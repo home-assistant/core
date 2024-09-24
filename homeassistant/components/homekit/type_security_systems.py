@@ -1,11 +1,12 @@
 """Class to hold all alarm control panel accessories."""
+
 import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN,
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
@@ -152,7 +153,7 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:

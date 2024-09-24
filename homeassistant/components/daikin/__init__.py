@@ -1,13 +1,13 @@
 """Platform for the Daikin AC."""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
-from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,20 +21,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.util import Throttle
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
+from .coordinator import DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -44,19 +39,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None or ".local" in entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
 
-    daikin_api = await daikin_api_setup(
-        hass,
-        conf[CONF_HOST],
-        conf.get(CONF_API_KEY),
-        conf.get(CONF_UUID),
-        conf.get(CONF_PASSWORD),
-    )
-    if not daikin_api:
-        return False
+    session = async_get_clientsession(hass)
+    host = conf[CONF_HOST]
+    try:
+        async with asyncio.timeout(TIMEOUT):
+            device: Appliance = await DaikinFactory(
+                host,
+                session,
+                key=entry.data.get(CONF_API_KEY),
+                uuid=entry.data.get(CONF_UUID),
+                password=entry.data.get(CONF_PASSWORD),
+            )
+        _LOGGER.debug("Connection to %s successful", host)
+    except TimeoutError as err:
+        _LOGGER.debug("Connection to %s timed out in 60 seconds", host)
+        raise ConfigEntryNotReady from err
+    except ClientConnectionError as err:
+        _LOGGER.debug("ClientConnectionError to %s", host)
+        raise ConfigEntryNotReady from err
 
-    await async_migrate_unique_id(hass, entry, daikin_api)
+    coordinator = DaikinCoordinator(hass, device)
 
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
+    await coordinator.async_config_entry_first_refresh()
+
+    await async_migrate_unique_id(hass, entry, device)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -71,84 +79,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(
-    hass: HomeAssistant,
-    host: str,
-    key: str | None,
-    uuid: str | None,
-    password: str | None,
-) -> DaikinApi | None:
-    """Create a Daikin instance only once."""
-
-    session = async_get_clientsession(hass)
-    try:
-        async with asyncio.timeout(TIMEOUT):
-            device = await Appliance.factory(
-                host, session, key=key, uuid=uuid, password=password
-            )
-    except asyncio.TimeoutError as err:
-        _LOGGER.debug("Connection to %s timed out", host)
-        raise ConfigEntryNotReady from err
-    except ClientConnectionError as err:
-        _LOGGER.debug("ClientConnectionError to %s", host)
-        raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device %s", host)
-        return None
-
-    api = DaikinApi(device)
-
-    return api
-
-
-class DaikinApi:
-    """Keep the Daikin instance in one place and centralize the update."""
-
-    def __init__(self, device: Appliance) -> None:
-        """Initialize the Daikin Handle."""
-        self.device = device
-        self.name = device.values.get("name", "Daikin AC")
-        self.ip_address = device.device_ip
-        self._available = True
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs: Any) -> None:
-        """Pull the latest data from Daikin."""
-        try:
-            await self.device.update_status()
-            self._available = True
-        except ClientConnectionError:
-            _LOGGER.warning("Connection failed for %s", self.ip_address)
-            self._available = False
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = self.device.values
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
-            manufacturer="Daikin",
-            model=info.get("model"),
-            name=info.get("name"),
-            sw_version=info.get("ver", "").replace("_", "."),
-        )
-
-
 async def async_migrate_unique_id(
-    hass: HomeAssistant, config_entry: ConfigEntry, api: DaikinApi
+    hass: HomeAssistant, config_entry: ConfigEntry, device: Appliance
 ) -> None:
     """Migrate old entry."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
     old_unique_id = config_entry.unique_id
-    new_unique_id = api.device.mac
+    new_unique_id = device.mac
     new_mac = dr.format_mac(new_unique_id)
-    new_name = api.name
+    new_name = device.values.get("name", "Daikin AC")
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:

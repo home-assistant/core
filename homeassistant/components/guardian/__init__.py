@@ -1,4 +1,5 @@
 """The Elexa Guardian integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -23,10 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_SENSOR_PAIR_DUMP,
@@ -138,16 +136,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = valve_controller_coordinators[
-            api
-        ] = GuardianDataUpdateCoordinator(
-            hass,
-            entry=entry,
-            client=client,
-            api_name=api,
-            api_coro=api_coro,
-            api_lock=api_lock,
-            valve_controller_uid=entry.data[CONF_UID],
+        coordinator = valve_controller_coordinators[api] = (
+            GuardianDataUpdateCoordinator(
+                hass,
+                entry=entry,
+                client=client,
+                api_name=api,
+                api_coro=api_coro,
+                api_lock=api_lock,
+                valve_controller_uid=entry.data[CONF_UID],
+            )
         )
         init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 
@@ -356,70 +354,3 @@ class PairedSensorManager:
             config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
         )
         dev_reg.async_remove_device(device.id)
-
-
-class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
-    """Define a base Guardian entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
-
-
-class PairedSensorEntity(GuardianEntity):
-    """Define a Guardian paired sensor entity."""
-
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinator: GuardianDataUpdateCoordinator,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
-
-        paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, paired_sensor_uid)},
-            manufacturer="Elexa",
-            model=coordinator.data["codename"],
-            name=f"Guardian paired sensor {paired_sensor_uid}",
-            via_device=(DOMAIN, entry.data[CONF_UID]),
-        )
-        self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
-
-
-@dataclass(frozen=True, kw_only=True)
-class ValveControllerEntityDescription(EntityDescription):
-    """Describe a Guardian valve controller entity."""
-
-    api_category: str
-
-
-class ValveControllerEntity(GuardianEntity):
-    """Define a Guardian valve controller entity."""
-
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinators: dict[str, GuardianDataUpdateCoordinator],
-        description: ValveControllerEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinators[description.api_category], description)
-
-        self._diagnostics_coordinator = coordinators[API_SYSTEM_DIAGNOSTICS]
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data[CONF_UID])},
-            manufacturer="Elexa",
-            model=self._diagnostics_coordinator.data["firmware"],
-            name=f"Guardian valve controller {entry.data[CONF_UID]}",
-        )
-        self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"

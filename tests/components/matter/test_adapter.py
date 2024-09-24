@@ -1,4 +1,5 @@
 """Test the adapter."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -28,6 +29,7 @@ from .common import load_and_parse_node_fixture, setup_integration_with_node_fix
 )
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
     node_fixture: str,
     name: str,
@@ -39,8 +41,7 @@ async def test_device_registry_single_node_device(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -53,14 +54,17 @@ async def test_device_registry_single_node_device(
     assert entry.name == name
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
+    assert entry.model_id == "32768"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
+    assert entry.serial_number == "12345678"
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test additional device with different attribute values."""
@@ -70,8 +74,7 @@ async def test_device_registry_single_node_device_alt(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -79,15 +82,17 @@ async def test_device_registry_single_node_device_alt(
     assert entry is not None
 
     # test name is derived from productName (because nodeLabel is absent)
-    assert entry.name == "Mock OnOffPluginUnit (powerplug/switch)"
+    assert entry.name == "Mock OnOffPluginUnit"
 
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
+    assert entry.serial_number is None
 
 
 @pytest.mark.skip("Waiting for a new test fixture")
 async def test_device_registry_bridge(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
@@ -97,10 +102,10 @@ async def test_device_registry_bridge(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-
     # Validate bridge
-    bridge_entry = dev_reg.async_get_device(identifiers={(DOMAIN, "mock-hub-id")})
+    bridge_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-hub-id")}
+    )
     assert bridge_entry is not None
 
     assert bridge_entry.name == "My Mock Bridge"
@@ -110,7 +115,7 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = dev_reg.async_get_device(
+    device1_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
     )
     assert device1_entry is not None
@@ -123,7 +128,7 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = dev_reg.async_get_device(
+    device2_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
     )
     assert device2_entry is not None
@@ -144,10 +149,10 @@ async def test_node_added_subscription(
     integration: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe_events.call_count == 4
+    assert matter_client.subscribe_events.call_count == 5
     assert (
         matter_client.subscribe_events.call_args.kwargs["event_filter"]
-        == EventType.NODE_ADDED
+        == EventType.NODE_UPDATED
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
@@ -159,14 +164,46 @@ async def test_node_added_subscription(
         )
     )
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert not entity_state
 
     node_added_callback(EventType.NODE_ADDED, node)
     await hass.async_block_till_done()
 
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
+
+
+async def test_device_registry_single_node_composed_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a composed device within a standalone node only creates one HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "air-purifier",
+        matter_client,
+    )
+    dev_reg = dr.async_get(hass)
+    assert len(dev_reg.devices) == 1
+
+
+async def test_multi_endpoint_name(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "multi-endpoint-light",
+        matter_client,
+    )
+    entity_state = hass.states.get("light.inovelli_light_1")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (1)"
+    entity_state = hass.states.get("light.inovelli_light_6")
+    assert entity_state
+    assert entity_state.name == "Inovelli Light (6)"
 
 
 async def test_get_clean_name_() -> None:

@@ -1,4 +1,5 @@
 """Support for the Mediaroom Set-up-box."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from pymediaroom import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -45,7 +46,7 @@ MEDIA_TYPE_MEDIAROOM = "mediaroom"
 SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -148,7 +149,7 @@ class MediaroomDevice(MediaPlayerEntity):
 
         self.host = host
         self.stb = Remote(host)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Found STB at %s%s", host, " - I'm optimistic" if optimistic else ""
         )
         self._channel = None

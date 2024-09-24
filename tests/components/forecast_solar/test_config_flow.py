@@ -1,4 +1,5 @@
 """Test the Forecast.Solar config flow."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.forecast_solar.const import (
@@ -24,7 +25,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -39,7 +40,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         },
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Name"
     assert result2.get("data") == {
         CONF_LATITUDE: 52.42,
@@ -66,7 +67,7 @@ async def test_options_flow_invalid_api(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -83,7 +84,7 @@ async def test_options_flow_invalid_api(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
@@ -99,7 +100,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     # With the API key
@@ -117,7 +118,7 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
         CONF_API_KEY: "SolarForecast150",
         CONF_DECLINATION: 21,
@@ -141,7 +142,7 @@ async def test_options_flow_without_key(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     # Without the API key
@@ -158,7 +159,7 @@ async def test_options_flow_without_key(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
         CONF_API_KEY: None,
         CONF_DECLINATION: 21,

@@ -1,7 +1,7 @@
 """Support for exposing regular REST commands as services."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -96,7 +96,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         method = command_config[CONF_METHOD]
 
         template_url = command_config[CONF_URL]
-        template_url.hass = hass
 
         auth = None
         if CONF_USERNAME in command_config:
@@ -107,11 +106,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         template_payload = None
         if CONF_PAYLOAD in command_config:
             template_payload = command_config[CONF_PAYLOAD]
-            template_payload.hass = hass
 
         template_headers = command_config.get(CONF_HEADERS, {})
-        for template_header in template_headers.values():
-            template_header.hass = hass
 
         content_type = command_config.get(CONF_CONTENT_TYPE)
 
@@ -173,33 +169,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             _content = await response.text()
                     except (JSONDecodeError, AttributeError) as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as JSON",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "json"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "JSON",
+                            },
                         ) from err
 
                     except UnicodeDecodeError as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as text",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "text"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "text",
+                            },
                         ) from err
                     return {"content": _content, "status": response.status}
 
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise HomeAssistantError(
-                    f"Timeout when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="timeout",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
             except aiohttp.ClientError as err:
+                _LOGGER.error("Error fetching data: %s", err)
                 raise HomeAssistantError(
-                    f"Client error occurred when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="client_error",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
         # register services

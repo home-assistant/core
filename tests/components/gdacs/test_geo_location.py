@@ -1,4 +1,5 @@
 """The tests for the GDACS Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
@@ -92,15 +93,16 @@ async def test_setup(
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
 
+        config_entry.add_to_hass(hass)
         hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data | CONFIG
         )
-        config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -226,16 +228,16 @@ async def test_setup_imperial(
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update, patch(
-        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+        patch("aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
+        config_entry.add_to_hass(hass)
         hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data | CONFIG
         )
-        config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(
             config_entry.entry_id
         )  # Artificially trigger update and collect events.

@@ -1,0 +1,10 @@
+{
+  "domain": "test_package_raises_cancelled_error_config_entry",
+  "name": "Test Package that raises asyncio.CancelledError in async_setup_entry",
+  "documentation": "http://test-package.io",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "config_flow": true,
+  "version": "1.2.3"
+}

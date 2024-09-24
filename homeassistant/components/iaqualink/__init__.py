@@ -1,18 +1,17 @@
 """Component to embed Aqualink devices."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.device import (
     AqualinkBinarySensor,
-    AqualinkDevice,
     AqualinkLight,
     AqualinkSensor,
     AqualinkSwitch,
@@ -29,18 +28,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, UPDATE_INTERVAL
-
-_AqualinkEntityT = TypeVar("_AqualinkEntityT", bound="AqualinkEntity")
-_P = ParamSpec("_P")
+from .entity import AqualinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +49,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -72,14 +63,14 @@ async def async_setup_entry(  # noqa: C901
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    aqualink = AqualinkClient(username, password)
+    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
     try:
         await aqualink.login()
     except AqualinkServiceException as login_exception:
         _LOGGER.error("Failed to login: %s", login_exception)
         await aqualink.close()
         return False
-    except (asyncio.TimeoutError, httpx.HTTPError) as aio_exception:
+    except (TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting login: {aio_exception}"
@@ -184,7 +175,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
-def refresh_system(
+def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
@@ -198,44 +189,3 @@ def refresh_system(
         async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
-
-
-class AqualinkEntity(Entity):
-    """Abstract class for all Aqualink platforms.
-
-    Entity state is updated via the interval timer within the integration.
-    Any entity state change via the iaqualink library triggers an internal
-    state refresh which is then propagated to all the entities in the system
-    via the refresh_system decorator above to the _update_callback in this
-    class.
-    """
-
-    _attr_should_poll = False
-
-    def __init__(self, dev: AqualinkDevice) -> None:
-        """Initialize the entity."""
-        self.dev = dev
-        self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer=dev.manufacturer,
-            model=dev.model,
-            name=dev.label,
-            via_device=(DOMAIN, dev.system.serial),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return whether the state is based on actual reading from the device."""
-        return self.dev.system.online in [False, None]
-
-    @property
-    def available(self) -> bool:
-        """Return whether the device is available or not."""
-        return self.dev.system.online is True

@@ -1,4 +1,5 @@
 """Constants for the ScreenLogic integration."""
+
 from screenlogicpy.const.common import UNIT
 from screenlogicpy.device_const.circuit import FUNCTION
 from screenlogicpy.device_const.system import COLOR_MODE
@@ -14,11 +15,13 @@ from homeassistant.const import (
 )
 from homeassistant.util import slugify
 
-ScreenLogicDataPath = tuple[str | int, ...]
+type ScreenLogicDataPath = tuple[str | int, ...]
 
 DOMAIN = "screenlogic"
 DEFAULT_SCAN_INTERVAL = 30
 MIN_SCAN_INTERVAL = 10
+
+ATTR_CONFIG_ENTRY = "config_entry"
 
 SERVICE_SET_COLOR_MODE = "set_color_mode"
 ATTR_COLOR_MODE = "color_mode"

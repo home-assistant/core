@@ -1,4 +1,5 @@
 """Tests for the Elgato Light button platform."""
+
 from unittest.mock import MagicMock
 
 from elgato import ElgatoError

@@ -1,4 +1,5 @@
 """Support for Ecobee sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -25,18 +26,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
-@dataclass(frozen=True)
-class EcobeeSensorEntityDescriptionMixin:
-    """Represent the required ecobee entity description attributes."""
+@dataclass(frozen=True, kw_only=True)
+class EcobeeSensorEntityDescription(SensorEntityDescription):
+    """Represent the ecobee sensor entity description."""
 
     runtime_key: str | None
-
-
-@dataclass(frozen=True)
-class EcobeeSensorEntityDescription(
-    SensorEntityDescription, EcobeeSensorEntityDescriptionMixin
-):
-    """Represent the ecobee sensor entity description."""
 
 
 SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
@@ -118,7 +112,7 @@ class EcobeeSensor(SensorEntity):
         self._state = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
@@ -126,6 +120,7 @@ class EcobeeSensor(SensorEntity):
                     return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:

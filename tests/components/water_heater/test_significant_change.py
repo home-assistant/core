@@ -1,4 +1,5 @@
 """Test the Water Heater significant change platform."""
+
 import pytest
 
 from homeassistant.components.water_heater import (

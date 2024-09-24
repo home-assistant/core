@@ -1,0 +1,16 @@
+{
+  "country": "DE",
+  "pmStandard": "ugm3",
+  "ledBarMode": "co2",
+  "abcDays": 8,
+  "tvocLearningOffset": 12,
+  "noxLearningOffset": 12,
+  "mqttBrokerUrl": "",
+  "temperatureUnit": "c",
+  "configurationControl": "both",
+  "postDataToAirGradient": true,
+  "ledBarBrightness": 100,
+  "displayBrightness": 0,
+  "offlineMode": false,
+  "model": "I-9PSL-DE"
+}

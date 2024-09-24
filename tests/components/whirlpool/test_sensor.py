@@ -1,4 +1,5 @@
 """Test the Whirlpool Sensor domain."""
+
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
@@ -41,6 +42,8 @@ def side_effect_function_open_door(*args, **kwargs):
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
 
+    return None
+
 
 async def test_dryer_sensor_values(
     hass: HomeAssistant,
@@ -80,7 +83,7 @@ async def test_dryer_sensor_values(
 
     state = await update_sensor_state(hass, entity_id, mock_instance)
     assert state is not None
-    state_id = f"{entity_id.split('_')[0]}_end_time"
+    state_id = f"{entity_id.split('_', maxsplit=1)[0]}_end_time"
     state = hass.states.get(state_id)
     assert state.state == thetimestamp.isoformat()
 
@@ -150,11 +153,11 @@ async def test_washer_sensor_values(
 
     state = await update_sensor_state(hass, entity_id, mock_instance)
     assert state is not None
-    state_id = f"{entity_id.split('_')[0]}_end_time"
+    state_id = f"{entity_id.split('_', maxsplit=1)[0]}_end_time"
     state = hass.states.get(state_id)
     assert state.state == thetimestamp.isoformat()
 
-    state_id = f"{entity_id.split('_')[0]}_detergent_level"
+    state_id = f"{entity_id.split('_', maxsplit=1)[0]}_detergent_level"
     entry = entity_registry.async_get(state_id)
     assert entry
     assert entry.disabled

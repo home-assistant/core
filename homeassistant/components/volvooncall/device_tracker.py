@@ -1,4 +1,5 @@
 """Support for tracking a Volvo."""
+
 from __future__ import annotations
 
 from volvooncall.dashboard import Instrument
@@ -9,8 +10,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VolvoEntity, VolvoUpdateCoordinator
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
+from .coordinator import VolvoUpdateCoordinator
+from .entity import VolvoEntity
 
 
 async def async_setup_entry(
@@ -25,21 +27,17 @@ async def async_setup_entry(
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
         """Discover and add a discovered Volvo On Call device tracker."""
-        entities: list[VolvoTrackerEntity] = []
-
-        for instrument in instruments:
-            if instrument.component == "device_tracker":
-                entities.append(
-                    VolvoTrackerEntity(
-                        instrument.vehicle.vin,
-                        instrument.component,
-                        instrument.attr,
-                        instrument.slug_attr,
-                        coordinator,
-                    )
-                )
-
-        async_add_entities(entities)
+        async_add_entities(
+            VolvoTrackerEntity(
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+                coordinator,
+            )
+            for instrument in instruments
+            if instrument.component == "device_tracker"
+        )
 
     async_discover_device([*volvo_data.instruments])
 
@@ -64,7 +62,7 @@ class VolvoTrackerEntity(VolvoEntity, TrackerEntity):
         return longitude
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type (GPS)."""
         return SourceType.GPS
 

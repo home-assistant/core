@@ -1,8 +1,10 @@
 """DataUpdateCoordinator for the Homeassistant Analytics integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from python_homeassistant_analytics import (
     CustomIntegration,
@@ -11,7 +13,6 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsNotModifiedError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,6 +22,9 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from . import AnalyticsInsightsConfigEntry
 
 
 @dataclass(frozen=True)
@@ -34,7 +38,7 @@ class AnalyticsData:
 class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[AnalyticsData]):
     """A Homeassistant Analytics Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: AnalyticsInsightsConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, client: HomeassistantAnalyticsClient

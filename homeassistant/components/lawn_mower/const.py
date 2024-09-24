@@ -1,4 +1,5 @@
 """Constants for the lawn mower integration."""
+
 from enum import IntFlag, StrEnum
 
 
@@ -16,6 +17,9 @@ class LawnMowerActivity(StrEnum):
 
     DOCKED = "docked"
     """Device is docked."""
+
+    RETURNING = "returning"
+    """Device is returning."""
 
 
 class LawnMowerEntityFeature(IntFlag):

@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -29,7 +30,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .const import DOMAIN
+from .entity import HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 
@@ -39,7 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
@@ -55,8 +57,10 @@ async def async_setup_entry(
                 )
             )
         elif isinstance(device, (AsyncWiredDimmer3, AsyncDinRailDimmer3)):
-            for channel in range(1, 4):
-                entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
+            entities.extend(
+                HomematicipMultiDimmer(hap, device, channel=channel)
+                for channel in range(1, 4)
+            )
         elif isinstance(
             device,
             (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),

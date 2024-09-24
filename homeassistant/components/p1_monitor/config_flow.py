@@ -1,4 +1,5 @@
 """Config flow for P1 Monitor integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,9 +7,8 @@ from typing import Any
 from p1monitor import P1Monitor, P1MonitorError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector
 
@@ -22,7 +22,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors = {}

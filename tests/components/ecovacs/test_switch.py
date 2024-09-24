@@ -5,21 +5,33 @@ from dataclasses import dataclass
 from deebot_client.command import Command
 from deebot_client.commands.json import (
     SetAdvancedMode,
+    SetBorderSwitch,
     SetCarpetAutoFanBoost,
+    SetChildLock,
     SetContinuousCleaning,
+    SetCrossMapBorderWarning,
+    SetMoveUpWarning,
+    SetSafeProtect,
+    SetTrueDetect,
 )
 from deebot_client.events import (
     AdvancedModeEvent,
+    BorderSwitchEvent,
     CarpetAutoFanBoostEvent,
+    ChildLockEvent,
     ContinuousCleaningEvent,
+    CrossMapBorderWarningEvent,
     Event,
+    MoveUpWarningEvent,
+    SafeProtectEvent,
+    TrueDetectEvent,
 )
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.switch.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -75,8 +87,48 @@ class SwitchTestCase:
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                SwitchTestCase(
+                    "switch.goat_g1_advanced_mode",
+                    AdvancedModeEvent(True),
+                    SetAdvancedMode,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_true_detect",
+                    TrueDetectEvent(True),
+                    SetTrueDetect,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_border_switch",
+                    BorderSwitchEvent(True),
+                    SetBorderSwitch,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_child_lock",
+                    ChildLockEvent(True),
+                    SetChildLock,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_move_up_warning",
+                    MoveUpWarningEvent(True),
+                    SetMoveUpWarning,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_cross_map_border_warning",
+                    CrossMapBorderWarningEvent(True),
+                    SetCrossMapBorderWarning,
+                ),
+                SwitchTestCase(
+                    "switch.goat_g1_safe_protect",
+                    SafeProtectEvent(True),
+                    SetSafeProtect,
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_switch_entities(
     hass: HomeAssistant,
@@ -108,7 +160,7 @@ async def test_switch_entities(
 
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
+        assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
         device._execute_command.reset_mock()
         await hass.services.async_call(
@@ -140,8 +192,20 @@ async def test_switch_entities(
                 "switch.ozmo_950_carpet_auto_boost_suction",
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                "switch.goat_g1_advanced_mode",
+                "switch.goat_g1_true_detect",
+                "switch.goat_g1_border_switch",
+                "switch.goat_g1_child_lock",
+                "switch.goat_g1_move_up_warning",
+                "switch.goat_g1_cross_map_border_warning",
+                "switch.goat_g1_safe_protect",
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_disabled_by_default_switch_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]

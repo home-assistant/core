@@ -1,4 +1,5 @@
 """Test sensor of Airly integration."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch

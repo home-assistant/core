@@ -1,4 +1,5 @@
 """The powerwall integration models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,7 +16,10 @@ from tesla_powerwall import (
     SiteMasterResponse,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+type PowerwallConfigEntry = ConfigEntry[PowerwallRuntimeData]
 
 
 @dataclass

@@ -1,4 +1,5 @@
 """Constants for Snapcast."""
+
 from homeassistant.const import Platform
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]

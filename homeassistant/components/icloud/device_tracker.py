@@ -1,4 +1,5 @@
 """Support for tracking for iCloud devices."""
+
 from __future__ import annotations
 
 from typing import Any

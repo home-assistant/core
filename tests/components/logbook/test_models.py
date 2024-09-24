@@ -1,20 +1,27 @@
 """The tests for the logbook component models."""
+
 from unittest.mock import Mock
 
-from homeassistant.components.logbook.models import LazyEventPartialState
+from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 
 
-def test_lazy_event_partial_state_context():
+def test_lazy_event_partial_state_context() -> None:
     """Test we can extract context from a lazy event partial state."""
     state = LazyEventPartialState(
-        Mock(
+        EventAsRow(
+            row_id=1,
+            event_type="event_type",
+            event_data={},
+            time_fired_ts=1,
             context_id_bin=b"1234123412341234",
             context_user_id_bin=b"1234123412341234",
             context_parent_id_bin=b"4444444444444444",
-            event_data={},
-            event_type="event_type",
-            entity_id="entity_id",
             state="state",
+            entity_id="entity_id",
+            icon="icon",
+            context_only=False,
+            data={},
+            context=Mock(),
         ),
         {},
     )

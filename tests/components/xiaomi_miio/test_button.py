@@ -1,9 +1,10 @@
 """The tests for the xiaomi_miio button component."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
     DOMAIN as XIAOMI_DOMAIN,
@@ -32,12 +33,15 @@ async def setup_test(hass: HomeAssistant):
 
     mock_vacuum = MagicMock()
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
-        return_value=[
-            Platform.BUTTON,
-        ],
-    ), patch("homeassistant.components.xiaomi_miio.RoborockVacuum") as mock_vacuum_cls:
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.get_platforms",
+            return_value=[
+                Platform.BUTTON,
+            ],
+        ),
+        patch("homeassistant.components.xiaomi_miio.RoborockVacuum") as mock_vacuum_cls,
+    ):
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -64,7 +68,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
 
     pressed_at = dt_util.utcnow()
     await hass.services.async_call(
-        DOMAIN,
+        BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id + "_reset_side_brush"},
         blocking=True,
@@ -77,7 +81,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
 
 async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up vacuum component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{BUTTON_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
         domain=XIAOMI_DOMAIN,

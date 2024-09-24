@@ -1,22 +1,22 @@
 """Config flow for PrusaLink integration."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 from typing import Any
 
-from aiohttp import ClientError
 from awesomeversion import AwesomeVersion, AwesomeVersionException
+from httpx import HTTPError, InvalidURL
 from pyprusalink import PrusaLink
-from pyprusalink.types import InvalidAuth
+from pyprusalink.types import InvalidAuth, VersionInfo
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -34,13 +34,33 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def ensure_printer_is_supported(version: VersionInfo) -> None:
+    """Raise NotSupported exception if the printer is not supported."""
+
+    try:
+        if AwesomeVersion("2.0.0") <= AwesomeVersion(version["api"]):
+            return
+
+        # Workaround to allow PrusaLink 0.7.2 on MK3 and MK2.5 that supports
+        # the 2.0.0 API, but doesn't advertise it yet
+        if version.get("original", "").startswith(
+            ("PrusaLink I3MK3", "PrusaLink I3MK2")
+        ) and AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"]):
+            return
+
+    except AwesomeVersionException as err:
+        raise NotSupported from err
+
+    raise NotSupported
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     api = PrusaLink(
-        async_get_clientsession(hass),
+        get_async_client(hass),
         data[CONF_HOST],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
@@ -50,20 +70,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         async with asyncio.timeout(5):
             version = await api.get_version()
 
-    except (asyncio.TimeoutError, ClientError) as err:
+    except (TimeoutError, HTTPError, InvalidURL) as err:
         _LOGGER.error("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
-    try:
-        if AwesomeVersion(version["api"]) < AwesomeVersion("2.0.0"):
-            raise NotSupported
-    except AwesomeVersionException as err:
-        raise NotSupported from err
+    ensure_printer_is_supported(version)
 
     return {"title": version["hostname"] or version["text"]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
     VERSION = 1
@@ -71,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -97,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "not_supported"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

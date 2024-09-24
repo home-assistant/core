@@ -1,4 +1,5 @@
 """Test Home Assistant unit conversion utility functions."""
+
 from __future__ import annotations
 
 import inspect
@@ -10,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,6 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -56,6 +59,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
         DurationConverter,
@@ -76,6 +80,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ConductivityConverter: (
+        UnitOfConductivity.MICROSIEMENS,
+        UnitOfConductivity.MILLISIEMENS,
+        1000,
+    ),
     DataRateConverter: (
         UnitOfDataRate.BITS_PER_SECOND,
         UnitOfDataRate.BYTES_PER_SECOND,
@@ -121,6 +130,14 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    ConductivityConverter: [
+        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
+    ],
     DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
         (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),
@@ -265,10 +282,22 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 10 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 0.010 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2777.78, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2.77778, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778e-3, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778e-6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.77778e-3, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.390057, UnitOfEnergy.CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.01, UnitOfEnergy.KILO_CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.011622222, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.01, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.011622222, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.01, UnitOfEnergy.GIGA_CALORIE),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
     ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
@@ -402,6 +431,20 @@ _CONVERTED_VALUE: dict[
             708661.42,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
         ),
+        # 5 m/s * 1000 = 5000 mm/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5000,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        # 5 m/s ÷ 0.0254 = 196.8503937 in/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5 / 0.0254,
+            UnitOfSpeed.INCHES_PER_SECOND,
+        ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,
@@ -413,6 +456,8 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.KNOTS, 2.57222, UnitOfSpeed.METERS_PER_SECOND),
         # 5 ft/s * 0.3048 m/ft = 1.524 m/s
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
+        # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
+        (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
     ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),

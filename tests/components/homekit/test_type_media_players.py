@@ -1,4 +1,5 @@
 """Test different accessory types: Media Players."""
+
 import pytest
 
 from homeassistant.components.homekit.accessories import HomeDriver
@@ -24,7 +25,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
 from homeassistant.const import (
@@ -39,13 +40,15 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
 
-async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_media_player_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     config = {
         CONF_FEATURE_LIST: {
@@ -65,7 +68,7 @@ async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) ->
     )
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -109,12 +112,12 @@ async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) ->
     assert acc.chars[FEATURE_PLAY_STOP].value is False
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
-    call_media_play = async_mock_service(hass, DOMAIN, "media_play")
-    call_media_pause = async_mock_service(hass, DOMAIN, "media_pause")
-    call_media_stop = async_mock_service(hass, DOMAIN, "media_stop")
-    call_toggle_mute = async_mock_service(hass, DOMAIN, "volume_mute")
+    call_turn_on = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_off")
+    call_media_play = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_play")
+    call_media_pause = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_pause")
+    call_media_stop = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_stop")
+    call_toggle_mute = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_mute")
 
     acc.chars[FEATURE_ON_OFF].client_update_value(True)
     await hass.async_block_till_done()
@@ -176,7 +179,10 @@ async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) ->
 
 
 async def test_media_player_television(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
@@ -196,7 +202,7 @@ async def test_media_player_television(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -246,16 +252,18 @@ async def test_media_player_television(
     assert caplog.records[-2].levelname == "DEBUG"
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
-    call_media_play = async_mock_service(hass, DOMAIN, "media_play")
-    call_media_pause = async_mock_service(hass, DOMAIN, "media_pause")
-    call_media_play_pause = async_mock_service(hass, DOMAIN, "media_play_pause")
-    call_toggle_mute = async_mock_service(hass, DOMAIN, "volume_mute")
-    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
-    call_volume_up = async_mock_service(hass, DOMAIN, "volume_up")
-    call_volume_down = async_mock_service(hass, DOMAIN, "volume_down")
-    call_volume_set = async_mock_service(hass, DOMAIN, "volume_set")
+    call_turn_on = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_off")
+    call_media_play = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_play")
+    call_media_pause = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_pause")
+    call_media_play_pause = async_mock_service(
+        hass, MEDIA_PLAYER_DOMAIN, "media_play_pause"
+    )
+    call_toggle_mute = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_mute")
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
+    call_volume_up = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_up")
+    call_volume_down = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_down")
+    call_volume_set = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_set")
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()
@@ -356,7 +364,6 @@ async def test_media_player_television(
 
     with pytest.raises(ValueError):
         acc.char_remote_key.client_update_value(20)
-        await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()
@@ -366,7 +373,7 @@ async def test_media_player_television(
 
 
 async def test_media_player_television_basic(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if basic television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
@@ -382,7 +389,7 @@ async def test_media_player_television_basic(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.chars_tv == [CHAR_REMOTE_KEY]
@@ -409,7 +416,7 @@ async def test_media_player_television_basic(
 
 
 async def test_media_player_television_supports_source_select_no_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if basic tv that supports source select but is missing a source list."""
     entity_id = "media_player.television"
@@ -422,14 +429,14 @@ async def test_media_player_television_supports_source_select_no_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.support_select_source is False
 
 
 async def test_tv_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)
@@ -482,7 +489,7 @@ async def test_tv_restore(
 
 
 async def test_media_player_television_max_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if television accessory that reaches the maximum number of sources."""
     entity_id = "media_player.television"
@@ -500,7 +507,7 @@ async def test_media_player_television_max_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -541,7 +548,7 @@ async def test_media_player_television_max_sources(
 
 
 async def test_media_player_television_duplicate_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if television accessory with duplicate sources."""
     entity_id = "media_player.television"
@@ -559,7 +566,7 @@ async def test_media_player_television_duplicate_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -586,7 +593,7 @@ async def test_media_player_television_duplicate_sources(
 
 
 async def test_media_player_television_unsafe_chars(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if television accessory with unsafe characters."""
     entity_id = "media_player.television"
@@ -604,7 +611,7 @@ async def test_media_player_television_unsafe_chars(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -629,7 +636,7 @@ async def test_media_player_television_unsafe_chars(
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 1
 
-    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
 
     acc.char_input_source.client_update_value(3)
     await hass.async_block_till_done()
@@ -671,7 +678,7 @@ async def test_media_player_receiver(
     )
     await hass.async_block_till_done()
     acc = ReceiverMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2

@@ -1,4 +1,5 @@
 """Switch platform for MicroBot."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,13 +14,14 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
 from .coordinator import MicroBotDataUpdateCoordinator
 from .entity import MicroBotEntity
 
 CALIBRATE = "calibrate"
-CALIBRATE_SCHEMA = {
+CALIBRATE_SCHEMA: VolDictType = {
     vol.Required("depth"): cv.positive_int,
     vol.Required("duration"): cv.positive_int,
     vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),

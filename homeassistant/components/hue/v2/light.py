@@ -1,6 +1,8 @@
 """Support for Hue lights."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aiohue import HueBridgeV2
@@ -21,6 +23,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -50,26 +53,26 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
+    make_light_entity = partial(HueLight, bridge, controller)
 
     @callback
     def async_add_light(event_type: EventType, resource: Light) -> None:
         """Add Hue Light."""
-        light = HueLight(bridge, controller, resource)
-        async_add_entities([light])
+        async_add_entities([make_light_entity(resource)])
 
     # add all current items in controller
-    for light in controller:
-        async_add_light(EventType.RESOURCE_ADDED, resource=light)
-
+    async_add_entities(make_light_entity(light) for light in controller)
     # register listener for new lights
     config_entry.async_on_unload(
         controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
     )
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 
+    _fixed_color_mode: ColorMode | None = None
     entity_description = LightEntityDescription(
         key="hue_light", has_entity_name=True, name=None
     )
@@ -83,17 +86,20 @@ class HueLight(HueBaseEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.FLASH
         self.resource = resource
         self.controller = controller
-        self._supported_color_modes: set[ColorMode | str] = set()
+        supported_color_modes = {ColorMode.ONOFF}
         if self.resource.supports_color:
-            self._supported_color_modes.add(ColorMode.XY)
+            supported_color_modes.add(ColorMode.XY)
         if self.resource.supports_color_temperature:
-            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
+            supported_color_modes.add(ColorMode.COLOR_TEMP)
         if self.resource.supports_dimming:
-            if len(self._supported_color_modes) == 0:
-                # only add color mode brightness if no color variants
-                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+            supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+        supported_color_modes = filter_supported_color_modes(supported_color_modes)
+        self._attr_supported_color_modes = supported_color_modes
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
         self._last_brightness: float | None = None
         self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
@@ -128,14 +134,15 @@ class HueLight(HueBaseEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
+        if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
+            return self._fixed_color_mode
+
+        # The light supports both color temperature and XY, determine which
+        # mode the light is in
         if self.color_temp_active:
             return ColorMode.COLOR_TEMP
-        if self.resource.supports_color:
-            return ColorMode.XY
-        if self.resource.supports_dimming:
-            return ColorMode.BRIGHTNESS
-        # fallback to on_off
-        return ColorMode.ONOFF
+        return ColorMode.XY
 
     @property
     def color_temp_active(self) -> bool:
@@ -181,11 +188,6 @@ class HueLight(HueBaseEntity, LightEntity):
         return FALLBACK_MAX_MIREDS
 
     @property
-    def supported_color_modes(self) -> set | None:
-        """Flag supported features."""
-        return self._supported_color_modes
-
-    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the optional state attributes."""
         return {
@@ -225,7 +227,11 @@ class HueLight(HueBaseEntity, LightEntity):
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
         if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            effect = EffectStatus.NO_EFFECT
+            # ignore effect if set to "None" and we have no effect active
+            # the special effect "None" is only used to stop an active effect
+            # but sending it while no effect is active can actually result in issues
+            # https://github.com/home-assistant/core/issues/122165
+            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)
@@ -234,6 +240,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 if transition is None:
                     # a transition is required for timed effect, default to 10 minutes
                     transition = 600000
+            # we need to clear color values if an effect is applied
+            color_temp = None
+            xy_color = None
 
         if flash is not None:
             await self.async_set_flash(flash)

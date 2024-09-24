@@ -1,4 +1,5 @@
 """BleBox switch implementation."""
+
 from datetime import timedelta
 from typing import Any
 
@@ -10,8 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+from .entity import BleBoxEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

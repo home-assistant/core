@@ -1,4 +1,5 @@
 """The tests for the event integration."""
+
 from collections.abc import Generator
 from typing import Any
 
@@ -21,6 +22,8 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .const import TEST_DOMAIN
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -32,8 +35,6 @@ from tests.common import (
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
-
-TEST_DOMAIN = "test"
 
 
 async def test_event() -> None:
@@ -48,7 +49,7 @@ async def test_event() -> None:
 
     # No event types defined, should raise
     with pytest.raises(AttributeError):
-        event.event_types
+        _ = event.event_types
 
     # Test retrieving data from entity description
     event.entity_description = EventEntityDescription(
@@ -95,7 +96,7 @@ async def test_event() -> None:
         event._trigger_event("unknown_event")
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache_with_extra_data(
@@ -127,9 +128,6 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -141,7 +139,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.attributes["hello"] == "world"
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache_with_extra_data(
@@ -162,9 +160,6 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -176,7 +171,7 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     assert "hello" not in state.attributes
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache(
@@ -197,9 +192,6 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -211,7 +203,7 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     assert "hello" not in state.attributes
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_saving_state(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test we restore state integration."""
     restore_data = {"last_event_type": "double_press", "last_event_attributes": None}
@@ -228,9 +220,6 @@ async def test_saving_state(hass: HomeAssistant, hass_storage: dict[str, Any]) -
             ),
         ),
     )
-
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -249,7 +238,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -265,7 +254,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

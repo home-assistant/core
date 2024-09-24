@@ -10,15 +10,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_entries_for_device,
-)
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .config_flow import get_master_gateway
+from .config_flow import get_master_hub
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -66,33 +62,33 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service_data = service_call.data
 
         if CONF_BRIDGE_ID in service_data:
-            found_gateway = False
+            found_hub = False
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
 
-            for possible_gateway in hass.data[DOMAIN].values():
-                if possible_gateway.bridgeid == bridge_id:
-                    gateway = possible_gateway
-                    found_gateway = True
+            for possible_hub in hass.data[DOMAIN].values():
+                if possible_hub.bridgeid == bridge_id:
+                    hub = possible_hub
+                    found_hub = True
                     break
 
-            if not found_gateway:
+            if not found_hub:
                 LOGGER.error("Could not find the gateway %s", bridge_id)
                 return
         else:
             try:
-                gateway = get_master_gateway(hass)
+                hub = get_master_hub(hass)
             except ValueError:
                 LOGGER.error("No master gateway available")
                 return
 
         if service == SERVICE_CONFIGURE_DEVICE:
-            await async_configure_service(gateway, service_data)
+            await async_configure_service(hub, service_data)
 
         elif service == SERVICE_DEVICE_REFRESH:
-            await async_refresh_devices_service(gateway)
+            await async_refresh_devices_service(hub)
 
         elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
-            await async_remove_orphaned_entries_service(gateway)
+            await async_remove_orphaned_entries_service(hub)
 
     for service in SUPPORTED_SERVICES:
         hass.services.async_register(
@@ -103,14 +99,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
 
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload deCONZ services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(DOMAIN, service)
-
-
-async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) -> None:
+async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
@@ -132,61 +121,62 @@ async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) ->
 
     if entity_id:
         try:
-            field = gateway.deconz_ids[entity_id] + field
+            field = hub.deconz_ids[entity_id] + field
         except KeyError:
             LOGGER.error("Could not find the entity %s", entity_id)
             return
 
-    await gateway.api.request("put", field, json=data)
+    await hub.api.request("put", field, json=data)
 
 
-async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
+async def async_refresh_devices_service(hub: DeconzHub) -> None:
     """Refresh available devices from deCONZ."""
-    gateway.ignore_state_updates = True
-    await gateway.api.refresh_state()
-    gateway.load_ignored_devices()
-    gateway.ignore_state_updates = False
+    hub.ignore_state_updates = True
+    await hub.api.refresh_state()
+    hub.load_ignored_devices()
+    hub.ignore_state_updates = False
 
 
-async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
+async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     """Remove orphaned deCONZ entries from device and entity registries."""
-    device_registry = dr.async_get(gateway.hass)
-    entity_registry = er.async_get(gateway.hass)
+    device_registry = dr.async_get(hub.hass)
+    entity_registry = er.async_get(hub.hass)
 
-    entity_entries = async_entries_for_config_entry(
-        entity_registry, gateway.config_entry.entry_id
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, hub.config_entry.entry_id
     )
 
     entities_to_be_removed = []
     devices_to_be_removed = [
         entry.id
-        for entry in device_registry.devices.values()
-        if gateway.config_entry.entry_id in entry.config_entries
+        for entry in device_registry.devices.get_devices_for_config_entry_id(
+            hub.config_entry.entry_id
+        )
     ]
 
     # Don't remove the Gateway host entry
-    if gateway.api.config.mac:
-        gateway_host = device_registry.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
+    if hub.api.config.mac:
+        hub_host = device_registry.async_get_device(
+            connections={(CONNECTION_NETWORK_MAC, hub.api.config.mac)},
         )
-        if gateway_host and gateway_host.id in devices_to_be_removed:
-            devices_to_be_removed.remove(gateway_host.id)
+        if hub_host and hub_host.id in devices_to_be_removed:
+            devices_to_be_removed.remove(hub_host.id)
 
     # Don't remove the Gateway service entry
-    gateway_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, gateway.api.config.bridge_id)}
+    hub_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, hub.api.config.bridge_id)}
     )
-    if gateway_service and gateway_service.id in devices_to_be_removed:
-        devices_to_be_removed.remove(gateway_service.id)
+    if hub_service and hub_service.id in devices_to_be_removed:
+        devices_to_be_removed.remove(hub_service.id)
 
     # Don't remove devices belonging to available events
-    for event in gateway.events:
+    for event in hub.events:
         if event.device_id in devices_to_be_removed:
             devices_to_be_removed.remove(event.device_id)
 
     for entry in entity_entries:
         # Don't remove available entities
-        if entry.unique_id in gateway.entities[entry.domain]:
+        if entry.unique_id in hub.entities[entry.domain]:
             # Don't remove devices with available entities
             if entry.device_id in devices_to_be_removed:
                 devices_to_be_removed.remove(entry.device_id)
@@ -202,7 +192,7 @@ async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
     for device_id in devices_to_be_removed:
         if (
             len(
-                async_entries_for_device(
+                er.async_entries_for_device(
                     entity_registry, device_id, include_disabled_entities=True
                 )
             )

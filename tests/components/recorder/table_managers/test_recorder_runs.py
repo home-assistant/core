@@ -1,4 +1,5 @@
 """Test recorder runs table manager."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

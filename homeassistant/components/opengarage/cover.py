@@ -1,4 +1,5 @@
 """Platform for the opengarage.io cover component."""
+
 from __future__ import annotations
 
 import logging
@@ -14,8 +15,8 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)

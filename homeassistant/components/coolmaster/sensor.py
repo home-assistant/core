@@ -1,4 +1,5 @@
 """Sensor platform for CoolMasterNet integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -32,7 +33,6 @@ class CoolmasterCleanFilter(CoolmasterEntity, SensorEntity):
         key="error_code",
         translation_key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert",
     )
 
     @property

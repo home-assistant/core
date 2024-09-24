@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "token": {
+        "default": "mdi:lock-clock"
+      }
+    }
+  }
+}

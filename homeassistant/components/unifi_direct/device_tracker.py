@@ -1,4 +1,5 @@
 """Support for Unifi AP direct access."""
+
 from __future__ import annotations
 
 import logging
@@ -8,8 +9,8 @@ from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSH_PORT = 22
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -33,7 +34,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
-    scanner = UnifiDeviceScanner(config[DOMAIN])
+    scanner = UnifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     return scanner if scanner.update_clients() else None
 
 

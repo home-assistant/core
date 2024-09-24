@@ -1,4 +1,5 @@
 """The MyQ integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState

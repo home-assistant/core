@@ -1,4 +1,5 @@
 """Constants for the Tesla Powerwall integration."""
+
 from typing import Final
 
 DOMAIN = "powerwall"

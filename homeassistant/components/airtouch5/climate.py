@@ -1,4 +1,5 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
+
 import logging
 from typing import Any
 
@@ -33,12 +34,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Airtouch5ConfigEntry
 from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
 from .entity import Airtouch5Entity
 
@@ -91,11 +92,11 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Airtouch5ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airtouch 5 Climate entities."""
-    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
+    client = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
 
@@ -108,8 +109,10 @@ async def async_setup_entry(
         entities.append(Airtouch5AC(client, ac))
 
     # Add each zone
-    for zone in client.zones:
-        entities.append(Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number]))
+    entities.extend(
+        Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number])
+        for zone in client.zones
+    )
 
     async_add_entities(entities)
 
@@ -118,16 +121,14 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
     """Base class for Airtouch5 Climate Entities."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
 
 class Airtouch5AC(Airtouch5ClimateEntity):
     """Representation of the AC unit. Used to control the overall HVAC Mode."""
-
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
 
     def __init__(self, client: Airtouch5SimpleClient, ability: AcAbility) -> None:
         """Initialise the Climate Entity."""
@@ -151,6 +152,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
         if ability.supports_mode_heat:
             self._attr_hvac_modes.append(HVACMode.HEAT)
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
         self._attr_fan_modes = []
         if ability.supports_fan_speed_quiet:
@@ -253,7 +262,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             _LOGGER.debug("Argument `temperature` is missing in set_temperature")
             return
 
-        await self._control(temp=temp)
+        await self._control(setpoint=SetpointControl.CHANGE_SETPOINT, temp=temp)
 
 
 class Airtouch5Zone(Airtouch5ClimateEntity):
@@ -262,7 +271,10 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_NONE, PRESET_BOOST]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     def __init__(

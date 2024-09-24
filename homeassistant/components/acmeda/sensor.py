@@ -1,26 +1,26 @@
 """Support for Acmeda Roller Blind Batteries."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import AcmedaBase
-from .const import ACMEDA_HUB_UPDATE, DOMAIN
+from . import AcmedaConfigEntry
+from .const import ACMEDA_HUB_UPDATE
+from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
-from .hub import PulseHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AcmedaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
-    hub: PulseHub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     current: set[int] = set()
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class AcmedaBattery(AcmedaBase, SensorEntity):
+class AcmedaBattery(AcmedaEntity, SensorEntity):
     """Representation of an Acmeda cover sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY

@@ -1,4 +1,5 @@
 """Config flow to configure the Meteo-France integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,18 +9,16 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import Place
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_CITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
     VERSION = 1
@@ -33,7 +32,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -49,7 +48,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
 
@@ -83,7 +82,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cities(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step where the user choose the city from the API search results."""
         if not user_input:
             if len(self.places) > 1 and self.source != SOURCE_IMPORT:

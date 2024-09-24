@@ -1,4 +1,5 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
+
 import logging
 from typing import Any
 
@@ -14,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Alpha2BaseCoordinator
 from .const import DOMAIN, PRESET_AUTO, PRESET_DAY, PRESET_NIGHT
+from .coordinator import Alpha2BaseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

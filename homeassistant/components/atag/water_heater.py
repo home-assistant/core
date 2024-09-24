@@ -1,4 +1,5 @@
 """ATAG water heater component."""
+
 from typing import Any
 
 from homeassistant.components.water_heater import (
@@ -11,7 +12,8 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTem
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, AtagEntity
+from . import DOMAIN
+from .entity import AtagEntity
 
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 

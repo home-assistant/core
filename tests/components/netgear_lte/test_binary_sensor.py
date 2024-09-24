@@ -1,4 +1,6 @@
 """The tests for Netgear LTE binary sensor platform."""
+
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -7,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     setup_integration: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

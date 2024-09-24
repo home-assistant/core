@@ -7,12 +7,14 @@
         "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
+          "button": "Button group",
           "cover": "Cover group",
           "event": "Event group",
           "fan": "Fan group",
           "light": "Light group",
           "lock": "Lock group",
           "media_player": "Media player group",
+          "notify": "Notify group",
           "sensor": "Sensor group",
           "switch": "Switch group"
         }
@@ -24,6 +26,14 @@
           "all": "All entities",
           "entities": "Members",
           "hide_members": "Hide members",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "button": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
@@ -75,6 +85,14 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
+      "notify": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
       "sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
@@ -109,6 +127,12 @@
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
         }
       },
+      "button": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
       "cover": {
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
@@ -136,6 +160,12 @@
         }
       },
       "media_player": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "notify": {
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
@@ -189,14 +219,15 @@
   "selector": {
     "type": {
       "options": {
-        "min": "Minimum",
+        "last": "Most recently updated",
         "max": "Maximum",
         "mean": "Arithmetic mean",
         "median": "Median",
-        "last": "Most recently updated",
+        "min": "Minimum",
+        "product": "Product",
         "range": "Statistical range",
-        "sum": "Sum",
-        "product": "Product"
+        "stdev": "Standard deviation",
+        "sum": "Sum"
       }
     }
   },
@@ -257,7 +288,7 @@
     },
     "uoms_not_matching_no_device_class": {
       "title": "Unit of measurements is not correct",
-      "description": "Unit of measurements `{uoms}` of input sensors `{source_entities}` are not compatible using no device class of sensor group `{entity_id}`.\n\nPlease correct the unit of measurements on the source entities or set a proper device class on the sensor group and reload the group sensor to fix this issue."
+      "description": "Unit of measurements `{uoms}` of input sensors `{source_entities}` are not compatible when not using a device class on sensor group `{entity_id}`.\n\nPlease correct the unit of measurements on the source entities or set a proper device class on the sensor group and reload the group sensor to fix this issue."
     },
     "device_classes_not_matching": {
       "title": "Device classes is not correct",
@@ -265,7 +296,7 @@
     },
     "state_classes_not_matching": {
       "title": "State classes is not correct",
-      "description": "Device classes `{state_classes}` on source entities `{source_entities}` needs to be same for sensor group `{entity_id}`.\n\nPlease correct the state classes on the source entities and reload the group sensor to fix this issue."
+      "description": "State classes `{state_classes}` on source entities `{source_entities}` needs to be same for sensor group `{entity_id}`.\n\nPlease correct the state classes on the source entities and reload the group sensor to fix this issue."
     }
   }
 }

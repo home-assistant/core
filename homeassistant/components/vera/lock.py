@@ -1,4 +1,5 @@
 """Support for Vera locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,8 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
@@ -34,14 +35,14 @@ async def async_setup_entry(
     )
 
 
-class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
+class VeraLock(VeraEntity[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
     def __init__(
         self, vera_device: veraApi.VeraLock, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def lock(self, **kwargs: Any) -> None:

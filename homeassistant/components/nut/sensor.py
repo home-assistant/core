@@ -1,4 +1,5 @@
 """Provides a sensor to track various status aspects of a UPS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -35,16 +35,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import PyNUTData
-from .const import (
-    COORDINATOR,
-    DOMAIN,
-    KEY_STATUS,
-    KEY_STATUS_DISPLAY,
-    PYNUT_DATA,
-    PYNUT_UNIQUE_ID,
-    STATE_TYPES,
-)
+from . import NutConfigEntry, PyNUTData
+from .const import DOMAIN, KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 
 NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
@@ -666,7 +658,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     "input.L1.current": SensorEntityDescription(
@@ -935,6 +926,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ambient.temperature": SensorEntityDescription(
         key="ambient.temperature",
@@ -942,6 +934,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "watts": SensorEntityDescription(
         key="watts",
@@ -967,15 +960,15 @@ def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NutConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
 
-    pynut_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = pynut_data[COORDINATOR]
-    data = pynut_data[PYNUT_DATA]
-    unique_id = pynut_data[PYNUT_UNIQUE_ID]
+    pynut_data = config_entry.runtime_data
+    coordinator = pynut_data.coordinator
+    data = pynut_data.data
+    unique_id = pynut_data.unique_id
     status = coordinator.data
 
     resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
@@ -984,7 +977,7 @@ async def async_setup_entry(
     if KEY_STATUS in resources:
         resources.append(KEY_STATUS_DISPLAY)
 
-    entities = [
+    async_add_entities(
         NUTSensor(
             coordinator,
             SENSOR_TYPES[sensor_type],
@@ -992,9 +985,7 @@ async def async_setup_entry(
             unique_id,
         )
         for sensor_type in resources
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class NUTSensor(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]], SensorEntity):

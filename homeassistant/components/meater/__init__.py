@@ -1,4 +1,5 @@
 """The Meater Temperature Probe integration."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data() -> dict[str, MeaterProbe]:
         """Fetch data from API endpoint."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 devices: list[MeaterProbe] = await meater_api.get_all_devices()

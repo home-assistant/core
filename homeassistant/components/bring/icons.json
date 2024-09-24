@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "default": "mdi:cart"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "service": "mdi:cellphone-message"
+    }
+  }
+}

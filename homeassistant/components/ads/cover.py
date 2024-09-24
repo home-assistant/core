@@ -1,4 +1,5 @@
 """Support for ADS covers."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +10,8 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -19,14 +21,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ADS_VAR,
-    CONF_ADS_VAR_POSITION,
-    DATA_ADS,
-    STATE_KEY_POSITION,
-    STATE_KEY_STATE,
-    AdsEntity,
-)
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .entity import AdsEntity
+from .hub import AdsHub
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -34,8 +31,11 @@ CONF_ADS_VAR_SET_POS = "adsvar_set_position"
 CONF_ADS_VAR_OPEN = "adsvar_open"
 CONF_ADS_VAR_CLOSE = "adsvar_close"
 CONF_ADS_VAR_STOP = "adsvar_stop"
+CONF_ADS_VAR_POSITION = "adsvar_position"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+STATE_KEY_POSITION = "position"
+
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
@@ -58,14 +58,14 @@ def setup_platform(
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 
-    ads_var_is_closed = config.get(CONF_ADS_VAR)
-    ads_var_position = config.get(CONF_ADS_VAR_POSITION)
-    ads_var_pos_set = config.get(CONF_ADS_VAR_SET_POS)
-    ads_var_open = config.get(CONF_ADS_VAR_OPEN)
-    ads_var_close = config.get(CONF_ADS_VAR_CLOSE)
-    ads_var_stop = config.get(CONF_ADS_VAR_STOP)
-    name = config[CONF_NAME]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    ads_var_is_closed: str = config[CONF_ADS_VAR]
+    ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
+    ads_var_pos_set: str | None = config.get(CONF_ADS_VAR_SET_POS)
+    ads_var_open: str | None = config.get(CONF_ADS_VAR_OPEN)
+    ads_var_close: str | None = config.get(CONF_ADS_VAR_CLOSE)
+    ads_var_stop: str | None = config.get(CONF_ADS_VAR_STOP)
+    name: str = config[CONF_NAME]
+    device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     add_entities(
         [
@@ -89,16 +89,16 @@ class AdsCover(AdsEntity, CoverEntity):
 
     def __init__(
         self,
-        ads_hub,
-        ads_var_is_closed,
-        ads_var_position,
-        ads_var_pos_set,
-        ads_var_open,
-        ads_var_close,
-        ads_var_stop,
-        name,
-        device_class,
-    ):
+        ads_hub: AdsHub,
+        ads_var_is_closed: str,
+        ads_var_position: str | None,
+        ads_var_pos_set: str | None,
+        ads_var_open: str | None,
+        ads_var_close: str | None,
+        ads_var_stop: str | None,
+        name: str,
+        device_class: CoverDeviceClass | None,
+    ) -> None:
         """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
         if self._attr_unique_id is None:

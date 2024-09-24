@@ -1,4 +1,5 @@
 """Test Home Assistant logging util methods."""
+
 import asyncio
 from functools import partial
 import logging
@@ -19,15 +20,16 @@ import homeassistant.util.logging as logging_util
 async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
-    simple_queue = queue.SimpleQueue()  # type: ignore
+    simple_queue = queue.SimpleQueue()
     handler = logging_util.HomeAssistantQueueHandler(simple_queue)
 
     log_record = logging.makeLogRecord({"msg": "Test Log Record"})
 
     handler.emit(log_record)
 
-    with pytest.raises(asyncio.CancelledError), patch.object(
-        handler, "enqueue", side_effect=asyncio.CancelledError
+    with (
+        pytest.raises(asyncio.CancelledError),
+        patch.object(handler, "enqueue", side_effect=asyncio.CancelledError),
     ):
         handler.emit(log_record)
 
@@ -35,16 +37,18 @@ async def test_logging_with_queue_handler() -> None:
         handler.handle(log_record)
         emit_mock.assert_called_once()
 
-    with patch.object(handler, "filter") as filter_mock, patch.object(
-        handler, "emit"
-    ) as emit_mock:
+    with (
+        patch.object(handler, "filter") as filter_mock,
+        patch.object(handler, "emit") as emit_mock,
+    ):
         filter_mock.return_value = False
         handler.handle(log_record)
         emit_mock.assert_not_called()
 
-    with patch.object(handler, "enqueue", side_effect=OSError), patch.object(
-        handler, "handleError"
-    ) as mock_handle_error:
+    with (
+        patch.object(handler, "enqueue", side_effect=OSError),
+        patch.object(handler, "handleError") as mock_handle_error,
+    ):
         handler.emit(log_record)
         mock_handle_error.assert_called_once()
 
@@ -76,7 +80,7 @@ async def test_async_create_catching_coro(
     """Test exception logging of wrapped coroutine."""
 
     async def job():
-        raise Exception("This is a bad coroutine")
+        raise Exception("This is a bad coroutine")  # noqa: TRY002
 
     hass.async_create_task(logging_util.async_create_catching_coro(job()))
     await hass.async_block_till_done()

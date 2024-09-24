@@ -2,6 +2,7 @@
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
+
 from __future__ import annotations
 
 import datetime
@@ -20,7 +21,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
@@ -48,6 +49,8 @@ from homeassistant.util.color import (
 from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -87,6 +90,7 @@ PLATFORM_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
         vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        vol.Optional(ATTR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -150,6 +154,7 @@ async def async_setup_platform(
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
+    unique_id = config.get(ATTR_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,
@@ -164,6 +169,7 @@ async def async_setup_platform(
         mode,
         interval,
         transition,
+        unique_id,
     )
     async_add_entities([flux])
 
@@ -172,7 +178,7 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
-    hass.services.async_register(DOMAIN, service_name, async_update)
+    hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 
 class FluxSwitch(SwitchEntity, RestoreEntity):
@@ -193,6 +199,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         mode,
         interval,
         transition,
+        unique_id,
     ):
         """Initialize the Flux switch."""
         self._name = name
@@ -208,6 +215,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self._mode = mode
         self._interval = interval
         self._transition = transition
+        self._attr_unique_id = unique_id
         self.unsub_tracker = None
 
     @property

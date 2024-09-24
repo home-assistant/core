@@ -1,4 +1,5 @@
 """The tests for the persistent notification component triggers."""
+
 from typing import Any
 
 import homeassistant.components.persistent_notification as pn

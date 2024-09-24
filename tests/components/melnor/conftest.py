@@ -1,9 +1,10 @@
 """Tests for the melnor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import UTC, datetime, time, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, _patch, patch
 
 from melnor_bluetooth.device import Device
 import pytest
@@ -34,6 +35,7 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
@@ -50,11 +52,12 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
@@ -242,7 +245,7 @@ def mock_melnor_device():
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
         "homeassistant.components.melnor.async_setup_entry", return_value=True
@@ -250,10 +253,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-# pylint: disable=dangerous-default-value
 def patch_async_discovered_service_info(
-    return_value: list[BluetoothServiceInfoBleak] = [FAKE_SERVICE_INFO_1],
-):
+    return_value: list[BluetoothServiceInfoBleak],
+) -> _patch:
     """Patch async_discovered_service_info a mocked device info."""
     return patch(
         "homeassistant.components.melnor.config_flow.async_discovered_service_info",

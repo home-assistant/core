@@ -29,7 +29,8 @@
           "event_type": {
             "state": {
               "volume_up": "Volume up",
-              "volume_down": "Volume down"
+              "volume_down": "Volume down",
+              "mute_toggle": "Mute toggle"
             }
           }
         }

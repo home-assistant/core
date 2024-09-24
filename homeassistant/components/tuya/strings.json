@@ -14,12 +14,14 @@
         }
       },
       "scan": {
-        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login:\n\n {qrcode} \n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "login_error": "Login error ({code}): {msg}",
+      "login_error": "Login error ({code}): {msg}"
+    },
+    "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -273,7 +275,7 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
-          "pos": "Indicate switch location",
+          "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
       },
@@ -515,6 +517,9 @@
       "total_energy": {
         "name": "Total energy"
       },
+      "total_production": {
+        "name": "Total production"
+      },
       "phase_a_current": {
         "name": "Phase A current"
       },
@@ -615,6 +620,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
       }
     },
     "switch": {
@@ -635,6 +651,9 @@
       },
       "filter_reset": {
         "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
       },
       "water_pump_reset": {
         "name": "Water pump reset"

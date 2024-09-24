@@ -1,4 +1,5 @@
 """Support for Modbus lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BaseSwitch
+from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1

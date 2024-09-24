@@ -1,4 +1,5 @@
 """The blueprint integration."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -14,7 +15,7 @@ from .errors import (  # noqa: F401
     MissingInput,
 )
 from .models import Blueprint, BlueprintInputs, DomainBlueprints  # noqa: F401
-from .schemas import is_blueprint_instance_config  # noqa: F401
+from .schemas import BLUEPRINT_SCHEMA, is_blueprint_instance_config  # noqa: F401
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

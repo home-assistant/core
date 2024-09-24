@@ -1,6 +1,8 @@
 """ScreenlogicDataUpdateCoordinator definition."""
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.common import (
@@ -32,11 +34,13 @@ async def async_get_connect_info(
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
-    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
+    discovered_gateways = await async_discover_gateways_by_unique_id()
     if mac in discovered_gateways:
         return discovered_gateways[mac]
 
     _LOGGER.debug("Gateway rediscovery failed for %s", entry.title)
+    if TYPE_CHECKING:
+        assert mac is not None
     # Static connection defined or fallback from discovery
     return {
         SL_GATEWAY_NAME: name_for_mac(mac),

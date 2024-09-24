@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'current_weather': dict({
+      '__type': "<class 'pyipma.observation.Observation'>",
+      'repr': 'Observation(intensidadeVentoKM=3.94, temperatura=18.0, radiacao=0.0, idDireccVento=8, precAcumulada=0.0, intensidadeVento=1.0944, humidade=71.0, pressao=1000.0, timestamp=datetime.datetime(2020, 1, 16, 0, 0), idEstacao=0)',
+    }),
+    'location_information': dict({
+      'global_id_local': 1130600,
+      'id_station': 1200545,
+      'latitude': 0.0,
+      'longitude': 0.0,
+      'name': 'HomeTown',
+      'station': 'HomeTown Station',
+    }),
+    'weather_forecast': list([
+      dict({
+        '__type': "<class 'pyipma.forecast.Forecast'>",
+        'repr': "Forecast(tMed=10.6, tMin=None, ffVento=32.7, idFfxVento=0, dataUpdate=datetime.datetime(2020, 1, 15, 2, 51), tMax=12.0, iUv=0, intervaloHora='', idTipoTempo=Weather_Type(id=10, en='Light rain', pt='Chuva fraca ou chuvisco'), hR=86.9, location=Forecast_Location(globalIdLocal=0, local='', idRegiao=0, idDistrito=0, idConcelho=0, idAreaAviso='', coordinates=(0, 0)), probabilidadePrecipita=80.0, idPeriodo=1, dataPrev=datetime.datetime(2020, 1, 15, 1, 0, tzinfo=datetime.timezone.utc), ddVento='S', utci=7.7)",
+      }),
+      dict({
+        '__type': "<class 'pyipma.forecast.Forecast'>",
+        'repr': "Forecast(tMed=10.6, tMin=None, ffVento=32.7, idFfxVento=0, dataUpdate=datetime.datetime(2020, 1, 15, 2, 51), tMax=12.0, iUv=0, intervaloHora='', idTipoTempo=Weather_Type(id=1, en='Clear sky', pt='Céu limpo'), hR=86.9, location=Forecast_Location(globalIdLocal=0, local='', idRegiao=0, idDistrito=0, idConcelho=0, idAreaAviso='', coordinates=(0, 0)), probabilidadePrecipita=80.0, idPeriodo=1, dataPrev=datetime.datetime(2020, 1, 15, 2, 0, tzinfo=datetime.timezone.utc), ddVento='S', utci=5.7)",
+      }),
+    ]),
+  })
+# ---

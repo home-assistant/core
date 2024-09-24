@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "simulated_deprecation": {
+      "description": "The {integration} integration is deprecated",
+      "title": "The {integration} integration has been deprecated and will be removed in 2025.1. Please remove the {integration} from your configuration.yaml settings and restart Home Assistant to fix this issue."
+    }
+  }
+}

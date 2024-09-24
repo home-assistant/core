@@ -1,12 +1,16 @@
 """Tests for the Cloudflare integration."""
+
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
 
@@ -53,18 +57,18 @@ MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [
 
 
 async def init_integration(
-    hass,
+    hass: HomeAssistant,
     *,
-    data: dict = ENTRY_CONFIG,
-    options: dict = ENTRY_OPTIONS,
+    data: dict[str, Any] | UndefinedType = UNDEFINED,
+    options: dict[str, Any] | UndefinedType = UNDEFINED,
     unique_id: str = MOCK_ZONE["name"],
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=data,
-        options=options,
+        data=ENTRY_CONFIG if data is UNDEFINED else data,
+        options=ENTRY_OPTIONS if options is UNDEFINED else options,
         unique_id=unique_id,
     )
     entry.add_to_hass(hass)
@@ -76,18 +80,20 @@ async def init_integration(
     return entry
 
 
-def _get_mock_client(zone: str = MOCK_ZONE, records: list = MOCK_ZONE_RECORDS):
-    client: pycfdns.Client = AsyncMock()
+def get_mock_client() -> Mock:
+    """Return of Mock of pycfdns.Client."""
+    client = Mock()
 
-    client.list_zones = AsyncMock(return_value=[zone])
-    client.list_dns_records = AsyncMock(return_value=records)
+    client.list_zones = AsyncMock(return_value=[MOCK_ZONE])
+    client.list_dns_records = AsyncMock(return_value=MOCK_ZONE_RECORDS)
     client.update_dns_record = AsyncMock(return_value=None)
 
     return client
 
 
-def _patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry() -> AsyncMock:
+    """Patch the async_setup_entry method and return a mock."""
     return patch(
         "homeassistant.components.cloudflare.async_setup_entry",
-        return_value=return_value,
+        return_value=True,
     )

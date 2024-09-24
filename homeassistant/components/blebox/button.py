@@ -1,4 +1,5 @@
 """BleBox button entities implementation."""
+
 from __future__ import annotations
 
 from blebox_uniapi.box import Box
@@ -9,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+from .entity import BleBoxEntity
 
 
 async def async_setup_entry(

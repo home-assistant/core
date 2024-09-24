@@ -1,4 +1,5 @@
 """Support for Huawei LTE binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -15,13 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_STATUS,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,11 +127,6 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         )
 
     @property
-    def icon(self) -> str:
-        """Return mobile connectivity sensor icon."""
-        return "mdi:signal" if self.is_on else "mdi:signal-off"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Get additional attributes related to connection status."""
         attributes = {}
@@ -153,11 +149,6 @@ class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
     def assumed_state(self) -> bool:
         """Return True if real state is assumed, not known."""
         return self._raw_state is None
-
-    @property
-    def icon(self) -> str:
-        """Return WiFi status sensor icon."""
-        return "mdi:wifi" if self.is_on else "mdi:wifi-off"
 
 
 class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
@@ -204,8 +195,3 @@ class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
     def assumed_state(self) -> bool:
         """Return True if real state is assumed, not known."""
         return self._raw_state is None
-
-    @property
-    def icon(self) -> str:
-        """Return WiFi status sensor icon."""
-        return "mdi:email-alert" if self.is_on else "mdi:email-off"

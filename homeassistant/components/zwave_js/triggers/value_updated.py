@@ -1,4 +1,5 @@
 """Offer Z-Wave JS value updated listening automation trigger."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -127,14 +128,9 @@ async def async_attach_trigger(
             (prev_value, prev_value_raw, from_value),
             (curr_value, curr_value_raw, to_value),
         ):
-            if (
-                match != MATCH_ALL
-                and value_to_eval != match
-                and not (
-                    isinstance(match, list)
-                    and (value_to_eval in match or raw_value_to_eval in match)
-                )
-                and raw_value_to_eval != match
+            if match not in (MATCH_ALL, value_to_eval, raw_value_to_eval) and not (
+                isinstance(match, list)
+                and (value_to_eval in match or raw_value_to_eval in match)
             ):
                 return
 
@@ -193,14 +189,14 @@ async def async_attach_trigger(
                 )
             )
 
-        for driver in drivers:
-            unsubs.append(
-                async_dispatcher_connect(
-                    hass,
-                    f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-                    _create_zwave_listeners,
-                )
+        unsubs.extend(
+            async_dispatcher_connect(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+                _create_zwave_listeners,
             )
+            for driver in drivers
+        )
 
     _create_zwave_listeners()
 

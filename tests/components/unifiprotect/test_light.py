@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Light
-from pyunifiprotect.data.types import LEDLevel
+from uiprotect.data import Light
+from uiprotect.data.types import LEDLevel
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -42,7 +42,11 @@ async def test_light_remove(
 
 
 async def test_light_setup(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+    unadopted_light: Light,
 ) -> None:
     """Test light entity setup."""
 
@@ -52,7 +56,6 @@ async def test_light_setup(
     unique_id = light.mac
     entity_id = "light.test_light"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

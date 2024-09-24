@@ -1,4 +1,5 @@
 """Monitor the NZBGet API."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -16,9 +17,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import NZBGetDataUpdateCoordinator
+from .entity import NZBGetEntity
 
 _LOGGER = logging.getLogger(__name__)
 

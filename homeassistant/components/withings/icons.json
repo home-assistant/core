@@ -19,6 +19,24 @@
       "hydration": {
         "default": "mdi:water"
       },
+      "muscle_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "muscle_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
       "deep_sleep": {
         "default": "mdi:sleep"
       },

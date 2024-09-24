@@ -1,4 +1,5 @@
 """Add constants for Workday integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from homeassistant.const import WEEKDAYS, Platform
 
 LOGGER = logging.getLogger(__package__)
 
-ALLOWED_DAYS = WEEKDAYS + ["holiday"]
+ALLOWED_DAYS = [*WEEKDAYS, "holiday"]
 
 DOMAIN = "workday"
 PLATFORMS = [Platform.BINARY_SENSOR]
@@ -18,6 +19,7 @@ CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
 CONF_REMOVE_HOLIDAYS = "remove_holidays"
+CONF_CATEGORY = "category"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]

@@ -1,4 +1,5 @@
 """Tests for the Stookwijzer config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.stookwijzer.const import DOMAIN
@@ -21,7 +22,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert "flow_id" in result
 

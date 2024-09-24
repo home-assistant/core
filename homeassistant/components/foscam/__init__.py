@@ -17,7 +17,7 @@ from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 from .coordinator import FoscamCoordinator
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,8 +66,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        entry.unique_id = None
-
         # Get RTSP port from the camera or use the fallback one and store it in data
         camera = FoscamCamera(
             entry.data[CONF_HOST],
@@ -85,12 +83,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_RTSP_PORT: rtsp_port}
+            entry,
+            data={**entry.data, CONF_RTSP_PORT: rtsp_port},
+            version=2,
+            unique_id=None,
         )
 
-        # Change entry version
-        entry.version = 2
-
-    LOGGER.info("Migration to version %s successful", entry.version)
+    LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True

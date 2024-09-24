@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "fan_1_speed": {
+        "default": "mdi:fan-speed-1"
+      },
+      "fan_2_speed": {
+        "default": "mdi:fan-speed-2"
+      },
+      "ports": {
+        "default": "mdi:ethernet"
+      },
+      "rx": {
+        "default": "mdi:download-network"
+      },
+      "rx_errors": {
+        "default": "mdi:close-network"
+      },
+      "rx_speed": {
+        "default": "mdi:download-network"
+      },
+      "tx": {
+        "default": "mdi:upload-network"
+      },
+      "tx_speed": {
+        "default": "mdi:upload-network"
+      },
+      "uptime": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

@@ -19,5 +19,25 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "selector": {
+    "nws_forecast_type": {
+      "options": {
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_extra": {
+      "name": "Get extra forecasts data.",
+      "description": "Get extra data for weather forecasts.",
+      "fields": {
+        "type": {
+          "name": "Forecast type",
+          "description": "Forecast type: hourly or twice_daily."
+        }
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 """Entity representing a Sonos player."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -84,6 +85,7 @@ class SonosEntity(Entity):
             identifiers={(DOMAIN, self.soco.uid)},
             name=self.speaker.zone_name,
             model=self.speaker.model_name.replace("Sonos ", ""),
+            model_id=self.speaker.model_number,
             sw_version=self.speaker.version,
             connections={
                 (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),

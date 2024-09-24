@@ -1,4 +1,5 @@
 """Minio component."""
+
 from __future__ import annotations
 
 import logging
@@ -126,7 +127,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _render_service_value(service, key):
         value = service.data[key]
-        value.hass = hass
         return value.async_render(parse_result=False)
 
     def put_file(service: ServiceCall) -> None:
@@ -181,7 +181,7 @@ class QueueListener(threading.Thread):
 
     def run(self):
         """Listen to queue events, and forward them to Home Assistant event bus."""
-        _LOGGER.info("Running QueueListener")
+        _LOGGER.debug("Running QueueListener")
         while True:
             if (event := self._queue.get()) is None:
                 break
@@ -203,10 +203,10 @@ class QueueListener(threading.Thread):
 
     def stop(self):
         """Stop run by putting None into queue and join the thread."""
-        _LOGGER.info("Stopping QueueListener")
+        _LOGGER.debug("Stopping QueueListener")
         self._queue.put(None)
         self.join()
-        _LOGGER.info("Stopped QueueListener")
+        _LOGGER.debug("Stopped QueueListener")
 
     def start_handler(self, _):
         """Start handler helper method."""

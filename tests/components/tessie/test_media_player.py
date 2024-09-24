@@ -22,6 +22,8 @@ async def test_media_player(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_get_state,
+    mock_get_status,
 ) -> None:
     """Tests that the media player entity is correct when idle."""
 
@@ -38,6 +40,7 @@ async def test_media_player(
         # The refresh fixture has music playing
         freezer.tick(WAIT)
         async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get(entity_entry.entity_id) == snapshot(
             name=f"{entity_entry.entity_id}-playing"

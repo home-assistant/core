@@ -1,4 +1,5 @@
 """Constants for the Dynalite component."""
+
 import logging
 
 from homeassistant.const import CONF_ROOM, Platform

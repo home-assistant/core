@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -7,7 +8,7 @@ import pytest
 
 import homeassistant.util.dt as dt_util
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TIME_ZONE = "America/Los_Angeles"
 
 
@@ -24,9 +25,19 @@ def test_get_time_zone_retrieves_valid_time_zone() -> None:
     assert dt_util.get_time_zone(TEST_TIME_ZONE) is not None
 
 
+async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
+    """Test getting a time zone."""
+    assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
+
+
 def test_get_time_zone_returns_none_for_garbage_time_zone() -> None:
     """Test getting a non existing time zone."""
     assert dt_util.get_time_zone("Non existing time zone") is None
+
+
+async def test_async_get_time_zone_returns_none_for_garbage_time_zone() -> None:
+    """Test getting a non existing time zone."""
+    assert await dt_util.async_get_time_zone("Non existing time zone") is None
 
 
 def test_set_default_time_zone() -> None:
@@ -85,12 +96,6 @@ def test_as_local_with_naive_object() -> None:
     assert abs(
         now - dt_util.as_local(datetime.now(UTC).replace(tzinfo=None))
     ) < timedelta(seconds=1)
-
-
-def test_as_local_with_local_object() -> None:
-    """Test local with local object."""
-    now = dt_util.now()
-    assert now == now
 
 
 def test_as_local_with_utc_object() -> None:
@@ -183,12 +188,18 @@ def test_get_age() -> None:
     """Test get_age."""
     diff = dt_util.now() - timedelta(seconds=0)
     assert dt_util.get_age(diff) == "0 seconds"
+    assert dt_util.get_age(diff, precision=2) == "0 seconds"
 
     diff = dt_util.now() - timedelta(seconds=1)
     assert dt_util.get_age(diff) == "1 second"
+    assert dt_util.get_age(diff, precision=2) == "1 second"
+
+    diff = dt_util.now() + timedelta(seconds=1)
+    pytest.raises(ValueError, dt_util.get_age, diff)
 
     diff = dt_util.now() - timedelta(seconds=30)
     assert dt_util.get_age(diff) == "30 seconds"
+    diff = dt_util.now() + timedelta(seconds=30)
 
     diff = dt_util.now() - timedelta(minutes=5)
     assert dt_util.get_age(diff) == "5 minutes"
@@ -201,18 +212,79 @@ def test_get_age() -> None:
 
     diff = dt_util.now() - timedelta(minutes=320)
     assert dt_util.get_age(diff) == "5 hours"
+    assert dt_util.get_age(diff, precision=2) == "5 hours 20 minutes"
+    assert dt_util.get_age(diff, precision=3) == "5 hours 20 minutes"
 
     diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
+    assert dt_util.get_age(diff, precision=2) == "1 day 14 hours"
+    assert dt_util.get_age(diff, precision=3) == "1 day 14 hours 24 minutes"
+    diff = dt_util.now() + timedelta(minutes=1.6 * 60 * 24)
+    pytest.raises(ValueError, dt_util.get_age, diff)
 
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
 
     diff = dt_util.now() - timedelta(minutes=32 * 60 * 24)
     assert dt_util.get_age(diff) == "1 month"
+    assert dt_util.get_age(diff, precision=10) == "1 month 2 days"
+
+    diff = dt_util.now() - timedelta(minutes=32 * 60 * 24 + 1)
+    assert dt_util.get_age(diff, precision=3) == "1 month 2 days 1 minute"
 
     diff = dt_util.now() - timedelta(minutes=365 * 60 * 24)
     assert dt_util.get_age(diff) == "1 year"
+
+
+def test_time_remaining() -> None:
+    """Test get_age."""
+    diff = dt_util.now() + timedelta(seconds=0)
+    assert dt_util.get_time_remaining(diff) == "0 seconds"
+    assert dt_util.get_time_remaining(diff) == "0 seconds"
+    assert dt_util.get_time_remaining(diff, precision=2) == "0 seconds"
+
+    diff = dt_util.now() + timedelta(seconds=1)
+    assert dt_util.get_time_remaining(diff) == "1 second"
+
+    diff = dt_util.now() - timedelta(seconds=1)
+    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+
+    diff = dt_util.now() + timedelta(seconds=30)
+    assert dt_util.get_time_remaining(diff) == "30 seconds"
+
+    diff = dt_util.now() + timedelta(minutes=5)
+    assert dt_util.get_time_remaining(diff) == "5 minutes"
+
+    diff = dt_util.now() + timedelta(minutes=1)
+    assert dt_util.get_time_remaining(diff) == "1 minute"
+
+    diff = dt_util.now() + timedelta(minutes=300)
+    assert dt_util.get_time_remaining(diff) == "5 hours"
+
+    diff = dt_util.now() + timedelta(minutes=320)
+    assert dt_util.get_time_remaining(diff) == "5 hours"
+    assert dt_util.get_time_remaining(diff, precision=2) == "5 hours 20 minutes"
+    assert dt_util.get_time_remaining(diff, precision=3) == "5 hours 20 minutes"
+
+    diff = dt_util.now() + timedelta(minutes=1.6 * 60 * 24)
+    assert dt_util.get_time_remaining(diff) == "2 days"
+    assert dt_util.get_time_remaining(diff, precision=2) == "1 day 14 hours"
+    assert dt_util.get_time_remaining(diff, precision=3) == "1 day 14 hours 24 minutes"
+    diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
+    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+
+    diff = dt_util.now() + timedelta(minutes=2 * 60 * 24)
+    assert dt_util.get_time_remaining(diff) == "2 days"
+
+    diff = dt_util.now() + timedelta(minutes=32 * 60 * 24)
+    assert dt_util.get_time_remaining(diff) == "1 month"
+    assert dt_util.get_time_remaining(diff, precision=10) == "1 month 2 days"
+
+    diff = dt_util.now() + timedelta(minutes=32 * 60 * 24 + 1)
+    assert dt_util.get_time_remaining(diff, precision=3) == "1 month 2 days 1 minute"
+
+    diff = dt_util.now() + timedelta(minutes=365 * 60 * 24)
+    assert dt_util.get_time_remaining(diff) == "1 year"
 
 
 def test_parse_time_expression() -> None:
@@ -222,12 +294,12 @@ def test_parse_time_expression() -> None:
 
     assert list(range(0, 60, 5)) == dt_util.parse_time_expression("/5", 0, 59)
 
-    assert [1, 2, 3] == dt_util.parse_time_expression([2, 1, 3], 0, 59)
+    assert dt_util.parse_time_expression([2, 1, 3], 0, 59) == [1, 2, 3]
 
     assert list(range(24)) == dt_util.parse_time_expression("*", 0, 23)
 
-    assert [42] == dt_util.parse_time_expression(42, 0, 59)
-    assert [42] == dt_util.parse_time_expression("42", 0, 59)
+    assert dt_util.parse_time_expression(42, 0, 59) == [42]
+    assert dt_util.parse_time_expression("42", 0, 59) == [42]
 
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)

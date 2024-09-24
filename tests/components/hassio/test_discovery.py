@@ -1,7 +1,10 @@
 """Test config flow."""
+
+from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
@@ -17,7 +20,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mock_mqtt")
-async def mock_mqtt_fixture(hass):
+def mock_mqtt_fixture(
+    hass: HomeAssistant,
+) -> Generator[type[config_entries.ConfigFlow]]:
     """Mock the MQTT integration's config flow."""
     mock_integration(hass, MockModule(MQTT_DOMAIN))
     mock_platform(hass, f"{MQTT_DOMAIN}.config_flow", None)
@@ -33,8 +38,12 @@ async def mock_mqtt_fixture(hass):
         yield MqttFlow
 
 
+@pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test startup and discovery after event."""
     aioclient_mock.get(
@@ -59,10 +68,7 @@ async def test_hassio_discovery_startup(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
     assert aioclient_mock.call_count == 0
 
@@ -70,7 +76,7 @@ async def test_hassio_discovery_startup(
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
     assert mock_mqtt.async_step_hassio.called
     mock_mqtt.async_step_hassio.assert_called_with(
         HassioServiceInfo(
@@ -89,8 +95,12 @@ async def test_hassio_discovery_startup(
     )
 
 
+@pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup_done(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test startup and discovery with hass discovery."""
     aioclient_mock.post(
@@ -119,23 +129,23 @@ async def test_hassio_discovery_startup_done(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
-        return_value={"result": "ok"},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        Mock(side_effect=HassioAPIError()),
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
     ):
         await hass.async_start()
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 2
+        assert aioclient_mock.call_count == 1
         assert mock_mqtt.async_step_hassio.called
         mock_mqtt.async_step_hassio.assert_called_with(
             HassioServiceInfo(
@@ -155,7 +165,11 @@ async def test_hassio_discovery_startup_done(
 
 
 async def test_hassio_discovery_webhook(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hassio_client: TestClient,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test discovery webhook."""
     aioclient_mock.get(
@@ -176,10 +190,7 @@ async def test_hassio_discovery_webhook(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
     resp = await hassio_client.post(
         "/api/hassio_push/discovery/testuuid",
@@ -190,7 +201,7 @@ async def test_hassio_discovery_webhook(
     await hass.async_block_till_done()
 
     assert resp.status == HTTPStatus.OK
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
     assert mock_mqtt.async_step_hassio.called
     mock_mqtt.async_step_hassio.assert_called_with(
         HassioServiceInfo(

@@ -1,21 +1,49 @@
 """Config flow for the Amber Electric integration."""
+
 from __future__ import annotations
 
 import amberelectric
 from amberelectric.api import amber_api
-from amberelectric.model.site import Site
+from amberelectric.model.site import Site, SiteStatus
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITE_NAME, DOMAIN
 
 API_URL = "https://app.amber.com.au/developers"
 
 
-class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+def generate_site_selector_name(site: Site) -> str:
+    """Generate the name to show in the site drop down in the configuration flow."""
+    if site.status == SiteStatus.CLOSED:
+        return site.nmi + " (Closed: " + site.closed_on.isoformat() + ")"  # type: ignore[no-any-return]
+    if site.status == SiteStatus.PENDING:
+        return site.nmi + " (Pending)"  # type: ignore[no-any-return]
+    return site.nmi  # type: ignore[no-any-return]
+
+
+def filter_sites(sites: list[Site]) -> list[Site]:
+    """Deduplicates the list of sites."""
+    filtered: list[Site] = []
+    filtered_nmi: set[str] = set()
+
+    for site in sorted(sites, key=lambda site: site.status.value):
+        if site.status == SiteStatus.ACTIVE or site.nmi not in filtered_nmi:
+            filtered.append(site)
+            filtered_nmi.add(site.nmi)
+
+    return filtered
+
+
+class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -31,11 +59,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api: amber_api.AmberApi = amber_api.AmberApi.create(configuration)
 
         try:
-            sites: list[Site] = api.get_sites()
-            if len(sites) == 0:
-                self._errors[CONF_API_TOKEN] = "no_site"
-                return None
-            return sites
+            sites: list[Site] = filter_sites(api.get_sites())
         except amberelectric.ApiException as api_exception:
             if api_exception.status == 403:
                 self._errors[CONF_API_TOKEN] = "invalid_api_token"
@@ -43,9 +67,14 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_API_TOKEN] = "unknown_error"
             return None
 
+        if len(sites) == 0:
+            self._errors[CONF_API_TOKEN] = "no_site"
+            return None
+        return sites
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         self._sites = None
@@ -79,45 +108,38 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_site(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step to select site."""
         self._errors = {}
 
         assert self._sites is not None
         assert self._api_token is not None
 
-        api_token = self._api_token
         if user_input is not None:
-            site_nmi = user_input[CONF_SITE_NMI]
-            sites = [site for site in self._sites if site.nmi == site_nmi]
-            site = sites[0]
-            site_id = site.id
+            site_id = user_input[CONF_SITE_ID]
             name = user_input.get(CONF_SITE_NAME, site_id)
             return self.async_create_entry(
                 title=name,
-                data={
-                    CONF_SITE_ID: site_id,
-                    CONF_API_TOKEN: api_token,
-                    CONF_SITE_NMI: site.nmi,
-                },
+                data={CONF_SITE_ID: site_id, CONF_API_TOKEN: self._api_token},
             )
-
-        user_input = {
-            CONF_API_TOKEN: api_token,
-            CONF_SITE_NMI: "",
-            CONF_SITE_NAME: "",
-        }
 
         return self.async_show_form(
             step_id="site",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_SITE_NMI, default=user_input[CONF_SITE_NMI]
-                    ): vol.In([site.nmi for site in self._sites]),
-                    vol.Optional(
-                        CONF_SITE_NAME, default=user_input[CONF_SITE_NAME]
-                    ): str,
+                    vol.Required(CONF_SITE_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=site.id,
+                                    label=generate_site_selector_name(site),
+                                )
+                                for site in self._sites
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    vol.Optional(CONF_SITE_NAME): str,
                 }
             ),
             errors=self._errors,

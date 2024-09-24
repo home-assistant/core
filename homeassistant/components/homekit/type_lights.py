@@ -1,4 +1,5 @@
 """Class to hold all light accessories."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -19,7 +20,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     brightness_supported,
     color_supported,
@@ -187,7 +188,10 @@ class Light(HomeAccessory):
 
         if service == SERVICE_TURN_OFF:
             self.async_call_service(
-                DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
+                LIGHT_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: self.entity_id},
+                ", ".join(events),
             )
             return
 
@@ -231,7 +235,7 @@ class Light(HomeAccessory):
         _LOGGER.debug(
             "Calling light service with params: %s -> %s", char_values, params
         )
-        self.async_call_service(DOMAIN, service, params, ", ".join(events))
+        self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
 
     @callback
     def async_update_state(self, new_state: State) -> None:

@@ -1,6 +1,5 @@
 """Tests for the La Marzocco Buttons."""
 
-
 from unittest.mock import MagicMock
 
 import pytest

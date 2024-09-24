@@ -1,4 +1,5 @@
 """Test the Tessie update platform."""
+
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion

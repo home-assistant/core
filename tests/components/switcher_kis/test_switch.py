@@ -1,4 +1,5 @@
 """Test the Switcher switch platform."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import Command, SwitcherBaseResponse
@@ -22,7 +23,9 @@ from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_switch(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
+async def test_switch(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the switch."""
     await init_integration(hass)
     assert mock_bridge
@@ -74,7 +77,7 @@ async def test_switch_control_fail(
     hass: HomeAssistant,
     mock_bridge,
     mock_api,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test switch control fail."""

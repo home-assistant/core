@@ -1,4 +1,5 @@
 """Support for Freebox cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DETECTION, DOMAIN, FreeboxHomeCategory
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)

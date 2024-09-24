@@ -1,4 +1,5 @@
 """Support for ISY covers."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -26,13 +27,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ISY cover platform."""
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[ISYCoverEntity | ISYCoverProgramEntity] = []
     devices: dict[str, DeviceInfo] = isy_data.devices
-    for node in isy_data.nodes[Platform.COVER]:
-        entities.append(ISYCoverEntity(node, devices.get(node.primary_node)))
+    entities: list[ISYCoverEntity | ISYCoverProgramEntity] = [
+        ISYCoverEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.COVER]
+    ]
 
-    for name, status, actions in isy_data.programs[Platform.COVER]:
-        entities.append(ISYCoverProgramEntity(name, status, actions))
+    entities.extend(
+        ISYCoverProgramEntity(name, status, actions)
+        for name, status, actions in isy_data.programs[Platform.COVER]
+    )
 
     async_add_entities(entities)
 

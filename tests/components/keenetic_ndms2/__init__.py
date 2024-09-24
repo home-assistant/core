@@ -1,4 +1,5 @@
 """Tests for the Keenetic NDMS2 component."""
+
 from homeassistant.components import ssdp
 from homeassistant.components.keenetic_ndms2 import const
 from homeassistant.const import (

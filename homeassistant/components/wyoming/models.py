@@ -1,4 +1,5 @@
 """Models for wyoming."""
+
 from dataclasses import dataclass
 
 from .data import WyomingService

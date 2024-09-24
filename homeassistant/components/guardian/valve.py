@@ -1,4 +1,5 @@
 """Valves for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -18,8 +19,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
+from . import GuardianData
 from .const import API_VALVE_STATUS, DOMAIN
+from .entity import ValveControllerEntity, ValveControllerEntityDescription
 from .util import convert_exceptions_to_homeassistant_error
 
 VALVE_KIND_VALVE = "valve"

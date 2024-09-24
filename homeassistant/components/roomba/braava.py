@@ -1,9 +1,10 @@
 """Class for Braava devices."""
+
 import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature
 
-from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
+from .entity import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
 SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 
-class BraavaJet(IRobotVacuum):
+class BraavaJet(IRobotVacuum):  # pylint: disable=hass-enforce-class-module
     """Braava Jet."""
 
     _attr_supported_features = SUPPORT_BRAAVA
@@ -36,11 +37,11 @@ class BraavaJet(IRobotVacuum):
         super().__init__(roomba, blid)
 
         # Initialize fan speed list
-        speed_list = []
-        for behavior in BRAAVA_MOP_BEHAVIORS:
-            for spray in BRAAVA_SPRAY_AMOUNT:
-                speed_list.append(f"{behavior}-{spray}")
-        self._attr_fan_speed_list = speed_list
+        self._attr_fan_speed_list = [
+            f"{behavior}-{spray}"
+            for behavior in BRAAVA_MOP_BEHAVIORS
+            for spray in BRAAVA_SPRAY_AMOUNT
+        ]
 
     @property
     def fan_speed(self):

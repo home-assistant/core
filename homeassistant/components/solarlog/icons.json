@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "power_ac": {
+        "default": "mdi:solar-power"
+      },
+      "power_dc": {
+        "default": "mdi:solar-power"
+      },
+      "yield_day": {
+        "default": "mdi:solar-power"
+      },
+      "yield_yesterday": {
+        "default": "mdi:solar-power"
+      },
+      "yield_month": {
+        "default": "mdi:solar-power"
+      },
+      "yield_year": {
+        "default": "mdi:solar-power"
+      },
+      "yield_total": {
+        "default": "mdi:solar-power"
+      },
+      "total_power": {
+        "default": "mdi:solar-power"
+      },
+      "alternator_loss": {
+        "default": "mdi:solar-power"
+      },
+      "capacity": {
+        "default": "mdi:solar-power"
+      },
+      "power_available": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}

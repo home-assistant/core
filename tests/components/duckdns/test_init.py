@@ -1,4 +1,5 @@
 """Test the DuckDNS component."""
+
 from datetime import timedelta
 import logging
 
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.components import duckdns
 from homeassistant.components.duckdns import async_track_time_interval_backoff
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -20,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 INTERVAL = duckdns.INTERVAL
 
 
-@bind_hass
-async def async_set_txt(hass, txt):
+async def async_set_txt(hass: HomeAssistant, txt: str | None) -> None:
     """Set the txt record. Pass in None to remove it.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -32,7 +31,7 @@ async def async_set_txt(hass, txt):
 
 
 @pytest.fixture
-def setup_duckdns(hass, aioclient_mock):
+def setup_duckdns(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture that sets up DuckDNS."""
     aioclient_mock.get(
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"

@@ -1,4 +1,7 @@
 """Entity representing a Blue Current charge point."""
+
+from abc import abstractmethod
+
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,9 +20,9 @@ class BlueCurrentEntity(Entity):
 
     def __init__(self, connector: Connector, signal: str) -> None:
         """Initialize the entity."""
-        self.connector: Connector = connector
-        self.signal: str = signal
-        self.has_value: bool = False
+        self.connector = connector
+        self.signal = signal
+        self.has_value = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -37,12 +40,12 @@ class BlueCurrentEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.connector.available and self.has_value
+        return self.connector.connected and self.has_value
 
     @callback
+    @abstractmethod
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
-        raise NotImplementedError
 
 
 class ChargepointEntity(BlueCurrentEntity):
@@ -50,6 +53,8 @@ class ChargepointEntity(BlueCurrentEntity):
 
     def __init__(self, connector: Connector, evse_id: str) -> None:
         """Initialize the entity."""
+        super().__init__(connector, f"{DOMAIN}_charge_point_update_{evse_id}")
+
         chargepoint_name = connector.charge_points[evse_id][ATTR_NAME]
 
         self.evse_id = evse_id
@@ -59,5 +64,3 @@ class ChargepointEntity(BlueCurrentEntity):
             manufacturer="Blue Current",
             model=connector.charge_points[evse_id][MODEL_TYPE],
         )
-
-        super().__init__(connector, f"{DOMAIN}_value_update_{self.evse_id}")

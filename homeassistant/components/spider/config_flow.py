@@ -1,10 +1,12 @@
 """Config flow for Spider."""
+
 import logging
+from typing import Any
 
 from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -20,7 +22,7 @@ RESULT_CONN_ERROR = "conn_error"
 RESULT_SUCCESS = "success"
 
 
-class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SpiderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Spider config flow."""
 
     VERSION = 1
@@ -48,7 +50,9 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -78,6 +82,6 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import spider config from configuration.yaml."""
         return await self.async_step_user(import_data)

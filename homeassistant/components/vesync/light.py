@@ -1,4 +1,5 @@
 """Support for VeSync bulbs and wall dimmers."""
+
 import logging
 from typing import Any
 
@@ -13,8 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 

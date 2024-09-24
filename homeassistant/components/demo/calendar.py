@@ -1,4 +1,5 @@
 """Demo platform that has two fake calendars."""
+
 from __future__ import annotations
 
 import datetime

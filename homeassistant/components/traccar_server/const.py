@@ -1,4 +1,5 @@
 """Constants for the Traccar Server integration."""
+
 from logging import getLogger
 
 DOMAIN = "traccar_server"

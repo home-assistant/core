@@ -1,4 +1,5 @@
 """The enphase_envoy component."""
+
 from __future__ import annotations
 
 import contextlib
@@ -23,16 +24,23 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
+NOTIFICATION_ID = "enphase_envoy_notification"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+type EnphaseConfigEntry = ConfigEntry[EnphaseUpdateCoordinator]
 
 
 class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator to gather data from any envoy."""
 
     envoy_serial_number: str
+    envoy_firmware: str
 
-    def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
+    ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data
@@ -40,6 +48,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
         self._setup_complete = False
+        self.envoy_firmware = ""
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
@@ -82,9 +91,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _async_mark_setup_complete(self) -> None:
         """Mark setup as complete and setup token refresh if needed."""
         self._setup_complete = True
-        if self._cancel_token_refresh:
-            self._cancel_token_refresh()
-            self._cancel_token_refresh = None
+        self.async_cancel_token_refresh()
         if not isinstance(self.envoy.auth, EnvoyTokenAuth):
             return
         self._cancel_token_refresh = async_track_time_interval(
@@ -146,8 +153,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._async_mark_setup_complete()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
-                _LOGGER.debug("Envoy data: %s", envoy_data)
-                return envoy_data.raw
             except INVALID_AUTH_ERRORS as err:
                 if self._setup_complete and tries == 0:
                     # token likely expired or firmware changed, try to re-authenticate
@@ -157,4 +162,31 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except EnvoyError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
+            # if we have a firmware version from previous setup, compare to current one
+            # when envoy gets new firmware there will be an authentication failure
+            # which results in getting fw version again, if so reload the integration.
+            if (current_firmware := self.envoy_firmware) and current_firmware != (
+                new_firmware := envoy.firmware
+            ):
+                _LOGGER.warning(
+                    "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
+                    current_firmware,
+                    new_firmware,
+                )
+                # reload the integration to get all established again
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+            # remember firmware version for next time
+            self.envoy_firmware = envoy.firmware
+            _LOGGER.debug("Envoy data: %s", envoy_data)
+            return envoy_data.raw
+
         raise RuntimeError("Unreachable code in _async_update_data")  # pragma: no cover
+
+    @callback
+    def async_cancel_token_refresh(self) -> None:
+        """Cancel token refresh."""
+        if self._cancel_token_refresh:
+            self._cancel_token_refresh()
+            self._cancel_token_refresh = None

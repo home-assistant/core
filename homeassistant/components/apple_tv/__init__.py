@@ -1,8 +1,11 @@
 """The Apple TV integration."""
+
+from __future__ import annotations
+
 import asyncio
 import logging
 from random import randrange
-from typing import TYPE_CHECKING, cast
+from typing import Any, cast
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
@@ -25,51 +28,85 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+from .const import (
+    CONF_CREDENTIALS,
+    CONF_IDENTIFIERS,
+    CONF_START_OFF,
+    DOMAIN,
+    SIGNAL_CONNECTED,
+    SIGNAL_DISCONNECTED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Apple TV"
+DEFAULT_NAME_TV = "Apple TV"
+DEFAULT_NAME_HP = "HomePod"
 
 BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
-SIGNAL_CONNECTED = "apple_tv_connected"
-SIGNAL_DISCONNECTED = "apple_tv_disconnected"
-
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
+AUTH_EXCEPTIONS = (
+    exceptions.AuthenticationError,
+    exceptions.InvalidCredentialsError,
+    exceptions.NoCredentialsError,
+)
+CONNECTION_TIMEOUT_EXCEPTIONS = (
+    OSError,
+    asyncio.CancelledError,
+    TimeoutError,
+    exceptions.ConnectionLostError,
+    exceptions.ConnectionFailedError,
+)
+DEVICE_EXCEPTIONS = (
+    exceptions.ProtocolError,
+    exceptions.NoServiceError,
+    exceptions.PairingError,
+    exceptions.BackOffError,
+    exceptions.DeviceIdMissingError,
+)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
     manager = AppleTVManager(hass, entry)
 
     if manager.is_on:
-        await manager.connect_once(raise_missing_credentials=True)
-        if not manager.atv:
-            address = entry.data[CONF_ADDRESS]
-            raise ConfigEntryNotReady(f"Not found at {address}, waiting for discovery")
+        address = entry.data[CONF_ADDRESS]
 
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
+        try:
+            await manager.async_first_connect()
+        except AUTH_EXCEPTIONS as ex:
+            raise ConfigEntryAuthFailed(
+                f"{address}: Authentication failed, try reconfiguring device: {ex}"
+            ) from ex
+        except CONNECTION_TIMEOUT_EXCEPTIONS as ex:
+            raise ConfigEntryNotReady(f"{address}: {ex}") from ex
+        except DEVICE_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Error setting up apple_tv at %s: %s", address, ex, exc_info=ex
+            )
+            raise ConfigEntryNotReady(f"{address}: {ex}") from ex
 
-    async def on_hass_stop(event):
+    entry.runtime_data = manager
+
+    async def on_hass_stop(event: Event) -> None:
         """Stop push updates when hass stops."""
         await manager.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
+    entry.async_on_unload(manager.disconnect)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.init()
@@ -79,75 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Apple TV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        manager = hass.data[DOMAIN].pop(entry.unique_id)
-        await manager.disconnect()
-
-    return unload_ok
-
-
-class AppleTVEntity(Entity):
-    """Device that sends commands to an Apple TV."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-    _attr_name = None
-
-    def __init__(
-        self, name: str, identifier: str | None, manager: "AppleTVManager"
-    ) -> None:
-        """Initialize device."""
-        self.atv: AppleTVInterface = None  # type: ignore[assignment]
-        self.manager = manager
-        if TYPE_CHECKING:
-            assert identifier is not None
-        self._attr_unique_id = identifier
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            name=name,
-        )
-
-    async def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
-
-        @callback
-        def _async_connected(atv):
-            """Handle that a connection was made to a device."""
-            self.atv = atv
-            self.async_device_connected(atv)
-            self.async_write_ha_state()
-
-        @callback
-        def _async_disconnected():
-            """Handle that a connection to a device was lost."""
-            self.async_device_disconnected()
-            self.atv = None
-            self.async_write_ha_state()
-
-        if self.manager.atv:
-            # ATV is already connected
-            _async_connected(self.manager.atv)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, f"{SIGNAL_CONNECTED}_{self.unique_id}", _async_connected
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_DISCONNECTED}_{self.unique_id}",
-                _async_disconnected,
-            )
-        )
-
-    def async_device_connected(self, atv):
-        """Handle when connection is made to device."""
-
-    def async_device_disconnected(self):
-        """Handle when connection was lost to device."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class AppleTVManager(DeviceListener):
@@ -158,22 +127,23 @@ class AppleTVManager(DeviceListener):
     in case of problems.
     """
 
+    atv: AppleTVInterface | None = None
+    _connection_attempts = 0
+    _connection_was_lost = False
+    _task: asyncio.Task[None] | None = None
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize power manager."""
         self.config_entry = config_entry
         self.hass = hass
-        self.atv: AppleTVInterface | None = None
         self.is_on = not config_entry.options.get(CONF_START_OFF, False)
-        self._connection_attempts = 0
-        self._connection_was_lost = False
-        self._task = None
 
-    async def init(self):
+    async def init(self) -> None:
         """Initialize power management."""
         if self.is_on:
             await self.connect()
 
-    def connection_lost(self, _):
+    def connection_lost(self, exception: Exception) -> None:
         """Device was unexpectedly disconnected.
 
         This is a callback function from pyatv.interface.DeviceListener.
@@ -184,14 +154,14 @@ class AppleTVManager(DeviceListener):
         self._connection_was_lost = True
         self._handle_disconnect()
 
-    def connection_closed(self):
+    def connection_closed(self) -> None:
         """Device connection was (intentionally) closed.
 
         This is a callback function from pyatv.interface.DeviceListener.
         """
         self._handle_disconnect()
 
-    def _handle_disconnect(self):
+    def _handle_disconnect(self) -> None:
         """Handle that the device disconnected and restart connect loop."""
         if self.atv:
             self.atv.close()
@@ -199,12 +169,12 @@ class AppleTVManager(DeviceListener):
         self._dispatch_send(SIGNAL_DISCONNECTED)
         self._start_connect_loop()
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to device."""
         self.is_on = True
         self._start_connect_loop()
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Disconnect from device."""
         _LOGGER.debug("Disconnecting from device")
         self.is_on = False
@@ -215,23 +185,42 @@ class AppleTVManager(DeviceListener):
             if self._task:
                 self._task.cancel()
                 self._task = None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("An error occurred while disconnecting")
 
-    def _start_connect_loop(self):
+    def _start_connect_loop(self) -> None:
         """Start background connect loop to device."""
         if not self._task and self.atv is None and self.is_on:
-            self._task = asyncio.create_task(self._connect_loop())
+            self._task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._connect_loop(),
+                name=f"apple_tv connect loop {self.config_entry.title}",
+                eager_start=True,
+            )
         else:
             _LOGGER.debug(
                 "Not starting connect loop (%s, %s)", self.atv is None, self.is_on
             )
 
+    async def _connect_once(self, raise_missing_credentials: bool) -> None:
+        """Connect to device once."""
+        if conf := await self._scan():
+            await self._connect(conf, raise_missing_credentials)
+
+    async def async_first_connect(self) -> None:
+        """Connect to device for the first time."""
+        connect_ok = False
+        try:
+            await self._connect_once(raise_missing_credentials=True)
+            connect_ok = True
+        finally:
+            if not connect_ok:
+                await self.disconnect()
+
     async def connect_once(self, raise_missing_credentials: bool) -> None:
         """Try to connect once."""
         try:
-            if conf := await self._scan():
-                await self._connect(conf, raise_missing_credentials)
+            await self._connect_once(raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
             await self.disconnect()
@@ -242,11 +231,11 @@ class AppleTVManager(DeviceListener):
             return
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to connect")
-            self.atv = None
+            await self.disconnect()
 
-    async def _connect_loop(self):
+    async def _connect_loop(self) -> None:
         """Connect loop background task function."""
         _LOGGER.debug("Starting connect loop")
 
@@ -255,7 +244,8 @@ class AppleTVManager(DeviceListener):
         while self.is_on and self.atv is None:
             await self.connect_once(raise_missing_credentials=False)
             if self.atv is not None:
-                break
+                # Calling self.connect_once may have set self.atv
+                break  # type: ignore[unreachable]
             self._connection_attempts += 1
             backoff = min(
                 max(
@@ -326,7 +316,7 @@ class AppleTVManager(DeviceListener):
                     f"Protocol(s) {missing_protocols_str} not yet found for {name},"
                     " waiting for discovery."
                 )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Protocol(s) %s not yet found for %s, trying later",
                 missing_protocols_str,
                 name,
@@ -345,20 +335,24 @@ class AppleTVManager(DeviceListener):
 
         self._connection_attempts = 0
         if self._connection_was_lost:
-            _LOGGER.info(
+            _LOGGER.warning(
                 'Connection was re-established to device "%s"',
                 self.config_entry.data[CONF_NAME],
             )
             self._connection_was_lost = False
 
     @callback
-    def _async_setup_device_registry(self):
+    def _async_setup_device_registry(self) -> None:
         attrs = {
             ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
             ATTR_MANUFACTURER: "Apple",
             ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
-        attrs[ATTR_SUGGESTED_AREA] = attrs[ATTR_NAME].removesuffix(f" {DEFAULT_NAME}")
+        attrs[ATTR_SUGGESTED_AREA] = (
+            attrs[ATTR_NAME]
+            .removesuffix(f" {DEFAULT_NAME_TV}")
+            .removesuffix(f" {DEFAULT_NAME_HP}")
+        )
 
         if self.atv:
             dev_info = self.atv.device_info
@@ -379,18 +373,18 @@ class AppleTVManager(DeviceListener):
         )
 
     @property
-    def is_connecting(self):
+    def is_connecting(self) -> bool:
         """Return true if connection is in progress."""
         return self._task is not None
 
-    def _address_updated(self, address):
+    def _address_updated(self, address: str) -> None:
         """Update cached address in config entry."""
         _LOGGER.debug("Changing address to %s", address)
         self.hass.config_entries.async_update_entry(
             self.config_entry, data={**self.config_entry.data, CONF_ADDRESS: address}
         )
 
-    def _dispatch_send(self, signal, *args):
+    def _dispatch_send(self, signal: str, *args: Any) -> None:
         """Dispatch a signal to all entities managed by this manager."""
         async_dispatcher_send(
             self.hass, f"{signal}_{self.config_entry.unique_id}", *args

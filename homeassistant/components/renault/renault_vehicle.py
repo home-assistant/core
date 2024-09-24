@@ -1,4 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
@@ -21,13 +22,11 @@ from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
-_T = TypeVar("_T")
-_P = ParamSpec("_P")
 
 
-def with_error_wrapping(
-    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]],
-) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _T]]:
+def with_error_wrapping[**_P, _R](
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_R]],
+) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _R]]:
     """Catch Renault errors."""
 
     @wraps(func)
@@ -35,7 +34,7 @@ def with_error_wrapping(
         self: RenaultVehicleProxy,
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> _T:
+    ) -> _R:
         """Catch RenaultException errors and raise HomeAssistantError."""
         try:
             return await func(self, *args, **kwargs)
@@ -77,8 +76,8 @@ class RenaultVehicleProxy:
             identifiers={(DOMAIN, cast(str, details.vin))},
             manufacturer=(details.get_brand_label() or "").capitalize(),
             model=(details.get_model_label() or "").capitalize(),
+            model_id=(details.get_model_code() or ""),
             name=details.registrationNumber or "",
-            sw_version=details.get_model_code() or "",
         )
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
@@ -124,16 +123,16 @@ class RenaultVehicleProxy:
             coordinator = self.coordinators[key]
             if coordinator.not_supported:
                 # Remove endpoint as it is not supported for this vehicle.
-                LOGGER.info(
-                    "Ignoring endpoint %s as it is not supported for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is not supported: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )
                 del self.coordinators[key]
             elif coordinator.access_denied:
                 # Remove endpoint as it is denied for this vehicle.
-                LOGGER.info(
-                    "Ignoring endpoint %s as it is denied for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is denied: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )
@@ -167,6 +166,18 @@ class RenaultVehicleProxy:
     ) -> models.KamereonVehicleHvacStartActionData:
         """Start vehicle ac."""
         return await self._vehicle.set_ac_start(temperature, when)
+
+    @with_error_wrapping
+    async def get_hvac_settings(self) -> models.KamereonVehicleHvacSettingsData:
+        """Get vehicle hvac settings."""
+        return await self._vehicle.get_hvac_settings()
+
+    @with_error_wrapping
+    async def set_hvac_schedules(
+        self, schedules: list[models.HvacSchedule]
+    ) -> models.KamereonVehicleHvacScheduleActionData:
+        """Set vehicle hvac schedules."""
+        return await self._vehicle.set_hvac_schedules(schedules)
 
     @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:

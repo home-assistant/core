@@ -1,40 +1,41 @@
 """Test Hydrawise switch."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pydrawise.schema import Zone
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import DEFAULT_WATERING_TIME
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_states(
+async def test_all_switches(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test switch states."""
-    watering1 = hass.states.get("switch.zone_one_manual_watering")
-    assert watering1 is not None
-    assert watering1.state == "off"
-
-    watering2 = hass.states.get("switch.zone_two_manual_watering")
-    assert watering2 is not None
-    assert watering2.state == "on"
-
-    auto_watering1 = hass.states.get("switch.zone_one_automatic_watering")
-    assert auto_watering1 is not None
-    assert auto_watering1.state == "on"
-
-    auto_watering2 = hass.states.get("switch.zone_two_automatic_watering")
-    assert auto_watering2 is not None
-    assert auto_watering2.state == "on"
+    """Test that all switches are working."""
+    with patch(
+        "homeassistant.components.hydrawise.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_manual_watering_services(

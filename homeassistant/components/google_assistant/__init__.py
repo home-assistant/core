@@ -1,4 +1,5 @@
 """Support for Actions on Google Assistant Smart Home Control."""
+
 from __future__ import annotations
 
 import logging
@@ -28,7 +29,7 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_QUERY_RECEIVED,  # noqa: F401
+    EVENT_QUERY_RECEIVED,
     SERVICE_REQUEST_SYNC,
     SOURCE_CLOUD,
 )

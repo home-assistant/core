@@ -1,7 +1,7 @@
 """Support for RESTful switches."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -64,7 +64,7 @@ DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,
@@ -117,7 +117,7 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (asyncio.TimeoutError, httpx.RequestError) as exc:
+    except (TimeoutError, httpx.RequestError) as exc:
         raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
@@ -151,14 +151,6 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-        self._body_on.hass = hass
-        self._body_off.hass = hass
-        if (is_on_template := self._is_on_template) is not None:
-            is_on_template.hass = hass
-
-        template.attach(hass, self._headers)
-        template.attach(hass, self._params)
-
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()
@@ -177,7 +169,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, httpx.RequestError):
+        except (TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -192,7 +184,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, httpx.RequestError):
+        except (TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
     async def set_device_state(self, body: Any) -> httpx.Response:
@@ -217,10 +209,10 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         req = None
         try:
             req = await self.get_device_state(self.hass)
-        except (asyncio.TimeoutError, httpx.TimeoutException):
+        except (TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
-        except httpx.RequestError as err:
-            _LOGGER.exception("Error while fetching data: %s", err)
+        except httpx.RequestError:
+            _LOGGER.exception("Error while fetching data")
 
         if req:
             self._process_manual_data(req.text)

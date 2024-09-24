@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -38,7 +39,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .const import DOMAIN
+from .entity import HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
@@ -77,7 +79,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
@@ -85,15 +87,15 @@ async def async_setup_entry(
         if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, AsyncWiredInput32):
-            for channel in range(1, 33):
-                entities.append(
-                    HomematicipMultiContactInterface(hap, device, channel=channel)
-                )
+            entities.extend(
+                HomematicipMultiContactInterface(hap, device, channel=channel)
+                for channel in range(1, 33)
+            )
         elif isinstance(device, AsyncFullFlushContactInterface6):
-            for channel in range(1, 7):
-                entities.append(
-                    HomematicipMultiContactInterface(hap, device, channel=channel)
-                )
+            entities.extend(
+                HomematicipMultiContactInterface(hap, device, channel=channel)
+                for channel in range(1, 7)
+            )
         elif isinstance(
             device, (AsyncContactInterface, AsyncFullFlushContactInterface)
         ):
@@ -167,7 +169,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         return DeviceInfo(
             identifiers={
                 # Serial numbers of Homematic IP device
-                (HMIPC_DOMAIN, self._home.id)
+                (DOMAIN, self._home.id)
             }
         )
 

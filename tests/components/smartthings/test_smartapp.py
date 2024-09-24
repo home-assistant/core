@@ -1,4 +1,5 @@
 """Tests for the smartapp module."""
+
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 

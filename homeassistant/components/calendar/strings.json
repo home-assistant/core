@@ -111,12 +111,12 @@
   },
   "issues": {
     "deprecated_service_calendar_list_events": {
-      "title": "Detected use of deprecated service `calendar.list_events`",
+      "title": "Detected use of deprecated action `calendar.list_events`",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::calendar::issues::deprecated_service_calendar_list_events::title%]",
-            "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to close this issue."
+            "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **submit** to close this issue."
           }
         }
       }

@@ -6,12 +6,7 @@ import pytest
 from homeassistant.components.matrix import MatrixBot
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
-from tests.components.matrix.conftest import (
-    TEST_DEVICE_ID,
-    TEST_MXID,
-    TEST_PASSWORD,
-    TEST_TOKEN,
-)
+from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
 
 
 @dataclass
@@ -90,7 +85,7 @@ bad_password_missing_access_token = LoginTestParameters(
 )
 async def test_login(
     matrix_bot: MatrixBot, caplog: pytest.LogCaptureFixture, params: LoginTestParameters
-):
+) -> None:
     """Test logging in with the given parameters and expected state."""
     await matrix_bot._client.logout()
     matrix_bot._password = params.password
@@ -105,7 +100,7 @@ async def test_login(
     assert set(caplog.messages).issuperset(params.expected_caplog_messages)
 
 
-async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json):
+async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json) -> None:
     """Test loading access_tokens from a mocked file."""
 
     # Test loading good tokens.

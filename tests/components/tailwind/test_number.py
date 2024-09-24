@@ -1,4 +1,5 @@
 """Tests for number entities provided by the Tailwind integration."""
+
 from unittest.mock import MagicMock
 
 from gotailwind import TailwindError
@@ -51,7 +52,7 @@ async def test_number_entities(
     # Test error handling
     mock_tailwind.status_led.side_effect = TailwindError("Some error")
 
-    with pytest.raises(HomeAssistantError, match="Some error") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             number.DOMAIN,
             SERVICE_SET_VALUE,
@@ -62,5 +63,9 @@ async def test_number_entities(
             blocking=True,
         )
 
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "communication_error"

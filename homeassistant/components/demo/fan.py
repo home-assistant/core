@@ -1,4 +1,5 @@
 """Demo fan platform that has a fake fan."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,9 +15,15 @@ PRESET_MODE_SLEEP = "sleep"
 PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = (
-    FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE | FanEntityFeature.DIRECTION
+    FanEntityFeature.SET_SPEED
+    | FanEntityFeature.OSCILLATE
+    | FanEntityFeature.DIRECTION
+    | FanEntityFeature.TURN_OFF
+    | FanEntityFeature.TURN_ON
 )
-LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
+LIMITED_SUPPORT = (
+    FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+)
 
 
 async def async_setup_entry(
@@ -74,7 +81,9 @@ async def async_setup_entry(
                 hass,
                 "fan5",
                 "Preset Only Limited Fan",
-                FanEntityFeature.PRESET_MODE,
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON,
                 [
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,
@@ -90,6 +99,8 @@ class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
     _attr_should_poll = False
+    _attr_translation_key = "demo"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

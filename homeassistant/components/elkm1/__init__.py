@@ -1,22 +1,20 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from enum import Enum
 import logging
 import re
 from types import MappingProxyType
 from typing import Any
 
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
+from elkm1_lib.elk import Elk, Panel
 from elkm1_lib.util import parse_url
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
     CONF_ENABLED,
     CONF_EXCLUDE,
     CONF_HOST,
@@ -32,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -67,6 +63,8 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .models import ELKM1Data
+
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 SYNC_TIMEOUT = 120
 
@@ -168,8 +166,8 @@ DEVICE_SCHEMA = vol.All(
             vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         },
-        _host_validator,
     ),
+    _host_validator,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -180,7 +178,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
@@ -234,7 +231,7 @@ def _async_find_matching_config_entry(
     return None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
@@ -296,7 +293,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
@@ -307,7 +304,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config["temperature_unit"] = temperature_unit
     prefix: str = conf[CONF_PREFIX]
     auto_configure: bool = conf[CONF_AUTO_CONFIGURE]
-    hass.data[DOMAIN][entry.entry_id] = ELKM1Data(
+    entry.runtime_data = ELKM1Data(
         elk=elk,
         prefix=prefix,
         mac=entry.unique_id,
@@ -330,24 +327,20 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
 
 def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
     """Search all config entries for a given prefix."""
-    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
-    for elk_data in all_elk.values():
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not entry.runtime_data:
+            continue
+        elk_data: ELKM1Data = entry.runtime_data
         if elk_data.prefix == prefix:
             return elk_data.elk
     return None
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
-
     # disconnect cleanly
-    all_elk[entry.entry_id].elk.disconnect()
-
-    if unload_ok:
-        all_elk.pop(entry.entry_id)
-
+    entry.runtime_data.elk.disconnect()
     return unload_ok
 
 
@@ -389,7 +382,7 @@ async def async_wait_for_elk_to_sync(
         try:
             async with asyncio.timeout(timeout):
                 await event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise
@@ -398,22 +391,30 @@ async def async_wait_for_elk_to_sync(
     return success
 
 
+@callback
+def _async_get_elk_panel(hass: HomeAssistant, service: ServiceCall) -> Panel:
+    """Get the ElkM1 panel from a service call."""
+    prefix = service.data["prefix"]
+    elk = _find_elk_by_prefix(hass, prefix)
+    if elk is None:
+        raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
+    return elk.panel
+
+
 def _create_elk_services(hass: HomeAssistant) -> None:
-    def _getelk(service: ServiceCall) -> Elk:
-        prefix = service.data["prefix"]
-        elk = _find_elk_by_prefix(hass, prefix)
-        if elk is None:
-            raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
-        return elk
+    """Create ElkM1 services."""
 
+    @callback
     def _speak_word_service(service: ServiceCall) -> None:
-        _getelk(service).panel.speak_word(service.data["number"])
+        _async_get_elk_panel(hass, service).speak_word(service.data["number"])
 
+    @callback
     def _speak_phrase_service(service: ServiceCall) -> None:
-        _getelk(service).panel.speak_phrase(service.data["number"])
+        _async_get_elk_panel(hass, service).speak_phrase(service.data["number"])
 
+    @callback
     def _set_time_service(service: ServiceCall) -> None:
-        _getelk(service).panel.set_time(dt_util.now())
+        _async_get_elk_panel(hass, service).set_time(dt_util.now())
 
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
@@ -424,126 +425,3 @@ def _create_elk_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, "set_time", _set_time_service, SET_TIME_SERVICE_SCHEMA
     )
-
-
-def create_elk_entities(
-    elk_data: ELKM1Data,
-    elk_elements: Iterable[Element],
-    element_type: str,
-    class_: Any,
-    entities: list[ElkEntity],
-) -> list[ElkEntity] | None:
-    """Create the ElkM1 devices of a particular class."""
-    auto_configure = elk_data.auto_configure
-
-    if not auto_configure and not elk_data.config[element_type]["enabled"]:
-        return None
-
-    elk = elk_data.elk
-    _LOGGER.debug("Creating elk entities for %s", elk)
-
-    for element in elk_elements:
-        if auto_configure:
-            if not element.configured:
-                continue
-        # Only check the included list if auto configure is not
-        elif not elk_data.config[element_type]["included"][element.index]:
-            continue
-
-        entities.append(class_(element, elk, elk_data))
-    return entities
-
-
-class ElkEntity(Entity):
-    """Base class for all Elk entities."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
-        """Initialize the base of all Elk devices."""
-        self._elk = elk
-        self._element = element
-        self._mac = elk_data.mac
-        self._prefix = elk_data.prefix
-        self._temperature_unit: str = elk_data.config["temperature_unit"]
-        # unique_id starts with elkm1_ iff there is no prefix
-        # it starts with elkm1m_{prefix} iff there is a prefix
-        # this is to avoid a conflict between
-        # prefix=foo, name=bar  (which would be elkm1_foo_bar)
-        #   - and -
-        # prefix="", name="foo bar" (which would be elkm1_foo_bar also)
-        # we could have used elkm1__foo_bar for the latter, but that
-        # would have been a breaking change
-        if self._prefix != "":
-            uid_start = f"elkm1m_{self._prefix}"
-        else:
-            uid_start = "elkm1"
-        self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
-        self._attr_name = element.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id of the element."""
-        return self._unique_id
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the default attributes of the element."""
-        dict_as_str = {}
-        for key, val in self._element.as_dict().items():
-            dict_as_str[key] = val.value if isinstance(val, Enum) else val
-        return {**dict_as_str, **self.initial_attrs()}
-
-    @property
-    def available(self) -> bool:
-        """Is the entity available to be updated."""
-        return self._elk.is_connected()
-
-    def initial_attrs(self) -> dict[str, Any]:
-        """Return the underlying element's attributes as a dict."""
-        return {"index": self._element.index + 1}
-
-    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        pass
-
-    @callback
-    def _element_callback(self, element: Element, changeset: dict[str, Any]) -> None:
-        """Handle callback from an Elk element that has changed."""
-        self._element_changed(element, changeset)
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback for ElkM1 changes and update entity state."""
-        self._element.add_callback(self._element_callback)
-        self._element_callback(self._element, {})
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info connecting via the ElkM1 system."""
-        return DeviceInfo(
-            name=self._element.name,
-            identifiers={(DOMAIN, self._unique_id)},
-            via_device=(DOMAIN, f"{self._prefix}_system"),
-        )
-
-
-class ElkAttachedEntity(ElkEntity):
-    """An elk entity that is attached to the elk system."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for the underlying ElkM1 system."""
-        device_name = "ElkM1"
-        if self._prefix:
-            device_name += f" {self._prefix}"
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._prefix}_system")},
-            manufacturer="ELK Products, Inc.",
-            model="M1",
-            name=device_name,
-            sw_version=self._elk.panel.elkm1_version,
-        )
-        if self._mac:
-            device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return device_info

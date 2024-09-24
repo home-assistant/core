@@ -1,6 +1,5 @@
 """Constants for the JustNimbus integration."""
 
-
 from typing import Final
 
 from homeassistant.const import Platform

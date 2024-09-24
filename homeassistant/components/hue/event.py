@@ -1,4 +1,5 @@
 """Hue event entities from Button resources."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -80,12 +81,12 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         # fill the event types based on the features the switch supports
         hue_dev_id = self.controller.get_device(self.resource.id).id
         model_id = self.bridge.api.devices[hue_dev_id].product_data.product_name
-        event_types: list[str] = []
-        for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
-            model_id, DEFAULT_BUTTON_EVENT_TYPES
-        ):
-            event_types.append(event_type.value)
-        self._attr_event_types = event_types
+        self._attr_event_types: list[str] = [
+            event_type.value
+            for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
+                model_id, DEFAULT_BUTTON_EVENT_TYPES
+            )
+        ]
         self._attr_translation_placeholders = {
             "button_id": self.resource.metadata.control_id
         }
@@ -94,7 +95,9 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     def _handle_event(self, event_type: EventType, resource: Button) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            self._trigger_event(resource.button.last_event.value)
+            if resource.button is None or resource.button.button_report is None:
+                return
+            self._trigger_event(resource.button.button_report.event.value)
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
@@ -118,11 +121,16 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
     def _handle_event(self, event_type: EventType, resource: RelativeRotary) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            event_key = resource.relative_rotary.last_event.rotation.direction.value
+            if (
+                resource.relative_rotary is None
+                or resource.relative_rotary.rotary_report is None
+            ):
+                return
+            event_key = resource.relative_rotary.rotary_report.rotation.direction.value
             event_data = {
-                "duration": resource.relative_rotary.last_event.rotation.duration,
-                "steps": resource.relative_rotary.last_event.rotation.steps,
-                "action": resource.relative_rotary.last_event.action.value,
+                "duration": resource.relative_rotary.rotary_report.rotation.duration,
+                "steps": resource.relative_rotary.rotary_report.rotation.steps,
+                "action": resource.relative_rotary.rotary_report.action.value,
             }
             self._trigger_event(event_key, event_data)
             self.async_write_ha_state()

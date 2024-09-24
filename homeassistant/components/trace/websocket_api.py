@@ -1,4 +1,5 @@
 """Websocket API for automation."""
+
 import json
 from typing import Any
 
@@ -25,7 +26,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .. import trace
+from .. import trace  # noqa: TID252 (see PR 125822)
 
 TRACE_DOMAINS = ("automation", "script")
 

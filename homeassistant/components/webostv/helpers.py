@@ -1,4 +1,5 @@
 """Helper functions for webOS Smart TV."""
+
 from __future__ import annotations
 
 from aiowebostv import WebOsClient

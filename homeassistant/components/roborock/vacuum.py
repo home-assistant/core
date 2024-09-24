@@ -1,4 +1,6 @@
 """Support for Roborock vacuum class."""
+
+from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
@@ -15,14 +17,14 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from .const import DOMAIN
+from . import RoborockConfigEntry
+from .const import DOMAIN, GET_MAPS_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .entity import RoborockCoordinatedEntityV1
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: STATE_IDLE,  # "Starting"
@@ -53,20 +55,27 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
     async_add_entities(
-        RoborockVacuum(slugify(device_id), coordinator)
-        for device_id, coordinator in coordinators.items()
+        RoborockVacuum(coordinator)
+        for coordinator in config_entry.runtime_data.v1
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        GET_MAPS_SERVICE_NAME,
+        None,
+        RoborockVacuum.get_maps.__name__,
+        supports_response=SupportsResponse.ONLY,
     )
 
 
-class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
+class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -87,19 +96,20 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        RoborockCoordinatedEntityV1.__init__(
+            self,
+            coordinator.duid_slug,
+            coordinator,
+            listener_request=[
+                RoborockDataProtocol.FAN_POWER,
+                RoborockDataProtocol.STATE,
+            ],
+        )
         self._attr_fan_speed_list = self._device_status.fan_power_options
-        self.api.add_listener(
-            RoborockDataProtocol.FAN_POWER, self._update_from_listener, self.api.cache
-        )
-        self.api.add_listener(
-            RoborockDataProtocol.STATE, self._update_from_listener, self.api.cache
-        )
 
     @property
     def state(self) -> str | None:
@@ -119,7 +129,12 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        await self.send(RoborockCommand.APP_START)
+        if self._device_status.in_cleaning == 2:
+            await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
+        elif self._device_status.in_cleaning == 3:
+            await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
+        else:
+            await self.send(RoborockCommand.APP_START)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -156,3 +171,11 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     ) -> None:
         """Send a command to a vacuum cleaner."""
         await self.send(command, params)
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        return {
+            "maps": [
+                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
+            ]
+        }

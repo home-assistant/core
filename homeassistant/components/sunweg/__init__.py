@@ -1,4 +1,5 @@
 """The Sun WEG inverter sensor integration."""
+
 import datetime
 import json
 import logging
@@ -10,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.typing import StateType, UndefinedType
 from homeassistant.util import Throttle
 
@@ -26,8 +28,7 @@ async def async_setup_entry(
     """Load the saved entities."""
     api = APIHelper(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     if not await hass.async_add_executor_job(api.authenticate):
-        _LOGGER.error("Username or Password may be incorrect!")
-        return False
+        raise ConfigEntryAuthFailed("Username or Password may be incorrect!")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SunWEGData(
         api, entry.data[CONF_PLANT_ID]
     )

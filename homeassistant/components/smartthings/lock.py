@@ -1,4 +1,5 @@
 """Support for locks through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -11,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 ST_STATE_LOCKED = "locked"
 ST_LOCK_ATTR_MAP = {
@@ -33,11 +34,9 @@ async def async_setup_entry(
     """Add locks for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [
-            SmartThingsLock(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, "lock")
-        ]
+        SmartThingsLock(device)
+        for device in broker.devices.values()
+        if broker.any_assigned(device.device_id, "lock")
     )
 
 

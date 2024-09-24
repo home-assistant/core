@@ -1,7 +1,9 @@
 """Support for Lupusec Security System binary sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 import lupupy.constants as CONST
@@ -25,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a binary sensors for a Lupusec device."""
 
@@ -33,11 +35,12 @@ async def async_setup_entry(
 
     device_types = CONST.TYPE_OPENING + CONST.TYPE_SENSOR
 
-    sensors = []
-    for device in data.get_devices(generic_type=device_types):
-        sensors.append(LupusecBinarySensor(device, config_entry.entry_id))
+    partial_func = partial(data.get_devices, generic_type=device_types)
+    devices = await hass.async_add_executor_job(partial_func)
 
-    async_add_devices(sensors)
+    async_add_entities(
+        LupusecBinarySensor(device, config_entry.entry_id) for device in devices
+    )
 
 
 class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):

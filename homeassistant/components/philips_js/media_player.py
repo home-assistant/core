@@ -1,4 +1,5 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,14 +16,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from . import LOGGER as _LOGGER, PhilipsTVConfigEntry
+from .coordinator import PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 
@@ -48,11 +48,11 @@ def _inverted(data):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PhilipsTVConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [
             PhilipsTVMediaPlayer(

@@ -6,6 +6,7 @@
         "fan_mode": {
           "default": "mdi:circle-medium",
           "state": {
+            "auto": "mdi:fan-auto",
             "diffuse": "mdi:weather-windy",
             "focus": "mdi:target",
             "high": "mdi:speedometer",
@@ -20,6 +21,7 @@
           "default": "mdi:circle-medium",
           "state": {
             "cooling": "mdi:snowflake",
+            "defrosting": "mdi:snowflake-melt",
             "drying": "mdi:water-percent",
             "fan": "mdi:fan",
             "heating": "mdi:fire",
@@ -54,9 +56,35 @@
     }
   },
   "services": {
-    "set_fan_mode": "mdi:fan",
-    "set_humidity": "mdi:water-percent",
-    "set_swing_mode": "mdi:arrow-oscillating",
-    "set_temperature": "mdi:thermometer"
+    "set_fan_mode": {
+      "service": "mdi:fan"
+    },
+    "set_humidity": {
+      "service": "mdi:water-percent"
+    },
+    "set_swing_mode": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "set_aux_heat": {
+      "service": "mdi:radiator"
+    },
+    "set_preset_mode": {
+      "service": "mdi:sofa"
+    },
+    "set_hvac_mode": {
+      "service": "mdi:hvac"
+    },
+    "turn_on": {
+      "service": "mdi:power-on"
+    },
+    "turn_off": {
+      "service": "mdi:power-off"
+    },
+    "toggle": {
+      "service": "mdi:toggle-switch"
+    }
   }
 }

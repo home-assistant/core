@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -25,11 +26,18 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_MEM_STORAGE, DATA_SESSION, DOMAIN, SUPPORTED_LANGUAGE_CODES
+from .const import (
+    CONF_LANGUAGE_CODE,
+    DATA_MEM_STORAGE,
+    DATA_SESSION,
+    DOMAIN,
+    SUPPORTED_LANGUAGE_CODES,
+)
 from .helpers import (
     GoogleAssistantSDKAudioView,
     InMemoryStorage,
     async_send_text_commands,
+    best_matching_language_code,
 )
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -163,15 +171,24 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         if not session.valid_token:
             await session.async_ensure_token_valid()
             self.assistant = None
-        if not self.assistant or user_input.language != self.language:
-            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
-            self.language = user_input.language
+
+        language = best_matching_language_code(
+            self.hass,
+            user_input.language,
+            self.entry.options.get(CONF_LANGUAGE_CODE),
+        )
+
+        if not self.assistant or language != self.language:
+            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+            self.language = language
             self.assistant = TextAssistant(credentials, self.language)
 
-        resp = self.assistant.assist(user_input.text)
+        resp = await self.hass.async_add_executor_job(
+            self.assistant.assist, user_input.text
+        )
         text_response = resp[0] or "<empty response>"
 
-        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response = intent.IntentResponse(language=language)
         intent_response.async_set_speech(text_response)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=user_input.conversation_id

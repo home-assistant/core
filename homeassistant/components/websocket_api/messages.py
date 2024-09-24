@@ -1,9 +1,10 @@
 """Message templates for websocket commands."""
+
 from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -14,7 +15,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
-from homeassistant.core import Event, State
+from homeassistant.core import CompressedState, Event, EventStateChangedData
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import (
     JSON_DUMP,
@@ -108,7 +109,7 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
-def cached_event_message(iden: int, event: Event) -> bytes:
+def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -121,7 +122,7 @@ def cached_event_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_event_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )
@@ -140,7 +141,9 @@ def _partial_cached_event_message(event: Event) -> bytes:
     )
 
 
-def cached_state_diff_message(iden: int, event: Event) -> bytes:
+def cached_state_diff_message(
+    message_id_as_bytes: bytes, event: Event[EventStateChangedData]
+) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -153,14 +156,14 @@ def cached_state_diff_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_state_diff_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )
 
 
 @lru_cache(maxsize=128)
-def _partial_cached_state_diff_message(event: Event) -> bytes:
+def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> bytes:
     """Cache and serialize the event to json.
 
     The message is constructed without the id which
@@ -174,7 +177,14 @@ def _partial_cached_state_diff_message(event: Event) -> bytes:
     )
 
 
-def _state_diff_event(event: Event) -> dict:
+def _state_diff_event(
+    event: Event[EventStateChangedData],
+) -> dict[
+    str,
+    list[str]
+    | dict[str, CompressedState]
+    | dict[str, dict[str, dict[str, str | list[str]]]],
+]:
     """Convert a state_changed event to the minimal version.
 
     State update example
@@ -185,25 +195,10 @@ def _state_diff_event(event: Event) -> dict:
         "r": [entity_id,…]
     }
     """
-    if (event_new_state := event.data["new_state"]) is None:
+    if (new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
-    if TYPE_CHECKING:
-        event_new_state = cast(State, event_new_state)
-    if (event_old_state := event.data["old_state"]) is None:
-        return {
-            ENTITY_EVENT_ADD: {
-                event_new_state.entity_id: event_new_state.as_compressed_state
-            }
-        }
-    if TYPE_CHECKING:
-        event_old_state = cast(State, event_old_state)
-    return _state_diff(event_old_state, event_new_state)
-
-
-def _state_diff(
-    old_state: State, new_state: State
-) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
-    """Create a diff dict that can be used to overlay changes."""
+    if (old_state := event.data["old_state"]) is None:
+        return {ENTITY_EVENT_ADD: {new_state.entity_id: new_state.as_compressed_state}}
     additions: dict[str, Any] = {}
     diff: dict[str, dict[str, Any]] = {STATE_DIFF_ADDITIONS: additions}
     new_state_context = new_state.context
@@ -229,9 +224,12 @@ def _state_diff(
     if (old_attributes := old_state.attributes) != (
         new_attributes := new_state.attributes
     ):
-        for key, value in new_attributes.items():
-            if old_attributes.get(key) != value:
-                additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
+        if added := {
+            key: value
+            for key, value in new_attributes.items()
+            if key not in old_attributes or old_attributes[key] != value
+        }:
+            additions[COMPRESSED_STATE_ATTRIBUTES] = added
         if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
             # here if there are any values to avoid jumping into the json_encoder_default
