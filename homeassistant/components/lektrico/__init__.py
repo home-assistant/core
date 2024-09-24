@@ -18,7 +18,11 @@ CHARGERS_PLATFORMS: list[Platform] = [
 ]
 
 # List the platforms that load balancer device supports.
-LB_DEVICES_PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
+LB_DEVICES_PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 type LektricoConfigEntry = ConfigEntry[LektricoDeviceDataUpdateCoordinator]
 

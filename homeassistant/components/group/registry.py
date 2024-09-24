@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.lock import LockState
 from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -28,19 +29,14 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_HOME,
     STATE_IDLE,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_OK,
     STATE_ON,
     STATE_OPEN,
-    STATE_OPENING,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_PROBLEM,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -90,14 +86,14 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.DEVICE_TRACKER: ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
     Platform.LOCK: (
         {
-            STATE_LOCKING,
-            STATE_OPEN,
-            STATE_OPENING,
-            STATE_UNLOCKED,
-            STATE_UNLOCKING,
+            LockState.LOCKING,
+            LockState.OPEN,
+            LockState.OPENING,
+            LockState.UNLOCKED,
+            LockState.UNLOCKING,
         },
-        STATE_UNLOCKED,
-        STATE_LOCKED,
+        LockState.UNLOCKED,
+        LockState.LOCKED,
     ),
     Platform.MEDIA_PLAYER: (
         {
