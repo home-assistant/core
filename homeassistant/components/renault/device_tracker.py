@@ -21,7 +21,7 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 class RenaultTrackerEntityDescription(
     TrackerEntityDescription, RenaultDataEntityDescription
 ):
-    """Class describing Renault sensor entities."""
+    """Class describing Renault tracker entities."""
 
 
 async def async_setup_entry(
