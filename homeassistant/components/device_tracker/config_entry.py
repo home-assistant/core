@@ -180,7 +180,7 @@ class BaseTrackerEntity(Entity):
         return None
 
     @property
-    def source_type(self) -> SourceType:
+    def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
         raise NotImplementedError
 
