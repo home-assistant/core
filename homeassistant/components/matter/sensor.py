@@ -563,11 +563,9 @@ DISCOVERY_SCHEMAS = [
             key="SmokeCOAlarmContaminationState",
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
-            state_class=None,
             # convert to set first to remove the duplicate unknown value
             options=list(set(CONTAMINATION_STATE_MAP.values())),
             measurement_to_ha=CONTAMINATION_STATE_MAP.get,
-            icon="mdi:air-filter",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ContaminationState,),
@@ -578,7 +576,6 @@ DISCOVERY_SCHEMAS = [
             key="SmokeCOAlarmExpiryDate",
             translation_key="expiry_date",
             device_class=SensorDeviceClass.DATE,
-            state_class=None,
             # raw value is epoch seconds
             measurement_to_ha=date.fromtimestamp,
         ),

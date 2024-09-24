@@ -157,7 +157,12 @@
         "name": "Mode"
       },
       "sensitivity_level": {
-        "name": "Sensitivity"
+        "name": "Sensitivity",
+        "state": {
+          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "standard": "Standard",
+          "high": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::high%]"
+        }
       },
       "startup_on_off": {
         "name": "Power-on behavior on Startup"
@@ -171,7 +176,7 @@
         "name": "Contamination state",
         "state": {
           "normal": "Normal",
-          "low": "Low",
+          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
         }
