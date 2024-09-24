@@ -1270,7 +1270,7 @@ async def test_target_temp_high_higher_than_low(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Target low temperature can not be higher than target high temperature",
+        match="Target temperature low can not be higher than Target temperature high",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -1284,6 +1284,6 @@ async def test_target_temp_high_higher_than_low(
         )
     assert (
         str(exc.value)
-        == "Target low temperature can not be higher than target high temperature"
+        == "Target temperature low can not be higher than Target temperature high"
     )
     assert exc.value.translation_key == "low_temp_higher_than_high_temp"
