@@ -326,3 +326,10 @@ def migrate_entity_ids(
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
                 entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+
+        # Cleanup, can be removed in HA 2025.4.0
+        if (
+            not host.api.supported(None, "recording")
+            and entity.unique_id == f"{host.unique_id}_record"
+        ):
+            entity_reg.async_remove(entity.entity_id)
