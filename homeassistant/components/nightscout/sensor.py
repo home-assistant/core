@@ -31,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    units = entry.data.get("Units")
+    units = entry.data.get('unit_of_measurement')
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id, units)], True)
 
 class NightscoutSensor(SensorEntity):
@@ -67,9 +67,9 @@ class NightscoutSensor(SensorEntity):
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
-            """Convert to mmol/l and keep 2 decimals"""
-            if self._attr_native_unit_of_measurement == 'mmol/l':
-                self._attr_native_value = '{:.2f}'.format(value.sgv * 0.0555)
+            if self._attr_native_unit_of_measurement == 'mmol/L':
+                # self._attr_native_value = value.sgv_mmol <- this does not work with the current 1.3.3 version of the api https://github.com/marciogranzotto/py-nightscout/blob/v1.3.3/py_nightscout/models.py#L82
+                self._attr_native_value = round(value.sgv * 0.0555, 1)
             else:
                 self._attr_native_value = value.sgv
             self._attr_icon = self._parse_icon(value.direction)
