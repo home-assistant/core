@@ -177,6 +177,7 @@ class BaseTrackerEntity(Entity):
     entity_description: BaseTrackerEntityDescription
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_source_type: SourceType
 
     @cached_property
     def battery_level(self) -> int | None:
@@ -189,6 +190,8 @@ class BaseTrackerEntity(Entity):
     @property
     def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
+        if hasattr(self, "_attr_source_type"):
+            return self._attr_source_type
         if hasattr(self, "entity_description"):
             return self.entity_description.source_type
         raise NotImplementedError
