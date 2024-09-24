@@ -1669,7 +1669,7 @@ async def test_zeroconf_rediscover_no_match(
         (
             "shelly",
             {
-                "bluetooth": (
+                "zeroconf": (
                     DiscoveryKey(
                         domain="zeroconf",
                         key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
