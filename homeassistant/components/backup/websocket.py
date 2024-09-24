@@ -8,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, LOGGER
-from .manager import BackupManager
+from .manager import BaseBackupManager
 
 
 @callback
@@ -33,8 +33,8 @@ async def handle_info(
     msg: dict[str, Any],
 ) -> None:
     """List all stored backups."""
-    manager: BackupManager = hass.data[DOMAIN]
-    backups = await manager.get_backups()
+    manager: BaseBackupManager = hass.data[DOMAIN]
+    backups = await manager.async_get_backups()
     connection.send_result(
         msg["id"],
         {
@@ -58,8 +58,8 @@ async def handle_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
-    manager: BackupManager = hass.data[DOMAIN]
-    await manager.remove_backup(msg["slug"])
+    manager: BaseBackupManager = hass.data[DOMAIN]
+    await manager.async_remove_backup(slug=msg["slug"])
     connection.send_result(msg["id"])
 
 
@@ -72,8 +72,8 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    manager: BackupManager = hass.data[DOMAIN]
-    backup = await manager.generate_backup()
+    manager: BaseBackupManager = hass.data[DOMAIN]
+    backup = await manager.async_create_backup()
     connection.send_result(msg["id"], backup)
 
 
@@ -86,12 +86,12 @@ async def handle_backup_start(
     msg: dict[str, Any],
 ) -> None:
     """Backup start notification."""
-    manager: BackupManager = hass.data[DOMAIN]
+    manager: BaseBackupManager = hass.data[DOMAIN]
     manager.backing_up = True
     LOGGER.debug("Backup start notification")
 
     try:
-        await manager.pre_backup_actions()
+        await manager.async_pre_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "pre_backup_actions_failed", str(err))
         return
@@ -108,12 +108,12 @@ async def handle_backup_end(
     msg: dict[str, Any],
 ) -> None:
     """Backup end notification."""
-    manager: BackupManager = hass.data[DOMAIN]
+    manager: BaseBackupManager = hass.data[DOMAIN]
     manager.backing_up = False
     LOGGER.debug("Backup end notification")
 
     try:
-        await manager.post_backup_actions()
+        await manager.async_post_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
         return
