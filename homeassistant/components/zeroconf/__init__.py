@@ -395,7 +395,6 @@ class ZeroconfDiscovery:
     @callback
     def _handle_config_entry_removed(
         self,
-        change: config_entries.ConfigEntryChange,
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
