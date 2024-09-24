@@ -33,13 +33,10 @@ STEP_USER_LOGIN_SCHEMA = vol.Schema(
 )
 
 
-async def get_api(hass: HomeAssistant, data: dict[str, Any]) -> BzuTech:
+def get_api(hass: HomeAssistant, data: dict[str, Any]) -> BzuTech:
     """Validate the user input allows us to connect."""
-    api = BzuTech(data[CONF_EMAIL], data[CONF_PASSWORD])
 
-    await api.start()
-
-    return api
+    return BzuTech(data[CONF_EMAIL], data[CONF_PASSWORD])
 
 
 def get_ports(api: BzuTech, chipid: str) -> list[str]:
@@ -64,10 +61,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                self.api = await get_api(self.hass, user_input)
-            except Exception:  # pylint: disable=broad-except
+                self.api = get_api(self.hass, user_input)
+                start = await self.api.start()
+                if not start:
+                    raise InvalidAuth("Invalid Authentication")
+            except InvalidAuth:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = "Invalid Authentication, please try again."
                 return self.async_abort(reason=errors["base"])
             self.email = user_input[CONF_EMAIL]
             self.password = user_input[CONF_PASSWORD]
