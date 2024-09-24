@@ -1,5 +1,6 @@
 """The tests for the Light component."""
 
+from types import ModuleType
 from typing import Literal
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -27,6 +28,8 @@ from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
 
@@ -2800,3 +2803,46 @@ def test_report_invalid_color_modes(
     entity._async_calculate_state()
     expected_warning = "sets invalid supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    "module",
+    [light],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    "enum",
+    [light.LightState.ON],
+)
+@pytest.mark.parametrize(
+    "module",
+    [light],
+)
+def test_deprecated_stream_type_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: light.LightState,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
+
+
+@pytest.mark.parametrize(
+    "enum",
+    [light.LightState.ON],
+)
+@pytest.mark.parametrize(
+    "module",
+    [light],
+)
+def test_deprecated_state_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: light.LightState,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")

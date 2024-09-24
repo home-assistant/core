@@ -7,7 +7,7 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-from functools import cached_property
+from functools import cached_property, partial
 import logging
 import os
 from typing import Any, Self, cast, final
@@ -15,15 +15,16 @@ from typing import Any, Self, cast, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -46,6 +47,11 @@ class LightState(StrEnum):
 
     ON = "on"
     OFF = "off"
+
+
+# The STATE_ON constant is deprecated as of Home Assistant 2024.10
+# Please use the LightState enum instead.
+_DEPRECATED_STATE_ON = DeprecatedConstantEnum(LightState.ON, "2025.10")
 
 
 class LightEntityFeature(IntFlag):
@@ -1352,3 +1358,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return True
         # philips_js has known issues, we don't need users to open issues
         return self.platform.platform_name not in {"philips_js"}
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
