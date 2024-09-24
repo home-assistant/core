@@ -24,6 +24,7 @@ from homeassistant.const import (CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                                  UnitOfTemperature, UnitOfVolumeFlowRate)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -51,8 +52,8 @@ CONTAMINATION_STATE_MAP = {
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
-    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running ",
-    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused ",
+    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
+    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
@@ -114,7 +115,7 @@ class MatterOperationalStateSensor(MatterSensor):
             # prefer translateable (known) state from mapping,
             # fallback to the raw state label as given by the device/manufacturer
             states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
-                state.operationalStateID, state.operationalStateLabel
+                state.operationalStateID, slugify(state.operationalStateLabel)
             )
         self.states_map = states_map
         self._attr_options = list(states_map.values())
