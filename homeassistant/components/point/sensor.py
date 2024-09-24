@@ -17,8 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
+from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
 

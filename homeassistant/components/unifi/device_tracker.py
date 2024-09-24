@@ -21,7 +21,6 @@ from aiounifi.models.event import Event, EventKey
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -274,11 +273,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
-
-    @cached_property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.ROUTER
 
     @cached_property
     def unique_id(self) -> str:

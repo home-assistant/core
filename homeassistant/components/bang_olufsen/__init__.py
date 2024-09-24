@@ -17,6 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.device_registry as dr
+from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 from .websocket import BangOlufsenWebsocket
@@ -48,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=entry.data[CONF_MODEL],
     )
 
-    client = MozartClient(host=entry.data[CONF_HOST])
+    client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
     # Check API and WebSocket connection
     try:

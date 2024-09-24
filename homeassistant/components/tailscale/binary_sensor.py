@@ -17,8 +17,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TailscaleEntity
 from .const import DOMAIN
+from .entity import TailscaleEntity
 
 
 @dataclass(frozen=True, kw_only=True)
