@@ -195,7 +195,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
-        
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
 
