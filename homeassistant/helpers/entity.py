@@ -17,7 +17,7 @@ import sys
 import threading
 import time
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict, final
 
 import voluptuous as vol
 
@@ -1664,8 +1664,7 @@ class ToggleEntity(
     _attr_state: None = None
 
     @property
-    @final
-    def state(self) -> Literal["on", "off"] | None:
+    def state(self) -> str | None:
         """Return the state."""
         if (is_on := self.is_on) is None:
             return None
