@@ -8,20 +8,34 @@ from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.common.custom_clusters import (EveCluster, NeoCluster,
-                                                  ThirdRealityMeteringCluster)
+from matter_server.common.custom_clusters import (
+    EveCluster,
+    NeoCluster,
+    ThirdRealityMeteringCluster,
+)
 
-from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
-                                             SensorEntityDescription,
-                                             SensorStateClass)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-                                 CONCENTRATION_PARTS_PER_MILLION, LIGHT_LUX,
-                                 PERCENTAGE, EntityCategory, Platform,
-                                 UnitOfElectricCurrent,
-                                 UnitOfElectricPotential, UnitOfEnergy,
-                                 UnitOfPower, UnitOfPressure,
-                                 UnitOfTemperature, UnitOfVolumeFlowRate)
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
+    EntityCategory,
+    Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -637,11 +651,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="OperationalState",
-            # native_unit_of_measurement=None,
-            device_class=SensorDeviceClass.ENUM,
-            # entity_category=EntityCategory.DIAGNOSTIC,
-            # state_class=SensorStateClass.MEASUREMENT,
             key="OperationalState",
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
