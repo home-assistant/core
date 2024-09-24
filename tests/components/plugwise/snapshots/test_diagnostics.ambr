@@ -423,14 +423,6 @@
       'e7693eb9582644e5b865dba8d4447cf1': dict({
         'active_preset': 'no_frost',
         'available': True,
-        'available_schedules': list([
-          'CV Roan',
-          'Bios Schema met Film Avond',
-          'GF7  Woonkamer',
-          'Badkamer Schema',
-          'CV Jessie',
-          'off',
-        ]),
         'binary_sensors': dict({
           'low_battery': False,
         }),
@@ -449,7 +441,6 @@
           'vacation',
           'no_frost',
         ]),
-        'select_schedule': 'off',
         'sensors': dict({
           'battery': 68,
           'setpoint': 5.5,
