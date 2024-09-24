@@ -34,7 +34,7 @@ def list_language(
 def sum_attributes(bring_list: BringData, attribute: str) -> int:
     """Count items with given attribute set."""
     return sum(
-        item["attributes"][0]["content"][attribute]  # type: ignore[typeddict-item]
+        item["attributes"][0]["content"][attribute]
         for item in bring_list["purchase"]
-        if len(item.get("attributes", []))  # type: ignore[arg-type]
+        if len(item.get("attributes", []))
     )
