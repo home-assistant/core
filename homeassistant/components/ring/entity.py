@@ -161,8 +161,7 @@ def async_check_exists(
 ) -> bool:
     """Return true if the entity should be created based on the exists_fn.
 
-    If the entity previously existed will remove it or raise an issue if it is
-    used in any scripts or automations.
+    If it should not be created and previously existed it will be removed.
     """
     # First check the non-dynamic exists function. They are separate functions
     # to avoid checking the entity registry for all possible entities.
@@ -190,31 +189,7 @@ def async_check_exists(
     entity_entry = ent_reg.async_get(entity_id)
     assert entity_entry
 
-    # Check for issues that need to be created
-    entity_automations = automations_with_entity(hass, entity_id)
-    entity_scripts = scripts_with_entity(hass, entity_id)
-    if not entity_automations and not entity_scripts:
-        # No automations or scripts so clean up the entity registry and return
-        ent_reg.async_remove(entity_id)
-        return False
-
-    # Create issues and return
-    for item in entity_automations + entity_scripts:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"dynamic_entity_{entity_id}_{item}",
-            is_fixable=False,
-            is_persistent=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="dynamic_entity",
-            translation_placeholders={
-                "entity": entity_id,
-                "info": item,
-                "platform": platform,
-                "setting_description": entity_description.dynamic_setting_description,
-            },
-        )
+    ent_reg.async_remove(entity_id)
     return False
 
 

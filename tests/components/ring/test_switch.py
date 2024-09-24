@@ -6,7 +6,6 @@ import pytest
 import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
@@ -16,14 +15,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
-from .common import MockConfigEntry, setup_automation, setup_platform
+from .common import MockConfigEntry, setup_platform
 from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import snapshot_platform
@@ -180,13 +178,11 @@ async def test_switch_dynamic_exists(
     mock_ring_client: Mock,
     mock_ring_devices: Mock,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Tests the switch turns on and off correctly."""
 
     mock_config_entry.add_to_hass(hass)
     entity_id = "switch.front_door_in_home_chime"
-    issue_id = f"dynamic_entity_{entity_id}_automation.test_automation"
 
     # Create the switch as it's present
     front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
@@ -198,23 +194,8 @@ async def test_switch_dynamic_exists(
     state = hass.states.get(entity_id)
     assert state
 
-    # Test being unavailable because of an automation
-    await setup_automation(hass, "test_automation", entity_id)
-
+    # Not present will result in the exists check returning false.
     front_door_mock.configure_mock(existing_doorbell_type="Not Present")
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-    state = hass.states.get(entity_id)
-    assert state.state is STATE_UNAVAILABLE
-
-    await hass.async_block_till_done()
-
-    # Remove the automation and reload should remove the entity.
-    await next(iter(hass.data[AUTOMATION_DOMAIN].entities)).async_remove()
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
     entry = entity_registry.async_get(entity_id)
