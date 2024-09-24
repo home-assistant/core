@@ -89,6 +89,9 @@
       },
       "stop": {
         "name": "Stop"
+      },
+      "reset": {
+        "name": "Reset"
       }
     },
     "climate": {

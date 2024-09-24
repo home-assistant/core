@@ -118,4 +118,32 @@ DISCOVERY_SCHEMAS = [
         value_contains=clusters.OperationalState.Commands.Stop.command_id,
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="HepaFilterMonitoringResetButton",
+            translation_key="reset",
+            command=clusters.HepaFilterMonitoring.Commands.ResetCondition,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(
+            clusters.HepaFilterMonitoring.Attributes.AcceptedCommandList,
+        ),
+        value_contains=clusters.HepaFilterMonitoring.Commands.ResetCondition.command_id,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="ActivatedCarbonFilterMonitoringResetButton",
+            translation_key="reset",
+            command=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(
+            clusters.ActivatedCarbonFilterMonitoring.Attributes.AcceptedCommandList,
+        ),
+        value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
+        allow_multi=True,
+    ),
 ]
