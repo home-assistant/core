@@ -641,13 +641,20 @@ async def test_dishwasher_sensor(
 ) -> None:
     """Test dishwasher sensor."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
-    state = hass.states.get("sensor.dishwasher_operationalstate")
+    state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
-    assert state.state == "1"
+    assert state.state == "stopped"
+    assert state.attributes["options"] == [
+        "stopped",
+        "running",
+        "paused",
+        "error",
+        "extra_state",
+    ]
 
-    set_node_attribute(dishwasher_node, 1, 96, 4, 0)
+    set_node_attribute(dishwasher_node, 1, 96, 4, 8)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.dishwasher_operationalstate")
+    state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
-    assert state.state == "0"
+    assert state.state == "extra_state"
