@@ -237,6 +237,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="EveThermoValvePosition",
             translation_key="valve_position",
+            native_unit_of_measurement=PERCENTAGE,
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.ValvePosition,),
