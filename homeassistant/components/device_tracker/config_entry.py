@@ -304,6 +304,8 @@ class TrackerEntity(
 class ScannerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
+    source_type: SourceType = SourceType.ROUTER
+
 
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
     "ip_address",
