@@ -444,8 +444,6 @@ class RediscoveryWatcher(WatcherBase):
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        if entry.source != config_entries.SOURCE_IGNORE:
-            return
         for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
                 continue
