@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.esphome import repairs
+from homeassistant.components.voip import repairs
 from homeassistant.core import HomeAssistant
 
 
