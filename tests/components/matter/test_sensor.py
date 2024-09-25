@@ -13,6 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     set_node_attribute,
     setup_integration_with_node_fixture,
+    snapshot_matter_entities,
     trigger_subscription_callback,
 )
 
@@ -439,10 +440,4 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensors."""
-    entities = hass.states.async_all(Platform.SENSOR)
-    for entity_state in entities:
-        entity_entry = entity_registry.async_get(entity_state.entity_id)
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        state = hass.states.get(entity_entry.entity_id)
-        assert state, f"State not found for {entity_entry.entity_id}"
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)

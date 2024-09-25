@@ -10,8 +10,11 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -89,3 +92,17 @@ async def trigger_subscription_callback(
         if event_filter in (None, event):
             callback(event, data)
     await hass.async_block_till_done()
+
+
+def snapshot_matter_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    platform: Platform,
+) -> None:
+    """Snapshot Matter entities."""
+    entities = hass.states.async_all(platform)
+    for entity_state in entities:
+        entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
