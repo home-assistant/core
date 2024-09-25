@@ -84,7 +84,7 @@ async def updateable_node_fixture(
 ) -> MatterNode:
     """Fixture for a flow sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "dimmable-light", matter_client
+        hass, "dimmable_light", matter_client
     )
 
 
@@ -392,7 +392,7 @@ async def test_update_state_restore(
             ),
         ),
     )
-    await setup_integration_with_node_fixture(hass, "dimmable-light", matter_client)
+    await setup_integration_with_node_fixture(hass, "dimmable_light", matter_client)
 
     assert check_node_update.call_count == 0
 

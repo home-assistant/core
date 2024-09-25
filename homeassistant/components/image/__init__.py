@@ -30,7 +30,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, DOMAIN_DATA, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image component."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[ImageEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ImageEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -120,12 +120,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

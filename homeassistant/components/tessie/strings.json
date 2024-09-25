@@ -539,7 +539,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::tessie::issues::deprecated_speed_limit_entity::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then select submit to fix this issue."
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then select **Submit** to fix this issue."
           }
         }
       }
@@ -550,7 +550,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::tessie::issues::deprecated_speed_limit_locked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select submit to fix this issue."
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select **Submit** to fix this issue."
           }
         }
       }
@@ -561,7 +561,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::tessie::issues::deprecated_speed_limit_unlocked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select submit to fix this issue."
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then select **Submit** to fix this issue."
           }
         }
       }

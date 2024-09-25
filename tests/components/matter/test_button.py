@@ -17,7 +17,7 @@ async def powerplug_node_fixture(
 ) -> MatterNode:
     """Fixture for a Powerplug node."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-energy-plug", matter_client
+        hass, "eve_energy_plug", matter_client
     )
 
 
@@ -27,7 +27,7 @@ async def dishwasher_node_fixture(
 ) -> MatterNode:
     """Fixture for an dishwasher node."""
     return await setup_integration_with_node_fixture(
-        hass, "silabs-dishwasher", matter_client
+        hass, "silabs_dishwasher", matter_client
     )
 
 

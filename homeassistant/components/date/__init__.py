@@ -22,7 +22,7 @@ from .const import DOMAIN, SERVICE_SET_VALUE
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[DateEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[DateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -39,7 +39,7 @@ async def _async_set_value(entity: DateEntity, service_call: ServiceCall) -> Non
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Date entities."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[DateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[DateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -53,12 +53,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class DateEntityDescription(EntityDescription, frozen_or_thawed=True):

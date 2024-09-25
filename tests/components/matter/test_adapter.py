@@ -22,9 +22,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("node_fixture", "name"),
     [
-        ("onoff-light", "Mock OnOff Light"),
-        ("onoff-light-alt-name", "Mock OnOff Light"),
-        ("onoff-light-no-name", "Mock Light"),
+        ("onoff_light", "Mock OnOff Light"),
+        ("onoff_light_alt_name", "Mock OnOff Light"),
+        ("onoff_light_no_name", "Mock Light"),
     ],
 )
 async def test_device_registry_single_node_device(
@@ -70,7 +70,7 @@ async def test_device_registry_single_node_device_alt(
     """Test additional device with different attribute values."""
     await setup_integration_with_node_fixture(
         hass,
-        "on-off-plugin-unit",
+        "on_off_plugin_unit",
         matter_client,
     )
 
@@ -98,7 +98,7 @@ async def test_device_registry_bridge(
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
         hass,
-        "fake-bridge-two-light",
+        "fake_bridge_two_light",
         matter_client,
     )
 
@@ -156,7 +156,7 @@ async def test_node_added_subscription(
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
-    node = create_node_from_fixture("onoff-light")
+    node = create_node_from_fixture("onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light_light")
     assert not entity_state
@@ -175,7 +175,7 @@ async def test_device_registry_single_node_composed_device(
     """Test that a composed device within a standalone node only creates one HA device entry."""
     await setup_integration_with_node_fixture(
         hass,
-        "air-purifier",
+        "air_purifier",
         matter_client,
     )
     dev_reg = dr.async_get(hass)
@@ -189,7 +189,7 @@ async def test_multi_endpoint_name(
     """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
     await setup_integration_with_node_fixture(
         hass,
-        "multi-endpoint-light",
+        "multi_endpoint_light",
         matter_client,
     )
     entity_state = hass.states.get("light.inovelli_light_1")
@@ -220,8 +220,8 @@ async def test_bad_node_not_crash_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a bad node does not crash the integration."""
-    good_node = create_node_from_fixture("onoff-light")
-    bad_node = create_node_from_fixture("onoff-light")
+    good_node = create_node_from_fixture("onoff_light")
+    bad_node = create_node_from_fixture("onoff_light")
     del bad_node.endpoints[0].node
     matter_client.get_nodes.return_value = [good_node, bad_node]
     config_entry = MockConfigEntry(
