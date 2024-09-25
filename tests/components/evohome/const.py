@@ -25,4 +25,3 @@ TEST_INSTALLS: Final = (
     "h099625",  # RoundThermostat
     "sys_004",  # RoundModulation
 )
-#   "botched",  # as default: but with activeFaults, ghost zones & unknown types
