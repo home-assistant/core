@@ -98,6 +98,7 @@ class MetricInfo:
     friendly_name: str
     object_id: str
     metric_value: Any | None = None
+    mode: str | None = None
 
     @property
     def entity(self):
@@ -109,11 +110,13 @@ class MetricInfo:
         final_metric_value = (
             f" {self.metric_value}" if self.metric_value is not None else ""
         )
+        final_mode_value = f',mode="{self.mode}"' if self.mode is not None else ""
         return (
             f"{self.metric_name}{{"
             f'domain="{self.domain}",'
             f'entity="{self.entity}",'
             f'friendly_name="{self.friendly_name}"'
+            f"{final_mode_value}"
             f"}}{final_metric_value}"
         )
 
@@ -163,6 +166,27 @@ def test_metric_info_generates_metric_string_with_value() -> None:
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"}'
         " 17.2"
+    )
+
+
+def test_metric_info_generates_metric_string_with_mode_value() -> None:
+    """Test using MetricInfo to format a simple metric string but with a value included."""
+    metric_info = MetricInfo(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        object_id="ecobee",
+        metric_value="1.0",
+        mode="away",
+    )
+    assert metric_info.get_full_metric_string() == (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+        " 1.0"
     )
 
 
@@ -626,17 +650,27 @@ async def test_climate(
         ),
     )
 
-    assert (
-        'climate_preset_mode{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee",'
-        'mode="away"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_preset_mode",
+            domain=domain,
+            friendly_name="Ecobee",
+            object_id="ecobee",
+            metric_value="1.0",
+            mode="away",
+        ),
     )
-    assert (
-        'climate_fan_mode{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee",'
-        'mode="auto"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_fan_mode",
+            domain=domain,
+            friendly_name="Ecobee",
+            object_id="ecobee",
+            metric_value="1.0",
+            mode="auto",
+        ),
     )
 
 
@@ -647,30 +681,52 @@ async def test_humidifier(
 ) -> None:
     """Test prometheus metrics for humidifier entities."""
     body = await generate_latest_metrics(client)
+    domain = "humidifier"
 
-    MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_target_humidity_percent",
-        "68.0",
-        "Humidifier",
-        "humidifier",
+    _assert_metric_present(
         body,
-        device_class=humidifier.HumidifierDeviceClass.HUMIDIFIER,
+        MetricInfo(
+            metric_name="humidifier_target_humidity_percent",
+            domain=domain,
+            friendly_name="Humidifier",
+            object_id="humidifier",
+            metric_value="68.0",
+        ),
     )
 
-    MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_state",
-        "1.0",
-        "Dehumidifier",
-        "dehumidifier",
+    _assert_metric_present(
         body,
-        device_class="dehumidifier",
+        MetricInfo(
+            metric_name="humidifier_state",
+            domain=domain,
+            friendly_name="Dehumidifier",
+            object_id="dehumidifier",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_mode", "1.0", "Hygrostat", "hygrostat", body, mode="home"
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="humidifier_mode",
+            domain=domain,
+            friendly_name="Hygrostat",
+            object_id="hygrostat",
+            metric_value="1.0",
+            mode="home",
+        ),
     )
-    MetricsTestHelper._perform_humidifier_metric_assert(
-        "humidifier_mode", "0.0", "Hygrostat", "hygrostat", body, mode="eco"
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="humidifier_mode",
+            domain=domain,
+            friendly_name="Hygrostat",
+            object_id="hygrostat",
+            metric_value="0.0",
+            mode="eco",
+        ),
     )
 
 
