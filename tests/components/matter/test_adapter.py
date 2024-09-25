@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from matter_server.client.models.node import MatterNode
-from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models import EventType, MatterNodeData
+from matter_server.common.models import EventType
 import pytest
 
 from homeassistant.components.matter.adapter import get_clean_name
@@ -14,7 +12,9 @@ from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
+from .common import create_node_from_fixture, setup_integration_with_node_fixture
+
+from tests.common import MockConfigEntry
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -156,13 +156,7 @@ async def test_node_added_subscription(
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
-    node_data = load_and_parse_node_fixture("onoff-light")
-    node = MatterNode(
-        dataclass_from_dict(
-            MatterNodeData,
-            node_data,
-        )
-    )
+    node = create_node_from_fixture("onoff-light")
 
     entity_state = hass.states.get("light.mock_onoff_light_light")
     assert not entity_state
@@ -218,3 +212,27 @@ async def test_get_clean_name_() -> None:
     assert get_clean_name("") is None
     assert get_clean_name("Mock device") == "Mock device"
     assert get_clean_name("Mock device                    \x00") == "Mock device"
+
+
+async def test_bad_node_not_crash_integration(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a bad node does not crash the integration."""
+    good_node = create_node_from_fixture("onoff-light")
+    bad_node = create_node_from_fixture("onoff-light")
+    del bad_node.endpoints[0].node
+    matter_client.get_nodes.return_value = [good_node, bad_node]
+    config_entry = MockConfigEntry(
+        domain="matter", data={"url": "http://mock-matter-server-url"}
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert matter_client.get_nodes.call_count == 1
+    assert hass.states.get("light.mock_onoff_light_light") is not None
+    assert len(hass.states.async_all("light")) == 1
+    assert "Error setting up node" in caplog.text
