@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Unable to discover Tempest WeatherFlow devices. Select submit to try again.",
+        "description": "Unable to discover Tempest WeatherFlow devices. Select **Submit** to try again.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
