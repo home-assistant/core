@@ -23,7 +23,7 @@ async def flow_sensor_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a flow sensor node."""
-    return await setup_integration_with_node_fixture(hass, "flow-sensor", matter_client)
+    return await setup_integration_with_node_fixture(hass, "flow_sensor", matter_client)
 
 
 @pytest.fixture(name="humidity_sensor_node")
@@ -32,7 +32,7 @@ async def humidity_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a humidity sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "humidity-sensor", matter_client
+        hass, "humidity_sensor", matter_client
     )
 
 
@@ -42,7 +42,7 @@ async def light_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a light sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "light-sensor", matter_client
+        hass, "light_sensor", matter_client
     )
 
 
@@ -52,7 +52,7 @@ async def pressure_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a pressure sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "pressure-sensor", matter_client
+        hass, "pressure_sensor", matter_client
     )
 
 
@@ -62,7 +62,7 @@ async def temperature_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a temperature sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "temperature-sensor", matter_client
+        hass, "temperature_sensor", matter_client
     )
 
 
@@ -72,7 +72,7 @@ async def eve_energy_plug_node_fixture(
 ) -> MatterNode:
     """Fixture for a Eve Energy Plug node."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-energy-plug", matter_client
+        hass, "eve_energy_plug", matter_client
     )
 
 
@@ -81,7 +81,7 @@ async def eve_thermo_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a Eve Thermo node."""
-    return await setup_integration_with_node_fixture(hass, "eve-thermo", matter_client)
+    return await setup_integration_with_node_fixture(hass, "eve_thermo", matter_client)
 
 
 @pytest.fixture(name="eve_energy_plug_patched_node")
@@ -90,7 +90,7 @@ async def eve_energy_plug_patched_node_fixture(
 ) -> MatterNode:
     """Fixture for a Eve Energy Plug node (patched to include Matter 1.3 energy clusters)."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-energy-plug-patched", matter_client
+        hass, "eve_energy_plug_patched", matter_client
     )
 
 
@@ -100,7 +100,7 @@ async def eve_weather_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a Eve Weather sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-weather-sensor", matter_client
+        hass, "eve_weather_sensor", matter_client
     )
 
 
@@ -110,7 +110,7 @@ async def air_quality_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for an air quality sensor (LightFi AQ1) node."""
     return await setup_integration_with_node_fixture(
-        hass, "air-quality-sensor", matter_client
+        hass, "air_quality_sensor", matter_client
     )
 
 
@@ -120,7 +120,7 @@ async def air_purifier_node_fixture(
 ) -> MatterNode:
     """Fixture for an air purifier node."""
     return await setup_integration_with_node_fixture(
-        hass, "air-purifier", matter_client
+        hass, "air_purifier", matter_client
     )
 
 
@@ -130,7 +130,7 @@ async def dishwasher_node_fixture(
 ) -> MatterNode:
     """Fixture for an dishwasher node."""
     return await setup_integration_with_node_fixture(
-        hass, "silabs-dishwasher", matter_client
+        hass, "silabs_dishwasher", matter_client
     )
 
 
