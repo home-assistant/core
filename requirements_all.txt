@@ -2337,7 +2337,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.9
+python-linkplay==0.0.11
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
