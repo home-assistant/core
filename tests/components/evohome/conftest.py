@@ -160,7 +160,6 @@ async def setup_evohome(
             yield mock_client
         finally:
             await hass.data[DOMAIN]["coordinator"].async_shutdown()
-            await hass.async_block_till_done()
 
 
 def ctl_entity(hass: HomeAssistant) -> EvoController:
