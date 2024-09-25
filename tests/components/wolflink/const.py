@@ -17,3 +17,16 @@ CONFIG = {
     CONF_PASSWORD: "test-password",
     LOCALE: "en",
 }
+
+MOCK_RESPONSE = """
+wb.addTranslation("en"
+, { messages: {
+"%":"%",
+"%r.H.":"%rel. hum.",
+"%rH":"%rH",
+"---":"---",
+"----":"----",
+"0":"0",
+"Englisch":"English"
+}});
+"""

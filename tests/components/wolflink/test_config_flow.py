@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONFIG, LOCALE
+from .const import CONFIG, LOCALE, MOCK_RESPONSE
 
 from tests.common import MockConfigEntry
 
@@ -147,8 +147,17 @@ async def test_already_configured_error(hass: HomeAssistant) -> None:
 
 
 async def test_locale(hass: HomeAssistant) -> None:
+    """Test locale loading."""
     wolf_client = WolfClient(INPUT_CONFIG[CONF_USERNAME], INPUT_CONFIG[CONF_PASSWORD])
-    print(INPUT_CONFIG)
-    await wolf_client.load_localized_json(LOCALE)
-    print("Language: ", wolf_client.language)
+
+    with patch.object(
+        WolfClient, "fetch_localized_text", return_value=MOCK_RESPONSE
+    ) as mock_fetch_localized_text:
+        await wolf_client.load_localized_json(LOCALE)
+
+    mock_fetch_localized_text.assert_called_once_with(LOCALE)
+
+    messages = WolfClient.extract_messages_json(mock_fetch_localized_text.return_value)
+    wolf_client.language = messages
+
     assert wolf_client.language["Englisch"] == "English"
