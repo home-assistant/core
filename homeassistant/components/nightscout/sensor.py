@@ -72,7 +72,6 @@ class NightscoutSensor(SensorEntity):
                 ATTR_DIRECTION: value.direction,
             }
             if self._attr_native_unit_of_measurement == MMOL_L:
-                # self._attr_native_value = value.sgv_mmol <- this does not work with the current 1.3.3 version of the api https://github.com/marciogranzotto/py-nightscout/blob/v1.3.3/py_nightscout/models.py#L82
                 self._attr_native_value = round(value.sgv * 0.0555, 1)
             else:
                 self._attr_native_value = value.sgv
