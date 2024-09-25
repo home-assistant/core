@@ -520,6 +520,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "eheimdigital",
+            "name": "eheimdigital._http._tcp.local.",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
