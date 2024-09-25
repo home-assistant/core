@@ -20,11 +20,9 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-ValveConfigurationAndControlFeature = (
-    clusters.ValveConfigurationAndControl.Bitmaps.Feature
-)
+ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
 
-ValveStateEnum = clusters.ValveConfigurationAndControl.Enums.ValveStateEnum
+ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
 async def async_setup_entry(
@@ -56,20 +54,16 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.send_device_command(
-            clusters.ValveConfigurationAndControl.Commands.Open()
-        )
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Open())
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        await self.send_device_command(
-            clusters.ValveConfigurationAndControl.Commands.Close()
-        )
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self.send_device_command(
-            clusters.ValveConfigurationAndControl.Commands.Open(targetLevel=position)
+            ValveConfigurationAndControl.Commands.Open(targetLevel=position)
         )
 
     @callback
@@ -78,11 +72,11 @@ class MatterValve(MatterEntity, ValveEntity):
         self._calculate_features()
         current_state: int
         current_state = self.get_matter_attribute_value(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentState
+            ValveConfigurationAndControl.Attributes.CurrentState
         )
         target_state: int
         target_state = self.get_matter_attribute_value(
-            clusters.ValveConfigurationAndControl.Attributes.TargetState
+            ValveConfigurationAndControl.Attributes.TargetState
         )
         if (
             current_state == ValveStateEnum.kTransitioning
@@ -105,7 +99,7 @@ class MatterValve(MatterEntity, ValveEntity):
         # handle optional position
         if self.supported_features & ValveEntityFeature.SET_POSITION:
             self._attr_current_valve_position = self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
+                ValveConfigurationAndControl.Attributes.CurrentLevel
             )
 
     @callback
@@ -115,7 +109,7 @@ class MatterValve(MatterEntity, ValveEntity):
         """Calculate features for HA Valve platform from Matter FeatureMap."""
         feature_map = int(
             self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.FeatureMap
+                ValveConfigurationAndControl.Attributes.FeatureMap
             )
         )
         # NOTE: the featuremap can dynamically change, so we need to update the
@@ -125,7 +119,7 @@ class MatterValve(MatterEntity, ValveEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = ValveEntityFeature(0)
-        if feature_map & ValveConfigurationAndControlFeature.kLevel:
+        if feature_map & ValveConfigurationAndControl.Bitmaps.Feature.kLevel:
             self._attr_supported_features |= ValveEntityFeature.SET_POSITION
             self._attr_reports_position = True
         else:
@@ -147,12 +141,10 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterValve,
         required_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentState,
-            clusters.ValveConfigurationAndControl.Attributes.TargetState,
+            ValveConfigurationAndControl.Attributes.CurrentState,
+            ValveConfigurationAndControl.Attributes.TargetState,
         ),
-        optional_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
-        ),
+        optional_attributes=(ValveConfigurationAndControl.Attributes.CurrentLevel,),
         device_type=(device_types.WaterValve,),
     ),
 ]
