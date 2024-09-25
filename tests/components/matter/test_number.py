@@ -22,7 +22,7 @@ async def dimmable_light_node_fixture(
 ) -> MatterNode:
     """Fixture for a flow sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "dimmable-light", matter_client
+        hass, "dimmable_light", matter_client
     )
 
 
@@ -32,7 +32,7 @@ async def eve_weather_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a Eve Weather sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-weather-sensor", matter_client
+        hass, "eve_weather_sensor", matter_client
     )
 
 

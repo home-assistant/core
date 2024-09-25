@@ -64,6 +64,9 @@
       "state": {
         "name": "Status"
       },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
       },

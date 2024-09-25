@@ -110,7 +110,7 @@ from .const import (
 from .helpers import async_get_blueprints
 from .trace import trace_automation
 
-DOMAIN_DATA: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
@@ -163,12 +163,12 @@ def _automations_with_x(
     hass: HomeAssistant, referenced_id: str, property_name: str
 ) -> list[str]:
     """Return all automations that reference the x."""
-    if DOMAIN_DATA not in hass.data:
+    if DATA_COMPONENT not in hass.data:
         return []
 
     return [
         automation_entity.entity_id
-        for automation_entity in hass.data[DOMAIN_DATA].entities
+        for automation_entity in hass.data[DATA_COMPONENT].entities
         if referenced_id in getattr(automation_entity, property_name)
     ]
 
@@ -177,10 +177,10 @@ def _x_in_automation(
     hass: HomeAssistant, entity_id: str, property_name: str
 ) -> list[str]:
     """Return all x in an automation."""
-    if DOMAIN_DATA not in hass.data:
+    if DATA_COMPONENT not in hass.data:
         return []
 
-    if (automation_entity := hass.data[DOMAIN_DATA].get_entity(entity_id)) is None:
+    if (automation_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is None:
         return []
 
     return list(getattr(automation_entity, property_name))
@@ -254,7 +254,7 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
 
     return [
         automation_entity.entity_id
-        for automation_entity in hass.data[DOMAIN_DATA].entities
+        for automation_entity in hass.data[DATA_COMPONENT].entities
         if automation_entity.referenced_blueprint == blueprint_path
     ]
 
@@ -262,10 +262,10 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
 @callback
 def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
     """Return the blueprint the automation is based on or None."""
-    if DOMAIN_DATA not in hass.data:
+    if DATA_COMPONENT not in hass.data:
         return None
 
-    if (automation_entity := hass.data[DOMAIN_DATA].get_entity(entity_id)) is None:
+    if (automation_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is None:
         return None
 
     return automation_entity.referenced_blueprint
@@ -273,7 +273,7 @@ def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
-    hass.data[DOMAIN_DATA] = component = EntityComponent[BaseAutomationEntity](
+    hass.data[DATA_COMPONENT] = component = EntityComponent[BaseAutomationEntity](
         LOGGER, DOMAIN, hass
     )
 
@@ -1204,7 +1204,7 @@ def websocket_config(
     msg: dict[str, Any],
 ) -> None:
     """Get automation config."""
-    automation = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
+    automation = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if automation is None:
         connection.send_error(

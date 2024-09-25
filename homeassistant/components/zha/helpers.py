@@ -140,7 +140,6 @@ from .const import (
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
-    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_BAUDRATE,
     CONF_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_CONSIDER_UNAVAILABLE_MAINS,
@@ -1153,7 +1152,6 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
-        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
         vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
@@ -1230,7 +1228,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         enable_light_transitioning_flag=zha_options.get(
             CONF_ENABLE_LIGHT_TRANSITIONING_FLAG
         ),
-        always_prefer_xy_color_mode=zha_options.get(CONF_ALWAYS_PREFER_XY_COLOR_MODE),
         group_members_assume_state=zha_options.get(CONF_GROUP_MEMBERS_ASSUME_STATE),
     )
     device_options: DeviceOptions = DeviceOptions(

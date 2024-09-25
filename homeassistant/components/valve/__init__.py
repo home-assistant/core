@@ -33,7 +33,7 @@ from .const import DOMAIN, ValveState
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -67,7 +67,7 @@ ATTR_POSITION = "position"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for valves."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[ValveEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ValveEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -111,12 +111,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @dataclass(frozen=True, kw_only=True)

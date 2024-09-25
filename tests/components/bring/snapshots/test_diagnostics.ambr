@@ -7,6 +7,14 @@
       'purchase': list([
         dict({
           'attributes': list([
+            dict({
+              'content': dict({
+                'convenient': True,
+                'discounted': True,
+                'urgent': True,
+              }),
+              'type': 'PURCHASE_CONDITIONS',
+            }),
           ]),
           'itemId': 'Paprika',
           'specification': 'Rot',
@@ -14,6 +22,14 @@
         }),
         dict({
           'attributes': list([
+            dict({
+              'content': dict({
+                'convenient': True,
+                'discounted': True,
+                'urgent': True,
+              }),
+              'type': 'PURCHASE_CONDITIONS',
+            }),
           ]),
           'itemId': 'Pouletbrüstli',
           'specification': 'Bio',
@@ -39,6 +55,14 @@
       'purchase': list([
         dict({
           'attributes': list([
+            dict({
+              'content': dict({
+                'convenient': True,
+                'discounted': True,
+                'urgent': True,
+              }),
+              'type': 'PURCHASE_CONDITIONS',
+            }),
           ]),
           'itemId': 'Paprika',
           'specification': 'Rot',
@@ -46,6 +70,14 @@
         }),
         dict({
           'attributes': list([
+            dict({
+              'content': dict({
+                'convenient': True,
+                'discounted': True,
+                'urgent': True,
+              }),
+              'type': 'PURCHASE_CONDITIONS',
+            }),
           ]),
           'itemId': 'Pouletbrüstli',
           'specification': 'Bio',
