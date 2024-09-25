@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .deprecate import DeprecatedInfo
+from .deprecate import DeprecatedInfo, async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -70,6 +70,7 @@ async def async_setup_entry(
         descriptions=BUTTON_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
+    async_cleanup_deprecated(hass, BUTTON_DOMAIN, config_entry.entry_id, entities)
     async_add_entities(entities)
 
 
