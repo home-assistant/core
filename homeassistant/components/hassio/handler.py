@@ -352,14 +352,6 @@ class HassIO:
         )
 
     @api_data
-    def get_store(self) -> Coroutine:
-        """Return data from the store.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/store", method="get")
-
-    @api_data
     def get_ingress_panels(self) -> Coroutine:
         """Return data for Add-on ingress panels.
 
