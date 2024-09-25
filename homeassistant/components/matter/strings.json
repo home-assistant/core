@@ -77,6 +77,23 @@
         "name": "Muted"
       }
     },
+    "button": {
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "reset_filter_condition": {
+        "name": "Reset filter condition"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat"
@@ -209,6 +226,15 @@
       },
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
+      },
+      "operational_state": {
+        "name": "Operational state",
+        "state": {
+          "stopped": "Stopped",
+          "running": "Running",
+          "paused": "[%key:common::state::paused%]",
+          "error": "Error"
+        }
       },
       "switch_current_position": {
         "name": "Current switch position"

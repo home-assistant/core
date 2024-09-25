@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -181,7 +181,7 @@ class BaseTrackerEntity(Entity):
         return None
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         if hasattr(self, "_attr_source_type"):
             return self._attr_source_type
@@ -198,6 +198,10 @@ class BaseTrackerEntity(Entity):
         return attr
 
 
+class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
     "latitude",
     "location_accuracy",
@@ -211,10 +215,12 @@ class TrackerEntity(
 ):
     """Base class for a tracked device."""
 
+    entity_description: TrackerEntityDescription
     _attr_latitude: float | None = None
     _attr_location_accuracy: int = 0
     _attr_location_name: str | None = None
     _attr_longitude: float | None = None
+    _attr_source_type: SourceType = SourceType.GPS
 
     @cached_property
     def should_poll(self) -> bool:
@@ -284,6 +290,10 @@ class TrackerEntity(
         return attr
 
 
+class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
     "ip_address",
     "mac_address",
@@ -296,9 +306,11 @@ class ScannerEntity(
 ):
     """Base class for a tracked device that is on a scanned network."""
 
+    entity_description: ScannerEntityDescription
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None
+    _attr_source_type: SourceType = SourceType.ROUTER
 
     @cached_property
     def ip_address(self) -> str | None:
