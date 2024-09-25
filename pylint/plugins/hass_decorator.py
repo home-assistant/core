@@ -27,9 +27,10 @@ class HassDecoratorChecker(BaseChecker):
 
     def _get_pytest_fixture_node(self, node: nodes.FunctionDef) -> nodes.Call | None:
         for decorator in node.decorators.nodes:
-            if not isinstance(decorator, nodes.Call):
-                pass
-            if decorator.func.as_string() == "pytest.fixture":
+            if (
+                isinstance(decorator, nodes.Call)
+                and decorator.func.as_string() == "pytest.fixture"
+            ):
                 return decorator
 
         return None
