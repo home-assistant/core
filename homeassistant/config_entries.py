@@ -1855,20 +1855,6 @@ class ConfigEntries:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
-        # After we have fully removed an "ignore" config entry we can try and rediscover
-        # it so that a user is able to immediately start configuring it. We do this by
-        # starting a new flow with the 'unignore' step. If the integration doesn't
-        # implement async_step_unignore then this will be a no-op.
-        if entry.source == SOURCE_IGNORE:
-            self.hass.async_create_task_internal(
-                self.hass.config_entries.flow.async_init(
-                    entry.domain,
-                    context={"source": SOURCE_UNIGNORE},
-                    data={"unique_id": entry.unique_id},
-                ),
-                f"config entry unignore {entry.title} {entry.domain} {entry.unique_id}",
-            )
-
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         for discovery_domain in entry.discovery_keys:
             async_dispatcher_send_internal(
@@ -2543,10 +2529,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
-
-    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Rediscover a config entry by it's unique_id."""
-        return self.async_abort(reason="not_implemented")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
