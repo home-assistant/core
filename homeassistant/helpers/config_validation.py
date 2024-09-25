@@ -4,10 +4,9 @@
 # with PEP 695 syntax. Fixed in Python 3.13.
 # from __future__ import annotations
 
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Mapping
 import contextlib
 from contextvars import ContextVar
-from copy import copy
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -1780,7 +1779,7 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     rename `trigger` to `platform.
     """
 
-    if not isinstance(value, dict):
+    if not isinstance(value, Mapping):
         return value
 
     if CONF_TRIGGER in value:
@@ -1788,7 +1787,7 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
             raise vol.Invalid(
                 "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
             )
-        value = copy(value)
+        value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
 
     return value
