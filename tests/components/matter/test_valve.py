@@ -96,3 +96,36 @@ async def test_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "open"
+
+    # add support for setting position by updating the featuremap
+    set_node_attribute(valve_node, 1, 129, 65532, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 0
+
+    # update current position
+    set_node_attribute(valve_node, 1, 129, 6, 50)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 50
+
+    # test set_position action
+    await hass.services.async_call(
+        "valve",
+        "set_valve_position",
+        {
+            "entity_id": entity_id,
+            "position": 100,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=valve_node.node_id,
+        endpoint_id=1,
+        command=clusters.ValveConfigurationAndControl.Commands.Open(targetLevel=100),
+    )
+    matter_client.send_device_command.reset_mock()
