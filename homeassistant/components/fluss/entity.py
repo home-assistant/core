@@ -34,8 +34,6 @@ class FlussEntity(Entity):
 
         unique_id = device.unique_id or "default_unique_id"
         self.identifiers = ({(DOMAIN, unique_id)},)
-
-        # Set unique_id and device_info attributes
         self._attr_unique_id = unique_id
         self._attr_device_info = {
             "identifiers": {(DOMAIN, unique_id)},

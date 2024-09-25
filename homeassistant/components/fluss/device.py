@@ -14,7 +14,7 @@ class FlussButton(ButtonEntity):
     """Representation of a Fluss cover device."""
 
     def __init__(self, api: FlussApiClient, device: dict) -> None:
-        """Initializr the cover."""
+        """Initialize the cover."""
         self.api = api
         self.device = device
         self._name = device.get("deviceName", "unknown")

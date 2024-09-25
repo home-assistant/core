@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from fluss_api import FlussApiClient, FlussApiClientAuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,11 +38,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    hub = ApiKeyStorageHub(data[CONF_API_KEY])
+    api = FlussApiClient(data[CONF_API_KEY], hass)
 
-    if not await hub.authenticate():
-        raise InvalidAuth("Invalid authentication provided.")
-
+    try:
+        api.async_validate_api_key()
+    except FlussApiClientAuthenticationError:
+        raise InvalidAuth  # noqa: B904
     return {"title": "Fluss+"}
 
 
@@ -69,7 +71,6 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception as ex:
                 _LOGGER.exception("Unexpected exception:  %s", ex)  # noqa: TRY401
                 errors["base"] = "unknown"
-                # Ensure to return the form with errors if an exception occurs
                 return self.async_show_form(
                     step_id="user",
                     data_schema=vol.Schema(
