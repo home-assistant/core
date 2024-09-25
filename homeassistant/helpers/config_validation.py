@@ -1780,6 +1780,7 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     """
 
     if not isinstance(value, Mapping):
+        # If the value is not a mapping, we let that be handled by the TRIGGER_SCHEMA
         return value
 
     if CONF_TRIGGER in value:
