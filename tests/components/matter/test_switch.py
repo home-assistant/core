@@ -21,7 +21,7 @@ async def powerplug_node_fixture(
 ) -> MatterNode:
     """Fixture for a Powerplug node."""
     return await setup_integration_with_node_fixture(
-        hass, "on-off-plugin-unit", matter_client
+        hass, "on_off_plugin_unit", matter_client
     )
 
 
@@ -30,7 +30,7 @@ async def switch_unit_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a Switch Unit node."""
-    return await setup_integration_with_node_fixture(hass, "switch-unit", matter_client)
+    return await setup_integration_with_node_fixture(hass, "switch_unit", matter_client)
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -123,7 +123,7 @@ async def test_power_switch(
 ) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
     await setup_integration_with_node_fixture(
-        hass, "room-airconditioner", matter_client
+        hass, "room_airconditioner", matter_client
     )
     state = hass.states.get("switch.room_airconditioner_power")
     assert state
