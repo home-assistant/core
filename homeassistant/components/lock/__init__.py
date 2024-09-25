@@ -45,7 +45,7 @@ from .const import DOMAIN, LockState
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -78,7 +78,7 @@ PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for locks."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[LockEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[LockEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -102,12 +102,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class LockEntityDescription(EntityDescription, frozen_or_thawed=True):

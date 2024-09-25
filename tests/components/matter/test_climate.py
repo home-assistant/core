@@ -31,7 +31,7 @@ async def room_airconditioner(
 ) -> MatterNode:
     """Fixture for a room air conditioner node."""
     return await setup_integration_with_node_fixture(
-        hass, "room-airconditioner", matter_client
+        hass, "room_airconditioner", matter_client
     )
 
 
