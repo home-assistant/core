@@ -22,10 +22,19 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import ctl_entity, setup_evohome
-from .const import CTL_MODE_LOOKUP, TEST_INSTALLS
+from .const import TEST_INSTALLS
 
 if TYPE_CHECKING:
     from homeassistant.components.evohome.climate import EvoController
+
+
+CTL_MODE_LOOKUP = {
+    "Reset": "AutoWithReset",
+    "eco": "AutoWithEco",
+    "away": "Away",
+    "home": "DayOff",
+    "Custom": "Custom",
+}
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

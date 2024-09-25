@@ -9,14 +9,6 @@ REFRESH_TOKEN: Final = "rf_jg68ZCKYdxEI3fF..."
 SESSION_ID: Final = "F7181186..."
 USERNAME: Final = "test_user@gmail.com"
 
-CTL_MODE_LOOKUP = {
-    "Reset": "AutoWithReset",
-    "eco": "AutoWithEco",
-    "away": "Away",
-    "home": "DayOff",
-    "Custom": "Custom",
-}
-
 # The h-numbers refer to issues in HA's core repo
 TEST_INSTALLS: Final = (
     "minimal",  # evohome(single zone, no DHW)
