@@ -83,20 +83,18 @@ DOMAIN_STORAGE_BASE: Final = {
 }
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_NULL)
 async def test_auth_tokens_null(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     config: dict[str, str],
     idx: str,
-    install: str,
 ) -> None:
     """Test loading/saving authentication tokens when no cached tokens in the store."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
+    async for mock_client in setup_evohome(hass, config, install="minimal"):
         # Confirm client was instantiated without tokens, as cache was empty...
         assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
         assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
@@ -114,20 +112,18 @@ async def test_auth_tokens_null(
         )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_same(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     config: dict[str, str],
     idx: str,
-    install: str,
 ) -> None:
     """Test loading/saving authentication tokens when matching username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
+    async for mock_client in setup_evohome(hass, config, install="minimal"):
         # Confirm client was instantiated with the cached tokens...
         assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
         assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
@@ -147,14 +143,12 @@ async def test_auth_tokens_same(
         )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_past(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     config: dict[str, str],
     idx: str,
-    install: str,
 ) -> None:
     """Test loading/saving authentication tokens with matching username, but expired."""
 
@@ -166,7 +160,7 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
+    async for mock_client in setup_evohome(hass, config, install="minimal"):
         # Confirm client was instantiated with the cached tokens...
         assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
         assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
@@ -186,21 +180,19 @@ async def test_auth_tokens_past(
         )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_diff(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     config: dict[str, str],
     idx: str,
-    install: str,
 ) -> None:
     """Test loading/saving authentication tokens when unmatched username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
     async for mock_client in setup_evohome(
-        hass, config | {CONF_USERNAME: USERNAME_DIFF}, install=install
+        hass, config | {CONF_USERNAME: USERNAME_DIFF}, install="minimal"
     ):
         # Confirm client was instantiated without tokens, as username was different...
         assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
