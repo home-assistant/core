@@ -1799,7 +1799,7 @@ async def test_disabling_entity(
         friendly_name="Outside Temperature",
         object_id="outside_temperature",
     ).get_full_metric_string()
-    assert any(state_change_metric_string for metric in body)
+    assert any(state_change_metric_string in metric for metric in body)
 
     _assert_metric_present(
         body,
