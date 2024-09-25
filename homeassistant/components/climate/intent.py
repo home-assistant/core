@@ -7,9 +7,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN
-
-INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
+from . import DOMAIN, INTENT_GET_TEMPERATURE
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:

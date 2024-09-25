@@ -97,8 +97,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.properties.get("mac")
         # fallback for legacy firmware
         if mac is None:
-            info = await self.client.get_info()
+            try:
+                info = await self.client.get_info()
+            except SmlightConnectionError:
+                # User is likely running unsupported ESPHome firmware
+                return self.async_abort(reason="cannot_connect")
             mac = info.MAC
+
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured()
 
@@ -139,10 +144,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             self.context["entry_id"]
         )
         host = entry_data[CONF_HOST]
-        self.context["title_placeholders"] = {
-            "host": host,
-            "name": entry_data.get(CONF_USERNAME, "unknown"),
-        }
         self.client = Api2(host, session=async_get_clientsession(self.hass))
         self.host = host
 
@@ -166,7 +167,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert self._reauth_entry is not None
 
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry, data={**user_input, CONF_HOST: self.host}
+                    self._reauth_entry,
+                    data={**self._reauth_entry.data, **user_input},
                 )
 
         return self.async_show_form(
@@ -197,4 +199,5 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = self.host
 
         assert info.model is not None
-        return self.async_create_entry(title=info.model, data=user_input)
+        title = self.context.get("title_placeholders", {}).get(CONF_NAME) or info.model
+        return self.async_create_entry(title=title, data=user_input)

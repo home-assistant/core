@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aiorussound import Controller, Russound
+from aiorussound import Controller, RussoundClient, RussoundTcpConnectionHandler
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -54,8 +54,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            controllers = None
-            russ = Russound(self.hass.loop, host, port)
+            russ = RussoundClient(
+                RussoundTcpConnectionHandler(self.hass.loop, host, port)
+            )
             try:
                 async with asyncio.timeout(CONNECT_TIMEOUT):
                     await russ.connect()
@@ -87,7 +88,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         port = import_data.get(CONF_PORT, 9621)
 
         # Connection logic is repeated here since this method will be removed in future releases
-        russ = Russound(self.hass.loop, host, port)
+        russ = RussoundClient(RussoundTcpConnectionHandler(self.hass.loop, host, port))
         try:
             async with asyncio.timeout(CONNECT_TIMEOUT):
                 await russ.connect()

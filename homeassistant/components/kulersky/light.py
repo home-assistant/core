@@ -137,7 +137,7 @@ class KulerskyLight(LightEntity):
             self._attr_available = False
             return
         if self._attr_available is False:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+            _LOGGER.warning("Reconnected to %s", self._light.address)
 
         self._attr_available = True
         brightness = max(rgbw)

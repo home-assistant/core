@@ -1,0 +1,113 @@
+[
+  {
+    "id": "IR",
+    "name": "Internet Radio",
+    "default_name": "Internet Radio",
+    "class": "stream.radio",
+    "nameable": false,
+    "ui_selectable": false,
+    "description": "Internet Radio",
+    "description_locale": "Internet Radio",
+    "preferred_order": 9
+  },
+  {
+    "id": "USB_AUDIO",
+    "name": "USB Audio",
+    "default_name": "USB Audio",
+    "class": "digital.usb",
+    "nameable": true,
+    "ui_selectable": true,
+    "description": "USB Audio",
+    "description_locale": "USB Audio",
+    "preferred_order": 1
+  },
+  {
+    "id": "SPDIF_COAX",
+    "name": "D2",
+    "default_name": "D2",
+    "class": "digital.coax",
+    "nameable": true,
+    "ui_selectable": false,
+    "description": "Digital Co-axial",
+    "description_locale": "Digital Co-axial",
+    "preferred_order": 3
+  },
+  {
+    "id": "SPDIF_TOSLINK",
+    "name": "D1",
+    "default_name": "D1",
+    "class": "digital.toslink",
+    "nameable": true,
+    "ui_selectable": false,
+    "description": "Digital Optical",
+    "description_locale": "Digital Optical",
+    "preferred_order": 2
+  },
+  {
+    "id": "MEDIA_PLAYER",
+    "name": "Media Library",
+    "default_name": "Media Library",
+    "class": "stream.media",
+    "nameable": false,
+    "ui_selectable": true,
+    "description": "Media Player",
+    "description_locale": "Media Player",
+    "preferred_order": 10
+  },
+  {
+    "id": "AIRPLAY",
+    "name": "AirPlay",
+    "default_name": "AirPlay",
+    "class": "stream.service.airplay",
+    "nameable": false,
+    "ui_selectable": true,
+    "description": "AirPlay",
+    "description_locale": "AirPlay",
+    "preferred_order": 11
+  },
+  {
+    "id": "SPOTIFY",
+    "name": "Spotify",
+    "default_name": "Spotify",
+    "class": "stream.service.spotify",
+    "nameable": false,
+    "ui_selectable": true,
+    "description": "Spotify",
+    "description_locale": "Spotify",
+    "preferred_order": 6,
+    "normalisation": "off"
+  },
+  {
+    "id": "CAST",
+    "name": "Chromecast built-in",
+    "default_name": "Chromecast built-in",
+    "class": "stream.service.cast",
+    "nameable": false,
+    "ui_selectable": true,
+    "description": "Chromecast built-in",
+    "description_locale": "Chromecast built-in",
+    "preferred_order": 8
+  },
+  {
+    "id": "ROON",
+    "name": "Roon Ready",
+    "default_name": "Roon Ready",
+    "class": "stream.service.roon",
+    "nameable": false,
+    "ui_selectable": false,
+    "description": "Roon Ready",
+    "description_locale": "Roon Ready",
+    "preferred_order": 5
+  },
+  {
+    "id": "TIDAL",
+    "name": "TIDAL Connect",
+    "default_name": "TIDAL Connect",
+    "class": "stream.service.tidal",
+    "nameable": false,
+    "ui_selectable": false,
+    "description": "TIDAL",
+    "description_locale": "TIDAL",
+    "preferred_order": 7
+  }
+]

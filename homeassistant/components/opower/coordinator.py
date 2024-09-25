@@ -128,19 +128,22 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
+                start = cost_reads[0].start_time
+                _LOGGER.debug("Getting statistics at: %s", start)
                 stats = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
                     self.hass,
-                    cost_reads[0].start_time,
-                    None,
+                    start,
+                    start + timedelta(seconds=1),
                     {cost_statistic_id, consumption_statistic_id},
-                    "hour" if account.meter_type == MeterType.ELEC else "day",
+                    "hour",
                     None,
                     {"sum"},
                 )
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
+                assert last_stats_time == start.timestamp()
 
             cost_statistics = []
             consumption_statistics = []

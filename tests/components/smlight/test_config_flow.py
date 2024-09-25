@@ -91,7 +91,7 @@ async def test_zeroconf_flow(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["context"]["source"] == "zeroconf"
     assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "SLZB-06p7"
+    assert result2["title"] == "slzb-06"
     assert result2["data"] == {
         CONF_HOST: MOCK_HOST,
     }
@@ -143,7 +143,7 @@ async def test_zeroconf_flow_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["context"]["source"] == "zeroconf"
     assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result3["title"] == "SLZB-06p7"
+    assert result3["title"] == "slzb-06"
     assert result3["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
@@ -336,6 +336,22 @@ async def test_zeroconf_cannot_connect(
     assert result2["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_legacy_cannot_connect(
+    hass: HomeAssistant, mock_smlight_client: MagicMock
+) -> None:
+    """Test we abort flow on zeroconf discovery unsupported firmware."""
+    mock_smlight_client.get_info.side_effect = SmlightConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO_LEGACY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.usefixtures("mock_smlight_client")
 async def test_zeroconf_legacy_mac(
     hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock
@@ -356,7 +372,7 @@ async def test_zeroconf_legacy_mac(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["context"]["source"] == "zeroconf"
     assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "SLZB-06p7"
+    assert result2["title"] == "slzb-06"
     assert result2["data"] == {
         CONF_HOST: MOCK_HOST,
     }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -37,28 +37,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER
+from .const import (
+    ATTR_HYSTERESIS,
+    ATTR_LOWER,
+    ATTR_POSITION,
+    ATTR_SENSOR_VALUE,
+    ATTR_TYPE,
+    ATTR_UPPER,
+    CONF_HYSTERESIS,
+    CONF_LOWER,
+    CONF_UPPER,
+    DEFAULT_HYSTERESIS,
+    POSITION_ABOVE,
+    POSITION_BELOW,
+    POSITION_IN_RANGE,
+    POSITION_UNKNOWN,
+    TYPE_LOWER,
+    TYPE_RANGE,
+    TYPE_UPPER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_HYSTERESIS = "hysteresis"
-ATTR_LOWER = "lower"
-ATTR_POSITION = "position"
-ATTR_SENSOR_VALUE = "sensor_value"
-ATTR_TYPE = "type"
-ATTR_UPPER = "upper"
-
-DEFAULT_NAME = "Threshold"
-DEFAULT_HYSTERESIS = 0.0
-
-POSITION_ABOVE = "above"
-POSITION_BELOW = "below"
-POSITION_IN_RANGE = "in_range"
-POSITION_UNKNOWN = "unknown"
-
-TYPE_LOWER = "lower"
-TYPE_RANGE = "range"
-TYPE_UPPER = "upper"
+DEFAULT_NAME: Final = "Threshold"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {

@@ -17,11 +17,13 @@ from homeassistant.components.assist_pipeline import (
     async_update_pipeline,
     vad,
 )
-from homeassistant.components.assist_satellite import SatelliteBusyError
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteAnnouncement,
+    SatelliteBusyError,
+)
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
 
 from . import ENTITY_ID
@@ -35,7 +37,7 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
     context = Context()
     audio_stream = object()
@@ -62,7 +64,7 @@ async def test_entity_state(
     assert kwargs["stt_stream"] is audio_stream
     assert kwargs["pipeline_id"] is None
     assert kwargs["device_id"] is None
-    assert kwargs["tts_audio_output"] == "wav"
+    assert kwargs["tts_audio_output"] is None
     assert kwargs["wake_word_phrase"] is None
     assert kwargs["audio_settings"] == AudioSettings(
         silence_seconds=vad.VadSensitivity.to_seconds(vad.VadSensitivity.DEFAULT)
@@ -70,22 +72,34 @@ async def test_entity_state(
     assert kwargs["start_stage"] == PipelineStage.STT
     assert kwargs["end_stage"] == PipelineStage.TTS
 
-    for event_type, expected_state in (
-        (PipelineEventType.RUN_START, STATE_UNKNOWN),
-        (PipelineEventType.RUN_END, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.WAKE_WORD_START, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.WAKE_WORD_END, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.STT_START, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_START, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_END, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_END, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.INTENT_START, AssistSatelliteState.PROCESSING),
-        (PipelineEventType.INTENT_END, AssistSatelliteState.PROCESSING),
-        (PipelineEventType.TTS_START, AssistSatelliteState.RESPONDING),
-        (PipelineEventType.TTS_END, AssistSatelliteState.RESPONDING),
-        (PipelineEventType.ERROR, AssistSatelliteState.RESPONDING),
+    for event_type, event_data, expected_state in (
+        (PipelineEventType.RUN_START, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.RUN_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (
+            PipelineEventType.WAKE_WORD_START,
+            {},
+            AssistSatelliteState.LISTENING_WAKE_WORD,
+        ),
+        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.INTENT_START, {}, AssistSatelliteState.PROCESSING),
+        (
+            PipelineEventType.INTENT_END,
+            {
+                "intent_output": {
+                    "conversation_id": "mock-conversation-id",
+                }
+            },
+            AssistSatelliteState.PROCESSING,
+        ),
+        (PipelineEventType.TTS_START, {}, AssistSatelliteState.RESPONDING),
+        (PipelineEventType.TTS_END, {}, AssistSatelliteState.RESPONDING),
+        (PipelineEventType.ERROR, {}, AssistSatelliteState.RESPONDING),
     ):
-        kwargs["event_callback"](PipelineEvent(event_type, {}))
+        kwargs["event_callback"](PipelineEvent(event_type, event_data))
         state = hass.states.get(ENTITY_ID)
         assert state.state == expected_state, event_type
 
@@ -94,23 +108,76 @@ async def test_entity_state(
     assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
 
+async def test_new_pipeline_cancels_pipeline(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test that a new pipeline run cancels any running pipeline."""
+    pipeline1_started = asyncio.Event()
+    pipeline1_finished = asyncio.Event()
+    pipeline1_cancelled = asyncio.Event()
+    pipeline2_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        if not pipeline1_started.is_set():
+            # First pipeline run
+            pipeline1_started.set()
+
+            # Wait for pipeline to be cancelled
+            try:
+                await pipeline1_finished.wait()
+            except asyncio.CancelledError:
+                pipeline1_cancelled.set()
+                raise
+        else:
+            # Second pipeline run
+            pipeline2_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        hass.async_create_task(
+            entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await pipeline1_started.wait()
+
+            # Start a second pipeline
+            await entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+            await pipeline1_cancelled.wait()
+            await pipeline2_finished.wait()
+
+
 @pytest.mark.parametrize(
     ("service_data", "expected_params"),
     [
         (
             {"message": "Hello"},
-            ("Hello", "https://www.home-assistant.io/resolved.mp3"),
+            AssistSatelliteAnnouncement(
+                "Hello", "https://www.home-assistant.io/resolved.mp3", "tts"
+            ),
         ),
         (
             {
                 "message": "Hello",
-                "media_id": "http://example.com/bla.mp3",
+                "media_id": "media-source://bla",
             },
-            ("Hello", "http://example.com/bla.mp3"),
+            AssistSatelliteAnnouncement(
+                "Hello", "https://www.home-assistant.io/resolved.mp3", "media_id"
+            ),
         ),
         (
             {"media_id": "http://example.com/bla.mp3"},
-            ("", "http://example.com/bla.mp3"),
+            AssistSatelliteAnnouncement("", "http://example.com/bla.mp3", "url"),
         ),
     ],
 )
@@ -130,10 +197,33 @@ async def test_announce(
         tts_voice="test-voice",
     )
 
+    entity._attr_tts_options = {"test-option": "test-value"}
+
+    original_announce = entity.async_announce
+    announce_started = asyncio.Event()
+
+    async def async_announce(announcement):
+        # Verify state change
+        assert entity.state == AssistSatelliteState.RESPONDING
+        await original_announce(announcement)
+        announce_started.set()
+
+    def tts_generate_media_source_id(
+        hass: HomeAssistant,
+        message: str,
+        engine: str | None = None,
+        language: str | None = None,
+        options: dict | None = None,
+        cache: bool | None = None,
+    ):
+        # Check that TTS options are passed here
+        assert options == {"test-option": "test-value", "voice": "test-voice"}
+        return "media-source://bla"
+
     with (
         patch(
             "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
-            return_value="media-source://bla",
+            new=tts_generate_media_source_id,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -142,6 +232,7 @@ async def test_announce(
                 mime_type="audio/mp3",
             ),
         ),
+        patch.object(entity, "async_announce", new=async_announce),
     ):
         await hass.services.async_call(
             "assist_satellite",
@@ -150,6 +241,7 @@ async def test_announce(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
+        assert entity.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
     assert entity.announcements[0] == expected_params
 
@@ -164,7 +256,7 @@ async def test_announce_busy(
     announce_started = asyncio.Event()
     got_error = asyncio.Event()
 
-    async def async_announce(message, media_id):
+    async def async_announce(announcement):
         announce_started.set()
 
         # Block so we can do another announcement
@@ -184,6 +276,48 @@ async def test_announce_busy(
     # Avoid lingering task
     got_error.set()
     await announce_task
+
+
+async def test_announce_cancels_pipeline(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test that announcements cancel any running pipeline."""
+    media_id = "https://www.home-assistant.io/resolved.mp3"
+    pipeline_started = asyncio.Event()
+    pipeline_finished = asyncio.Event()
+    pipeline_cancelled = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        pipeline_started.set()
+
+        # Wait for pipeline to be cancelled
+        try:
+            await pipeline_finished.wait()
+        except asyncio.CancelledError:
+            pipeline_cancelled.set()
+            raise
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(entity, "async_announce") as mock_async_announce,
+    ):
+        hass.async_create_task(
+            entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await pipeline_started.wait()
+            await entity.async_internal_announce(None, media_id)
+            await pipeline_cancelled.wait()
+
+        mock_async_announce.assert_called_once()
 
 
 async def test_context_refresh(

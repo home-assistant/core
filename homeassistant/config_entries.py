@@ -18,7 +18,7 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
-from functools import cached_property
+from functools import cache, cached_property
 import logging
 from random import randint
 from types import MappingProxyType
@@ -49,6 +49,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
+from .helpers.discovery_flow import DiscoveryKey
 from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
@@ -105,11 +106,6 @@ SOURCE_ZEROCONF = "zeroconf"
 # source and while it exists normal discoveries with the same unique id are ignored.
 SOURCE_IGNORE = "ignore"
 
-# This is used when a user uses the "Stop Ignoring" button in the UI (the
-# config_entries/ignore_flow websocket command). It's triggered after the
-# "ignore" config entry has been removed and unloaded.
-SOURCE_UNIGNORE = "unignore"
-
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
@@ -120,7 +116,7 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 SAVE_DELAY = 1
 
@@ -178,7 +174,6 @@ DISCOVERY_SOURCES = {
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_MQTT,
     SOURCE_SSDP,
-    SOURCE_UNIGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
@@ -190,6 +185,15 @@ EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
     "config_entry_changed"
 )
+
+
+@cache
+def signal_discovered_config_entry_removed(
+    discovery_domain: str,
+) -> SignalType[ConfigEntry]:
+    """Format signal."""
+    return SignalType(f"{discovery_domain}_discovered_config_entry_removed")
+
 
 NO_RESET_TRIES_STATES = {
     ConfigEntryState.SETUP_RETRY,
@@ -271,6 +275,16 @@ class ConfigFlowResult(FlowResult, total=False):
     version: int
 
 
+def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
+    """Validate config entry item."""
+
+    # Deprecated in 2022.1, stopped working in 2024.10
+    if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
+        raise TypeError(
+            f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
+        )
+
+
 class ConfigEntry(Generic[_DataT]):
     """Hold a configuration entry."""
 
@@ -307,6 +321,7 @@ class ConfigEntry(Generic[_DataT]):
     _tries: int
     created_at: datetime
     modified_at: datetime
+    discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
 
     def __init__(
         self,
@@ -314,6 +329,7 @@ class ConfigEntry(Generic[_DataT]):
         created_at: datetime | None = None,
         data: Mapping[str, Any],
         disabled_by: ConfigEntryDisabler | None = None,
+        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]],
         domain: str,
         entry_id: str | None = None,
         minor_version: int,
@@ -369,18 +385,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
+        _validate_item(disabled_by=disabled_by)
         _setter(self, "disabled_by", disabled_by)
 
         # Supports unload
@@ -423,6 +428,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_tries", 0)
         _setter(self, "created_at", created_at or utcnow())
         _setter(self, "modified_at", modified_at or utcnow())
+        _setter(self, "discovery_keys", discovery_keys)
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -952,6 +958,7 @@ class ConfigEntry(Generic[_DataT]):
         return {
             "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
+            "discovery_keys": dict(self.discovery_keys),
             "disabled_by": self.disabled_by,
             "domain": self.domain,
             "entry_id": self.entry_id,
@@ -1251,7 +1258,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # a single config entry, but which already has an entry
         if (
             context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE, SOURCE_RECONFIGURE}
+            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
@@ -1339,7 +1346,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         flow: data_entry_flow.FlowHandler[ConfigFlowResult],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
-        """Finish a config flow and add an entry."""
+        """Finish a config flow and add an entry.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         flow = cast(ConfigFlow, flow)
 
         # Mark the step as done.
@@ -1361,6 +1372,41 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+            # If there's an ignored config entry with a matching unique ID,
+            # update the discovery key.
+            if (
+                (discovery_key := flow.context.get("discovery_key"))
+                and (unique_id := flow.unique_id) is not None
+                and (
+                    entry := self.config_entries.async_entry_for_domain_unique_id(
+                        result["handler"], unique_id
+                    )
+                )
+                and discovery_key
+                not in (
+                    known_discovery_keys := entry.discovery_keys.get(
+                        discovery_key.domain, ()
+                    )
+                )
+            ):
+                new_discovery_keys = MappingProxyType(
+                    entry.discovery_keys
+                    | {
+                        discovery_key.domain: tuple(
+                            [*known_discovery_keys, discovery_key][-10:]
+                        )
+                    }
+                )
+                _LOGGER.debug(
+                    "Updating discovery keys for %s entry %s %s -> %s",
+                    entry.domain,
+                    unique_id,
+                    entry.discovery_keys,
+                    new_discovery_keys,
+                )
+                self.config_entries.async_update_entry(
+                    entry, discovery_keys=new_discovery_keys
+                )
             return result
 
         # Avoid adding a config entry for a integration
@@ -1417,8 +1463,15 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
+        discovery_key = flow.context.get("discovery_key")
+        discovery_keys = (
+            MappingProxyType({discovery_key.domain: (discovery_key,)})
+            if discovery_key
+            else MappingProxyType({})
+        )
         entry = ConfigEntry(
             data=result["data"],
+            discovery_keys=discovery_keys,
             domain=result["handler"],
             minor_version=result["minor_version"],
             options=result["options"],
@@ -1527,10 +1580,13 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
-            # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.9, we should remove the guard and instead fail
-            if not isinstance(entry.unique_id, Hashable):
-                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+            if not isinstance(entry.unique_id, str):
+                # Guard against integrations using unhashable unique_id
+                # In HA Core 2024.9, we should remove the guard and instead fail
+                if not isinstance(entry.unique_id, Hashable):  # type: ignore[unreachable]
+                    unique_id_hash = str(entry.unique_id)
+                # Checks for other non-string was added in HA Core 2024.10
+                # In HA Core 2025.10, we should remove the error and instead fail
                 report_issue = async_suggest_report_issue(
                     self._hass, integration_domain=entry.domain
                 )
@@ -1642,6 +1698,11 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 created_at = utc_from_timestamp(0).isoformat()
                 for entry in data["entries"]:
                     entry["created_at"] = entry["modified_at"] = created_at
+
+            if old_minor_version < 4:
+                # Version 1.4 adds discovery_keys
+                for entry in data["entries"]:
+                    entry["discovery_keys"] = {}
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1788,21 +1849,13 @@ class ConfigEntries:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
-        # After we have fully removed an "ignore" config entry we can try and rediscover
-        # it so that a user is able to immediately start configuring it. We do this by
-        # starting a new flow with the 'unignore' step. If the integration doesn't
-        # implement async_step_unignore then this will be a no-op.
-        if entry.source == SOURCE_IGNORE:
-            self.hass.async_create_task_internal(
-                self.hass.config_entries.flow.async_init(
-                    entry.domain,
-                    context={"source": SOURCE_UNIGNORE},
-                    data={"unique_id": entry.unique_id},
-                ),
-                f"config entry unignore {entry.title} {entry.domain} {entry.unique_id}",
-            )
-
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
         return {"require_restart": not unload_success}
 
     @callback
@@ -1830,6 +1883,12 @@ class ConfigEntries:
                 created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
+                discovery_keys=MappingProxyType(
+                    {
+                        domain: tuple(DiscoveryKey.from_json_dict(key) for key in keys)
+                        for domain, keys in entry["discovery_keys"].items()
+                    }
+                ),
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
@@ -1955,19 +2014,7 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
-
+        _validate_item(disabled_by=disabled_by)
         if entry.disabled_by is disabled_by:
             return True
 
@@ -1998,6 +2045,8 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+        | UndefinedType = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2027,6 +2076,7 @@ class ConfigEntries:
             changed = True
 
         for attr, value in (
+            ("discovery_keys", discovery_keys),
             ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
@@ -2457,13 +2507,22 @@ class ConfigFlow(ConfigEntryBaseFlow):
         ]
 
     async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Ignore this config flow."""
+        """Ignore this config flow.
+
+        Ignoring a config flow works by creating a config entry with source set to
+        SOURCE_IGNORE.
+
+        There will only be a single active discovery flow per device, also when the
+        integration has multiple discovery sources for the same device. This method
+        is called when the user ignores a discovered device or service, we then store
+        the key for the flow being ignored.
+
+        Once the ignore config entry is created, ConfigEntriesFlowManager.async_finish_flow
+        will make sure the discovery key is kept up to date since it may not be stable
+        unlike the unique id.
+        """
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
-
-    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Rediscover a config entry by it's unique_id."""
-        return self.async_abort(reason="not_implemented")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -2669,6 +2728,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
         """

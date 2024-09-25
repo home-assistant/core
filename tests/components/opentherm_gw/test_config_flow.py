@@ -54,6 +54,7 @@ async def test_form_user(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
+# Deprecated import from configuration.yaml, can be removed in 2025.4.0
 async def test_form_import(
     hass: HomeAssistant,
     mock_pyotgw: MagicMock,

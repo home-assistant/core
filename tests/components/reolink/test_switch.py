@@ -138,7 +138,7 @@ async def test_switch(
         )
 
     # test switch turn off
-    reolink_connect.set_recording.side_effect = None
+    reolink_connect.set_recording.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -156,6 +156,8 @@ async def test_switch(
             blocking=True,
         )
 
+    reolink_connect.set_recording.reset_mock(side_effect=True)
+
 
 async def test_host_switch(
     hass: HomeAssistant,
@@ -165,6 +167,7 @@ async def test_host_switch(
 ) -> None:
     """Test host switch entity."""
     reolink_connect.camera_name.return_value = TEST_CAM_NAME
+    reolink_connect.recording_enabled.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -200,7 +203,7 @@ async def test_host_switch(
         )
 
     # test switch turn off
-    reolink_connect.set_recording.side_effect = None
+    reolink_connect.set_recording.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -217,6 +220,8 @@ async def test_host_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+    reolink_connect.set_recording.reset_mock(side_effect=True)
 
 
 async def test_chime_switch(
@@ -262,7 +267,7 @@ async def test_chime_switch(
         )
 
     # test switch turn off
-    test_chime.set_option.side_effect = None
+    test_chime.set_option.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -279,3 +284,5 @@ async def test_chime_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+    test_chime.set_option.reset_mock(side_effect=True)

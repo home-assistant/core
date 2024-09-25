@@ -116,7 +116,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::calendar::issues::deprecated_service_calendar_list_events::title%]",
-            "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **submit** to close this issue."
+            "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
           }
         }
       }

@@ -25,9 +25,39 @@ async def test_auth_error(
     assert entry.state is ConfigEntryState.LOADED
 
     freezer.tick(timedelta(minutes=10))
-    with patch(
-        "homeassistant.components.nextdns.NextDns.connection_status",
-        side_effect=InvalidApiKeyError,
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_profiles",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_status",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_settings",
+            side_effect=InvalidApiKeyError,
+        ),
+        patch(
+            "homeassistant.components.nextdns.NextDns.connection_status",
+            side_effect=InvalidApiKeyError,
+        ),
     ):
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
