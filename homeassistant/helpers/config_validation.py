@@ -1778,8 +1778,8 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     if not isinstance(value, dict):
         return value
 
-    # `platform` has been renamed to `trigger`
-    # But we still use `platform` to maintain backward compatibility
+    # `platform` has been renamed to `trigger` for users
+    # In the code, platform is still used
     if CONF_TRIGGER in value:
         if CONF_PLATFORM in value:
             raise vol.Invalid(
