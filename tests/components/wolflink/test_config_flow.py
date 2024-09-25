@@ -5,6 +5,7 @@ from unittest.mock import patch
 from httpcore import ConnectError
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import WolfClient
 
 from homeassistant import config_entries
 from homeassistant.components.wolflink.const import (
@@ -17,13 +18,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONFIG
+from .const import CONFIG, LOCALE
 
 from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],
     CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+    LOCALE: CONFIG[LOCALE],
 }
 
 DEVICE = Device(CONFIG[DEVICE_ID], CONFIG[DEVICE_GATEWAY], CONFIG[DEVICE_NAME])
@@ -142,3 +144,11 @@ async def test_already_configured_error(hass: HomeAssistant) -> None:
 
     assert result_create_entry["type"] is FlowResultType.ABORT
     assert result_create_entry["reason"] == "already_configured"
+
+
+async def test_locale(hass: HomeAssistant) -> None:
+    wolf_client = WolfClient(INPUT_CONFIG[CONF_USERNAME], INPUT_CONFIG[CONF_PASSWORD])
+    print(INPUT_CONFIG)
+    await wolf_client.load_localized_json(LOCALE)
+    print("Language: ", wolf_client.language)
+    assert wolf_client.language["Englisch"] == "English"

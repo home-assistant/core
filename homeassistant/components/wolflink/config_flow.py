@@ -16,7 +16,11 @@ from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN, LOCALE
 _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str, vol.Required(LOCALE): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(LOCALE): str,
+    }
 )
 
 

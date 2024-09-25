@@ -8,7 +8,7 @@ from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME,  Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -21,8 +21,8 @@ from .const import (
     DEVICE_ID,
     DEVICE_NAME,
     DOMAIN,
-    PARAMETERS,
     LOCALE,
+    PARAMETERS,
 )
 
 _LOGGER = logging.getLogger(__name__)
