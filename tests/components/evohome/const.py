@@ -19,9 +19,9 @@ CTL_MODE_LOOKUP = {
 
 # The h-numbers refer to issues in HA's core repo
 TEST_INSTALLS: Final = (
-    "minimal",  # evohome: single zone, no DHW
-    "default",  # evohome: multi-zone, with DHW
-    "h032585",  # VisionProWifi: no preset modes for TCS, zoneId=systemId
+    "minimal",  # evohome(single zone, no DHW)
+    "default",  # evohome(multi-zone, with DHW & ghost zones)
+    "h032585",  # VisionProWifi(no preset_mode for TCS)
     "h099625",  # RoundThermostat
     "sys_004",  # RoundModulation
 )
