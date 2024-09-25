@@ -50,7 +50,6 @@ from homeassistant.components.fan import (
     DIRECTION_REVERSE,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
-from homeassistant.components.prometheus import PrometheusMetrics
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -88,6 +87,37 @@ from .helpers import MetricsTestHelper
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
+
+
+@dataclass(frozen=True)
+class MetricInfo:
+    """Class for all data in a single prometheus metric."""
+
+    metric_name: str
+    domain: str
+    friendly_name: str
+    object_id: str
+    metric_value: Any | None = None
+
+    @property
+    def entity(self):
+        """Generate entity_id from components."""
+        return f"{self.domain}.{self.object_id}"
+
+    def get_full_metric_string(self):
+        """Convert metric info into a valid prometheus text string."""
+        final_metric_value = f" {self.metric_value}" if self.metric_value else ""
+        return (
+            f"{self.metric_name}{{"
+            f'domain="{self.domain}",'
+            f'entity="{self.entity}",'
+            f'friendly_name="{self.friendly_name}",'
+            f"}}{final_metric_value}"
+        )
+
+
+def _assert_metric_present(body, metric_info: MetricInfo):
+    assert metric_info.get_full_metric_string() in body
 
 
 @dataclass
@@ -136,25 +166,6 @@ async def generate_latest_metrics(client):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_metrics_labels_list(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    entity_registry: er.EntityRegistry,
-    namespace: str,
-) -> None:
-    """Test that the common labels list is as expected."""
-    expected_list = [
-        "entity",
-        "friendly_name",
-        "domain",
-        "area",
-        "object_id",
-        "device_class",
-    ]
-    assert expected_list == PrometheusMetrics._get_label_keys()
-
-
-@pytest.mark.parametrize("namespace", [""])
 async def test_setup_enumeration(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -181,13 +192,15 @@ async def test_setup_enumeration(
 
     client = await hass_client()
     body = await generate_latest_metrics(client)
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "homeassistant_sensor_temperature_celsius",
-        "12.3",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="homeassistant_sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value=state,
+        ),
     )
 
 
@@ -204,22 +217,26 @@ async def test_view_empty_namespace(
         "Objects collected during gc" in body
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "entity_available",
-        "1.0",
-        "Radio Energy",
-        "radio_energy",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.POWER,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Radio Energy",
+            object_id="radio_energy",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "last_updated_time_seconds",
-        "86400.0",
-        "Radio Energy",
-        "radio_energy",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.POWER,
+        MetricInfo(
+            metric_name="last_updated_time_seconds",
+            domain="sensor",
+            friendly_name="Radio Energy",
+            object_id="radio_energy",
+            metric_value="86400.0",
+        ),
     )
 
 
@@ -480,8 +497,7 @@ async def test_humidifier(
         "Humidifier",
         "humidifier",
         body,
-        # TODO: where is this humidifier device_class?
-        device_class="humidifier",
+        device_class=humidifier.HumidifierDeviceClass.HUMIDIFIER,
     )
 
     MetricsTestHelper._perform_humidifier_metric_assert(
