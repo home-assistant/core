@@ -8,29 +8,16 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
-
-
-@pytest.fixture(name="light_node")
-async def dimmable_light_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a dimmable light node."""
-    return await setup_integration_with_node_fixture(
-        hass, "dimmable_light", matter_client
-    )
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_mode_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    light_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test select entities are created for the ModeSelect cluster attributes."""
     state = hass.states.get("select.mock_dimmable_light_led_color")
@@ -53,7 +40,7 @@ async def test_mode_select_entities(
     ]
     # name should be derived from description attribute
     assert state.attributes["friendly_name"] == "Mock Dimmable Light LED Color"
-    set_node_attribute(light_node, 6, 80, 3, 1)
+    set_node_attribute(matter_node, 6, 80, 3, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.mock_dimmable_light_led_color")
     assert state.state == "Orange"
@@ -70,7 +57,7 @@ async def test_mode_select_entities(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=light_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=6,
         command=clusters.ModeSelect.Commands.ChangeToMode(newMode=3),
     )
@@ -78,10 +65,11 @@ async def test_mode_select_entities(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_attribute_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    light_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test select entities are created for attribute based discovery schema(s)."""
     entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
@@ -93,12 +81,12 @@ async def test_attribute_select_entities(
         state.attributes["friendly_name"]
         == "Mock Dimmable Light Power-on behavior on startup"
     )
-    set_node_attribute(light_node, 1, 6, 16387, 1)
+    set_node_attribute(matter_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "on"
     # test that an invalid value (e.g. 253) leads to an unknown state
-    set_node_attribute(light_node, 1, 6, 16387, 253)
+    set_node_attribute(matter_node, 1, 6, 16387, 253)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "unknown"

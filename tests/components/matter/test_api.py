@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.models.node import (
     MatterFabricData,
+    MatterNode,
     NetworkType,
     NodeDiagnostics,
     NodeType,
@@ -22,8 +23,6 @@ from homeassistant.components.matter.api import (
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from .common import setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -199,19 +198,16 @@ async def test_set_wifi_credentials(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+# setup (mock) integration with a random node fixture
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_node_diagnostics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test the node diagnostics command."""
-    # setup (mock) integration with a random node fixture
-    await setup_integration_with_node_fixture(
-        hass,
-        "onoff_light",
-        matter_client,
-    )
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
@@ -273,19 +269,16 @@ async def test_node_diagnostics(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+# setup (mock) integration with a random node fixture
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_ping_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test the ping_node command."""
-    # setup (mock) integration with a random node fixture
-    await setup_integration_with_node_fixture(
-        hass,
-        "onoff_light",
-        matter_client,
-    )
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
@@ -333,19 +326,16 @@ async def test_ping_node(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+# setup (mock) integration with a random node fixture
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_open_commissioning_window(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test the open_commissioning_window command."""
-    # setup (mock) integration with a random node fixture
-    await setup_integration_with_node_fixture(
-        hass,
-        "onoff_light",
-        matter_client,
-    )
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
@@ -399,19 +389,16 @@ async def test_open_commissioning_window(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+# setup (mock) integration with a random node fixture
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_remove_matter_fabric(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test the remove_matter_fabric command."""
-    # setup (mock) integration with a random node fixture
-    await setup_integration_with_node_fixture(
-        hass,
-        "onoff_light",
-        matter_client,
-    )
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
@@ -455,19 +442,16 @@ async def test_remove_matter_fabric(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+# setup (mock) integration with a random node fixture
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_interview_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test the interview_node command."""
-    # setup (mock) integration with a random node fixture
-    await setup_integration_with_node_fixture(
-        hass,
-        "onoff_light",
-        matter_client,
-    )
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
