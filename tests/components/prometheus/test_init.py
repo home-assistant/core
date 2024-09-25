@@ -467,21 +467,37 @@ async def test_input_number(
     body = await generate_latest_metrics(client)
     domain = "input_number"
 
-    MetricsTestHelper._perform_metric_assert(
-        "input_number_state", "5.2", domain, "Threshold", "threshold", body
-    )
-
-    MetricsTestHelper._perform_metric_assert(
-        "input_number_state", "60.0", domain, "None", "brightness", body
-    )
-
-    MetricsTestHelper._perform_metric_assert(
-        "input_number_state_celsius",
-        "22.7",
-        domain,
-        "Target temperature",
-        "target_temperature",
+    _assert_metric_present(
         body,
+        MetricInfo(
+            metric_name="input_number_state",
+            domain=domain,
+            friendly_name="Threshold",
+            object_id="threshold",
+            metric_value="5.2",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="input_number_state",
+            domain=domain,
+            friendly_name="None",
+            object_id="brightness",
+            metric_value="60.0",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="input_number_state_celsius",
+            domain=domain,
+            friendly_name="Target temperature",
+            object_id="target_temperature",
+            metric_value="22.7",
+        ),
     )
 
 
@@ -493,21 +509,37 @@ async def test_number(
     body = await generate_latest_metrics(client)
     domain = "number"
 
-    MetricsTestHelper._perform_metric_assert(
-        "number_state", "5.2", domain, "Threshold", "threshold", body
-    )
-
-    MetricsTestHelper._perform_metric_assert(
-        "number_state", "60.0", domain, "None", "brightness", body
-    )
-
-    MetricsTestHelper._perform_metric_assert(
-        "number_state_celsius",
-        "22.7",
-        domain,
-        "Target temperature",
-        "target_temperature",
+    _assert_metric_present(
         body,
+        MetricInfo(
+            metric_name="number_state",
+            domain=domain,
+            friendly_name="Threshold",
+            object_id="threshold",
+            metric_value="5.2",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="number_state",
+            domain=domain,
+            friendly_name="None",
+            object_id="brightness",
+            metric_value="60.0",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="number_state_celsius",
+            domain=domain,
+            friendly_name="Target temperature",
+            object_id="target_temperature",
+            metric_value="22.7",
+        ),
     )
 
 
@@ -518,13 +550,15 @@ async def test_battery(
     """Test prometheus metrics for battery."""
     body = await generate_latest_metrics(client)
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "battery_level_percent",
-        "12.0",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="battery_level_percent",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="12.0",
+        ),
     )
 
 
@@ -535,26 +569,63 @@ async def test_climate(
 ) -> None:
     """Test prometheus metrics for climate entities."""
     body = await generate_latest_metrics(client)
+    domain = "climate"
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_current_temperature_celsius", "25.0", "HeatPump", "heatpump", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_current_temperature_celsius",
+            domain=domain,
+            friendly_name="HeatPump",
+            object_id="heatpump",
+            metric_value="25.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_celsius", "20.0", "HeatPump", "heatpump", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_target_temperature_celsius",
+            domain=domain,
+            friendly_name="HeatPump",
+            object_id="heatpump",
+            metric_value="20.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_low_celsius", "21.0", "Ecobee", "ecobee", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_target_temperature_low_celsius",
+            domain=domain,
+            friendly_name="Ecobee",
+            object_id="ecobee",
+            metric_value="21.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_high_celsius", "24.0", "Ecobee", "ecobee", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_target_temperature_high_celsius",
+            domain=domain,
+            friendly_name="Ecobee",
+            object_id="ecobee",
+            metric_value="24.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_target_temperature_celsius", "0.0", "Fritz!DECT", "fritzdect", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_target_temperature_celsius",
+            domain=domain,
+            friendly_name="Fritz!DECT",
+            object_id="fritzdect",
+            metric_value="0.0",
+        ),
     )
+
     assert (
         'climate_preset_mode{domain="climate",'
         'entity="climate.ecobee",'
