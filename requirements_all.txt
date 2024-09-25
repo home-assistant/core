@@ -1212,7 +1212,7 @@ ismartgate==5.0.1
 israel-rail-api==0.1.2
 
 # homeassistant.components.abode
-jaraco.abode==6.2.0
+jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
