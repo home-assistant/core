@@ -392,8 +392,6 @@ class MawaqitPrayerClient:
         async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_update(self, *_):
-        # TODO : Reload pray_time.txt so we avoid bugs if prayer_times changes (for example if the mosque decides to change the iqama delay of a prayer) # pylint: disable=fixme
-        # get ID from my_mosque.txt, then create AsyncMawaqitClient and generate the dict with the prayer times.
         """Update sensors with new prayer times."""
         try:
             # prayer_times = await self.hass.async_add_executor_job(
