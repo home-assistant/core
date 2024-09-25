@@ -54,15 +54,11 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Open()
-        )
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Open())
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Close()
-        )
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
@@ -148,9 +144,7 @@ DISCOVERY_SCHEMAS = [
             ValveConfigurationAndControl.Attributes.CurrentState,
             ValveConfigurationAndControl.Attributes.TargetState,
         ),
-        optional_attributes=(
-            ValveConfigurationAndControl.Attributes.CurrentLevel,
-        ),
+        optional_attributes=(ValveConfigurationAndControl.Attributes.CurrentLevel,),
         device_type=(device_types.WaterValve,),
     ),
 ]
