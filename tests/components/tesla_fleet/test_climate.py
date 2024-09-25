@@ -437,7 +437,7 @@ async def test_climate_notemp(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with target temperature low/high but the entity does not support it",
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
