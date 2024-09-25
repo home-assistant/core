@@ -250,27 +250,18 @@ async def test_get_prices_start_tomorrow(
 
 
 @pytest.mark.parametrize(
-    ("start_time", "expect_it_to_work"),
+    "start_time",
     [
-        (STARTTIME.isoformat(), True),
-        (STARTTIME.replace(tzinfo=None).isoformat(), True),
-        (
-            (STARTTIME + dt.timedelta(hours=4))
-            .replace(tzinfo=dt.timezone(dt.timedelta(hours=4)))
-            .isoformat(),
-            True,
-        ),
-        ((STARTTIME + dt.timedelta(hours=4)).isoformat(), False),
-        (
-            (STARTTIME + dt.timedelta(hours=4)).replace(tzinfo=None).isoformat(),
-            False,
-        ),
+        STARTTIME.isoformat(),
+        STARTTIME.replace(tzinfo=None).isoformat(),
+        (STARTTIME + dt.timedelta(hours=4))
+        .replace(tzinfo=dt.timezone(dt.timedelta(hours=4)))
+        .isoformat(),
     ],
 )
 async def test_get_prices_with_timezones(
     freezer: FrozenDateTimeFactory,
     start_time: str,
-    expect_it_to_work: bool,
 ) -> None:
     """Test __get_prices with timezone and without."""
     freezer.move_to(STARTTIME)
@@ -278,37 +269,53 @@ async def test_get_prices_with_timezones(
 
     result = await __get_prices(call, hass=create_mock_hass())
 
-    if expect_it_to_work:
-        assert result == {
-            "prices": {
-                "first_home": [
-                    {
-                        "start_time": STARTTIME,
-                        "price": 0.46914,
-                        "level": "VERY_EXPENSIVE",
-                    },
-                    {
-                        "start_time": STARTTIME + dt.timedelta(hours=1),
-                        "price": 0.46914,
-                        "level": "VERY_EXPENSIVE",
-                    },
-                ],
-                "second_home": [
-                    {
-                        "start_time": STARTTIME,
-                        "price": 0.46914,
-                        "level": "VERY_EXPENSIVE",
-                    },
-                    {
-                        "start_time": STARTTIME + dt.timedelta(hours=1),
-                        "price": 0.46914,
-                        "level": "VERY_EXPENSIVE",
-                    },
-                ],
-            }
+    assert result == {
+        "prices": {
+            "first_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
+            "second_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
         }
-    else:
-        assert result == {"prices": {"first_home": [], "second_home": []}}
+    }
+
+
+@pytest.mark.parametrize(
+    "start_time",
+    [
+        (STARTTIME + dt.timedelta(hours=4)).isoformat(),
+        (STARTTIME + dt.timedelta(hours=4)).replace(tzinfo=None).isoformat(),
+    ],
+)
+async def test_get_prices_with_wrong_timezones(
+    freezer: FrozenDateTimeFactory,
+    start_time: str,
+) -> None:
+    """Test __get_prices with timezone and without, while expecting it to fail."""
+    freezer.move_to(STARTTIME)
+    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": start_time})
+
+    result = await __get_prices(call, hass=create_mock_hass())
+    assert result == {"prices": {"first_home": [], "second_home": []}}
 
 
 async def test_get_prices_invalid_input() -> None:
