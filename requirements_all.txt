@@ -1978,7 +1978,7 @@ pyisy==3.1.14
 pyitachip2ir==0.0.7
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.12
+pyjvcprojector==1.1.0
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -2956,7 +2956,7 @@ weatherflow4py==1.0.6
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.09.10
+weheat==2024.09.23
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

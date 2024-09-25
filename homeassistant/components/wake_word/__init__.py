@@ -137,7 +137,6 @@ class WakeWordDetectionEntity(RestoreEntity):
     }
 )
 @websocket_api.async_response
-@callback
 async def websocket_entity_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
