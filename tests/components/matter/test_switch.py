@@ -15,22 +15,6 @@ from .common import (
 )
 
 
-@pytest.fixture(name="powerplug_node")
-async def powerplug_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a Powerplug node."""
-    return await setup_integration_with_node_fixture(
-        hass, "on_off_plugin_unit", matter_client
-    )
-
-
-@pytest.fixture(name="switch_unit")
-async def switch_unit_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a Switch Unit node."""
-    return await setup_integration_with_node_fixture(hass, "switch_unit", matter_client)
 
 
 # This tests needs to be adjusted to remove lingering tasks
