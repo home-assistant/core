@@ -25,7 +25,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The EcoNet `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat.\n\nUpdate any automations to use the new `aux_heat_only` switch entity. When this is done, Press submit to fix this issue.",
+            "description": "The EcoNet `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat.\n\nUpdate any automations to use the new `aux_heat_only` switch entity. When this is done, select submit to fix this issue.",
             "title": "[%key:component::econet::issues::migrate_aux_heat::title%]"
           }
         }
