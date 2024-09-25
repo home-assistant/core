@@ -83,10 +83,12 @@ class MatterValve(MatterEntity, ValveEntity):
             and target_state == ValveStateEnum.kOpen
         ):
             self._attr_is_opening = True
+            self._attr_is_closing = False
         elif (
             current_state == ValveStateEnum.kTransitioning
             and target_state == ValveStateEnum.kClosed
         ):
+            self._attr_is_opening = False
             self._attr_is_closing = True
         elif current_state == ValveStateEnum.kClosed:
             self._attr_is_opening = False

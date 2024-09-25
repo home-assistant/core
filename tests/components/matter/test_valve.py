@@ -81,17 +81,17 @@ async def test_valve(
     assert state
     assert state.state == "opening"
 
-    # set changing state to 'opening'
+    # set changing state to 'closing'
     set_node_attribute(valve_node, 1, 129, 4, 2)
     set_node_attribute(valve_node, 1, 129, 5, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "open"
+    assert state.state == "closing"
 
-    # set changing state to 'closed'
+    # set changing state to 'open'
     set_node_attribute(valve_node, 1, 129, 4, 1)
-    set_node_attribute(valve_node, 1, 129, 5, 1)
+    set_node_attribute(valve_node, 1, 129, 5, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
