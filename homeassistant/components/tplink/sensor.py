@@ -8,6 +8,7 @@ from typing import cast
 from kasa import Feature
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
+from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -128,6 +130,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
@@ -135,6 +138,7 @@ async def async_setup_entry(
         descriptions=SENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
+    async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
     async_add_entities(entities)
 
 
