@@ -38,6 +38,60 @@ async def test_entities(
     assert hass.states.async_all() == snapshot
 
 
+SETUP_FAILED_ANTICIPATED = (
+    "homeassistant.setup",
+    logging.ERROR,
+    "Setup failed for 'evohome': Integration failed to initialize.",
+)
+SETUP_FAILED_UNEXPECTED = (
+    "homeassistant.setup",
+    logging.ERROR,
+    "Error during setup of component evohome",
+)
+AUTHENTICATION_FAILED = (
+    "homeassistant.components.evohome.helpers",
+    logging.ERROR,
+    "Failed to authenticate with the vendor's server. Check your username"
+    " and password. NB: Some special password characters that work"
+    " correctly via the website will not work via the web API. Message"
+    " is: ",
+)
+REQUEST_FAILED_NONE = (
+    "homeassistant.components.evohome.helpers",
+    logging.WARNING,
+    "Unable to connect with the vendor's server. "
+    "Check your network and the vendor's service status page. "
+    "Message is: ",
+)
+REQUEST_FAILED_503 = (
+    "homeassistant.components.evohome.helpers",
+    logging.WARNING,
+    "The vendor says their server is currently unavailable. "
+    "Check the vendor's service status page",
+)
+REQUEST_FAILED_429 = (
+    "homeassistant.components.evohome.helpers",
+    logging.WARNING,
+    "The vendor's API rate limit has been exceeded. "
+    "If this message persists, consider increasing the scan_interval",
+)
+
+REQUEST_FAILED_LOOKUP = {
+    None: [
+        REQUEST_FAILED_NONE,
+        SETUP_FAILED_ANTICIPATED,
+    ],
+    HTTPStatus.SERVICE_UNAVAILABLE: [
+        REQUEST_FAILED_503,
+        SETUP_FAILED_ANTICIPATED,
+    ],
+    HTTPStatus.TOO_MANY_REQUESTS: [
+        REQUEST_FAILED_429,
+        SETUP_FAILED_ANTICIPATED,
+    ],
+}
+
+
 @pytest.mark.parametrize(
     "status", [*sorted([*_ERR_MSG_LOOKUP_AUTH, HTTPStatus.BAD_GATEWAY]), None]
 )
@@ -58,16 +112,8 @@ async def test_authentication_failure_v2(
     assert result is False
 
     assert caplog.record_tuples == [
-        (
-            "homeassistant.components.evohome.helpers",
-            logging.ERROR,
-            "Failed to authenticate with the vendor's server. Check your username and password. NB: Some special password characters that work correctly via the website will not work via the web API. Message is: ",
-        ),
-        (
-            "homeassistant.setup",
-            logging.ERROR,
-            "Setup failed for 'evohome': Integration failed to initialize.",
-        ),
+        AUTHENTICATION_FAILED,
+        SETUP_FAILED_ANTICIPATED,
     ]
 
 
@@ -90,24 +136,6 @@ async def test_client_request_failure_v2(
 
     assert result is False
 
-    # ignore any logging from the client library
-    log = [r.message for r in caplog.records if r.name.startswith("homeassistant.")]
-
-    if status in (
-        HTTPStatus.TOO_MANY_REQUESTS,
-        HTTPStatus.SERVICE_UNAVAILABLE,
-        None,
-    ):
-        assert log[1].startswith("Setup failed for")
-        assert len(log) == 2
-    else:
-        assert log[0].startswith("Error during setup of")
-        assert len(log) == 1
-
-    # these entries are from evohome
-    if status == HTTPStatus.TOO_MANY_REQUESTS:
-        assert "API rate limit" in log[0]
-    elif status == HTTPStatus.SERVICE_UNAVAILABLE:
-        assert "currently unavailable" in log[0]
-    elif status is None:
-        assert "Unable to connect" in log[0]
+    assert caplog.record_tuples == REQUEST_FAILED_LOOKUP.get(
+        status, [SETUP_FAILED_UNEXPECTED]
+    )
