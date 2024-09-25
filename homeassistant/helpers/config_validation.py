@@ -1778,25 +1778,24 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     if not isinstance(value, dict):
         return value
 
-    response = copy(value)
-
     # `platform` has been renamed to `trigger`
     # But we still use `platform` to maintain backward compatibility
     if CONF_TRIGGER in value:
+        if CONF_PLATFORM in value:
+            raise vol.Invalid(
+                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+            )
+        response = copy(value)
         response[CONF_PLATFORM] = response.pop(CONF_TRIGGER)
+        return response
 
-    return response
+    return value
 
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): str,
-        vol.Exclusive(CONF_PLATFORM, "trigger"): str,
-        vol.Exclusive(
-            CONF_TRIGGER,
-            "trigger",
-            msg="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
-        ): str,
+        vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
@@ -1830,7 +1829,7 @@ def _base_trigger_validator(value: Any) -> Any:
 TRIGGER_SCHEMA = vol.All(
     ensure_list,
     _base_trigger_list_flatten,
-    [vol.All(_base_trigger_validator, _backward_compat_trigger_schema)],
+    [vol.All(_backward_compat_trigger_schema, _base_trigger_validator)],
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
