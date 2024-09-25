@@ -12,10 +12,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
-from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
-from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models import MatterNodeData
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError
@@ -30,7 +27,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
+from .common import create_node_from_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -57,13 +54,7 @@ async def test_entry_setup_unload(
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node_data = load_and_parse_node_fixture("onoff-light")
-    node = MatterNode(
-        dataclass_from_dict(
-            MatterNodeData,
-            node_data,
-        )
-    )
+    node = create_node_from_fixture("onoff-light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
     entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
