@@ -101,7 +101,10 @@ async def test_authentication_failure_v2(
     status: HTTPStatus,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test failure to setup an evohome-compatible system."""
+    """Test failure to setup an evohome-compatible system.
+
+    In this instance, the failure occurs in the v2 API.
+    """
 
     with patch("evohomeasync2.broker.Broker.get") as mock_fcn:
         mock_fcn.side_effect = exc.AuthenticationFailed("", status=status)
@@ -126,7 +129,10 @@ async def test_client_request_failure_v2(
     status: HTTPStatus,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test failure to setup an evohome-compatible system."""
+    """Test failure to setup an evohome-compatible system.
+
+    In this instance, the failure occurs in the v2 API.
+    """
 
     with patch("evohomeasync2.broker.Broker.get") as mock_fcn:
         mock_fcn.side_effect = exc.RequestFailed("", status=status)
