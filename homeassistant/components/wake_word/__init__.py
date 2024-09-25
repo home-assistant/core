@@ -36,7 +36,7 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-DOMAIN_DATA: HassKey[EntityComponent[WakeWordDetectionEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[WakeWordDetectionEntity]] = HassKey(DOMAIN)
 
 TIMEOUT_FETCH_WAKE_WORDS = 10
 
@@ -52,14 +52,14 @@ def async_get_wake_word_detection_entity(
     hass: HomeAssistant, entity_id: str
 ) -> WakeWordDetectionEntity | None:
     """Return wake word entity."""
-    return hass.data[DOMAIN_DATA].get_entity(entity_id)
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up wake word."""
     websocket_api.async_register_command(hass, websocket_entity_info)
 
-    component = hass.data[DOMAIN_DATA] = EntityComponent[WakeWordDetectionEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[WakeWordDetectionEntity](
         _LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -69,12 +69,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class WakeWordDetectionEntity(RestoreEntity):
@@ -141,7 +141,7 @@ async def websocket_entity_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get info about wake word entity."""
-    entity = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(
