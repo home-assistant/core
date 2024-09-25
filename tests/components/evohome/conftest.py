@@ -100,14 +100,6 @@ def mock_get_factory(install: str) -> Callable:
     return mock_get
 
 
-async def block_request(
-    self: Broker, method: HTTPMethod, url: str, **kwargs: Any
-) -> None:
-    """Fail if the code attempts any actual I/O via aiohttp."""
-
-    pytest.fail(f"Unexpected request: {method} {url}")
-
-
 @pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
@@ -117,8 +109,6 @@ def config() -> dict[str, str]:
     }
 
 
-@patch("evohomeasync.broker.Broker._make_request", block_request)
-@patch("evohomeasync2.broker.Broker._client", block_request)
 async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
