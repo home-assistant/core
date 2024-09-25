@@ -216,10 +216,16 @@ async def test_climate_entity_with_step_and_target_temp(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_myclimate", ATTR_TEMPERATURE: 25},
+        {
+            ATTR_ENTITY_ID: "climate.test_myclimate",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+            ATTR_TEMPERATURE: 25,
+        },
         blocking=True,
     )
-    mock_client.climate_command.assert_has_calls([call(key=1, target_temperature=25.0)])
+    mock_client.climate_command.assert_has_calls(
+        [call(key=1, mode=ClimateMode.AUTO, target_temperature=25.0)]
+    )
     mock_client.climate_command.reset_mock()
 
     with pytest.raises(ServiceValidationError):
