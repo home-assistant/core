@@ -32,9 +32,6 @@ class TeslaFleetDeviceTrackerEntity(
 ):
     """Base class for Tesla Fleet device tracker entities."""
 
-    _attr_latitude: float | None = None
-    _attr_longitude: float | None = None
-
     def __init__(
         self,
         vehicle: TeslaFleetVehicleData,
@@ -52,16 +49,6 @@ class TeslaFleetDeviceTrackerEntity(
         ):
             self._attr_latitude = state.attributes.get("latitude")
             self._attr_longitude = state.attributes.get("longitude")
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        return self._attr_latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        return self._attr_longitude
 
 
 class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):
