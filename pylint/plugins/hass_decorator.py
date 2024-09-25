@@ -73,14 +73,13 @@ class HassDecoratorChecker(BaseChecker):
                     args=("scope `session`", "use `package` or lower"),
                 )
                 return
-            if (
-                not (
-                    autouse_keyword := self._get_pytest_fixture_node_keyword(
-                        decorator, "autouse"
-                    )
+            if not (
+                autouse_keyword := self._get_pytest_fixture_node_keyword(
+                    decorator, "autouse"
                 )
-                or not isinstance(autouse_keyword.value, nodes.Const)
-                or not autouse_keyword.value.value
+            ) or (
+                isinstance(autouse_keyword.value, nodes.Const)
+                and not autouse_keyword.value.value
             ):
                 self.add_message(
                     "hass-pytest-fixture-decorator",

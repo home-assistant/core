@@ -78,6 +78,10 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
         ('scope="module"', "tests.components.conftest"),
         ('scope="package"', "tests.components.conftest"),
         ('scope="session", autouse=True', "tests.components.conftest"),
+        (
+            'scope="session", autouse=find_spec("zeroconf") is not None',
+            "tests.components.conftest",
+        ),
         ('scope="function"', "tests.components.pylint_tests.conftest"),
         ('scope="class"', "tests.components.pylint_tests.conftest"),
         ('scope="module"', "tests.components.pylint_tests.conftest"),
