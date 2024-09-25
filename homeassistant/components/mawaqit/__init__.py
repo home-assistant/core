@@ -48,8 +48,6 @@ from .const import (
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 file_path = f"{CURRENT_DIR}/data/mosq_list_data"
 
-# from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
@@ -185,22 +183,13 @@ class MawaqitPrayerClient:
         uuid_servers = []  # noqa: F841
         # TODO check if we should keep this or no  # pylint: disable=fixme
         CALC_METHODS.clear()  # changed due to W0621 with pylint and F841 with Ruff
-        # if self.store is None:
-        #     self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         # TODO reload files here from API # pylint: disable=fixme
         # We get the prayer times of the year from pray_time.txt
-        # utils.update_mosque_data_files()
         await utils.update_my_mosque_data_files(
             self.hass, CURRENT_DIR, store=self.store
         )
 
-        # with open(f"{CURRENT_DIR}/data/pray_time.txt", encoding="utf-8") as f:
-        #     content = json.load(f)
-
-        # data_pray_time = await utils.async_read_in_data(
-        #     self.hass, CURRENT_DIR, "pray_time.txt"
-        # )
         data_pray_time = await utils.read_pray_time(self.store)
 
         # data_pray_time = content
@@ -232,10 +221,7 @@ class MawaqitPrayerClient:
 
         tomorrow = (today + timedelta(days=1)).strftime("%Y-%m-%d")
         today = today.strftime("%Y-%m-%d")
-        # _LOGGER.debug("[;] Now New : %s", ha_now().day)
-        # _LOGGER.debug("[;] Now New - Date : %s", ha_now().strftime("%Y-%m-%d"))
 
-        # prayer_names = {"Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"}
         ordered_prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"]
         prayers = []
         res = {}
@@ -262,13 +248,8 @@ class MawaqitPrayerClient:
         next_prayer = min(prayers)
         res["Next Salat Time"] = next_prayer.split(" ", 1)[1].rsplit(":", 1)[0]
         next_prayer_index = prayers.index(next_prayer)
-        # TODO fix sensor times # pylint: disable=fixme
+
         res["Next Salat Name"] = ordered_prayer_names[next_prayer_index]
-        # _LOGGER.debug("[;] Prayers : %s", prayers)
-        # _LOGGER.debug("[;] Next_prayer : %s", next_prayer)
-        # _LOGGER.debug("[;] List : %s", list(prayer_names))
-        # res["Next Salat Name"] = prayer_name[next_prayer]
-        # res["Next Salat Name"] = next_prayer
 
         countdown_next_prayer = 15
         # 15 minutes Before Next Prayer
@@ -360,9 +341,6 @@ class MawaqitPrayerClient:
             ]
 
         else:  # We retrieve the next Fajr (more calculations).
-            # data_pray_time = ""
-            # async with await anyio.open_file(f"{CURRENT_DIR}/data/pray_time.txt") as f:
-            #     data_pray_time = json.loads(await f.read())
             data_pray_time = await utils.read_pray_time(self.store)
             calendar = data_pray_time["calendar"]
 
@@ -485,7 +463,7 @@ class MawaqitPrayerClient:
             )
             self.cancel_events_next_salat.append(cancel_event)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "[;] [async_update] self.prayer_times_info : %s", self.prayer_times_info
         )
 

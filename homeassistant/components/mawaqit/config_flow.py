@@ -23,6 +23,7 @@ from .const import (
     CONF_CALC_METHOD,
     CONF_UUID,
     DOMAIN,
+    MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
 )
@@ -90,7 +91,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             await utils.write_mawaqit_token(self.hass, self.store, mawaqit_token)
-            # os.environ["MAWAQIT_API_KEY"] = mawaqit_token
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -112,7 +112,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_mosques()
 
-        # (if not valid)
         self._errors["base"] = "wrong_credential"
 
         return await self._show_config_form(user_input)
@@ -159,6 +158,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LATITUDE: lat,
                 CONF_LONGITUDE: longi,
             }
+
+            utils.cleare_storage_entry(self.store, MAWAQIT_ALL_MOSQUES_NN)
 
             return self.async_create_entry(title=title, data=data_entry)
 
@@ -317,7 +318,6 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
             # return self.config_entry
             return self.async_create_entry(title=None, data={})
-            # return self.async_create_entry(title=None, data=None) #"None" is not assignable to "Mapping[str, Any]
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -353,15 +353,9 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
-# def get_mawaqit_token_from_file(hass: HomeAssistant, store: Store):
-#     """Retrieve the Mawaqit API token from the environment variable."""
-#     return await utils.read_mawaqit_token(hass, store)
-
-
 async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
     """Check if the mosque configuration file already exists."""
     return await utils.read_my_mosque_NN_file(store) is not None
-    # return os.path.isfile(f"{CURRENT_DIR}/data/my_mosque_NN.txt")
 
 
 async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:

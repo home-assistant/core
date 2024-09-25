@@ -188,18 +188,12 @@ async def async_read_in_data(hass: HomeAssistant, directory, file_name):
 async def read_mawaqit_token(hass: HomeAssistant, store: Store | None) -> str:
     """Read the Mawaqit API token from an environment variable."""
 
-    # def read_token():
-    #     return os.environ.get(MAWAQIT_API_KEY_TOKEN, "")
-
     _LOGGER.debug("Reading Mawaqit token from store")
 
     if store is None:
         _LOGGER.error("Store is None !")
         raise ValueError("Store is None !")
 
-    # return await hass.async_add_executor_job(
-    #     read_one_element, store, MAWAQIT_API_KEY_TOKEN
-    # )
     return await read_one_element(store, MAWAQIT_API_KEY_TOKEN)
 
 
@@ -208,13 +202,8 @@ async def write_mawaqit_token(
 ) -> None:
     """Write the Mawaqit API token to an environment variable."""
 
-    # def write_token(token):
-    #     os.environ[MAWAQIT_API_KEY_TOKEN] = token
     _LOGGER.debug("Writing Mawaqit token to store")
 
-    # await hass.async_add_executor_job(
-    #     write_one_element, store, MAWAQIT_API_KEY_TOKEN, mawaqit_token
-    # )
     await write_one_element(store, MAWAQIT_API_KEY_TOKEN, mawaqit_token)
 
 
