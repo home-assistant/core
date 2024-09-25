@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_CALC_METHOD,
     DOMAIN,
     MAWAQIT_ALL_MOSQUES_NN,
+    MAWAQIT_MOSQ_LIST_DATA,
     MAWAQIT_MY_MOSQUE_NN,
     MAWAQIT_PRAY_TIME,
     MAWAQIT_STORAGE_KEY,
@@ -144,6 +145,7 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await utils.cleare_storage_entry(store, MAWAQIT_MY_MOSQUE_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_PRAY_TIME)
+    await utils.cleare_storage_entry(store, MAWAQIT_MOSQ_LIST_DATA)
 
     _LOGGER.debug("Finished clearing data folder")
 
@@ -187,7 +189,7 @@ class MawaqitPrayerClient:
         # if self.store is None:
         #     self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
-        # TODO reload files here from API
+        # TODO reload files here from API # pylint: disable=fixme
         # We get the prayer times of the year from pray_time.txt
         # utils.update_mosque_data_files()
         await utils.update_my_mosque_data_files(

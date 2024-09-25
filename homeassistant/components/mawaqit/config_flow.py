@@ -108,7 +108,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await utils.async_write_in_data(
                 self.hass, CURRENT_DIR, "mosq_list_data", {"CALC_METHODS": CALC_METHODS}
-            )
+            )  # TODO deprecate this line # pylint: disable=fixme
+
+            await utils.write_mosq_list_data({"CALC_METHODS": CALC_METHODS}, self.store)
 
             return await self.async_step_mosques()
 

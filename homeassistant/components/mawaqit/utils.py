@@ -14,6 +14,7 @@ from . import mawaqit_wrapper
 from .const import (
     MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_API_KEY_TOKEN,
+    MAWAQIT_MOSQ_LIST_DATA,
     MAWAQIT_MY_MOSQUE_NN,
     MAWAQIT_PRAY_TIME,
 )
@@ -107,6 +108,30 @@ async def write_pray_time(pray_time, store: Store | None) -> None:
 
     """
     await write_one_element(store, MAWAQIT_PRAY_TIME, pray_time)
+
+
+async def read_mosq_list_data(store: Store | None):
+    """Read the mosque list data from the store.
+
+    Args:
+        store (Store | None): The storage object to read from.
+
+    Returns:
+        The mosque list data read from the store.
+
+    """
+    return await read_one_element(store, MAWAQIT_MOSQ_LIST_DATA)
+
+
+async def write_mosq_list_data(mosq_list_data, store: Store | None) -> None:
+    """Write the mosque list data to the store.
+
+    Args:
+        mosq_list_data (dict): The mosque list data to write.
+        store (Store | None): The storage object to write to.
+
+    """
+    await write_one_element(store, MAWAQIT_MOSQ_LIST_DATA, mosq_list_data)
 
 
 def create_data_folder() -> None:
@@ -326,4 +351,5 @@ async def cleare_storage_entry(store, key):
         key,
         None,
     )
+    _LOGGER.info("Cleared storage entry with key = %s", key)
     # await store.async_remove()
