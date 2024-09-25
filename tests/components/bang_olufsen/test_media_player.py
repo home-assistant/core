@@ -37,6 +37,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -45,6 +47,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_VOLUME_MUTE,
@@ -58,6 +61,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    TEST_ACTIVE_SOUND_MODE_NAME,
+    TEST_ACTIVE_SOUND_MODE_NAME_2,
     TEST_AUDIO_SOURCES,
     TEST_DEEZER_FLOW,
     TEST_DEEZER_INVALID_FLOW,
@@ -66,6 +71,7 @@ from .const import (
     TEST_FALLBACK_SOURCES,
     TEST_FRIENDLY_NAME_2,
     TEST_JID_2,
+    TEST_LISTENING_MODE_REF,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_MEDIA_PLAYER_ENTITY_ID_3,
@@ -79,6 +85,8 @@ from .const import (
     TEST_PLAYBACK_STATE_TURN_OFF,
     TEST_RADIO_STATION,
     TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
+    TEST_SOUND_MODE_2,
+    TEST_SOUND_MODES,
     TEST_SOURCES,
     TEST_VIDEO_SOURCES,
     TEST_VOLUME,
@@ -113,12 +121,15 @@ async def test_initialization(
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
     assert states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert states.attributes[ATTR_SOUND_MODE_LIST] == TEST_SOUND_MODES
 
     # Check API calls
     mock_mozart_client.get_softwareupdate_status.assert_called_once()
     mock_mozart_client.get_product_state.assert_called_once()
     mock_mozart_client.get_available_sources.assert_called_once()
     mock_mozart_client.get_remote_menu.assert_called_once()
+    mock_mozart_client.get_listening_mode_set.assert_called_once()
+    mock_mozart_client.get_active_listening_mode.assert_called_once()
 
 
 async def test_async_update_sources_audio_only(
@@ -777,6 +788,69 @@ async def test_async_select_source(
 
     assert mock_mozart_client.set_active_source.call_count == audio_source_call
     assert mock_mozart_client.post_remote_trigger.call_count == video_source_call
+
+
+async def test_async_select_sound_mode(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_select_sound_mode."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME
+
+    active_listening_mode_callback = (
+        mock_mozart_client.get_active_listening_mode_notifications.call_args[0][0]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_SOUND_MODE: TEST_ACTIVE_SOUND_MODE_NAME_2,
+        },
+        blocking=True,
+    )
+
+    active_listening_mode_callback(TEST_LISTENING_MODE_REF)
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME_2
+
+    mock_mozart_client.activate_listening_mode.assert_called_once_with(
+        id=TEST_SOUND_MODE_2
+    )
+
+
+async def test_async_select_sound_mode_invalid(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_select_sound_mode with an invalid sound_mode."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            {
+                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                ATTR_SOUND_MODE: "invalid_sound_mode",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_sound_mode"
+    assert exc_info.errisinstance(ServiceValidationError)
 
 
 async def test_async_play_media_invalid_type(

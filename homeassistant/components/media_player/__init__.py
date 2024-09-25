@@ -139,7 +139,7 @@ from .errors import BrowseError
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -278,7 +278,7 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for media_players."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[MediaPlayerEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[MediaPlayerEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -452,12 +452,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -1294,7 +1294,7 @@ async def websocket_browse_media(
     To use, media_player integrations can implement
     MediaPlayerEntity.async_browse_media()
     """
-    player = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
+    player = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")

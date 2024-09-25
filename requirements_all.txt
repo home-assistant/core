@@ -198,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.2
+aioautomower==2024.9.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -738,7 +738,7 @@ deluge-client==1.10.2
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.11.6
+denonavr==1.0.0
 
 # homeassistant.components.devialet
 devialet==1.4.5
@@ -1001,13 +1001,13 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.7.2
+google-generativeai==0.8.2
 
 # homeassistant.components.nest
 google-nest-sdm==5.0.1
 
 # homeassistant.components.google_photos
-google-photos-library-api==0.12.0
+google-photos-library-api==0.12.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240909.1
+home-assistant-frontend==20240925.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -1203,7 +1203,7 @@ iottycloud==0.2.1
 iperf3==0.1.11
 
 # homeassistant.components.isal
-isal==1.6.1
+isal==1.7.1
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
@@ -1321,7 +1321,7 @@ lupupy==0.3.2
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==5.1.0
+lxml==5.3.0
 
 # homeassistant.components.matrix
 matrix-nio==0.25.1
@@ -3041,13 +3041,13 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.134.0
+zeroconf==0.135.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.33
+zha==0.0.34
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
