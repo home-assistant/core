@@ -95,7 +95,7 @@ async def mock_vicare_gas_boiler(
 @pytest.fixture
 async def mock_vicare_room_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Return a mocked ViCare API representing multiple room sensor devices."""
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
