@@ -21,7 +21,7 @@ from .const import (
     DEVICE_ID,
     DEVICE_NAME,
     DOMAIN,
-    LOCALE,
+    LANGUAGE,
     PARAMETERS,
 )
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_name = entry.data[DEVICE_NAME]
     device_id = entry.data[DEVICE_ID]
     gateway_id = entry.data[DEVICE_GATEWAY]
-    locale = entry.data[LOCALE]
+    locale = entry.data[LANGUAGE]
     refetch_parameters = False
     _LOGGER.debug(
         "Setting up wolflink integration for device: %s (ID: %s, gateway: %s)",
@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await wolf_client.load_localized_json(locale)
 
     parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
+    parameters = fix_duplicated_parameters(parameters)
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
@@ -68,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             if refetch_parameters:
                 parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+                parameters = fix_duplicated_parameters(parameters)
                 hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
                 refetch_parameters = False
             values = {
@@ -119,6 +121,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def fix_duplicated_parameters(parameters):
+    """Fix duplicated parameters."""
+    seen = set()
+    new_parameters = []
+    for parameter in parameters:
+        if parameter.name not in seen:
+            new_parameters.append(parameter)
+            seen.add(parameter.name)
+            _LOGGER.debug("Adding parameter: %s", parameter.name)
+        else:
+            _LOGGER.debug(
+                "Duplicated parameter found: %s. Skipping this parameter",
+                parameter.name,
+            )
+    return new_parameters
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

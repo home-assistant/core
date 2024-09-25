@@ -13,19 +13,20 @@ from homeassistant.components.wolflink.const import (
     DEVICE_ID,
     DEVICE_NAME,
     DOMAIN,
+    LANGUAGE,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONFIG, LOCALE, MOCK_RESPONSE
+from .const import CONFIG, MOCK_RESPONSE
 
 from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],
     CONF_PASSWORD: CONFIG[CONF_PASSWORD],
-    LOCALE: CONFIG[LOCALE],
+    LANGUAGE: CONFIG[LANGUAGE],
 }
 
 DEVICE = Device(CONFIG[DEVICE_ID], CONFIG[DEVICE_GATEWAY], CONFIG[DEVICE_NAME])
@@ -153,9 +154,9 @@ async def test_locale(hass: HomeAssistant) -> None:
     with patch.object(
         WolfClient, "fetch_localized_text", return_value=MOCK_RESPONSE
     ) as mock_fetch_localized_text:
-        await wolf_client.load_localized_json(LOCALE)
+        await wolf_client.load_localized_json(LANGUAGE)
 
-    mock_fetch_localized_text.assert_called_once_with(LOCALE)
+    mock_fetch_localized_text.assert_called_once_with(LANGUAGE)
 
     messages = WolfClient.extract_messages_json(mock_fetch_localized_text.return_value)
     wolf_client.language = messages

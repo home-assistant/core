@@ -8,7 +8,7 @@ DEVICE_ID = "device_id"
 DEVICE_GATEWAY = "device_gateway"
 DEVICE_NAME = "device_name"
 MANUFACTURER = "WOLF GmbH"
-LOCALE = "locale (en, de, it, fr, etc)"
+LANGUAGE = "Language (en, de, it, fr, etc)"
 
 STATES = {
     "Ein": "ein",
