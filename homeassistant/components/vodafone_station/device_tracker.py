@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiovodafone import VodafoneStationDevice
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -90,11 +90,6 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device_info.home
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str | None:
