@@ -1773,7 +1773,12 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 
 
 def _backward_compat_trigger_schema(value: Any | None) -> Any:
-    """Backward compatibility for trigger schemas."""
+    """Rewrite trigger `trigger` to `platform`.
+
+    `platform` has been renamed to `trigger` in user documentation and in the automation
+    editor. The Python trigger implementation still uses `platform`, so we need to
+    rename `trigger` to `platform.
+    """
 
     if not isinstance(value, dict):
         return value
