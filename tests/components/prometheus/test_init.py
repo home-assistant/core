@@ -855,24 +855,59 @@ async def test_light(
     body = await generate_latest_metrics(client)
 
     domain = "light"
-    MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "Desk", "desk", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="light_brightness_percent",
+            domain=domain,
+            friendly_name="Desk",
+            object_id="desk",
+            metric_value="100.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "0.0", domain, "Wall", "wall", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="light_brightness_percent",
+            domain=domain,
+            friendly_name="Wall",
+            object_id="wall",
+            metric_value="0.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "TV", "tv", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="light_brightness_percent",
+            domain=domain,
+            friendly_name="TV",
+            object_id="tv",
+            metric_value="100.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "70.58823529411765", domain, "PC", "pc", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="light_brightness_percent",
+            domain=domain,
+            friendly_name="PC",
+            object_id="pc",
+            metric_value="70.58823529411765",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "light_brightness_percent", "100.0", domain, "Hallway", "hallway", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="light_brightness_percent",
+            domain=domain,
+            friendly_name="Hallway",
+            object_id="hallway",
+            metric_value="100.0",
+        ),
     )
 
 
@@ -884,12 +919,26 @@ async def test_lock(
     body = await generate_latest_metrics(client)
 
     domain = "lock"
-    MetricsTestHelper._perform_metric_assert(
-        "lock_state", "1.0", domain, "Front Door", "front_door", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="lock_state",
+            domain=domain,
+            friendly_name="Front Door",
+            object_id="front_door",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "lock_state", "0.0", domain, "Kitchen Door", "kitchen_door", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="lock_state",
+            domain=domain,
+            friendly_name="Kitchen Door",
+            object_id="kitchen_door",
+            metric_value="0.0",
+        ),
     )
 
 
@@ -899,42 +948,73 @@ async def test_fan(
 ) -> None:
     """Test prometheus metrics for fan."""
     body = await generate_latest_metrics(client)
+    domain = "fan"
 
-    assert (
-        'fan_state{domain="fan",'
-        'entity="fan.fan_1",'
-        'friendly_name="Fan 1"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_state",
+            domain=domain,
+            friendly_name="Fan 1",
+            object_id="fan_1",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'fan_speed_percent{domain="fan",'
-        'entity="fan.fan_1",'
-        'friendly_name="Fan 1"} 33.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_speed_percent",
+            domain=domain,
+            friendly_name="Fan 1",
+            object_id="fan_1",
+            metric_value="33.0",
+        ),
     )
 
-    assert (
-        'fan_is_oscillating{domain="fan",'
-        'entity="fan.fan_1",'
-        'friendly_name="Fan 1"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_is_oscillating",
+            domain=domain,
+            friendly_name="Fan 1",
+            object_id="fan_1",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'fan_direction_reversed{domain="fan",'
-        'entity="fan.fan_1",'
-        'friendly_name="Fan 1"} 0.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_direction_reversed",
+            domain=domain,
+            friendly_name="Fan 1",
+            object_id="fan_1",
+            metric_value="0.0",
+        ),
     )
 
-    assert (
-        'fan_preset_mode{domain="fan",'
-        'entity="fan.fan_1",'
-        'friendly_name="Fan 1",'
-        'mode="LO"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_preset_mode",
+            domain=domain,
+            friendly_name="Fan 1",
+            object_id="fan_1",
+            metric_value="1.0",
+            mode="LO",
+        ),
     )
 
-    assert (
-        'fan_direction_reversed{domain="fan",'
-        'entity="fan.fan_2",'
-        'friendly_name="Reverse Fan"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="fan_direction_reversed",
+            domain=domain,
+            friendly_name="Reverse Fan",
+            object_id="fan_2",
+            metric_value="1.0",
+        ),
     )
 
 
