@@ -391,6 +391,9 @@
       "components_grid_services_enabled": {
         "name": "Grid services enabled"
       },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
       "grid_services_active": {
         "name": "Grid services active"
       },
