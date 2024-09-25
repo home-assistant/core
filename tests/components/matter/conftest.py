@@ -70,12 +70,38 @@ async def integration_fixture(
     return entry
 
 
+@pytest.fixture(
+    params=[
+        "door-lock",
+        "smoke-detector",
+        "air-purifier",
+        "eve-energy-plug-patched",
+        "eve-energy-plug",
+    ]
+)
+async def matter_devices(
+    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
+) -> MatterNode:
+    """Fixture for a Matter device."""
+    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
+
+
 @pytest.fixture(name="door_lock")
 async def door_lock_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a door lock node."""
     return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+
+
+@pytest.fixture(name="smoke_detector")
+async def smoke_detector_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a smoke detector node."""
+    return await setup_integration_with_node_fixture(
+        hass, "smoke-detector", matter_client
+    )
 
 
 @pytest.fixture(name="door_lock_with_unbolt")

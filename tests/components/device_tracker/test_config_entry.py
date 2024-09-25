@@ -505,8 +505,7 @@ async def test_scanner_entity_state(
 def test_tracker_entity() -> None:
     """Test coverage for base TrackerEntity class."""
     entity = TrackerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.GPS
     assert entity.latitude is None
     assert entity.longitude is None
     assert entity.location_name is None
@@ -539,8 +538,7 @@ def test_tracker_entity() -> None:
 def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.ROUTER
     with pytest.raises(NotImplementedError):
         assert entity.is_connected is None
     with pytest.raises(NotImplementedError):

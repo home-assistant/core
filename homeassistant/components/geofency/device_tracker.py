@@ -1,6 +1,6 @@
 """Support for the Geofency device tracker platform."""
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
@@ -96,11 +96,6 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
             identifiers={(GF_DOMAIN, self._unique_id)},
             name=self._name,
         )
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""

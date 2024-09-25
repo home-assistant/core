@@ -105,7 +105,7 @@ class MatterModeSelectEntity(MatterSelectEntity):
         )
         modes = {mode.mode: mode.label for mode in cluster.supportedModes}
         self._attr_options = list(modes.values())
-        self._attr_current_option = modes[cluster.currentMode]
+        self._attr_current_option = modes.get(cluster.currentMode)
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
@@ -244,5 +244,26 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="SmokeCOSmokeSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["high", "standard", "low"],
+            measurement_to_ha={
+                0: "high",
+                1: "standard",
+                2: "low",
+            }.get,
+            ha_to_native_value={
+                "high": 0,
+                "standard": 1,
+                "low": 2,
+            }.get,
+        ),
+        entity_class=MatterSelectEntity,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
     ),
 ]
