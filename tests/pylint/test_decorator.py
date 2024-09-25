@@ -254,7 +254,7 @@ def test_bad_fixture_autouse(
             msg_id="hass-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
-            args=("scope/autouse combination", "set `autouse=True`"),
+            args=("scope/autouse combination", "set `autouse=True` or reduce scope"),
             confidence=UNDEFINED,
             col_offset=1,
             end_line=10,

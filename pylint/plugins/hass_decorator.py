@@ -85,7 +85,10 @@ class HassDecoratorChecker(BaseChecker):
                 self.add_message(
                     "hass-pytest-fixture-decorator",
                     node=decorator,
-                    args=("scope/autouse combination", "set `autouse=True`"),
+                    args=(
+                        "scope/autouse combination",
+                        "set `autouse=True` or reduce scope",
+                    ),
                 )
             return
 
