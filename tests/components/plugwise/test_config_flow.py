@@ -1,14 +1,13 @@
 """Test the Plugwise config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidSetupError,
     InvalidXMLError,
-    ResponseError,
     UnsupportedDeviceError,
 )
 import pytest
@@ -95,22 +94,6 @@ TEST_DISCOVERY_ADAM = ZeroconfServiceInfo(
 )
 
 
-@pytest.fixture(name="mock_smile")
-def mock_smile():
-    """Create a Mock Smile for testing exceptions."""
-    with patch(
-        "homeassistant.components.plugwise.config_flow.Smile",
-    ) as smile_mock:
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.InvalidSetupError = InvalidSetupError
-        smile_mock.InvalidXMLError = InvalidXMLError
-        smile_mock.ResponseError = ResponseError
-        smile_mock.UnsupportedDeviceError = UnsupportedDeviceError
-        smile_mock.return_value.connect.return_value = True
-        yield smile_mock.return_value
-
-
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -165,11 +148,12 @@ async def test_zeroconf_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=discovery,
+        data=TEST_DISCOVERY,
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -183,7 +167,7 @@ async def test_zeroconf_flow(
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
-        CONF_USERNAME: username,
+        CONF_USERNAME: TEST_USERNAME,
         PW_TYPE: API,
     }
 
@@ -205,6 +189,7 @@ async def test_zeroconf_flow_stretch(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -276,7 +261,6 @@ async def test_zercoconf_discovery_update_configuration(
         (InvalidAuthentication, "invalid_auth"),
         (InvalidSetupError, "invalid_setup"),
         (InvalidXMLError, "response_error"),
-        (ResponseError, "response_error"),
         (RuntimeError, "unknown"),
         (UnsupportedDeviceError, "unsupported"),
     ],
@@ -296,6 +280,7 @@ async def test_flow_errors(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     mock_smile_config_flow.connect.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(

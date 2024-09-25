@@ -106,11 +106,6 @@ SOURCE_ZEROCONF = "zeroconf"
 # source and while it exists normal discoveries with the same unique id are ignored.
 SOURCE_IGNORE = "ignore"
 
-# This is used when a user uses the "Stop Ignoring" button in the UI (the
-# config_entries/ignore_flow websocket command). It's triggered after the
-# "ignore" config entry has been removed and unloaded.
-SOURCE_UNIGNORE = "unignore"
-
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
@@ -179,7 +174,6 @@ DISCOVERY_SOURCES = {
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_MQTT,
     SOURCE_SSDP,
-    SOURCE_UNIGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
@@ -196,7 +190,7 @@ SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
 @cache
 def signal_discovered_config_entry_removed(
     discovery_domain: str,
-) -> SignalType[ConfigEntryChange, ConfigEntry]:
+) -> SignalType[ConfigEntry]:
     """Format signal."""
     return SignalType(f"{discovery_domain}_discovered_config_entry_removed")
 
@@ -1264,7 +1258,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # a single config entry, but which already has an entry
         if (
             context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE, SOURCE_RECONFIGURE}
+            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
@@ -1388,7 +1382,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                         result["handler"], unique_id
                     )
                 )
-                and entry.source == SOURCE_IGNORE
                 and discovery_key
                 not in (
                     known_discovery_keys := entry.discovery_keys.get(
@@ -1856,26 +1849,11 @@ class ConfigEntries:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
-        # After we have fully removed an "ignore" config entry we can try and rediscover
-        # it so that a user is able to immediately start configuring it. We do this by
-        # starting a new flow with the 'unignore' step. If the integration doesn't
-        # implement async_step_unignore then this will be a no-op.
-        if entry.source == SOURCE_IGNORE:
-            self.hass.async_create_task_internal(
-                self.hass.config_entries.flow.async_init(
-                    entry.domain,
-                    context={"source": SOURCE_UNIGNORE},
-                    data={"unique_id": entry.unique_id},
-                ),
-                f"config entry unignore {entry.title} {entry.domain} {entry.unique_id}",
-            )
-
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         for discovery_domain in entry.discovery_keys:
             async_dispatcher_send_internal(
                 self.hass,
                 signal_discovered_config_entry_removed(discovery_domain),
-                ConfigEntryChange.REMOVED,
                 entry,
             )
         return {"require_restart": not unload_success}
@@ -2545,10 +2523,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
-
-    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Rediscover a config entry by it's unique_id."""
-        return self.async_abort(reason="not_implemented")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

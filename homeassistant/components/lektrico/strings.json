@@ -38,6 +38,17 @@
         "name": "Dynamic limit"
       }
     },
+    "select": {
+      "load_balancing_mode": {
+        "name": "Load balancing mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "power": "Power",
+          "hybrid": "Hybrid",
+          "green": "Green"
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",

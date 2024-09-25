@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
-DOMAIN_DATA: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
 
 DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
 DATA_RTSP_TO_WEB_RTC: HassKey[dict[str, RtspToWebRtcProviderType]] = HassKey(
@@ -38,6 +38,14 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+
+
+class CameraState(StrEnum):
+    """Camera entity states."""
+
+    RECORDING = "recording"
+    STREAMING = "streaming"
+    IDLE = "idle"
 
 
 class StreamType(StrEnum):

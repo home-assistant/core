@@ -2911,7 +2911,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
 @pytest.mark.parametrize(
     (
         "discovery_keys",
-        "entry_source",
         "entry_unique_id",
         "flow_context",
         "flow_source",
@@ -2922,7 +2921,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # No discovery key
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {},
             config_entries.SOURCE_ZEROCONF,
@@ -2932,7 +2930,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key added to ignored entry data
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2942,7 +2939,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key added to ignored entry data
         (
             {"test": (DiscoveryKey(domain="test", key="bleh", version=1),)},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2970,7 +2966,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
                     DiscoveryKey(domain="test", key="10", version=1),
                 )
             },
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="11", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2993,33 +2988,102 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key already in ignored entry data
         (
             {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
             {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
         ),
-        # Discovery key not added to user entry data
-        (
-            {},
-            config_entries.SOURCE_USER,
-            "mock-unique-id",
-            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
-            config_entries.SOURCE_ZEROCONF,
-            data_entry_flow.FlowResultType.ABORT,
-            {},
-        ),
         # Flow not aborted when unique id is not matching
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id-2",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.FORM,
             {},
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "entry_source",
+    [
+        config_entries.SOURCE_IGNORE,
+        config_entries.SOURCE_USER,
+        config_entries.SOURCE_ZEROCONF,
+    ],
+)
+async def test_update_discovery_keys(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    discovery_keys: tuple,
+    entry_source: str,
+    entry_unique_id: str,
+    flow_context: dict,
+    flow_source: str,
+    flow_result: data_entry_flow.FlowResultType,
+    updated_discovery_keys: tuple,
+) -> None:
+    """Test that discovery keys of an entry can be updated."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        discovery_keys=discovery_keys,
+        unique_id=entry_unique_id,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            self._abort_if_unique_id_configured(reload_on_update=False)
+            return self.async_show_form(step_id="step2")
+
+        async def async_step_step2(self, user_input=None):
+            raise NotImplementedError
+
+        async def async_step_zeroconf(self, discovery_info=None):
+            """Test zeroconf step."""
+            return await self.async_step_user(discovery_info)
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as async_reload,
+    ):
+        result = await manager.flow.async_init(
+            "comp", context={"source": flow_source} | flow_context
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == flow_result
+    assert entry.data == {}
+    assert entry.discovery_keys == updated_discovery_keys
+    assert len(async_reload.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "discovery_keys",
+        "entry_source",
+        "entry_unique_id",
+        "flow_context",
+        "flow_source",
+        "flow_result",
+        "updated_discovery_keys",
+    ),
+    [
         # Flow not aborted when user initiated flow
         (
             {},
@@ -3032,7 +3096,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         ),
     ],
 )
-async def test_ignored_entry_update_discovery_keys(
+async def test_update_discovery_keys_2(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     discovery_keys: tuple,
@@ -3043,7 +3107,7 @@ async def test_ignored_entry_update_discovery_keys(
     flow_result: data_entry_flow.FlowResultType,
     updated_discovery_keys: tuple,
 ) -> None:
-    """Test that discovery keys of an ignored entry can be updated."""
+    """Test that discovery keys of an entry can be updated."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
         domain="comp",
@@ -3205,129 +3269,6 @@ async def test_async_current_entries_explicit_include_ignore(
         await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 0
-
-
-async def test_unignore_step_form(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-        async def async_step_unignore(self, user_input):
-            """Test unignore step."""
-            unique_id = user_input["unique_id"]
-            await self.async_set_unique_id(unique_id)
-            return self.async_show_form(step_id="discovery")
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-
-        # But after a 'tick' the unignore step has run and we can see an active flow again.
-        await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
-
-        # and still not config entries
-        assert len(hass.config_entries.async_entries("comp")) == 0
-
-
-async def test_unignore_create_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-        async def async_step_unignore(self, user_input):
-            """Test unignore step."""
-            unique_id = user_input["unique_id"]
-            await self.async_set_unique_id(unique_id)
-            return self.async_create_entry(title="yo", data={})
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-
-        # But after a 'tick' the unignore step has run and we can see a config entry.
-        await hass.async_block_till_done()
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == config_entries.SOURCE_UNIGNORE
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.title == "yo"
-
-        # And still no active flow
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
-
-
-async def test_unignore_default_impl(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that resdicovery is a no-op by default."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_partial_flows_hidden(
@@ -5333,11 +5274,6 @@ async def test_hashable_non_string_unique_id(
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_UNIGNORE,
-            None,
-            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
-        ),
-        (
             config_entries.SOURCE_USER,
             None,
             {
@@ -5420,11 +5356,6 @@ async def test_starting_config_flow_on_single_config_entry(
             config_entries.SOURCE_RECONFIGURE,
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
-        ),
-        (
-            config_entries.SOURCE_UNIGNORE,
-            None,
-            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
         ),
         (
             config_entries.SOURCE_USER,
