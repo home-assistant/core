@@ -224,7 +224,7 @@ async def test_save_blueprint(
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
             " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
-            "  platform: event\n  event_type: !input 'trigger_event'\nactions:\n "
+            "  trigger: event\n  event_type: !input 'trigger_event'\nactions:\n "
             " service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
             # c dumper will not quote the value after !input
             "blueprint:\n  name: Call service based on event\n  domain: automation\n "
@@ -232,7 +232,7 @@ async def test_save_blueprint(
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
             " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
-            "  platform: event\n  event_type: !input trigger_event\nactions:\n  service:"
+            "  trigger: event\n  event_type: !input trigger_event\nactions:\n  service:"
             " !input service_to_call\n  entity_id: light.kitchen\n"
         )
         # Make sure ita parsable and does not raise
@@ -500,7 +500,7 @@ async def test_substituting_blueprint_inputs(
         },
         "triggers": {
             "event_type": "test_event",
-            "platform": "event",
+            "trigger": "event",
         },
     }
 

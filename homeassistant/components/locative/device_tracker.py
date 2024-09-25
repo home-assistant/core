@@ -1,6 +1,6 @@
 """Support for the Locative platform."""
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -58,11 +58,6 @@ class LocativeEntity(TrackerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""

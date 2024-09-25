@@ -5,17 +5,19 @@ from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import STATE_OFF, EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
     setup_integration_with_node_fixture,
+    snapshot_matter_entities,
     trigger_subscription_callback,
 )
 
@@ -124,47 +126,15 @@ async def test_battery_sensor(
     assert state
     assert state.state == "on"
 
-    entry = entity_registry.async_get(entity_id)
-
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
-
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_smoke_alarm(
+async def test_binary_sensors(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    smoke_detector: MatterNode,
+    matter_devices: MatterNode,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test smoke detector."""
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_muted")
-    assert state
-    assert state.state == STATE_OFF
-
-    # End of service
-    state = hass.states.get("binary_sensor.smoke_sensor_end_of_service")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Battery alert
-    state = hass.states.get("binary_sensor.smoke_sensor_battery_alert")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Test in progress
-    state = hass.states.get("binary_sensor.smoke_sensor_test_in_progress")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Hardware fault
-    state = hass.states.get("binary_sensor.smoke_sensor_hardware_fault")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Smoke
-    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
-    assert state
-    assert state.state == STATE_OFF
+    """Test binary sensors."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
