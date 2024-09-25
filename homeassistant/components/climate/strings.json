@@ -270,6 +270,9 @@
     "temp_out_of_range": {
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
     },
+    "low_temp_higher_than_high_temp": {
+      "message": "Target temperature low can not be higher than Target temperature high."
+    },
     "humidity_out_of_range": {
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }

@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import LOGGER
 
 if TYPE_CHECKING:
-    from . import GuardianEntity
+    from .entity import GuardianEntity
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 

@@ -7,6 +7,7 @@ import logging
 from mozart_api.models import (
     BeoRemoteButton,
     ButtonEvent,
+    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -54,6 +55,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_notification_notifications(self.on_notification_notification)
         self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_on_connection(self.on_connection)
+        self._client.get_active_listening_mode_notifications(
+            self.on_active_listening_mode
+        )
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
@@ -96,6 +100,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Handle WebSocket connection lost."""
         _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
+
+    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
+        """Send active_listening_mode dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            notification,
+        )
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""

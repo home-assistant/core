@@ -73,6 +73,7 @@ async def test_update_firm(
 ) -> None:
     """Test update state when update available with firmware info from reolink.com."""
     reolink_connect.camera_name.return_value = TEST_CAM_NAME
+    reolink_connect.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     new_firmware = NewSoftwareVersion(
         version_string="v3.3.0.226_23031644",
         download_url=TEST_DOWNLOAD_URL,
@@ -129,3 +130,5 @@ async def test_update_firm(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
+
+    reolink_connect.update_firmware.side_effect = None

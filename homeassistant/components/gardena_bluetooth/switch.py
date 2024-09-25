@@ -13,14 +13,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from .coordinator import GardenaBluetoothCoordinator
+from .entity import GardenaBluetoothEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up switch based on a config entry."""
-    coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: GardenaBluetoothCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
     if GardenaBluetoothValveSwitch.characteristics.issubset(
         coordinator.characteristics
@@ -41,7 +42,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: GardenaBluetoothCoordinator,
     ) -> None:
         """Initialize the switch."""
         super().__init__(

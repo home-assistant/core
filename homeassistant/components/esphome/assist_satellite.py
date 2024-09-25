@@ -174,6 +174,9 @@ class EsphomeAssistSatellite(
         )
         _LOGGER.debug("Set active wake words: %s", config.active_wake_words)
 
+        # Ensure configuration is updated
+        await self._update_satellite_config()
+
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
         config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
