@@ -720,12 +720,17 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
     assert "KeyError" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "trigger_key",
+    ["trigger", "platform"],
+)
 async def test_websocket_get_trigger_capabilities(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     fake_integration,
+    trigger_key: str,
 ) -> None:
     """Test we get the expected trigger capabilities through websocket."""
     await async_setup_component(hass, "device_automation", {})
@@ -767,11 +772,12 @@ async def test_websocket_get_trigger_capabilities(
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    triggers = msg["result"]
+    triggers: dict = msg["result"]
 
     msg_id = 2
     assert len(triggers) == 3  # toggled, turned_on, turned_off
     for trigger in triggers:
+        trigger[trigger_key] = trigger.pop("platform")
         await client.send_json(
             {
                 "id": msg_id,
