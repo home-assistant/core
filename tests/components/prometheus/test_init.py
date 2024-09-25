@@ -739,20 +739,48 @@ async def test_attributes(
     body = await generate_latest_metrics(client)
     domain = "switch"
 
-    MetricsTestHelper._perform_metric_assert(
-        "switch_state", "1.0", domain, "Boolean", "boolean", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="switch_state",
+            domain=domain,
+            friendly_name="Boolean",
+            object_id="boolean",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "switch_attr_boolean", "1.0", domain, "Boolean", "boolean", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="switch_attr_boolean",
+            domain=domain,
+            friendly_name="Boolean",
+            object_id="boolean",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "switch_state", "0.0", domain, "Number", "number", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="switch_state",
+            domain=domain,
+            friendly_name="Number",
+            object_id="number",
+            metric_value="0.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "switch_attr_number", "10.2", domain, "Number", "number", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="switch_attr_number",
+            domain=domain,
+            friendly_name="Number",
+            object_id="number",
+            metric_value="10.2",
+        ),
     )
 
 
@@ -764,12 +792,27 @@ async def test_binary_sensor(
     body = await generate_latest_metrics(client)
 
     domain = "binary_sensor"
-    MetricsTestHelper._perform_metric_assert(
-        "binary_sensor_state", "1.0", domain, "Door", "door", body
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="binary_sensor_state",
+            domain=domain,
+            friendly_name="Door",
+            object_id="door",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "binary_sensor_state", "0.0", domain, "Window", "window", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="binary_sensor_state",
+            domain=domain,
+            friendly_name="Window",
+            object_id="window",
+            metric_value="0.0",
+        ),
     )
 
 
@@ -781,12 +824,26 @@ async def test_input_boolean(
     body = await generate_latest_metrics(client)
 
     domain = "input_boolean"
-    MetricsTestHelper._perform_metric_assert(
-        "input_boolean_state", "1.0", domain, "Test", "test", body
-    )
 
-    MetricsTestHelper._perform_metric_assert(
-        "input_boolean_state", "0.0", domain, "Helper", "helper", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="input_boolean_state",
+            domain=domain,
+            friendly_name="Test",
+            object_id="test",
+            metric_value="1.0",
+        ),
+    )
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="input_boolean_state",
+            domain=domain,
+            friendly_name="Helper",
+            object_id="helper",
+            metric_value="0.0",
+        ),
     )
 
 
