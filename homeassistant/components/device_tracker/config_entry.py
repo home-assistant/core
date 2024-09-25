@@ -165,14 +165,9 @@ def _async_register_mac(
     hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
-class BaseTrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
-    """A class that describes tracker entities."""
-
-
 class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
 
-    entity_description: BaseTrackerEntityDescription
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_source_type: SourceType
@@ -203,7 +198,7 @@ class BaseTrackerEntity(Entity):
         return attr
 
 
-class TrackerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
+class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
 
@@ -295,7 +290,7 @@ class TrackerEntity(
         return attr
 
 
-class ScannerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
+class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
 
