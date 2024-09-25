@@ -118,7 +118,7 @@ async def test_if_fires_on_beo_remote_button(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger }}",
+                            "some": "{{ trigger.event.data.device_id }}",
                             "id": "{{ trigger.id }}",
                         },
                     },
@@ -131,6 +131,7 @@ async def test_if_fires_on_beo_remote_button(
     beo_remote_button_callback = (
         mock_mozart_client.get_beo_remote_button_notifications.call_args[0][0]
     )
+
     beo_remote_button_callback(BeoRemoteButton(key="Control/Wind", type="KeyPress"))
     await hass.async_block_till_done()
 
