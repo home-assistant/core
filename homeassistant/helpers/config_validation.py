@@ -1788,9 +1788,8 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
             raise vol.Invalid(
                 "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
             )
-        response = copy(value)
-        response[CONF_PLATFORM] = response.pop(CONF_TRIGGER)
-        return response
+        value = copy(value)
+        value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
 
     return value
 
