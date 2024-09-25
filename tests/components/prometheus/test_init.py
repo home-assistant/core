@@ -143,10 +143,12 @@ class EntityTestMetricInfo:
 
 
 def _assert_metric_present(body, metric_info: EntityTestMetricInfo) -> None:
+    """Assert metrics text body contains metric for entity."""
     assert metric_info.get_full_metric_string() in body
 
 
 def _assert_metric_not_present(body, metric_info: EntityTestMetricInfo) -> None:
+    """Assert metrics text body does not contain metric for entity."""
     assert metric_info.get_full_metric_string() not in body
 
 
