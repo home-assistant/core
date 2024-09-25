@@ -1843,40 +1843,70 @@ async def test_entity_becomes_unavailable_with_export(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="state_change_total",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_humidity_percent",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="54.0",
+        ),
     )
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="state_change_total",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
     # Make sensor_1 unavailable.
@@ -1888,41 +1918,71 @@ async def test_entity_becomes_unavailable_with_export(
     body = await generate_latest_metrics(client)
 
     # Check that only the availability changed on sensor_1.
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 2.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="state_change_total",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="2.0",
+        ),
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 0.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="0.0",
+        ),
     )
 
     # The other sensor should be unchanged.
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_humidity_percent",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="54.0",
+        ),
     )
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="state_change_total",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
     # Bring sensor_1 back and check that it is correct.
@@ -1931,22 +1991,37 @@ async def test_entity_becomes_unavailable_with_export(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 200.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="200.0",
+        ),
     )
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 3.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="state_change_total",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="3.0",
+        ),
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="1.0",
+        ),
     )
 
 
