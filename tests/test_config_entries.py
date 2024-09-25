@@ -3271,129 +3271,6 @@ async def test_async_current_entries_explicit_include_ignore(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_unignore_step_form(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-        async def async_step_unignore(self, user_input):
-            """Test unignore step."""
-            unique_id = user_input["unique_id"]
-            await self.async_set_unique_id(unique_id)
-            return self.async_show_form(step_id="discovery")
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-
-        # But after a 'tick' the unignore step has run and we can see an active flow again.
-        await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
-
-        # and still not config entries
-        assert len(hass.config_entries.async_entries("comp")) == 0
-
-
-async def test_unignore_create_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-        async def async_step_unignore(self, user_input):
-            """Test unignore step."""
-            unique_id = user_input["unique_id"]
-            await self.async_set_unique_id(unique_id)
-            return self.async_create_entry(title="yo", data={})
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-
-        # But after a 'tick' the unignore step has run and we can see a config entry.
-        await hass.async_block_till_done()
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == config_entries.SOURCE_UNIGNORE
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.title == "yo"
-
-        # And still no active flow
-        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
-
-
-async def test_unignore_default_impl(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that resdicovery is a no-op by default."""
-    async_setup_entry = AsyncMock(return_value=True)
-    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-    with mock_config_flow("comp", TestFlow):
-        result = await manager.flow.async_init(
-            "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "ignore"
-        assert entry.unique_id == "mock-unique-id"
-        assert entry.domain == "comp"
-        assert entry.title == "Ignored Title"
-
-        await manager.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress()) == 0
-
-
 async def test_partial_flows_hidden(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -5397,11 +5274,6 @@ async def test_hashable_non_string_unique_id(
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_UNIGNORE,
-            None,
-            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
-        ),
-        (
             config_entries.SOURCE_USER,
             None,
             {
@@ -5484,11 +5356,6 @@ async def test_starting_config_flow_on_single_config_entry(
             config_entries.SOURCE_RECONFIGURE,
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
-        ),
-        (
-            config_entries.SOURCE_UNIGNORE,
-            None,
-            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
         ),
         (
             config_entries.SOURCE_USER,
