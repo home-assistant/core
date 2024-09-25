@@ -363,10 +363,10 @@
         }
       },
       "room_temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "room_humidity": {
-        "name": "Humidity"
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
       "supply_temperature": {
         "name": "Supply temperature"
