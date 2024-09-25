@@ -19,9 +19,9 @@ from .common import (
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
-    matter_devices: MatterNode,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

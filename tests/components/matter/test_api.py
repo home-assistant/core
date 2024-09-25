@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.models.node import (
     MatterFabricData,
-    MatterNode,
     NetworkType,
     NodeDiagnostics,
     NodeType,
@@ -196,6 +195,7 @@ async def test_set_wifi_credentials(
     )
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
@@ -205,7 +205,6 @@ async def test_node_diagnostics(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
-    matter_node: MatterNode,
 ) -> None:
     """Test the node diagnostics command."""
     # get the device registry entry for the mocked node
@@ -267,6 +266,7 @@ async def test_node_diagnostics(
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
@@ -276,7 +276,6 @@ async def test_ping_node(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
-    matter_node: MatterNode,
 ) -> None:
     """Test the ping_node command."""
     # get the device registry entry for the mocked node
@@ -324,6 +323,7 @@ async def test_ping_node(
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
@@ -333,7 +333,6 @@ async def test_open_commissioning_window(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
-    matter_node: MatterNode,
 ) -> None:
     """Test the open_commissioning_window command."""
     # get the device registry entry for the mocked node
@@ -387,6 +386,7 @@ async def test_open_commissioning_window(
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
@@ -396,7 +396,6 @@ async def test_remove_matter_fabric(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
-    matter_node: MatterNode,
 ) -> None:
     """Test the remove_matter_fabric command."""
     # get the device registry entry for the mocked node
@@ -440,6 +439,7 @@ async def test_remove_matter_fabric(
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
@@ -449,7 +449,6 @@ async def test_interview_node(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
-    matter_node: MatterNode,
 ) -> None:
     """Test the interview_node command."""
     # get the device registry entry for the mocked node

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
 
@@ -18,6 +17,7 @@ from .common import create_node_from_fixture
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
@@ -31,7 +31,6 @@ from tests.common import MockConfigEntry
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_node: MatterNode,
     name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
@@ -54,13 +53,13 @@ async def test_device_registry_single_node_device(
     assert entry.serial_number == "12345678"
 
 
+@pytest.mark.usefixtures("matter_node")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_node: MatterNode,
 ) -> None:
     """Test additional device with different attribute values."""
     entry = device_registry.async_get_device(
@@ -78,12 +77,12 @@ async def test_device_registry_single_node_device_alt(
     assert entry.serial_number is None
 
 
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.skip("Waiting for a new test fixture")
 @pytest.mark.parametrize("node_fixture", ["fake_bridge_two_light"])
 async def test_device_registry_bridge(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_node: MatterNode,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     # Validate bridge
@@ -125,12 +124,12 @@ async def test_device_registry_bridge(
     assert device2_entry.sw_version == "1.49.1"
 
 
+@pytest.mark.usefixtures("integration")
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    integration: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
     assert matter_client.subscribe_events.call_count == 5
@@ -152,21 +151,19 @@ async def test_node_added_subscription(
     assert entity_state
 
 
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["air_purifier"])
 async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_node: MatterNode,
 ) -> None:
     """Test that a composed device within a standalone node only creates one HA device entry."""
     assert len(device_registry.devices) == 1
 
 
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["multi_endpoint_light"])
-async def test_multi_endpoint_name(
-    hass: HomeAssistant,
-    matter_node: MatterNode,
-) -> None:
+async def test_multi_endpoint_name(hass: HomeAssistant) -> None:
     """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
     entity_state = hass.states.get("light.inovelli_light_1")
     assert entity_state
@@ -176,7 +173,7 @@ async def test_multi_endpoint_name(
     assert entity_state.name == "Inovelli Light (6)"
 
 
-async def test_get_clean_name_() -> None:
+async def test_get_clean_name() -> None:
     """Test get_clean_name helper.
 
     Test device names that are assigned to `null`
