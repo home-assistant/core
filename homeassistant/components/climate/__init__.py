@@ -965,46 +965,18 @@ async def async_service_temperature_set(
         ATTR_TEMPERATURE in service_call.data
         and not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
     ):
-        # Warning implemented in 2024.10 and will be changed to raising
-        # a ServiceValidationError in 2025.4
-        report_issue = async_suggest_report_issue(
-            entity.hass,
-            integration_domain=entity.platform.platform_name,
-            module=type(entity).__module__,
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s set_temperature action was used with temperature but the entity does not "
-                "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. "
-                "This will stop working in 2025.4 and raise an error instead. "
-                "Please %s"
-            ),
-            entity.platform.platform_name,
-            entity.__class__.__name__,
-            report_issue,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_entity_feature",
         )
     if (
         ATTR_TARGET_TEMP_LOW in service_call.data
         and not entity.supported_features
         & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     ):
-        # Warning implemented in 2024.10 and will be changed to raising
-        # a ServiceValidationError in 2025.4
-        report_issue = async_suggest_report_issue(
-            entity.hass,
-            integration_domain=entity.platform.platform_name,
-            module=type(entity).__module__,
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s set_temperature action was used with target_temp_low but the entity does not "
-                "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. "
-                "This will stop working in 2025.4 and raise an error instead. "
-                "Please %s"
-            ),
-            entity.platform.platform_name,
-            entity.__class__.__name__,
-            report_issue,
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_range_entity_feature",
         )
 
     hass = entity.hass
