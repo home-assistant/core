@@ -57,12 +57,12 @@ from .const import (
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
+    DATA_COMPONENT,
     DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
-    DOMAIN_DATA,
     TtsAudioType,
 )
 from .helper import get_engine_instance
@@ -140,7 +140,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     """
     default_entity_id: str | None = None
 
-    for entity in hass.data[DOMAIN_DATA].entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         if entity.platform and entity.platform.platform_name == "cloud":
             return entity.entity_id
 
@@ -158,7 +158,7 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     """
     if engine is not None:
         if (
-            not hass.data[DOMAIN_DATA].get_entity(engine)
+            not hass.data[DATA_COMPONENT].get_entity(engine)
             and engine not in hass.data[DATA_TTS_MANAGER].providers
         ):
             return None
@@ -200,7 +200,7 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by tts engines."""
     languages = set()
 
-    for entity in hass.data[DOMAIN_DATA].entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
@@ -317,7 +317,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_TTS_MANAGER] = tts
-    component = hass.data[DOMAIN_DATA] = EntityComponent[TextToSpeechEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextToSpeechEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -365,12 +365,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -1101,7 +1101,7 @@ def websocket_list_engines(
     provider_info: dict[str, Any]
     entity_domains: set[str] = set()
 
-    for entity in hass.data[DOMAIN_DATA].entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
@@ -1149,7 +1149,7 @@ def websocket_get_engine(
     provider: TextToSpeechEntity | Provider | None = next(
         (
             entity
-            for entity in hass.data[DOMAIN_DATA].entities
+            for entity in hass.data[DATA_COMPONENT].entities
             if entity.entity_id == engine_id
         ),
         None,
