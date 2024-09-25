@@ -1,4 +1,5 @@
 """Tests for the Stookwijzer integration."""
+
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,

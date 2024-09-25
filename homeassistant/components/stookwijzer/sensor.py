@@ -28,7 +28,7 @@ class StookwijzerSensorDescription(SensorEntityDescription):
     value_fn: Callable[[StookwijzerCoordinator], int | float | str | None]
 
 
-STOOKWIJZER_SENSORS = (
+STOOKWIJZER_SENSORS = [
     StookwijzerSensorDescription(
         key="windspeed",
         translation_key="windspeed",
@@ -55,7 +55,7 @@ STOOKWIJZER_SENSORS = (
         ).value,
         options=[cls.value for cls in StookwijzerState],
     ),
-)
+]
 
 
 async def async_setup_entry(
