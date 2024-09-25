@@ -1791,7 +1791,7 @@ def _trigger_pre_validator(value: Any | None) -> Any:
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
     elif CONF_PLATFORM not in value:
-        raise vol.Invalid("required key not provided", ["trigger"])
+        raise vol.Invalid("required key not provided", [CONF_TRIGGER])
 
     return value
 
