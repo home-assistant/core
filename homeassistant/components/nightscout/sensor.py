@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_DATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN, MMOL_L
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN, MMOL_L, MG_DL
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
