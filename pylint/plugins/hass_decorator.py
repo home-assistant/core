@@ -50,10 +50,13 @@ class HassDecoratorChecker(BaseChecker):
             "_pytest.fixtures.FixtureFunctionMarker" not in decoratornames
             or not (root_name := node.root().name).startswith("tests.")
             or (decorator := self._get_pytest_fixture_node(node)) is None
-            or (keyword := self._get_pytest_fixture_node_keyword(decorator, "scope"))
-            is None
-            or not isinstance(keyword.value, nodes.Const)
-            or not (scope := keyword.value.value)
+            or not (
+                scope_keyword := self._get_pytest_fixture_node_keyword(
+                    decorator, "scope"
+                )
+            )
+            or not isinstance(scope_keyword.value, nodes.Const)
+            or not (scope := scope_keyword.value.value)
         ):
             return
 
