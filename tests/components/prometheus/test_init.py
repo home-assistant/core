@@ -82,8 +82,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .helpers import MetricsTestHelper
-
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
@@ -101,6 +99,21 @@ class MetricInfo:
     mode: str | None = None
     state: str | None = None
     action: str | None = None
+
+    @classmethod
+    def from_entity_id(cls, entity_id, **kwargs):
+        """Construct MetricInfo using full entity_id instead of parts."""
+        domain, object_id = entity_id.split(".")
+        return cls(
+            metric_name=kwargs["metric_name"],
+            domain=domain,
+            friendly_name=kwargs["friendly_name"],
+            object_id=object_id,
+            metric_value=kwargs.get("metric_value"),
+            mode=kwargs.get("mode"),
+            state=kwargs.get("state"),
+            action=kwargs.get("action"),
+        )
 
     @property
     def entity(self):
@@ -175,6 +188,35 @@ def test_metric_info_generates_metric_string_with_value() -> None:
         'friendly_name="Outside Temperature"}'
         " 17.2"
     )
+
+
+def test_metric_info_generates_info_from_entity_id() -> None:
+    """Test using MetricInfo from entity_id matches constructor MetricInfo."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    entity_id = f"{domain}.{object_id}"
+    assert f"{domain}.{object_id}" == entity_id
+    metric_name = "homeassistant_sensor_temperature_celsius"
+    friendly_name = "Outside Temperature"
+    metric_value = "12.3"
+    metric_info_from_entity_id = MetricInfo.from_entity_id(
+        entity_id,
+        metric_name=metric_name,
+        friendly_name=friendly_name,
+        metric_value=metric_value,
+    )
+    assert metric_info_from_entity_id.entity == entity_id
+
+    metric_info_with_constructor = MetricInfo(
+        metric_name=metric_name,
+        domain=domain,
+        friendly_name=friendly_name,
+        object_id=object_id,
+        metric_value=metric_value,
+    )
+    assert metric_info_with_constructor.entity == entity_id
+
+    assert metric_info_from_entity_id == metric_info_with_constructor
 
 
 def test_metric_info_generates_metric_string_with_mode_value() -> None:
@@ -1136,58 +1178,78 @@ async def test_cover(
 
     open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
     for testcover in data:
-        MetricsTestHelper._perform_cover_metric_assert(
-            "cover_state",
-            1.0 if cover_entities[testcover].unique_id in open_covers else 0.0,
-            cover_entities[testcover].entity_id,
-            cover_entities[testcover].original_name,
+        _assert_metric_present(
             body,
-            state="open",
+            MetricInfo.from_entity_id(
+                cover_entities[testcover].entity_id,
+                metric_name="cover_state",
+                friendly_name=cover_entities[testcover].original_name,
+                metric_value=1.0
+                if cover_entities[testcover].unique_id in open_covers
+                else 0.0,
+                state="open",
+            ),
         )
 
-        MetricsTestHelper._perform_cover_metric_assert(
-            "cover_state",
-            1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0,
-            cover_entities[testcover].entity_id,
-            cover_entities[testcover].original_name,
+        _assert_metric_present(
             body,
-            state="closed",
+            MetricInfo.from_entity_id(
+                cover_entities[testcover].entity_id,
+                metric_name="cover_state",
+                friendly_name=cover_entities[testcover].original_name,
+                metric_value=1.0
+                if cover_entities[testcover].unique_id == "cover_closed"
+                else 0.0,
+                state="closed",
+            ),
         )
 
-        MetricsTestHelper._perform_cover_metric_assert(
-            "cover_state",
-            1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0,
-            cover_entities[testcover].entity_id,
-            cover_entities[testcover].original_name,
+        _assert_metric_present(
             body,
-            state="opening",
+            MetricInfo.from_entity_id(
+                cover_entities[testcover].entity_id,
+                metric_name="cover_state",
+                friendly_name=cover_entities[testcover].original_name,
+                metric_value=1.0
+                if cover_entities[testcover].unique_id == "cover_opening"
+                else 0.0,
+                state="opening",
+            ),
         )
 
-        MetricsTestHelper._perform_cover_metric_assert(
-            "cover_state",
-            1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0,
-            cover_entities[testcover].entity_id,
-            cover_entities[testcover].original_name,
+        _assert_metric_present(
             body,
-            state="closing",
+            MetricInfo.from_entity_id(
+                cover_entities[testcover].entity_id,
+                metric_name="cover_state",
+                friendly_name=cover_entities[testcover].original_name,
+                metric_value=1.0
+                if cover_entities[testcover].unique_id == "cover_closing"
+                else 0.0,
+                state="closing",
+            ),
         )
 
         if testcover == "cover_position":
-            MetricsTestHelper._perform_cover_metric_assert(
-                "cover_position",
-                "50.0",
-                cover_entities[testcover].entity_id,
-                cover_entities[testcover].original_name,
+            _assert_metric_present(
                 body,
+                MetricInfo.from_entity_id(
+                    cover_entities[testcover].entity_id,
+                    metric_name="cover_position",
+                    friendly_name=cover_entities[testcover].original_name,
+                    metric_value="50.0",
+                ),
             )
 
         if testcover == "cover_tilt_position":
-            MetricsTestHelper._perform_cover_metric_assert(
-                "cover_tilt_position",
-                "50.0",
-                cover_entities[testcover].entity_id,
-                cover_entities[testcover].original_name,
+            _assert_metric_present(
                 body,
+                MetricInfo.from_entity_id(
+                    cover_entities[testcover].entity_id,
+                    metric_name="cover_tilt_position",
+                    friendly_name=cover_entities[testcover].original_name,
+                    metric_value="50.0",
+                ),
             )
 
 
