@@ -19,7 +19,7 @@ class HassDecoratorChecker(BaseChecker):
             "Used when a coroutine function has an invalid @callback decorator",
         ),
         "W7472": (
-            "Fixture %s is invalid here, please use %s",
+            "Fixture %s is invalid here, please %s",
             "hass-pytest-fixture-decorator",
             "Used when a pytest fixture is invalid",
         ),
@@ -34,11 +34,11 @@ class HassDecoratorChecker(BaseChecker):
 
         return None
 
-    def _get_pytest_fixture_scope_node(
-        self, decorator: nodes.Call
+    def _get_pytest_fixture_node_keyword(
+        self, decorator: nodes.Call, search_arg: str
     ) -> nodes.Keyword | None:
         for keyword in decorator.keywords:
-            if keyword.arg == "scope":
+            if keyword.arg == search_arg:
                 return keyword
 
         return None
@@ -48,31 +48,51 @@ class HassDecoratorChecker(BaseChecker):
     ) -> None:
         if (
             "_pytest.fixtures.FixtureFunctionMarker" not in decoratornames
-            or (root_name := node.root().name) == "tests.components.conftest"
-            or not root_name.startswith("tests.components.")
+            or not (root_name := node.root().name).startswith("tests.")
             or (decorator := self._get_pytest_fixture_node(node)) is None
-            or (keyword := self._get_pytest_fixture_scope_node(decorator)) is None
+            or (keyword := self._get_pytest_fixture_node_keyword(decorator, "scope"))
+            is None
             or not isinstance(keyword.value, nodes.Const)
             or not (scope := keyword.value.value)
         ):
             return
 
+        parts = root_name.split(".")
+        test_component: str | None = None
+        if root_name.startswith("tests.components.") and parts[2] != "conftest":
+            test_component = parts[2]
+
         if scope == "session":
-            self.add_message(
-                "hass-pytest-fixture-decorator",
-                node=decorator,
-                args=("scope `session`", "`package` or lower"),
-            )
+            if test_component:
+                self.add_message(
+                    "hass-pytest-fixture-decorator",
+                    node=decorator,
+                    args=("scope `session`", "use `package` or lower"),
+                )
+                return
+            if (
+                not (
+                    autouse_keyword := self._get_pytest_fixture_node_keyword(
+                        decorator, "autouse"
+                    )
+                )
+                or not isinstance(autouse_keyword.value, nodes.Const)
+                or not autouse_keyword.value.value
+            ):
+                self.add_message(
+                    "hass-pytest-fixture-decorator",
+                    node=decorator,
+                    args=("scope/autouse combination", "set `autouse=True`"),
+                )
             return
 
-        parts = root_name.split(".")
-        current_module = parts[3] if len(parts) > 3 else ""
+        test_module = parts[3] if len(parts) > 3 else ""
 
-        if scope == "package" and current_module != "conftest":
+        if test_component and scope == "package" and test_module != "conftest":
             self.add_message(
                 "hass-pytest-fixture-decorator",
                 node=decorator,
-                args=("scope `package`", "`module` or lower"),
+                args=("scope `package`", "use `module` or lower"),
             )
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
