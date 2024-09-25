@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
-    CONF_TRIGGER,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -483,18 +482,8 @@ async def websocket_device_automation_get_condition_capabilities(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
         vol.Required("trigger"): vol.All(
-            DEVICE_TRIGGER_BASE_SCHEMA.extend(
-                {
-                    vol.Exclusive(CONF_PLATFORM, "trigger"): "device",
-                    vol.Exclusive(
-                        CONF_TRIGGER,
-                        "trigger",
-                        msg="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
-                    ): "device",
-                },
-                extra=vol.ALLOW_EXTRA,
-            ),
             cv._backward_compat_trigger_schema,  # noqa: SLF001
+            DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
         ),
     }
 )
