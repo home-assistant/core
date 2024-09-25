@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Plant(Entity):
+class Plant(Entity):  # pylint: disable=hass-enforce-class-module
     """Plant monitors the well-being of a plant.
 
     It also checks the measurements against

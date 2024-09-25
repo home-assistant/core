@@ -25,7 +25,41 @@ from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor(hass: HomeAssistant, mock_ring_client) -> None:
+@pytest.fixture
+def create_deprecated_sensor_entities(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+):
+    """Create the entity so it is not ignored by the deprecation check."""
+    mock_config_entry.add_to_hass(hass)
+
+    def create_entry(
+        device_name,
+        description,
+        device_id,
+    ):
+        unique_id = f"{device_id}-{description}"
+        entity_registry.async_get_or_create(
+            domain=SENSOR_DOMAIN,
+            platform=DOMAIN,
+            unique_id=unique_id,
+            suggested_object_id=f"{device_name}_{description}",
+            config_entry=mock_config_entry,
+        )
+
+    create_entry("downstairs", "volume", 123456)
+    create_entry("front_door", "volume", 987654)
+    create_entry("ingress", "doorbell_volume", 185036587)
+    create_entry("ingress", "mic_volume", 185036587)
+    create_entry("ingress", "voice_volume", 185036587)
+
+
+async def test_sensor(
+    hass: HomeAssistant,
+    mock_ring_client,
+    create_deprecated_sensor_entities,
+) -> None:
     """Test the Ring sensors."""
     await setup_platform(hass, "sensor")
 

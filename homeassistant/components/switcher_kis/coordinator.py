@@ -8,6 +8,7 @@ import logging
 from aioswitcher.device import SwitcherBase
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, update_coordinator
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -23,7 +24,10 @@ class SwitcherDataUpdateCoordinator(
     """Switcher device data update coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, device: SwitcherBase
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        device: SwitcherBase,
     ) -> None:
         """Initialize the Switcher device coordinator."""
         super().__init__(
@@ -34,6 +38,7 @@ class SwitcherDataUpdateCoordinator(
         )
         self.entry = entry
         self.data = device
+        self.token = entry.data.get(CONF_TOKEN)
 
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""

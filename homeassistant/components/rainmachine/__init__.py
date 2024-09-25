@@ -291,7 +291,7 @@ async def async_setup_entry(  # noqa: C901
             else:
                 data = await controller.zones.all(details=True, include_inactive=True)
         except UnknownAPICallError:
-            LOGGER.info(
+            LOGGER.warning(
                 "Skipping unsupported API call for controller %s: %s",
                 controller.name,
                 api_category,
@@ -518,7 +518,7 @@ async def async_migrate_entry(
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True
 

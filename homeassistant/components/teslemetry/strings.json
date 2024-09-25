@@ -420,7 +420,10 @@
         "name": "version"
       },
       "vin": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "disconnected": "Disconnected"
+        }
       },
       "vpp_backup_reserve_percent": {
         "name": "VPP backup reserve"

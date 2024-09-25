@@ -41,6 +41,21 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
+LIMIT_REASON_OPTIONS = [
+    "no_limit",
+    "installation_current",
+    "user_limit",
+    "dynamic_limit",
+    "schedule",
+    "em_offline",
+    "em",
+    "ocpp",
+    "overtemperature",
+    "switching_phases",
+    "1p_charging_disabled",
+]
+
+
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="state",
@@ -104,17 +119,12 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
         key="limit_reason",
         translation_key="limit_reason",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "no_limit",
-            "installation_current",
-            "user_limit",
-            "dynamic_limit",
-            "schedule",
-            "em_offline",
-            "em",
-            "ocpp",
-        ],
-        value_fn=lambda data: str(data["current_limit_reason"]),
+        options=LIMIT_REASON_OPTIONS,
+        value_fn=lambda data: (
+            str(data["current_limit_reason"])
+            if str(data["current_limit_reason"]) in LIMIT_REASON_OPTIONS
+            else None
+        ),
     ),
 )
 

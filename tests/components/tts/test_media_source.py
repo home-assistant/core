@@ -1,6 +1,7 @@
 """Tests for TTS media source."""
 
 from http import HTTPStatus
+import re
 from unittest.mock import MagicMock
 
 import pytest
@@ -169,29 +170,34 @@ async def test_resolving(
     [(MSProvider(DEFAULT_LANG), MSEntity(DEFAULT_LANG))],
 )
 @pytest.mark.parametrize(
-    "setup",
+    ("setup", "engine"),
     [
-        "mock_setup",
-        "mock_config_entry_setup",
+        ("mock_setup", "test"),
+        ("mock_config_entry_setup", "tts.test"),
     ],
     indirect=["setup"],
 )
-async def test_resolving_errors(hass: HomeAssistant, setup: str) -> None:
+async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) -> None:
     """Test resolving."""
     # No message added
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(hass, "media-source://tts/test", None)
 
     # Non-existing provider
-    with pytest.raises(media_source.Unresolvable):
+    with pytest.raises(
+        media_source.Unresolvable, match="Provider non-existing not found"
+    ):
         await media_source.async_resolve_media(
             hass, "media-source://tts/non-existing?message=bla", None
         )
 
     # Non-existing option
-    with pytest.raises(media_source.Unresolvable):
+    with pytest.raises(
+        media_source.Unresolvable,
+        match=re.escape("Invalid options found: ['non_existing_option']"),
+    ):
         await media_source.async_resolve_media(
             hass,
-            "media-source://tts/non-existing?message=bla&non_existing_option=bla",
+            f"media-source://tts/{engine}?message=bla&non_existing_option=bla",
             None,
         )

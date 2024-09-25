@@ -34,7 +34,7 @@ async def async_setup_entry(
     """Set up binary sensors."""
     controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
 
-    gateway_coordinator = await controller.get_gateway_coordinator()
+    gateway_coordinator = controller.gateway_coordinator
     if not gateway_coordinator:
         return
 

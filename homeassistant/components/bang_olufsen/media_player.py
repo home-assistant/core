@@ -354,7 +354,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         if self.hass.is_running:
             self.async_write_ha_state()
 
-    @callback
     async def _async_update_playback_metadata_and_beolink(
         self, data: PlaybackContentMetadata
     ) -> None:
@@ -410,7 +409,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    @callback
     async def _async_update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
         beolink_self = await self._client.get_beolink_self()
@@ -424,7 +422,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         await self._async_update_beolink()
 
-    @callback
     async def _async_update_beolink(self) -> None:
         """Update the current Beolink leader, listeners, peers and self."""
 
