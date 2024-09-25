@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from mozart_api.models import BeoRemoteButton, PairedRemote, PairedRemoteResponse
+from mozart_api.models import (
+    BeoRemoteButton,
+    ButtonEvent,
+    PairedRemote,
+    PairedRemoteResponse,
+)
 import pytest
 
 from homeassistant.components import automation
@@ -84,14 +89,34 @@ async def test_async_get_triggers(
         assert expected_trigger in triggers
 
 
-async def test_if_fires_on_beo_remote_button(
+@pytest.mark.parametrize(
+    ("notification", "notification_method", "trigger_type"),
+    [
+        # Button event trigger
+        (
+            ButtonEvent(button="PlayPause", state="shortPress"),
+            "get_button_notifications",
+            "PlayPause_shortPress",
+        ),
+        # Remote trigger
+        (
+            BeoRemoteButton(key="Control/Wind", type="KeyPress"),
+            "get_beo_remote_button_notifications",
+            "Control/Wind_KeyPress",
+        ),
+    ],
+)
+async def test_if_fires_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     device_registry: DeviceRegistry,
+    notification: BeoRemoteButton | ButtonEvent,
+    notification_method: str,
+    trigger_type: str,
 ) -> None:
-    """Test Control/Wind_KeyPress trigger firing."""
+    """Test device triggers firing."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -113,7 +138,7 @@ async def test_if_fires_on_beo_remote_button(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device.id,
-                        "type": "Control/Wind_KeyPress",
+                        "type": trigger_type,
                     },
                     "action": {
                         "service": "test.automation",
@@ -128,11 +153,11 @@ async def test_if_fires_on_beo_remote_button(
     )
 
     # Trigger automation
-    beo_remote_button_callback = (
-        mock_mozart_client.get_beo_remote_button_notifications.call_args[0][0]
-    )
+    notification_callback = getattr(mock_mozart_client, notification_method).call_args[
+        0
+    ][0]
 
-    beo_remote_button_callback(BeoRemoteButton(key="Control/Wind", type="KeyPress"))
+    notification_callback(notification)
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
