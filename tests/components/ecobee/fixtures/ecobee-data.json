@@ -12,6 +12,15 @@
       "program": {
         "climates": [
           {
+            "name": "Home",
+            "climateRef": "home",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
+          },
+          {
             "name": "Climate1",
             "climateRef": "c1",
             "sensors": [
@@ -72,6 +81,24 @@
         }
       ],
       "remoteSensors": [
+        {
+          "id": "ei:0",
+          "name": "ecobee",
+          "type": "thermostat",
+          "inUse": true,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "humidity",
+              "value": "54"
+            }
+          ]
+        },
         {
           "id": "rs:100",
           "name": "Remote Sensor 1",

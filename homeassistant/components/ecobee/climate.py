@@ -596,7 +596,11 @@ class Thermostat(ClimateEntity):
     @property
     def active_sensors_in_preset_mode(self) -> list:
         """Return the currently active/participating sensors."""
-        return self._sensors_in_preset_mode(self.preset_mode)
+        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
+        # During a manual hold, the ecobee will follow the Sensor Participation
+        # rules for the Home Comfort Settings
+        mode = self._preset_modes.get(self.preset_mode, "Home")
+        return self._sensors_in_preset_mode(mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -784,7 +788,7 @@ class Thermostat(ClimateEntity):
         # Check if climate is an available preset option.
         elif preset_mode not in self._preset_modes.values():
             if self.preset_modes:
-                msg = f"Invalid climate name, available options are: {', '.join(self.preset_modes)}"
+                msg = f"Invalid climate name, available options are: {', '.join(self._preset_modes.values())}"
                 raise ServiceValidationError(msg)
 
         # Get device name from device id.
