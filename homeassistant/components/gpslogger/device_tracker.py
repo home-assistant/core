@@ -79,25 +79,16 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
             self._attr_latitude = location[0]
             self._attr_longitude = location[1]
         self._unsub_dispatcher = None
-        self._unique_id = device
+        self._attr_unique_id = device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(GPL_DOMAIN, device)},
+            name=device,
+        )
 
     @property
     def battery_level(self):
         """Return battery value of the device."""
         return self._battery
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(GPL_DOMAIN, self._unique_id)},
-            name=self._name,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
