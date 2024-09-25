@@ -34,15 +34,7 @@ async def setup_integration_with_node_fixture(
     override_attributes: dict[str, Any] | None = None,
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
-    node_data = load_and_parse_node_fixture(node_fixture)
-    if override_attributes:
-        node_data["attributes"].update(override_attributes)
-    node = MatterNode(
-        dataclass_from_dict(
-            MatterNodeData,
-            node_data,
-        )
-    )
+    node = create_node_from_fixture(node_fixture, override_attributes)
     client.get_nodes.return_value = [node]
     client.get_node.return_value = node
     config_entry = MockConfigEntry(
@@ -54,6 +46,21 @@ async def setup_integration_with_node_fixture(
     await hass.async_block_till_done()
 
     return node
+
+
+def create_node_from_fixture(
+    node_fixture: str, override_attributes: dict[str, Any] | None = None
+) -> MatterNode:
+    """Create a node from a fixture."""
+    node_data = load_and_parse_node_fixture(node_fixture)
+    if override_attributes:
+        node_data["attributes"].update(override_attributes)
+    return MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
+    )
 
 
 def set_node_attribute(
