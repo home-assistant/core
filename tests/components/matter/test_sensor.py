@@ -19,6 +19,18 @@ from .common import (
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_sensors(
+    hass: HomeAssistant,
+    matter_devices: MatterNode,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensors."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["flow_sensor"])
 async def test_sensor_null_value(
     hass: HomeAssistant,
@@ -323,15 +335,3 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_sensors(
-    hass: HomeAssistant,
-    matter_devices: MatterNode,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test sensors."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)
