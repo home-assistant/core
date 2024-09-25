@@ -107,6 +107,7 @@ async def integration_fixture(
         "switch_unit",
         "temperature_sensor",
         "thermostat",
+        "valve",
         "window_covering_full",
         "window_covering_lift",
         "window_covering_pa_lift",
