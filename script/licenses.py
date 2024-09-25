@@ -170,7 +170,7 @@ EXCEPTIONS = {
 
 TODO = {
     "aiocache": AwesomeVersion(
-        "0.12.2"
+        "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 
