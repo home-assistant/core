@@ -22,7 +22,7 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     HomeAssistantBluetoothManager,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from . import _get_manager, generate_advertisement_data, generate_ble_device
 
@@ -164,7 +164,11 @@ def mock_platform_client_that_raises_on_connect_fixture():
         yield
 
 
-def _generate_scanners_with_fake_devices(hass):
+def _generate_scanners_with_fake_devices(
+    hass: HomeAssistant,
+) -> tuple[
+    dict[str, tuple[BLEDevice, AdvertisementData]], CALLBACK_TYPE, CALLBACK_TYPE
+]:
     """Generate scanners with fake devices."""
     manager = _get_manager()
     hci0_device_advs = {}

@@ -120,3 +120,4 @@ class NikoHomeControlData:
             if state["id"] == aid:
                 return state["value1"]
         _LOGGER.error("Failed to retrieve state off unknown light")
+        return None

@@ -25,16 +25,6 @@ async def dimmable_light_node_fixture(
     )
 
 
-@pytest.fixture(name="microwave_oven_node")
-async def microwave_oven_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a microwave oven node."""
-    return await setup_integration_with_node_fixture(
-        hass, "microwave-oven", matter_client
-    )
-
-
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_mode_select_entities(
@@ -88,22 +78,27 @@ async def test_mode_select_entities(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_microwave_select_entities(
+async def test_attribute_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    microwave_oven_node: MatterNode,
+    light_node: MatterNode,
 ) -> None:
-    """Test select entities are created for the MicrowaveOvenMode cluster attributes."""
-    state = hass.states.get("select.microwave_oven_mode")
+    """Test select entities are created for attribute based discovery schema(s)."""
+    entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Normal"
-    assert state.attributes["options"] == [
-        "Normal",
-        "Defrost",
-    ]
-    # name should just be Mode (from the translation key)
-    assert state.attributes["friendly_name"] == "Microwave Oven Mode"
-    set_node_attribute(microwave_oven_node, 1, 94, 1, 1)
+    assert state.state == "previous"
+    assert state.attributes["options"] == ["on", "off", "toggle", "previous"]
+    assert (
+        state.attributes["friendly_name"]
+        == "Mock Dimmable Light Power-on behavior on startup"
+    )
+    set_node_attribute(light_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("select.microwave_oven_mode")
-    assert state.state == "Defrost"
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    # test that an invalid value (e.g. 253) leads to an unknown state
+    set_node_attribute(light_node, 1, 6, 16387, 253)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"

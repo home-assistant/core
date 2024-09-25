@@ -484,7 +484,9 @@ async def test_set_invalid_fan_speed(
     assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "high"
 
 
-def _verify(hass, expected_state, expected_battery_level):
+def _verify(
+    hass: HomeAssistant, expected_state: str, expected_battery_level: int
+) -> None:
     """Verify vacuum's state and speed."""
     state = hass.states.get(_TEST_VACUUM)
     attributes = state.attributes
@@ -492,7 +494,7 @@ def _verify(hass, expected_state, expected_battery_level):
     assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level
 
 
-async def _register_basic_vacuum(hass):
+async def _register_basic_vacuum(hass: HomeAssistant) -> None:
     """Register basic vacuum with only required options for testing."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
@@ -528,7 +530,7 @@ async def _register_basic_vacuum(hass):
     await hass.async_block_till_done()
 
 
-async def _register_components(hass):
+async def _register_components(hass: HomeAssistant) -> None:
     """Register basic components for testing."""
     with assert_setup_component(2, "input_boolean"):
         assert await setup.async_setup_component(

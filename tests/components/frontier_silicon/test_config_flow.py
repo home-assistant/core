@@ -356,15 +356,7 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_PIN] == "1234"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
@@ -395,15 +387,7 @@ async def test_reauth_flow_friendly_name_error(
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_PIN] == "1234"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_config"
 

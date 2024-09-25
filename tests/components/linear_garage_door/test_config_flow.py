@@ -6,7 +6,7 @@ from linear_garage_door.errors import InvalidLoginError
 import pytest
 
 from homeassistant.components.linear_garage_door.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -61,16 +61,7 @@ async def test_reauth(
 ) -> None:
     """Test reauthentication."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "title_placeholders": {"name": mock_config_entry.title},
-            "unique_id": mock_config_entry.unique_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 

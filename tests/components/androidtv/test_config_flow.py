@@ -73,7 +73,7 @@ CONNECT_METHOD = (
 class MockConfigDevice:
     """Mock class to emulate Android device."""
 
-    def __init__(self, eth_mac=ETH_MAC, wifi_mac=None):
+    def __init__(self, eth_mac=ETH_MAC, wifi_mac=None) -> None:
         """Initialize a fake device to test config flow."""
         self.available = True
         self.device_properties = {PROP_ETHMAC: eth_mac, PROP_WIFIMAC: wifi_mac}

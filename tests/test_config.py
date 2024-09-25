@@ -36,6 +36,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     ConfigSource,
     HomeAssistant,
+    State,
 )
 from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import (
@@ -579,7 +580,7 @@ def test_customize_glob_is_ordered() -> None:
     assert isinstance(conf["customize_glob"], OrderedDict)
 
 
-async def _compute_state(hass, config):
+async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State | None:
     await config_util.async_process_ha_core_config(hass, config)
 
     entity = Entity()

@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'info': dict({
+      '__type': "<class 'aiostreammagic.models.Info'>",
+      'repr': "Info(name='Cambridge Audio CXNv2', model='CXNv2', timezone='America/Chicago', locale='en_GB', udn='02680b5c-1320-4d54-9f7c-3cfe915ad4c3', unit_id='0020c2d8', api_version='1.8')",
+    }),
+    'sources': list([
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='IR', name='Internet Radio', default_name='Internet Radio', nameable=False, ui_selectable=False, description='Internet Radio', description_locale='Internet Radio', preferred_order=9)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='USB_AUDIO', name='USB Audio', default_name='USB Audio', nameable=True, ui_selectable=True, description='USB Audio', description_locale='USB Audio', preferred_order=1)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='SPDIF_COAX', name='D2', default_name='D2', nameable=True, ui_selectable=False, description='Digital Co-axial', description_locale='Digital Co-axial', preferred_order=3)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='SPDIF_TOSLINK', name='D1', default_name='D1', nameable=True, ui_selectable=False, description='Digital Optical', description_locale='Digital Optical', preferred_order=2)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='MEDIA_PLAYER', name='Media Library', default_name='Media Library', nameable=False, ui_selectable=True, description='Media Player', description_locale='Media Player', preferred_order=10)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='AIRPLAY', name='AirPlay', default_name='AirPlay', nameable=False, ui_selectable=True, description='AirPlay', description_locale='AirPlay', preferred_order=11)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='SPOTIFY', name='Spotify', default_name='Spotify', nameable=False, ui_selectable=True, description='Spotify', description_locale='Spotify', preferred_order=6)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='CAST', name='Chromecast built-in', default_name='Chromecast built-in', nameable=False, ui_selectable=True, description='Chromecast built-in', description_locale='Chromecast built-in', preferred_order=8)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='ROON', name='Roon Ready', default_name='Roon Ready', nameable=False, ui_selectable=False, description='Roon Ready', description_locale='Roon Ready', preferred_order=5)",
+      }),
+      dict({
+        '__type': "<class 'aiostreammagic.models.Source'>",
+        'repr': "Source(id='TIDAL', name='TIDAL Connect', default_name='TIDAL Connect', nameable=False, ui_selectable=False, description='TIDAL', description_locale='TIDAL', preferred_order=7)",
+      }),
+    ]),
+  })
+# ---

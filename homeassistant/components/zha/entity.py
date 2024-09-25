@@ -62,7 +62,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.entity_data.device_proxy.device.available
+        return self.entity_data.entity.available
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -53,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        client=get_async_client(hass),
     )
 
     # initialize local API

@@ -21,6 +21,4 @@ ATTR_OUTSIDE_TEMPERATURE: Final = "outside_temperature"
 
 CONF_PASSKEY: Final = "passkey"
 
-CONF_DEVICE_IDENT: Final = "RVS21.831F/127"
-
 DEFAULT_PORT: Final = 80

@@ -10,9 +10,17 @@
     }
   },
   "services": {
-    "seen": "mdi:email-open-outline",
-    "move": "mdi:email-arrow-right-outline",
-    "delete": "mdi:trash-can-outline",
-    "fetch": "mdi:email-sync-outline"
+    "seen": {
+      "service": "mdi:email-open-outline"
+    },
+    "move": {
+      "service": "mdi:email-arrow-right-outline"
+    },
+    "delete": {
+      "service": "mdi:trash-can-outline"
+    },
+    "fetch": {
+      "service": "mdi:email-sync-outline"
+    }
   }
 }

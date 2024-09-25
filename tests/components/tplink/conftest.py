@@ -1,9 +1,9 @@
 """tplink conftest."""
 
 from collections.abc import Generator
-import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
+from kasa import DeviceConfig
 import pytest
 
 from homeassistant.components.tplink import DOMAIN
@@ -34,13 +34,13 @@ def mock_discovery():
         discover_single=DEFAULT,
     ) as mock_discovery:
         device = _mocked_device(
-            device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
             credentials_hash=CREDENTIALS_HASH_KLAP,
             alias=None,
         )
         devices = {
             "127.0.0.1": _mocked_device(
-                device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
                 credentials_hash=CREDENTIALS_HASH_KLAP,
                 alias=None,
             )
@@ -57,12 +57,12 @@ def mock_connect():
     with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
             IP_ADDRESS: _mocked_device(
-                device_config=DEVICE_CONFIG_KLAP,
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
                 credentials_hash=CREDENTIALS_HASH_KLAP,
                 ip_address=IP_ADDRESS,
             ),
             IP_ADDRESS2: _mocked_device(
-                device_config=DEVICE_CONFIG_AES,
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
                 credentials_hash=CREDENTIALS_HASH_AES,
                 mac=MAC_ADDRESS2,
                 ip_address=IP_ADDRESS2,

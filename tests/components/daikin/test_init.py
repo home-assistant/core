@@ -7,10 +7,10 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.daikin import DaikinApi, update_unique_id
+from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -183,18 +183,15 @@ async def test_client_update_connection_error(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    api: DaikinApi = hass.data[DOMAIN][config_entry.entry_id]
-
-    assert api.available is True
+    assert hass.states.get("climate.daikinap00000").state != STATE_UNAVAILABLE
 
     type(mock_daikin).update_status.side_effect = ClientConnectionError
 
-    freezer.tick(timedelta(seconds=90))
+    freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-
     await hass.async_block_till_done()
 
-    assert api.available is False
+    assert hass.states.get("climate.daikinap00000").state == STATE_UNAVAILABLE
 
     assert mock_daikin.update_status.call_count == 2
 

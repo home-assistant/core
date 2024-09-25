@@ -5,6 +5,7 @@ import json
 from unittest.mock import call
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -74,7 +75,9 @@ async def test_device_remove_non_tasmota_device(
     """Test removing a non Tasmota device through device registry."""
     assert await async_setup_component(hass, "config", {})
 
-    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
         return True
 
     mock_integration(

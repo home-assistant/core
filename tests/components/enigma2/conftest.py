@@ -72,7 +72,7 @@ class MockDevice:
         """Initialize the mock Enigma2 device."""
         self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
 
-    async def _call_api(self, url: str) -> dict:
+    async def _call_api(self, url: str) -> dict | None:
         if url.endswith("/api/about"):
             return {
                 "info": {
@@ -85,6 +85,7 @@ class MockDevice:
                     "brand": "Enigma2",
                 }
             }
+        return None
 
     def get_version(self) -> str | None:
         """Return the version."""

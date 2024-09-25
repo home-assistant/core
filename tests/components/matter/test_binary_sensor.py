@@ -5,11 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -124,7 +125,21 @@ async def test_battery_sensor(
     assert state
     assert state.state == "on"
 
-    entry = entity_registry.async_get(entity_id)
 
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_devices: MatterNode,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test binary sensors."""
+    entities = hass.states.async_all(Platform.BINARY_SENSOR)
+    for entity_state in entities:
+        entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")

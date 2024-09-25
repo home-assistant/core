@@ -976,12 +976,26 @@ class TrackTemplateResultInfo:
         self.hass = hass
         self._job = HassJob(action, f"track template result {track_templates}")
 
-        for track_template_ in track_templates:
-            track_template_.template.hass = hass
         self._track_templates = track_templates
         self._has_super_template = has_super_template
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
+
+        for track_template_ in track_templates:
+            if track_template_.template.hass:
+                continue
+
+            # pylint: disable-next=import-outside-toplevel
+            from .frame import report
+
+            report(
+                (
+                    "calls async_track_template_result with template without hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
+            track_template_.template.hass = hass
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}

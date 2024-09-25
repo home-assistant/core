@@ -79,7 +79,7 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
     _route_tags: dict[str, str]
     _stop_tags: dict[str, str]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize NextBus config flow."""
         self.data: dict[str, str] = {}
         self._client = NextBusClient()

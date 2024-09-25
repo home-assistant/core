@@ -1,5 +1,7 @@
 {
   "services": {
-    "create": "mdi:cloud-upload"
+    "create": {
+      "service": "mdi:cloud-upload"
+    }
   }
 }

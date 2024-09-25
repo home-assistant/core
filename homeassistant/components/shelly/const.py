@@ -254,3 +254,6 @@ VIRTUAL_NUMBER_MODE_MAP = {
     "field": NumberMode.BOX,
     "slider": NumberMode.SLIDER,
 }
+
+
+API_WS_URL = "/api/shelly/ws"

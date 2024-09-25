@@ -23,5 +23,10 @@
         "default": "mdi:clock-plus"
       }
     }
+  },
+  "services": {
+    "fetch_connections": {
+      "service": "mdi:bus-clock"
+    }
   }
 }

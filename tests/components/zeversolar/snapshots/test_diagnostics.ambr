@@ -10,6 +10,7 @@
 # name: test_entry_diagnostics
   dict({
     'communication_status': 'OK',
+    'energy_today': 123.4,
     'hardware_version': 'M10',
     'meter_status': 'OK',
     'num_inverters': 1,

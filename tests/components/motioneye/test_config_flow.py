@@ -264,14 +264,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 

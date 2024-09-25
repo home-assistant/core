@@ -7,14 +7,12 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
 from .coordinator import IslamicPrayerDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 

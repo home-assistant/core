@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 from unittest.mock import Mock
 
 from uiprotect import ProtectApiClient
@@ -41,11 +40,11 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
-    def ws_msg(self, msg: WSSubscriptionMessage) -> Any:
+    def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
 
         if self.ws_subscription is not None:
-            return self.ws_subscription(msg)
+            self.ws_subscription(msg)
 
 
 def reset_objects(bootstrap: Bootstrap):

@@ -1984,6 +1984,18 @@ async def test_validate_statistics(
     await assert_validation_result(client, {})
 
 
+async def test_update_statistics_issues(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update_statistics_issues can be called."""
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
 async def test_clear_statistics(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2555,7 +2567,9 @@ async def test_recorder_info_migration_queue_exhausted(
             recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
         ),
     ):
-        async with async_test_recorder(hass, wait_recorder=False):
+        async with async_test_recorder(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        ):
             await hass.async_add_executor_job(
                 instrument_migration.migration_started.wait
             )

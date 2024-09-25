@@ -1969,6 +1969,58 @@
     'state': '9.2',
   })
 # ---
+# name: test_sensor[sensor.home_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': '0123456-relativehumidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.home_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'humidity',
+      'friendly_name': 'Home Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '67',
+  })
+# ---
 # name: test_sensor[sensor.home_mold_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2265,6 +2317,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensor[sensor.home_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pressure',
+    'unique_id': '0123456-pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_sensor[sensor.home_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'pressure',
+      'friendly_name': 'Home Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1012.0',
   })
 # ---
 # name: test_sensor[sensor.home_pressure_tendency-entry]
@@ -4143,6 +4250,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '276.1',
+  })
+# ---
+# name: test_sensor[sensor.home_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': '0123456-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.home_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'temperature',
+      'friendly_name': 'Home Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.6',
   })
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_0-entry]

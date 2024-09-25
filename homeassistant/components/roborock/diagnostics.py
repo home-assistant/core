@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 

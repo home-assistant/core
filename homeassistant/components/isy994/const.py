@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.lock import LockState
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -23,21 +24,18 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_CLOSED,
     STATE_CLOSING,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UV_INDEX,
     Platform,
     UnitOfApparentPower,
@@ -50,6 +48,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -438,7 +437,7 @@ UOM_FRIENDLY_NAME = {
     "133": UnitOfFrequency.KILOHERTZ,
     "134": f"{UnitOfLength.METERS}/{UnitOfTime.SECONDS}²",
     "135": UnitOfApparentPower.VOLT_AMPERE,  # Volt-Amp
-    "136": POWER_VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
+    "136": UnitOfReactivePower.VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
     "137": "",  # NTP DateTime - Number of seconds since 1900
     "138": UnitOfPressure.PSI,
     "139": DEGREE,  # Degree 0-360
@@ -451,8 +450,8 @@ UOM_FRIENDLY_NAME = {
 
 UOM_TO_STATES = {
     "11": {  # Deadbolt Status
-        0: STATE_UNLOCKED,
-        100: STATE_LOCKED,
+        0: LockState.UNLOCKED,
+        100: LockState.LOCKED,
         101: STATE_UNKNOWN,
         102: STATE_PROBLEM,
     },

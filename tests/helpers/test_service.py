@@ -39,7 +39,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     service,
-    template,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
@@ -405,7 +404,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     """Test service call with templating."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "entity_id": "hello.world",
         "data": {
             "hello": "{{ 'goodbye' }}",
@@ -435,7 +434,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": {
             "area_id": ["area-42", "{{ 'area-51' }}"],
             "device_id": ["abcdef", "{{ 'fedcba' }}"],
@@ -455,7 +454,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
     }
 
@@ -542,7 +541,7 @@ async def test_split_entity_string(hass: HomeAssistant) -> None:
     await service.async_call_from_config(
         hass,
         {
-            "service": "test_domain.test_service",
+            "action": "test_domain.test_service",
             "entity_id": "hello.world, sensor.beer",
         },
     )
@@ -554,7 +553,7 @@ async def test_not_mutate_input(hass: HomeAssistant) -> None:
     """Test for immutable input."""
     async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "entity_id": "hello.world, sensor.beer",
         "data": {"hello": 1},
         "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
@@ -564,9 +563,6 @@ async def test_not_mutate_input(hass: HomeAssistant) -> None:
     # Validate both the original and the copy
     config = cv.SERVICE_SCHEMA(config)
     orig = cv.SERVICE_SCHEMA(orig)
-
-    # Only change after call is each template getting hass attached
-    template.attach(hass, orig)
 
     await service.async_call_from_config(hass, config, validate_config=False)
     assert orig == config
@@ -581,7 +577,7 @@ async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant) -> Non
     await service.async_call_from_config(hass, {})
     assert mock_log.call_count == 2
 
-    await service.async_call_from_config(hass, {"service": "invalid"})
+    await service.async_call_from_config(hass, {"action": "invalid"})
     assert mock_log.call_count == 3
 
 
@@ -597,7 +593,7 @@ async def test_service_call_entry_id(
     assert entry.entity_id == "hello.world"
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": entry.id},
     }
 
@@ -613,7 +609,7 @@ async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     calls = async_mock_service(hass, "test_domain", "test_service")
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": target},
     }
 

@@ -279,6 +279,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        if discovery_info.ip_address.version == 6:
+            return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
         # First try to get the mac address from the name
         # so we can avoid making another connection to the

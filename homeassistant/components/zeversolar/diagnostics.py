@@ -31,6 +31,7 @@ async def async_get_config_entry_diagnostics(
         "num_inverters": data.num_inverters,
         "serial_number": data.serial_number,
         "pac": data.pac,
+        "energy_today": data.energy_today,
         "status": data.status.value,
         "meter_status": data.meter_status.value,
     }

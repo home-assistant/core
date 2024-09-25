@@ -110,6 +110,14 @@
           "s": "Sensitive"
         }
       },
+      "pm25_pure": {
+        "name": "Pure AQI",
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "bad": "Bad"
+        }
+      },
       "timer_time": {
         "name": "Timer end time"
       },

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -11,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_fan_service(accessory):
+def create_fan_service(accessory: Accessory) -> None:
     """Define fan v1 characteristics as per HAP spec.
 
     This service is no longer documented in R2 of the public HAP spec but existing
@@ -29,7 +30,7 @@ def create_fan_service(accessory):
     speed.value = 0
 
 
-def create_fanv2_service(accessory):
+def create_fanv2_service(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -46,7 +47,7 @@ def create_fanv2_service(accessory):
     swing_mode.value = 0
 
 
-def create_fanv2_service_non_standard_rotation_range(accessory):
+def create_fanv2_service_non_standard_rotation_range(accessory: Accessory) -> None:
     """Define fan v2 with a non-standard rotation range."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -60,7 +61,7 @@ def create_fanv2_service_non_standard_rotation_range(accessory):
     speed.minStep = 1
 
 
-def create_fanv2_service_with_min_step(accessory):
+def create_fanv2_service_with_min_step(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -78,7 +79,7 @@ def create_fanv2_service_with_min_step(accessory):
     swing_mode.value = 0
 
 
-def create_fanv2_service_without_rotation_speed(accessory):
+def create_fanv2_service_without_rotation_speed(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
