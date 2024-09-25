@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from . import CalendarEntity
 
 DOMAIN = "calendar"
-DOMAIN_DATA: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
+DATA: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 CONF_EVENT = "event"
 
