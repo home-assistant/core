@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration_with_node_fixture
+from .common import (
+    set_node_attribute,
+    setup_integration_with_node_fixture,
+    trigger_subscription_callback,
+)
 
 
 @pytest.fixture(name="valve_node")
@@ -30,8 +34,10 @@ async def test_valve(
     entity_id = "valve.valve_valve"
     state = hass.states.get(entity_id)
     assert state
+    assert state.state == "closed"
     assert state.attributes["friendly_name"] == "Valve Valve"
 
+    # test close_valve action
     await hass.services.async_call(
         "valve",
         "close_valve",
@@ -49,6 +55,7 @@ async def test_valve(
     )
     matter_client.send_device_command.reset_mock()
 
+    # test open_valve action
     await hass.services.async_call(
         "valve",
         "open_valve",
@@ -65,3 +72,27 @@ async def test_valve(
         command=clusters.ValveConfigurationAndControl.Commands.Open(),
     )
     matter_client.send_device_command.reset_mock()
+
+    # set changing state to 'opening'
+    set_node_attribute(valve_node, 1, 129, 4, 2)
+    set_node_attribute(valve_node, 1, 129, 5, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "opening"
+
+    # set changing state to 'opening'
+    set_node_attribute(valve_node, 1, 129, 4, 2)
+    set_node_attribute(valve_node, 1, 129, 5, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "open"
+
+    # set changing state to 'closed'
+    set_node_attribute(valve_node, 1, 129, 4, 1)
+    set_node_attribute(valve_node, 1, 129, 5, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "open"
