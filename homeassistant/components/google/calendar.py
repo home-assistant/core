@@ -24,6 +24,7 @@ from homeassistant.components.calendar import (
     EVENT_START,
     EVENT_SUMMARY,
     CalendarEntity,
+    CalendarEntityDescription,
     CalendarEntityFeature,
     CalendarEvent,
     extract_offset,
@@ -34,7 +35,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_O
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
-from homeassistant.helpers.entity import EntityDescription, generate_entity_id
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -84,7 +85,7 @@ SERVICE_CREATE_EVENT = "create_event"
 
 
 @dataclass(frozen=True, kw_only=True)
-class GoogleCalendarEntityDescription(EntityDescription):
+class GoogleCalendarEntityDescription(CalendarEntityDescription):
     """Google calendar entity description."""
 
     name: str
