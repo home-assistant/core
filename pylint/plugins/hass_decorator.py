@@ -53,7 +53,7 @@ class HassDecoratorChecker(BaseChecker):
             ):
                 self.add_message(
                     "hass-pytest-fixture-decorator",
-                    node=node,
+                    node=decorator,
                     args=(f"scope `{keyword.value.value}`", "`package` or lower"),
                 )
 

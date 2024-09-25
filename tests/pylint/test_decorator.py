@@ -140,13 +140,13 @@ def test_bad_fixture_scope(
         linter,
         MessageTest(
             msg_id="hass-pytest-fixture-decorator",
-            line=11,
-            node=root_node.body[2],
+            line=10,
+            node=root_node.body[2].decorators.nodes[0],
             args=("scope `session`", "`package` or lower"),
             confidence=UNDEFINED,
-            col_offset=0,
-            end_line=11,
-            end_col_offset=17,
+            col_offset=1,
+            end_line=10,
+            end_col_offset=32,
         ),
     ):
         walker.walk(root_node)
