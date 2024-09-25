@@ -122,6 +122,10 @@ def _assert_metric_present(body, metric_info: MetricInfo):
     assert metric_info.get_full_metric_string() in body
 
 
+def _assert_metric_not_present(body, metric_info: MetricInfo):
+    assert metric_info.get_full_metric_string() not in body
+
+
 @dataclass
 class FilterTest:
     """Class for capturing a filter test."""
@@ -358,21 +362,37 @@ async def test_sensor_without_unit(
     """Test prometheus metrics for sensors without a unit."""
     body = await generate_latest_metrics(client)
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_state", "0.002", "Trend Gradient", "trend_gradient", body
-    )
-
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_state", "0", "Text", "text", body, positive_comparison=False
-    )
-
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_text",
-        "0",
-        "Text Unit",
-        "text_unit",
+    _assert_metric_present(
         body,
-        positive_comparison=False,
+        MetricInfo(
+            metric_name="sensor_state",
+            domain="sensor",
+            friendly_name="Trend Gradient",
+            object_id="trend_gradient",
+            metric_value="0.002",
+        ),
+    )
+
+    _assert_metric_not_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_state",
+            domain="sensor",
+            friendly_name="Text",
+            object_id="text",
+            metric_value="0",
+        ),
+    )
+
+    _assert_metric_not_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_unit_text",
+            domain="sensor",
+            friendly_name="Text Unit",
+            object_id="text_unit",
+            metric_value="0",
+        ),
     )
 
 
@@ -383,49 +403,59 @@ async def test_sensor_device_class(
     """Test prometheus metrics for sensor with a device_class."""
     body = await generate_latest_metrics(client)
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_temperature_celsius",
-        "10.0",
-        "Fahrenheit",
-        "fahrenheit",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Fahrenheit",
+            object_id="fahrenheit",
+            metric_value="10.0",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_temperature_celsius",
-        "15.6",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_humidity_percent",
-        "54.0",
-        "Outside Humidity",
-        "outside_humidity",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.HUMIDITY,
+        MetricInfo(
+            metric_name="sensor_humidity_percent",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="54.0",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_power_kwh",
-        "14.0",
-        "Radio Energy",
-        "radio_energy",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.POWER,
+        MetricInfo(
+            metric_name="sensor_power_kwh",
+            domain="sensor",
+            friendly_name="Radio Energy",
+            object_id="radio_energy",
+            metric_value="14.0",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_timestamp_seconds",
-        "1.691445808136036e+09",
-        "Timestamp",
-        "timestamp",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        MetricInfo(
+            metric_name="sensor_timestamp_seconds",
+            domain="sensor",
+            friendly_name="Timestamp",
+            object_id="timestamp",
+            metric_value="1.691445808136036e+09",
+        ),
     )
 
 
