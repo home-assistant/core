@@ -904,7 +904,7 @@ growattServer==1.5.0
 gspread==5.5.0
 
 # homeassistant.components.profiler
-guppy3==3.1.4.post1
+guppy3==3.1.4.post1;python_version<'3.13'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
