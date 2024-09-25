@@ -2,11 +2,12 @@
 
 import logging
 
+from fluss_api.main import FlussApiClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import FlussApiClient, FlussDeviceError
 from .device import FlussButton
 
 LOGGER = logging.getLogger(__package__)
@@ -20,12 +21,8 @@ async def async_setup_entry(
     entry_data = entry.runtime_data
     api: FlussApiClient = entry_data["api"]
 
-    try:
-        devices_data = await api.async_get_devices()
-        devices = devices_data["devices"]
-    except FlussDeviceError as e:
-        LOGGER.error("Error fetching devices: %s", e)
-        return
+    devices_data = await api.async_get_devices()
+    devices = devices_data["devices"]
 
     device_info_list = []
     for device in devices:

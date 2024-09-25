@@ -4,8 +4,10 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 
+from .const import DOMAIN
 from .device import FlussButton
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,32 +18,45 @@ class FlussEntity(Entity):
 
     _attr_has_entity_name = True
 
-    device: FlussButton
-    entry: ConfigEntry
-
     def __init__(  # noqa: D107
         self,
+        hass: HomeAssistant,
         device: FlussButton,
         entry: ConfigEntry,
         entity_description: EntityDescription,
         unique_id_suffix: str | None = None,
     ) -> None:
+        """Initialize the entity."""
+        self.hass = hass
         self.device = device
         self.entry = entry
         self.entity_description = entity_description
 
-        """Initialize the entity."""
-        if unique_id_suffix is None:
-            self._attr_unique_id = entry.data[CONF_ADDRESS]
-        else:
-            self._attr_unique_id = f"{entry.data[CONF_ADDRESS]}_{unique_id_suffix}"
-        if (
-            CONF_ADDRESS not in entry.data
-            or entry.data[CONF_ADDRESS] != self._attr_unique_id
-        ):
-            data = dict(entry.data)
-            data[CONF_ADDRESS] = self._attr_unique_id
-            self.hass.config_entries.async_update_entry(entry, data=data)
+        unique_id = device.unique_id or "default_unique_id"
+        self.identifiers = ({(DOMAIN, unique_id)},)
 
-    async def async_update(self) -> None:
-        """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
+        # Set unique_id and device_info attributes
+        self._attr_unique_id = unique_id
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, unique_id)},
+        }
+
+        if unique_id_suffix is None:
+            self._attr_unique_id = (
+                f"{entry.data[CONF_ADDRESS]}_{entity_description.key}"
+            )
+
+    def _update_entry_data(self) -> None:
+        """Update the entry data if necessary."""
+        if (
+            CONF_ADDRESS not in self.entry.data
+            or self.entry.data[CONF_ADDRESS] != self.device.unique_id
+        ):
+            data = dict(self.entry.data)
+            data[CONF_ADDRESS] = self.device.unique_id or "default_unique_id"
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+    async def async_update(self):
+        """Fetch new state data for the entity."""
+        _LOGGER.debug("Updating FlussEntity: %s", self.device)
+        await self.device.async_update()

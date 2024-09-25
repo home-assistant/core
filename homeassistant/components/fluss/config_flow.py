@@ -27,8 +27,7 @@ class ApiKeyStorageHub:
         """Initialize."""
         self.apikey = apikey
 
-    async def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
+    async def authenticate(self) -> bool:  # noqa: D102
         return True
 
 
@@ -67,27 +66,22 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception as ex:
+                _LOGGER.exception("Unexpected exception:  %s", ex)  # noqa: TRY401
                 errors["base"] = "unknown"
+                # Ensure to return the form with errors if an exception occurs
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_API_KEY): str,
+                        }
+                    ),
+                    errors=errors,
+                )
 
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_API_KEY): str,
-                    }
-                ),
-                errors=errors,
-            )
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
 

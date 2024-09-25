@@ -2,9 +2,9 @@
 
 import logging
 
-from homeassistant.components.button import ButtonEntity
+from fluss_api import FlussApiClient
 
-from .api import FlussApiClient
+from homeassistant.components.button import ButtonEntity
 
 LOGGER = logging.getLogger(__package__)
 DEFAULT_NAME = "Fluss +"
@@ -17,8 +17,8 @@ class FlussButton(ButtonEntity):
         """Initializr the cover."""
         self.api = api
         self.device = device
-        self._name = device["deviceName"]
-        self._attr_unique_id = f"fluss_{device['deviceId']}"
+        self._name = device.get("deviceName", "unknown")
+        self._attr_unique_id = f"fluss_{device.get("deviceName", "unknown")}"
 
     @property
     def name(self) -> str:

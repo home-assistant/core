@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
-
-from .api import (
+from fluss_api import (  # noqa: PGH003
     FlussApiClient,
     FlussApiClientAuthenticationError,  # noqa: F401
     FlussApiClientCommunicationError,  # noqa: F401
     FlussApiClientError,  # noqa: F401
 )
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
 
 LOGGER = logging.getLogger(__package__)
 
@@ -43,4 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
