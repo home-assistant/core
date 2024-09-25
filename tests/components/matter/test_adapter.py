@@ -31,7 +31,6 @@ from tests.common import MockConfigEntry
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
     matter_node: MatterNode,
     name: str,
 ) -> None:
@@ -61,7 +60,6 @@ async def test_device_registry_single_node_device(
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test additional device with different attribute values."""
@@ -85,7 +83,6 @@ async def test_device_registry_single_node_device_alt(
 async def test_device_registry_bridge(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
@@ -158,7 +155,6 @@ async def test_node_added_subscription(
 @pytest.mark.parametrize("node_fixture", ["air_purifier"])
 async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
-    matter_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     matter_node: MatterNode,
 ) -> None:
@@ -169,7 +165,6 @@ async def test_device_registry_single_node_composed_device(
 @pytest.mark.parametrize("node_fixture", ["multi_endpoint_light"])
 async def test_multi_endpoint_name(
     hass: HomeAssistant,
-    matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test that the entity name gets postfixed if the device has multiple primary endpoints."""

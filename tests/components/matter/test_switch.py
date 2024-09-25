@@ -81,11 +81,7 @@ async def test_turn_off(
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["switch_unit"])
-async def test_switch_unit(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
+async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
@@ -99,11 +95,7 @@ async def test_switch_unit(
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
-async def test_power_switch(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
+async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
     state = hass.states.get("switch.room_airconditioner_power")
     assert state

@@ -329,7 +329,6 @@ async def test_operational_state_sensor(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensors(
     hass: HomeAssistant,
-    matter_client: MagicMock,
     matter_devices: MatterNode,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

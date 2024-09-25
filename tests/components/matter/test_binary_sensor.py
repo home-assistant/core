@@ -37,7 +37,6 @@ def binary_sensor_platform() -> Generator[None]:
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_binary_sensors(
     hass: HomeAssistant,
-    matter_client: MagicMock,
     matter_devices: MatterNode,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
