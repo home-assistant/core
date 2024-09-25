@@ -389,7 +389,7 @@ async def async_setup_entry(
             )
 
         # Can be removed in HA 2025.4.0
-        if entity.domain == "switch" and entity.unique_id in depricated_dict.keys():
+        if entity.domain == "switch" and entity.unique_id in depricated_dict:
             if entity.disabled:
                 entity_reg.async_remove(entity.entity_id)
                 continue
@@ -402,8 +402,8 @@ async def async_setup_entry(
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="hub_switch_deprecated",
             )
-            entities.extend(
-                ReolinkNVRSwitchEntity(reolink_data, channel, depricated_dict[entity.unique_id])
+            entities.append(
+                ReolinkNVRSwitchEntity(reolink_data, depricated_dict[entity.unique_id])
             )
 
     async_add_entities(entities)
