@@ -47,7 +47,7 @@ from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -153,7 +153,7 @@ def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for covers."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[CoverEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[CoverEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -233,12 +233,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
