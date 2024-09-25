@@ -1,7 +1,6 @@
 """Fixtures for Pinecil tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
@@ -12,9 +11,8 @@ import pytest
 from homeassistant.components.iron_os import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 USER_INPUT = {CONF_ADDRESS: "c0:ff:ee:c0:ff:ee"}
 DEFAULT_NAME = "Pinecil-C0FFEEE"
@@ -109,34 +107,25 @@ def mock_ble_device() -> Generator[MagicMock]:
         yield ble_device
 
 
-@pytest.fixture(autouse=False)
-async def mock_github(
-    aioclient_mock: AiohttpClientMocker,
-) -> AiohttpClientMocker:
-    """Mock aiogithubapi."""
-
-    aioclient_mock.get(
-        "https://api.github.com/repos/Ralim/IronOS/releases/latest",
-        json={
-            **json.loads(load_fixture("releases_latest.json", DOMAIN)),
-        },
-        headers=json.loads(load_fixture("base_headers.json", DOMAIN)),
-    )
-
-    return aioclient_mock
-
-
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_githubapi() -> Generator[AsyncMock]:
     """Mock aiogithubapi."""
 
-    with (
-        patch(
-            "homeassistant.components.iron_os.GitHubAPI",
-            new=AsyncMock,
-        ) as mock_client,
-    ):
+    with patch(
+        "homeassistant.components.iron_os.GitHubAPI",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
+        client.repos.releases.latest = AsyncMock()
+
+        client.repos.releases.latest.return_value.data.html_url = (
+            "https://github.com/Ralim/IronOS/releases/tag/v2.22"
+        )
+        client.repos.releases.latest.return_value.data.name = (
+            "V2.22 | TS101 & S60 Added | PinecilV2 improved"
+        )
+        client.repos.releases.latest.return_value.data.tag_name = "v2.22"
+        client.repos.releases.latest.return_value.data.body = "**RELEASE_NOTES**"
 
         yield client
 

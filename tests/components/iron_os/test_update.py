@@ -1,8 +1,9 @@
 """Tests for IronOS update platform."""
 
 from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiogithubapi import GitHubException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,7 +26,7 @@ async def update_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_pynecil", "ble_device")
+@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_githubapi")
 async def test_update(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -52,23 +53,18 @@ async def test_update(
         }
     )
     result = await ws_client.receive_json()
-
     assert result["result"] == snapshot
 
 
-@pytest.mark.usefixtures("mock_githubapi", "ble_device", "mock_pynecil")
+@pytest.mark.usefixtures("ble_device", "mock_pynecil")
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    # mock_github: AiohttpClientMocker,
-    mock_githubapi,
+    mock_githubapi: AsyncMock,
 ) -> None:
     """Test config entry not ready."""
-    # mock_github.clear_requests()
-    # mock_github.get(
-    #     "https://api.github.com/repos/Ralim/IronOS/releases/latest",
-    #     side_effect=ClientError,
-    # )
+
+    mock_githubapi.repos.releases.latest.side_effect = GitHubException
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
