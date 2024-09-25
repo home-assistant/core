@@ -40,7 +40,7 @@ async def occupancy_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a occupancy sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "occupancy-sensor", matter_client
+        hass, "occupancy_sensor", matter_client
     )
 
 
@@ -71,8 +71,8 @@ async def test_occupancy_sensor(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("eve-contact-sensor", "binary_sensor.eve_door_door"),
-        ("leak-sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("eve_contact_sensor", "binary_sensor.eve_door_door"),
+        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[air-purifier-True][sensor.air_purifier_activated_carbon_filter_condition-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_activated_carbon_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_activated_carbon_filter_condition-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_activated_carbon_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier Activated carbon filter condition',
@@ -49,7 +49,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_air_quality-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -91,7 +91,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_air_quality-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -113,7 +113,7 @@
     'state': 'good',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_carbon_dioxide-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_carbon_dioxide-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_dioxide',
@@ -164,7 +164,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_carbon_monoxide-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -199,7 +199,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_carbon_monoxide-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_monoxide',
@@ -215,7 +215,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_hepa_filter_condition-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_hepa_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -250,7 +250,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_hepa_filter_condition-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_hepa_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Purifier Hepa filter condition',
@@ -265,7 +265,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_humidity-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -300,7 +300,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_humidity-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -316,7 +316,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_nitrogen_dioxide-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -351,7 +351,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_nitrogen_dioxide-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'nitrogen_dioxide',
@@ -367,7 +367,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_ozone-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -402,7 +402,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_ozone-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'ozone',
@@ -418,7 +418,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm1-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -453,7 +453,7 @@
     'unit_of_measurement': 'µg/m³',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm1-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm1',
@@ -469,7 +469,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm10-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -504,7 +504,7 @@
     'unit_of_measurement': 'µg/m³',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm10-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm10',
@@ -520,7 +520,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm2_5-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -555,7 +555,7 @@
     'unit_of_measurement': 'µg/m³',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_pm2_5-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
@@ -571,7 +571,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_temperature-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -606,7 +606,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_temperature-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -622,7 +622,7 @@
     'state': '20.0',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_vocs-entry]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_vocs-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -657,7 +657,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air-purifier-True][sensor.air_purifier_vocs-state]
+# name: test_sensors[air_purifier-True][sensor.air_purifier_vocs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
@@ -673,7 +673,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_current-entry]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -711,7 +711,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_current-state]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -727,7 +727,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_energy-entry]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -765,7 +765,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_energy-state]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -781,7 +781,7 @@
     'state': '0.220000028610229',
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_power-entry]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -819,7 +819,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_power-state]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -835,7 +835,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_voltage-entry]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -873,7 +873,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-True][sensor.eve_energy_plug_voltage-state]
+# name: test_sensors[eve_energy_plug-True][sensor.eve_energy_plug_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -889,7 +889,7 @@
     'state': '238.800003051758',
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_current-entry]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -927,7 +927,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_current-state]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -943,7 +943,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_energy-entry]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -981,7 +981,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_energy-state]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -997,7 +997,7 @@
     'state': '0.0025',
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_power-entry]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1035,7 +1035,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_power-state]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1051,7 +1051,7 @@
     'state': '550.0',
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_voltage-entry]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1089,7 +1089,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve-energy-plug-patched-True][sensor.eve_energy_plug_patched_voltage-state]
+# name: test_sensors[eve_energy_plug_patched-True][sensor.eve_energy_plug_patched_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1105,7 +1105,7 @@
     'state': '220.0',
   })
 # ---
-# name: test_sensors[smoke-detector-True][sensor.smoke_sensor_battery-entry]
+# name: test_sensors[smoke_detector-True][sensor.smoke_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1140,7 +1140,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[smoke-detector-True][sensor.smoke_sensor_battery-state]
+# name: test_sensors[smoke_detector-True][sensor.smoke_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1156,7 +1156,7 @@
     'state': '94',
   })
 # ---
-# name: test_sensors[smoke-detector-True][sensor.smoke_sensor_voltage-entry]
+# name: test_sensors[smoke_detector-True][sensor.smoke_sensor_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1191,7 +1191,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[smoke-detector-True][sensor.smoke_sensor_voltage-state]
+# name: test_sensors[smoke_detector-True][sensor.smoke_sensor_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',

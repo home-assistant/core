@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[door-lock-True][binary_sensor.mock_door_lock_battery-entry]
+# name: test_binary_sensors[door_lock-True][binary_sensor.mock_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[door-lock-True][binary_sensor.mock_door_lock_battery-state]
+# name: test_binary_sensors[door_lock-True][binary_sensor.mock_door_lock_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -46,7 +46,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[door-lock-True][binary_sensor.mock_door_lock_door-entry]
+# name: test_binary_sensors[door_lock-True][binary_sensor.mock_door_lock_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -79,7 +79,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[door-lock-True][binary_sensor.mock_door_lock_door-state]
+# name: test_binary_sensors[door_lock-True][binary_sensor.mock_door_lock_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -93,7 +93,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_battery_alert-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_battery_alert-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +126,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_battery_alert-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_battery_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -140,7 +140,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_end_of_service-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_end_of_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -173,7 +173,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_end_of_service-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_end_of_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -187,7 +187,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_hardware_fault-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_hardware_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -220,7 +220,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_hardware_fault-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_hardware_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -234,7 +234,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_muted-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_muted-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -267,7 +267,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_muted-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke sensor Muted',
@@ -280,7 +280,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_smoke-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -313,7 +313,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_smoke-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
@@ -327,7 +327,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_test_in_progress-entry]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_test_in_progress-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -360,7 +360,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[smoke-detector-True][binary_sensor.smoke_sensor_test_in_progress-state]
+# name: test_binary_sensors[smoke_detector-True][binary_sensor.smoke_sensor_test_in_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',

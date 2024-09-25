@@ -21,7 +21,7 @@ async def dimmable_light_node_fixture(
 ) -> MatterNode:
     """Fixture for a dimmable light node."""
     return await setup_integration_with_node_fixture(
-        hass, "dimmable-light", matter_client
+        hass, "dimmable_light", matter_client
     )
 
 

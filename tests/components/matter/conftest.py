@@ -72,11 +72,11 @@ async def integration_fixture(
 
 @pytest.fixture(
     params=[
-        "door-lock",
-        "smoke-detector",
-        "air-purifier",
-        "eve-energy-plug-patched",
-        "eve-energy-plug",
+        "door_lock",
+        "smoke_detector",
+        "air_purifier",
+        "eve_energy_plug_patched",
+        "eve_energy_plug",
     ]
 )
 async def matter_devices(
@@ -91,7 +91,7 @@ async def door_lock_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+    return await setup_integration_with_node_fixture(hass, "door_lock", matter_client)
 
 
 @pytest.fixture(name="smoke_detector")
@@ -100,7 +100,7 @@ async def smoke_detector_fixture(
 ) -> MatterNode:
     """Fixture for a smoke detector node."""
     return await setup_integration_with_node_fixture(
-        hass, "smoke-detector", matter_client
+        hass, "smoke_detector", matter_client
     )
 
 
@@ -110,7 +110,7 @@ async def door_lock_with_unbolt_fixture(
 ) -> MatterNode:
     """Fixture for a door lock node with unbolt feature."""
     return await setup_integration_with_node_fixture(
-        hass, "door-lock-with-unbolt", matter_client
+        hass, "door_lock_with_unbolt", matter_client
     )
 
 
@@ -120,5 +120,5 @@ async def eve_contact_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a contact sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "eve-contact-sensor", matter_client
+        hass, "eve_contact_sensor", matter_client
     )
