@@ -100,6 +100,7 @@ def mock_get_factory(install: str) -> Callable:
     return mock_get
 
 
+@pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
     return {
