@@ -28,7 +28,7 @@ _MODULES: dict[str, set[str]] = {
     "assist_satellite": {"AssistSatelliteEntity", "AssistSatelliteEntityDescription"},
     "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
     "button": {"ButtonEntity", "ButtonEntityDescription"},
-    "calendar": {"CalendarEntity"},
+    "calendar": {"CalendarEntity", "CalendarEntityDescription"},
     "camera": {"Camera", "CameraEntityDescription"},
     "climate": {"ClimateEntity", "ClimateEntityDescription"},
     "coordinator": {"DataUpdateCoordinator"},

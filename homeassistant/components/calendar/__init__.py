@@ -33,7 +33,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -483,8 +483,14 @@ def is_offset_reached(
     return start + offset_time <= dt_util.now(start.tzinfo)
 
 
+class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes calendar entities."""
+
+
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
+
+    entity_description: CalendarEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
