@@ -55,10 +55,7 @@ def async_check_create_deprecated(
 
     entity_entry = ent_reg.async_get(entity_id)
     assert entity_entry
-    if entity_entry.disabled:
-        return False
-
-    return True
+    return not entity_entry.disabled
 
 
 def async_cleanup_deprecated(
@@ -67,13 +64,7 @@ def async_cleanup_deprecated(
     entry_id: str,
     entities: Sequence[CoordinatedTPLinkFeatureEntity],
 ) -> None:
-    """Remove deprecated entities and .
-
-    If deprecated_info is not defined will return true.
-    If entity not yet created will return false.
-    If entity disabled will delete it and return false.
-    Otherwise will return true and create issues for scripts or automations.
-    """
+    """Remove disabled deprecated entities or create issues if necessary."""
     ent_reg = er.async_get(hass)
     for entity in entities:
         if not (deprecated_info := entity.entity_description.deprecated_info):
