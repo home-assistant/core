@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
-from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
+from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons, WorkArea
 from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
@@ -24,7 +24,11 @@ from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .entity import (
+    AutomowerBaseEntity,
+    WorkAreaAvailableEntity,
+    _work_area_translation_key,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,7 +241,7 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[MowerAttributes], StateType | datetime]
 
 
-SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
+MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="battery_percent",
         state_class=SensorStateClass.MEASUREMENT,
@@ -374,6 +378,34 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class WorkAreaSensorEntityDescription(SensorEntityDescription):
+    """Describes Automower work area number entity."""
+
+    value_fn: Callable[[WorkArea], int | datetime | None]
+    translation_key_fn: Callable[[int, str], str]
+
+
+WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
+    WorkAreaSensorEntityDescription(
+        key="progress",
+        translation_key_fn=_work_area_translation_key,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: data.progress,
+    ),
+    WorkAreaSensorEntityDescription(
+        key="last_time_completed",
+        translation_key_fn=_work_area_translation_key,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: naive_to_aware(
+            data.last_time_completed_naive,
+            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
@@ -381,12 +413,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerSensorEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in SENSOR_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+    entities: list[SensorEntity] = []
+    for mower_id in coordinator.data:
+        if coordinator.data[mower_id].capabilities.work_areas:
+            _work_areas = coordinator.data[mower_id].work_areas
+            if _work_areas is not None:
+                entities.extend(
+                    WorkAreaSensorEntity(
+                        mower_id, coordinator, description, work_area_id
+                    )
+                    for description in WORK_AREA_SENSOR_TYPES
+                    for work_area_id in _work_areas
+                )
+        entities.extend(
+            AutomowerSensorEntity(mower_id, coordinator, description)
+            for description in MOWER_SENSOR_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
+    async_add_entities(entities)
 
 
 class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
@@ -420,3 +464,36 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
+
+
+class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
+    """Defining the Work area sensors with WorkAreaSensorEntityDescription."""
+
+    entity_description: WorkAreaSensorEntityDescription
+
+    def __init__(
+        self,
+        mower_id: str,
+        coordinator: AutomowerDataUpdateCoordinator,
+        description: WorkAreaSensorEntityDescription,
+        work_area_id: int,
+    ) -> None:
+        """Set up AutomowerSensors."""
+        super().__init__(mower_id, coordinator, work_area_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
+        self._attr_translation_placeholders = {
+            "work_area": self.work_area_attributes.name
+        }
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.work_area_attributes)
+
+    @property
+    def translation_key(self) -> str:
+        """Return the translation key of the work area."""
+        return self.entity_description.translation_key_fn(
+            self.work_area_id, self.entity_description.key
+        )
