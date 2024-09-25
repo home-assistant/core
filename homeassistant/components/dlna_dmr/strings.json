@@ -17,7 +17,7 @@
         }
       },
       "import_turn_on": {
-        "description": "Please turn on the device and select submit to continue migration"
+        "description": "Please turn on the device and select **Submit** to continue migration"
       },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
