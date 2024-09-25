@@ -121,3 +121,20 @@ def enforce_class_module_fixture(hass_enforce_class_module, linter) -> BaseCheck
     )
     enforce_class_module_checker.module = "homeassistant.components.pylint_test"
     return enforce_class_module_checker
+
+
+@pytest.fixture(name="hass_decorator", scope="package")
+def hass_decorator_fixture() -> ModuleType:
+    """Fixture to provide a pylint plugin."""
+    return _load_plugin_from_file(
+        "hass_imports",
+        "pylint/plugins/hass_decorator.py",
+    )
+
+
+@pytest.fixture(name="decorator_checker")
+def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
+    """Fixture to provide a pylint checker."""
+    type_hint_checker = hass_decorator.HassDecoratorChecker(linter)
+    type_hint_checker.module = "homeassistant.components.pylint_test"
+    return type_hint_checker

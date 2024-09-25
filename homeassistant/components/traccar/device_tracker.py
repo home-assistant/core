@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -162,11 +162,6 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
             name=self._name,
             identifiers={(DOMAIN, self._unique_id)},
         )
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
