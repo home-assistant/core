@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
@@ -25,6 +24,7 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors = {}
 
         if user_input is not None:
             session = async_get_clientsession(self.hass)
@@ -39,9 +39,11 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
                     title="Stookwijzer",
                     data={CONF_LATITUDE: x, CONF_LONGITUDE: y},
                 )
+            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(

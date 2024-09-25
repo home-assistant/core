@@ -1,9 +1,9 @@
 """Support for Stookwijzer Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,60 +15,44 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, StookwijzerState
-from .coordinator import StookwijzerCoordinator, StookwijzerData
+from .const import StookwijzerState
+from .coordinator import StookwijzerCoordinator
 from .entity import StookwijzerEntity
 
 
-@dataclass(frozen=True)
-class StookwijzerSensorDescriptionMixin:
-    """Required values for Stookwijzer sensors."""
+@dataclass(kw_only=True, frozen=True)
+class StookwijzerSensorDescription(SensorEntityDescription):
+    """Class describing Stookwijzer sensor entities."""
 
     value_fn: Callable[[StookwijzerCoordinator], int | float | str | None]
-    attr_fn: Callable[[StookwijzerCoordinator], list | None] | None
-
-
-@dataclass(frozen=True)
-class StookwijzerSensorDescription(
-    SensorEntityDescription,
-    StookwijzerSensorDescriptionMixin,
-):
-    """Class describing Stookwijzer sensor entities."""
 
 
 STOOKWIJZER_SENSORS = (
     StookwijzerSensorDescription(
         key="windspeed",
+        translation_key="windspeed",
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfSpeed.BEAUFORT,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda StookwijzerCoordinator: cast(
-            float | None, StookwijzerCoordinator.client.windspeed_ms
-        ),
-        attr_fn=None,
+        value_fn=lambda StookwijzerCoordinator: StookwijzerCoordinator.client.windspeed_ms,
     ),
     StookwijzerSensorDescription(
-        key="air quality index",
+        key="air_quality_index",
+        translation_key="air_quality_index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda StookwijzerCoordinator: cast(
-            int | None, StookwijzerCoordinator.client.lki
-        ),
-        attr_fn=None,
+        value_fn=lambda StookwijzerCoordinator: StookwijzerCoordinator.client.lki,
     ),
     StookwijzerSensorDescription(
         key="stookwijzer",
         translation_key="stookwijzer",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda StookwijzerCoordinator: cast(
-            str | None, StookwijzerState(StookwijzerCoordinator.client.advice).value
-        ),
-        attr_fn=lambda StookwijzerCoordinator: cast(
-            list | None, StookwijzerCoordinator.client.forecast_advice
-        ),
+        value_fn=lambda StookwijzerCoordinator: StookwijzerState(
+            StookwijzerCoordinator.client.advice
+        ).value,
         options=[cls.value for cls in StookwijzerState],
     ),
 )
@@ -80,19 +64,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Stookwijzer sensor from a config entry."""
-    data: StookwijzerData = hass.data[DOMAIN][entry.entry_id]
-    coordinator = data.coordinator
 
-    assert coordinator is not None
     async_add_entities(
-        StookwijzerSensor(description, coordinator, entry)
-        for description in STOOKWIJZER_SENSORS
+        StookwijzerSensor(description, entry) for description in STOOKWIJZER_SENSORS
     )
 
 
-class StookwijzerSensor(
-    StookwijzerEntity, CoordinatorEntity[StookwijzerCoordinator], SensorEntity
-):
+class StookwijzerSensor(StookwijzerEntity, SensorEntity):
     """Defines a Stookwijzer sensor."""
 
     entity_description: StookwijzerSensorDescription
@@ -100,11 +78,10 @@ class StookwijzerSensor(
     def __init__(
         self,
         description: StookwijzerSensorDescription,
-        coordinator: StookwijzerCoordinator,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(description, coordinator, entry)
+        super().__init__(description, entry)
 
     @property
     def native_value(self) -> str | None:
