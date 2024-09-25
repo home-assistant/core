@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -46,6 +47,7 @@ from .repairs import migrate_notify_issue  # noqa: F401
 # Platform specific data
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -76,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # legacy platforms to finish setting up.
         hass.async_create_task(setup, eager_start=True)
 
-    component = hass.data[DOMAIN] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](
+        _LOGGER, DOMAIN, hass
+    )
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
         {
@@ -113,14 +117,12 @@ class NotifyEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[NotifyEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[NotifyEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class NotifyEntity(RestoreEntity):

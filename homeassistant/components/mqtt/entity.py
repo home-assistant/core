@@ -144,20 +144,6 @@ MQTT_ATTRIBUTES_BLOCKED = {
 }
 
 
-class SetupEntity(Protocol):
-    """Protocol type for async_setup_entities."""
-
-    async def __call__(
-        self,
-        hass: HomeAssistant,
-        async_add_entities: AddEntitiesCallback,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Define setup_entities type."""
-
-
 @callback
 def async_handle_schema_error(
     discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid

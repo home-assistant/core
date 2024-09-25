@@ -25,9 +25,9 @@ from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import ElmaxEntity
 from .const import DOMAIN
 from .coordinator import ElmaxCoordinator
+from .entity import ElmaxEntity
 
 
 async def async_setup_entry(

@@ -1,6 +1,5 @@
 """Tests for the SMLIGHT update platform."""
 
-from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -23,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import get_mock_event_function
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -65,18 +65,6 @@ MOCK_FIRMWARE_NOTES = [
         notes=None,
     )
 ]
-
-
-def get_callback_function(mock: MagicMock, trigger: SmEvents):
-    """Extract the callback function for a given trigger."""
-    return next(
-        (
-            call_args[0][1]
-            for call_args in mock.sse.register_callback.call_args_list
-            if trigger == call_args[0][0]
-        ),
-        None,
-    )
 
 
 @pytest.fixture
@@ -122,17 +110,13 @@ async def test_update_firmware(
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.ZB_FW_prgs
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_prgs)
 
     event_function(MOCK_FIRMWARE_PROGRESS)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] == 50
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.FW_UPD_done
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
 
     event_function(MOCK_FIRMWARE_DONE)
 
@@ -178,9 +162,7 @@ async def test_update_legacy_firmware_v2(
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.ESP_UPD_done
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ESP_UPD_done)
 
     event_function(MOCK_FIRMWARE_DONE)
 
@@ -220,9 +202,7 @@ async def test_update_firmware_failed(
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.ZB_FW_err
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
 
     async def _call_event_function(event: MessageEvent):
         event_function(event)

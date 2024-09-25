@@ -321,12 +321,12 @@ def start_addon_side_effect_fixture(
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def start_addon_fixture(
+    supervisor_client: AsyncMock, start_addon_side_effect: Any | None
+) -> AsyncMock:
     """Mock start add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon
-
-    yield from mock_start_addon(start_addon_side_effect)
+    supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
+    return supervisor_client.addons.start_addon
 
 
 @pytest.fixture(name="restart_addon_side_effect")
@@ -337,22 +337,18 @@ def restart_addon_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="restart_addon")
 def restart_addon_fixture(
+    supervisor_client: AsyncMock,
     restart_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock restart add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_restart_addon
-
-    yield from mock_restart_addon(restart_addon_side_effect)
+    supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
+    return supervisor_client.addons.restart_addon
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock]:
+def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock stop add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_stop_addon
-
-    yield from mock_stop_addon()
+    return supervisor_client.addons.stop_addon
 
 
 @pytest.fixture(name="addon_options")
@@ -387,12 +383,9 @@ def set_addon_options_fixture(
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock]:
+def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock uninstall add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_uninstall_addon
-
-    yield from mock_uninstall_addon()
+    return supervisor_client.addons.uninstall_addon
 
 
 @pytest.fixture(name="create_backup")

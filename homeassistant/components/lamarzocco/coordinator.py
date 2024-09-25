@@ -113,7 +113,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         **kwargs: _P.kwargs,
     ) -> None:
         try:
-            await func()
+            await func(*args, **kwargs)
         except AuthFail as ex:
             msg = "Authentication failed."
             _LOGGER.debug(msg, exc_info=True)

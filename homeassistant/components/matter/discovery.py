@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import callback
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
+from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
@@ -26,6 +27,7 @@ from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+    Platform.BUTTON: BUTTON_SCHEMAS,
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
@@ -100,10 +102,27 @@ def async_discover_entities(
         ):
             continue
 
-        # check for values that may not be present
+        # check for endpoint-attributes that may not be present
         if schema.absent_attributes is not None and any(
             endpoint.has_attribute(None, val_schema)
             for val_schema in schema.absent_attributes
+        ):
+            continue
+
+        # check for clusters that may not be present
+        if schema.absent_clusters is not None and any(
+            endpoint.node.has_cluster(val_schema)
+            for val_schema in schema.absent_clusters
+        ):
+            continue
+
+        # check for required value in (primary) attribute
+        if schema.value_contains is not None and (
+            (primary_attribute := next((x for x in schema.required_attributes), None))
+            is None
+            or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
+            or not isinstance(value, list)
+            or schema.value_contains not in value
         ):
             continue
 

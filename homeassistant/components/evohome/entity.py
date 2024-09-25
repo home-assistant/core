@@ -26,9 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EvoDevice(Entity):
-    """Base for any evohome device.
+    """Base for any evohome-compatible entity (controller, DHW, zone).
 
-    This includes the Controller, (up to 12) Heating Zones and (optionally) a
+    This includes the controller, (1 to 12) heating zones and (optionally) a
     DHW controller.
     """
 
@@ -39,7 +39,7 @@ class EvoDevice(Entity):
         evo_broker: EvoBroker,
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
-        """Initialize the evohome entity."""
+        """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
@@ -88,9 +88,9 @@ class EvoDevice(Entity):
 
 
 class EvoChild(EvoDevice):
-    """Base for any evohome child.
+    """Base for any evohome-compatible child entity (DHW, zone).
 
-    This includes (up to 12) Heating Zones and (optionally) a DHW controller.
+    This includes (1 to 12) heating zones and (optionally) a DHW controller.
     """
 
     _evo_id: str  # mypy hint
@@ -98,7 +98,7 @@ class EvoChild(EvoDevice):
     def __init__(
         self, evo_broker: EvoBroker, evo_device: evo.HotWater | evo.Zone
     ) -> None:
-        """Initialize a evohome Controller (hub)."""
+        """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(evo_broker, evo_device)
 
         self._schedule: dict[str, Any] = {}
