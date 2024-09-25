@@ -490,6 +490,8 @@ class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
+    entity_description: CalendarEntityDescription
+
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
