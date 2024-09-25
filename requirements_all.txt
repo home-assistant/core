@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240909.1
+home-assistant-frontend==20240925.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -3047,7 +3047,7 @@ zeroconf==0.135.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.33
+zha==0.0.34
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
