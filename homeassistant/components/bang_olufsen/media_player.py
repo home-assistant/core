@@ -13,6 +13,8 @@ from mozart_api.models import (
     Action,
     Art,
     BeolinkLeader,
+    ListeningModeProps,
+    ListeningModeRef,
     OverlayPlayRequest,
     OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
@@ -88,6 +90,7 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
 
@@ -137,6 +140,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
+        self._sound_modes: dict[str, int] = {}
 
         # Beolink compatible sources
         self._beolink_sources: dict[str, bool] = {}
@@ -148,6 +152,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         signal_handlers: dict[str, Callable] = {
             CONNECTION_STATUS: self._async_update_connection_state,
+            WebsocketNotification.ACTIVE_LISTENING_MODE: self._async_update_sound_modes,
             WebsocketNotification.BEOLINK: self._async_update_beolink,
             WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
             WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
@@ -210,6 +215,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # If the device has been updated with new sources, then the API will fail here.
         await self._async_update_sources()
+
+        await self._async_update_sound_modes()
 
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
@@ -432,6 +439,29 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Return JID
         return cast(str, config_entry.data[CONF_BEOLINK_JID])
 
+    async def _async_update_sound_modes(
+        self, active_sound_mode: ListeningModeProps | ListeningModeRef | None = None
+    ) -> None:
+        """Update the available sound modes."""
+        sound_modes = await self._client.get_listening_mode_set()
+
+        if active_sound_mode is None:
+            active_sound_mode = await self._client.get_active_listening_mode()
+
+        # Add the key to make the labels unique (As labels are not required to be unique on B&O devices)
+        for sound_mode in sound_modes:
+            label = f"{sound_mode.name} ({sound_mode.id})"
+
+            self._sound_modes[label] = sound_mode.id
+
+            if sound_mode.id == active_sound_mode.id:
+                self._attr_sound_mode = label
+
+        # Set available options
+        self._attr_sound_mode_list = list(self._sound_modes.keys())
+
+        self.async_write_ha_state()
+
     @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
@@ -619,6 +649,21 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         else:
             # Video
             await self._client.post_remote_trigger(id=key)
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select a sound mode."""
+        # Ensure only known sound modes known by the integration can be activated.
+        if sound_mode not in self._sound_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={
+                    "invalid_sound_mode": sound_mode,
+                    "valid_sound_modes": ", ".join(list(self._sound_modes.keys())),
+                },
+            )
+
+        await self._client.activate_listening_mode(id=self._sound_modes[sound_mode])
 
     async def async_play_media(
         self,
