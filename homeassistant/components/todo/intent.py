@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 from . import TodoItem, TodoItemStatus, TodoListEntity
-from .const import DATA, DOMAIN
+from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
 
@@ -49,7 +49,9 @@ class ListAddItemIntent(intent.IntentHandler):
                 result=match_result, constraints=match_constraints
             )
 
-        target_list = hass.data[DATA].get_entity(match_result.states[0].entity_id)
+        target_list = hass.data[DATA_COMPONENT].get_entity(
+            match_result.states[0].entity_id
+        )
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 

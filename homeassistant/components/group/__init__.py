@@ -48,7 +48,7 @@ from .const import (  # noqa: F401
     ATTR_ORDER,
     ATTR_REMOVE_ENTITIES,
     CONF_HIDE_MEMBERS,
-    DATA,
+    DATA_COMPONENT,
     DOMAIN,
     GROUP_ORDER,
     REG_KEY,
@@ -131,7 +131,7 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     return [
         group.entity_id
-        for group in hass.data[DATA].entities
+        for group in hass.data[DATA_COMPONENT].entities
         if entity_id in group.tracking
     ]
 

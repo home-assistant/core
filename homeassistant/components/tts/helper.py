@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA, DATA_TTS_MANAGER
+from .const import DATA_COMPONENT, DATA_TTS_MANAGER
 
 if TYPE_CHECKING:
     from . import TextToSpeechEntity
@@ -17,7 +17,7 @@ def get_engine_instance(
     hass: HomeAssistant, engine: str
 ) -> TextToSpeechEntity | Provider | None:
     """Get engine instance."""
-    if entity := hass.data[DATA].get_entity(engine):
+    if entity := hass.data[DATA_COMPONENT].get_entity(engine):
         return entity
 
     return hass.data[DATA_TTS_MANAGER].providers.get(engine)

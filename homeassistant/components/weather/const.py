@@ -54,7 +54,7 @@ ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_WEATHER_UV_INDEX = "uv_index"
 
 DOMAIN: Final = "weather"
-DATA: HassKey[EntityComponent[WeatherEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[WeatherEntity]] = HassKey(DOMAIN)
 
 INTENT_GET_WEATHER = "HassGetWeather"
 

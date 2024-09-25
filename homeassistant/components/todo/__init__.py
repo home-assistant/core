@@ -38,7 +38,7 @@ from .const import (
     ATTR_ITEM,
     ATTR_RENAME,
     ATTR_STATUS,
-    DATA,
+    DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
@@ -114,7 +114,7 @@ def _validate_supported_features(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
-    component = hass.data[DATA] = EntityComponent[TodoListEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TodoListEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -197,12 +197,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @dataclasses.dataclass
@@ -334,7 +334,7 @@ async def websocket_handle_subscribe_todo_items(
     """Subscribe to To-do list item updates."""
     entity_id: str = msg["entity_id"]
 
-    if not (entity := hass.data[DATA].get_entity(entity_id)):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
         connection.send_error(
             msg["id"],
             "invalid_entity_id",
@@ -389,7 +389,7 @@ async def websocket_handle_todo_item_list(
     """Handle the list of To-do items in a To-do- list."""
     if (
         not (entity_id := msg[CONF_ENTITY_ID])
-        or not (entity := hass.data[DATA].get_entity(entity_id))
+        or not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id))
         or not isinstance(entity, TodoListEntity)
     ):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
@@ -422,7 +422,7 @@ async def websocket_handle_todo_item_move(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle move of a To-do item within a To-do list."""
-    if not (entity := hass.data[DATA].get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
