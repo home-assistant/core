@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import functools
+from functools import cached_property, partial
 import logging
 from typing import Any
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
 from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
@@ -54,11 +54,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         if meta.translation_key is not None:
             self._attr_translation_key = meta.translation_key
 
-        if self.name in (UNDEFINED, None) and meta.fallback_name is not None:
-            # This is to allow local development and to register niche devices, since
-            # their translation_key will probably never be added to `zha/strings.json`.
-            del self.name
-            self._attr_name = meta.fallback_name
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        meta = self.entity_data.entity.info_object
+        original_name = super().name
+
+        if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
+            return original_name
+
+        # This is to allow local development and to register niche devices, since
+        # their translation_key will probably never be added to `zha/strings.json`.
+        self._attr_name = meta.fallback_name
+        return super().name
 
     @property
     def available(self) -> bool:
@@ -103,7 +111,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             async_dispatcher_connect(
                 self.hass,
                 remove_signal,
-                functools.partial(self.async_remove, force_remove=True),
+                partial(self.async_remove, force_remove=True),
             )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
