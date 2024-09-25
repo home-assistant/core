@@ -1908,6 +1908,21 @@ async def test_nested_trigger_list_extra() -> None:
     ]
 
 
+async def test_trigger_backwards_compatibility() -> None:
+    """Test triggers with backwards compatibility."""
+
+    assert cv._backward_compat_trigger_schema("str") == "str"
+    assert cv._backward_compat_trigger_schema({"platform": "abc"}) == {
+        "platform": "abc"
+    }
+    assert cv._backward_compat_trigger_schema({"trigger": "abc"}) == {"platform": "abc"}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+    ):
+        cv._backward_compat_trigger_schema({"trigger": "abc", "platform": "def"})
+
+
 async def test_is_entity_service_schema(
     hass: HomeAssistant,
 ) -> None:
