@@ -3504,7 +3504,7 @@ async def test_valid_configuration(
     hass: HomeAssistant,
     trigger_key: str,
 ) -> None:
-    """Test for invalid automation configurations."""
+    """Test for valid automation configurations."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
