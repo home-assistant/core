@@ -106,12 +106,14 @@ class MetricInfo:
 
     def get_full_metric_string(self):
         """Convert metric info into a valid prometheus text string."""
-        final_metric_value = f" {self.metric_value}" if self.metric_value else ""
+        final_metric_value = (
+            f" {self.metric_value}" if self.metric_value is not None else ""
+        )
         return (
             f"{self.metric_name}{{"
             f'domain="{self.domain}",'
             f'entity="{self.entity}",'
-            f'friendly_name="{self.friendly_name}",'
+            f'friendly_name="{self.friendly_name}"'
             f"}}{final_metric_value}"
         )
 
@@ -126,6 +128,38 @@ class FilterTest:
 
     id: str
     should_pass: bool
+
+
+def test_metric_info_generates_entity() -> None:
+    """Test using MetricInfo to format a simple metric string but with a value included."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    metric_info = MetricInfo(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain=domain,
+        friendly_name="Outside Temperature",
+        object_id=object_id,
+        metric_value=12.3,
+    )
+    assert metric_info.entity == f"{domain}.{object_id}"
+
+
+def test_metric_info_generates_metric_string_with_value() -> None:
+    """Test using MetricInfo to format a simple metric string but with a value included."""
+    metric_info = MetricInfo(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        object_id="outside_temperature",
+        metric_value=17.2,
+    )
+    assert metric_info.get_full_metric_string() == (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"}'
+        " 17.2"
+    )
 
 
 @pytest.fixture(name="client")
@@ -253,13 +287,15 @@ async def test_view_default_namespace(
         "Objects collected during gc" in body
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "homeassistant_sensor_temperature_celsius",
-        "15.6",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="homeassistant_sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
 
@@ -270,28 +306,48 @@ async def test_sensor_unit(
     """Test prometheus metrics for sensors with a unit."""
     body = await generate_latest_metrics(client)
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_kwh", "74.0", "Television Energy", "television_energy", body
-    )
-
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_sek_per_kwh",
-        "0.123",
-        "Electricity price",
-        "electricity_price",
+    _assert_metric_present(
         body,
+        MetricInfo(
+            metric_name="sensor_unit_kwh",
+            domain="sensor",
+            friendly_name="Television Energy",
+            object_id="television_energy",
+            metric_value="74.0",
+        ),
     )
 
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_u0xb0", "25.0", "Wind Direction", "wind_direction", body
-    )
-
-    MetricsTestHelper._perform_sensor_metric_assert(
-        "sensor_unit_u0xb5g_per_mu0xb3",
-        "3.7069",
-        "SPS30 PM <1µm Weight concentration",
-        "sps30_pm_1um_weight_concentration",
+    _assert_metric_present(
         body,
+        MetricInfo(
+            metric_name="sensor_unit_sek_per_kwh",
+            domain="sensor",
+            friendly_name="Electricity price",
+            object_id="electricity_price",
+            metric_value="0.123",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_unit_u0xb0",
+            domain="sensor",
+            friendly_name="Wind Direction",
+            object_id="wind_direction",
+            metric_value="25.0",
+        ),
+    )
+
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="sensor_unit_u0xb5g_per_mu0xb3",
+            domain="sensor",
+            friendly_name="SPS30 PM <1µm Weight concentration",
+            object_id="sps30_pm_1um_weight_concentration",
+            metric_value="3.7069",
+        ),
     )
 
 
