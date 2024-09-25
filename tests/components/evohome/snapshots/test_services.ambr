@@ -8,30 +8,7 @@
     'Custom',
   ])
 # ---
-# name: test_climate_ctl_svcs[default].1
-  list([
-    tuple(
-      'AutoWithReset',
-    ),
-    tuple(
-      'AutoWithEco',
-    ),
-    tuple(
-      'Away',
-    ),
-    tuple(
-      'DayOff',
-    ),
-    tuple(
-      'Custom',
-    ),
-  ])
-# ---
 # name: test_climate_ctl_svcs[h032585]
-  list([
-  ])
-# ---
-# name: test_climate_ctl_svcs[h032585].1
   list([
   ])
 # ---
@@ -39,16 +16,6 @@
   list([
     'eco',
     'away',
-  ])
-# ---
-# name: test_climate_ctl_svcs[h099625].1
-  list([
-    tuple(
-      'AutoWithEco',
-    ),
-    tuple(
-      'Away',
-    ),
   ])
 # ---
 # name: test_climate_ctl_svcs[minimal]
@@ -60,129 +27,10 @@
     'Custom',
   ])
 # ---
-# name: test_climate_ctl_svcs[minimal].1
-  list([
-    tuple(
-      'AutoWithReset',
-    ),
-    tuple(
-      'AutoWithEco',
-    ),
-    tuple(
-      'Away',
-    ),
-    tuple(
-      'DayOff',
-    ),
-    tuple(
-      'Custom',
-    ),
-  ])
-# ---
 # name: test_climate_ctl_svcs[sys_004]
   list([
     'eco',
     'away',
-  ])
-# ---
-# name: test_climate_ctl_svcs[sys_004].1
-  list([
-    tuple(
-      'AutoWithEco',
-    ),
-    tuple(
-      'Away',
-    ),
-  ])
-# ---
-# name: test_climate_zon_svcs[default]
-  list([
-    tuple(
-      17.0,
-    ),
-    _Call(
-      tuple(
-        17.0,
-      ),
-      dict({
-        'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-      }),
-    ),
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_climate_zon_svcs[h032585]
-  list([
-    tuple(
-      21.5,
-    ),
-    _Call(
-      tuple(
-        21.5,
-      ),
-      dict({
-        'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-      }),
-    ),
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_climate_zon_svcs[h099625]
-  list([
-    tuple(
-      21.5,
-    ),
-    _Call(
-      tuple(
-        21.5,
-      ),
-      dict({
-        'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
-      }),
-    ),
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_climate_zon_svcs[minimal]
-  list([
-    tuple(
-      17.0,
-    ),
-    _Call(
-      tuple(
-        17.0,
-      ),
-      dict({
-        'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-      }),
-    ),
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_climate_zon_svcs[sys_004]
-  list([
-    tuple(
-      15.0,
-    ),
-    _Call(
-      tuple(
-        15.0,
-      ),
-      dict({
-        'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
-      }),
-    ),
-    dict({
-      'until': None,
-    }),
   ])
 # ---
 # name: test_evohome_ctl_svcs[default]
@@ -192,13 +40,6 @@
     'set_system_mode',
     'clear_zone_override',
     'set_zone_override',
-  ])
-# ---
-# name: test_evohome_ctl_svcs[default].1
-  list([
-    dict({
-      'until': HAFakeDatetime(2024, 7, 31, 7, 0, tzinfo=datetime.timezone.utc),
-    }),
   ])
 # ---
 # name: test_evohome_ctl_svcs[h032585]
@@ -226,63 +67,11 @@
     'set_zone_override',
   ])
 # ---
-# name: test_evohome_ctl_svcs[minimal].1
-  list([
-    dict({
-      'until': HAFakeDatetime(2024, 7, 31, 7, 0, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
 # name: test_evohome_ctl_svcs[sys_004]
   list([
     'refresh_system',
     'set_system_mode',
     'clear_zone_override',
     'set_zone_override',
-  ])
-# ---
-# name: test_evohome_zon_svcs[default]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_evohome_zon_svcs[h032585]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_evohome_zon_svcs[h099625]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_evohome_zon_svcs[minimal]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_evohome_zon_svcs[sys_004]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
-    }),
-  ])
-# ---
-# name: test_water_heater_svcs[default]
-  list([
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
-    }),
-    dict({
-      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
-    }),
   ])
 # ---
