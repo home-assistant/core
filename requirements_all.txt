@@ -1203,7 +1203,7 @@ iottycloud==0.2.1
 iperf3==0.1.11
 
 # homeassistant.components.isal
-isal==1.6.1
+isal==1.7.1
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
@@ -1321,7 +1321,7 @@ lupupy==0.3.2
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==5.1.0
+lxml==5.3.0
 
 # homeassistant.components.matrix
 matrix-nio==0.25.1

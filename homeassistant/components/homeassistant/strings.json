@@ -48,7 +48,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
-            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nSelect **Submit** below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
           }
         }
       }

@@ -17,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     set_node_attribute,
     setup_integration_with_node_fixture,
+    snapshot_matter_entities,
     trigger_subscription_callback,
 )
 
@@ -39,7 +40,7 @@ async def occupancy_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a occupancy sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "occupancy-sensor", matter_client
+        hass, "occupancy_sensor", matter_client
     )
 
 
@@ -70,8 +71,8 @@ async def test_occupancy_sensor(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("eve-contact-sensor", "binary_sensor.eve_door_door"),
-        ("leak-sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("eve_contact_sensor", "binary_sensor.eve_door_door"),
+        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(
@@ -136,10 +137,4 @@ async def test_binary_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensors."""
-    entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    for entity_state in entities:
-        entity_entry = entity_registry.async_get(entity_state.entity_id)
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        state = hass.states.get(entity_entry.entity_id)
-        assert state, f"State not found for {entity_entry.entity_id}"
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
