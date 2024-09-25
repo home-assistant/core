@@ -36,6 +36,7 @@ async def async_setup_entry(
         [NightscoutSensor(api, "Blood Sugar", entry.unique_id, unit)], True
     )
 
+
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
