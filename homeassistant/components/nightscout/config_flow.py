@@ -8,7 +8,7 @@ from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, MG_DL, MMOL_L
