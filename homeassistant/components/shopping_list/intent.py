@@ -9,12 +9,14 @@ import homeassistant.helpers.config_validation as cv
 from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
+INTENT_REMOVE_ITEM = "HassShoppingListRemoveItem"
 INTENT_LAST_ITEMS = "HassShoppingListLastItems"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the Shopping List intents."""
     intent.async_register(hass, AddItemIntent())
+    intent.async_register(hass, RemoveItemIntent())
     intent.async_register(hass, ListTopItemsIntent())
 
 
@@ -31,6 +33,25 @@ class AddItemIntent(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
         await intent_obj.hass.data[DOMAIN].async_add(item)
+
+        response = intent_obj.create_response()
+        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
+        return response
+
+
+class RemoveItemIntent(intent.IntentHandler):
+    """Handle RemoveItem intents."""
+
+    intent_type = INTENT_REMOVE_ITEM
+    description = "Removes an item from the shopping list"
+    slot_schema = {"item": cv.string}
+    platforms = {DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        slots = self.async_validate_slots(intent_obj.slots)
+        item = slots["item"]["value"]
+        await intent_obj.hass.data[DOMAIN].async_remove(item)
 
         response = intent_obj.create_response()
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
