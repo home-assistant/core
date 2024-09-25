@@ -57,12 +57,18 @@ async def test_authentication_failure_v2(
 
     assert result is False
 
-    # ignore any logging from the client library
-    log = [r.message for r in caplog.records if r.name.startswith("homeassistant.")]
-
-    assert log[0].startswith("Failed to authenticate")  # this entry is from evohome
-    assert log[1].startswith("Setup failed for")
-    assert len(log) == 2
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.components.evohome.helpers",
+            logging.ERROR,
+            "Failed to authenticate with the vendor's server. Check your username and password. NB: Some special password characters that work correctly via the website will not work via the web API. Message is: ",
+        ),
+        (
+            "homeassistant.setup",
+            logging.ERROR,
+            "Setup failed for 'evohome': Integration failed to initialize.",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(
