@@ -1921,7 +1921,7 @@ async def test_trigger_backwards_compatibility() -> None:
         cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
     with pytest.raises(
         vol.Invalid,
-        match="Missing 'trigger' key in trigger.",
+        match="required key not provided @ data['trigger']",
     ):
         cv._trigger_pre_validator({})
 
