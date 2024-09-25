@@ -1049,33 +1049,54 @@ async def test_alarm_control_panel(
 ) -> None:
     """Test prometheus metrics for alarm control panel."""
     body = await generate_latest_metrics(client)
+    domain = "alarm_control_panel"
 
-    assert (
-        'alarm_control_panel_state{domain="alarm_control_panel",'
-        'entity="alarm_control_panel.alarm_control_panel_1",'
-        'friendly_name="Alarm Control Panel 1",'
-        'state="armed_away"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="alarm_control_panel_state",
+            domain=domain,
+            friendly_name="Alarm Control Panel 1",
+            object_id="alarm_control_panel_1",
+            metric_value="1.0",
+            state="armed_away",
+        ),
     )
 
-    assert (
-        'alarm_control_panel_state{domain="alarm_control_panel",'
-        'entity="alarm_control_panel.alarm_control_panel_1",'
-        'friendly_name="Alarm Control Panel 1",'
-        'state="disarmed"} 0.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="alarm_control_panel_state",
+            domain=domain,
+            friendly_name="Alarm Control Panel 1",
+            object_id="alarm_control_panel_1",
+            metric_value="0.0",
+            state="disarmed",
+        ),
     )
 
-    assert (
-        'alarm_control_panel_state{domain="alarm_control_panel",'
-        'entity="alarm_control_panel.alarm_control_panel_2",'
-        'friendly_name="Alarm Control Panel 2",'
-        'state="armed_home"} 1.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="alarm_control_panel_state",
+            domain=domain,
+            friendly_name="Alarm Control Panel 2",
+            object_id="alarm_control_panel_2",
+            metric_value="1.0",
+            state="armed_home",
+        ),
     )
 
-    assert (
-        'alarm_control_panel_state{domain="alarm_control_panel",'
-        'entity="alarm_control_panel.alarm_control_panel_2",'
-        'friendly_name="Alarm Control Panel 2",'
-        'state="armed_away"} 0.0' in body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="alarm_control_panel_state",
+            domain=domain,
+            friendly_name="Alarm Control Panel 2",
+            object_id="alarm_control_panel_2",
+            metric_value="0.0",
+            state="armed_away",
+        ),
     )
 
 
