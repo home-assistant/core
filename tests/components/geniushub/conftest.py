@@ -40,13 +40,13 @@ def mock_geniushub_client() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def zones() -> list[dict[str, Any]]:
     """Return a list of zones."""
     return load_json_array_fixture("zones_cloud_test_data.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def devices() -> list[dict[str, Any]]:
     """Return a list of devices."""
     return load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)

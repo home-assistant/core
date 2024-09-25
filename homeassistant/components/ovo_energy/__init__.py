@@ -15,12 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -102,32 +97,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     del hass.data[DOMAIN][entry.entry_id]
 
     return unload_ok
-
-
-class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
-    """Defines a base OVO Energy entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
-        client: OVOEnergy,
-    ) -> None:
-        """Initialize the OVO Energy entity."""
-        super().__init__(coordinator)
-        self._client = client
-
-
-class OVOEnergyDeviceEntity(OVOEnergyEntity):
-    """Defines a OVO Energy device entity."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this OVO Energy instance."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._client.account_id)},
-            manufacturer="OVO Energy",
-            name=self._client.username,
-        )

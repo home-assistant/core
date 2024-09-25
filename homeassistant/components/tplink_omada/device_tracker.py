@@ -4,7 +4,7 @@ import logging
 
 from tplink_omada_client.clients import OmadaWirelessClient
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,7 +26,6 @@ async def async_setup_entry(
 
     controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
 
-    clients_coordinator = controller.get_clients_coordinator()
     site_id = config_entry.data[CONF_SITE]
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
@@ -34,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             OmadaClientScannerEntity(
-                site_id, client.mac, client.name, clients_coordinator
+                site_id, client.mac, client.name, controller.clients_coordinator
             )
             async for client in controller.omada_client.get_known_clients()
             if isinstance(client, OmadaWirelessClient)
@@ -61,11 +60,6 @@ class OmadaClientScannerEntity(
         self._site_id = site_id
         self._client_id = client_id
         self._attr_name = display_name
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.ROUTER
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)

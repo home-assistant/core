@@ -10,7 +10,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, DOMAIN_DATA, AssistSatelliteEntityFeature
+from .connection_test import ConnectionTestView
+from .const import (
+    CONNECTION_TEST_DATA,
+    DATA_COMPONENT,
+    DOMAIN,
+    AssistSatelliteEntityFeature,
+)
 from .entity import (
     AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
@@ -38,7 +44,7 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    component = hass.data[DOMAIN_DATA] = EntityComponent[AssistSatelliteEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[AssistSatelliteEntity](
         _LOGGER, DOMAIN, hass
     )
     await component.async_setup(config)
@@ -57,16 +63,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
+    hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
+    hass.http.register_view(ConnectionTestView())
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)

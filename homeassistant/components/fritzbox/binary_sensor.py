@@ -17,8 +17,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxDeviceEntity
 from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
