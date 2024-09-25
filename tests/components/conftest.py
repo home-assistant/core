@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiohasupervisor.models import StoreInfo
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -404,6 +405,13 @@ def update_addon_fixture() -> Generator[AsyncMock]:
     from .hassio.common import mock_update_addon
 
     yield from mock_update_addon()
+
+
+@pytest.fixture(name="store_info")
+def store_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock store info."""
+    supervisor_client.store.info.return_value = StoreInfo(addons=[], repositories=[])
+    return supervisor_client.store.info
 
 
 @pytest.fixture(name="supervisor_client")

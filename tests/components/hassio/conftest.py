@@ -5,7 +5,7 @@ import os
 import re
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohasupervisor.models import AddonState, StoreInfo
+from aiohasupervisor.models import AddonState
 from aiohttp.test_utils import TestClient
 import pytest
 
@@ -126,13 +126,6 @@ def hassio_handler(
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
-
-
-@pytest.fixture
-def store_info(supervisor_client: AsyncMock) -> AsyncMock:
-    """Mock store info."""
-    supervisor_client.store.info.return_value = StoreInfo(addons=[], repositories=[])
-    return supervisor_client.store.info
 
 
 @pytest.fixture
