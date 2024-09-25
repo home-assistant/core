@@ -21,7 +21,7 @@ from homeassistant.components.evohome import DOMAIN, EvoService
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import ctl_entity, setup_evohome
+from .conftest import ctl_entity, extract_ctl_from_locations_config, setup_evohome
 from .const import TEST_INSTALLS
 
 if TYPE_CHECKING:
@@ -37,6 +37,28 @@ CTL_MODE_LOOKUP = {
 }
 
 
+def extract_heat_mode_from_location(
+    config: dict[str, str],
+    install: str,
+) -> str:
+    """Return the heating on mode for this install's controller."""
+
+    ctl = extract_ctl_from_locations_config(config, install)
+    modes = [d["systemMode"] for d in ctl["allowedSystemModes"]]
+    return "Heat" if "Heat" in modes else "Auto"  # almost all Auto
+
+
+def extract_off_mode_from_location(
+    config: dict[str, str],
+    install: str,
+) -> str:
+    """Return the heating off mode for this install's controller."""
+
+    ctl = extract_ctl_from_locations_config(config, install)
+    modes = [d["systemMode"] for d in ctl["allowedSystemModes"]]
+    return "Off" if "Off" in modes else "HeatingOff"  # almost all HeatingOff
+
+
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_evohome_ctl_svcs(
     hass: HomeAssistant,
@@ -50,13 +72,11 @@ async def test_evohome_ctl_svcs(
     freezer.move_to("2024-07-10T12:00:00Z")
 
     async for _ in setup_evohome(hass, config, install=install):
-        ctl: EvoController = ctl_entity(hass)
-
         services = list(hass.services.async_services_for_domain(DOMAIN))
         assert services == snapshot
 
         # EvoService.SET_SYSTEM_MODE: HeatingOff (or Off)
-        ctl_mode = "Off" if "Off" in ctl._modes else "HeatingOff"  # most are HeatingOff
+        ctl_mode = extract_off_mode_from_location(config, install)
 
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
@@ -73,7 +93,7 @@ async def test_evohome_ctl_svcs(
             }
 
         # EvoService.SET_SYSTEM_MODE: Auto (or Heat)
-        ctl_mode = "Auto" if "Auto" in ctl._modes else "Heat"  # most are Auto
+        ctl_mode = extract_heat_mode_from_location(config, install)
 
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
@@ -108,7 +128,7 @@ async def test_climate_ctl_svcs(
         assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
 
         # SERVICE_SET_HVAC_MODE: HVACMode.OFF
-        ctl_mode = "HeatingOff" if "HeatingOff" in ctl._modes else "Off"
+        ctl_mode = extract_off_mode_from_location(config, install)
 
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
@@ -126,7 +146,7 @@ async def test_climate_ctl_svcs(
             assert mock_fcn.await_args.kwargs == {"until": None}
 
         # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
-        ctl_mode = "Heat" if "Heat" in ctl._modes else "Auto"
+        ctl_mode = extract_heat_mode_from_location(config, install)
 
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(

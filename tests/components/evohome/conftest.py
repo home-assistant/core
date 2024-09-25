@@ -116,6 +116,17 @@ async def block_request(
     pytest.fail(f"Unexpected request: {method} {url}")
 
 
+def extract_ctl_from_locations_config(
+    config: dict[str, str],
+    install: str,
+) -> dict[str, Any]:
+    """Return the controller config JSON from the installation JSON."""
+
+    idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc: dict = user_locations_config_fixture(install)[idx]  # type: ignore[assignment]
+    return loc["gateways"][0]["temperatureControlSystems"][0]
+
+
 @pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
