@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 import io
 import socket
 from unittest.mock import ANY, Mock, patch
@@ -1457,11 +1458,16 @@ async def test_get_set_configuration(
     actual_config = satellite.async_get_configuration()
     assert actual_config == expected_config
 
-    # Change active wake words
-    actual_config.active_wake_words = ["5678"]
-    await satellite.async_set_configuration(actual_config)
+    updated_config = replace(actual_config, active_wake_words=["5678"])
+    mock_client.get_voice_assistant_configuration.return_value = updated_config
 
-    # Device should have been updated
+    # Change active wake words
+    await satellite.async_set_configuration(updated_config)
+
+    # Set config method should be called
     mock_client.set_voice_assistant_configuration.assert_called_once_with(
         active_wake_words=["5678"]
     )
+
+    # Device should have been updated
+    assert satellite.async_get_configuration() == updated_config

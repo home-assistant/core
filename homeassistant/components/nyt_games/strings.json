@@ -22,16 +22,31 @@
   "entity": {
     "sensor": {
       "wordles_played": {
-        "name": "Wordles played"
+        "name": "Played"
       },
-      "wordles_won": {
-        "name": "Wordles won"
+      "won": {
+        "name": "Won"
       },
-      "wordles_streak": {
-        "name": "Current Wordle streak"
+      "streak": {
+        "name": "Current streak"
       },
-      "wordles_max_streak": {
-        "name": "Highest Wordle streak"
+      "max_streak": {
+        "name": "Highest streak"
+      },
+      "spelling_bees_played": {
+        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
+      },
+      "total_words": {
+        "name": "Total words found"
+      },
+      "total_pangrams": {
+        "name": "Total pangrams found"
+      },
+      "connections_played": {
+        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
+      },
+      "last_played": {
+        "name": "Last played"
       }
     }
   }

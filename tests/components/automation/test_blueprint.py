@@ -38,7 +38,10 @@ def patch_blueprint(
             return orig_load(self, path)
 
         return models.Blueprint(
-            yaml.load_yaml(data_path), expected_domain=self.domain, path=path
+            yaml.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=automation.config.AUTOMATION_BLUEPRINT_SCHEMA,
         )
 
     with patch(

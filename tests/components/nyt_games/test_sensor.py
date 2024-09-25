@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from nyt_games import NYTGamesError
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -16,6 +17,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -44,7 +46,7 @@ async def test_updating_exception(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.nytgames_wordles_played").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wordle_played").state == STATE_UNAVAILABLE
 
     mock_nyt_games_client.get_latest_stats.side_effect = None
 
@@ -52,4 +54,4 @@ async def test_updating_exception(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.nytgames_wordles_played").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wordle_played").state != STATE_UNAVAILABLE

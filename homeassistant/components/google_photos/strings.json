@@ -52,8 +52,14 @@
     "upload_error": {
       "message": "Failed to upload content: {message}"
     },
+    "create_album_error": {
+      "message": "Failed to create album: {message}"
+    },
     "api_error": {
       "message": "Google Photos API responded with error: {message}"
+    },
+    "albums_failed": {
+      "message": "Cannot fetch albums from the Google Photos API"
     }
   },
   "services": {
@@ -69,6 +75,11 @@
           "name": "Filename",
           "description": "Path to the image or video to upload.",
           "example": "/config/www/image.jpg"
+        },
+        "album": {
+          "name": "Album",
+          "description": "Album name that is the destination for the uploaded content.",
+          "example": "Family photos"
         }
       }
     }
