@@ -1173,11 +1173,25 @@ async def test_device_tracker(
     body = await generate_latest_metrics(client)
 
     domain = "device_tracker"
-    MetricsTestHelper._perform_metric_assert(
-        "device_tracker_state", "1.0", domain, "Phone", "phone", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="device_tracker_state",
+            domain=domain,
+            friendly_name="Phone",
+            object_id="phone",
+            metric_value="1.0",
+        ),
     )
-    MetricsTestHelper._perform_metric_assert(
-        "device_tracker_state", "0.0", domain, "Watch", "watch", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="device_tracker_state",
+            domain=domain,
+            friendly_name="Watch",
+            object_id="watch",
+            metric_value="0.0",
+        ),
     )
 
 
@@ -1189,8 +1203,15 @@ async def test_counter(
     body = await generate_latest_metrics(client)
 
     domain = "counter"
-    MetricsTestHelper._perform_metric_assert(
-        "counter_value", "2.0", domain, "None", "counter", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="counter_value",
+            domain=domain,
+            friendly_name="None",
+            object_id="counter",
+            metric_value="2.0",
+        ),
     )
 
 
@@ -1202,11 +1223,25 @@ async def test_update(
     body = await generate_latest_metrics(client)
 
     domain = "update"
-    MetricsTestHelper._perform_metric_assert(
-        "update_state", "1.0", domain, "Firmware", "firmware", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="update_state",
+            domain=domain,
+            friendly_name="Firmware",
+            object_id="firmware",
+            metric_value="1.0",
+        ),
     )
-    MetricsTestHelper._perform_metric_assert(
-        "update_state", "0.0", domain, "Addon", "addon", body
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="update_state",
+            domain=domain,
+            friendly_name="Addon",
+            object_id="addon",
+            metric_value="0.0",
+        ),
     )
 
 
