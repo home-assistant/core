@@ -65,7 +65,7 @@
       "description": "Leave a Beolink experience."
     },
     "beolink_allstandby": {
-      "name": "Beolink allstandby",
+      "name": "Beolink all standby",
       "description": "Set all Connected Beolink devices to standby."
     }
   },
