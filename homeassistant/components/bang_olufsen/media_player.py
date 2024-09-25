@@ -652,6 +652,17 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
+        # Ensure only known sound modes known by the integration can be activated.
+        if sound_mode not in self._sound_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={
+                    "invalid_sound_mode": sound_mode,
+                    "valid_sound_modes": ", ".join(list(self._sound_modes.keys())),
+                },
+            )
+
         await self._client.activate_listening_mode(id=self._sound_modes[sound_mode])
 
     async def async_play_media(
