@@ -197,7 +197,7 @@
 # name: test_evohome_ctl_svcs[default].1
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 30, 23, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 31, 7, 0, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -229,7 +229,7 @@
 # name: test_evohome_ctl_svcs[minimal].1
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 30, 23, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 31, 7, 0, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---

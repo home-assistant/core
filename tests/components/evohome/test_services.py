@@ -125,7 +125,7 @@ async def test_evohome_ctl_svcs(
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == ("Away",)
             assert install != "default" or mock_fcn.await_args.kwargs == {
-                "until": dt_util.parse_datetime("2024-07-30T23:00:00Z")
+                "until": dt_util.parse_datetime("2024-07-31T07:00:00Z")
             }
 
             results.append(mock_fcn.await_args.kwargs)
