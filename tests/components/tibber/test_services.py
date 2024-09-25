@@ -249,88 +249,66 @@ async def test_get_prices_start_tomorrow(
     }
 
 
-async def test_get_prices_with_timezone(
+@pytest.mark.parametrize(
+    ("start_time", "expect_it_to_work"),
+    [
+        (STARTTIME.isoformat(), True),
+        (STARTTIME.replace(tzinfo=None).isoformat(), True),
+        (
+            (STARTTIME + dt.timedelta(hours=4))
+            .replace(tzinfo=dt.timezone(dt.timedelta(hours=4)))
+            .isoformat(),
+            True,
+        ),
+        ((STARTTIME + dt.timedelta(hours=4)).isoformat(), False),
+        (
+            (STARTTIME + dt.timedelta(hours=4)).replace(tzinfo=None).isoformat(),
+            False,
+        ),
+    ],
+)
+async def test_get_prices_with_timezones(
     freezer: FrozenDateTimeFactory,
+    start_time: str,
+    expect_it_to_work: bool,
 ) -> None:
-    """Test __get_prices with start date tomorrow."""
+    """Test __get_prices with timezone and without."""
     freezer.move_to(STARTTIME)
-    call = ServiceCall(
-        DOMAIN, PRICE_SERVICE_NAME, {"start": dt_util.start_of_local_day().isoformat()}
-    )
+    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": start_time})
 
     result = await __get_prices(call, hass=create_mock_hass())
 
-    assert result == {
-        "prices": {
-            "first_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
-            "second_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
+    if expect_it_to_work:
+        assert result == {
+            "prices": {
+                "first_home": [
+                    {
+                        "start_time": STARTTIME,
+                        "price": 0.46914,
+                        "level": "VERY_EXPENSIVE",
+                    },
+                    {
+                        "start_time": STARTTIME + dt.timedelta(hours=1),
+                        "price": 0.46914,
+                        "level": "VERY_EXPENSIVE",
+                    },
+                ],
+                "second_home": [
+                    {
+                        "start_time": STARTTIME,
+                        "price": 0.46914,
+                        "level": "VERY_EXPENSIVE",
+                    },
+                    {
+                        "start_time": STARTTIME + dt.timedelta(hours=1),
+                        "price": 0.46914,
+                        "level": "VERY_EXPENSIVE",
+                    },
+                ],
+            }
         }
-    }
-
-
-async def test_get_prices_without_timezone(
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test __get_prices with start date tomorrow."""
-    freezer.move_to(STARTTIME)
-    call = ServiceCall(
-        DOMAIN,
-        PRICE_SERVICE_NAME,
-        {"start": dt_util.start_of_local_day().replace(tzinfo=None).isoformat()},
-    )
-
-    result = await __get_prices(call, hass=create_mock_hass())
-
-    assert result == {
-        "prices": {
-            "first_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
-            "second_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
-        }
-    }
+    else:
+        assert result == {"prices": {"first_home": [], "second_home": []}}
 
 
 async def test_get_prices_invalid_input() -> None:
