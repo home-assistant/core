@@ -166,7 +166,7 @@ def mock_start_addon_side_effect(
 ) -> Any | None:
     """Return the start add-on options side effect."""
 
-    async def start_addon(hass: HomeAssistant, slug):
+    async def start_addon(addon: str) -> None:
         """Mock start add-on."""
         addon_store_info.return_value = {
             "available": True,
@@ -178,40 +178,6 @@ def mock_start_addon_side_effect(
         addon_info.return_value.state = "started"
 
     return start_addon
-
-
-def mock_start_addon(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
-    """Mock start add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon",
-        side_effect=start_addon_side_effect,
-    ) as start_addon:
-        yield start_addon
-
-
-def mock_stop_addon() -> Generator[AsyncMock]:
-    """Mock stop add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_stop_addon"
-    ) as stop_addon:
-        yield stop_addon
-
-
-def mock_restart_addon(restart_addon_side_effect: Any | None) -> Generator[AsyncMock]:
-    """Mock restart add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_restart_addon",
-        side_effect=restart_addon_side_effect,
-    ) as restart_addon:
-        yield restart_addon
-
-
-def mock_uninstall_addon() -> Generator[AsyncMock]:
-    """Mock uninstall add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
-    ) as uninstall_addon:
-        yield uninstall_addon
 
 
 def mock_addon_options(addon_info: AsyncMock) -> dict[str, Any]:

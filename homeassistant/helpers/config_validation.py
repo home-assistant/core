@@ -4,7 +4,7 @@
 # with PEP 695 syntax. Fixed in Python 3.13.
 # from __future__ import annotations
 
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -81,6 +81,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGER,
     CONF_TRIGGERS,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
@@ -1769,6 +1770,30 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+
+def _backward_compat_trigger_schema(value: Any | None) -> Any:
+    """Rewrite trigger `trigger` to `platform`.
+
+    `platform` has been renamed to `trigger` in user documentation and in the automation
+    editor. The Python trigger implementation still uses `platform`, so we need to
+    rename `trigger` to `platform.
+    """
+
+    if not isinstance(value, Mapping):
+        # If the value is not a mapping, we let that be handled by the TRIGGER_SCHEMA
+        return value
+
+    if CONF_TRIGGER in value:
+        if CONF_PLATFORM in value:
+            raise vol.Invalid(
+                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+            )
+        value = dict(value)
+        value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
+
+    return value
+
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): str,
@@ -1804,7 +1829,9 @@ def _base_trigger_validator(value: Any) -> Any:
 
 
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, _base_trigger_list_flatten, [_base_trigger_validator]
+    ensure_list,
+    _base_trigger_list_flatten,
+    [vol.All(_backward_compat_trigger_schema, _base_trigger_validator)],
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(

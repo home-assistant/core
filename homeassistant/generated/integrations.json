@@ -418,6 +418,13 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aqara": {
+      "name": "Aqara",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
+    },
     "aquacell": {
       "name": "AquaCell",
       "integration_type": "device",
@@ -4220,6 +4227,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "nyt_games": {
+      "name": "NYT Games",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "nzbget": {
       "name": "NZBGet",

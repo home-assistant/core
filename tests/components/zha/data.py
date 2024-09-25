@@ -55,6 +55,12 @@ BASE_CUSTOM_CONFIGURATION = {
                 "optional": True,
                 "default": 21600,
             },
+            {
+                "default": True,
+                "name": "enable_mains_startup_polling",
+                "required": True,
+                "type": "boolean",
+            },
         ]
     },
     "data": {
@@ -65,6 +71,7 @@ BASE_CUSTOM_CONFIGURATION = {
             "always_prefer_xy_color_mode": True,
             "group_members_assume_state": False,
             "enable_identify_on_join": True,
+            "enable_mains_startup_polling": True,
             "consider_unavailable_mains": 7200,
             "consider_unavailable_battery": 21600,
         }
@@ -126,6 +133,12 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "optional": True,
                 "default": 21600,
             },
+            {
+                "default": True,
+                "name": "enable_mains_startup_polling",
+                "required": True,
+                "type": "boolean",
+            },
         ],
         "zha_alarm_options": [
             {
@@ -157,6 +170,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             "always_prefer_xy_color_mode": True,
             "group_members_assume_state": False,
             "enable_identify_on_join": True,
+            "enable_mains_startup_polling": True,
             "consider_unavailable_mains": 7200,
             "consider_unavailable_battery": 21600,
         },

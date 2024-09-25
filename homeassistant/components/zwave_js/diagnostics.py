@@ -80,7 +80,7 @@ def get_device_entities(
         er.async_get(hass), device.id, include_disabled_entities=True
     )
     entities = []
-    for entry in entity_entries:
+    for entry in sorted(entity_entries):
         # Skip entities that are not part of this integration
         if entry.config_entry_id != config_entry.entry_id:
             continue
