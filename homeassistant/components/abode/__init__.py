@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import partial
+from pathlib import Path
 
 from jaraco.abode.client import Client as Abode
+import jaraco.abode.config
 from jaraco.abode.exceptions import (
     AuthenticationException as AbodeAuthenticationException,
     Exception as AbodeException,
@@ -100,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     try:
+        jaraco.abode.config.paths.override(user_data=Path(hass.config.path("Abode")))
         abode = await hass.async_add_executor_job(
             Abode, username, password, True, True, True
         )
