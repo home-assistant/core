@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -59,11 +59,6 @@ class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self._longitude
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
 
     @callback
     def _async_update(self) -> None:

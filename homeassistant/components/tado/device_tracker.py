@@ -6,7 +6,6 @@ import logging
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SourceType,
     TrackerEntity,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
@@ -170,8 +169,3 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     def longitude(self) -> None:
         """Return longitude value of the device."""
         return None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.GPS
