@@ -827,6 +827,32 @@ async def test_async_select_sound_mode(
     )
 
 
+async def test_async_select_sound_mode_invalid(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_select_sound_mode with an invalid sound_mode."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            {
+                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                ATTR_SOUND_MODE: "invalid_sound_mode",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_sound_mode"
+    assert exc_info.errisinstance(ServiceValidationError)
+
+
 async def test_async_play_media_invalid_type(
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
