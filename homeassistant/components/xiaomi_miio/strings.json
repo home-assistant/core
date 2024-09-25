@@ -439,7 +439,7 @@
     },
     "remote_learn_command": {
       "name": "Remote learn command",
-      "description": "Learns an IR command, press \"Perform action\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "description": "Learns an IR command, select \"Perform action\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
       "fields": {
         "slot": {
           "name": "Slot",
