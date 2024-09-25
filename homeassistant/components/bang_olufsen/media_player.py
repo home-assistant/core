@@ -56,7 +56,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -422,8 +422,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Update device name
         device_registry = dr.async_get(self.hass)
+        assert self.device_entry is not None
+
         device_registry.async_update_device(
-            device_id=cast(DeviceEntry, self.device_entry).id,
+            device_id=self.device_entry.id,
             name=beolink_self.friendly_name,
         )
 
@@ -434,10 +436,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self._beolink_attributes = {}
 
-        # Add Beolink self
-        assert self.device_entry
-        assert self.device_entry.name
+        assert self.device_entry is not None
+        assert self.device_entry.name is not None
 
+        # Add Beolink self
         self._beolink_attributes = {
             "beolink": {"self": {self.device_entry.name: self._beolink_jid}}
         }
@@ -452,24 +454,24 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                     peer.jid
                 )
 
-        self._remote_leader = self._playback_metadata.remote_leader
-
         # Add Beolink listeners / leader
+        self._remote_leader = self._playback_metadata.remote_leader
 
         # Create group members list
         group_members = []
 
         # If the device is a listener.
         if self._remote_leader is not None:
-            # Add leader
+            # Add leader if available in Home Assistant
+            leader = self._get_entity_id_from_jid(self._remote_leader.jid)
             group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._remote_leader.jid))
+                leader
+                if leader is not None
+                else f"leader_not_in_hass-{self._remote_leader.friendly_name}"
             )
 
             # Add self
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-            )
+            group_members.append(self.entity_id)
 
             self._beolink_attributes["beolink"]["leader"] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
