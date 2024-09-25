@@ -78,10 +78,13 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
         ("module", "tests.components.conftest"),
         ("package", "tests.components.conftest"),
         ("session", "tests.components.conftest"),
+        ("function", "tests.components.pylint_tests.conftest"),
+        ("class", "tests.components.pylint_tests.conftest"),
+        ("module", "tests.components.pylint_tests.conftest"),
+        ("package", "tests.components.pylint_tests.conftest"),
         ("function", "tests.components.pylint_test"),
         ("class", "tests.components.pylint_test"),
         ("module", "tests.components.pylint_test"),
-        ("package", "tests.components.pylint_test"),
     ],
 )
 def test_good_fixture(
@@ -112,8 +115,16 @@ def test_good_fixture(
         walker.walk(root_node)
 
 
-def test_bad_fixture_scope(
-    linter: UnittestLinter, decorator_checker: BaseChecker
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tests.components.pylint_test",
+        "tests.components.pylint_test.conftest",
+        "tests.components.pylint_test.module",
+    ],
+)
+def test_bad_fixture_session_scope(
+    linter: UnittestLinter, decorator_checker: BaseChecker, path: str
 ) -> None:
     """Test bad `@pytest.fixture` decorator."""
     code = """
@@ -132,7 +143,7 @@ def test_bad_fixture_scope(
         pass
     """
 
-    root_node = astroid.parse(code, "tests.components.pylint_test")
+    root_node = astroid.parse(code, path)
     walker = ASTWalker(linter)
     walker.add_checker(decorator_checker)
 
@@ -143,6 +154,53 @@ def test_bad_fixture_scope(
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope `session`", "`package` or lower"),
+            confidence=UNDEFINED,
+            col_offset=1,
+            end_line=10,
+            end_col_offset=32,
+        ),
+    ):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tests.components.pylint_test",
+        "tests.components.pylint_test.module",
+    ],
+)
+def test_bad_fixture_package_scope(
+    linter: UnittestLinter, decorator_checker: BaseChecker, path: str
+) -> None:
+    """Test bad `@pytest.fixture` decorator."""
+    code = """
+    import pytest
+
+    @pytest.fixture
+    def setup(
+        arg1, arg2
+    ):
+        pass
+
+    @pytest.fixture(scope="package")
+    def setup_session(
+        arg1, arg2
+    ):
+        pass
+    """
+
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(decorator_checker)
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="hass-pytest-fixture-decorator",
+            line=10,
+            node=root_node.body[2].decorators.nodes[0],
+            args=("scope `package`", "`module` or lower"),
             confidence=UNDEFINED,
             col_offset=1,
             end_line=10,

@@ -34,6 +34,15 @@ class HassDecoratorChecker(BaseChecker):
 
         return None
 
+    def _get_pytest_fixture_scope_node(
+        self, decorator: nodes.Call
+    ) -> nodes.Keyword | None:
+        for keyword in decorator.keywords:
+            if keyword.arg == "scope":
+                return keyword
+
+        return None
+
     def _check_pytest_fixture(
         self, node: nodes.FunctionDef, decoratornames: set[str]
     ) -> None:
@@ -42,20 +51,29 @@ class HassDecoratorChecker(BaseChecker):
             or (root_name := node.root().name) == "tests.components.conftest"
             or not root_name.startswith("tests.components.")
             or (decorator := self._get_pytest_fixture_node(node)) is None
+            or (keyword := self._get_pytest_fixture_scope_node(decorator)) is None
+            or not isinstance(keyword.value, nodes.Const)
+            or not (scope := keyword.value.value)
         ):
             return
 
-        for keyword in decorator.keywords:
-            if (
-                keyword.arg == "scope"
-                and isinstance(keyword.value, nodes.Const)
-                and keyword.value.value == "session"
-            ):
-                self.add_message(
-                    "hass-pytest-fixture-decorator",
-                    node=decorator,
-                    args=(f"scope `{keyword.value.value}`", "`package` or lower"),
-                )
+        if scope == "session":
+            self.add_message(
+                "hass-pytest-fixture-decorator",
+                node=decorator,
+                args=("scope `session`", "`package` or lower"),
+            )
+            return
+
+        parts = root_name.split(".")
+        current_module = parts[3] if len(parts) > 3 else ""
+
+        if scope == "package" and current_module != "conftest":
+            self.add_message(
+                "hass-pytest-fixture-decorator",
+                node=decorator,
+                args=("scope `package`", "`module` or lower"),
+            )
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Apply checks on an AsyncFunctionDef node."""
