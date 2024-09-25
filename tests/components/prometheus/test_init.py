@@ -99,6 +99,7 @@ class MetricInfo:
     object_id: str
     metric_value: Any | None = None
     mode: str | None = None
+    state: str | None = None
 
     @property
     def entity(self):
@@ -111,12 +112,14 @@ class MetricInfo:
             f" {self.metric_value}" if self.metric_value is not None else ""
         )
         final_mode_value = f',mode="{self.mode}"' if self.mode is not None else ""
+        final_state_value = f',state="{self.state}"' if self.state is not None else ""
         return (
             f"{self.metric_name}{{"
             f'domain="{self.domain}",'
             f'entity="{self.entity}",'
             f'friendly_name="{self.friendly_name}"'
             f"{final_mode_value}"
+            f"{final_state_value}"
             f"}}{final_metric_value}"
         )
 
@@ -152,7 +155,7 @@ def test_metric_info_generates_entity() -> None:
 
 
 def test_metric_info_generates_metric_string_with_value() -> None:
-    """Test using MetricInfo to format a simple metric string but with a value included."""
+    """Test using MetricInfo to format a simple metric string but with a metric value included."""
     metric_info = MetricInfo(
         metric_name="homeassistant_sensor_temperature_celsius",
         domain="sensor",
@@ -170,7 +173,7 @@ def test_metric_info_generates_metric_string_with_value() -> None:
 
 
 def test_metric_info_generates_metric_string_with_mode_value() -> None:
-    """Test using MetricInfo to format a simple metric string but with a value included."""
+    """Test using MetricInfo to format a simple metric string but with a mode value included."""
     metric_info = MetricInfo(
         metric_name="climate_preset_mode",
         domain="climate",
@@ -185,6 +188,27 @@ def test_metric_info_generates_metric_string_with_mode_value() -> None:
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
         'mode="away"'
+        "}"
+        " 1.0"
+    )
+
+
+def test_metric_info_generates_metric_string_with_state_value() -> None:
+    """Test using MetricInfo to format a simple metric string but with a state value included."""
+    metric_info = MetricInfo(
+        metric_name="cover_state",
+        domain="cover",
+        friendly_name="Curtain",
+        object_id="curtain",
+        metric_value="1.0",
+        state="open",
+    )
+    assert metric_info.get_full_metric_string() == (
+        "cover_state{"
+        'domain="cover",'
+        'entity="cover.curtain",'
+        'friendly_name="Curtain",'
+        'state="open"'
         "}"
         " 1.0"
     )
