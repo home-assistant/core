@@ -41,7 +41,9 @@ class NightscoutSensor(SensorEntity):
 
     _attr_icon = "mdi:cloud-question"
 
-    def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None, unit: str) -> None:
+    def __init__(
+        self, api: NightscoutAPI, name: str, unique_id: str | None, unit: str
+    ) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_native_unit_of_measurement = unit
