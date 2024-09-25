@@ -382,6 +382,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
 class WorkAreaSensorEntityDescription(SensorEntityDescription):
     """Describes Automower work area number entity."""
 
+    exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], int | datetime | None]
     translation_key_fn: Callable[[int, str], str]
 
@@ -390,6 +391,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="progress",
         translation_key_fn=_work_area_translation_key,
+        exists_fn=lambda data: data.progress is not None,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.progress,
@@ -397,6 +399,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
+        exists_fn=lambda data: data.last_time_completed_naive is not None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: naive_to_aware(
             data.last_time_completed_naive,
@@ -424,6 +427,7 @@ async def async_setup_entry(
                     )
                     for description in WORK_AREA_SENSOR_TYPES
                     for work_area_id in _work_areas
+                    if description.exists_fn(_work_areas[work_area_id])
                 )
         entities.extend(
             AutomowerSensorEntity(mower_id, coordinator, description)
