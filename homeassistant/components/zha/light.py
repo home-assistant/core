@@ -143,11 +143,6 @@ class Light(LightEntity, ZHAEntity):
         return self.entity_data.entity.max_mireds
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hs color value [int, int]."""
-        return self.entity_data.entity.hs_color
-
-    @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self.entity_data.entity.xy_color
