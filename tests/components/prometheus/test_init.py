@@ -100,6 +100,7 @@ class MetricInfo:
     metric_value: Any | None = None
     mode: str | None = None
     state: str | None = None
+    action: str | None = None
 
     @property
     def entity(self):
@@ -111,10 +112,14 @@ class MetricInfo:
         final_metric_value = (
             f" {self.metric_value}" if self.metric_value is not None else ""
         )
+        final_action_value = (
+            f'action="{self.action}",' if self.action is not None else ""
+        )
         final_mode_value = f',mode="{self.mode}"' if self.mode is not None else ""
         final_state_value = f',state="{self.state}"' if self.state is not None else ""
         return (
             f"{self.metric_name}{{"
+            f"{final_action_value}"
             f'domain="{self.domain}",'
             f'entity="{self.entity}",'
             f'friendly_name="{self.friendly_name}"'
@@ -188,6 +193,27 @@ def test_metric_info_generates_metric_string_with_mode_value() -> None:
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
         'mode="away"'
+        "}"
+        " 1.0"
+    )
+
+
+def test_metric_info_generates_metric_string_with_action_value() -> None:
+    """Test using MetricInfo to format a simple metric string but with an action value included."""
+    metric_info = MetricInfo(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        object_id="heatpump",
+        metric_value="1.0",
+        action="heating",
+    )
+    assert metric_info.get_full_metric_string() == (
+        "climate_action{"
+        'action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"'
         "}"
         " 1.0"
     )
@@ -1257,52 +1283,72 @@ async def test_renaming_entity_name(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    MetricsTestHelper._perform_metric_assert(
-        "sensor_temperature_celsius",
-        "15.6",
-        "sensor",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "entity_available",
-        "1.0",
-        "sensor",
-        "Outside Temperature",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Temperature",
+            object_id="outside_temperature",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "sensor_humidity_percent",
-        "54.0",
-        "sensor",
-        "Outside Humidity",
-        "outside_humidity",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.HUMIDITY,
+        MetricInfo(
+            metric_name="sensor_humidity_percent",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="54.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "entity_available",
-        "1.0",
-        "sensor",
-        "Outside Humidity",
-        "outside_humidity",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.HUMIDITY,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "1.0", "HeatPump", "heatpump", body, action="heating"
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_action",
+            domain="climate",
+            friendly_name="HeatPump",
+            object_id="heatpump",
+            metric_value="1.0",
+            action="heating",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action", "0.0", "HeatPump", "heatpump", body, action="cooling"
+    _assert_metric_present(
+        body,
+        MetricInfo(
+            metric_name="climate_action",
+            domain="climate",
+            friendly_name="HeatPump",
+            object_id="heatpump",
+            metric_value="0.0",
+            action="cooling",
+        ),
     )
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1341,63 +1387,73 @@ async def test_renaming_entity_name(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Check if new metrics created
-    MetricsTestHelper._perform_metric_assert(
-        "sensor_temperature_celsius",
-        "15.6",
-        "sensor",
-        "Outside Temperature Renamed",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="sensor_temperature_celsius",
+            domain="sensor",
+            friendly_name="Outside Temperature Renamed",
+            object_id="outside_temperature",
+            metric_value="15.6",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "entity_available",
-        "1.0",
-        "sensor",
-        "Outside Temperature Renamed",
-        "outside_temperature",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Temperature Renamed",
+            object_id="outside_temperature",
+            metric_value="1.0",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action",
-        "1.0",
-        "HeatPump Renamed",
-        "heatpump",
+    _assert_metric_present(
         body,
-        action="heating",
+        MetricInfo(
+            metric_name="climate_action",
+            domain="climate",
+            friendly_name="HeatPump Renamed",
+            object_id="heatpump",
+            metric_value="1.0",
+            action="heating",
+        ),
     )
 
-    MetricsTestHelper._perform_climate_metric_assert(
-        "climate_action",
-        "0.0",
-        "HeatPump Renamed",
-        "heatpump",
+    _assert_metric_present(
         body,
-        action="cooling",
+        MetricInfo(
+            metric_name="climate_action",
+            domain="climate",
+            friendly_name="HeatPump Renamed",
+            object_id="heatpump",
+            metric_value="0.0",
+            action="cooling",
+        ),
     )
 
     # Keep other sensors
-    MetricsTestHelper._perform_metric_assert(
-        "sensor_humidity_percent",
-        "54.0",
-        "sensor",
-        "Outside Humidity",
-        "outside_humidity",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.HUMIDITY,
+        MetricInfo(
+            metric_name="sensor_humidity_percent",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="54.0",
+        ),
     )
 
-    MetricsTestHelper._perform_metric_assert(
-        "entity_available",
-        "1.0",
-        "sensor",
-        "Outside Humidity",
-        "outside_humidity",
+    _assert_metric_present(
         body,
-        device_class=SensorDeviceClass.HUMIDITY,
+        MetricInfo(
+            metric_name="entity_available",
+            domain="sensor",
+            friendly_name="Outside Humidity",
+            object_id="outside_humidity",
+            metric_value="1.0",
+        ),
     )
 
 
