@@ -481,6 +481,8 @@ async def websocket_device_automation_get_condition_capabilities(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
+        # The frontend responds with `trigger` as key, while the
+        # `DEVICE_TRIGGER_BASE_SCHEMA` expects `platform1` as key.
         vol.Required("trigger"): vol.All(
             cv._backward_compat_trigger_schema,  # noqa: SLF001
             DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
