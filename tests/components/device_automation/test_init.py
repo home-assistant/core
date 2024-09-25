@@ -1128,14 +1128,12 @@ async def test_automation_with_integration_without_device_condition(
     )
 
 
-@pytest.mark.parametrize("trigger_key", ["platform", "trigger"])
 async def test_automation_with_device_trigger(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     fake_integration,
-    trigger_key: str,
 ) -> None:
     """Test automation with a device trigger."""
 
@@ -1160,7 +1158,7 @@ async def test_automation_with_device_trigger(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {
-                    trigger_key: "device",
+                    "platform": "device",
                     "device_id": device_entry.id,
                     "domain": "fake_integration",
                     "entity_id": entity_entry.id,
