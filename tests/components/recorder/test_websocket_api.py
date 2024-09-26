@@ -1984,6 +1984,18 @@ async def test_validate_statistics(
     await assert_validation_result(client, {})
 
 
+async def test_update_statistics_issues(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update_statistics_issues can be called."""
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
 async def test_clear_statistics(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

@@ -138,7 +138,7 @@ async def test_async_poll_manual_hosts_warnings(
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
         record = caplog.records[0]
-        assert record.levelname == "INFO"
+        assert record.levelname == "WARNING"
         assert "Connection reestablished to Sonos device" in record.message
         assert mock_async_call_later.call_count == 3
 

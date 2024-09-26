@@ -28,8 +28,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToonDataUpdateCoordinator
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .entity import ToonDisplayDeviceEntity
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity
 
 
 async def async_setup_entry(

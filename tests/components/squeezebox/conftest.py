@@ -226,6 +226,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.remote_title = None
         mock_player.title = None
         mock_player.image_url = None
+        mock_player.model = "SqueezeLite"
 
         return mock_player
 

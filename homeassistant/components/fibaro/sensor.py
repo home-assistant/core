@@ -27,8 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
@@ -132,7 +133,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class FibaroSensor(FibaroDevice, SensorEntity):
+class FibaroSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
@@ -161,7 +162,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
             self._attr_native_value = self.fibaro_device.value.float_value()
 
 
-class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
+class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(

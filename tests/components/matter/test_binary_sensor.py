@@ -5,17 +5,19 @@ from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
     setup_integration_with_node_fixture,
+    snapshot_matter_entities,
     trigger_subscription_callback,
 )
 
@@ -38,7 +40,7 @@ async def occupancy_sensor_node_fixture(
 ) -> MatterNode:
     """Fixture for a occupancy sensor node."""
     return await setup_integration_with_node_fixture(
-        hass, "occupancy-sensor", matter_client
+        hass, "occupancy_sensor", matter_client
     )
 
 
@@ -69,8 +71,8 @@ async def test_occupancy_sensor(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("eve-contact-sensor", "binary_sensor.eve_door_door"),
-        ("leak-sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("eve_contact_sensor", "binary_sensor.eve_door_door"),
+        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(
@@ -124,7 +126,15 @@ async def test_battery_sensor(
     assert state
     assert state.state == "on"
 
-    entry = entity_registry.async_get(entity_id)
 
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_devices: MatterNode,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test binary sensors."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)

@@ -15,5 +15,5 @@ TEST_INSTALLS: Final = (
     "default",  # evohome (multi-zone, with DHW & ghost zones)
     "h032585",  # VisionProWifi (no preset_mode for TCS)
     "h099625",  # RoundThermostat
-    "system_004",  # RoundModulation
+    "sys_004",  # RoundModulation
 )

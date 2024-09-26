@@ -209,7 +209,7 @@ async def test_node_diagnostics(
     # setup (mock) integration with a random node fixture
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        "onoff_light",
         matter_client,
     )
     # get the device registry entry for the mocked node
@@ -283,7 +283,7 @@ async def test_ping_node(
     # setup (mock) integration with a random node fixture
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        "onoff_light",
         matter_client,
     )
     # get the device registry entry for the mocked node
@@ -343,7 +343,7 @@ async def test_open_commissioning_window(
     # setup (mock) integration with a random node fixture
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        "onoff_light",
         matter_client,
     )
     # get the device registry entry for the mocked node
@@ -409,7 +409,7 @@ async def test_remove_matter_fabric(
     # setup (mock) integration with a random node fixture
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        "onoff_light",
         matter_client,
     )
     # get the device registry entry for the mocked node
@@ -465,7 +465,7 @@ async def test_interview_node(
     # setup (mock) integration with a random node fixture
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        "onoff_light",
         matter_client,
     )
     # get the device registry entry for the mocked node

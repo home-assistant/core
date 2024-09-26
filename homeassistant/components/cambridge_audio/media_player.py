@@ -45,6 +45,7 @@ TRANSPORT_FEATURES: dict[TransportControl, MediaPlayerEntityFeature] = {
     TransportControl.TOGGLE_REPEAT: MediaPlayerEntityFeature.REPEAT_SET,
     TransportControl.TOGGLE_SHUFFLE: MediaPlayerEntityFeature.SHUFFLE_SET,
     TransportControl.SEEK: MediaPlayerEntityFeature.SEEK,
+    TransportControl.STOP: MediaPlayerEntityFeature.STOP,
 }
 
 

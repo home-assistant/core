@@ -7,13 +7,11 @@ from typing import Any, Concatenate
 from aiostreammagic import StreamMagicClient
 from aiostreammagic.models import CallbackType
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import STREAM_MAGIC_EXCEPTIONS
-from .const import DOMAIN
+from .const import DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
 
 def command[_EntityT: CambridgeAudioEntity, **_P](
@@ -51,7 +49,6 @@ class CambridgeAudioEntity(Entity):
             configuration_url=f"http://{client.host}",
         )
 
-    @callback
     async def _state_update_callback(
         self, _client: StreamMagicClient, _callback_type: CallbackType
     ) -> None:

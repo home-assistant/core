@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpbEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from .entity import UpbEntity
 
 SERVICE_LINK_DEACTIVATE = "link_deactivate"
 SERVICE_LINK_FADE_STOP = "link_fade_stop"
