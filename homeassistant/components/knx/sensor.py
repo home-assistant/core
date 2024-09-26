@@ -35,7 +35,7 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import KNXModule
 from .const import ATTR_SOURCE, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)

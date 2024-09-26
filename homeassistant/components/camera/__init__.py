@@ -71,11 +71,13 @@ from .const import (  # noqa: F401
     CONF_DURATION,
     CONF_LOOKBACK,
     DATA_CAMERA_PREFS,
+    DATA_COMPONENT,
     DATA_RTSP_TO_WEB_RTC,
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraState,
     StreamType,
 )
 from .img_util import scale_jpeg_camera_image
@@ -97,9 +99,11 @@ ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
 
-STATE_RECORDING: Final = "recording"
-STATE_STREAMING: Final = "streaming"
-STATE_IDLE: Final = "idle"
+# These constants are deprecated as of Home Assistant 2024.10
+# Please use the StreamType enum instead.
+_DEPRECATED_STATE_RECORDING = DeprecatedConstantEnum(CameraState.RECORDING, "2025.10")
+_DEPRECATED_STATE_STREAMING = DeprecatedConstantEnum(CameraState.STREAMING, "2025.10")
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(CameraState.IDLE, "2025.10")
 
 
 class CameraEntityFeature(IntFlag):
@@ -362,7 +366,7 @@ def async_register_rtsp_to_web_rtc_provider(
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
 
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     await asyncio.gather(
         *(camera.async_refresh_providers() for camera in component.entities)
     )
@@ -372,15 +376,13 @@ def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
 ) -> Iterable[RtspToWebRtcProviderType]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
-        DATA_RTSP_TO_WEB_RTC, {}
-    )
+    providers = hass.data.get(DATA_RTSP_TO_WEB_RTC, {})
     return providers.values()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the camera component."""
-    component = hass.data[DOMAIN] = EntityComponent[Camera](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[Camera](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -455,14 +457,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -677,10 +677,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
-            return STATE_RECORDING
+            return CameraState.RECORDING
         if self.is_streaming:
-            return STATE_STREAMING
-        return STATE_IDLE
+            return CameraState.STREAMING
+        return CameraState.IDLE
 
     @cached_property
     def is_on(self) -> bool:
@@ -953,8 +953,9 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-    stream_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
+    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
+        msg["entity_id"]
+    )
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 
@@ -971,14 +972,14 @@ async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
     try:
-        entity_prefs = await prefs.async_update(entity_id, **changes)
+        entity_prefs = await hass.data[DATA_CAMERA_PREFS].async_update(
+            entity_id, **changes
+        )
     except HomeAssistantError as ex:
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))

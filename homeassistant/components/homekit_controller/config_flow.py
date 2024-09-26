@@ -168,28 +168,6 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Rediscover a previously ignored discover."""
-        unique_id = user_input["unique_id"]
-        await self.async_set_unique_id(unique_id)
-
-        if self.controller is None:
-            await self._async_setup_controller()
-
-        assert self.controller
-
-        try:
-            discovery = await self.controller.async_find(unique_id)
-        except aiohomekit.AccessoryNotFoundError:
-            return self.async_abort(reason="accessory_not_found_error")
-
-        self.name = discovery.description.name
-        self.model = getattr(discovery.description, "model", BLE_DEFAULT_NAME)
-        self.category = discovery.description.category
-        self.hkid = discovery.description.id
-
-        return self._async_step_pair_show_form()
-
     @callback
     def _hkid_is_homekit(self, hkid: str) -> bool:
         """Determine if the device is a homekit bridge or accessory."""

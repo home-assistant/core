@@ -13,8 +13,6 @@ from homeassistant.components.media_player import (
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
-)
-from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
 from homeassistant.components.websocket_api import ActiveConnection

@@ -240,7 +240,7 @@ class ConfiguredDoorBird:
             )
             return False
 
-        _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+        _LOGGER.debug("Successfully registered URL for %s on %s", event, self.name)
         return True
 
     def get_event_data(self, event: str) -> dict[str, str | None]:

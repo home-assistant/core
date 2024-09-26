@@ -3,10 +3,12 @@
 import asyncio
 from asyncio import timeout
 import logging
+from typing import Any
 
 from homeassistant.helpers.entity import Entity
 
 from .const import STATE_KEY_STATE
+from .hub import AdsHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,19 +18,23 @@ class AdsEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, ads_hub, name, ads_var):
+    def __init__(self, ads_hub: AdsHub, name: str, ads_var: str) -> None:
         """Initialize ADS binary sensor."""
-        self._state_dict = {}
+        self._state_dict: dict[str, Any] = {}
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._event = None
+        self._event: asyncio.Event | None = None
         self._attr_unique_id = ads_var
         self._attr_name = name
 
     async def async_initialize_device(
-        self, ads_var, plctype, state_key=STATE_KEY_STATE, factor=None
-    ):
+        self,
+        ads_var: str,
+        plctype: type,
+        state_key: str = STATE_KEY_STATE,
+        factor: int | None = None,
+    ) -> None:
         """Register device notification."""
 
         def update(name, value):

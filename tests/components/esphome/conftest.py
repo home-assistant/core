@@ -19,6 +19,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
     VoiceAssistantFeature,
 )
@@ -205,11 +206,18 @@ class MockESPHomeDevice:
             Coroutine[Any, Any, int | None],
         ]
         self.voice_assistant_handle_stop_callback: Callable[
-            [], Coroutine[Any, Any, None]
+            [bool], Coroutine[Any, Any, None]
         ]
         self.voice_assistant_handle_audio_callback: (
             Callable[
                 [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        )
+        self.voice_assistant_handle_announcement_finished_callback: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
                 Coroutine[Any, Any, None],
             ]
             | None
@@ -287,10 +295,17 @@ class MockESPHomeDevice:
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
                 Coroutine[Any, Any, None],
             ]
             | None
@@ -300,6 +315,9 @@ class MockESPHomeDevice:
         self.voice_assistant_handle_start_callback = handle_start
         self.voice_assistant_handle_stop_callback = handle_stop
         self.voice_assistant_handle_audio_callback = handle_audio
+        self.voice_assistant_handle_announcement_finished_callback = (
+            handle_announcement_finished
+        )
 
     async def mock_voice_assistant_handle_start(
         self,
@@ -313,14 +331,21 @@ class MockESPHomeDevice:
             conversation_id, flags, settings, wake_word_phrase
         )
 
-    async def mock_voice_assistant_handle_stop(self) -> None:
+    async def mock_voice_assistant_handle_stop(self, abort: bool) -> None:
         """Mock voice assistant handle stop."""
-        await self.voice_assistant_handle_stop_callback()
+        await self.voice_assistant_handle_stop_callback(abort)
 
     async def mock_voice_assistant_handle_audio(self, audio: bytes) -> None:
         """Mock voice assistant handle audio."""
         assert self.voice_assistant_handle_audio_callback is not None
         await self.voice_assistant_handle_audio_callback(audio)
+
+    async def mock_voice_assistant_handle_announcement_finished(
+        self, finished: VoiceAssistantAnnounceFinished
+    ) -> None:
+        """Mock voice assistant handle announcement finished."""
+        assert self.voice_assistant_handle_announcement_finished_callback is not None
+        await self.voice_assistant_handle_announcement_finished_callback(finished)
 
 
 async def _mock_generic_device_entry(
@@ -394,7 +419,7 @@ async def _mock_generic_device_entry(
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
@@ -402,10 +427,17 @@ async def _mock_generic_device_entry(
             ]
             | None
         ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
     ) -> Callable[[], None]:
         """Subscribe to voice assistant."""
         mock_device.set_subscribe_voice_assistant_callbacks(
-            handle_start, handle_stop, handle_audio
+            handle_start, handle_stop, handle_audio, handle_announcement_finished
         )
 
         def unsub():

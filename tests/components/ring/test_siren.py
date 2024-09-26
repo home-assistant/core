@@ -6,8 +6,16 @@ import pytest
 import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -184,3 +192,44 @@ async def test_siren_errors_when_turned_on(
         )
         == reauth_expected
     )
+
+
+async def test_camera_siren_on_off(
+    hass: HomeAssistant, mock_ring_client, mock_ring_devices
+) -> None:
+    """Tests siren on a ring camera turns on and off."""
+    await setup_platform(hass, Platform.SIREN)
+
+    entity_id = "siren.front_siren"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    downstairs_chime_mock = mock_ring_devices.get_device(765432)
+    downstairs_chime_mock.async_set_siren.assert_called_once_with(1)
+
+    downstairs_chime_mock.async_set_siren.reset_mock()
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    downstairs_chime_mock.async_set_siren.assert_called_once_with(0)
+
+    assert state.state == STATE_OFF

@@ -22,8 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
+from .entity import EcoNetEntity
 
 ECONET_STATE_TO_HA = {
     ThermostatOperationMode.HEATING: HVACMode.HEAT,

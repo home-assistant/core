@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from tplink_omada_client import OmadaSite
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -14,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
@@ -52,12 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, site_client)
-    gateway_coordinator = await controller.get_gateway_coordinator()
-    if gateway_coordinator:
-        await gateway_coordinator.async_config_entry_first_refresh()
-    await controller.get_clients_coordinator().async_config_entry_first_refresh()
+    await controller.initialize_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = controller
+
+    _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -70,3 +71,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def _remove_old_devices(
+    hass: HomeAssistant, entry: ConfigEntry, omada_devices: dict[str, OmadaListDevice]
+) -> None:
+    device_registry = dr.async_get(hass)
+
+    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        mac = next(
+            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
+        )
+        if mac and mac not in omada_devices:
+            device_registry.async_update_device(
+                registered_device.id, remove_config_entry_id=entry.entry_id
+            )

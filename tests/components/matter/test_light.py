@@ -21,18 +21,18 @@ from .common import (
     ("fixture", "entity_id", "supported_color_modes"),
     [
         (
-            "extended-color-light",
+            "extended_color_light",
             "light.mock_extended_color_light_light",
             ["color_temp", "hs", "xy"],
         ),
         (
-            "color-temperature-light",
+            "color_temperature_light",
             "light.mock_color_temperature_light_light",
             ["color_temp"],
         ),
-        ("dimmable-light", "light.mock_dimmable_light_light", ["brightness"]),
-        ("onoff-light", "light.mock_onoff_light_light", ["onoff"]),
-        ("onoff-light-with-levelcontrol-present", "light.d215s_light", ["onoff"]),
+        ("dimmable_light", "light.mock_dimmable_light_light", ["brightness"]),
+        ("onoff_light", "light.mock_onoff_light_light", ["onoff"]),
+        ("onoff_light_with_levelcontrol_present", "light.d215s_light", ["onoff"]),
     ],
 )
 async def test_light_turn_on_off(
@@ -113,10 +113,10 @@ async def test_light_turn_on_off(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light_light"),
-        ("dimmable-light", "light.mock_dimmable_light_light"),
-        ("dimmable-plugin-unit", "light.dimmable_plugin_unit_light"),
+        ("extended_color_light", "light.mock_extended_color_light_light"),
+        ("color_temperature_light", "light.mock_color_temperature_light_light"),
+        ("dimmable_light", "light.mock_dimmable_light_light"),
+        ("dimmable_plugin_unit", "light.dimmable_plugin_unit_light"),
     ],
 )
 async def test_dimmable_light(
@@ -159,7 +159,7 @@ async def test_dimmable_light(
         endpoint_id=1,
         command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
             level=128,
-            transitionTime=2,
+            transitionTime=0,
         ),
     )
     matter_client.send_device_command.reset_mock()
@@ -189,8 +189,8 @@ async def test_dimmable_light(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light_light"),
+        ("extended_color_light", "light.mock_extended_color_light_light"),
+        ("color_temperature_light", "light.mock_color_temperature_light_light"),
     ],
 )
 async def test_color_temperature_light(
@@ -237,7 +237,7 @@ async def test_color_temperature_light(
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
                     colorTemperatureMireds=300,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),
@@ -287,7 +287,7 @@ async def test_color_temperature_light(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("extended-color-light", "light.mock_extended_color_light_light"),
+        ("extended_color_light", "light.mock_extended_color_light_light"),
     ],
 )
 async def test_extended_color_light(
@@ -348,7 +348,7 @@ async def test_extended_color_light(
                 command=clusters.ColorControl.Commands.MoveToColor(
                     colorX=0.5 * 65536,
                     colorY=0.5 * 65536,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),
@@ -413,7 +413,7 @@ async def test_extended_color_light(
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,
                     saturation=254,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),
