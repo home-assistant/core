@@ -29,7 +29,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.components.shelly.const import SHELLY_PLUS_RGBW_CHANNELS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -51,6 +50,7 @@ from .conftest import mock_white_light_set_state
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
+SHELLY_PLUS_RGBW_CHANNELS = 4
 
 
 async def test_block_device_rgbw_bulb(
