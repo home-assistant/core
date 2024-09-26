@@ -1,11 +1,17 @@
 {
   "title": "Local Calendar",
   "config": {
+    "error": {
+      "cannot_connect": "can't connect to URL",
+      "invalid_url": "Invalid URL"
+    },
     "step": {
       "user": {
         "description": "Please choose a name for your new calendar",
         "data": {
-          "calendar_name": "Calendar Name"
+          "calendar_name": "Calendar Name",
+          "calendar_url": "Calendar URL. If given, create a read-only calendar.",
+          "update_interval": "Update interval (applies to read-only calendars)"
         }
       }
     }

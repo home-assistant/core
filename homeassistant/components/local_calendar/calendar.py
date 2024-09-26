@@ -26,14 +26,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CALENDAR_NAME, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_CALENDAR_URL, CONF_SYNC_INTERVAL, DOMAIN
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
 PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
+DEFAULT_SYNC_INTERVAL = timedelta(days=1)
+MIN_SYNC_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
@@ -43,26 +47,39 @@ async def async_setup_entry(
 ) -> None:
     """Set up the local calendar platform."""
     store = hass.data[DOMAIN][config_entry.entry_id]
-    ics = await store.async_load()
-    calendar: Calendar = await hass.async_add_executor_job(
-        IcsCalendarStream.calendar_from_ics, ics
-    )
-    calendar.prodid = PRODID
-
     name = config_entry.data[CONF_CALENDAR_NAME]
-    entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
+    url = config_entry.data.get(CONF_CALENDAR_URL)
+    if url:
+        update_interval = config_entry.data.get(CONF_SYNC_INTERVAL)
+        if update_interval:
+            update_interval = timedelta(**update_interval)
+        else:
+            update_interval = DEFAULT_SYNC_INTERVAL
+        if update_interval < MIN_SYNC_INTERVAL:
+            update_interval = MIN_SYNC_INTERVAL
+        entity = RemoteCalendarEntity(
+            store,
+            name,
+            unique_id=config_entry.entry_id,
+            url=url,
+            update_interval=update_interval,
+        )
+    else:
+        ics = await store.async_load()
+        calendar: Calendar = await hass.async_add_executor_job(
+            IcsCalendarStream.calendar_from_ics, ics
+        )
+        calendar.prodid = PRODID
+        entity = LocalCalendarEntity(
+            store, calendar, name, unique_id=config_entry.entry_id
+        )
     async_add_entities([entity], True)
 
 
-class LocalCalendarEntity(CalendarEntity):
-    """A calendar entity backed by a local iCalendar file."""
+class ReadOnlyLocalCalendarEntity(CalendarEntity):
+    """Class for a read-only calendar entity backed by a local iCalendar file."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = (
-        CalendarEntityFeature.CREATE_EVENT
-        | CalendarEntityFeature.DELETE_EVENT
-        | CalendarEntityFeature.UPDATE_EVENT
-    )
 
     def __init__(
         self,
@@ -106,6 +123,74 @@ class LocalCalendarEntity(CalendarEntity):
         """Persist the calendar to disk."""
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
+
+
+class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
+    """A read-only calendar that we get and refresh from a url"""
+
+    def __init__(
+        self,
+        store: LocalCalendarStore,
+        name: str,
+        unique_id: str,
+        url: str,
+        update_interval: timedelta,
+    ) -> None:
+        super().__init__(store, None, name, unique_id)
+        self._url = url
+        self._client = None
+        self._track_fetch = None
+        self._etag = None
+        self._update_interval = update_interval
+
+    async def _fetch_calendar_and_update(self):
+        headers = {}
+        if self._etag:
+            headers["If-None-Match"] = self._etag
+        res = await self._client.get(self._url, headers=headers)
+        if res.status_code == 304:  # Not modified
+            return
+        res.raise_for_status()
+        self._etag = res.headers.get("ETag")
+        self._calendar = await self.hass.async_add_executor_job(
+            IcsCalendarStream.calendar_from_ics, res.text
+        )
+        self._calendar.prodid = PRODID
+        content = await self.hass.async_add_executor_job(
+            IcsCalendarStream.calendar_to_ics, self._calendar
+        )
+        await self._store.async_store(content)
+        await self.async_update_ha_state(force_refresh=True)
+
+    async def async_added_to_hass(self):
+        self._client = get_async_client(self.hass)
+        self.hass.loop.create_task(self._fetch_calendar_and_update())
+        self._track_fetch = async_track_time_interval(
+            self.hass,
+            lambda now: self.hass.loop.create_task(self._fetch_calendar_and_update()),
+            self._update_interval,
+        )
+
+    async def async_will_remove_from_hass(self):
+        if self._track_fetch is not None:
+            self._track_fetch()
+
+    async def async_update(self) -> None:
+        if self._calendar is None:
+            # async_added_to_hass has not set _calendar yet
+            # async_added_to_hass will update the entity
+            return
+        await super().async_update()
+
+
+class LocalCalendarEntity(ReadOnlyLocalCalendarEntity):
+    """A calendar entity backed by a local iCalendar file."""
+
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
+    )
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
