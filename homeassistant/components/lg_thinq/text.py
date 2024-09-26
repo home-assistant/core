@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from thinqconnect import DeviceType
-from thinqconnect.integration import ActiveMode, TimerProperty
+from thinqconnect.integration import TimerProperty
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
 from homeassistant.core import HomeAssistant
@@ -71,9 +71,7 @@ async def async_setup_entry(
             for description in descriptions:
                 entities.extend(
                     ThinQTextEntity(coordinator, description, property_id)
-                    for property_id in coordinator.api.get_active_idx(
-                        description.key, ActiveMode.READ_WRITE
-                    )
+                    for property_id in coordinator.api.get_active_idx(description.key)
                 )
 
     if entities:
