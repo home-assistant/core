@@ -1286,6 +1286,36 @@ async def test_device_tracker(
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_person(
+    client: ClientSessionGenerator, person_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for person."""
+    body = await generate_latest_metrics(client)
+
+    domain = "person"
+    _assert_metric_present(
+        body,
+        EntityTestMetricInfo(
+            metric_name="person_state",
+            domain=domain,
+            friendly_name="Arthur",
+            object_id="arthur",
+            metric_value="1.0",
+        ),
+    )
+    _assert_metric_present(
+        body,
+        EntityTestMetricInfo(
+            metric_name="person_state",
+            domain=domain,
+            friendly_name="Ford",
+            object_id="ford",
+            metric_value="0.0",
+        ),
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_counter(
     client: ClientSessionGenerator, counter_entities: dict[str, er.RegistryEntry]
 ) -> None:
@@ -2778,36 +2808,6 @@ async def alarm_control_panel_fixture(
     return data
 
 
-@pytest.fixture(name="person_entities")
-async def person_fixture(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> dict[str, er.RegistryEntry]:
-    """Simulate person entities."""
-    data = {}
-    person_1 = entity_registry.async_get_or_create(
-        domain=person.DOMAIN,
-        platform="test",
-        unique_id="person_1",
-        suggested_object_id="bob",
-        original_name="Bob",
-    )
-    set_state_with_entry(hass, person_1, STATE_HOME)
-    data["person_1"] = person_1
-
-    person_2 = entity_registry.async_get_or_create(
-        domain=person.DOMAIN,
-        platform="test",
-        unique_id="person_2",
-        suggested_object_id="alice",
-        original_name="Alice",
-    )
-    set_state_with_entry(hass, person_2, STATE_NOT_HOME)
-    data["person_2"] = person_2
-
-    await hass.async_block_till_done()
-    return data
-
-
 @pytest.fixture(name="device_tracker_entities")
 async def device_tracker_fixture(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -2833,6 +2833,36 @@ async def device_tracker_fixture(
     )
     set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
     data["device_tracker_2"] = device_tracker_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="person_entities")
+async def person_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate person entities."""
+    data = {}
+    person_1 = entity_registry.async_get_or_create(
+        domain=person.DOMAIN,
+        platform="test",
+        unique_id="person_1",
+        suggested_object_id="arthur",
+        original_name="Arthur",
+    )
+    set_state_with_entry(hass, person_1, STATE_HOME)
+    data["person_1"] = person_1
+
+    person_2 = entity_registry.async_get_or_create(
+        domain=person.DOMAIN,
+        platform="test",
+        unique_id="person_2",
+        suggested_object_id="ford",
+        original_name="Ford",
+    )
+    set_state_with_entry(hass, person_2, STATE_NOT_HOME)
+    data["person_2"] = person_2
 
     await hass.async_block_till_done()
     return data
