@@ -34,14 +34,13 @@ from .const import (
     RGBW_MODELS,
     RPC_MIN_TRANSITION_TIME_SEC,
     SHBLB_1_RGB_EFFECTS,
-    SHELLY_PLUS_RGBW_CHANNELS,
     STANDARD_RGB_EFFECTS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
+    async_remove_orphaned_entities,
     async_remove_shelly_entity,
-    async_remove_shelly_rpc_entities,
     brightness_to_percentage,
     get_device_entry_gen,
     get_rpc_key_ids,
@@ -119,34 +118,27 @@ def async_setup_rpc_entry(
         )
         return
 
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        LIGHT_DOMAIN,
+        coordinator.mac,
+        list(coordinator.device.config.keys()),
+    )
+
     if light_key_ids := get_rpc_key_ids(coordinator.device.status, "light"):
-        # Light mode remove RGB & RGBW entities, add light entities
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, ["rgb:0", "rgbw:0"]
-        )
         async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
         return
 
-    light_keys = [f"light:{i}" for i in range(SHELLY_PLUS_RGBW_CHANNELS)]
-
     if cct_key_ids := get_rpc_key_ids(coordinator.device.status, "cct"):
-        # CCT mode, add CCT entity
         async_add_entities(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
         return
 
     if rgb_key_ids := get_rpc_key_ids(coordinator.device.status, "rgb"):
-        # RGB mode remove light & RGBW entities, add RGB entity
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, [*light_keys, "rgbw:0"]
-        )
         async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
         return
 
     if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
-        # RGBW mode remove light & RGB entities, add RGBW entity
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, [*light_keys, "rgb:0"]
-        )
         async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
 
 

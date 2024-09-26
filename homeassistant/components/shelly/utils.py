@@ -580,6 +580,42 @@ def async_remove_orphaned_virtual_entities(
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
+@callback
+def async_remove_orphaned_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    platform: str,
+    mac: str,
+    keys: list[str],
+) -> None:
+    """Remove orphaned entities."""
+    orphaned_entities = []
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    if not (
+        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
+    ):
+        return
+
+    device_id = devices[0].id
+    entities = er.async_entries_for_device(entity_reg, device_id, True)
+    for entity in entities:
+        if not entity.entity_id.startswith(platform):
+            continue
+        # we are looking for the component ID, e.g. rgb:1
+        if not (match := re.search(r"[a-z]+:\d+", entity.unique_id)):
+            continue
+
+        key = match.group()
+
+        if key not in keys:
+            orphaned_entities.append(key)
+
+    if orphaned_entities:
+        async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
+
+
 def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     """Return the RPC websocket URL."""
     try:
