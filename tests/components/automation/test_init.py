@@ -1971,37 +1971,37 @@ async def test_extraction_functions(
                 {
                     "alias": "test1",
                     "triggers": [
-                        {"platform": "state", "entity_id": "sensor.trigger_state"},
+                        {"trigger": "state", "entity_id": "sensor.trigger_state"},
                         {
-                            "platform": "numeric_state",
+                            "trigger": "numeric_state",
                             "entity_id": "sensor.trigger_numeric_state",
                             "above": 10,
                         },
                         {
-                            "platform": "calendar",
+                            "trigger": "calendar",
                             "entity_id": "calendar.trigger_calendar",
                             "event": "start",
                         },
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "state_changed",
                             "event_data": {"entity_id": "sensor.trigger_event"},
                         },
                         # entity_id is a list of strings (not supported)
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "state_changed",
                             "event_data": {"entity_id": ["sensor.trigger_event2"]},
                         },
                         # entity_id is not a valid entity ID
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "state_changed",
                             "event_data": {"entity_id": "abc"},
                         },
                         # entity_id is not a string
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "state_changed",
                             "event_data": {"entity_id": 123},
                         },
@@ -2044,36 +2044,36 @@ async def test_extraction_functions(
                     "alias": "test2",
                     "triggers": [
                         {
-                            "platform": "device",
+                            "trigger": "device",
                             "domain": "light",
                             "type": "turned_on",
                             "entity_id": "light.trigger_2",
                             "device_id": trigger_device_2.id,
                         },
                         {
-                            "platform": "tag",
+                            "trigger": "tag",
                             "tag_id": "1234",
                             "device_id": "device-trigger-tag1",
                         },
                         {
-                            "platform": "tag",
+                            "trigger": "tag",
                             "tag_id": "1234",
                             "device_id": ["device-trigger-tag2", "device-trigger-tag3"],
                         },
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"device_id": "device-trigger-event"},
                         },
                         # device_id is a list of strings (not supported)
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"device_id": ["device-trigger-event2"]},
                         },
                         # device_id is not a string
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"device_id": 123},
                         },
@@ -2114,19 +2114,19 @@ async def test_extraction_functions(
                     "alias": "test3",
                     "triggers": [
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"area_id": "area-trigger-event"},
                         },
                         # area_id is a list of strings (not supported)
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"area_id": ["area-trigger-event2"]},
                         },
                         # area_id is not a string
                         {
-                            "platform": "event",
+                            "trigger": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"area_id": 123},
                         },
@@ -2287,7 +2287,7 @@ async def test_automation_variables(
                         "event_type": "{{ trigger.event.event_type }}",
                         "this_variables": "{{this.entity_id}}",
                     },
-                    "triggers": {"platform": "event", "event_type": "test_event"},
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
                     "actions": {
                         "action": "test.automation",
                         "data": {
@@ -2302,7 +2302,7 @@ async def test_automation_variables(
                     "variables": {
                         "test_var": "defined_in_config",
                     },
-                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "trigger": {"trigger": "event", "event_type": "test_event_2"},
                     "conditions": {
                         "condition": "template",
                         "value_template": "{{ trigger.event.data.pass_condition }}",
@@ -2315,7 +2315,7 @@ async def test_automation_variables(
                     "variables": {
                         "test_var": "{{ trigger.event.data.break + 1 }}",
                     },
-                    "triggers": {"platform": "event", "event_type": "test_event_3"},
+                    "triggers": {"trigger": "event", "event_type": "test_event_3"},
                     "actions": {
                         "action": "test.automation",
                     },
@@ -2371,7 +2371,7 @@ async def test_automation_trigger_variables(
                     "trigger_variables": {
                         "test_var": "defined_in_config",
                     },
-                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "trigger": {"trigger": "event", "event_type": "test_event"},
                     "action": {
                         "action": "test.automation",
                         "data": {
@@ -2389,7 +2389,7 @@ async def test_automation_trigger_variables(
                         "test_var": "defined_in_config",
                         "this_trigger_variables": "{{this.entity_id}}",
                     },
-                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "trigger": {"trigger": "event", "event_type": "test_event_2"},
                     "action": {
                         "action": "test.automation",
                         "data": {
@@ -2436,7 +2436,7 @@ async def test_automation_bad_trigger_variables(
                     "trigger_variables": {
                         "test_var": "{{ states('foo.bar') }}",
                     },
-                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "trigger": {"trigger": "event", "event_type": "test_event"},
                     "action": {
                         "action": "test.automation",
                     },
@@ -2463,7 +2463,7 @@ async def test_automation_this_var_always(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "trigger": {"trigger": "event", "event_type": "test_event"},
                     "action": {
                         "action": "test.automation",
                         "data": {
@@ -2739,7 +2739,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
         {
             automation.DOMAIN: {
                 "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {
                     "action": "test.automation",
                     "data_template": {"trigger": "{{ trigger }}"},
@@ -2771,9 +2771,9 @@ async def test_trigger_condition_implicit_id(
         {
             automation.DOMAIN: {
                 "trigger": [
-                    {"platform": "event", "event_type": "test_event1"},
-                    {"platform": "event", "event_type": "test_event2"},
-                    {"platform": "event", "event_type": "test_event3"},
+                    {"trigger": "event", "event_type": "test_event1"},
+                    {"trigger": "event", "event_type": "test_event2"},
+                    {"trigger": "event", "event_type": "test_event3"},
                 ],
                 "action": {
                     "choose": [
@@ -2823,8 +2823,8 @@ async def test_trigger_condition_explicit_id(
         {
             automation.DOMAIN: {
                 "trigger": [
-                    {"platform": "event", "event_type": "test_event1", "id": "one"},
-                    {"platform": "event", "event_type": "test_event2", "id": "two"},
+                    {"trigger": "event", "event_type": "test_event1", "id": "one"},
+                    {"trigger": "event", "event_type": "test_event2", "id": "two"},
                 ],
                 "action": {
                     "choose": [
@@ -2938,7 +2938,7 @@ async def test_recursive_automation_starting_script(
                 automation.DOMAIN: {
                     "mode": automation_mode,
                     "trigger": [
-                        {"platform": "event", "event_type": "trigger_automation"},
+                        {"trigger": "event", "event_type": "trigger_automation"},
                     ],
                     "action": [
                         {"action": "test.automation_started"},
@@ -3020,7 +3020,7 @@ async def test_recursive_automation(
                 automation.DOMAIN: {
                     "mode": automation_mode,
                     "trigger": [
-                        {"platform": "event", "event_type": "trigger_automation"},
+                        {"trigger": "event", "event_type": "trigger_automation"},
                     ],
                     "action": [
                         {"event": "trigger_automation"},
@@ -3082,7 +3082,7 @@ async def test_recursive_automation_restart_mode(
                 automation.DOMAIN: {
                     "mode": SCRIPT_MODE_RESTART,
                     "trigger": [
-                        {"platform": "event", "event_type": "trigger_automation"},
+                        {"trigger": "event", "event_type": "trigger_automation"},
                     ],
                     "action": [
                         {"event": "trigger_automation"},
@@ -3121,7 +3121,7 @@ async def test_websocket_config(
     """Test config command."""
     config = {
         "alias": "hello",
-        "triggers": {"platform": "event", "event_type": "test_event"},
+        "triggers": {"trigger": "event", "event_type": "test_event"},
         "actions": {"action": "test.automation", "data": 100},
     }
     assert await async_setup_component(
@@ -3191,7 +3191,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "state",
+                        "trigger": "state",
                         "entity_id": "binary_sensor.presence",
                         "from": "on",
                     },
@@ -3209,7 +3209,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
                 },
                 {
                     "trigger": {
-                        "platform": "state",
+                        "trigger": "state",
                         "entity_id": "binary_sensor.presence",
                         "from": "on",
                         "for": {
@@ -3302,7 +3302,7 @@ async def test_two_automations_call_restart_script_same_time(
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "state",
+                        "trigger": "state",
                         "entity_id": "binary_sensor.presence",
                         "to": "on",
                     },
@@ -3314,7 +3314,7 @@ async def test_two_automations_call_restart_script_same_time(
                 },
                 {
                     "trigger": {
-                        "platform": "state",
+                        "trigger": "state",
                         "entity_id": "binary_sensor.presence",
                         "to": "on",
                     },
@@ -3360,7 +3360,7 @@ async def test_two_automation_call_restart_script_right_after_each_other(
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "state",
+                        "trigger": "state",
                         "entity_id": ["input_boolean.test_1", "input_boolean.test_1"],
                         "from": "off",
                         "to": "on",
@@ -3419,7 +3419,7 @@ async def test_action_backward_compatibility(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "template",
                     "value_template": "{{ True }}",
@@ -3467,6 +3467,17 @@ async def test_action_backward_compatibility(
             },
             "Cannot specify both 'action' and 'actions'. Please use 'actions' only.",
         ),
+        (
+            {
+                "trigger": {
+                    "platform": "event",
+                    "trigger": "event",
+                    "event_type": "test_event2",
+                },
+                "action": [],
+            },
+            "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+        ),
     ],
 )
 async def test_invalid_configuration(
@@ -3483,3 +3494,28 @@ async def test_invalid_configuration(
     )
     await hass.async_block_till_done()
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("trigger_key"),
+    ["trigger", "platform"],
+)
+async def test_valid_configuration(
+    hass: HomeAssistant,
+    trigger_key: str,
+) -> None:
+    """Test for valid automation configurations."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    trigger_key: "event",
+                    "event_type": "test_event2",
+                },
+                "action": [],
+            }
+        },
+    )
+    await hass.async_block_till_done()

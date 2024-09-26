@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from volvooncall.dashboard import Instrument
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -60,11 +60,6 @@ class VolvoTrackerEntity(VolvoEntity, TrackerEntity):
         """Return longitude value of the device."""
         _, longitude = self._get_pos()
         return longitude
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type (GPS)."""
-        return SourceType.GPS
 
     def _get_pos(self) -> tuple[float, float]:
         volvo_data = self.coordinator.volvo_data

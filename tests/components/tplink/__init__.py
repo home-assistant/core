@@ -21,6 +21,7 @@ from kasa.protocol import BaseProtocol
 from kasa.smart.modules.alarm import Alarm
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.tplink import (
     CONF_AES_KEYS,
     CONF_ALIAS,
@@ -182,6 +183,21 @@ async def snapshot_platform(
             assert state == snapshot(
                 name=f"{entity_entry.entity_id}-state"
             ), f"state snapshot failed for {entity_entry.entity_id}"
+
+
+async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
+    """Set up an automation for tests."""
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": alias,
+                "trigger": {"platform": "state", "entity_id": entity_id, "to": "on"},
+                "action": {"action": "notify.notify", "metadata": {}, "data": {}},
+            }
+        },
+    )
 
 
 def _mock_protocol() -> BaseProtocol:
