@@ -64,6 +64,30 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "sensor",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
+            STATE_UNAVAILABLE,
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {"availability": "{{ False }}"},
+            {"availability": "{{ False }}"},
+            {},
+        ),
+        (
+            "sensor",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
+            "50.0",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {"availability": ""},
+            {},
+            {},
+        ),
+        (
             "button",
             {},
             "unknown",

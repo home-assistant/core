@@ -285,7 +285,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
-    For all domaines: Set template type.
+    For all domains: Set template type.
     """
 
     async def _validate_user_input(
@@ -296,6 +296,8 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+            if user_input.get(CONF_AVAILABILITY) == "":
+                user_input.pop(CONF_AVAILABILITY)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input

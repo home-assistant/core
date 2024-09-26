@@ -71,16 +71,6 @@ LEGACY_FIELDS = {
 }
 
 
-def pop_empty_availability(val: dict[str, Any]) -> dict[str, Any]:
-    """Run extra validation checks."""
-    if (
-        availability := val.get(CONF_AVAILABILITY)
-    ) and availability.template.strip() == "":
-        val.pop(CONF_AVAILABILITY)
-
-    return val
-
-
 def validate_last_reset(val):
     """Run extra validation checks."""
     if (
@@ -115,7 +105,6 @@ SENSOR_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
-    pop_empty_availability,
 )
 
 LEGACY_SENSOR_SCHEMA = vol.All(

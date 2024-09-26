@@ -2109,7 +2109,6 @@ async def test_device_id(
 @pytest.mark.parametrize(
     ("availability", "expected_state"),
     [
-        ("", "30.0"),  # Empty templates should be ignored
         ("{{ False }}", STATE_UNAVAILABLE),
         ("{{ True }}", "30.0"),
     ],
