@@ -8,7 +8,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import PLATFORM_SCHEMA  # noqa: F401
-from .const import DOMAIN, PLATFORMS  # noqa: F401
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Scrape config entry."""
+    _LOGGER.debug(
+        "Unloading sensor for entry_id %s with options %s",
+        entry.entry_id,
+        entry.options,
+    )
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
