@@ -8,7 +8,7 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -654,11 +654,20 @@ async def test_options(
         (
             "sensor",
             "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
-            {},
+            {"availability": ""},
             {"one": "30.0", "two": "20.0"},
             ["", STATE_UNAVAILABLE, "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
+        ),
+        (
+            "sensor",
+            "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
+            {"availability": "{{ states.sensor.one.state != 'unavailable' }}"},
+            {"one": "30.0", "two": "20.0"},
+            [STATE_UNAVAILABLE, STATE_UNKNOWN, "50.0"],
+            [{}, {}],
+            [["one"], ["one", "two"]],
         ),
     ],
 )
@@ -677,6 +686,9 @@ async def test_config_flow_preview(
     client = await hass_ws_client(hass)
 
     input_entities = ["one", "two"]
+    for input_entity in input_entities:
+        hass.states.async_set(f"{template_type}.{input_entity}", STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
