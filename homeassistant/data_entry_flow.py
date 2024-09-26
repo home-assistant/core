@@ -258,7 +258,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
 
     @callback
     def async_flow_has_matching_flow(
-        self, flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT]
+        self, flow: FlowHandler[_FlowResultT, _HandlerT]
     ) -> bool:
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):
