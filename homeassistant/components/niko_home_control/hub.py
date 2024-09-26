@@ -32,7 +32,7 @@ class Hub:
     manufacturer = "Niko"
     website = "https://niko.eu"
 
-    def __init__(self, hass: HomeAssistant, name: str, host: str, port: str) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, host: str, port: int) -> None:
         """Init niko home control hub."""
         self._host = host
         self._port = port
@@ -86,18 +86,26 @@ class Hub:
 
     def _execute(self, message):
         """Execute command."""
-        data = json.loads(self.connection.send(message))
-        _LOGGER.debug(data)
-        if "error" in data["data"] and data["data"]["error"] > 0:
-            error = data["data"]["error"]
+        _LOGGER.debug("execute")
+        _LOGGER.debug(message)
+        message = json.loads(self.connection.send(message))
+        _LOGGER.debug(message)
+        if "error" in message["data"] and message["data"]["error"] > 0:
+            error = message["data"]["error"]
             if error == 100:
-                raise "NOT_FOUND"
+                raise Exception("NOT_FOUND")
             if error == 200:
-                raise "SYNTAX_ERROR"
+                raise Exception("SYNTAX_ERROR")
             if error == 300:
-                raise "ERROR"
+                raise Exception("ERROR")
 
-        return list(data["data"])
+        elif "event" in message and message["event"] == "listactions":
+            for _action in message["data"]:
+                entity = self.get_entity(_action["id"])
+                entity.update_state(_action["value1"])
+
+        """Always return data"""
+        return list(message["data"])
 
     async def async_update(self):
         """Update data."""
@@ -127,7 +135,9 @@ class Hub:
         async for line in reader:
             try:
                 message = json.loads(line.decode())
+                _LOGGER.debug("message")
                 _LOGGER.debug(message)
+                _LOGGER.debug("message")
                 if message != "b\r":
                     if "event" in message and message["event"] == "listactions":
                         for _action in message["data"]:

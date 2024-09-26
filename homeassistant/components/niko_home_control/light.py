@@ -51,7 +51,9 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    should_poll = False
+    @property
+    def should_poll(self) -> bool:
+        return False
 
     def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
@@ -107,11 +109,15 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         self._attr_unique_id = f"dimmable-{light.action_id}"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_brightness = int(round(float(light.state) * 2.55))
 
     def update_state(self, state):
         """Update HA state."""
         self._attr_is_on = state != 0
-        self._attr_brightness = state * 2.55
+        _LOGGER.debug("Update state: %s", self.name)
+        _LOGGER.debug("State: %s", state)
+        if state is not None:
+            self._attr_brightness = int(round(float(state) * 2.55))
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
