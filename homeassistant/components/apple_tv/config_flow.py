@@ -98,10 +98,10 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     scan_filter: str | None = None
-    all_identifiers: list[str]
+    all_identifiers: set[str]
     atv: BaseConfig | None = None
     atv_identifiers: list[str] | None = None
-    _host: str  # host zeroconf discovery info, should not accessed by other flows
+    _host: str  # host in zeroconf discovery info, should not be accessed by other flows
     host: str | None = None  # set by _async_aggregate_discoveries, for other flows
     protocol: Protocol | None = None
     pairing: PairingHandler | None = None
@@ -194,7 +194,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.device_identifier, raise_on_progress=False
                 )
                 assert self.atv
-                self.all_identifiers = self.atv.all_identifiers
+                self.all_identifiers = set(self.atv.all_identifiers)
                 return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -294,13 +294,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             or other_flow.host != self._host
         ):
             return False
-        if (
-            other_flow.all_identifiers is not None
-            and self.unique_id is not None
-            and self.unique_id not in other_flow.all_identifiers
-        ):
+        if self.unique_id is not None:
             # Add potentially new identifiers from this device to the existing flow
-            other_flow.all_identifiers.append(self.unique_id)
+            other_flow.all_identifiers.add(self.unique_id)
         return True
 
     async def async_found_zeroconf_device(
@@ -308,7 +304,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle device found after Zeroconf discovery."""
         assert self.atv
-        self.all_identifiers = self.atv.all_identifiers
+        self.all_identifiers = set(self.atv.all_identifiers)
         # Also abort if an integration with this identifier already exists
         await self.async_set_unique_id(self.device_identifier)
         # but be sure to update the address if its changed so the scanner
