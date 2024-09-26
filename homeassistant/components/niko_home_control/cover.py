@@ -42,7 +42,10 @@ async def async_setup_entry(
 class NikoHomeControlCover(CoverEntity):
     """Representation of a Niko Cover."""
 
-    should_poll = False
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for a Niko cover."""
+        return False
 
     def __init__(self, cover, hub: Hub) -> None:
         """Set up the Niko Home Control cover."""
@@ -56,12 +59,12 @@ class NikoHomeControlCover(CoverEntity):
             manufacturer=hub.manufacturer,
             name=cover.name,
         )
-    
+
     @property
     def id(self):
         """A Niko Action action_id."""
-        return self._light.action_id
-    
+        return self._cover.action_id
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -80,7 +83,7 @@ class NikoHomeControlCover(CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
-        return self._cover.state == 0
+        return self._cover.state == COVER_CLOSE
 
     @property
     def is_closing(self) -> bool:
@@ -117,7 +120,7 @@ class NikoHomeControlCover(CoverEntity):
     def stop_cover(self):
         """Stop the cover."""
         _LOGGER.debug("Stop cover: %s", self.name)
-        # 253 = open
+        # 253 = stop
         self._cover.turn_on(COVER_STOP)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -138,6 +141,18 @@ class NikoHomeControlCover(CoverEntity):
 
         self.stop_cover()
         self._moving = False
+
+    def update_state(self, state):
+        """Update HA state."""
+        if state == COVER_STOP:
+            self._moving = False
+        elif state == COVER_OPEN:
+            self._moving = True
+        elif state == COVER_CLOSE:
+            self._moving = True
+
+        # self._attr_current_cover_position = state
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
