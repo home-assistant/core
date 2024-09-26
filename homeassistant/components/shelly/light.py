@@ -133,8 +133,8 @@ def async_setup_rpc_entry(
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
-        LIGHT_DOMAIN,
         coordinator.mac,
+        LIGHT_DOMAIN,
         list(coordinator.device.status.keys()),
     )
 
