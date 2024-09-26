@@ -87,11 +87,9 @@ async def async_setup_entry(
     sources = client.sources
 
     async_add_entities(
-        [
-            RussoundZoneDevice(controller, zone_id, sources)
-            for controller in client.controllers.values()
-            for zone_id in controller.zones
-        ]
+        RussoundZoneDevice(controller, zone_id, sources)
+        for controller in client.controllers.values()
+        for zone_id in controller.zones
     )
 
 
