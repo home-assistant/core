@@ -1417,6 +1417,24 @@ async def test_bad_config_flow_preview(
     assert not msg["success"]
     assert msg["error"] is not None
 
+    # Send a config that is invalid because prob_given_false == true
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                CONF_VALUE_TEMPLATE: "{{true}}",
+                CONF_P_GIVEN_T: 50,
+                CONF_P_GIVEN_F: 50,
+                CONF_NAME: "tracking template",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] is not None
+
 
 @pytest.mark.parametrize(
     (

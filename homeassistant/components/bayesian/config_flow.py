@@ -529,6 +529,10 @@ async def ws_start_preview(
                 validator(user_input[key.schema])
             except vol.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
+        try:
+            _validate_probabilities_given(user_input)
+        except SchemaFlowError as ex:
+            errors[CONF_P_GIVEN_T] = str(ex)
         return errors
 
     user_input: dict[str, Any] = msg["user_input"]
