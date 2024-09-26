@@ -10,11 +10,6 @@
     }
   },
   "entity": {
-    "assist_satellite": {
-      "assist_satellite": {
-        "name": "[%key:component::assist_satellite::entity_component::_::name%]"
-      }
-    },
     "binary_sensor": {
       "call_in_progress": {
         "name": "Call in progress"

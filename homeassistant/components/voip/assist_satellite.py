@@ -78,11 +78,10 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol):
     """Assist satellite for VoIP devices."""
 
-    entity_description = AssistSatelliteEntityDescription(
-        key="assist_satellite",
-        translation_key="assist_satellite",
-        entity_category=EntityCategory.CONFIG,
-    )
+    entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
+    _attr_translation_key = "assist_satellite"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_name = None
 
     def __init__(
         self,
