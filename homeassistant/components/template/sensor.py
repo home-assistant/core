@@ -52,6 +52,7 @@ from homeassistant.util import dt as dt_util
 from . import TriggerUpdateCoordinator
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
+    CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
     CONF_TRIGGER,
@@ -68,6 +69,16 @@ LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
+
+
+def pop_empty_availability(val: dict[str, Any]) -> dict[str, Any]:
+    """Run extra validation checks."""
+    if (
+        availability := val.get(CONF_AVAILABILITY)
+    ) and availability.template.strip() == "":
+        val.pop(CONF_AVAILABILITY)
+
+    return val
 
 
 def validate_last_reset(val):
@@ -100,9 +111,11 @@ SENSOR_CONFIG_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_AVAILABILITY): cv.template,
             vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
+    pop_empty_availability,
 )
 
 LEGACY_SENSOR_SCHEMA = vol.All(

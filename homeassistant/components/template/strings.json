@@ -88,6 +88,7 @@
       },
       "sensor": {
         "data": {
+          "availability": "Availability",
           "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "Device class",
           "name": "[%key:common::config_flow::data::name%]",
@@ -211,6 +212,7 @@
       },
       "sensor": {
         "data": {
+          "availability": "[%key:component::template::config::step::sensor::data::availability%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",

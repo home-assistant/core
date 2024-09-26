@@ -52,7 +52,7 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
 )
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_AVAILABILITY, CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -204,6 +204,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     sort=True,
                 ),
             ),
+            vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
         }
 
     if domain == Platform.SWITCH:
