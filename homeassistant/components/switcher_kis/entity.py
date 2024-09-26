@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import SwitcherDataUpdateCoordinator
 
 
-class SwitcherKisEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
+class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
     """Base class for Switcher entities."""
 
     _attr_has_entity_name = True

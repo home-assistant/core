@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
-from .entity import SwitcherKisEntity
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class SwitcherCoverEntity(SwitcherKisEntity, CoverEntity):
+class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
     _attr_name = None

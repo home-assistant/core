@@ -26,7 +26,7 @@ from .const import (
     SIGNAL_DEVICE_ADD,
 )
 from .coordinator import SwitcherDataUpdateCoordinator
-from .entity import SwitcherKisEntity
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ async def async_setup_entry(
     )
 
 
-class SwitcherBaseSwitchEntity(SwitcherKisEntity, SwitchEntity):
+class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
     """Representation of a Switcher switch entity."""
 
     _attr_name = None

@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
-from .entity import SwitcherKisEntity
+from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
@@ -79,7 +79,7 @@ async def async_setup_entry(
     )
 
 
-class SwitcherClimateEntity(SwitcherKisEntity, ClimateEntity):
+class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     """Representation of a Switcher climate entity."""
 
     _attr_name = None

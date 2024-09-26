@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
-from .entity import SwitcherKisEntity
+from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
 
@@ -104,7 +104,7 @@ async def async_setup_entry(
     )
 
 
-class SwitcherThermostatButtonEntity(SwitcherKisEntity, ButtonEntity):
+class SwitcherThermostatButtonEntity(SwitcherEntity, ButtonEntity):
     """Representation of a Switcher climate entity."""
 
     entity_description: SwitcherThermostatButtonEntityDescription

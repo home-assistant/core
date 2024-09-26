@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
-from .entity import SwitcherKisEntity
+from .entity import SwitcherEntity
 
 POWER_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -77,7 +77,7 @@ async def async_setup_entry(
     )
 
 
-class SwitcherSensorEntity(SwitcherKisEntity, SensorEntity):
+class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
     """Representation of a Switcher sensor entity."""
 
     def __init__(
