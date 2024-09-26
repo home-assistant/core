@@ -78,7 +78,7 @@ async def async_setup_entry(
 
 
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
-    """Representation of an mobile app sensor."""
+    """Representation of a mobile app sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
