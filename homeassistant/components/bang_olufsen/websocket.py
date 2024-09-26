@@ -119,6 +119,12 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 CONF_DEVICE_ID: self._device.id,
             },
         )
+        # Send to event entity
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
+            notification.type,
+        )
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
@@ -129,6 +135,11 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 CONF_TYPE: f"{notification.button}_{notification.state}",
                 CONF_DEVICE_ID: self._device.id,
             },
+        )
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
+            notification.state,
         )
 
     def on_notification_notification(

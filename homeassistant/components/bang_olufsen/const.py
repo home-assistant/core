@@ -69,6 +69,8 @@ class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE = "active_listening_mode"
+    BEO_REMOTE_BUTTON = "beo_remote_button"
+    BUTTON = "button"
     PLAYBACK_ERROR = "playback_error"
     PLAYBACK_METADATA = "playback_metadata"
     PLAYBACK_PROGRESS = "playback_progress"
@@ -207,3 +209,69 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+DEVICE_BUTTONS: Final[list[str]] = [
+    "Bluetooth",
+    "Microphone",
+    "Next",
+    "PlayPause",
+    "Preset1",
+    "Preset2",
+    "Preset3",
+    "Preset4",
+    "Previous",
+    "Volume",
+]
+DEVICE_BUTTON_EVENTS: Final[list[str]] = [
+    "shortPress (Release)",
+    "longPress (Timeout)",
+    "longPress (Release)",
+    "veryLongPress (Timeout)",
+    "veryLongPress (Release)",
+]
+
+BEO_REMOTE_SUBMENU_CONTROL: Final[str] = "Control"
+BEO_REMOTE_SUBMENU_LIGHT: Final[str] = "Light"
+BEO_REMOTE_CONTROL_FUNCTIONS: Final[list[str]] = [
+    "Func1",
+    "Func11",
+    "Func16",
+    "Func6",
+]
+BEO_REMOTE_LIGHT_FUNCTIONS: Final[list[str]] = [
+    "Func1",
+    "Func11",
+    "Func12",
+    "Func13",
+    "Func14",
+    "Func15",
+    "Func16",
+    "Func17",
+]
+
+BEO_REMOTE_KEYS: Final[list[str]] = [
+    "Blue",
+    "Digit0",
+    "Digit1",
+    "Digit2",
+    "Digit3",
+    "Digit4",
+    "Digit5",
+    "Digit6",
+    "Digit7",
+    "Digit8",
+    "Digit9",
+    "Down",
+    "Green",
+    "Left",
+    "Play",
+    "Red",
+    "Rewind",
+    "Right",
+    "Select",
+    "Stop",
+    "Up",
+    "Wind",
+    "Yellow",
+]
+BEO_REMOTE_KEY_EVENTS: Final[list[str]] = ["KeyPress", "KeyRelease"]
