@@ -5,8 +5,12 @@ from unittest.mock import patch
 from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries
-from homeassistant.components.dexcom.const import DOMAIN, MG_DL, MMOL_L
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.components.dexcom.const import DOMAIN
+from homeassistant.const import (
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    UnitOfGlucoseLevel,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -123,7 +127,7 @@ async def test_option_flow_default(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
-        CONF_UNIT_OF_MEASUREMENT: MG_DL,
+        CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MG_DL,
     }
 
 
@@ -132,7 +136,7 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
-        options={CONF_UNIT_OF_MEASUREMENT: MG_DL},
+        options={CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MG_DL},
     )
     entry.add_to_hass(hass)
 
@@ -143,9 +147,9 @@ async def test_option_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
+        user_input={CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MMOL_L},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_UNIT_OF_MEASUREMENT: MMOL_L,
+        CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MMOL_L,
     }

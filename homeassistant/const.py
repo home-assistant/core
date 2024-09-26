@@ -796,6 +796,14 @@ CURRENCY_DOLLAR: Final = "$"
 CURRENCY_CENT: Final = "¢"
 
 
+# Glucose level units
+class UnitOfGlucoseLevel(StrEnum):
+    """Glucose level units."""
+
+    MMOL_L = "mmol/L"
+    MG_DL = "mg/dL"
+
+
 # Temperature units
 class UnitOfTemperature(StrEnum):
     """Temperature units."""

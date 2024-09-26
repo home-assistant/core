@@ -11,7 +11,7 @@ from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_DATE, UnitOfGlucoseLevel
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    _attr_native_unit_of_measurement = "mg/dL"
+    _attr_native_unit_of_measurement = UnitOfGlucoseLevel.MG_DL
     _attr_icon = "mdi:cloud-question"
 
     def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:

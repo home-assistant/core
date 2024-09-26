@@ -13,10 +13,15 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    UnitOfGlucoseLevel,
+)
 from homeassistant.core import callback
 
-from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, SERVER_OUS, SERVER_US
+from .const import CONF_SERVER, DOMAIN, SERVER_OUS, SERVER_US
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -91,9 +96,9 @@ class DexcomOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_UNIT_OF_MEASUREMENT,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_OF_MEASUREMENT, MG_DL
+                        CONF_UNIT_OF_MEASUREMENT, UnitOfGlucoseLevel.MG_DL
                     ),
-                ): vol.In({MG_DL, MMOL_L}),
+                ): vol.In({UnitOfGlucoseLevel.MG_DL, UnitOfGlucoseLevel.MMOL_L}),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

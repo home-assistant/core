@@ -6,7 +6,11 @@ from pydexcom import GlucoseReading
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    UnitOfGlucoseLevel,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, MG_DL
+from .const import DOMAIN
 
 TRENDS = {
     1: "rising_quickly",
@@ -85,7 +89,9 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "value")
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._key = "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
+        self._key = (
+            "mg_dl" if unit_of_measurement == UnitOfGlucoseLevel.MG_DL else "mmol_l"
+        )
 
     @property
     def native_value(self):

@@ -6,12 +6,17 @@ import logging
 from pydexcom import AccountError, Dexcom, GlucoseReading, SessionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    UnitOfGlucoseLevel,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERVER, DOMAIN, MG_DL, PLATFORMS, SERVER_OUS
+from .const import CONF_SERVER, DOMAIN, PLATFORMS, SERVER_OUS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.options:
         hass.config_entries.async_update_entry(
-            entry, options={CONF_UNIT_OF_MEASUREMENT: MG_DL}
+            entry, options={CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MG_DL}
         )
 
     async def async_update_data():
