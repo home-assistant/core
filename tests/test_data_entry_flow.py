@@ -781,13 +781,13 @@ async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
         await manager.async_get("does_not_exist")
 
 
-async def test_async_has_matching_flow(
+async def async_has_matching_discovery_flow(
     hass: HomeAssistant, manager: MockFlowManager
 ) -> None:
     """Test we can check for matching flows."""
     manager.hass = hass
     assert (
-        manager.async_has_matching_flow(
+        manager.async_has_masync_has_matching_discovery_flowatching_flow(
             "test",
             {"source": config_entries.SOURCE_HOMEKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
@@ -833,7 +833,7 @@ async def test_async_has_matching_flow(
     assert manager.async_get(result["flow_id"])["handler"] == "test"
 
     assert (
-        manager.async_has_matching_flow(
+        manager.async_has_matching_discovery_flow(
             "test",
             {"source": config_entries.SOURCE_HOMEKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
@@ -841,7 +841,7 @@ async def test_async_has_matching_flow(
         is True
     )
     assert (
-        manager.async_has_matching_flow(
+        manager.async_has_matching_discovery_flow(
             "test",
             {"source": config_entries.SOURCE_SSDP},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
@@ -849,7 +849,7 @@ async def test_async_has_matching_flow(
         is False
     )
     assert (
-        manager.async_has_matching_flow(
+        manager.async_has_matching_discovery_flow(
             "other",
             {"source": config_entries.SOURCE_HOMEKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},

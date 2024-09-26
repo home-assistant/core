@@ -238,10 +238,10 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         """Entry has finished executing its first step asynchronously."""
 
     @callback
-    def async_has_matching_flow(
+    def async_has_matching_discovery_flow(
         self, handler: _HandlerT, match_context: dict[str, Any], data: Any
     ) -> bool:
-        """Check if an existing matching flow is in progress.
+        """Check if an existing matching discovery flow is in progress.
 
         A flow with the same handler, context, and data.
 
@@ -257,7 +257,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         return False
 
     @callback
-    def async_flow_has_matching_flow(
+    def async_has_matching_flow(
         self, flow: FlowHandler[_FlowResultT, _HandlerT]
     ) -> bool:
         """Check if an existing matching flow is in progress."""

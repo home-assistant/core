@@ -284,7 +284,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
         """Check for in-progress flows and update them with identifiers if needed."""
-        if self.hass.config_entries.flow.async_flow_has_matching_flow(self):
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
     def is_matching(self, other_flow: Self) -> bool:
