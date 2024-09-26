@@ -221,7 +221,7 @@ async def async_setup_entry(
                 thermostat["name"],
                 thermostat["modelNumber"],
             )
-        entities.append(Thermostat(data, index, thermostat))
+        entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
 
@@ -355,7 +355,11 @@ class Thermostat(ClimateEntity):
     _attr_translation_key = "ecobee"
 
     def __init__(
-        self, data: EcobeeData, thermostat_index: int, thermostat: dict
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+        thermostat: dict,
+        hass: HomeAssistant,
     ) -> None:
         """Initialize the thermostat."""
         self.data = data
@@ -365,6 +369,7 @@ class Thermostat(ClimateEntity):
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
         self._last_hvac_mode_before_aux_heat = HVACMode.HEAT_COOL
+        self._hass = hass
 
         self._attr_hvac_modes = []
         if self.settings["heatStages"] or self.settings["hasHeatPump"]:
@@ -580,8 +585,8 @@ class Thermostat(ClimateEntity):
             ),
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
-            "available_sensors": self.remote_sensors,
-            "active_sensors": self.active_sensors_in_preset_mode,
+            "available_sensors": self.remote_sensor_devices,
+            "active_sensors": self.active_sensor_devices_in_preset_mode,
         }
 
     @property
@@ -594,6 +599,24 @@ class Thermostat(ClimateEntity):
         return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
 
     @property
+    def remote_sensor_devices(self) -> list:
+        """Return the remote sensor device name_by_user or name for the thermostat."""
+        try:
+            sensors_info = self.thermostat["remoteSensors"]
+        except KeyError:
+            sensors_info = []
+
+        device_registry = dr.async_get(self._hass)
+        return sorted(
+            [
+                device.name_by_user if device.name_by_user else device.name
+                for device in device_registry.devices.values()
+                for sensor_info in sensors_info
+                if device.name == sensor_info["name"]
+            ]
+        )
+
+    @property
     def active_sensors_in_preset_mode(self) -> list:
         """Return the currently active/participating sensors."""
         # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
@@ -601,6 +624,15 @@ class Thermostat(ClimateEntity):
         # rules for the Home Comfort Settings
         mode = self._preset_modes.get(self.preset_mode, "Home")
         return self._sensors_in_preset_mode(mode)
+
+    @property
+    def active_sensor_devices_in_preset_mode(self) -> list:
+        """Return the currently active/participating sensor devices."""
+        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
+        # During a manual hold, the ecobee will follow the Sensor Participation
+        # rules for the Home Comfort Settings
+        mode = self._preset_modes.get(self.preset_mode, "Home")
+        return self._sensor_devices_in_preset_mode(mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -830,6 +862,19 @@ class Thermostat(ClimateEntity):
                 return [sensor["name"] for sensor in climate["sensors"]]
 
         return []
+
+    def _sensor_devices_in_preset_mode(self, preset_mode: str | None) -> list[str]:
+        """Return current sensor device name_by_user or name used in climate."""
+        device_registry = dr.async_get(self._hass)
+        sensor_names = self._sensors_in_preset_mode(preset_mode)
+        return sorted(
+            [
+                device.name_by_user if device.name_by_user else device.name
+                for device in device_registry.devices.values()
+                for sensor_name in sensor_names
+                if device.name == sensor_name
+            ]
+        )
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
