@@ -55,8 +55,7 @@ async def async_setup_entry(
             update_interval = timedelta(**update_interval)
         else:
             update_interval = DEFAULT_SYNC_INTERVAL
-        if update_interval < MIN_SYNC_INTERVAL:
-            update_interval = MIN_SYNC_INTERVAL
+        update_interval = max(update_interval, MIN_SYNC_INTERVAL)
         entity = RemoteCalendarEntity(
             store,
             name,
@@ -126,7 +125,7 @@ class ReadOnlyLocalCalendarEntity(CalendarEntity):
 
 
 class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
-    """A read-only calendar that we get and refresh from a url"""
+    """A read-only calendar that we get and refresh from a url."""
 
     def __init__(
         self,
@@ -136,6 +135,7 @@ class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
         url: str,
         update_interval: timedelta,
     ) -> None:
+        """Initialize a remote read-only calendar."""
         super().__init__(store, None, name, unique_id)
         self._url = url
         self._client = None
@@ -163,6 +163,7 @@ class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_added_to_hass(self):
+        """Once initialized, get the calendar, and schedule future updates."""
         self._client = get_async_client(self.hass)
         self.hass.loop.create_task(self._fetch_calendar_and_update())
         self._track_fetch = async_track_time_interval(
@@ -172,13 +173,13 @@ class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
         )
 
     async def async_will_remove_from_hass(self):
+        """If the entity is removed, we do not need to keep fetching the calendar."""
         if self._track_fetch is not None:
             self._track_fetch()
 
     async def async_update(self) -> None:
+        """Update once the calendar has been fetched."""
         if self._calendar is None:
-            # async_added_to_hass has not set _calendar yet
-            # async_added_to_hass will update the entity
             return
         await super().async_update()
 
