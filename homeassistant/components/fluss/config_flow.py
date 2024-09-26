@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fluss_api import FlussApiClient, FlussApiClientAuthenticationError
+from fluss_api import FlussApiClient, FlussApiClientCommunicationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -39,11 +39,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     api = FlussApiClient(data[CONF_API_KEY], hass)
-
     try:
-        api.async_validate_api_key()
-    except FlussApiClientAuthenticationError:
-        raise InvalidAuth  # noqa: B904
+        is_valid = await api.async_validate_api_key()
+
+        if not is_valid:
+            raise InvalidAuth
+    except FlussApiClientCommunicationError:
+        raise CannotConnect  # noqa: B904
+
     return {"title": "Fluss+"}
 
 

@@ -1,7 +1,8 @@
 """Test Script for Config_Flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from fluss_api import FlussApiClient, FlussApiClientCommunicationError
 import pytest
 
 from homeassistant.components.fluss import config_flow
@@ -68,7 +69,13 @@ async def test_validate_input_success(mock_hass) -> None:
     mock_api_key = "mock_api_key"
     data = {config_flow.CONF_API_KEY: mock_api_key}
 
-    with patch.object(ApiKeyStorageHub, "authenticate", return_value=True):
+    with (
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ),
+        patch.object(ApiKeyStorageHub, "authenticate", return_value=True),
+    ):
         result = await validate_input(mock_hass, data)
         assert result == {"title": "Fluss+"}
 
@@ -79,8 +86,37 @@ async def test_validate_input_invalid_auth(mock_hass) -> None:
     mock_api_key = "mock_api_key"
     data = {config_flow.CONF_API_KEY: mock_api_key}
 
-    with patch.object(ApiKeyStorageHub, "authenticate", return_value=False):  # noqa: SIM117
+    with (  # noqa: SIM117
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ),
+        patch.object(FlussApiClient, "async_validate_api_key", return_value=False),
+    ):  # noqa: SIM117
         with pytest.raises(InvalidAuth):
+            await validate_input(mock_hass, data)
+
+
+@pytest.mark.asyncio
+async def test_cannot_connect_exception(mock_hass) -> None:
+    """Test handling of connection errors in validate_input."""
+    mock_api_key = "mock_api_key"
+    data = {config_flow.CONF_API_KEY: mock_api_key}
+
+    # Mock async_get_clientsession to return a session and raise CannotConnect exception
+    with (  # noqa: SIM117
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ),
+        patch.object(
+            FlussApiClient,
+            "async_validate_api_key",
+            side_effect=FlussApiClientCommunicationError,
+        ),
+    ):
+        # Ensure that CannotConnect is raised
+        with pytest.raises(config_flow.CannotConnect):
             await validate_input(mock_hass, data)
 
 
