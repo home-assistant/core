@@ -47,6 +47,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the local calendar platform."""
     store = hass.data[DOMAIN][config_entry.entry_id]
+    ics = await store.async_load()
+    calendar: Calendar = await hass.async_add_executor_job(
+        IcsCalendarStream.calendar_from_ics, ics
+    )
+    calendar.prodid = PRODID
     name = config_entry.data[CONF_CALENDAR_NAME]
     url = config_entry.data.get(CONF_CALENDAR_URL)
     if url:
@@ -56,26 +61,22 @@ async def async_setup_entry(
         else:
             update_interval = DEFAULT_SYNC_INTERVAL
         update_interval = max(update_interval, MIN_SYNC_INTERVAL)
-        entity = RemoteCalendarEntity(
+        entity: LocalCalendarEntityBase = RemoteCalendarEntity(
             store,
+            calendar,
             name,
             unique_id=config_entry.entry_id,
             url=url,
             update_interval=update_interval,
         )
     else:
-        ics = await store.async_load()
-        calendar: Calendar = await hass.async_add_executor_job(
-            IcsCalendarStream.calendar_from_ics, ics
-        )
-        calendar.prodid = PRODID
         entity = LocalCalendarEntity(
             store, calendar, name, unique_id=config_entry.entry_id
         )
     async_add_entities([entity], True)
 
 
-class ReadOnlyLocalCalendarEntity(CalendarEntity):
+class LocalCalendarEntityBase(CalendarEntity):
     """Class for a read-only calendar entity backed by a local iCalendar file."""
 
     _attr_has_entity_name = True
@@ -87,7 +88,7 @@ class ReadOnlyLocalCalendarEntity(CalendarEntity):
         name: str,
         unique_id: str,
     ) -> None:
-        """Initialize LocalCalendarEntity."""
+        """Initialize LocalCalendarEntityBase."""
         self._store = store
         self._calendar = calendar
         self._event: CalendarEvent | None = None
@@ -124,19 +125,20 @@ class ReadOnlyLocalCalendarEntity(CalendarEntity):
         await self._store.async_store(content)
 
 
-class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
+class RemoteCalendarEntity(LocalCalendarEntityBase):
     """A read-only calendar that we get and refresh from a url."""
 
     def __init__(
         self,
         store: LocalCalendarStore,
+        calendar: Calendar,
         name: str,
         unique_id: str,
         url: str,
         update_interval: timedelta,
     ) -> None:
         """Initialize a remote read-only calendar."""
-        super().__init__(store, None, name, unique_id)
+        super().__init__(store, calendar, name, unique_id)
         self._url = url
         self._client = None
         self._track_fetch = None
@@ -177,14 +179,8 @@ class RemoteCalendarEntity(ReadOnlyLocalCalendarEntity):
         if self._track_fetch is not None:
             self._track_fetch()
 
-    async def async_update(self) -> None:
-        """Update once the calendar has been fetched."""
-        if self._calendar is None:
-            return
-        await super().async_update()
 
-
-class LocalCalendarEntity(ReadOnlyLocalCalendarEntity):
+class LocalCalendarEntity(LocalCalendarEntityBase):
     """A calendar entity backed by a local iCalendar file."""
 
     _attr_supported_features = (
