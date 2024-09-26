@@ -418,7 +418,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="NitrogenDioxideSensor",
-            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -431,7 +431,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="OzoneConcentrationSensor",
-            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             device_class=SensorDeviceClass.OZONE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
