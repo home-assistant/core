@@ -84,18 +84,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Russound RIO platform."""
     client = entry.runtime_data
-
     sources = client.sources
 
-    # Discover controllers
-
-    entities = []
-    for controller in client.controllers.values():
-        for zone_id in controller.zones:
-            mp = RussoundZoneDevice(controller, zone_id, sources)
-            entities.append(mp)
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            RussoundZoneDevice(controller, zone_id, sources)
+            for controller in client.controllers.values()
+            for zone_id in controller.zones
+        ]
+    )
 
 
 class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
@@ -117,7 +114,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         """Initialize the zone device."""
         super().__init__(controller)
         self._zone_id = zone_id
-        _zone = controller.zones[zone_id]
+        _zone = self._zone
         self._sources = sources
         self._attr_name = _zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
@@ -125,16 +122,18 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
             if flag in self._client.supported_features:
                 self._attr_supported_features |= feature
 
+    @property
     def _zone(self) -> ZoneControlSurface:
         return self._controller.zones[self._zone_id]
 
+    @property
     def _source(self) -> Source:
-        return self._zone().fetch_current_source()
+        return self._zone.fetch_current_source()
 
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        status = self._zone().status
+        status = self._zone.status
         if status == "ON":
             return MediaPlayerState.ON
         if status == "OFF":
@@ -144,7 +143,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def source(self):
         """Get the currently selected source."""
-        return self._source().name
+        return self._source.name
 
     @property
     def source_list(self):
@@ -154,22 +153,22 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._source().song_name
+        return self._source.song_name
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._source().artist_name
+        return self._source.artist_name
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._source().album_name
+        return self._source.album_name
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._source().cover_art_url
+        return self._source.cover_art_url
 
     @property
     def volume_level(self):
@@ -178,23 +177,23 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         Value is returned based on a range (0..50).
         Therefore float divide by 50 to get to the required range.
         """
-        return float(self._zone().volume or "0") / 50.0
+        return float(self._zone.volume or "0") / 50.0
 
     @command
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self._zone().zone_off()
+        await self._zone.zone_off()
 
     @command
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self._zone().zone_on()
+        await self._zone.zone_on()
 
     @command
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._zone().set_volume(str(rvol))
+        await self._zone.set_volume(str(rvol))
 
     @command
     async def async_select_source(self, source: str) -> None:
@@ -202,15 +201,15 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         for source_id, src in self._sources.items():
             if src.name.lower() != source.lower():
                 continue
-            await self._zone().select_source(source_id)
+            await self._zone.select_source(source_id)
             break
 
     @command
     async def async_volume_up(self) -> None:
         """Step the volume up."""
-        await self._zone().volume_up()
+        await self._zone.volume_up()
 
     @command
     async def async_volume_down(self) -> None:
         """Step the volume down."""
-        await self._zone().volume_down()
+        await self._zone.volume_down()
