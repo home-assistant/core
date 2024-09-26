@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -30,6 +30,7 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
             except NYTGamesError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(str(user_id))

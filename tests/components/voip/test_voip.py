@@ -57,6 +57,7 @@ def async_get_satellite_entity(
     )
     if satellite_entity_id is None:
         return None
+    assert not satellite_entity_id.endswith("none")
 
     component: EntityComponent[AssistSatelliteEntity] = hass.data[
         assist_satellite.DOMAIN

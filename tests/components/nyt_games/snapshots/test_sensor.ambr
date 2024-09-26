@@ -547,7 +547,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33',
+    'state': '70',
   })
 # ---
 # name: test_all_entities[sensor.wordle_won-entry]
@@ -597,6 +597,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26',
+    'state': '51',
   })
 # ---

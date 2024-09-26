@@ -10,37 +10,16 @@ import pytest
 from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
-
-
-@pytest.fixture(name="thermostat")
-async def thermostat_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a thermostat node."""
-    return await setup_integration_with_node_fixture(hass, "thermostat", matter_client)
-
-
-@pytest.fixture(name="room_airconditioner")
-async def room_airconditioner(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a room air conditioner node."""
-    return await setup_integration_with_node_fixture(
-        hass, "room_airconditioner", matter_client
-    )
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_thermostat_base(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    thermostat: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test thermostat base attributes and state updates."""
     # test entity attributes
@@ -61,10 +40,10 @@ async def test_thermostat_base(
     assert state.attributes["supported_features"] & mask == mask
 
     # test common state updates from device
-    set_node_attribute(thermostat, 1, 513, 3, 1600)
-    set_node_attribute(thermostat, 1, 513, 4, 3000)
-    set_node_attribute(thermostat, 1, 513, 5, 1600)
-    set_node_attribute(thermostat, 1, 513, 6, 3000)
+    set_node_attribute(matter_node, 1, 513, 3, 1600)
+    set_node_attribute(matter_node, 1, 513, 4, 3000)
+    set_node_attribute(matter_node, 1, 513, 5, 1600)
+    set_node_attribute(matter_node, 1, 513, 6, 3000)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
@@ -78,63 +57,63 @@ async def test_thermostat_base(
     ]
 
     # test system mode update from device
-    set_node_attribute(thermostat, 1, 513, 28, 0)
+    set_node_attribute(matter_node, 1, 513, 28, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.state == HVACMode.OFF
 
     # test running state update from device
-    set_node_attribute(thermostat, 1, 513, 41, 1)
+    set_node_attribute(matter_node, 1, 513, 41, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.HEATING
 
-    set_node_attribute(thermostat, 1, 513, 41, 8)
+    set_node_attribute(matter_node, 1, 513, 41, 8)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.HEATING
 
-    set_node_attribute(thermostat, 1, 513, 41, 2)
+    set_node_attribute(matter_node, 1, 513, 41, 2)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.COOLING
 
-    set_node_attribute(thermostat, 1, 513, 41, 16)
+    set_node_attribute(matter_node, 1, 513, 41, 16)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.COOLING
 
-    set_node_attribute(thermostat, 1, 513, 41, 4)
+    set_node_attribute(matter_node, 1, 513, 41, 4)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.FAN
 
-    set_node_attribute(thermostat, 1, 513, 41, 32)
+    set_node_attribute(matter_node, 1, 513, 41, 32)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.FAN
 
-    set_node_attribute(thermostat, 1, 513, 41, 64)
+    set_node_attribute(matter_node, 1, 513, 41, 64)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.FAN
 
-    set_node_attribute(thermostat, 1, 513, 41, 66)
+    set_node_attribute(matter_node, 1, 513, 41, 66)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
     assert state.attributes["hvac_action"] == HVACAction.OFF
 
     # change system mode to heat
-    set_node_attribute(thermostat, 1, 513, 28, 4)
+    set_node_attribute(matter_node, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("climate.longan_link_hvac_thermostat")
@@ -142,7 +121,7 @@ async def test_thermostat_base(
     assert state.state == HVACMode.HEAT
 
     # change occupied heating setpoint to 20
-    set_node_attribute(thermostat, 1, 513, 18, 2000)
+    set_node_attribute(matter_node, 1, 513, 18, 2000)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("climate.longan_link_hvac_thermostat")
@@ -152,10 +131,11 @@ async def test_thermostat_base(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_thermostat_service_calls(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    thermostat: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test climate platform service calls."""
     # test single-setpoint temperature adjustment when cool mode is active
@@ -174,14 +154,14 @@ async def test_thermostat_service_calls(
 
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path="1/513/17",
         value=2500,
     )
     matter_client.write_attribute.reset_mock()
 
     # ensure that no command is executed when the temperature is the same
-    set_node_attribute(thermostat, 1, 513, 17, 2500)
+    set_node_attribute(matter_node, 1, 513, 17, 2500)
     await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         "climate",
@@ -197,7 +177,7 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
     # test single-setpoint temperature adjustment when heat mode is active
-    set_node_attribute(thermostat, 1, 513, 28, 4)
+    set_node_attribute(matter_node, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
@@ -215,14 +195,14 @@ async def test_thermostat_service_calls(
 
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path="1/513/18",
         value=2000,
     )
     matter_client.write_attribute.reset_mock()
 
     # test dual setpoint temperature adjustments when heat_cool mode is active
-    set_node_attribute(thermostat, 1, 513, 28, 1)
+    set_node_attribute(matter_node, 1, 513, 28, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
@@ -241,12 +221,12 @@ async def test_thermostat_service_calls(
 
     assert matter_client.write_attribute.call_count == 2
     assert matter_client.write_attribute.call_args_list[0] == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path="1/513/18",
         value=1000,
     )
     assert matter_client.write_attribute.call_args_list[1] == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path="1/513/17",
         value=3000,
     )
@@ -265,7 +245,7 @@ async def test_thermostat_service_calls(
 
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
             attribute=clusters.Thermostat.Attributes.SystemMode,
@@ -289,7 +269,7 @@ async def test_thermostat_service_calls(
     )
     assert matter_client.write_attribute.call_count == 2
     assert matter_client.write_attribute.call_args_list[0] == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
             attribute=clusters.Thermostat.Attributes.SystemMode,
@@ -297,7 +277,7 @@ async def test_thermostat_service_calls(
         value=3,
     )
     assert matter_client.write_attribute.call_args_list[1] == call(
-        node_id=thermostat.node_id,
+        node_id=matter_node.node_id,
         attribute_path="1/513/17",
         value=2200,
     )
@@ -306,10 +286,11 @@ async def test_thermostat_service_calls(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
 async def test_room_airconditioner(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    room_airconditioner: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test if a climate entity is created for a Room Airconditioner device."""
     state = hass.states.get("climate.room_airconditioner_thermostat")
@@ -324,7 +305,7 @@ async def test_room_airconditioner(
     assert state.attributes["supported_features"] & mask == mask
 
     # set mains power to ON (OnOff cluster)
-    set_node_attribute(room_airconditioner, 1, 6, 0, True)
+    set_node_attribute(matter_node, 1, 6, 0, True)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner_thermostat")
 
@@ -338,21 +319,21 @@ async def test_room_airconditioner(
         HVACMode.HEAT_COOL,
     ]
     # test fan-only hvac mode
-    set_node_attribute(room_airconditioner, 1, 513, 28, 7)
+    set_node_attribute(matter_node, 1, 513, 28, 7)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner_thermostat")
     assert state
     assert state.state == HVACMode.FAN_ONLY
 
     # test dry hvac mode
-    set_node_attribute(room_airconditioner, 1, 513, 28, 8)
+    set_node_attribute(matter_node, 1, 513, 28, 8)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner_thermostat")
     assert state
     assert state.state == HVACMode.DRY
 
     # test featuremap update
-    set_node_attribute(room_airconditioner, 1, 513, 65532, 1)
+    set_node_attribute(matter_node, 1, 513, 65532, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner_thermostat")
     assert state.attributes["supported_features"] & ClimateEntityFeature.TURN_ON
