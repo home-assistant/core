@@ -264,9 +264,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         if not (flows := self._handler_progress_index.get(flow.handler)):
             return False
         for other_flow in flows:
-            if other_flow is flow:
-                continue
-            if flow.is_matching(other_flow):
+            if other_flow is not flow and flow.is_matching(other_flow):
                 return True
         return False
 
