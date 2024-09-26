@@ -297,7 +297,7 @@ async def _get_state_schema(
 ) -> vol.Schema:
     """Return the state schema, without an add_another box if editing."""
 
-    if handler.options.get(CONF_INDEX) is None:
+    if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
     return STATE_SUBSCHEMA
@@ -308,7 +308,7 @@ async def _get_numeric_state_schema(
 ) -> vol.Schema:
     """Return the numeric state schema, without an add_another box if editing."""
 
-    if handler.options.get(CONF_INDEX) is None:
+    if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
     return NUMERIC_STATE_SUBSCHEMA
@@ -318,8 +318,7 @@ async def _get_template_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
     """Return the template schema, without an add_another box if editing."""
-
-    if handler.options.get(CONF_INDEX) is None:
+    if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
     return TEMPLATE_SUBSCHEMA
@@ -509,8 +508,9 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         vol.Required("user_input"): dict,
     }
 )
+@websocket_api.async_response
 @callback
-def ws_start_preview(
+async def ws_start_preview(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -535,22 +535,30 @@ def ws_start_preview(
     entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
+        handler = flow_status["handler"]
         form_step = cast(
             SchemaFlowFormStep, CONFIG_FLOW[str(ObservationTypes.TEMPLATE)]
         )
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        handler = flow_status["handler"]
         form_step = cast(
             SchemaFlowFormStep, OPTIONS_FLOW[str(ObservationTypes.TEMPLATE)]
         )
         entity_registry = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(
-            entity_registry, flow_status["handler"]
-        )
+        entries = er.async_entries_for_config_entry(entity_registry, handler)
         if entries:
             entity_registry_entry = entries[0]
 
-    schema = cast(vol.Schema, form_step.schema)
+    # the form step will always be either a vol.Schema or an Awaitable that returns a vol.Schema
+    assert form_step.schema is not None
+
+    schema = (
+        form_step.schema
+        if type(form_step.schema) is vol.Schema
+        else cast(vol.Schema, await form_step.schema(handler))
+    )
+
     errors = _validate(schema, user_input)
 
     @callback
