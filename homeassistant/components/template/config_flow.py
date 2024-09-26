@@ -105,7 +105,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.BINARY_SENSOR:
-        schema |= _SCHEMA_STATE
+        schema |= _SCHEMA_STATE | {
+            vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+        }
         if flow_type == "config":
             schema |= {
                 vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
