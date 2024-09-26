@@ -378,15 +378,15 @@ class HassJobWithArgs:
 def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
-    check_target = target
-    while isinstance(check_target, functools.partial):
-        check_target = check_target.func
 
-    if asyncio.iscoroutinefunction(check_target):
+    while isinstance(target, functools.partial):
+        target = target.func
+
+    if asyncio.iscoroutinefunction(target):
         return HassJobType.Coroutinefunction
-    if is_callback(check_target):
+    if is_callback(target):
         return HassJobType.Callback
-    if asyncio.iscoroutine(check_target):
+    if asyncio.iscoroutine(target):
         raise ValueError("Coroutine not allowed to be passed to HassJob")
     return HassJobType.Executor
 
@@ -442,7 +442,7 @@ class HomeAssistant:
         self.helpers = loader.Helpers(self)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
-        # If not None, use to signal end-of-loop
+        # If not None, use the variable to signal end-of-loop
         self._stopped: asyncio.Event | None = None
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
@@ -475,12 +475,12 @@ class HomeAssistant:
 
     @cached_property
     def is_running(self) -> bool:
-        """Return if Home Assistant is running."""
+        """Return True if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
     @cached_property
     def is_stopping(self) -> bool:
-        """Return if Home Assistant is stopping."""
+        """Return True if Home Assistant is stopping."""
         return self.state in (CoreState.stopping, CoreState.final_write)
 
     def set_state(self, state: CoreState) -> None:
