@@ -109,9 +109,7 @@ async def async_migrate_entities(hass: HomeAssistant, entry: ConfigEntry) -> Non
             entity_entry.domain == Platform.SWITCH
             and entity_entry.unique_id == "sleep_switch"
         ):
-            entity_new_unique_id = (
-                f"{DOMAIN}_{entity_entry.config_entry_id}_sleep_switch"
-            )
+            entity_new_unique_id = f"{entity_entry.config_entry_id}_sleep_switch"
             return {"new_unique_id": entity_new_unique_id}
 
         return None
