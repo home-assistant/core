@@ -64,15 +64,17 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         assert self._bridge
         return self._bridge
 
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        async def _async_get_bridge() -> None:
+            self._bridge = await self.tedee_client.get_local_bridge()
+
+        _LOGGER.debug("Update coordinator: Getting bridge from API")
+        await self._async_update(_async_get_bridge)
+
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
-        if self._bridge is None:
-
-            async def _async_get_bridge() -> None:
-                self._bridge = await self.tedee_client.get_local_bridge()
-
-            _LOGGER.debug("Update coordinator: Getting bridge from API")
-            await self._async_update(_async_get_bridge)
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
