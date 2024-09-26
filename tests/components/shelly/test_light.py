@@ -37,9 +37,16 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_entity, init_integration, mutate_rpc_device_status, register_entity
+from . import (
+    get_entity,
+    init_integration,
+    mutate_rpc_device_status,
+    register_device,
+    register_entity,
+)
 from .conftest import mock_white_light_set_state
 
 RELAY_BLOCK_ID = 0
@@ -682,21 +689,39 @@ async def test_rpc_rgbw_device_light_mode_remove_others(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Shelly RPC RGBW device in light mode removes RGB/RGBW entities."""
-    # register lights
     monkeypatch.delitem(mock_rpc_device.status, "rgb:0")
     monkeypatch.delitem(mock_rpc_device.status, "rgbw:0")
-    register_entity(hass, LIGHT_DOMAIN, "test_rgb_0", "rgb:0")
-    register_entity(hass, LIGHT_DOMAIN, "test_rgbw_0", "rgbw:0")
+
+    # register rgb and rgbw lights
+    config_entry = await init_integration(hass, 2, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    register_entity(
+        hass,
+        LIGHT_DOMAIN,
+        "test_rgb_0",
+        "rgb:0",
+        config_entry,
+        device_id=device_entry.id,
+    )
+    register_entity(
+        hass,
+        LIGHT_DOMAIN,
+        "test_rgbw_0",
+        "rgbw:0",
+        config_entry,
+        device_id=device_entry.id,
+    )
 
     # verify RGB & RGBW entities created
     assert get_entity(hass, LIGHT_DOMAIN, "rgb:0") is not None
     assert get_entity(hass, LIGHT_DOMAIN, "rgbw:0") is not None
 
-    # init to remove RGB & RGBW
-    await init_integration(hass, 2)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # verify we have 4 lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
@@ -722,27 +747,45 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
     active_mode: str,
     removed_mode: str,
 ) -> None:
     """Test Shelly RPC RGBW device in RGB/W modes other lights."""
     removed_key = f"{removed_mode}:0"
+    config_entry = await init_integration(hass, 2, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
 
     # register lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
         entity_id = f"light.test_light_{i}"
-        register_entity(hass, LIGHT_DOMAIN, entity_id, f"light:{i}")
+        register_entity(
+            hass,
+            LIGHT_DOMAIN,
+            entity_id,
+            f"light:{i}",
+            config_entry,
+            device_id=device_entry.id,
+        )
     monkeypatch.delitem(mock_rpc_device.status, f"{removed_mode}:0")
-    register_entity(hass, LIGHT_DOMAIN, f"test_{removed_key}", removed_key)
+    register_entity(
+        hass,
+        LIGHT_DOMAIN,
+        f"test_{removed_key}",
+        removed_key,
+        config_entry,
+        device_id=device_entry.id,
+    )
 
     # verify lights entities created
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         assert get_entity(hass, LIGHT_DOMAIN, f"light:{i}") is not None
     assert get_entity(hass, LIGHT_DOMAIN, removed_key) is not None
 
-    await init_integration(hass, 2)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # verify we have RGB/w light
     entity_id = f"light.test_{active_mode}_0"
