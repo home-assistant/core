@@ -52,9 +52,9 @@
     'labels': set({
     }),
     'manufacturer': 'Withings',
-    'model': None,
+    'model': 'Body+',
     'model_id': None,
-    'name': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d',
+    'name': 'Body+',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

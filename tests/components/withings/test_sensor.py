@@ -366,19 +366,13 @@ async def test_device_sensors_created_when_device_data_received(
     withings.get_devices.return_value = []
     await setup_integration(hass, polling_config_entry, False)
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery")
-        is None
-    )
+    assert hass.states.get("sensor.body_battery") is None
 
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery")
-        is None
-    )
+    assert hass.states.get("sensor.body_battery") is None
 
     withings.get_devices.return_value = load_device_fixture()
 
@@ -386,7 +380,7 @@ async def test_device_sensors_created_when_device_data_received(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery")
+    assert hass.states.get("sensor.body_battery")
     assert device_registry.async_get_device(
         {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
     )
@@ -397,10 +391,7 @@ async def test_device_sensors_created_when_device_data_received(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery")
-        is None
-    )
+    assert hass.states.get("sensor.body_battery") is None
     assert not device_registry.async_get_device(
         {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
     )
@@ -418,10 +409,7 @@ async def test_device_two_config_entries(
     """Test device sensors will be added for one config entry only at a time."""
     await setup_integration(hass, polling_config_entry, False)
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery")
-        is not None
-    )
+    assert hass.states.get("sensor.body_battery") is not None
 
     second_polling_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(second_polling_config_entry.entry_id)
@@ -433,19 +421,13 @@ async def test_device_two_config_entries(
     await hass.config_entries.async_unload(polling_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery").state
-        == STATE_UNAVAILABLE
-    )
+    assert hass.states.get("sensor.body_battery").state == STATE_UNAVAILABLE
 
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery").state
-        != STATE_UNAVAILABLE
-    )
+    assert hass.states.get("sensor.body_battery").state != STATE_UNAVAILABLE
 
     await hass.config_entries.async_setup(polling_config_entry.entry_id)
     await hass.async_block_till_done()

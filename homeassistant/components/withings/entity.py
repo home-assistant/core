@@ -51,7 +51,8 @@ class WithingsDeviceEntity(WithingsEntity[WithingsDeviceDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             manufacturer="Withings",
-            name=device_id,
+            name=self.device.raw_model,
+            model=self.device.raw_model,
             via_device=(DOMAIN, str(coordinator.config_entry.unique_id)),
         )
 

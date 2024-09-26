@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery-entry]
+# name: test_all_entities[sensor.body_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery',
+    'entity_id': 'sensor.body_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,11 +38,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery-state]
+# name: test_all_entities[sensor.body_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d Battery',
+      'friendly_name': 'Body+ Battery',
       'options': list([
         'low',
         'medium',
@@ -50,7 +50,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery',
+    'entity_id': 'sensor.body_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
