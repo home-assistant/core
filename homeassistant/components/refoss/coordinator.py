@@ -22,7 +22,7 @@ class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}-{device.device_info.dev_name}",
-            update_interval=timedelta(seconds=15),
+            update_interval=timedelta(seconds=5),
         )
         self.device = device
         self._error_count = 0
