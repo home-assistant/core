@@ -1,7 +1,6 @@
 {
   "domain": "local_calendar",
   "name": "Local Calendar",
-  "version": "2024.09.1",
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_calendar",
