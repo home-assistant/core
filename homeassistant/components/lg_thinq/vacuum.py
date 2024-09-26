@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ThinqConfigEntry
-from .coordinator import DeviceDataUpdateCoordinator
 from .entity import ThinQEntity
 
 DEVICE_TYPE_VACUUM_MAP: dict[DeviceType, tuple[StateVacuumEntityDescription, ...]] = {
@@ -101,14 +100,9 @@ async def async_setup_entry(
 class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
     """Represent an thinq vacuum platform."""
 
-    def __init__(
-        self,
-        coordinator: DeviceDataUpdateCoordinator,
-        entity_description: StateVacuumEntityDescription,
-        property_id: str,
-    ) -> None:
-        """Initialize vacuum platform."""
-        super().__init__(coordinator, entity_description, property_id)
+    def _update_status(self) -> None:
+        """Update status itself."""
+        super()._update_status()
 
         self._attr_supported_features = (
             VacuumEntityFeature.SEND_COMMAND
@@ -118,16 +112,9 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             | VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.RETURN_HOME
         )
-        self._device_state: str | None = None
-
-    def _update_status(self) -> None:
-        """Update status itself."""
-        super()._update_status()
-
         # Update state.
         self._device_state = self.data.current_state
-        if self._device_state:
-            self._attr_state = ROBOT_STATUS_TO_HA.get(self._device_state)
+        self._attr_state = ROBOT_STATUS_TO_HA.get(self._device_state)
 
         # Update battery.
         if (level := self.data.battery) is not None:
