@@ -206,7 +206,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     sort=True,
                 ),
             ),
-            vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
         }
 
     if domain == Platform.SWITCH:
@@ -287,7 +286,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
-    For all domaines: Set template type.
+    For all domains: Set template type.
     """
 
     async def _validate_user_input(
@@ -295,7 +294,10 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type == Platform.SENSOR:
+        if template_type == Platform.BINARY_SENSOR:
+            if user_input.get(CONF_AVAILABILITY) == "":
+                user_input.pop(CONF_AVAILABILITY)
+        elif template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
         return {"template_type": template_type} | user_input

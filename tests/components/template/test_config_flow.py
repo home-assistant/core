@@ -47,8 +47,20 @@ from tests.typing import WebSocketGenerator
             "on",
             {"one": "on", "two": "off"},
             {},
+            {"availability": ""},
+            {},  # Empty availability should been removed from options
             {},
+        ),
+        (
+            "binary_sensor",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            STATE_UNAVAILABLE,
+            {"one": "on", "two": "off"},
             {},
+            {"availability": "{{ False }}"},
+            {"availability": "{{ False }}"},
             {},
         ),
         (
