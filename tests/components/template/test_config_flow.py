@@ -645,11 +645,20 @@ async def test_options(
         (
             "binary_sensor",
             "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
-            {},
+            {"availability": ""},
             {"one": "on", "two": "off"},
             ["off", "on"],
             [{}, {}],
             [["one", "two"], ["one"]],
+        ),
+        (
+            "binary_sensor",
+            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            {"availability": "{{ states.binary_sensor.two.state != 'unavailable' }}"},
+            {"one": "on", "two": "off"},
+            [STATE_UNAVAILABLE, "on"],
+            [{}, {}],
+            [["two"], ["one", "two"]],
         ),
         (
             "sensor",
@@ -677,6 +686,9 @@ async def test_config_flow_preview(
     client = await hass_ws_client(hass)
 
     input_entities = ["one", "two"]
+    for input_entity in input_entities:
+        hass.states.async_set(f"{template_type}.{input_entity}", STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1441,3 +1453,115 @@ async def test_options_flow_change_device(
         **state_template,
         **extra_options,
     }
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+        "extra_user_input",
+        "input_states",
+        "template_states",
+        "extra_attributes",
+        "listeners",
+    ),
+    [
+        (
+            "binary_sensor",
+            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            {"availability": ""},
+            {"one": "on", "two": "off"},
+            ["off", "on"],
+            [{}, {}],
+            [["one", "two"], ["one"]],
+        ),
+        (
+            "binary_sensor",
+            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            {"availability": "{{ states.binary_sensor.two.state != 'unavailable' }}"},
+            {"one": "on", "two": STATE_UNAVAILABLE},
+            ["off", "on", STATE_UNAVAILABLE],
+            [{}, {}],
+            [["one", "two"], ["one", "two"]],
+        ),
+    ],
+)
+async def test_config_flow_preview_availability(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    template_type: str,
+    state_template: str,
+    extra_user_input: dict[str, Any],
+    input_states: list[str],
+    template_states: str,
+    extra_attributes: list[dict[str, Any]],
+    listeners: list[list[str]],
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["one", "two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == template_type
+    assert result["errors"] is None
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", "state": state_template}
+            | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
+            "time": False,
+        },
+        "state": template_states[0],
+    }
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[input_entity], {}
+        )
+        await hass.async_block_till_done()
+
+    for template_state in template_states[1:]:
+        msg = await client.receive_json()
+        assert msg["event"] == {
+            "attributes": {"friendly_name": "My template"}
+            | extra_attributes[0]
+            | extra_attributes[1],
+            "listeners": {
+                "all": False,
+                "domains": [],
+                "entities": unordered(
+                    [f"{template_type}.{_id}" for _id in listeners[1]]
+                ),
+                "time": False,
+            },
+            "state": template_state,
+        }
+    assert len(hass.states.async_all()) == 2

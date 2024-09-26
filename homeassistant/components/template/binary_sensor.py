@@ -227,6 +227,8 @@ def async_create_preview_binary_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> BinarySensorTemplate:
     """Create a preview sensor."""
+    if config.get(CONF_AVAILABILITY) == "":
+        config.pop(CONF_AVAILABILITY)
     validated_config = BINARY_SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return BinarySensorTemplate(hass, validated_config, None)
 
