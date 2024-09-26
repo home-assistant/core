@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
@@ -86,39 +87,20 @@ async def matter_devices(
     return await setup_integration_with_node_fixture(hass, request.param, matter_client)
 
 
-@pytest.fixture(name="door_lock")
-async def door_lock_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door_lock", matter_client)
+@pytest.fixture
+def attributes() -> dict[str, Any]:
+    """Return common attributes for all nodes."""
+    return {}
 
 
-@pytest.fixture(name="smoke_detector")
-async def smoke_detector_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
+@pytest.fixture
+async def matter_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    node_fixture: str,
+    attributes: dict[str, Any],
 ) -> MatterNode:
-    """Fixture for a smoke detector node."""
+    """Fixture for a Matter node."""
     return await setup_integration_with_node_fixture(
-        hass, "smoke_detector", matter_client
-    )
-
-
-@pytest.fixture(name="door_lock_with_unbolt")
-async def door_lock_with_unbolt_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a door lock node with unbolt feature."""
-    return await setup_integration_with_node_fixture(
-        hass, "door_lock_with_unbolt", matter_client
-    )
-
-
-@pytest.fixture(name="eve_contact_sensor_node")
-async def eve_contact_sensor_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a contact sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "eve_contact_sensor", matter_client
+        hass, node_fixture, matter_client, attributes
     )

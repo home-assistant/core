@@ -310,7 +310,7 @@ def mock_smile_p1_2() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_smile_legacy_anna() -> Generator[None, MagicMock, None]:
+def mock_smile_legacy_anna() -> Generator[MagicMock]:
     """Create a Mock legacy Anna environment for testing exceptions."""
     chosen_env = "legacy_anna"
     with patch(
