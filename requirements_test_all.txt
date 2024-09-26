@@ -243,7 +243,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.1.0b1
+aiohasupervisor==0.1.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -338,7 +338,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.1.5
+aiorussound==4.0.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -395,7 +395,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.0.3
+aiowithings==3.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -943,7 +943,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240925.0
+home-assistant-frontend==20240926.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -1020,7 +1020,7 @@ ismartgate==5.0.1
 israel-rail-api==0.1.2
 
 # homeassistant.components.abode
-jaraco.abode==6.2.0
+jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1036,7 +1036,7 @@ justnimbus==0.7.4
 kegtron-ble==0.4.0
 
 # homeassistant.components.knocki
-knocki==0.3.1
+knocki==0.3.5
 
 # homeassistant.components.knx
 knx-frontend==2024.9.10.221729
@@ -1232,7 +1232,7 @@ numato-gpio==0.13.0
 numpy==1.26.4
 
 # homeassistant.components.nyt_games
-nyt_games==0.4.0
+nyt_games==0.4.2
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -2025,7 +2025,7 @@ reolink-aio==0.9.11
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.9.5
+ring-doorbell==0.9.6
 
 # homeassistant.components.roku
 rokuecp==0.19.3
