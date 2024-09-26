@@ -170,22 +170,17 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_current_humidity = self.data.humidity
         self._attr_current_temperature = self.data.current_temp
 
-        if (
-            self.entity_description.max_temp is None
-            and (max_temp := self.data.max) is not None
-        ):
+        if (max_temp := self.entity_description.max_temp) is not None or (
+            max_temp := self.data.max
+        ) is not None:
             self._attr_max_temp = max_temp
-
-        if (
-            self.entity_description.min_temp is None
-            and (min_temp := self.data.min) is not None
-        ):
+        if (min_temp := self.entity_description.min_temp) is not None or (
+            min_temp := self.data.min
+        ) is not None:
             self._attr_min_temp = min_temp
-
-        if (
-            self.entity_description.step is None
-            and (step := self.data.step) is not None
-        ):
+        if (step := self.entity_description.step) is not None or (
+            step := self.data.step
+        ) is not None:
             self._attr_target_temperature_step = step
 
         # Update target temperatures.
