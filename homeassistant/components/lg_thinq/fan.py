@@ -108,6 +108,9 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
         try:
             value = percentage_to_ordered_list_item(
                 self._ordered_named_fan_speeds, percentage
