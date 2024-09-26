@@ -8,27 +8,16 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
-
-
-@pytest.fixture(name="valve_node")
-async def valve_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a valve node."""
-    return await setup_integration_with_node_fixture(hass, "valve", matter_client)
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["valve"])
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    valve_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
     entity_id = "valve.valve_valve"
@@ -49,7 +38,7 @@ async def test_valve(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=valve_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ValveConfigurationAndControl.Commands.Close(),
     )
@@ -67,45 +56,45 @@ async def test_valve(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=valve_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ValveConfigurationAndControl.Commands.Open(),
     )
     matter_client.send_device_command.reset_mock()
 
     # set changing state to 'opening'
-    set_node_attribute(valve_node, 1, 129, 4, 2)
-    set_node_attribute(valve_node, 1, 129, 5, 1)
+    set_node_attribute(matter_node, 1, 129, 4, 2)
+    set_node_attribute(matter_node, 1, 129, 5, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "opening"
 
     # set changing state to 'closing'
-    set_node_attribute(valve_node, 1, 129, 4, 2)
-    set_node_attribute(valve_node, 1, 129, 5, 0)
+    set_node_attribute(matter_node, 1, 129, 4, 2)
+    set_node_attribute(matter_node, 1, 129, 5, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "closing"
 
     # set changing state to 'open'
-    set_node_attribute(valve_node, 1, 129, 4, 1)
-    set_node_attribute(valve_node, 1, 129, 5, 0)
+    set_node_attribute(matter_node, 1, 129, 4, 1)
+    set_node_attribute(matter_node, 1, 129, 5, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "open"
 
     # add support for setting position by updating the featuremap
-    set_node_attribute(valve_node, 1, 129, 65532, 2)
+    set_node_attribute(matter_node, 1, 129, 65532, 2)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["current_position"] == 0
 
     # update current position
-    set_node_attribute(valve_node, 1, 129, 6, 50)
+    set_node_attribute(matter_node, 1, 129, 6, 50)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
@@ -124,7 +113,7 @@ async def test_valve(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=valve_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ValveConfigurationAndControl.Commands.Open(targetLevel=100),
     )
