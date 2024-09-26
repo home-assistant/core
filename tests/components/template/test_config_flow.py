@@ -59,8 +59,8 @@ from tests.typing import WebSocketGenerator
             "50.0",
             {"one": "30.0", "two": "20.0"},
             {},
-            {},
-            {},
+            {"availability": ""},
+            {},  # Empty availability has been removed from options
             {},
         ),
         (
@@ -73,18 +73,6 @@ from tests.typing import WebSocketGenerator
             {},
             {"availability": "{{ False }}"},
             {"availability": "{{ False }}"},
-            {},
-        ),
-        (
-            "sensor",
-            {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
-            },
-            "50.0",
-            {"one": "30.0", "two": "20.0"},
-            {},
-            {"availability": ""},
-            {},
             {},
         ),
         (
