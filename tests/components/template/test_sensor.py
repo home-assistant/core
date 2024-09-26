@@ -49,6 +49,8 @@ TEST_NAME = "sensor.test_template_sensor"
             "state_class": "measurement",
             "unit_of_measurement": "%",
         },
+        {"availability": "{{ False }}"},
+        {"availability": "{{ True }}"},
     ],
 )
 async def test_setup_config_entry(
@@ -2104,49 +2106,3 @@ async def test_device_id(
     template_entity = entity_registry.async_get("sensor.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
-
-
-@pytest.mark.parametrize(
-    ("availability", "expected_state"),
-    [
-        ("{{ False }}", STATE_UNAVAILABLE),
-        ("{{ True }}", "30.0"),
-    ],
-)
-async def test_config_entry_availability(
-    hass: HomeAssistant,
-    availability: str,
-    expected_state: str,
-) -> None:
-    """Test the config flow."""
-    state_template = "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
-    input_entities = ["one", "two"]
-    input_states = {"one": "10", "two": "20"}
-    template_type = sensor.DOMAIN
-
-    for input_entity in input_entities:
-        hass.states.async_set(
-            f"{template_type}.{input_entity}",
-            input_states[input_entity],
-            {},
-        )
-
-    template_config_entry = MockConfigEntry(
-        data={},
-        domain=template.DOMAIN,
-        options={
-            "name": "My template",
-            "state": state_template,
-            "template_type": template_type,
-            "availability": availability,
-        },
-        title="My template",
-    )
-    template_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"{template_type}.my_template")
-    assert state is not None
-    assert state.state == expected_state

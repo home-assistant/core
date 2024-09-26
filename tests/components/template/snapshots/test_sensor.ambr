@@ -28,3 +28,29 @@
     'state': '30.0',
   })
 # ---
+# name: test_setup_config_entry[config_entry_extra_options2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_setup_config_entry[config_entry_extra_options3]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.0',
+  })
+# ---
