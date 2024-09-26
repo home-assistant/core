@@ -16,7 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
-    setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -34,31 +33,34 @@ def binary_sensor_platform() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="occupancy_sensor_node")
-async def occupancy_sensor_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a occupancy sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "occupancy_sensor", matter_client
-    )
+@pytest.mark.usefixtures("matter_devices")
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test binary sensors."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    occupancy_sensor_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test occupancy sensor."""
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
     assert state
     assert state.state == "on"
 
-    set_node_attribute(occupancy_sensor_node, 1, 1030, 0, 0)
+    set_node_attribute(matter_node, 1, 1030, 0, 0)
     await trigger_subscription_callback(
-        hass, matter_client, data=(occupancy_sensor_node.node_id, "1/1030/0", 0)
+        hass, matter_client, data=(matter_node.node_id, "1/1030/0", 0)
     )
 
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
@@ -69,7 +71,7 @@ async def test_occupancy_sensor(
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
-    ("fixture", "entity_id"),
+    ("node_fixture", "entity_id"),
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
         ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
@@ -78,24 +80,19 @@ async def test_occupancy_sensor(
 async def test_boolean_state_sensors(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
+    matter_node: MatterNode,
     entity_id: str,
 ) -> None:
     """Test if binary sensors get created from devices with Boolean State cluster."""
-    node = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
 
     # invert the value
-    cur_attr_value = node.get_attribute_value(1, 69, 0)
-    set_node_attribute(node, 1, 69, 0, not cur_attr_value)
+    cur_attr_value = matter_node.get_attribute_value(1, 69, 0)
+    set_node_attribute(matter_node, 1, 69, 0, not cur_attr_value)
     await trigger_subscription_callback(
-        hass, matter_client, data=(node.node_id, "1/69/0", not cur_attr_value)
+        hass, matter_client, data=(matter_node.node_id, "1/69/0", not cur_attr_value)
     )
 
     state = hass.states.get(entity_id)
@@ -105,11 +102,12 @@ async def test_boolean_state_sensors(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
-    door_lock: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test battery sensor."""
     entity_id = "binary_sensor.mock_door_lock_battery"
@@ -117,24 +115,11 @@ async def test_battery_sensor(
     assert state
     assert state.state == "off"
 
-    set_node_attribute(door_lock, 1, 47, 14, 1)
+    set_node_attribute(matter_node, 1, 47, 14, 1)
     await trigger_subscription_callback(
-        hass, matter_client, data=(door_lock.node_id, "1/47/14", 1)
+        hass, matter_client, data=(matter_node.node_id, "1/47/14", 1)
     )
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_binary_sensors(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_devices: MatterNode,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test binary sensors."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
