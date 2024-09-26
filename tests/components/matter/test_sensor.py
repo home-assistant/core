@@ -122,6 +122,17 @@ async def air_purifier_node_fixture(
     return await setup_integration_with_node_fixture(
         hass, "air_purifier", matter_client
     )
+    # Carbon Monoxide
+    state = hass.states.get("sensor.air_purifier_node_carbon_monoxide")
+    assert state
+    assert state.state == "678.0"
+
+    set_node_attribute(air_quality_sensor_node, 1, 1036, 0, 789)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.air_purifier_node_carbon_monoxide")
+    assert state
+    assert state.state == "1000.0"
 
 
 @pytest.fixture(name="dishwasher_node")
@@ -364,18 +375,6 @@ async def test_air_quality_sensor(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
-    assert state
-    assert state.state == "789.0"
-
-    # Carbon Monoxide
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_monoxide")
-    assert state
-    assert state.state == "678.0"
-
-    set_node_attribute(air_quality_sensor_node, 1, 1036, 0, 789)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_monoxide")
     assert state
     assert state.state == "789.0"
 
