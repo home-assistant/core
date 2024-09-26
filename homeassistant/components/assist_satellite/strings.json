@@ -4,7 +4,7 @@
     "_": {
       "name": "Assist satellite",
       "state": {
-        "listening_wake_word": "Listening for wake word",
+        "listening_wake_word": "Waiting for wake word",
         "listening_command": "Listening to voice command",
         "responding": "Responding",
         "processing": "Processing"
