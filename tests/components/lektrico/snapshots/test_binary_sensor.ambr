@@ -1,0 +1,48 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.1p7k_500006_errors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.1p7k_500006_errors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Errors',
+    'platform': 'lektrico',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'errors',
+    'unique_id': '500006_errors',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.1p7k_500006_errors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': '1p7k_500006 Errors',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.1p7k_500006_errors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

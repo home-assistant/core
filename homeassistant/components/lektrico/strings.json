@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "errors": {
+        "name": "Errors"
+      }
+    },
     "button": {
       "charge_start": {
         "name": "Charge start"

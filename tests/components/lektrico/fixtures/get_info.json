@@ -14,5 +14,6 @@
   "dynamic_current": 32,
   "user_current": 32,
   "lb_mode": 0,
-  "require_auth": true
+  "require_auth": true,
+  "has_active_errors": true
 }
