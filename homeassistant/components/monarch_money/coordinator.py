@@ -64,8 +64,8 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         """Fetch data for all accounts."""
 
         now = datetime.now()
-        start_of_year = now.replace(month=1, day=1).strftime("%Y-%m-%d")
-        end_of_year = now.replace(month=12, day=31).strftime("%Y-%m-%d")
+        start_of_year = f"{now.year}-01-01"
+        end_of_year = f"{now.year}-12-31"
 
         account_data, cashflow_summary = await asyncio.gather(
             self.client.get_accounts_as_dict_with_id_key(),
