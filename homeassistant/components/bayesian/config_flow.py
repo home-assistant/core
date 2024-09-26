@@ -37,7 +37,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
-    SchemaFlowStep,
 )
 from homeassistant.helpers.template import result_as_boolean
 
@@ -73,7 +72,7 @@ class ObservationTypes(StrEnum):
 
 
 class ConfigFlowSteps(StrEnum):
-    """StrEnum for all the different config steps."""
+    """StrEnum for all the different config steps apart from those named after ObservationTypes."""
 
     USER = "user"
     OBSERVATION_SELECTOR = "observation_selector"
@@ -139,7 +138,7 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-SUBSCHEMA_BOILERPLATE = vol.Schema(
+OBSERVATION_BOILERPLATE = vol.Schema(
     {
         vol.Required(CONF_P_GIVEN_T): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -178,7 +177,7 @@ STATE_SUBSCHEMA = vol.Schema(
             )  # ideally this would be a state selector context-linked to the above entity.
         ),
     },
-).extend(SUBSCHEMA_BOILERPLATE.schema)
+).extend(OBSERVATION_BOILERPLATE.schema)
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
@@ -198,7 +197,7 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
             ),
         ),
     },
-).extend(SUBSCHEMA_BOILERPLATE.schema)
+).extend(OBSERVATION_BOILERPLATE.schema)
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
@@ -206,14 +205,14 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
             selector.TemplateSelectorConfig(),
         ),
     },
-).extend(SUBSCHEMA_BOILERPLATE.schema)
+).extend(OBSERVATION_BOILERPLATE.schema)
 
 
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
-    """Convert percentage values in a dictionary to fractions."""
-    percentages = [
+    """Convert percentage probability values in a dictionary to fractions."""
+    probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
         CONF_PRIOR,
@@ -222,7 +221,7 @@ def _convert_percentages_to_fractions(
     return {
         key: (
             value / 100
-            if isinstance(value, (int, float)) and key in percentages
+            if isinstance(value, (int, float)) and key in probabilities
             else value
         )
         for key, value in data.items()
@@ -232,8 +231,8 @@ def _convert_percentages_to_fractions(
 def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
-    """Convert fraction values in a dictionary to percentages."""
-    percentages = [
+    """Convert fraction probability values in a dictionary to percentages."""
+    probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
         CONF_PRIOR,
@@ -242,7 +241,7 @@ def _convert_fractions_to_percentages(
     return {
         key: (
             value * 100
-            if isinstance(value, (int, float)) and key in percentages
+            if isinstance(value, (int, float)) and key in probabilities
             else value
         )
         for key, value in data.items()
@@ -252,7 +251,7 @@ def _convert_fractions_to_percentages(
 async def _get_select_observation_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return schema for selecting a observation for editing."""
+    """Return menu schema for selecting an observation for editing."""
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): vol.In(
@@ -268,7 +267,7 @@ async def _get_select_observation_schema(
 async def _get_remove_observation_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return schema for observation removal."""
+    """Return menu schema for multi-selecting observations for removal."""
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): cv.multi_select(
@@ -284,7 +283,7 @@ async def _get_remove_observation_schema(
 async def _get_flow_step_for_editing(
     user_input: dict[str, Any],
 ) -> str:
-    """Choose which observation config flow step to show depending on observation type."""
+    """Choose which observation config flow form step to show depending on observation type selected."""
 
     observations: list[dict[str, Any]] = user_input[CONF_OBSERVATIONS]
     selected_idx = int(user_input[CONF_INDEX])
@@ -295,7 +294,7 @@ async def _get_flow_step_for_editing(
 async def _get_state_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the state schema, without an add_another box if editing."""
+    """Return the state schema, without an add_another box if editing or using the schema for previews."""
 
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
@@ -306,7 +305,7 @@ async def _get_state_schema(
 async def _get_numeric_state_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the numeric state schema, without an add_another box if editing."""
+    """Return the numeric_state schema, without an add_another box if editing or using the schema for previews."""
 
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
@@ -317,7 +316,8 @@ async def _get_numeric_state_schema(
 async def _get_template_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the template schema, without an add_another box if editing."""
+    """Return the template schema, without an add_another box if editing or using the schema for previews."""
+
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
@@ -327,7 +327,7 @@ async def _get_template_schema(
 async def _add_more_or_end(
     user_input: dict[str, Any],
 ) -> ConfigFlowSteps | None:
-    """Return next step_id for options flow according to template_type."""
+    """Choose whether to add another observation or end the flow."""
     if user_input.get("add_another", False):
         return ConfigFlowSteps.OBSERVATION_SELECTOR
     return None
@@ -336,7 +336,7 @@ async def _add_more_or_end(
 async def _get_base_suggested_values(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, Any]:
-    """Return suggested values for the sensor base options."""
+    """Return suggested values for the base sensor options."""
 
     return _convert_fractions_to_percentages(dict(handler.options))
 
@@ -344,7 +344,7 @@ async def _get_base_suggested_values(
 async def _get_observation_values_if_editing(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, Any]:
-    """Return suggested values for observation if editing."""
+    """Only if editing observations in options flow, get the values. Otherwise leave blank."""
     if idx := handler.options.get(CONF_INDEX):
         return _convert_fractions_to_percentages(
             dict(handler.options[CONF_OBSERVATIONS][int(idx)])
@@ -355,7 +355,7 @@ async def _get_observation_values_if_editing(
 async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate the threshold mode, and set limits to None if not set."""
+    """Validate user input for the basic settings and convert to fractions for storage."""
     if user_input[CONF_PRIOR] == 0:
         raise SchemaFlowError("prior_low_error")
     if user_input[CONF_PRIOR] == 100:
@@ -382,7 +382,7 @@ def _validate_probabilities_given(
 async def _validate_observation_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate observation input."""
+    """Validate an observation input and manually update options with observations as they are nested items."""
     _validate_probabilities_given(user_input)
 
     # add_another is really just a variable for controlling the flow
@@ -413,19 +413,21 @@ async def _validate_observation_setup(
 async def _validate_remove_observation(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Delete an observation."""
+    """Delete observation(s)."""
     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
     indexes: set[int] = {int(x) for x in user_input[CONF_INDEX]}
 
     # Standard behavior is to merge the result with the options.
-    # In this case, we want to remove sub-items so we update the options directly.
+    # In this case, we want to remove nested items so we update the options directly.
     # Remove the last indexes first so subsequent items to be removed aren't shifted
     for index in sorted(indexes, reverse=True):
         observations.pop(index)
+
+    _LOGGER.debug("Deleted observations: '%s'", observations)
     return {}
 
 
-CONFIG_FLOW = {
+CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(ConfigFlowSteps.USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
@@ -449,13 +451,13 @@ CONFIG_FLOW = {
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         _get_template_schema,
         next_step=_add_more_or_end,
-        preview="template",
+        preview=str(ObservationTypes.TEMPLATE),
         validate_user_input=_validate_observation_setup,
         suggested_values=_get_observation_values_if_editing,
     ),
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
+OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(OptionsFlowSteps.INIT): SchemaFlowMenuStep(
         OptionsFlowSteps.list_primary_steps()
     ),
@@ -479,7 +481,7 @@ OPTIONS_FLOW.update(CONFIG_FLOW)
 
 
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Example config flow."""
+    """Bayesian config flow."""
 
     # The schema version of the entries that it creates
     # Home Assistant will call your migrate method if the version changes
@@ -514,9 +516,10 @@ async def ws_start_preview(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Generate a preview."""
+    """Generate a preview of a template observation."""
 
     def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> dict:
+        """Run schema validation on the user input."""
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
@@ -526,7 +529,6 @@ async def ws_start_preview(
                 validator(user_input[key.schema])
             except vol.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
-
         return errors
 
     user_input: dict[str, Any] = msg["user_input"]
