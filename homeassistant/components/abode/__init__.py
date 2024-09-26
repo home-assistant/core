@@ -95,6 +95,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
     polling = entry.data[CONF_POLLING]
 
+    # Configure abode library to use config directory for storing data
+    jaraco.abode.config.paths.override(user_data=Path(hass.config.path("Abode")))
+
     # For previous config entries where unique_id is None
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
@@ -102,7 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     try:
-        jaraco.abode.config.paths.override(user_data=Path(hass.config.path("Abode")))
         abode = await hass.async_add_executor_job(
             Abode, username, password, True, True, True
         )
