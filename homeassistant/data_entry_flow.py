@@ -13,7 +13,7 @@ from enum import StrEnum
 from functools import partial
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, Self, TypedDict, cast
+from typing import Any, Generic, Required, TypedDict, cast
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -236,37 +236,6 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         self, flow: FlowHandler[_FlowResultT, _HandlerT], result: _FlowResultT
     ) -> None:
         """Entry has finished executing its first step asynchronously."""
-
-    @callback
-    def async_has_matching_discovery_flow(
-        self, handler: _HandlerT, match_context: dict[str, Any], data: Any
-    ) -> bool:
-        """Check if an existing matching discovery flow is in progress.
-
-        A flow with the same handler, context, and data.
-
-        If match_context is passed, only return flows with a context that is a
-        superset of match_context.
-        """
-        if not (flows := self._handler_progress_index.get(handler)):
-            return False
-        match_items = match_context.items()
-        for progress in flows:
-            if match_items <= progress.context.items() and progress.init_data == data:
-                return True
-        return False
-
-    @callback
-    def async_has_matching_flow(
-        self, flow: FlowHandler[_FlowResultT, _HandlerT]
-    ) -> bool:
-        """Check if an existing matching flow is in progress."""
-        if not (flows := self._handler_progress_index.get(flow.handler)):
-            return False
-        for other_flow in flows:
-            if other_flow is not flow and flow.is_matching(other_flow):
-                return True
-        return False
 
     @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
@@ -919,10 +888,6 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
     ) -> None:
         """Set in progress task."""
         self.__progress_task = progress_task
-
-    def is_matching(self, other_flow: Self) -> bool:
-        """Return True if other_flow is matching this flow."""
-        raise NotImplementedError
 
 
 class SectionConfig(TypedDict, total=False):
