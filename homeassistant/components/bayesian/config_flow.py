@@ -16,7 +16,7 @@ from homeassistant.components.input_boolean import DOMAIN as INPUT_BOLEAN_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.template.sensor import async_create_preview_sensor
+from homeassistant.components.template import sensor
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -509,7 +509,6 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     }
 )
 @websocket_api.async_response
-@callback
 async def ws_start_preview(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -603,7 +602,9 @@ async def ws_start_preview(
     template_config = {
         CONF_STATE: user_input[CONF_VALUE_TEMPLATE],
     }
-    preview_entity = async_create_preview_sensor(hass, "Observation", template_config)
+    preview_entity = sensor.async_create_preview_sensor(
+        hass, "Observation", template_config
+    )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 
