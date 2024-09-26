@@ -79,9 +79,13 @@ def ecobee_fixture():
         ],
         "remoteSensors": [
             {
+                "id": "ei:0",
+                "name": "Ecobee",
+            },
+            {
                 "id": "rs2:100",
                 "name": "Remote Sensor 1",
-            }
+            },
         ],
     }
     mock_ecobee = mock.Mock()
@@ -99,10 +103,10 @@ def data_fixture(ecobee_fixture):
 
 
 @pytest.fixture(name="thermostat")
-def thermostat_fixture(data):
+def thermostat_fixture(data, hass: HomeAssistant):
     """Set up ecobee thermostat object."""
     thermostat = data.ecobee.get_thermostat(1)
-    return Thermostat(data, 1, thermostat)
+    return Thermostat(data, 1, thermostat, hass)
 
 
 async def test_name(thermostat) -> None:
@@ -209,8 +213,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
@@ -219,8 +223,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
@@ -229,8 +233,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
     ecobee_fixture["equipmentStatus"] = ""
     assert thermostat.extra_state_attributes == {
@@ -238,8 +242,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -248,8 +252,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -258,8 +262,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "available_sensors": ["Remote Sensor 1"],
-        "active_sensors": ["Ecobee"],
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
 
@@ -414,11 +418,45 @@ async def test_set_preset_mode(ecobee_fixture, thermostat, data) -> None:
 
 async def test_remote_sensors(hass: HomeAssistant) -> None:
     """Test remote sensors."""
-    await setup_platform(hass, const.Platform.CLIMATE)
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+    remote_sensors = thermostat.remote_sensors
+
+    assert sorted(remote_sensors) == sorted(["ecobee", "Remote Sensor 1"])
+
+
+async def test_remote_sensor_devices(hass: HomeAssistant) -> None:
+    """Test remote sensor devices."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
     state = hass.states.get(ENTITY_ID)
-    assert sorted(state.attributes.get("available_sensors")) == sorted(
-        ["Remote Sensor 1", "ecobee"]
-    )
+    assert sorted(state.attributes.get("available_sensors")) == sorted(["ecobee"])
+
+
+async def test_active_sensors_in_preset_mode(hass: HomeAssistant) -> None:
+    """Test active sensors in preset mode property."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+    remote_sensors = thermostat.active_sensors_in_preset_mode
+
+    assert sorted(remote_sensors) == sorted(["ecobee"])
+
+
+async def test_active_sensor_devices_in_preset_mode(hass: HomeAssistant) -> None:
+    """Test active sensor devices in preset mode."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    state = hass.states.get(ENTITY_ID)
 
     assert state.attributes.get("active_sensors") == ["ecobee"]
 
