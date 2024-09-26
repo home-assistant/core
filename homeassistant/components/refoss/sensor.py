@@ -43,8 +43,68 @@ class RefossSensorEntityDescription(SensorEntityDescription):
     fn: Callable[[float], float] = lambda x: x
 
 
-CATEGORY_DESCRIPTION: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
-    "em": (
+SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
+    "em06": (
+        RefossSensorEntityDescription(
+            key="power",
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            subkey="power",
+            fn=lambda x: x / 1000.0,
+        ),
+        RefossSensorEntityDescription(
+            key="voltage",
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            suggested_display_precision=2,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            subkey="voltage",
+        ),
+        RefossSensorEntityDescription(
+            key="current",
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_display_precision=2,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            subkey="current",
+        ),
+        RefossSensorEntityDescription(
+            key="factor",
+            translation_key="power_factor",
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            subkey="factor",
+        ),
+        RefossSensorEntityDescription(
+            key="energy",
+            translation_key="this_month_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_display_precision=2,
+            subkey="mConsume",
+            fn=lambda x: max(0, x),
+        ),
+        RefossSensorEntityDescription(
+            key="energy_returned",
+            translation_key="this_month_energy_returned",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_display_precision=2,
+            subkey="mConsume",
+            fn=lambda x: abs(x) if x < 0 else 0,
+        ),
+    ),
+    "em16": (
         RefossSensorEntityDescription(
             key="power",
             translation_key="power",
@@ -105,13 +165,6 @@ CATEGORY_DESCRIPTION: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
         ),
     ),
 }
-DEVICE_CATEGORY: dict[str, list[str]] = {"em": ["em06", "em16"]}
-DEVICE_TYPE_DESCRIPTION: dict[str, tuple[RefossSensorEntityDescription, ...]] = {}
-
-for category, device_types in DEVICE_CATEGORY.items():
-    if category in CATEGORY_DESCRIPTION:
-        for devicetype in device_types:
-            DEVICE_TYPE_DESCRIPTION[devicetype] = CATEGORY_DESCRIPTION[category]
 
 
 async def async_setup_entry(
@@ -128,8 +181,8 @@ async def async_setup_entry(
 
         if not isinstance(device, ElectricityXMix):
             return
-        descriptions: tuple[RefossSensorEntityDescription, ...] = (
-            DEVICE_TYPE_DESCRIPTION.get(device.device_type, ())
+        descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
+            device.device_type, ()
         )
 
         async_add_entities(
