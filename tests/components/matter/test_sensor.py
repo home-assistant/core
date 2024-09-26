@@ -367,6 +367,18 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "789.0"
 
+    # Carbon Monoxide
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "678.0"
+
+    set_node_attribute(air_quality_sensor_node, 1, 1036, 0, 789)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "789.0"
+
     # PM1
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm1")
     assert state
