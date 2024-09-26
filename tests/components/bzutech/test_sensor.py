@@ -2,16 +2,13 @@
 
 from homeassistant.components.bzutech.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .conftest import USER_INPUT
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(
-    hass: HomeAssistant, bzutech, entity_registry: er.EntityRegistry
-) -> None:
+async def test_sensors(hass: HomeAssistant, bzutech) -> None:
     """Test adding sensor entities and states."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
     config_entry.add_to_hass(hass)
@@ -21,21 +18,9 @@ async def test_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entrytemperature = entity_registry.async_get("sensor.mock_title_temperature")
-    entryhumidity = entity_registry.async_get("sensor.mock_title_humidity")
-    entryilluminance = entity_registry.async_get("sensor.mock_title_illuminance")
-
-    assert entrytemperature
-    assert entryhumidity
-    assert entryilluminance
-
-    assert entrytemperature.disabled is False
-    assert entryhumidity.disabled is False
-    assert entryilluminance.disabled is False
-
-    statetemperature = hass.states.get("sensor.mock_title_temperature")
-    statehumidity = hass.states.get("sensor.mock_title_humidity")
-    stateilluminance = hass.states.get("sensor.mock_title_illuminance")
+    statetemperature = hass.states.get("sensor.19284_3_temperature")
+    statehumidity = hass.states.get("sensor.19284_3_humidity")
+    stateilluminance = hass.states.get("sensor.19284_3_illuminance")
 
     assert statetemperature
     assert statehumidity

@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-from requests import ConnectTimeout
 
 from homeassistant.components.bzutech import BzuTech
 from homeassistant.components.bzutech.const import DOMAIN
@@ -25,7 +24,6 @@ def bzutech_config_flow(hass: HomeAssistant):
         patch("homeassistant.components.bzutech.config_flow.BzuTech") as mock_bzu,
     ):
         instance = mock_bzu.return_value = BzuTech("test@email.com", "test-password")
-
         instance.get_endpoint_on.return_value = "EP101"
 
         yield mock_bzu
@@ -63,22 +61,12 @@ async def test_form(hass: HomeAssistant, bzutech) -> None:
     assert result["data"][CONF_PASSWORD] == ENTRY_CONFIG[CONF_PASSWORD]
 
 
-async def test_form_unexpected_exception(
-    hass: HomeAssistant, bzutech_config_flow
-) -> None:
-    """Test any unexpected exception while creating api object."""
-    bzutech_config_flow.side_effect = ConnectTimeout()
+async def test_form_authentication_exception(hass: HomeAssistant) -> None:
+    """Test invalid authentication exception while creating api object."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], ENTRY_CONFIG
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    with patch.object(BzuTech, "start", return_value=False):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=ENTRY_CONFIG
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "Invalid Authentication"

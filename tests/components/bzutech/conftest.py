@@ -24,9 +24,9 @@ ENTRY_CONFIG = {
 USER_INPUT = {
     CONF_EMAIL: "test@email.com",
     CONF_PASSWORD: "test-password",
-    CONF_ENDPOINT: "EP101",
+    CONF_ENDPOINT: "EP111",
     CONF_CHIPID: "19284",
-    CONF_SENSORPORT: "1",
+    CONF_SENSORPORT: "3",
 }
 
 

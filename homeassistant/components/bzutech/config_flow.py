@@ -11,8 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -33,7 +31,7 @@ STEP_USER_LOGIN_SCHEMA = vol.Schema(
 )
 
 
-def get_api(hass: HomeAssistant, data: dict[str, Any]) -> BzuTech:
+def get_api(data: dict[str, Any]) -> BzuTech:
     """Validate the user input allows us to connect."""
 
     return BzuTech(data[CONF_EMAIL], data[CONF_PASSWORD])
@@ -60,15 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                self.api = get_api(self.hass, user_input)
-                start = await self.api.start()
-                if not start:
-                    raise InvalidAuth("Invalid Authentication")
-            except InvalidAuth:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "Invalid Authentication, please try again."
-                return self.async_abort(reason=errors["base"])
+            self.api = get_api(user_input)
+            if not await self.api.start():
+                return self.async_abort(reason="Invalid Authentication")
             self.email = user_input[CONF_EMAIL]
             self.password = user_input[CONF_PASSWORD]
             return await self.async_step_deviceselect(user_input=user_input)
@@ -136,15 +128,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class InvalidSensor(HomeAssistantError):
-    """Error to indicate there is invalid Sensor."""
