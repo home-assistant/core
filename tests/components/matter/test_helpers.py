@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
@@ -21,15 +22,14 @@ from tests.common import MockConfigEntry
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_get_device_id(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    matter_node: MatterNode,
 ) -> None:
     """Test get_device_id."""
-    node = await setup_integration_with_node_fixture(
-        hass, "device_diagnostics", matter_client
-    )
-    device_id = get_device_id(matter_client.server_info, node.endpoints[0])
+    device_id = get_device_id(matter_client.server_info, matter_node.endpoints[0])
 
     assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
 

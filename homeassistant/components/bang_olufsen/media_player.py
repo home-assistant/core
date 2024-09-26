@@ -458,7 +458,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 self._attr_sound_mode = label
 
         # Set available options
-        self._attr_sound_mode_list = list(self._sound_modes.keys())
+        self._attr_sound_mode_list = list(self._sound_modes)
 
         self.async_write_ha_state()
 
@@ -659,7 +659,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 translation_key="invalid_sound_mode",
                 translation_placeholders={
                     "invalid_sound_mode": sound_mode,
-                    "valid_sound_modes": ", ".join(list(self._sound_modes.keys())),
+                    "valid_sound_modes": ", ".join(list(self._sound_modes)),
                 },
             )
 
@@ -855,7 +855,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": cast(str, self._source_change.id),
-                    "valid_sources": ", ".join(list(self._beolink_sources.keys())),
+                    "valid_sources": ", ".join(list(self._beolink_sources)),
                 },
             )
 
