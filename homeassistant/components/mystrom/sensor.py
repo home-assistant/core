@@ -33,9 +33,9 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
     MyStromSwitchSensorEntityDescription(
         key="avg_consumption",
         translation_key="avg_consumption",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda device: device.consumedWs,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_fn=lambda device: device.consumedWs / 3600.0,
     ),
     MyStromSwitchSensorEntityDescription(
         key="consumption",
