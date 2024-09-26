@@ -118,28 +118,25 @@ def async_setup_rpc_entry(
         )
         return
 
+    if light_key_ids := get_rpc_key_ids(coordinator.device.status, "light"):
+        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
+
+    if cct_key_ids := get_rpc_key_ids(coordinator.device.status, "cct"):
+        async_add_entities(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
+
+    if rgb_key_ids := get_rpc_key_ids(coordinator.device.status, "rgb"):
+        async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
+
+    if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
+        async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
+
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         LIGHT_DOMAIN,
         coordinator.mac,
-        list(coordinator.device.config.keys()),
+        list(coordinator.device.status.keys()),
     )
-
-    if light_key_ids := get_rpc_key_ids(coordinator.device.status, "light"):
-        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
-        return
-
-    if cct_key_ids := get_rpc_key_ids(coordinator.device.status, "cct"):
-        async_add_entities(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
-        return
-
-    if rgb_key_ids := get_rpc_key_ids(coordinator.device.status, "rgb"):
-        async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
-        return
-
-    if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
-        async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
 
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
