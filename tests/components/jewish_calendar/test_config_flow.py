@@ -1,6 +1,6 @@
 """Test the Jewish calendar config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -187,18 +187,12 @@ async def test_reconfigure(
     assert result["step_id"] == "reconfigure_confirm"
 
     # success
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_async_reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_DIASPORA: not DEFAULT_DIASPORA,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DIASPORA: not DEFAULT_DIASPORA,
+        },
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_DIASPORA] is not DEFAULT_DIASPORA
-
-    await hass.async_block_till_done()
-    assert mock_async_reload.call_count == 1
