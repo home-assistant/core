@@ -43,8 +43,8 @@ class RefossSensorEntityDescription(SensorEntityDescription):
     fn: Callable[[float], float] = lambda x: x
 
 
-SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
-    "em06": (
+CATEGORY_DESCRIPTION: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
+    "em": (
         RefossSensorEntityDescription(
             key="power",
             translation_key="power",
@@ -105,6 +105,13 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
         ),
     ),
 }
+DEVICE_CATEGORY: dict[str, list[str]] = {"em": ["em06", "em16"]}
+DEVICE_TYPE_DESCRIPTION: dict[str, tuple[RefossSensorEntityDescription, ...]] = {}
+
+for category, device_types in DEVICE_CATEGORY.items():
+    if category in CATEGORY_DESCRIPTION:
+        for devicetype in device_types:
+            DEVICE_TYPE_DESCRIPTION[devicetype] = CATEGORY_DESCRIPTION[category]
 
 
 async def async_setup_entry(
@@ -121,8 +128,8 @@ async def async_setup_entry(
 
         if not isinstance(device, ElectricityXMix):
             return
-        descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
-            device.device_type, ()
+        descriptions: tuple[RefossSensorEntityDescription, ...] = (
+            DEVICE_TYPE_DESCRIPTION.get(device.device_type, ())
         )
 
         async_add_entities(
