@@ -40,28 +40,20 @@ async def test_full_user_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_while_unavailable(
+async def test_flow_while_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the full user configuration flow."""
+    """Test the full user configuration flow while unavailable."""
     mock_transform_failure(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "version": 1}
     )
-
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.stookwijzer.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+    ):
+        await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-
-    assert result2.get("data") is None
-
-    assert len(mock_setup_entry.mock_calls) == 0

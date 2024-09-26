@@ -20,28 +20,26 @@ _LOGGER = logging.getLogger(__name__)
 type StookwijzerConfigEntry = ConfigEntry[StookwijzerCoordinator]
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version == 1:
+    if entry.version == 1:
         session = async_get_clientsession(hass)
         x, y = await Stookwijzer.async_transform_coordinates(
             session,
-            config_entry.data[CONF_LOCATION][CONF_LATITUDE],
-            config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+            entry.data[CONF_LOCATION][CONF_LATITUDE],
+            entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )
 
         if not x or not y:
-            _LOGGER.error(
-                "Migration to version %s not successful", config_entry.version
-            )
+            _LOGGER.error("Migration to version %s not successful", entry.version)
             return False
         hass.config_entries.async_update_entry(
-            config_entry, version=2, data={CONF_LATITUDE: x, CONF_LONGITUDE: y}
+            entry, version=2, data={CONF_LATITUDE: x, CONF_LONGITUDE: y}
         )
 
-        _LOGGER.debug("Migration to version %s successful", config_entry.version)
+        _LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
 

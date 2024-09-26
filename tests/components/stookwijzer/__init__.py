@@ -52,7 +52,9 @@ def mock_transform_failure(aioclient_mock: AiohttpClientMocker) -> None:
 async def setup_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    version: int = 2,
     available: bool = True,
+    setup: bool = True,
 ) -> MockConfigEntry:
     """Set up the Stookwijzer integration in Home Assistant."""
 
@@ -65,11 +67,13 @@ async def setup_integration(
         domain=DOMAIN,
         unique_id=1234,
         data=CONF_INPUT,
+        version=version,
+        title=DOMAIN,
     )
-
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    if setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     return entry
