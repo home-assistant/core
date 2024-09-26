@@ -252,7 +252,7 @@ async def _async_create_bridge_with_updated_data(
         LOGGER.warning(
             (
                 "Detected model %s for %s. Some televisions from H and J series use "
-                "an encrypted protocol but you are using %s which may not be supported."
+                "an encrypted protocol but you are using %s which may not be supported. "
                 "If your TV is working in the integration, this message can be ignored"
             ),
             model,
