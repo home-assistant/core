@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Select the location for which you want to receive the Stookwijzer information.",
+        "description": "Select the location you want to recieve the Stookwijzer information for.",
         "data": {
           "location": "[%key:common::config_flow::data::location%]"
         }
