@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
@@ -22,6 +22,7 @@ class LektricoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Lektrico binary sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], bool]
+    attributes_fn: Callable[[Any], dict[Any, bool]] | None = None
 
 
 BINARY_SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
@@ -31,6 +32,18 @@ BINARY_SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda data: bool(data["has_active_errors"]),
+        attributes_fn=lambda data: {
+            "state_e_activated": bool(data["state_e_activated"]),
+            "overtemp": bool(data["overtemp"]),
+            "critical_temp": bool(data["critical_temp"]),
+            "overcurrent": bool(data["overcurrent"]),
+            "meter_fault": bool(data["meter_fault"]),
+            "undervoltage_error": bool(data["undervoltage_error"]),
+            "overvoltage_error": bool(data["overvoltage_error"]),
+            "rcd_error": bool(data["rcd_error"]),
+            "cp_diode_failure": bool(data["cp_diode_failure"]),
+            "contactor_failure": bool(data["contactor_failure"]),
+        },
     ),
 )
 
@@ -67,9 +80,19 @@ class LektricoBinarySensor(LektricoEntity, BinarySensorEntity):
         """Initialize Lektrico binary sensor."""
         super().__init__(coordinator, device_name)
         self.entity_description = description
+        self._coordinator = coordinator
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                self._coordinator.data
+            )
+            super()._handle_coordinator_update()
