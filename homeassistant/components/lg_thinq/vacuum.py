@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ThinqConfigEntry
+from .coordinator import DeviceDataUpdateCoordinator
 from .entity import ThinQEntity
 
 DEVICE_TYPE_VACUUM_MAP: dict[DeviceType, tuple[StateVacuumEntityDescription, ...]] = {
@@ -99,6 +100,17 @@ async def async_setup_entry(
 
 class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
     """Represent an thinq vacuum platform."""
+
+    def __init__(
+        self,
+        coordinator: DeviceDataUpdateCoordinator,
+        entity_description: StateVacuumEntityDescription,
+        property_id: str,
+    ) -> None:
+        """Initialize vacuum platform."""
+        super().__init__(coordinator, entity_description, property_id)
+
+        self._device_state: str | None = None
 
     def _update_status(self) -> None:
         """Update status itself."""
