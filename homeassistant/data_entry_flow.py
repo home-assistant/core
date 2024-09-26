@@ -13,7 +13,7 @@ from enum import StrEnum
 from functools import partial
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, cast
+from typing import Any, Generic, Required, Self, TypedDict, cast
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -253,6 +253,20 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         match_items = match_context.items()
         for progress in flows:
             if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
+
+    @callback
+    def async_flow_has_matching_flow(
+        self, flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT]
+    ) -> bool:
+        """Check if an existing matching flow is in progress."""
+        if not (flows := self._handler_progress_index.get(flow.handler)):
+            return False
+        for other_flow in flows:
+            if other_flow is flow:
+                continue
+            if flow.is_matching(other_flow):
                 return True
         return False
 
@@ -907,6 +921,10 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
     ) -> None:
         """Set in progress task."""
         self.__progress_task = progress_task
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        raise NotImplementedError
 
 
 class SectionConfig(TypedDict, total=False):
