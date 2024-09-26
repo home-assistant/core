@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from datetime import datetime, timedelta
 from http import HTTPMethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientSession
 from evohomeasync2 import EvohomeClient
-from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
@@ -21,6 +20,9 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
+
+if TYPE_CHECKING:
+    from evohomeasync2.broker import Broker
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -113,8 +115,8 @@ async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
     install: str = "default",
-) -> MagicMock:
-    """Set up the evohome integration and return its client.
+) -> AsyncGenerator[MagicMock]:
+    """Mock the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
@@ -138,4 +140,7 @@ async def setup_evohome(
 
         assert mock_client.account_info is not None
 
-        return mock_client
+        try:
+            yield mock_client
+        finally:
+            await hass.data[DOMAIN]["coordinator"].async_shutdown()
