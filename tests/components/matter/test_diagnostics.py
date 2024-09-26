@@ -6,6 +6,7 @@ import json
 from typing import Any
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import ServerDiagnostics
 import pytest
@@ -14,8 +15,6 @@ from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.diagnostics import redact_matter_attributes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from .common import setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import (
@@ -79,6 +78,7 @@ async def test_config_entry_diagnostics(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -86,9 +86,9 @@ async def test_device_diagnostics(
     matter_client: MagicMock,
     config_entry_diagnostics: dict[str, Any],
     device_diagnostics: dict[str, Any],
+    matter_node: MatterNode,
 ) -> None:
     """Test the device diagnostics."""
-    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
     system_info_dict = config_entry_diagnostics["info"]
     device_diagnostics_redacted = {
         "server_info": system_info_dict,
