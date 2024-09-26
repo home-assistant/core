@@ -37,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BINSENSOR_PORTS,
+    CONF_ACKNOWLEDGE,
     CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
@@ -158,6 +159,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
         "password": "lcn,
         "sk_num_tries: 0,
         "dim_mode: "STEPS200",
+        "acknowledge": False,
         "devices": [
             {
                 "address": (0, 7, False)
@@ -192,6 +194,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
             CONF_PASSWORD: connection[CONF_PASSWORD],
             CONF_SK_NUM_TRIES: connection[CONF_SK_NUM_TRIES],
             CONF_DIM_MODE: connection[CONF_DIM_MODE],
+            CONF_ACKNOWLEDGE: False,
             CONF_DEVICES: [],
             CONF_ENTITIES: [],
         }

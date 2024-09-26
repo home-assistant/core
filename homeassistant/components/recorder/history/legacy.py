@@ -19,9 +19,9 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States
 from ..filters import Filters
 from ..models import process_timestamp, process_timestamp_to_utc_isoformat
@@ -496,7 +496,7 @@ def _get_rows_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
+        run = get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
     if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time

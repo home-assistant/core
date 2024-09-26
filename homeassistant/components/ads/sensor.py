@@ -19,10 +19,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .. import ads
 from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsType
 from .entity import AdsEntity
+from .hub import AdsHub
 
 DEFAULT_NAME = "ADS sensor"
 
@@ -30,21 +30,24 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
-        vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
-            [
-                ads.ADSTYPE_BOOL,
-                ads.ADSTYPE_BYTE,
-                ads.ADSTYPE_INT,
-                ads.ADSTYPE_UINT,
-                ads.ADSTYPE_SINT,
-                ads.ADSTYPE_USINT,
-                ads.ADSTYPE_DINT,
-                ads.ADSTYPE_UDINT,
-                ads.ADSTYPE_WORD,
-                ads.ADSTYPE_DWORD,
-                ads.ADSTYPE_LREAL,
-                ads.ADSTYPE_REAL,
-            ]
+        vol.Optional(CONF_ADS_TYPE, default=AdsType.INT): vol.All(
+            vol.Coerce(AdsType),
+            vol.In(
+                [
+                    AdsType.BOOL,
+                    AdsType.BYTE,
+                    AdsType.INT,
+                    AdsType.UINT,
+                    AdsType.SINT,
+                    AdsType.USINT,
+                    AdsType.DINT,
+                    AdsType.UDINT,
+                    AdsType.WORD,
+                    AdsType.DWORD,
+                    AdsType.LREAL,
+                    AdsType.REAL,
+                ]
+            ),
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -64,7 +67,7 @@ def setup_platform(
     ads_hub = hass.data[DATA_ADS]
 
     ads_var: str = config[CONF_ADS_VAR]
-    ads_type: str = config[CONF_ADS_TYPE]
+    ads_type: AdsType = config[CONF_ADS_TYPE]
     name: str = config[CONF_NAME]
     factor: int | None = config.get(CONF_ADS_FACTOR)
     device_class: SensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
@@ -90,9 +93,9 @@ class AdsSensor(AdsEntity, SensorEntity):
 
     def __init__(
         self,
-        ads_hub: ads.AdsHub,
+        ads_hub: AdsHub,
         ads_var: str,
-        ads_type: str,
+        ads_type: AdsType,
         name: str,
         factor: int | None,
         device_class: SensorDeviceClass | None,

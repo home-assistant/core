@@ -19,6 +19,11 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Auto mock bluetooth."""
+
+
 @pytest.fixture
 def address() -> str:
     """Address fixture."""

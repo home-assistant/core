@@ -407,11 +407,23 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "aps": {
+      "name": "Arizona Public Service (APS)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "apsystems": {
       "name": "APsystems",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "aqara": {
+      "name": "Aqara",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "aquacell": {
       "name": "AquaCell",
@@ -3257,12 +3269,6 @@
           "iot_class": "local_polling",
           "name": "LG Netcast"
         },
-        "lg_thinq": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "LG ThinQ"
-        },
         "lg_soundbar": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4221,6 +4227,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "nyt_games": {
+      "name": "NYT Games",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "nzbget": {
       "name": "NZBGet",
@@ -5659,7 +5671,7 @@
       "name": "SMLIGHT SLZB",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "sms": {
       "name": "SMS notifications via GSM-modem",
@@ -6936,6 +6948,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "wmspro": {
+      "name": "WMS WebControl pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "wolflink": {
       "name": "Wolf SmartSet Service",

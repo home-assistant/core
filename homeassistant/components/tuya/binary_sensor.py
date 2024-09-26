@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -18,8 +18,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import TuyaEntity
 
 
 @dataclass(frozen=True)
@@ -155,7 +155,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "hps": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
-            device_class=BinarySensorDeviceClass.MOTION,
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value="presence",
         ),
     ),

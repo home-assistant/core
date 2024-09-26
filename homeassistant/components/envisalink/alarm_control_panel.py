@@ -37,8 +37,8 @@ from . import (
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
-    EnvisalinkDevice,
 )
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ async def async_setup_platform(
     )
 
 
-class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
+class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
 
     _attr_supported_features = (

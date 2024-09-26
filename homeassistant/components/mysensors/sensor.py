@@ -49,7 +49,7 @@ from .const import (
     DiscoveryInfo,
     NodeDiscoveryInfo,
 )
-from .device import MySensorNodeEntity, MySensorsChildEntity
+from .entity import MySensorNodeEntity, MySensorsChildEntity
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {

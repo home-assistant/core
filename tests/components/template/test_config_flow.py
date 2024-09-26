@@ -30,6 +30,16 @@ from tests.typing import WebSocketGenerator
     ),
     [
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            "armed_away",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {},
+        ),
+        (
             "binary_sensor",
             {
                 "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
@@ -146,14 +156,14 @@ from tests.typing import WebSocketGenerator
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_config_flow(
     hass: HomeAssistant,
-    template_type,
-    state_template,
-    template_state,
-    input_states,
-    input_attributes,
-    extra_input,
-    extra_options,
-    extra_attrs,
+    template_type: str,
+    state_template: dict[str, Any],
+    template_state: str,
+    input_states: dict[str, Any],
+    input_attributes: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
+    extra_attrs: dict[str, Any],
 ) -> None:
     """Test the config flow."""
     input_entities = ["one", "two"]
@@ -269,6 +279,12 @@ async def test_config_flow(
                 "max": 100,
                 "step": 0.1,
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",
@@ -477,6 +493,16 @@ def get_suggested(schema, key):
             "state",
         ),
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"value_template": "{{ states('alarm_control_panel.two') }}"},
+            ["armed_away", "disarmed"],
+            {"one": "armed_away", "two": "disarmed"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+            "value_template",
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             {"state": "{{ states('select.two') }}"},
@@ -501,14 +527,14 @@ def get_suggested(schema, key):
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_options(
     hass: HomeAssistant,
-    template_type,
-    old_state_template,
-    new_state_template,
-    template_state,
-    input_states,
-    extra_options,
-    options_options,
-    key_template,
+    template_type: str,
+    old_state_template: dict[str, Any],
+    new_state_template: dict[str, Any],
+    template_state: list[str],
+    input_states: dict[str, Any],
+    extra_options: dict[str, Any],
+    options_options: dict[str, Any],
+    key_template: str,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -630,7 +656,7 @@ async def test_config_flow_preview(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_states: str,
     extra_attributes: list[dict[str, Any]],
     listeners: list[list[str]],
@@ -780,7 +806,7 @@ async def test_config_flow_preview_bad_input(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, str],
-    error: str,
+    error: dict[str, str],
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
@@ -1092,7 +1118,7 @@ async def test_option_flow_preview(
     new_state_template: str,
     extra_config_flow_data: dict[str, Any],
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_state: str,
     extra_attributes: dict[str, Any],
     listeners: list[str],
@@ -1243,6 +1269,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "max": 100,
                 "step": 0.1,
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",

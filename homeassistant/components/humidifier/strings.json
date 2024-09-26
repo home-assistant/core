@@ -115,5 +115,10 @@
       "name": "[%key:common::action::toggle%]",
       "description": "Toggles the humidifier on/off."
     }
+  },
+  "exceptions": {
+    "humidity_out_of_range": {
+      "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+    }
   }
 }

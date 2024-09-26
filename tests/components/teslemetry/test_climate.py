@@ -10,8 +10,6 @@ from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
@@ -175,17 +173,6 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
 
-    # Set Temp do nothing
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 30,
-        },
-        blocking=True,
-    )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 40
     assert state.state == HVACMode.COOL
