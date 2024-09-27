@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
@@ -63,9 +63,13 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
+        now = datetime.now()
+
         account_data, cashflow_summary = await asyncio.gather(
             self.client.get_accounts_as_dict_with_id_key(),
-            self.client.get_cashflow_summary(),
+            self.client.get_cashflow_summary(
+                start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
+            ),
         )
 
         return MonarchData(account_data=account_data, cashflow_summary=cashflow_summary)
