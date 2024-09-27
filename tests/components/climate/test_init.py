@@ -1227,6 +1227,8 @@ async def test_temperature_validation(
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
 
+    # Test that the min or max temps may be overridden in the state machine
+    # Fox example by using customize.
     attributes = state.attributes.copy()
     attributes[ATTR_MIN_TEMP] = 0.0
     attributes[ATTR_MAX_TEMP] = 45.0
@@ -1245,6 +1247,7 @@ async def test_temperature_validation(
         blocking=True,
     )
 
+    # Repeat the tests used the entity without a unique id
     with pytest.raises(
         ServiceValidationError,
         match="Provided temperature 0.0 is not valid. Accepted range is 7 to 35",
