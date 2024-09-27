@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
@@ -132,6 +132,8 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str | None = None
+
     def __init__(self) -> None:
         """Initialize the elkm1 config flow."""
         self._discovered_device: ElkSystem | None = None
@@ -176,10 +178,9 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if async_update_entry_from_discovery(self.hass, entry, device):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         # Handled ignored case since _async_current_entries
         # is called with include_ignore=False
         self._abort_if_unique_id_configured()
@@ -189,6 +190,10 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
