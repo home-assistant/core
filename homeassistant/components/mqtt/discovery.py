@@ -192,6 +192,7 @@ async def async_start(  # noqa: C901
     """Start MQTT Discovery."""
     mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
+    integration_discovery_discovered: set[str] = set()
 
     @callback
     def _async_add_component(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -368,6 +369,14 @@ async def async_start(  # noqa: C901
         integration: str, msg: ReceiveMessage
     ) -> None:
         """Process the received message."""
+        if msg.topic in integration_discovery_discovered:
+            _LOGGER.debug(
+                "Ignoring already processed discovery message for '%s' on topic %s: %s",
+                integration,
+                msg.topic,
+                msg.payload,
+            )
+            return
         if TYPE_CHECKING:
             assert mqtt_data.data_config_flow_lock
         key = f"{integration}_{msg.subscribed_topic}"
@@ -396,6 +405,8 @@ async def async_start(  # noqa: C901
                 and result["reason"] == "single_instance_allowed"
             ):
                 integration_unsubscribe.pop(key)()
+            elif result and result["type"] == FlowResultType.CREATE_ENTRY:
+                integration_discovery_discovered.add(msg.topic)
 
     integration_unsubscribe.update(
         {
