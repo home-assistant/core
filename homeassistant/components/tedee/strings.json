@@ -65,8 +65,14 @@
     }
   },
   "exceptions": {
-    "lock_failed": "Failed to lock the door. Lock {lock_id}",
-    "unlock_failed": "Failed to unlock the door. Lock {lock_id}",
-    "open_failed": "Failed to unlatch the door. Lock {lock_id}"
+    "lock_failed": {
+      "message": "Failed to lock the door. Lock {lock_id}"
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door. Lock {lock_id}"
+    },
+    "open_failed": {
+      "message": "Failed to unlatch the door. Lock {lock_id}"
+    }
   }
 }
