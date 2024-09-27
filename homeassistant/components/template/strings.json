@@ -360,6 +360,12 @@
       "description": "Reloads template entities from the YAML-configuration."
     }
   },
+  "issues": {
+    "binary_sensor_none_result": {
+      "title": "Behavior of `None` value in binary sensor templates is about to change",
+      "description": "Starting in 2024.11, templates returning `None` will return state as `\"unknown\"`.\nIf this is not intentional, please adjust the template to return `False`.\nIf this is intentional, you may ignore this issue."
+    }
+  },
   "exceptions": {
     "code_format_template_error": {
       "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"

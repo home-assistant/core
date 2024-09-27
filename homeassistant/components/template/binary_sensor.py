@@ -40,10 +40,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import selector, template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+    template,
+)
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -57,6 +61,7 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
     CONF_PICTURE,
+    DOMAIN,
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
@@ -227,7 +232,29 @@ def async_create_preview_binary_sensor(
 ) -> BinarySensorTemplate:
     """Create a preview sensor."""
     validated_config = BINARY_SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return BinarySensorTemplate(hass, validated_config, None)
+    return BinarySensorTemplate(hass, validated_config, None, is_preview=True)
+
+
+@callback
+def _async_result_as_boolean(
+    entity: Entity, raw: Any | None, is_preview: bool = False
+) -> bool | None:
+    """Return the result as a boolean."""
+    if raw is None and not is_preview:
+        # Legacy behavior is to return False - from 2025.11.0 we should return None
+        ir.async_create_issue(
+            entity.hass,
+            DOMAIN,
+            f"binary_sensor_none_result_{entity.unique_id or entity.entity_id}",
+            breaks_in_ha_version="2025.11.0",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="binary_sensor_none_result",
+            translation_placeholders={"entity_id": entity.entity_id},
+        )
+        return False
+    return template.result_as_boolean(raw)
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
@@ -240,6 +267,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         hass: HomeAssistant,
         config: dict[str, Any],
         unique_id: str | None,
+        *,
+        is_preview: bool = False,
     ) -> None:
         """Initialize the Template binary sensor."""
         super().__init__(hass, config=config, unique_id=unique_id)
@@ -260,6 +289,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             hass,
             config.get(CONF_DEVICE_ID),
         )
+        self._is_preview = is_preview
 
     async def async_added_to_hass(self) -> None:
         """Restore state."""
@@ -305,9 +335,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         state = (
             None
             if isinstance(result, TemplateError)
-            else template.result_as_boolean(result)
+            else _async_result_as_boolean(self, result, self._is_preview)
         )
-
         if state == self._state:
             return
 
@@ -412,7 +441,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             return
 
         raw = self._rendered.get(CONF_STATE)
-        state = template.result_as_boolean(raw)
+        state = _async_result_as_boolean(self, raw)
 
         key = CONF_DELAY_ON if state else CONF_DELAY_OFF
         delay = self._rendered.get(key) or self._config.get(key)
