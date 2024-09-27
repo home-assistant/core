@@ -567,8 +567,26 @@
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
     },
+    "command_exception": {
+      "message": "Command returned exception: {message}"
+    },
     "command_error": {
       "message": "Command returned error: {error}"
+    },
+    "command_reason": {
+      "message": "Command was rejected: {reason}"
+    },
+    "command_no_result": {
+      "message": "Command had no result"
+    },
+    "wake_up_failed": {
+      "message": "Failed to wake up vehicle: {message}"
+    },
+    "wake_up_timeout": {
+      "message": "Timed out trying to wake up vehicle"
+    },
+    "missing_scope": {
+      "message": "Missing required scope: {scope}"
     }
   },
   "services": {
