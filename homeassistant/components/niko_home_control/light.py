@@ -34,14 +34,16 @@ async def async_setup_entry(
     """Set up the Niko Home Control light platform."""
     hub = hass.data[DOMAIN][entry.entry_id]
     entities = []
+
     for action in hub.actions:
+        entity = None
         action_type = action.action_type
         if action_type == 1:
             entity = NikoHomeControlLight(action, hub)
-            hub.entities.append(entity)
-            entities.append(entity)
         if action_type == 2:
             entity = NikoHomeControlDimmableLight(action, hub)
+
+        if entity:
             hub.entities.append(entity)
             entities.append(entity)
 
@@ -53,6 +55,7 @@ class NikoHomeControlLight(LightEntity):
 
     @property
     def should_poll(self) -> bool:
+        """No polling needed for a Niko light."""
         return False
 
     def __init__(self, light, hub):
@@ -67,6 +70,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.action_id)},
             manufacturer=hub.manufacturer,
+            model=f"{hub.model}-light",
             name=light.name,
         )
 
@@ -113,17 +117,13 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
 
     def update_state(self, state):
         """Update HA state."""
-        self._attr_is_on = state != 0
-        _LOGGER.debug("Update state: %s", self.name)
-        _LOGGER.debug("State: %s", state)
-        if state is not None:
-            self._attr_brightness = int(round(float(state) * 2.55))
-        self.async_write_ha_state()
+        self._light.update_state(state)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
+        _LOGGER.debug("Brightness: %s", kwargs.get(ATTR_BRIGHTNESS, 255))
+        self._light.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""

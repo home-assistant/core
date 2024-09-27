@@ -1,5 +1,4 @@
 """A Niko Action."""
-import asyncio
 
 
 class Action:
@@ -14,7 +13,7 @@ class Action:
         self._attr_is_on = action["value1"] != 0
         self._callbacks = set()
         self._hub = hub
-        self._loop = asyncio.get_event_loop()
+        # self._loop = asyncio.get_event_loop()
         if self._type == "2":
             self._attr_brightness = action["value1"] * 2.55
         if self._type == "4":
@@ -90,11 +89,11 @@ class Action:
         """Update HA state."""
         if self.is_cover():
             self._attr_is_on = state > 0
-            self._state = state
+            self._state = round(state)
             self._attr_is_closed = state == 0
-            self._attr_current_cover_position = state
+            self._attr_current_cover_position = round(state)
         else:
             self._attr_is_on = state != 0
             if self.is_dimmable():
-                self._attr_brightness = state * 2.55
+                self._attr_brightness = int(round(float(state) * 2.55))
         self.publish_updates()

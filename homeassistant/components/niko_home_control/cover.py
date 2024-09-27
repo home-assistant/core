@@ -16,7 +16,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COVER_CLOSE, COVER_OPEN, COVER_STOP, DOMAIN
-from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class NikoHomeControlCover(CoverEntity):
         """No polling needed for a Niko cover."""
         return False
 
-    def __init__(self, cover, hub: Hub) -> None:
+    def __init__(self, cover, hub) -> None:
         """Set up the Niko Home Control cover."""
         self._hub = hub
         self._cover = cover
@@ -57,6 +56,7 @@ class NikoHomeControlCover(CoverEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cover.action_id)},
             manufacturer=hub.manufacturer,
+            model=f"{hub.model}-cover",
             name=cover.name,
         )
 
@@ -83,7 +83,7 @@ class NikoHomeControlCover(CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
-        return self._cover.state == COVER_CLOSE
+        return self._cover.state == 0
 
     @property
     def is_closing(self) -> bool:
@@ -144,15 +144,7 @@ class NikoHomeControlCover(CoverEntity):
 
     def update_state(self, state):
         """Update HA state."""
-        if state == COVER_STOP:
-            self._moving = False
-        elif state == COVER_OPEN:
-            self._moving = True
-        elif state == COVER_CLOSE:
-            self._moving = True
-
-        # self._attr_current_cover_position = state
-        self.async_write_ha_state()
+        self._cover.update_state(state)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
