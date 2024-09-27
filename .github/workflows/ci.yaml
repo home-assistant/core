@@ -645,7 +645,7 @@ jobs:
       - name: Process licenses
         run: |
           . venv/bin/activate
-          python -m script.licenses
+          python -m script.licenses licenses.json
 
   pylint:
     name: Check pylint
