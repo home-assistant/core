@@ -377,7 +377,7 @@ class UnifiSensorEntityDescription(
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor RX",
-        translation_key="bandwidth_rx",
+        translation_key="client_bandwidth_rx",
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -394,7 +394,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor TX",
-        translation_key="bandwidth_tx",
+        translation_key="client_bandwidth_tx",
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,

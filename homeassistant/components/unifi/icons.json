@@ -1,10 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "bandwidth_rx": {
+      "client_bandwidth_rx": {
         "default": "mdi:download"
       },
-      "bandwidth_tx": {
+      "client_bandwidth_tx": {
         "default": "mdi:upload"
       },
       "port_bandwidth_rx": {
