@@ -13,23 +13,52 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[TemplateEntity]] = HassKey(DOMAIN)
+
+
+@callback
+def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
+    """Return all templates that reference the blueprint."""
+    if DOMAIN not in hass.data:
+        return []
+
+    return [
+        template_entity.entity_id
+        for template_entity in hass.data[DATA_COMPONENT].entities
+        if template_entity.referenced_blueprint == blueprint_path
+    ]
+
+
+@callback
+def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the blueprint the template is based on or None."""
+    if DATA_COMPONENT not in hass.data:
+        return None
+
+    if (template_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is None:
+        return None
+
+    return template_entity.referenced_blueprint
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""

@@ -7,16 +7,18 @@ import contextlib
 from functools import cached_property
 import itertools
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PATH,
     CONF_VARIABLES,
     STATE_UNKNOWN,
 )
@@ -370,6 +372,13 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         self.add_template_attribute(
             attribute_key, attribute_template, None, _update_attribute
         )
+
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     def add_template_attribute(
         self,
