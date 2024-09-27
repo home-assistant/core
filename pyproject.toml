@@ -482,10 +482,7 @@ filterwarnings = [
     "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('azure'|'google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
 
     # -- tracked upstream / open PRs
-    # https://github.com/ronf/asyncssh/issues/674 - v2.15.0
-    "ignore:ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from this module in 48.0.0:UserWarning:asyncssh.crypto.cipher",
-    "ignore:TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from this module in 48.0.0:UserWarning:asyncssh.crypto.cipher",
-    # https://github.com/certbot/certbot/issues/9828 - v2.10.0
+    # https://github.com/certbot/certbot/issues/9828 - v2.11.0
     "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
@@ -496,6 +493,8 @@ filterwarnings = [
     # -- fixed, waiting for release / update
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
+    # https://bugs.launchpad.net/beautifulsoup/+bug/2076897 - >4.12.3
+    "ignore:The 'strip_cdata' option of HTMLParser\\(\\) has never done anything and will eventually be removed:DeprecationWarning:bs4.builder._lxml",
     # https://github.com/DataDog/datadogpy/pull/290 - >=0.23.0
     "ignore:invalid escape sequence:SyntaxWarning:.*datadog.dogstatsd.base",
     # https://github.com/DataDog/datadogpy/pull/566/files - >=0.37.0
@@ -504,7 +503,7 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
     # https://github.com/httplib2/httplib2/pull/226 - >=0.21.0
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:httplib2",
-    # https://github.com/influxdata/influxdb-client-python/issues/603 >1.45.0
+    # https://github.com/influxdata/influxdb-client-python/issues/603 >=1.45.0
     # https://github.com/influxdata/influxdb-client-python/pull/652
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
     # https://github.com/majuss/lupupy/pull/15 - >0.3.2
@@ -521,8 +520,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
     # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
-    # https://github.com/googleapis/python-pubsub/commit/060f00bcea5cd129be3a2d37078535cc97b4f5e8 - >=2.13.12
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:google.pubsub_v1.services.publisher.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
@@ -535,7 +532,7 @@ filterwarnings = [
     # -- other
     # Locale changes might take some time to resolve upstream
     "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
-    # https://github.com/protocolbuffers/protobuf - v4.25.1
+    # https://github.com/protocolbuffers/protobuf - v4.25.4
     "ignore:Type google._upb._message.(Message|Scalar)MapContainer uses PyType_Spec with a metaclass that has custom tp_new. .* Python 3.14:DeprecationWarning",
     # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
@@ -587,8 +584,8 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pybotvac.version",
     # https://github.com/home-assistant-ecosystem/python-mystrom/blob/2.2.0/pymystrom/__init__.py#L10 - v2.2.0 - 2023-05-21
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pymystrom",
-    # https://pypi.org/project/velbus-aio/ - v2024.7.5 - 2024-07-05
-    # https://github.com/Cereal2nd/velbus-aio/blob/2024.7.5/velbusaio/handler.py#L22
+    # https://pypi.org/project/velbus-aio/ - v2024.7.6 - 2024-07-31
+    # https://github.com/Cereal2nd/velbus-aio/blob/2024.7.6/velbusaio/handler.py#L22
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:velbusaio.handler",
     # - pyOpenSSL v24.2.1
     # https://pypi.org/project/acme/ - v2.11.0 - 2024-06-06
@@ -607,8 +604,8 @@ filterwarnings = [
     # https://pypi.org/project/SpeechRecognition/ - v3.10.4 - 2024-05-05
     # https://github.com/Uberi/speech_recognition/blob/3.10.4/speech_recognition/__init__.py#L7
     "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
-    # https://pypi.org/project/voip-utils/ - v0.1.0 - 2023-06-28
-    # https://github.com/home-assistant-libs/voip-utils/blob/v0.1.0/voip_utils/rtp_audio.py#L2
+    # https://pypi.org/project/voip-utils/ - v0.2.0 - 2024-09-06
+    # https://github.com/home-assistant-libs/voip-utils/blob/v0.2.0/voip_utils/rtp_audio.py#L3
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:voip_utils.rtp_audio",
 
     # -- Python 3.13 - unmaintained projects, last release about 2+ years
