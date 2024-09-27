@@ -220,7 +220,15 @@ def _get_request_host() -> str | None:
     # partition the host to remove the port
     # because the raw host header can contain the port
     host = request.headers.get(hdrs.HOST)
-    return None if host is None else host.partition(":")[0]
+    if host is None:
+        return None
+    # IPv6 addresses are enclosed in brackets
+    # use same logic as yarl and urllib to extract the host
+    if "[" in host:
+        return (host.partition("[")[2]).partition("]")[0]
+    if ":" in host:
+        host = host.partition(":")[0]
+    return host
 
 
 @bind_hass
