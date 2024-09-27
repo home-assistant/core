@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -174,11 +176,24 @@ TODO = {
 }
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the main script."""
-    raw_licenses = json.loads(Path("licenses.json").read_text())
-    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     exit_code = 0
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        "path",
+        nargs="?",
+        metavar="PATH",
+        default="licenses.json",
+        help="Path to json licenses file",
+    )
+
+    argv = argv or sys.argv[1:]
+    args = parser.parse_args(argv)
+
+    raw_licenses = json.loads(Path(args.path).read_text())
+    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
         previous_unapproved_version = TODO.get(package.name)
         approved = False
