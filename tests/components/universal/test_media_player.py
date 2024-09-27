@@ -8,8 +8,11 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_number, input_select, media_player, switch
-from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
-from homeassistant.components.media_player.browse_media import BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaPlayerEntityFeature,
+)
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,

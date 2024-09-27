@@ -38,8 +38,6 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 CONF_FALLBACK = "fallback"
 CONF_HOME_ID = "home_id"
 DATA = "data"
-UPDATE_TRACK = "update_track"
-UPDATE_MOBILE_DEVICE_TRACK = "update_mobile_device_track"
 
 # Weather
 CONDITIONS_MAP = {
@@ -206,8 +204,6 @@ DEFAULT_NAME = "Tado"
 
 TADO_HOME = "Home"
 TADO_ZONE = "Zone"
-
-UPDATE_LISTENER = "update_listener"
 
 # Constants for Temperature Offset
 INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"

@@ -28,7 +28,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.fixture(name="mock_setup")
-def mock_setup_entry() -> Generator[Mock, None, None]:
+def mock_setup_entry() -> Generator[Mock]:
     """Fixture to mock out integration setup."""
     with patch(
         "homeassistant.components.google_photos.async_setup_entry", return_value=True
@@ -37,7 +37,7 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_patch_api(mock_api: Mock) -> Generator[None, None, None]:
+def mock_patch_api(mock_api: Mock) -> Generator[None]:
     """Fixture to patch the config flow api."""
     with patch(
         "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi",
@@ -92,8 +92,7 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
-        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
         "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
@@ -121,8 +120,7 @@ async def test_full_flow(
             "refresh_token": FAKE_REFRESH_TOKEN,
             "type": "Bearer",
             "scope": (
-                "https://www.googleapis.com/auth/photoslibrary.readonly"
-                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                "https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
                 " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),
@@ -163,8 +161,7 @@ async def test_api_not_enabled(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
-        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
         "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
@@ -203,8 +200,7 @@ async def test_general_exception(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
-        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
         "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
@@ -288,8 +284,7 @@ async def test_reauth(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
-        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "&scope=https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
         "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
@@ -321,8 +316,7 @@ async def test_reauth(
             "refresh_token": FAKE_REFRESH_TOKEN,
             "type": "Bearer",
             "scope": (
-                "https://www.googleapis.com/auth/photoslibrary.readonly"
-                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                "https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
                 " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),

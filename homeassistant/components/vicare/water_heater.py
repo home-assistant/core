@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice
-from .utils import get_circuits
+from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ def _build_entities(
 
     return [
         ViCareWater(
+            get_device_serial(device.api),
             device.config,
             device.api,
             circuit,
@@ -108,12 +109,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def __init__(
         self,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(circuit.id, device_config, device)
+        super().__init__(circuit.id, device_serial, device_config, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
 

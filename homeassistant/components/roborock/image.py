@@ -23,7 +23,7 @@ import homeassistant.util.dt as dt_util
 from . import RoborockConfigEntry
 from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityV1
 
 
 async def async_setup_entry(

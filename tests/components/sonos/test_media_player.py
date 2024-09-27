@@ -72,6 +72,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
@@ -1161,6 +1162,27 @@ async def test_play_media_announce(
             blocking=True,
         )
     assert sonos_websocket.play_clip.call_count == 1
+
+    # Test speakers that do not support announce. This
+    # will result in playing the clip directly via play_uri
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0, "type": "globalError"}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    soco.play_uri.assert_called_with(content_id, force_radio=False)
 
 
 async def test_media_get_queue(

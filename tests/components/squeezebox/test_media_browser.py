@@ -16,7 +16,7 @@ from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -30,6 +30,10 @@ async def setup_integration(
     """Fixture for setting up the component."""
     with (
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.MEDIA_PLAYER],
+        ),
         patch(
             "homeassistant.components.squeezebox.media_player.start_server_discovery"
         ),

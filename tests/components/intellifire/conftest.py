@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.intellifire.async_setup_entry", return_value=True
@@ -43,7 +43,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
+def mock_fireplace_finder_none() -> Generator[MagicMock]:
     """Mock fireplace finder."""
     mock_found_fireplaces = Mock()
     mock_found_fireplaces.ips = []
@@ -110,7 +110,7 @@ def mock_common_data_local() -> IntelliFireCommonFireplaceData:
 @pytest.fixture
 def mock_apis_multifp(
     mock_cloud_interface, mock_local_interface, mock_fp
-) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock], None, None]:
+) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock]]:
     """Multi fireplace version of mocks."""
     return mock_local_interface, mock_cloud_interface, mock_fp
 
@@ -118,7 +118,7 @@ def mock_apis_multifp(
 @pytest.fixture
 def mock_apis_single_fp(
     mock_cloud_interface, mock_local_interface, mock_fp
-) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock], None, None]:
+) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock]]:
     """Single fire place version of the mocks."""
     data_v1 = IntelliFireUserData(
         **load_json_object_fixture("user_data_1.json", DOMAIN)
@@ -131,7 +131,7 @@ def mock_apis_single_fp(
 
 
 @pytest.fixture
-def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
+def mock_cloud_interface() -> Generator[AsyncMock]:
     """Mock cloud interface to use for testing."""
     user_data = IntelliFireUserData(
         **load_json_object_fixture("user_data_3.json", DOMAIN)
@@ -165,7 +165,7 @@ def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_local_interface() -> Generator[AsyncMock, None, None]:
+def mock_local_interface() -> Generator[AsyncMock]:
     """Mock version of IntelliFireAPILocal."""
     poll_data = IntelliFirePollData(
         **load_json_object_fixture("intellifire/local_poll.json")
@@ -181,7 +181,7 @@ def mock_local_interface() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
+def mock_fp(mock_common_data_local) -> Generator[AsyncMock]:
     """Mock fireplace."""
 
     local_poll_data = IntelliFirePollData(

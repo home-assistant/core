@@ -6,6 +6,7 @@ from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
+    CODE_REQUIRED,
     CONF_USERCODES,
     DOMAIN,
 )
@@ -238,11 +239,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={AUTO_BYPASS: True}
+            result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {AUTO_BYPASS: True}
+        assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
         await hass.async_block_till_done()
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -18,7 +18,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -31,14 +30,13 @@ from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
 from .storage.const import (
-    CONF_DEVICE_INFO,
     CONF_ENTITY,
     CONF_GA_PASSIVE,
     CONF_GA_STATE,
@@ -53,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     platform = async_get_current_platform()
     knx_module.config_store.add_platform(
         platform=Platform.SWITCH,
@@ -65,7 +63,7 @@ async def async_setup_entry(
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
-    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.SWITCH):
         entities.extend(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config
@@ -133,14 +131,17 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
 class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     """Representation of a KNX switch configured from UI."""
 
-    _attr_has_entity_name = True
     _device: XknxSwitch
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
     ) -> None:
         """Initialize KNX switch."""
-        self._knx_module = knx_module
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=unique_id,
+            entity_config=config[CONF_ENTITY],
+        )
         self._device = XknxSwitch(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
@@ -153,7 +154,3 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
             sync_state=config[DOMAIN][CONF_SYNC_STATE],
             invert=config[DOMAIN][CONF_INVERT],
         )
-        self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
-        self._attr_unique_id = unique_id
-        if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})

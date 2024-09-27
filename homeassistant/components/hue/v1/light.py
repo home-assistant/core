@@ -305,6 +305,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
