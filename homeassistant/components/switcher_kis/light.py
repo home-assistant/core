@@ -62,9 +62,7 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
     _attr_translation_key = "light"
 
     def __init__(
-        self,
-        coordinator: SwitcherDataUpdateCoordinator,
-        light_id: int,
+        self, coordinator: SwitcherDataUpdateCoordinator, light_id: int
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
