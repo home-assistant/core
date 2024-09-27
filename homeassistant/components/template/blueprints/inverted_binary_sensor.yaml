@@ -1,0 +1,27 @@
+blueprint:
+  name: Invert a binary sensor
+  description: Creates a binary_sensor which holds the inverted value of a reference binary_sensor
+  domain: template
+  source_url: http://example.com
+  input:
+    original_entity:
+      name: Binary sensor to be inverted
+      description: The binary_sensor which needs to have its value inverted
+      selector:
+        entity:
+          domain: binary_sensor
+variables:
+  original_entity: !input original_entity
+binary_sensor:
+  state: >
+    {% if states(original_entity) == 'on' %}
+      off
+    {% elif states(original_entity) == 'off' %}
+      on
+    {% else %}
+      {{ states(original_entity) }}
+    {% endif %}
+  # delay_on: not_used in this example
+  # delay_off: not_used in this example
+  # auto_off: not_used in this example
+  availability: "{{ states(original_entity) not in ('unknown', 'unavailable') }}"
