@@ -17,10 +17,11 @@ from .common import set_node_attribute, trigger_subscription_callback
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    door_lock: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test door lock."""
     await hass.services.async_call(
@@ -34,7 +35,7 @@ async def test_lock(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
@@ -52,7 +53,7 @@ async def test_lock(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(),
         timed_request_timeout_ms=1000,
@@ -64,28 +65,28 @@ async def test_lock(
     assert state
     assert state.state == LockState.LOCKING
 
-    set_node_attribute(door_lock, 1, 257, 0, 0)
+    set_node_attribute(matter_node, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
     assert state.state == LockState.UNLOCKED
 
-    set_node_attribute(door_lock, 1, 257, 0, 2)
+    set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
     assert state.state == LockState.UNLOCKED
 
-    set_node_attribute(door_lock, 1, 257, 0, 1)
+    set_node_attribute(matter_node, 1, 257, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
     assert state.state == LockState.LOCKED
 
-    set_node_attribute(door_lock, 1, 257, 0, None)
+    set_node_attribute(matter_node, 1, 257, 0, None)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
@@ -93,7 +94,7 @@ async def test_lock(
     assert state.state == STATE_UNKNOWN
 
     # test featuremap update
-    set_node_attribute(door_lock, 1, 257, 65532, 4096)
+    set_node_attribute(matter_node, 1, 257, 65532, 4096)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state.attributes["supported_features"] & LockEntityFeature.OPEN
@@ -101,10 +102,11 @@ async def test_lock(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock_requires_pin(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    door_lock: MatterNode,
+    matter_node: MatterNode,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test door lock with PINCode."""
@@ -112,9 +114,9 @@ async def test_lock_requires_pin(
     code = "1234567"
 
     # set RequirePINforRemoteOperation
-    set_node_attribute(door_lock, 1, 257, 51, True)
+    set_node_attribute(matter_node, 1, 257, 51, True)
     # set door state to unlocked
-    set_node_attribute(door_lock, 1, 257, 0, 2)
+    set_node_attribute(matter_node, 1, 257, 0, 2)
 
     await trigger_subscription_callback(hass, matter_client)
     with pytest.raises(ServiceValidationError):
@@ -136,7 +138,7 @@ async def test_lock_requires_pin(
     )
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(code.encode()),
         timed_request_timeout_ms=1000,
@@ -156,7 +158,7 @@ async def test_lock_requires_pin(
     )
     assert matter_client.send_device_command.call_count == 2
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(default_code.encode()),
         timed_request_timeout_ms=1000,
@@ -165,10 +167,11 @@ async def test_lock_requires_pin(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_unbolt"])
 async def test_lock_with_unbolt(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    door_lock_with_unbolt: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test door lock."""
     state = hass.states.get("lock.mock_door_lock_lock")
@@ -187,7 +190,7 @@ async def test_lock_with_unbolt(
     assert matter_client.send_device_command.call_count == 1
     # unlock should unbolt on a lock with unbolt feature
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock_with_unbolt.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnboltDoor(),
         timed_request_timeout_ms=1000,
@@ -204,7 +207,7 @@ async def test_lock_with_unbolt(
     )
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=door_lock_with_unbolt.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
@@ -215,14 +218,14 @@ async def test_lock_with_unbolt(
     assert state
     assert state.state == LockState.OPENING
 
-    set_node_attribute(door_lock_with_unbolt, 1, 257, 0, 0)
+    set_node_attribute(matter_node, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
     assert state.state == LockState.UNLOCKED
 
-    set_node_attribute(door_lock_with_unbolt, 1, 257, 0, 3)
+    set_node_attribute(matter_node, 1, 257, 0, 3)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")

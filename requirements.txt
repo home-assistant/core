@@ -4,7 +4,7 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohasupervisor==0.1.0b1
+aiohasupervisor==0.1.0
 aiohttp==3.10.6
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.1.1
@@ -42,4 +42,4 @@ uv==0.4.15
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.12.1
+yarl==1.13.0

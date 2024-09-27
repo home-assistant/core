@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import ipaddress
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -122,7 +122,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
-        self.context[CONF_HOST] = host
 
         if (
             ipaddress.ip_address(host).version == 6
@@ -136,9 +135,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self._host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
@@ -147,11 +146,14 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
-        self._host = host
         self._name = str(discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
