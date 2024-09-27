@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.NUMBER,
     Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 _LOGGER = logging.getLogger(__name__)
