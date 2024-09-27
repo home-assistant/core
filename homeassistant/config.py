@@ -367,10 +367,9 @@ CORE_CONFIG_SCHEMA = vol.All(
 )
 
 
-def get_default_config_dir() -> str:
+def get_default_config_dir() -> Path:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.path.expanduser("~")
-    return os.path.join(data_dir, CONFIG_DIR_NAME)
+    return Path("~").expanduser() / CONFIG_DIR_NAME
 
 
 async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
@@ -379,9 +378,9 @@ async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     Creating a default one if needed.
     Return boolean if configuration dir is ready to go.
     """
-    config_path = hass.config.path(YAML_CONFIG_FILE)
+    config_path = Path(hass.config.path(YAML_CONFIG_FILE))
 
-    if os.path.isfile(config_path):
+    if config_path.is_file():
         return True
 
     print(  # noqa: T201
@@ -396,43 +395,34 @@ async def async_create_default_config(hass: HomeAssistant) -> bool:
     Return if creation was successful.
     """
     return await hass.async_add_executor_job(
-        _write_default_config, hass.config.config_dir
+        _write_default_config, Path(hass.config.config_dir)
     )
 
 
-def _write_default_config(config_dir: str) -> bool:
+def _write_default_config(config_dir: Path) -> bool:
     """Write the default config."""
-    config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-    secret_path = os.path.join(config_dir, SECRET_YAML)
-    version_path = os.path.join(config_dir, VERSION_FILE)
-    automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
-    script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
-    scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
+    config_path = config_dir / YAML_CONFIG_FILE
+    secret_path = config_dir / SECRET_YAML
+    version_path = config_dir / VERSION_FILE
+    automation_yaml_path = config_dir / AUTOMATION_CONFIG_PATH
+    script_yaml_path = config_dir / SCRIPT_CONFIG_PATH
+    scene_yaml_path = config_dir / SCENE_CONFIG_PATH
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        with open(config_path, "w", encoding="utf8") as config_file:
-            config_file.write(DEFAULT_CONFIG)
+        config_path.write_text(DEFAULT_CONFIG, encoding="utf8")
 
-        if not os.path.isfile(secret_path):
-            with open(secret_path, "w", encoding="utf8") as secret_file:
-                secret_file.write(DEFAULT_SECRETS)
+        if not secret_path.is_file():
+            secret_path.write_text(DEFAULT_SECRETS, encoding="utf8")
 
-        with open(version_path, "w", encoding="utf8") as version_file:
-            version_file.write(__version__)
+        version_path.write_text(__version__, encoding="utf8")
 
-        if not os.path.isfile(automation_yaml_path):
-            with open(automation_yaml_path, "w", encoding="utf8") as automation_file:
-                automation_file.write("[]")
+        if not automation_yaml_path.is_file():
+            automation_yaml_path.write_text("[]", encoding="utf8")
 
-        if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "w", encoding="utf8"):
-                pass
-
-        if not os.path.isfile(scene_yaml_path):
-            with open(scene_yaml_path, "w", encoding="utf8"):
-                pass
+        script_yaml_path.touch(exist_ok=True)
+        scene_yaml_path.touch(exist_ok=True)
     except OSError:
         print(  # noqa: T201
             f"Unable to create default configuration file {config_path}"
@@ -454,7 +444,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
         config = await hass.loop.run_in_executor(
             None,
             load_yaml_config_file,
-            hass.config.path(YAML_CONFIG_FILE),
+            Path(hass.config.path(YAML_CONFIG_FILE)),
             secrets,
         )
     except HomeAssistantError as exc:
@@ -499,7 +489,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
 
 
 def load_yaml_config_file(
-    config_path: str, secrets: Secrets | None = None
+    config_path: str | Path, secrets: Secrets | None = None
 ) -> dict[Any, Any]:
     """Parse a YAML configuration file.
 
@@ -507,11 +497,14 @@ def load_yaml_config_file(
 
     This method needs to run in an executor.
     """
+    if isinstance(config_path, str):
+        _LOGGER.debug("load_yaml_config_file called with path of type 'str'")
+        config_path = Path(config_path)
     try:
         conf_dict = load_yaml_dict(config_path, secrets)
     except YamlTypeError as exc:
         msg = (
-            f"The configuration file {os.path.basename(config_path)} "
+            f"The configuration file {config_path.name} "
             "does not contain a dictionary"
         )
         _LOGGER.error(msg)
@@ -528,12 +521,11 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     This method needs to run in an executor.
     """
-    version_path = hass.config.path(VERSION_FILE)
+    version_path = Path(hass.config.path(VERSION_FILE))
 
-    try:
-        with open(version_path, encoding="utf8") as inp:
-            conf_version = inp.readline().strip()
-    except FileNotFoundError:
+    if version_path.is_file():
+        conf_version = version_path.read_text(encoding="utf8").strip()
+    else:
         # Last version to not have this file
         conf_version = "0.7.7"
 
@@ -548,35 +540,32 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     if version_obj < AwesomeVersion("0.50"):
         # 0.50 introduced persistent deps dir.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
+        lib_path = Path(hass.config.path("deps"))
+        if lib_path.is_dir():
             shutil.rmtree(lib_path)
 
     if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
-        config_path = hass.config.path(YAML_CONFIG_FILE)
+        config_path = Path(hass.config.path(YAML_CONFIG_FILE))
 
-        with open(config_path, encoding="utf-8") as config_file:
-            config_raw = config_file.read()
+        config_raw = config_path.read_text(encoding="utf8")
 
         if TTS_PRE_92 in config_raw:
             _LOGGER.info("Migrating google tts to google_translate tts")
             config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
             try:
-                with open(config_path, "w", encoding="utf-8") as config_file:
-                    config_file.write(config_raw)
+                config_path.write_text(config_raw, encoding="utf8")
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
 
     if version_obj < AwesomeVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when
         # running inside a Docker container.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
+        lib_path = Path(hass.config.path("deps"))
+        if lib_path.is_dir():
             shutil.rmtree(lib_path)
 
-    with open(version_path, "w", encoding="utf8") as outp:
-        outp.write(__version__)
+    version_path.write_text(__version__, encoding="utf8")
 
 
 @callback
@@ -1689,15 +1678,15 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     return res.error_str
 
 
-def safe_mode_enabled(config_dir: str) -> bool:
+def safe_mode_enabled(config_dir: Path) -> bool:
     """Return if safe mode is enabled.
 
     If safe mode is enabled, the safe mode file will be removed.
     """
-    safe_mode_path = os.path.join(config_dir, SAFE_MODE_FILENAME)
-    safe_mode = os.path.exists(safe_mode_path)
+    safe_mode_path = config_dir / SAFE_MODE_FILENAME
+    safe_mode = safe_mode_path.exists()
     if safe_mode:
-        os.remove(safe_mode_path)
+        safe_mode_path.unlink()
     return safe_mode
 
 

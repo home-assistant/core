@@ -157,13 +157,13 @@ def install_package(
     return True
 
 
-async def async_get_user_site(deps_dir: str) -> str:
+async def async_get_user_site(deps_dir: Path) -> Path:
     """Return user local library path.
 
     This function is a coroutine.
     """
     env = os.environ.copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
+    env["PYTHONUSERBASE"] = str(deps_dir.resolve())
     args = [sys.executable, "-m", "site", "--user-site"]
     process = await asyncio.create_subprocess_exec(
         *args,
@@ -174,4 +174,4 @@ async def async_get_user_site(deps_dir: str) -> str:
         close_fds=False,  # required for posix_spawn
     )
     stdout, _ = await process.communicate()
-    return stdout.decode().strip()
+    return Path(stdout.decode().strip())

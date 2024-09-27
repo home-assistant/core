@@ -920,7 +920,7 @@ split-on-trailing-comma = false
 "tests/components/*/*/*" = ["TID252"]
 
 # Temporary
-"homeassistant/**" = ["PTH"]
+"homeassistant/*/**" = ["PTH"]
 "tests/**" = ["PTH"]
 
 [tool.ruff.lint.mccabe]

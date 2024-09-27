@@ -5,6 +5,7 @@ from collections.abc import Generator
 from importlib.metadata import metadata
 import logging
 import os
+from pathlib import Path
 from subprocess import PIPE
 import sys
 from unittest.mock import MagicMock, Mock, call, patch
@@ -322,9 +323,9 @@ def test_install_constraint(mock_popen, mock_env_copy) -> None:
 
 async def test_async_get_user_site(mock_env_copy) -> None:
     """Test async get user site directory."""
-    deps_dir = "/deps_dir"
+    deps_dir = Path("/deps_dir")
     env = mock_env_copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
+    env["PYTHONUSERBASE"] = str(deps_dir.resolve())
     args = [sys.executable, "-m", "site", "--user-site"]
     with patch(
         "homeassistant.util.package.asyncio.create_subprocess_exec",
@@ -340,7 +341,7 @@ async def test_async_get_user_site(mock_env_copy) -> None:
         env=env,
         close_fds=False,
     )
-    assert ret == os.path.join(deps_dir, "lib_dir")
+    assert ret == deps_dir / "lib_dir"
 
 
 def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:

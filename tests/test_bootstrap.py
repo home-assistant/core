@@ -6,6 +6,7 @@ import contextlib
 import glob
 import logging
 import os
+from pathlib import Path
 import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -102,7 +103,7 @@ async def test_async_enable_logging(
         await bootstrap.async_enable_logging(
             hass,
             log_rotate_days=5,
-            log_file="test.log",
+            log_file=Path("test.log"),
         )
         mock_async_activate_log_queue_handler.assert_called_once()
         for f in glob.glob("test.log*"):
