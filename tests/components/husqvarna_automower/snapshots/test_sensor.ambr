@@ -486,7 +486,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-20T21:44:09+00:00',
+    'state': '2024-08-12T05:54:29+00:00',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-entry]
@@ -645,7 +645,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-20T21:43:59+00:00',
+    'state': '2024-08-12T03:07:49+00:00',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-entry]
