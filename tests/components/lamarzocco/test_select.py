@@ -134,7 +134,7 @@ async def test_select_errors(
     mock_lamarzocco.set_prebrew_mode.side_effect = RequestNotSuccessful("Boom")
 
     # Test setting invalid option
-    with pytest.raises(HomeAssistantError, match="Updating selection failed"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

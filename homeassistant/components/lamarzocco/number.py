@@ -228,7 +228,6 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
-                    "Failed to set value.",
                     translation_key="number_exception",
                     translation_placeholders={
                         "key": self.entity_description.key,
@@ -278,7 +277,6 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
-                    "Failed to set value.",
                     translation_key="number_exception_key",
                     translation_placeholders={
                         "key": self.entity_description.key,

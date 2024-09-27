@@ -177,7 +177,7 @@ async def test_switch_exceptions(
 
     mock_lamarzocco.set_power.side_effect = RequestNotSuccessful("Boom")
 
-    with pytest.raises(HomeAssistantError, match="Turning off main failed."):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -187,7 +187,7 @@ async def test_switch_exceptions(
             blocking=True,
         )
 
-    with pytest.raises(HomeAssistantError, match="Turning on main failed."):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -201,9 +201,7 @@ async def test_switch_exceptions(
     assert state
 
     mock_lamarzocco.set_wake_up_sleep.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(
-        HomeAssistantError, match="Setting auto on/off schedule failed."
-    ):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

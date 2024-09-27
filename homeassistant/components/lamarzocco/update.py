@@ -101,7 +101,6 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             )
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
-                "Update failed.",
                 translation_key="update_failed",
                 translation_placeholders={
                     "key": self.entity_description.key,
@@ -109,7 +108,6 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             ) from exc
         if not success:
             raise HomeAssistantError(
-                "Update failed.",
                 translation_key="update_failed",
                 translation_placeholders={
                     "key": self.entity_description.key,

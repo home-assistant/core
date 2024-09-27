@@ -83,7 +83,6 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             await self.entity_description.control_fn(self.coordinator.device, True)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
-                f"Turning on {self.entity_description.key} failed.",
                 translation_key="switch_on_error",
                 translation_placeholders={"key": self.entity_description.key},
             ) from exc
@@ -95,7 +94,6 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             await self.entity_description.control_fn(self.coordinator.device, False)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
-                f"Turning off {self.entity_description.key} failed.",
                 translation_key="switch_off_error",
                 translation_placeholders={"name": self.entity_description.key},
             ) from exc
@@ -134,7 +132,6 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
             await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
-                "Setting auto on/off schedule failed.",
                 translation_key="auto_on_off_error",
                 translation_placeholders={"id": self._identifier, "state": str(state)},
             ) from exc

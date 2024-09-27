@@ -121,7 +121,6 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
-                    "Updating selection failed.",
                     translation_key="select_option_error",
                     translation_placeholders={
                         "key": self.entity_description.key,

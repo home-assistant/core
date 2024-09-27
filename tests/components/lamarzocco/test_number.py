@@ -397,7 +397,7 @@ async def test_number_error(
     assert state
 
     mock_lamarzocco.set_temp.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(HomeAssistantError, match="Failed to set value."):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -412,7 +412,7 @@ async def test_number_error(
     assert state
 
     mock_lamarzocco.set_dose.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(HomeAssistantError, match="Failed to set value."):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

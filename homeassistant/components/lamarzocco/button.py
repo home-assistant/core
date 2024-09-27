@@ -61,7 +61,6 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.device)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
-                "Button action failed.",
                 translation_key="button_error",
                 translation_placeholders={
                     "key": self.entity_description.key,
