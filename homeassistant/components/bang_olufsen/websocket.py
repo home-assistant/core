@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from mozart_api.models import (
+    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -50,6 +51,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_notification_notifications(self.on_notification_notification)
         self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_on_connection(self.on_connection)
+        self._client.get_active_listening_mode_notifications(
+            self.on_active_listening_mode
+        )
         self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
@@ -89,6 +93,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
 
+    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
+        """Send active_listening_mode dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            notification,
+        )
+
     def on_notification_notification(
         self, notification: WebsocketNotificationTag
     ) -> None:
@@ -96,7 +108,16 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # Try to match the notification type with available WebsocketNotification members
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
-        if notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
+        if notification_type in (
+            WebsocketNotification.BEOLINK_PEERS,
+            WebsocketNotification.BEOLINK_LISTENERS,
+            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+            )
+        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",

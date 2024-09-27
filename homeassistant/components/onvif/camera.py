@@ -24,7 +24,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import (
     ABSOLUTE_MOVE,
     ATTR_CONTINUOUS_DURATION,
@@ -51,6 +50,7 @@ from .const import (
     ZOOM_OUT,
 )
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 from .models import Profile
 
 

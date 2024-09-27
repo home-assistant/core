@@ -4,10 +4,11 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
+from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
-from typing import Any, Final, final
+from typing import Any, Final, Literal, final
 
 from homeassistant.components import media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -28,7 +29,6 @@ from homeassistant.components.tts import (
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import ulid
 
 from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
@@ -41,10 +41,10 @@ _LOGGER = logging.getLogger(__name__)
 class AssistSatelliteState(StrEnum):
     """Valid states of an Assist satellite entity."""
 
-    LISTENING_WAKE_WORD = "listening_wake_word"
-    """Device is streaming audio for wake word detection to Home Assistant."""
+    IDLE = "idle"
+    """Device is waiting for user input, such as a wake word or a button press."""
 
-    LISTENING_COMMAND = "listening_command"
+    LISTENING = "listening"
     """Device is streaming audio with the voice command to Home Assistant."""
 
     PROCESSING = "processing"
@@ -56,6 +56,47 @@ class AssistSatelliteState(StrEnum):
 
 class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes Assist satellite entities."""
+
+
+@dataclass(frozen=True)
+class AssistSatelliteWakeWord:
+    """Available wake word model."""
+
+    id: str
+    """Unique id for wake word model."""
+
+    wake_word: str
+    """Wake word phrase."""
+
+    trained_languages: list[str]
+    """List of languages that the wake word was trained on."""
+
+
+@dataclass
+class AssistSatelliteConfiguration:
+    """Satellite configuration."""
+
+    available_wake_words: list[AssistSatelliteWakeWord]
+    """List of available available wake word models."""
+
+    active_wake_words: list[str]
+    """List of active wake word ids."""
+
+    max_active_wake_words: int
+    """Maximum number of simultaneous wake words allowed (0 for no limit)."""
+
+
+@dataclass
+class AssistSatelliteAnnouncement:
+    """Announcement to be made."""
+
+    message: str
+    """Message to be spoken."""
+
+    media_id: str
+    """Media ID to be played."""
+
+    media_id_source: Literal["url", "media_id", "tts"]
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -76,7 +117,7 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
 
-    __assist_satellite_state = AssistSatelliteState.LISTENING_WAKE_WORD
+    __assist_satellite_state = AssistSatelliteState.IDLE
 
     @final
     @property
@@ -98,6 +139,17 @@ class AssistSatelliteEntity(entity.Entity):
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return self._attr_tts_options
+
+    @callback
+    @abstractmethod
+    def async_get_configuration(self) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+
+    @abstractmethod
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
 
     async def async_intercept_wake_word(self) -> str | None:
         """Intercept the next wake word from the satellite.
@@ -135,10 +187,13 @@ class AssistSatelliteEntity(entity.Entity):
         """
         await self._cancel_running_pipeline()
 
+        media_id_source: Literal["url", "media_id", "tts"] | None = None
+
         if message is None:
             message = ""
 
         if not media_id:
+            media_id_source = "tts"
             # Synthesize audio and get URL
             pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
@@ -159,12 +214,17 @@ class AssistSatelliteEntity(entity.Entity):
             )
 
         if media_source.is_media_source_id(media_id):
+            if not media_id_source:
+                media_id_source = "media_id"
             media = await media_source.async_resolve_media(
                 self.hass,
                 media_id,
                 None,
             )
             media_id = media.url
+
+        if not media_id_source:
+            media_id_source = "url"
 
         # Resolve to full URL
         media_id = async_process_play_media_url(self.hass, media_id)
@@ -177,12 +237,14 @@ class AssistSatelliteEntity(entity.Entity):
 
         try:
             # Block until announcement is finished
-            await self.async_announce(message, media_id)
+            await self.async_announce(
+                AssistSatelliteAnnouncement(message, media_id, media_id_source)
+            )
         finally:
             self._is_announcing = False
-            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+            self._set_state(AssistSatelliteState.IDLE)
 
-    async def async_announce(self, message: str, media_id: str) -> None:
+    async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
         Should block until the announcement is done playing.
@@ -240,16 +302,11 @@ class AssistSatelliteEntity(entity.Entity):
         assert self._context is not None
 
         # Reset conversation id if necessary
-        if (self._conversation_id_time is None) or (
+        if self._conversation_id_time and (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
             self._conversation_id = None
-
-        if self._conversation_id is None:
-            self._conversation_id = ulid.ulid()
-
-        # Update timeout
-        self._conversation_id_time = time.monotonic()
+            self._conversation_id_time = None
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -306,18 +363,23 @@ class AssistSatelliteEntity(entity.Entity):
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+            self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
-            self._set_state(AssistSatelliteState.LISTENING_COMMAND)
+            self._set_state(AssistSatelliteState.LISTENING)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
+        elif event.type is PipelineEventType.INTENT_END:
+            assert event.data is not None
+            # Update timeout
+            self._conversation_id_time = time.monotonic()
+            self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
-                self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+                self._set_state(AssistSatelliteState.IDLE)
 
         self.on_pipeline_event(event)
 
@@ -330,7 +392,7 @@ class AssistSatelliteEntity(entity.Entity):
     @callback
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
-        self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+        self._set_state(AssistSatelliteState.IDLE)
 
     @callback
     def _resolve_pipeline(self) -> str | None:

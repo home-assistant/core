@@ -602,7 +602,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "time"}
 
     if isinstance(schema, selector.TriggerSelector):
-        return convert(cv.TRIGGER_SCHEMA)
+        return {"type": "array", "items": {"type": "string"}}
 
     if schema.config.get("multiple"):
         return {"type": "array", "items": {"type": "string"}}

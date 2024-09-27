@@ -32,7 +32,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
@@ -119,7 +119,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.8
@@ -130,6 +130,12 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: requirements_diff
+
+      - name: Adjust build env
+        run: |
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
         uses: home-assistant/wheels@2024.07.1
@@ -157,7 +163,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.8
@@ -173,6 +179,18 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: requirements_all_wheels
+
+      - name: Adjust build env
+        run: |
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            echo "NPY_DISABLE_SVML=1" >> .env_file
+          fi
+
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
 
       - name: Split requirements all
         run: |
@@ -193,15 +211,6 @@ jobs:
           touch requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
-
-      - name: Adjust build env
-        run: |
-          if [ "${{ matrix.arch }}" = "i386" ]; then
-            echo "NPY_DISABLE_SVML=1" >> .env_file
-          fi
-
-          # Do not pin numpy in wheels building
-          sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels (old cython)
         uses: home-assistant/wheels@2024.07.1

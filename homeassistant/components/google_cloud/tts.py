@@ -223,7 +223,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
     ) -> None:
         """Init Google Cloud TTS entity."""
         super().__init__(client, voices, language, options_schema)
-        self._attr_unique_id = f"{entry.entry_id}-tts"
+        self._attr_unique_id = f"{entry.entry_id}"
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

@@ -33,13 +33,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import VolDictType
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
     ATTR_CHANGED_BY_TIME,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
