@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 
+from aiohttp import hdrs
 from hass_nabucasa import remote
 import yarl
 
@@ -218,7 +219,8 @@ def _get_request_host() -> str | None:
         raise NoURLAvailableError
     # partition the host to remove the port
     # because the raw host header can contain the port
-    return request.host.partition(":")[0]
+    host = request.headers.get(hdrs.HOST)
+    return None if host is None else host.partition(":")[0]
 
 
 @bind_hass
