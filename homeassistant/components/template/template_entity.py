@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_VARIABLES,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
@@ -77,6 +78,7 @@ TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
         vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
@@ -287,12 +289,14 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
+            self._run_variables = {}
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+            self._run_variables = config.get(CONF_VARIABLES, {})
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -330,6 +334,13 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 self._attr_icon = self._icon_template.async_render(
                     variables=variables, parse_result=False
                 )
+
+    @callback
+    def _render_variables(self) -> dict:
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(self.hass, {"this": TemplateStateFromEntityId(self.hass, self.entity_id),})
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -459,7 +470,10 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
-        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **self._render_variables()
+        }
 
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, variables)
@@ -563,6 +577,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **self._render_variables(),
                 **run_variables,
             },
             context=context,
