@@ -79,6 +79,28 @@ class FibaroCover(FibaroEntity, CoverEntity):
         """Return the current tilt position for venetian blinds."""
         return self.bound(self.level2)
 
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening or not.
+
+        Be aware that this property is only available for some modern devices.
+        For example the Fibaro Roller Shutter 4 reports this correctly.
+        """
+        if self.fibaro_device.state.has_value:
+            return self.fibaro_device.state.str_value().lower() == "opening"
+        return None
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing or not.
+
+        Be aware that this property is only available for some modern devices.
+        For example the Fibaro Roller Shutter 4 reports this correctly.
+        """
+        if self.fibaro_device.state.has_value:
+            return self.fibaro_device.state.str_value().lower() == "closing"
+        return None
+
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self.set_level(cast(int, kwargs.get(ATTR_POSITION)))
