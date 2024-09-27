@@ -1703,7 +1703,7 @@ pyopnsense==0.4.0
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.0
+pyotgw==2.2.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1864,7 +1864,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.9
+python-linkplay==0.0.12
 
 # homeassistant.components.matter
 python-matter-server==6.5.2
@@ -1919,7 +1919,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.5
+pytouchlinesl==0.1.6
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2366,7 +2366,7 @@ wiffi==1.1.2
 wled==0.20.2
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.10
+wolf-comm==0.0.15
 
 # homeassistant.components.wyoming
 wyoming==1.5.4

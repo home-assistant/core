@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import aiohomekit
 from aiohomekit import Controller, const as aiohomekit_const
@@ -111,6 +111,8 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: dict[str, AbstractDiscovery] = {}
         self.controller: Controller | None = None
         self.finish_pairing: FinishPairing | None = None
+        self.pairing = False
+        self._device_paired = False
 
     async def _async_setup_controller(self) -> None:
         """Create the controller."""
@@ -300,18 +302,10 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         # Set unique-id and error out if it's already configured
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
-        for progress in self._async_in_progress(include_uninitialized=True):
-            context = progress["context"]
-            if context.get("unique_id") == normalized_hkid and not context.get(
-                "pairing"
-            ):
-                if paired:
-                    # If the device gets paired, we want to dismiss
-                    # an existing discovery since we can no longer
-                    # pair with it
-                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
-                else:
-                    raise AbortFlow("already_in_progress")
+        self.hkid = normalized_hkid
+        self._device_paired = paired
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            raise AbortFlow("already_in_progress")
 
         if paired:
             # Device is paired but not to us - ignore it
@@ -332,12 +326,23 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         self.name = name
         self.model = model
         self.category = Categories(int(properties.get("ci", 0)))
-        self.hkid = normalized_hkid
 
         # We want to show the pairing form - but don't call async_step_pair
         # directly as it has side effects (will ask the device to show a
         # pairing code)
         return self._async_step_pair_show_form()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        if other_flow.context.get("unique_id") == self.hkid and not other_flow.pairing:
+            if self._device_paired:
+                # If the device gets paired, we want to dismiss
+                # an existing discovery since we can no longer
+                # pair with it
+                self.hass.config_entries.flow.async_abort(other_flow.flow_id)
+            else:
+                return True
+        return False
 
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
@@ -419,7 +424,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self.controller
 
         if pair_info and self.finish_pairing:
-            self.context["pairing"] = True
+            self.pairing = True
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(
