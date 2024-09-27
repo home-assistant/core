@@ -67,6 +67,7 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Number,
