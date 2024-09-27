@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
-    tado: TadoConnector = entry.runtime_data.tadoconnector
+    tado = entry.runtime_data
     tracked: set = set()
 
     # Fix non-string unique_id for device trackers
