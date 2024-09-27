@@ -21,9 +21,7 @@ def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
     return len(templates_with_blueprint(hass, blueprint_path)) > 0
 
 
-async def _reload_blueprint_templates(
-    hass: HomeAssistant, blueprint_path: str
-) -> None:
+async def _reload_blueprint_templates(hass: HomeAssistant, blueprint_path: str) -> None:
     """Reload all templates that rely on a specific blueprint."""
     await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
