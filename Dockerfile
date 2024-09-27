@@ -14,7 +14,7 @@ ARG QEMU_CPU
 ARG BUILD_ARCH
 
 # Install uv
-RUN pip3 install uv==0.4.12
+RUN pip3 install uv==0.4.15
 
 WORKDIR /usr/src
 
@@ -31,15 +31,9 @@ RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
-    && if [ "${BUILD_ARCH}" = "i386" ]; then \
-        linux32 uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    else \
-        uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    fi
+    && uv pip install \
+        --no-build \
+        -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/

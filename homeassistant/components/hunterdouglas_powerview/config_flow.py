@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
@@ -152,10 +152,8 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
         assert self.discovered_ip and self.discovered_name is not None
-        self.context[CONF_HOST] = self.discovered_ip
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         self._async_abort_entries_match({CONF_HOST: self.discovered_ip})
         info, error = await self._async_validate_or_error(self.discovered_ip)
@@ -176,6 +174,10 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_API_VERSION: api_version,
         }
         return await self.async_step_link()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.discovered_ip == self.discovered_ip
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None

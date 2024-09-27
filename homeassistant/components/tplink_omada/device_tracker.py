@@ -4,7 +4,7 @@ import logging
 
 from tplink_omada_client.clients import OmadaWirelessClient
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,11 +60,6 @@ class OmadaClientScannerEntity(
         self._site_id = site_id
         self._client_id = client_id
         self._attr_name = display_name
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.ROUTER
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)

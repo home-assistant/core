@@ -42,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -80,7 +80,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[UpdateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -113,12 +113,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
@@ -492,7 +492,7 @@ async def websocket_release_notes(
     msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    entity = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(
