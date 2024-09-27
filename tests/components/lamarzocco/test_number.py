@@ -308,7 +308,7 @@ async def test_pre_brew_infusion_key_numbers(
     await async_init_integration(hass, mock_config_entry)
 
     serial_number = mock_lamarzocco.serial_number
-
+    # comment
     func = getattr(mock_lamarzocco, function_name)
 
     state = hass.states.get(f"number.{serial_number}_{entity_name}")
