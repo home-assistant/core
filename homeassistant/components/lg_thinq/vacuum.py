@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ThinqConfigEntry
-from .coordinator import DeviceDataUpdateCoordinator
 from .entity import ThinQEntity
 
 DEVICE_TYPE_VACUUM_MAP: dict[DeviceType, tuple[StateVacuumEntityDescription, ...]] = {
@@ -99,7 +98,7 @@ async def async_setup_entry(
 
 
 class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
-    """Represent an thinq vacuum platform."""
+    """Represent a thinq vacuum platform."""
 
     _attr_supported_features = (
         VacuumEntityFeature.SEND_COMMAND
@@ -110,24 +109,12 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
     )
 
-    def __init__(
-        self,
-        coordinator: DeviceDataUpdateCoordinator,
-        entity_description: StateVacuumEntityDescription,
-        property_id: str,
-    ) -> None:
-        """Initialize vacuum platform."""
-        super().__init__(coordinator, entity_description, property_id)
-
-        self._device_state: str
-
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
 
         # Update state.
-        self._device_state = self.data.current_state
-        self._attr_state = ROBOT_STATUS_TO_HA[self._device_state]
+        self._attr_state = ROBOT_STATUS_TO_HA[self.data.current_state]
 
         # Update battery.
         if (level := self.data.battery) is not None:
@@ -146,9 +133,9 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
 
     async def async_start(self, **kwargs) -> None:
         """Start the device."""
-        if self._device_state == State.SLEEP:
+        if self.data.current_state == State.SLEEP:
             value = State.WAKE_UP
-        elif self.state == STATE_PAUSED:
+        elif self._attr_state == STATE_PAUSED:
             value = State.RESUME
         else:
             value = State.START
