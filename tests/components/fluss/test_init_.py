@@ -1,6 +1,6 @@
 """Test Script for Fluss+ Initialisation."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from fluss_api import (
     FlussApiClient,
@@ -12,11 +12,12 @@ import pytest
 
 from homeassistant.components.fluss import (
     DOMAIN,
+    PLATFORMS,
     Platform,
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
@@ -24,10 +25,10 @@ from homeassistant.core import HomeAssistant
 async def mock_hass():
     """Mock Hass Environment."""
     hass = AsyncMock(spec=HomeAssistant)
-    hass.config_entries = Mock()
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
-    hass.data = {DOMAIN: {}}
+    hass.config_entries = AsyncMock()
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+    hass.config_entries.async_unload_platforms = AsyncMock()
+    hass.data = {}
     return hass
 
 
@@ -37,7 +38,8 @@ async def mock_entry():
     entry = AsyncMock(spec=ConfigEntry)
     entry.data = {"api_key": "test_api_key"}
     entry.entry_id = "test_entry_id"
-    entry.runtime_data = {}  # Adjusted to AsyncMock
+    entry.runtime_data = {}
+    entry.state = ConfigEntryState.NOT_LOADED
     return entry
 
 
@@ -93,12 +95,40 @@ async def test_async_setup_entry_general_error(mock_hass, mock_entry) -> None:
 @pytest.mark.asyncio
 async def test_async_unload_entry_success(mock_hass, mock_entry) -> None:
     """Mock Successful Unloading."""
-    # Ensure the entry exists in hass.data before unloading
-    mock_hass.data[DOMAIN][mock_entry.entry_id] = {}
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        new=AsyncMock(return_value=True),
-    ):
-        result = await async_unload_entry(mock_hass, mock_entry)
-        assert result is True
-        assert mock_entry.entry_id not in mock_hass.data[DOMAIN]
+    mock_hass.data[DOMAIN] = {mock_entry.entry_id: {"platforms": PLATFORMS}}
+    mock_hass.config_entries.async_unload_platforms.return_value = True
+
+    result = await async_unload_entry(mock_hass, mock_entry)
+
+    assert result is True
+    assert DOMAIN not in mock_hass.data
+    mock_hass.config_entries.async_unload_platforms.assert_called_once_with(
+        mock_entry, PLATFORMS
+    )
+
+
+@pytest.mark.asyncio
+async def test_async_unload_entry_not_loaded(mock_hass, mock_entry) -> None:
+    """Test unloading when entry is not loaded."""
+    mock_hass.data[DOMAIN] = {}
+
+    result = await async_unload_entry(mock_hass, mock_entry)
+    assert result is False
+    assert DOMAIN in mock_hass.data
+    mock_hass.config_entries.async_unload_platforms.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_async_unload_entry_failure(mock_hass, mock_entry) -> None:
+    """Test unloading when platforms fail to unload."""
+    mock_hass.data[DOMAIN] = {mock_entry.entry_id: {"platforms": PLATFORMS}}
+    mock_hass.config_entries.async_unload_platforms.return_value = False
+
+    result = await async_unload_entry(mock_hass, mock_entry)
+
+    assert result is False
+    assert DOMAIN in mock_hass.data
+    assert mock_entry.entry_id in mock_hass.data[DOMAIN]
+    mock_hass.config_entries.async_unload_platforms.assert_called_once_with(
+        mock_entry, PLATFORMS
+    )

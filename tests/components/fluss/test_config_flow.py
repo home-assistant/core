@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from fluss_api import FlussApiClient, FlussApiClientCommunicationError
+from fluss_api import FlussApiClientCommunicationError
 import pytest
 
 from homeassistant.components.fluss import config_flow
@@ -91,7 +91,7 @@ async def test_validate_input_invalid_auth(mock_hass) -> None:
             "homeassistant.helpers.aiohttp_client.async_get_clientsession",
             return_value=AsyncMock(),
         ),
-        patch.object(FlussApiClient, "async_validate_api_key", return_value=False),
+        patch.object(ApiKeyStorageHub, "authenticate", return_value=False),
     ):  # noqa: SIM117
         with pytest.raises(InvalidAuth):
             await validate_input(mock_hass, data)
@@ -110,8 +110,8 @@ async def test_cannot_connect_exception(mock_hass) -> None:
             return_value=AsyncMock(),
         ),
         patch.object(
-            FlussApiClient,
-            "async_validate_api_key",
+            ApiKeyStorageHub,
+            "authenticate",
             side_effect=FlussApiClientCommunicationError,
         ),
     ):

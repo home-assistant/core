@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fluss_api import FlussApiClient, FlussApiClientCommunicationError
+from fluss_api import FlussApiClientCommunicationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,9 +38,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    api = FlussApiClient(data[CONF_API_KEY], hass)
+    api = ApiKeyStorageHub(data[CONF_API_KEY])
     try:
-        is_valid = await api.async_validate_api_key()
+        is_valid = await api.authenticate()
 
         if not is_valid:
             raise InvalidAuth
