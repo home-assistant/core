@@ -4537,11 +4537,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "panel_custom": {
-      "name": "Custom Panel",
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "panel_iframe": {
       "name": "iframe Panel",
       "integration_type": "hub",
