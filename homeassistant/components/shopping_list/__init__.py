@@ -250,6 +250,7 @@ class ShoppingData:
         for item_id in item_ids:
             _LOGGER.debug(
                 "Removing %s",
+                item_id,
             )
             if not (item := items_dict.pop(item_id, None)):
                 raise NoMatchingShoppingListItem(
