@@ -95,6 +95,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -123,7 +126,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '211.880',
+    'state': '211.88',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy-statealt]
@@ -139,7 +142,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '211.880',
+    'state': '211.88',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_10-entry]
@@ -165,6 +168,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -193,7 +199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.080',
+    'state': '0.08',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_10-statealt]
@@ -209,7 +215,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.080',
+    'state': '0.08',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_11-entry]
@@ -235,6 +241,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -263,7 +272,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '43.600',
+    'state': '43.6',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_11-statealt]
@@ -279,7 +288,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '43.600',
+    'state': '43.6',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_12-entry]
@@ -305,6 +314,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -333,7 +345,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_12-statealt]
@@ -349,7 +361,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_13-entry]
@@ -375,6 +387,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -445,6 +460,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -473,7 +491,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.960',
+    'state': '30.96',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_14-statealt]
@@ -489,7 +507,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.960',
+    'state': '30.96',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_15-entry]
@@ -515,6 +533,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -585,6 +606,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -613,7 +637,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_16-statealt]
@@ -629,7 +653,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_17-entry]
@@ -655,6 +679,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -683,7 +710,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_17-statealt]
@@ -699,7 +726,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_18-entry]
@@ -725,6 +752,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -753,7 +783,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_18-statealt]
@@ -769,7 +799,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_19-entry]
@@ -795,6 +825,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -823,7 +856,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_19-statealt]
@@ -839,7 +872,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_2-entry]
@@ -865,6 +898,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -935,6 +971,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -963,7 +1002,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_20-statealt]
@@ -979,7 +1018,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_21-entry]
@@ -1005,6 +1044,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1033,7 +1075,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_21-statealt]
@@ -1049,7 +1091,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_3-entry]
@@ -1075,6 +1117,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1145,6 +1190,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1215,6 +1263,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1285,6 +1336,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1313,7 +1367,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '127.320',
+    'state': '127.32',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_6-statealt]
@@ -1329,7 +1383,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '127.320',
+    'state': '127.32',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_7-entry]
@@ -1355,6 +1409,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1383,7 +1440,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_7-statealt]
@@ -1399,7 +1456,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_8-entry]
@@ -1425,6 +1482,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1495,6 +1555,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1523,7 +1586,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.060',
+    'state': '30.06',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_9-statealt]
@@ -1539,7 +1602,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.060',
+    'state': '30.06',
   })
 # ---
 # name: test_sensors[sensor.energy_site_energy_left-entry]
