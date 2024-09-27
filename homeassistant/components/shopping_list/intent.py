@@ -51,15 +51,15 @@ class RemoveItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
-        item = await intent_obj.hass.data[DOMAIN].remove_by_name(item)
+        result = await intent_obj.hass.data[DOMAIN].remove_by_name(item)
 
         response = intent_obj.create_response()
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
-        if not item:
-            response.async_set_speech(f"{item['name']} is not on your shopping list")
+        if not result:
+            response.async_set_speech(f"{item} is not on your shopping list")
         else:
-            response.async_set_speech(f"Removed {item['name']} from your shopping list")
+            response.async_set_speech(f"Removed {item} from your shopping list")
         return response
 
 
