@@ -532,6 +532,8 @@ filterwarnings = [
     # -- other
     # Locale changes might take some time to resolve upstream
     "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
+    # https://github.com/protocolbuffers/protobuf - v4.25.4
+    "ignore:Type google._upb._message.(Message|Scalar)MapContainer uses PyType_Spec with a metaclass that has custom tp_new. .* Python 3.14:DeprecationWarning",
     # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
     # https://github.com/lidatong/dataclasses-json/issues/328
