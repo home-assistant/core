@@ -238,25 +238,6 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         """Entry has finished executing its first step asynchronously."""
 
     @callback
-    def async_has_matching_flow(
-        self, handler: _HandlerT, match_context: dict[str, Any], data: Any
-    ) -> bool:
-        """Check if an existing matching flow is in progress.
-
-        A flow with the same handler, context, and data.
-
-        If match_context is passed, only return flows with a context that is a
-        superset of match_context.
-        """
-        if not (flows := self._handler_progress_index.get(handler)):
-            return False
-        match_items = match_context.items()
-        for progress in flows:
-            if match_items <= progress.context.items() and progress.init_data == data:
-                return True
-        return False
-
-    @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:

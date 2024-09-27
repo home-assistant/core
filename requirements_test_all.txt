@@ -243,7 +243,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.1.0b1
+aiohasupervisor==0.1.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -395,7 +395,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.0.3
+aiowithings==3.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -943,7 +943,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240925.0
+home-assistant-frontend==20240927.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -1703,7 +1703,7 @@ pyopnsense==0.4.0
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.0
+pyotgw==2.2.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1816,7 +1816,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.9.2
+pysqueezebox==0.9.3
 
 # homeassistant.components.suez_water
 pysuez==0.2.0
@@ -1864,7 +1864,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.9
+python-linkplay==0.0.12
 
 # homeassistant.components.matter
 python-matter-server==6.5.2
@@ -1919,7 +1919,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.5
+pytouchlinesl==0.1.7
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2366,7 +2366,7 @@ wiffi==1.1.2
 wled==0.20.2
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.10
+wolf-comm==0.0.15
 
 # homeassistant.components.wyoming
 wyoming==1.5.4

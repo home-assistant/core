@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
-    tado: TadoConnector = entry.runtime_data.tadoconnector
+    tado = entry.runtime_data
     tracked: set = set()
 
     # Fix non-string unique_id for device trackers
@@ -100,8 +100,6 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._device_name = device_name
         self._tado = tado
         self._active = False
-        self._latitude = None
-        self._longitude = None
 
     @callback
     def update_state(self) -> None:
@@ -159,13 +157,3 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     def location_name(self) -> str:
         """Return the state of the device."""
         return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def latitude(self) -> None:
-        """Return latitude value of the device."""
-        return None
-
-    @property
-    def longitude(self) -> None:
-        """Return longitude value of the device."""
-        return None

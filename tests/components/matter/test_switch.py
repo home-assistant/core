@@ -8,37 +8,16 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
-
-
-@pytest.fixture(name="powerplug_node")
-async def powerplug_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a Powerplug node."""
-    return await setup_integration_with_node_fixture(
-        hass, "on_off_plugin_unit", matter_client
-    )
-
-
-@pytest.fixture(name="switch_unit")
-async def switch_unit_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a Switch Unit node."""
-    return await setup_integration_with_node_fixture(hass, "switch_unit", matter_client)
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_on(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    powerplug_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test turning on a switch."""
     state = hass.states.get("switch.mock_onoffpluginunit_switch")
@@ -56,12 +35,12 @@ async def test_turn_on(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=powerplug_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.OnOff.Commands.On(),
     )
 
-    set_node_attribute(powerplug_node, 1, 6, 0, True)
+    set_node_attribute(matter_node, 1, 6, 0, True)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("switch.mock_onoffpluginunit_switch")
@@ -71,10 +50,11 @@ async def test_turn_on(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    powerplug_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test turning off a switch."""
     state = hass.states.get("switch.mock_onoffpluginunit_switch")
@@ -92,7 +72,7 @@ async def test_turn_off(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=powerplug_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )
@@ -100,11 +80,8 @@ async def test_turn_off(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_switch_unit(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    switch_unit: MatterNode,
-) -> None:
+@pytest.mark.parametrize("node_fixture", ["switch_unit"])
+async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
@@ -117,14 +94,9 @@ async def test_switch_unit(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_power_switch(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-) -> None:
+@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
-    await setup_integration_with_node_fixture(
-        hass, "room_airconditioner", matter_client
-    )
     state = hass.states.get("switch.room_airconditioner_power")
     assert state
     assert state.state == "off"
