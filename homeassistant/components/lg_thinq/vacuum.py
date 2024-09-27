@@ -110,7 +110,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         """Initialize vacuum platform."""
         super().__init__(coordinator, entity_description, property_id)
 
-        self._device_state: str | None = None
+        self._device_state: str
 
     def _update_status(self) -> None:
         """Update status itself."""
@@ -126,7 +126,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         )
         # Update state.
         self._device_state = self.data.current_state
-        self._attr_state = ROBOT_STATUS_TO_HA.get(self._device_state)
+        self._attr_state = ROBOT_STATUS_TO_HA[self._device_state]
 
         # Update battery.
         if (level := self.data.battery) is not None:
