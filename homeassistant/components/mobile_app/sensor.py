@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
@@ -32,6 +33,8 @@ from .const import (
 from .entity import MobileAppEntity
 from .webhook import _extract_sensor_unique_id
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,6 +62,9 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
+        if entry.unique_id.endswith("battery_level"):
+            _LOGGER.warning("Entity_entry: %s", entry)
+            _LOGGER.warning("Capabilities: %s", entry.capabilities)
         if capabilities := entry.capabilities:
             config[ATTR_SENSOR_STATE_CLASS] = capabilities.get(ATTR_SENSOR_STATE_CLASS)
         entities.append(MobileAppSensor(config, config_entry))
@@ -133,3 +139,4 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         self._attr_native_unit_of_measurement = config.get(ATTR_SENSOR_UOM)
         self._attr_state_class = config.get(ATTR_SENSOR_STATE_CLASS)
         self._attr_native_value = self._calculate_native_value()
+        _LOGGER.warning("Stateclass for %s: %r", self.entity_id, self._attr_state_class)
