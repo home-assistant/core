@@ -44,7 +44,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
+from .const import (
+    DATA_DEFAULT_ENTITY,
+    DEFAULT_EXPOSED_ATTRIBUTES,
+    DOMAIN,
+    ConversationEntityFeature,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
@@ -60,14 +65,7 @@ TRIGGER_CALLBACK_TYPE = Callable[
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
-DATA_DEFAULT_ENTITY = "conversation_default_entity"
 ERROR_SENTINEL = object()
-
-
-@core.callback
-def async_get_default_agent(hass: core.HomeAssistant) -> DefaultAgent:
-    """Get the default agent."""
-    return hass.data[DATA_DEFAULT_ENTITY]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:

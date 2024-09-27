@@ -1,7 +1,6 @@
 {
   "common": {
-    "error_cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
-    "error_no_primary_controller": "No primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit)."
+    "error_cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
   },
   "config": {
     "step": {
@@ -14,12 +13,10 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
-      "no_primary_controller": "[%key:component::russound_rio::common::error_no_primary_controller%]"
+      "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]"
     },
     "abort": {
       "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
-      "no_primary_controller": "[%key:component::russound_rio::common::error_no_primary_controller%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },

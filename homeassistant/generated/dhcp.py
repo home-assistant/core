@@ -428,6 +428,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0CAE7D*",
     },
     {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "2CAB33*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "94E36D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "9C7613*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "341513*",
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*",
@@ -1088,6 +1108,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "wiz",
         "hostname": "wiz_*",
+    },
+    {
+        "domain": "wmspro",
+        "macaddress": "0023D5*",
+    },
+    {
+        "domain": "wmspro",
+        "registered_devices": True,
     },
     {
         "domain": "yale",

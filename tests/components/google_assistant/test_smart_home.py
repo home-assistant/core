@@ -9,10 +9,20 @@ from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.cover import DemoCover
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,

@@ -1,11 +1,17 @@
 """Common methods used across tests for TotalConnect."""
 
+from typing import Any
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
 
-from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.components.totalconnect.const import (
+    AUTO_BYPASS,
+    CODE_REQUIRED,
+    CONF_USERCODES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -341,13 +347,16 @@ RESPONSE_ZONE_BYPASS_FAILURE = {
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
-USERCODES = {123456: "7890"}
+USERCODES = {LOCATION_ID: "7890"}
 CONFIG_DATA = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
     CONF_USERCODES: USERCODES,
 }
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+
+OPTIONS_DATA = {AUTO_BYPASS: False, CODE_REQUIRED: False}
+OPTIONS_DATA_CODE_REQUIRED = {AUTO_BYPASS: False, CODE_REQUIRED: True}
 
 PARTITION_DETAILS_1 = {
     "PartitionID": 1,
@@ -395,10 +404,19 @@ TOTALCONNECT_REQUEST = (
 )
 
 
-async def setup_platform(hass: HomeAssistant, platform: Platform) -> MockConfigEntry:
+async def setup_platform(
+    hass: HomeAssistant, platform: Any, code_required: bool = False
+) -> MockConfigEntry:
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
+    if code_required:
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA_CODE_REQUIRED
+        )
+    else:
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA
+        )
     mock_entry.add_to_hass(hass)
 
     responses = [
@@ -426,7 +444,7 @@ async def setup_platform(hass: HomeAssistant, platform: Platform) -> MockConfigE
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the TotalConnect integration."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA)
     mock_entry.add_to_hass(hass)
 
     responses = [

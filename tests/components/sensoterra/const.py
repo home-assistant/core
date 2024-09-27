@@ -4,4 +4,3 @@ API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE4NTYzMDQwMDAsInN1Yi
 API_EMAIL = "test-email@example.com"
 API_PASSWORD = "test-password"
 HASS_UUID = "phony-unique-id"
-SOURCE_USER = "user"

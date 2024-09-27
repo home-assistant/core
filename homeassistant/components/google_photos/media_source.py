@@ -1,9 +1,11 @@
 """Media source for Google Photos."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import StrEnum
 import logging
-from typing import Any, Self, cast
+from typing import Self, cast
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album, MediaItem
@@ -19,43 +21,15 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from . import GooglePhotosConfigEntry
-from .const import DOMAIN, READ_SCOPES
+from .const import DOMAIN, READ_SCOPE
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_RECENT_PHOTOS = 100
 MEDIA_ITEMS_PAGE_SIZE = 100
 ALBUM_PAGE_SIZE = 50
 
 THUMBNAIL_SIZE = 256
 LARGE_IMAGE_SIZE = 2160
-
-
-@dataclass
-class SpecialAlbumDetails:
-    """Details for a Special album."""
-
-    path: str
-    title: str
-    list_args: dict[str, Any]
-    max_photos: int | None
-
-
-class SpecialAlbum(Enum):
-    """Special Album types."""
-
-    RECENT = SpecialAlbumDetails("recent", "Recent Photos", {}, MAX_RECENT_PHOTOS)
-    FAVORITE = SpecialAlbumDetails(
-        "favorites", "Favorite Photos", {"favorites": True}, None
-    )
-
-    @classmethod
-    def of(cls, path: str) -> Self | None:
-        """Parse a PhotosIdentifierType by string value."""
-        for enum in cls:
-            if enum.value.path == path:
-                return enum
-        return None
 
 
 # The PhotosIdentifier can be in the following forms:
@@ -74,7 +48,7 @@ class PhotosIdentifierType(StrEnum):
     ALBUM = "a"
 
     @classmethod
-    def of(cls, name: str) -> "PhotosIdentifierType":
+    def of(cls, name: str) -> PhotosIdentifierType:
         """Parse a PhotosIdentifierType by string value."""
         for enum in PhotosIdentifierType:
             if enum.value == name:
@@ -154,7 +128,7 @@ class GooglePhotosMediaSource(MediaSource):
                 f"Could not resolve identiifer that is not a Photo: {identifier}"
             )
         entry = self._async_config_entry(identifier.config_entry_id)
-        client = entry.runtime_data
+        client = entry.runtime_data.client
         media_item = await client.get_media_item(media_item_id=identifier.media_id)
         if not media_item.mime_type:
             raise BrowseError("Could not determine mime type of media item")
@@ -194,29 +168,13 @@ class GooglePhotosMediaSource(MediaSource):
         # Determine the configuration entry for this item
         identifier = PhotosIdentifier.of(item.identifier)
         entry = self._async_config_entry(identifier.config_entry_id)
-        client = entry.runtime_data
+        coordinator = entry.runtime_data
+        client = coordinator.client
 
         source = _build_account(entry, identifier)
         if identifier.id_type is None:
+            albums = await coordinator.list_albums()
             source.children = [
-                _build_album(
-                    special_album.value.title,
-                    PhotosIdentifier.album(
-                        identifier.config_entry_id, special_album.value.path
-                    ),
-                )
-                for special_album in SpecialAlbum
-            ]
-            albums: list[Album] = []
-            try:
-                async for album_result in await client.list_albums(
-                    page_size=ALBUM_PAGE_SIZE
-                ):
-                    albums.extend(album_result.albums)
-            except GooglePhotosApiError as err:
-                raise BrowseError(f"Error listing albums: {err}") from err
-
-            source.children.extend(
                 _build_album(
                     album.title,
                     PhotosIdentifier.album(
@@ -226,7 +184,7 @@ class GooglePhotosMediaSource(MediaSource):
                     _cover_photo_url(album, THUMBNAIL_SIZE),
                 )
                 for album in albums
-            )
+            ]
             return source
 
         if (
@@ -235,24 +193,12 @@ class GooglePhotosMediaSource(MediaSource):
         ):
             raise BrowseError(f"Unsupported identifier: {identifier}")
 
-        list_args: dict[str, Any]
-        if special_album := SpecialAlbum.of(identifier.media_id):
-            list_args = special_album.value.list_args
-        else:
-            list_args = {"album_id": identifier.media_id}
-
         media_items: list[MediaItem] = []
         try:
             async for media_item_result in await client.list_media_items(
-                **list_args, page_size=MEDIA_ITEMS_PAGE_SIZE
+                album_id=identifier.media_id, page_size=MEDIA_ITEMS_PAGE_SIZE
             ):
                 media_items.extend(media_item_result.media_items)
-                if (
-                    special_album
-                    and (max_photos := special_album.value.max_photos)
-                    and len(media_items) > max_photos
-                ):
-                    break
         except GooglePhotosApiError as err:
             raise BrowseError(f"Error listing media items: {err}") from err
 
@@ -270,7 +216,7 @@ class GooglePhotosMediaSource(MediaSource):
         entries = []
         for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             scopes = entry.data["token"]["scope"].split(" ")
-            if any(scope in scopes for scope in READ_SCOPES):
+            if READ_SCOPE in scopes:
                 entries.append(entry)
         return entries
 

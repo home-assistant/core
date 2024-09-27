@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,

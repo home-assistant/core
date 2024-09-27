@@ -94,7 +94,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.components.websocket_api import ActiveConnection
 
 _LOGGER = logging.getLogger(__name__)
 
