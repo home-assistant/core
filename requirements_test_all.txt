@@ -1944,7 +1944,7 @@ pyudev==0.24.1
 pyuptimerobot==22.2.0
 
 # homeassistant.components.vera
-pyvera==0.3.13
+pyvera==0.3.15
 
 # homeassistant.components.vesync
 pyvesync==2.1.12
