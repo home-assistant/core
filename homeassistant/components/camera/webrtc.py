@@ -75,7 +75,7 @@ class WebRTCClientConfiguration(_RTCBaseModel):
     Not part of the spec, but required to configure client.
     """
 
-    configuration: RTCConfiguration = RTCConfiguration()
+    configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
     data_channel: str | None = field(
         metadata=field_options(alias="dataChannel"), default=None
     )

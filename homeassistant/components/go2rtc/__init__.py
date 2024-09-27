@@ -1,5 +1,7 @@
 """The go2rtc component."""
 
+from go2rtc_client import Go2RtcClient, WebRTCSdpOffer
+
 from homeassistant.components.camera import Camera
 from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
@@ -10,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api.client import Go2rtcClient
-from .api.models import WebRTCSdpOffer
 from .const import CONF_BINARY
 from .utils import Server
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebRTCConfigEntry) -> bo
         entry.runtime_data = server
         server.start()
 
-    client = Go2rtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
+    client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
 
     provider = WebRTCProvider(entry, client)
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebRTCConfigEntry) -> bo
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
-    def __init__(self, entry: ConfigEntry, client: Go2rtcClient) -> None:
+    def __init__(self, entry: ConfigEntry, client: Go2RtcClient) -> None:
         """Initialize the WebRTC provider."""
         self._entry = entry
         self._client = client
