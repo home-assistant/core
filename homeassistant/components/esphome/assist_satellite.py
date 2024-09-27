@@ -315,6 +315,10 @@ class EsphomeAssistSatellite(
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
+            if self._tts_streaming_task is None:
+                # No TTS
+                self.entry_data.async_set_assist_pipeline_state(False)
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
@@ -413,7 +417,6 @@ class EsphomeAssistSatellite(
 
         # Run the pipeline
         _LOGGER.debug("Running pipeline from %s to %s", start_stage, end_stage)
-        self.entry_data.async_set_assist_pipeline_state(True)
         self._pipeline_task = self.config_entry.async_create_background_task(
             self.hass,
             self.async_accept_pipeline_from_satellite(
@@ -443,7 +446,6 @@ class EsphomeAssistSatellite(
 
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
-        self.entry_data.async_set_assist_pipeline_state(False)
         self._stop_udp_server()
         _LOGGER.debug("Pipeline finished")
 
@@ -561,6 +563,7 @@ class EsphomeAssistSatellite(
 
         # State change
         self.tts_response_finished()
+        self.entry_data.async_set_assist_pipeline_state(False)
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
         """Yield audio chunks from the queue until None."""
