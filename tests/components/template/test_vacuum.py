@@ -94,9 +94,8 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
         ),
     ],
 )
-async def test_valid_configs(
-    hass: HomeAssistant, count, parm1, parm2, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_valid_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
     """Test: configs."""
     assert len(hass.states.async_all("vacuum")) == count
     _verify(hass, parm1, parm2)
@@ -118,7 +117,8 @@ async def test_valid_configs(
         },
     ],
 )
-async def test_invalid_configs(hass: HomeAssistant, count, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_invalid_configs(hass: HomeAssistant, count) -> None:
     """Test: configs."""
     assert len(hass.states.async_all("vacuum")) == count
 
@@ -144,7 +144,8 @@ async def test_invalid_configs(hass: HomeAssistant, count, start_ha) -> None:
         )
     ],
 )
-async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_templates_with_entities(hass: HomeAssistant) -> None:
     """Test templates with values from other entities."""
     _verify(hass, STATE_UNKNOWN, None)
 
@@ -174,7 +175,8 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
         )
     ],
 )
-async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
 
     # When template returns true..
@@ -212,8 +214,9 @@ async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -
         )
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
@@ -243,7 +246,8 @@ async def test_invalid_availability_template_keeps_component_available(
         )
     ],
 )
-async def test_attribute_templates(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_attribute_templates(hass: HomeAssistant) -> None:
     """Test attribute_templates template."""
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It ."
@@ -278,8 +282,9 @@ async def test_attribute_templates(hass: HomeAssistant, start_ha) -> None:
         )
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that errors are logged if rendering template fails."""
     assert len(hass.states.async_all("vacuum")) == 1
@@ -313,7 +318,8 @@ async def test_invalid_attribute_template(
         ),
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one vacuum per id."""
     assert len(hass.states.async_all("vacuum")) == 1
 

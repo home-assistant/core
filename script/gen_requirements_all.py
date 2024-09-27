@@ -96,9 +96,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.59.0
-grpcio-status==1.59.0
-grpcio-reflection==1.59.0
+grpcio==1.62.3
+grpcio-status==1.62.3
+grpcio-reflection==1.62.3
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -138,7 +138,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.17
+pydantic==1.10.18
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
