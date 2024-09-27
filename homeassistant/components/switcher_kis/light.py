@@ -16,14 +16,12 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,14 +54,12 @@ async def async_setup_entry(
     )
 
 
-class SwitcherLightEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], LightEntity
-):
+class SwitcherLightEntity(SwitcherEntity, LightEntity):
     """Representation of a Switcher light entity."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_has_entity_name = True
+    _attr_translation_key = "light"
 
     def __init__(
         self,
@@ -76,12 +72,9 @@ class SwitcherLightEntity(
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = f"Light{self._light_id + 1}"
+        self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
-        )
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     @callback

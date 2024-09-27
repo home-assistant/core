@@ -26,8 +26,8 @@ from .consts import (
     DUMMY_USERNAME as USERNAME,
 )
 
-ENTITY_ID = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light1"
-ENTITY_ID2 = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light2"
+ENTITY_ID = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_1"
+ENTITY_ID2 = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_2"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
