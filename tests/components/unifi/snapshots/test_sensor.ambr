@@ -1798,7 +1798,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bandwidth_rx',
+    'translation_key': 'client_bandwidth_rx',
     'unique_id': 'rx-00:00:00:00:00:01',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -1849,7 +1849,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bandwidth_tx',
+    'translation_key': 'client_bandwidth_tx',
     'unique_id': 'tx-00:00:00:00:00:01',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -1947,7 +1947,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bandwidth_rx',
+    'translation_key': 'client_bandwidth_rx',
     'unique_id': 'rx-00:00:00:00:00:02',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -1998,7 +1998,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bandwidth_tx',
+    'translation_key': 'client_bandwidth_tx',
     'unique_id': 'tx-00:00:00:00:00:02',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
