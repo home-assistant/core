@@ -25,7 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -981,8 +985,21 @@ async def async_service_temperature_set(
 
     hass = entity.hass
     kwargs: dict[str, Any] = {}
-    min_temp = entity.min_temp
-    max_temp = entity.max_temp
+    entity_reg: er.EntityRegistry = er.async_get(hass)
+
+    # If the entity has a unique id then look it up in the registry
+    # to get its entity id, otherwise use the entity default entity_id
+    entity_id: str = entity.entity_id
+    if er_entity_id := entity_reg.async_get_entity_id(
+        entity.platform.domain, entity.platform.platform_name, entity.unique_id
+    ):
+        entity_id = er_entity_id
+    entity_state = hass.states.get(entity_id)
+
+    # Get the min and max from the state machine in case they have been
+    # overridden through customize.
+    min_temp = entity_state.attributes.get(ATTR_MIN_TEMP, entity.min_temp)
+    max_temp = entity_state.attributes.get(ATTR_MAX_TEMP, entity.max_temp)
     temp_unit = entity.temperature_unit
 
     if (

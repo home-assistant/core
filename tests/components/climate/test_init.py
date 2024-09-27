@@ -1154,8 +1154,16 @@ async def test_temperature_validation(
         unique_id="unique_climate_test",
     )
 
+    test_climate_no_unique_id = MockClimateEntityTemp(
+        name="Test1",
+        unique_id=None,
+    )
+
     setup_test_component_platform(
-        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+        hass,
+        DOMAIN,
+        entities=[test_climate, test_climate_no_unique_id],
+        from_config_entry=True,
     )
     await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
@@ -1218,6 +1226,63 @@ async def test_temperature_validation(
     state = hass.states.get("climate.test")
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
+
+    attributes = state.attributes.copy()
+    attributes[ATTR_MIN_TEMP] = 0.0
+    attributes[ATTR_MAX_TEMP] = 45.0
+    hass.states.async_set(
+        "climate.test", "heat", attributes=attributes, force_update=True
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: "45",
+            ATTR_TARGET_TEMP_LOW: "0",
+        },
+        blocking=True,
+    )
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided temperature 0.0 is not valid. Accepted range is 7 to 35",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test1",
+                ATTR_TARGET_TEMP_HIGH: "25",
+                ATTR_TARGET_TEMP_LOW: "0",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Provided temperature 0.0 is not valid. Accepted range is 7 to 35"
+    )
+    assert exc.value.translation_key == "temp_out_of_range"
+
+    state = hass.states.get("climate.test1")
+    attributes = state.attributes.copy()
+    attributes[ATTR_MIN_TEMP] = 0.0
+    attributes[ATTR_MAX_TEMP] = 45.0
+    hass.states.async_set(
+        "climate.test1", "heat", attributes=attributes, force_update=True
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test1",
+            ATTR_TARGET_TEMP_HIGH: "45",
+            ATTR_TARGET_TEMP_LOW: "0",
+        },
+        blocking=True,
+    )
 
 
 async def test_target_temp_high_higher_than_low(
