@@ -7,7 +7,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from functools import cached_property
 import logging
-from typing import Any
+from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
@@ -6180,3 +6180,204 @@ async def test_async_loaded_entries(
     assert await hass.config_entries.async_unload(entry1.entry_id)
 
     assert hass.config_entries.async_loaded_entries("comp") == []
+
+
+async def test_async_has_matching_discovery_flow(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test we can check for matching discovery flows."""
+    assert (
+        manager.flow.async_has_matching_discovery_flow(
+            "test",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+            )
+
+        async def async_step_homekit(self, discovery_info=None):
+            return await self.async_step_init(discovery_info)
+
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert len(manager.flow.async_progress()) == 1
+    assert len(manager.flow.async_progress_by_handler("test")) == 1
+    assert (
+        len(
+            manager.flow.async_progress_by_handler(
+                "test", match_context={"source": config_entries.SOURCE_HOMEKIT}
+            )
+        )
+        == 1
+    )
+    assert (
+        len(
+            manager.flow.async_progress_by_handler(
+                "test", match_context={"source": config_entries.SOURCE_BLUETOOTH}
+            )
+        )
+        == 0
+    )
+    assert manager.flow.async_get(result["flow_id"])["handler"] == "test"
+
+    assert (
+        manager.flow.async_has_matching_discovery_flow(
+            "test",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is True
+    )
+    assert (
+        manager.flow.async_has_matching_discovery_flow(
+            "test",
+            {"source": config_entries.SOURCE_SSDP},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )
+    assert (
+        manager.flow.async_has_matching_discovery_flow(
+            "other",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )
+
+
+async def test_async_has_matching_flow(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test check for matching flows when there is no active flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+            )
+
+        async def async_step_homekit(self, discovery_info=None):
+            return await self.async_step_init(discovery_info)
+
+        def is_matching(self, other_flow: Self) -> bool:
+            """Return True if other_flow is matching this flow."""
+            return True
+
+    # Initiate a flow
+    with mock_config_flow("test", TestFlow):
+        await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    flow = list(manager.flow._handler_progress_index.get("test"))[0]
+
+    assert manager.flow.async_has_matching_flow(flow) is False
+
+    # Initiate another flow
+    with mock_config_flow("test", TestFlow):
+        await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+
+    assert manager.flow.async_has_matching_flow(flow) is True
+
+
+async def test_async_has_matching_flow_no_flows(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test check for matching flows when there is no active flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+            )
+
+        async def async_step_homekit(self, discovery_info=None):
+            return await self.async_step_init(discovery_info)
+
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    flow = list(manager.flow._handler_progress_index.get("test"))[0]
+
+    # Abort the flow before checking for matching flows
+    manager.flow.async_abort(result["flow_id"])
+
+    assert manager.flow.async_has_matching_flow(flow) is False
+
+
+async def test_async_has_matching_flow_not_implemented(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test check for matching flows when there is no active flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+            )
+
+        async def async_step_homekit(self, discovery_info=None):
+            return await self.async_step_init(discovery_info)
+
+    # Initiate a flow
+    with mock_config_flow("test", TestFlow):
+        await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    flow = list(manager.flow._handler_progress_index.get("test"))[0]
+
+    # Initiate another flow
+    with mock_config_flow("test", TestFlow):
+        await manager.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+
+    # The flow does not implement is_matching
+    with pytest.raises(NotImplementedError):
+        manager.flow.async_has_matching_flow(flow)
