@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    UnitOfGlucoseLevel,
+    UnitOfVolumeConcentration,
 )
 from homeassistant.core import callback
 
@@ -96,9 +96,11 @@ class DexcomOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_UNIT_OF_MEASUREMENT,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_OF_MEASUREMENT, UnitOfGlucoseLevel.MG_DL
+                        CONF_UNIT_OF_MEASUREMENT, UnitOfVolumeConcentration.MG_DL
                     ),
-                ): vol.In({UnitOfGlucoseLevel.MG_DL, UnitOfGlucoseLevel.MMOL_L}),
+                ): vol.In(
+                    {UnitOfVolumeConcentration.MG_DL, UnitOfVolumeConcentration.MMOL_L}
+                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

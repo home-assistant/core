@@ -796,14 +796,6 @@ CURRENCY_DOLLAR: Final = "$"
 CURRENCY_CENT: Final = "¢"
 
 
-# Glucose level units
-class UnitOfGlucoseLevel(StrEnum):
-    """Glucose level units."""
-
-    MMOL_L = "mmol/L"
-    MG_DL = "mg/dL"
-
-
 # Temperature units
 class UnitOfTemperature(StrEnum):
     """Temperature units."""
@@ -1231,6 +1223,14 @@ _DEPRECATED_IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = DeprecatedConstantEnu
     "2025.1",
 )
 """Deprecated: please use UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT"""
+
+
+# Volume Concentration units
+class UnitOfVolumeConcentration(StrEnum):
+    """Volume concentration units."""
+
+    MMOL_L = "mmol/L"
+    MG_DL = "mg/dL"
 
 
 class UnitOfVolumetricFlux(StrEnum):

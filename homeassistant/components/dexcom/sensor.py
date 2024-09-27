@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    UnitOfGlucoseLevel,
+    UnitOfVolumeConcentration,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -90,7 +90,9 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         super().__init__(coordinator, username, entry_id, "value")
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._key = (
-            "mg_dl" if unit_of_measurement == UnitOfGlucoseLevel.MG_DL else "mmol_l"
+            "mg_dl"
+            if unit_of_measurement == UnitOfVolumeConcentration.MG_DL
+            else "mmol_l"
         )
 
     @property

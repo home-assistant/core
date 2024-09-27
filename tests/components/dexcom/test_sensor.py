@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    UnitOfGlucoseLevel,
+    UnitOfVolumeConcentration,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -81,11 +81,11 @@ async def test_sensors_options_changed(hass: HomeAssistant) -> None:
     ):
         hass.config_entries.async_update_entry(
             entry=entry,
-            options={CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MMOL_L},
+            options={CONF_UNIT_OF_MEASUREMENT: UnitOfVolumeConcentration.MMOL_L},
         )
         await hass.async_block_till_done()
 
-    assert entry.options == {CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MMOL_L}
+    assert entry.options == {CONF_UNIT_OF_MEASUREMENT: UnitOfVolumeConcentration.MMOL_L}
 
     test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == str(GLUCOSE_READING.mmol_l)

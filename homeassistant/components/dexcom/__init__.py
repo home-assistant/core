@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    UnitOfGlucoseLevel,
+    UnitOfVolumeConcentration,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.options:
         hass.config_entries.async_update_entry(
-            entry, options={CONF_UNIT_OF_MEASUREMENT: UnitOfGlucoseLevel.MG_DL}
+            entry, options={CONF_UNIT_OF_MEASUREMENT: UnitOfVolumeConcentration.MG_DL}
         )
 
     async def async_update_data():
