@@ -395,7 +395,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.0.3
+aiowithings==3.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -1864,7 +1864,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.9
+python-linkplay==0.0.12
 
 # homeassistant.components.matter
 python-matter-server==6.5.2
@@ -2366,7 +2366,7 @@ wiffi==1.1.2
 wled==0.20.2
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.10
+wolf-comm==0.0.15
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
