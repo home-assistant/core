@@ -1,10 +1,12 @@
 """Template config validator."""
 
+from contextlib import suppress
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.blueprint import is_blueprint_instance_config
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -12,7 +14,12 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
-from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import async_validate_conditions_config
@@ -29,7 +36,8 @@ from . import (
     sensor as sensor_platform,
     weather as weather_platform,
 )
-from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN
+from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -70,6 +78,72 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
 )
 
 
+class TemplateConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config: ConfigType | None = None
+    raw_blueprint_inputs: ConfigType | None = None
+
+
+async def _async_resolve_blueprints(
+    hass: HomeAssistant,
+    config: ConfigType,
+    expected_platform: Platform,
+) -> TemplateConfig:
+    """If a config item requires a blueprint, resolve that item to an actual config."""
+    raw_config = None
+    raw_blueprint_inputs = None
+
+    with suppress(ValueError):  # Invalid config
+        raw_config = dict(config)
+
+    if is_blueprint_instance_config(config):
+        blueprints = async_get_blueprints(hass)
+
+        blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+        config = blueprint_inputs.async_substitute()
+        if expected_platform not in config:
+            raise vol.Invalid("Expected platform not in blueprint")
+        for key, value in config[expected_platform].items():
+            config[key] = value
+        del config[expected_platform]
+        raw_config = dict(config)
+
+    template_config = TemplateConfig(config)
+    template_config.raw_blueprint_inputs = raw_blueprint_inputs
+    template_config.raw_config = raw_config
+
+    return template_config
+
+
+async def async_validate_config_section(hass: HomeAssistant, config: ConfigType):
+    """Validate an entire config section for the template integration."""
+
+    for platform in PLATFORMS:
+        if platform not in config:
+            continue
+
+        config[platform] = cv.ensure_list(config[platform])
+        for idx, cfg in enumerate(config[platform]):
+            config[platform][idx] = await _async_resolve_blueprints(hass, cfg, platform)
+
+    validated_config = CONFIG_SECTION_SCHEMA(config)
+
+    if CONF_TRIGGER in validated_config:
+        validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGER]
+        )
+
+    if CONF_CONDITION in validated_config:
+        validated_config[CONF_CONDITION] = await async_validate_conditions_config(
+            hass, validated_config[CONF_CONDITION]
+        )
+
+    return validated_config
+
+
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     if DOMAIN not in config:
@@ -79,17 +153,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
     for cfg in cv.ensure_list(config[DOMAIN]):
         try:
-            cfg = CONFIG_SECTION_SCHEMA(cfg)
-
-            if CONF_TRIGGER in cfg:
-                cfg[CONF_TRIGGER] = await async_validate_trigger_config(
-                    hass, cfg[CONF_TRIGGER]
-                )
-
-            if CONF_CONDITION in cfg:
-                cfg[CONF_CONDITION] = await async_validate_conditions_config(
-                    hass, cfg[CONF_CONDITION]
-                )
+            cfg = await async_validate_config_section(hass, cfg)
         except vol.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
