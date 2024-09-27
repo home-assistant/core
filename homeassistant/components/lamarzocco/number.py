@@ -32,6 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
@@ -228,6 +229,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
+                    translation_domain=DOMAIN,
                     translation_key="number_exception",
                     translation_placeholders={
                         "key": self.entity_description.key,
@@ -277,6 +279,7 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
+                    translation_domain=DOMAIN,
                     translation_key="number_exception_key",
                     translation_placeholders={
                         "key": self.entity_description.key,
