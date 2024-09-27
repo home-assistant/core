@@ -342,7 +342,12 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         if isinstance(self._run_variables, dict):
             return self._run_variables
 
-        return self._run_variables.async_render(self.hass, {"this": TemplateStateFromEntityId(self.hass, self.entity_id),})
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
+        )
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -481,7 +486,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
 
         variables = {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **self._render_variables()
+            **self._render_variables(),
         }
 
         for template, attributes in self._template_attrs.items():

@@ -60,6 +60,7 @@ def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
 
     return template_entity.referenced_blueprint
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
 
