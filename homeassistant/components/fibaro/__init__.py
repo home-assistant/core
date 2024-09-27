@@ -67,6 +67,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.doorLock": Platform.LOCK,
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
     "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
+    "com.fibaro.powerMeter": Platform.BINARY_SENSOR,
 }
 
 
