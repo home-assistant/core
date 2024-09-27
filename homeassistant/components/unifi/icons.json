@@ -1,4 +1,40 @@
 {
+  "entity": {
+    "sensor": {
+      "bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "bandwidth_tx": {
+        "default": "mdi:upload"
+      },
+      "port_bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "port_bandwidth_tx": {
+        "default": "mdi:upload"
+      }
+    },
+    "switch": {
+      "block_client": {
+        "default": "mdi:ethernet"
+      },
+      "dpi_restriction": {
+        "default": "mdi:network"
+      },
+      "port_forward_control": {
+        "default": "mdi:upload-network"
+      },
+      "traffic_rule_control": {
+        "default": "mdi:security-network"
+      },
+      "poe_port_control": {
+        "default": "mdi:ethernet"
+      },
+      "wlan_control": {
+        "default": "mdi:wifi-check"
+      }
+    }
+  },
   "services": {
     "reconnect_client": {
       "service": "mdi:sync"
