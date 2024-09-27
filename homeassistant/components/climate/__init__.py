@@ -987,13 +987,15 @@ async def async_service_temperature_set(
     kwargs: dict[str, Any] = {}
     entity_reg: er.EntityRegistry = er.async_get(hass)
 
-    # If the entity has a unique id then look it up in the registry
-    # to get its entity id, otherwise use the entity default entity_id
-    entity_id: str = entity.entity_id
+    # If the entity has a unique id then look it up in the registry to get its entity id.
     if er_entity_id := entity_reg.async_get_entity_id(
         entity.platform.domain, entity.platform.platform_name, entity.unique_id
     ):
         entity_id = er_entity_id
+    # otherwise use the default entity_id
+    else:
+        entity_id = entity.entity_id
+
     entity_state = hass.states.get(entity_id)
 
     # Get the min and max from the state machine in case they have been
@@ -1020,7 +1022,8 @@ async def async_service_temperature_set(
             )
 
             _LOGGER.debug(
-                "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
+                "Check valid temperature %s %d %s (%d %s) in range %d %s - %d %s",
+                entity_id,
                 check_temp,
                 entity.temperature_unit,
                 temp,
