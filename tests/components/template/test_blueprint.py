@@ -1,0 +1,101 @@
+"""Test built-in blueprints."""
+
+from collections.abc import Iterator
+import contextlib
+from os import PathLike
+import pathlib
+from typing import Any
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.components import template
+from homeassistant.components.blueprint import (
+    BLUEPRINT_SCHEMA,
+    Blueprint,
+    DomainBlueprints,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
+from homeassistant.util import yaml
+
+from tests.common import MockConfigEntry
+
+BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(template.__file__).parent / "blueprints"
+
+
+@contextlib.contextmanager
+def patch_blueprint(
+    blueprint_path: str, data_path: str | PathLike[str]
+) -> Iterator[None]:
+    """Patch blueprint loading from a different source."""
+    orig_load = DomainBlueprints._load_blueprint
+
+    @callback
+    def mock_load_blueprint(self, path):
+        if path != blueprint_path:
+            pytest.fail(f"Unexpected blueprint {path}")
+            return orig_load(self, path)
+
+        return Blueprint(
+            yaml.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=BLUEPRINT_SCHEMA,
+        )
+
+    with patch(
+        "homeassistant.components.blueprint.models.DomainBlueprints._load_blueprint",
+        mock_load_blueprint,
+    ):
+        yield
+
+
+async def test_inverted_binary_sensor(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test inverted binary sensor blueprint."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+
+    def set_occupancy_state(state: str, extra: dict[str, Any]) -> None:
+        hass.states.async_set(
+            "binary_sensor.occupancy", state, {"friendly_name": "Occupancy", **extra}
+        )
+
+    set_occupancy_state("School", {})
+
+    assert await async_setup_component(
+        hass, "zone", {"zone": {"name": "School", "latitude": 1, "longitude": 2}}
+    )
+
+    with patch_blueprint(
+        "inverted_binary_sensor.yaml",
+        BUILTIN_BLUEPRINT_FOLDER / "inverted_binary_sensor.yaml",
+    ):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "binary_sensor": {
+                        "use_blueprint": {
+                            "path": "inverted_binary_sensor.yaml",
+                            "input": {"original_entity": "binary_sensor.occupancy"},
+                        },
+                        "name": "Vacancy",
+                    }
+                }
+            },
+        )
+
+    set_occupancy_state("on", {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.occupancy").state == "on"
+    vacancy = hass.states.get("binary_sensor.vacancy")
+    assert vacancy
+    assert vacancy.state == "off"
