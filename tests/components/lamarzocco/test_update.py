@@ -74,7 +74,7 @@ async def test_update_error(
 
     setattr(mock_lamarzocco.update_firmware, attr, value)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -83,3 +83,4 @@ async def test_update_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "update_failed"

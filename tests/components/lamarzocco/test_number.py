@@ -397,7 +397,7 @@ async def test_number_error(
     assert state
 
     mock_lamarzocco.set_temp.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -407,12 +407,13 @@ async def test_number_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "number_exception"
 
     state = hass.states.get(f"number.{serial_number}_dose_key_1")
     assert state
 
     mock_lamarzocco.set_dose.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -422,3 +423,4 @@ async def test_number_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "number_exception_key"

@@ -177,7 +177,7 @@ async def test_switch_exceptions(
 
     mock_lamarzocco.set_power.side_effect = RequestNotSuccessful("Boom")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -186,8 +186,9 @@ async def test_switch_exceptions(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "switch_off_error"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -196,12 +197,13 @@ async def test_switch_exceptions(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "switch_on_error"
 
     state = hass.states.get(f"switch.{serial_number}_auto_on_off_os2oswx")
     assert state
 
     mock_lamarzocco.set_wake_up_sleep.side_effect = RequestNotSuccessful("Boom")
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -210,3 +212,4 @@ async def test_switch_exceptions(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "auto_on_off_error"

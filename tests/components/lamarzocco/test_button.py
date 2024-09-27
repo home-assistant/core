@@ -57,8 +57,9 @@ async def test_button_error(
     assert state
 
     mock_lamarzocco.start_backflush.side_effect = RequestNotSuccessful("Boom.")
-
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Error while executing button"
+    ) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -67,3 +68,4 @@ async def test_button_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "button_error"

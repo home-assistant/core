@@ -134,7 +134,7 @@ async def test_select_errors(
     mock_lamarzocco.set_prebrew_mode.side_effect = RequestNotSuccessful("Boom")
 
     # Test setting invalid option
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -144,3 +144,4 @@ async def test_select_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "select_option_error"
