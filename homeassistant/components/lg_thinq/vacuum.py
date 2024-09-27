@@ -101,6 +101,15 @@ async def async_setup_entry(
 class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
     """Represent an thinq vacuum platform."""
 
+    _attr_supported_features = (
+        VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.RETURN_HOME
+    )
+
     def __init__(
         self,
         coordinator: DeviceDataUpdateCoordinator,
@@ -116,14 +125,6 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         """Update status itself."""
         super()._update_status()
 
-        self._attr_supported_features = (
-            VacuumEntityFeature.SEND_COMMAND
-            | VacuumEntityFeature.STATE
-            | VacuumEntityFeature.BATTERY
-            | VacuumEntityFeature.START
-            | VacuumEntityFeature.PAUSE
-            | VacuumEntityFeature.RETURN_HOME
-        )
         # Update state.
         self._device_state = self.data.current_state
         self._attr_state = ROBOT_STATUS_TO_HA[self._device_state]
