@@ -99,33 +99,9 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
         return super().available and not self._tile.dead
 
     @property
-    def location_accuracy(self) -> int:
-        """Return the location accuracy of the device.
-
-        Value in meters.
-        """
-        if not self._tile.accuracy:
-            return super().location_accuracy
-        return int(self._tile.accuracy)
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(identifiers={(DOMAIN, self._tile.uuid)}, name=self._tile.name)
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        if not self._tile.latitude:
-            return None
-        return self._tile.latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        if not self._tile.longitude:
-            return None
-        return self._tile.longitude
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -136,6 +112,14 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
     @callback
     def _update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
+        self._attr_longitude = (
+            None if not self._tile.longitude else self._tile.longitude
+        )
+        self._attr_latitude = None if not self._tile.latitude else self._tile.latitude
+        self._attr_location_accuracy = (
+            0 if not self._tile.accuracy else int(self._tile.accuracy)
+        )
+
         self._attr_extra_state_attributes = {
             ATTR_ALTITUDE: self._tile.altitude,
             ATTR_IS_LOST: self._tile.lost,
