@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 from plugwise import Smile
 from plugwise.exceptions import (
@@ -85,6 +85,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     discovery_info: ZeroconfServiceInfo | None = None
+    product: str | None = None
     _username: str = DEFAULT_USERNAME
 
     async def async_step_zeroconf(
@@ -118,7 +119,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
-        _product = _properties.get("product", None)
+        self.product = _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
@@ -130,23 +131,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         # If we have discovered an Adam or Anna, both might be on the network.
         # In that case, we need to cancel the Anna flow, as the Adam should
         # be added.
-        for flow in self._async_in_progress():
-            # This is an Anna, and there is already an Adam flow in progress
-            if (
-                _product == "smile_thermo"
-                and "context" in flow
-                and flow["context"].get("product") == "smile_open_therm"
-            ):
-                return self.async_abort(reason="anna_with_adam")
-
-            # This is an Adam, and there is already an Anna flow in progress
-            if (
-                _product == "smile_open_therm"
-                and "context" in flow
-                and flow["context"].get("product") == "smile_thermo"
-                and "flow_id" in flow
-            ):
-                self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="anna_with_adam")
 
         self.context.update(
             {
@@ -159,10 +145,21 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                 ),
-                "product": _product,
             }
         )
         return await self.async_step_user()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        # This is an Anna, and there is already an Adam flow in progress
+        if self.product == "smile_thermo" and other_flow.product == "smile_open_therm":
+            return True
+
+        # This is an Adam, and there is already an Anna flow in progress
+        if self.product == "smile_open_therm" and other_flow.product == "smile_thermo":
+            self.hass.config_entries.flow.async_abort(other_flow.flow_id)
+
+        return False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
