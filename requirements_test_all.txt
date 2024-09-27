@@ -2366,7 +2366,7 @@ wiffi==1.1.2
 wled==0.20.2
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.10
+wolf-comm==0.0.15
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
