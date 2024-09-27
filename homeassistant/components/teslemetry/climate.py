@@ -265,10 +265,9 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
         """Set the climate temperature."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        if not (temp := kwargs.get(ATTR_TEMPERATURE)):
-            return
-
-        if (cop_mode := TEMP_LEVELS.get(temp)) is None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None or (
+            cop_mode := TEMP_LEVELS.get(temp)
+        ) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_cop_temp",
