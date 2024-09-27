@@ -3,6 +3,11 @@ name: Build wheels
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+    inputs:
+      build-deps:
+        description: Build wheels for build dependencies
+        default: false
+        type: boolean
   schedule:
     - cron: "0 4 * * *"
   push:
@@ -200,6 +205,16 @@ jobs:
 
           split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all_wheels_${{ matrix.arch }}.txt requirements_all.txt
 
+      - name: Create requirements for build dependencies
+        run: |
+          # Add build dependencies to speed up wheel builds
+          # ninja is used by numpy and pandas
+
+          touch requirements_build-deps.txt
+          echo "cython<4" >> requirements_build-deps.txt
+          echo "ninja<2" >> requirements_build-deps.txt
+          echo "numpy<3" >> requirements_build-deps.txt
+
       - name: Create requirements for cython<3
         run: |
           # Some dependencies still require 'cython<3'
@@ -209,6 +224,21 @@ jobs:
 
           touch requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
+
+      - name: Build wheels (build dependencies)
+        if: github.event.inputs.build-deps == 'true'
+        uses: home-assistant/wheels@2024.07.1
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl;cython
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_build-deps.txt"
 
       - name: Build wheels (old cython)
         uses: home-assistant/wheels@2024.07.1
