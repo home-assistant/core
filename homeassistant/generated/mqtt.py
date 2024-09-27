@@ -17,6 +17,7 @@ MQTT = {
         "fully/deviceInfo/+",
     ],
     "qbus": [
+        "cloudapp/QBUSMQTTGW/state",
         "cloudapp/QBUSMQTTGW/config",
         "cloudapp/QBUSMQTTGW/+/state",
     ],
