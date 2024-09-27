@@ -187,7 +187,7 @@ async def test_pipeline_api_audio(
         )
 
         # Wake word
-        assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert satellite.state == AssistSatelliteState.IDLE
 
         event_callback(
             PipelineEvent(
@@ -242,7 +242,7 @@ async def test_pipeline_api_audio(
             VoiceAssistantEventType.VOICE_ASSISTANT_STT_START,
             {},
         )
-        assert satellite.state == AssistSatelliteState.LISTENING_COMMAND
+        assert satellite.state == AssistSatelliteState.LISTENING
 
         event_callback(
             PipelineEvent(
@@ -761,7 +761,7 @@ async def test_pipeline_media_player(
             )
             await tts_finished.wait()
 
-            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+            assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_timer_events(
@@ -1214,7 +1214,7 @@ async def test_announce_message(
                 blocking=True,
             )
             await done.wait()
-            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+            assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_announce_media_id(
@@ -1297,7 +1297,7 @@ async def test_announce_media_id(
                 blocking=True,
             )
             await done.wait()
-            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+            assert satellite.state == AssistSatelliteState.IDLE
 
         mock_async_create_proxy_url.assert_called_once_with(
             hass,
