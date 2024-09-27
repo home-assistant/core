@@ -1,5 +1,15 @@
 {
   "entity": {
+    "button": {
+      "wlan_regenerate_password": {
+        "default": "mdi:form-textbox-password"
+      }
+    },
+    "image": {
+      "wlan_qr_code": {
+        "default": "mdi:qrcode"
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "default": "mdi:download"
@@ -12,6 +22,24 @@
       },
       "port_bandwidth_tx": {
         "default": "mdi:upload"
+      },
+      "wlan_clients": {
+        "default": "mdi:account-multiple"
+      },
+      "device_clients": {
+        "default": "mdi:account-multiple"
+      },
+      "device_uplink_mac": {
+        "default": "mdi:ethernet"
+      },
+      "device_state": {
+        "default": "mdi:lan-connect"
+      },
+      "device_cpu_utilization": {
+        "default": "mdi:chip"
+      },
+      "device_memory_utilization": {
+        "default": "mdi:memory"
       }
     },
     "switch": {
