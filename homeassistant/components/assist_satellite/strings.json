@@ -4,7 +4,7 @@
     "_": {
       "name": "Assist satellite",
       "state": {
-        "idle": "Idle",
+        "idle": "[%key:common::state::idle%]",
         "listening": "Listening",
         "responding": "Responding",
         "processing": "Processing"
