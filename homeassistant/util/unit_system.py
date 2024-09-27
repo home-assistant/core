@@ -238,6 +238,7 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
+        ("distance", UnitOfLength.NAUTICALMILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
