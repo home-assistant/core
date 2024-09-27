@@ -2119,7 +2119,7 @@ pyoppleio-legacy==1.0.8
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.0
+pyotgw==2.2.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2413,7 +2413,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.5
+pytouchlinesl==0.1.7
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
