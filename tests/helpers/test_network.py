@@ -649,6 +649,20 @@ async def test_get_request_ipv6_address_without_port(hass: HomeAssistant) -> Non
         assert _get_request_host() == "::1"
 
 
+async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
+    """Test getting the host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(CIMultiDict())
+        mock_request.url = URL("/test/request")
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() is None
+
+
 @patch("homeassistant.components.hassio.is_hassio", Mock(return_value=True))
 @patch(
     "homeassistant.components.hassio.get_host_info",
