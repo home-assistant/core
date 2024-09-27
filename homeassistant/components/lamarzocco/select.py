@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 STEAM_LEVEL_HA_TO_LM = {
@@ -121,6 +122,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                 )
             except RequestNotSuccessful as exc:
                 raise HomeAssistantError(
+                    translation_domain=DOMAIN,
                     translation_key="select_option_error",
                     translation_placeholders={
                         "key": self.entity_description.key,
