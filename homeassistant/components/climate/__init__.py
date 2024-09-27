@@ -995,9 +995,7 @@ async def async_service_temperature_set(
     # otherwise use the default entity_id
     else:
         entity_id = entity.entity_id
-
     entity_state = hass.states.get(entity_id)
-
     # Get the min and max from the state machine in case they have been
     # overridden through customize.
     min_temp = entity_state.attributes.get(ATTR_MIN_TEMP, entity.min_temp)
