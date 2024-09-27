@@ -149,7 +149,6 @@ EXCEPTIONS = {
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
-    "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
