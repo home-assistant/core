@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+from aiohttp import hdrs
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 from yarl import URL
 
@@ -592,6 +594,9 @@ async def test_get_request_host(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(
+            CIMultiDict({hdrs.HOST: "example.com:8123"})
+        )
         mock_request.url = URL("http://example.com:8123/test/request")
         mock_request.host = "example.com:8123"
         mock_request_context.get = Mock(return_value=mock_request)
@@ -685,11 +690,16 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     assert not is_internal_request(hass)
 
     mock_current_request.return_value = Mock(
-        host="example.local:8123", url=URL("http://example.local:8123")
+        headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: "example.local:8123"})),
+        host="example.local:8123",
+        url=URL("http://example.local:8123"),
     )
     assert is_internal_request(hass)
 
     mock_current_request.return_value = Mock(
+        headers=CIMultiDictProxy(
+            CIMultiDict({hdrs.HOST: "no_match.example.local:8123"})
+        ),
         host="no_match.example.local:8123",
         url=URL("http://no_match.example.local:8123"),
     )
@@ -705,7 +715,9 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     assert not is_internal_request(hass)
 
     mock_current_request.return_value = Mock(
-        host="192.168.0.1:8123", url=URL("http://192.168.0.1:8123")
+        headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: "192.168.0.1:8123"})),
+        host="192.168.0.1:8123",
+        url=URL("http://192.168.0.1:8123"),
     )
     assert is_internal_request(hass)
 
@@ -713,14 +725,18 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     hass.config.api = Mock(use_ssl=False, local_ip="192.168.123.123", port=8123)
     for allowed in ("127.0.0.1", "192.168.123.123"):
         mock_current_request.return_value = Mock(
-            host=f"{allowed}:8123", url=URL(f"http://{allowed}:8123")
+            headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: f"{allowed}:8123"})),
+            host=f"{allowed}:8123",
+            url=URL(f"http://{allowed}:8123"),
         )
         assert is_internal_request(hass), mock_current_request.return_value.url
 
     # Test for matching against HassOS hostname
     for allowed in ("hellohost", "hellohost.local"):
         mock_current_request.return_value = Mock(
-            host=f"{allowed}:8123", url=URL(f"http://{allowed}:8123")
+            headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: f"{allowed}:8123"})),
+            host=f"{allowed}:8123",
+            url=URL(f"http://{allowed}:8123"),
         )
         assert is_internal_request(hass), mock_current_request.return_value.url
 
