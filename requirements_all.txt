@@ -2441,7 +2441,7 @@ pyuptimerobot==22.2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.13
+pyvera==0.3.15
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
