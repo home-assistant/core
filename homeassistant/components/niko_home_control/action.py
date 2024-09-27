@@ -95,5 +95,5 @@ class Action:
         else:
             self._attr_is_on = state != 0
             if self.is_dimmable():
-                self._attr_brightness = int(round(float(state) * 2.55))
+                self._attr_brightness = state * 2.55
         self.publish_updates()

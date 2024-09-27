@@ -113,7 +113,7 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         self._attr_unique_id = f"dimmable-{light.action_id}"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        self._attr_brightness = int(round(float(light.state) * 2.55))
+        self._attr_brightness = light.state * 2.55
 
     def update_state(self, state):
         """Update HA state."""
