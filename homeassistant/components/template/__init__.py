@@ -26,12 +26,17 @@ from homeassistant.loader import async_get_integration
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
+
+    # Register template as valid domain for Blueprint
+    async_get_blueprints(hass)
+
     if DOMAIN in config:
         await _process_config(hass, config)
 

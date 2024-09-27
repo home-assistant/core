@@ -1,5 +1,6 @@
 """Constants for the Template Platform Components."""
 
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA
 from homeassistant.const import Platform
 
 CONF_ACTION = "action"
@@ -38,3 +39,5 @@ PLATFORMS = [
     Platform.VACUUM,
     Platform.WEATHER,
 ]
+
+TEMPLATE_BLUEPRINT_SCHEMA = BLUEPRINT_SCHEMA.schema # TODO
