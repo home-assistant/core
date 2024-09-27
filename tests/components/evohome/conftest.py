@@ -154,7 +154,4 @@ async def setup_evohome(
 
         assert mock_client.account_info is not None
 
-        try:
-            yield mock_client
-        finally:
-            await hass.data[DOMAIN]["coordinator"].async_shutdown()
+        yield mock_client
