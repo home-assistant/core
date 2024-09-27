@@ -1717,7 +1717,7 @@ pyoverkiz==1.14.1
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.23
+pypck==0.7.24
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
