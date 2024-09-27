@@ -106,7 +106,6 @@ from .util import (
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
     get_index_by_name,
-    retryable_database_job,
     retryable_database_job_method,
     session_scope,
 )
