@@ -29,7 +29,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_clients',
     'unique_id': 'device_clients-20:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -92,7 +92,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_state',
     'unique_id': 'device_state-20:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -359,7 +359,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_clients',
     'unique_id': 'device_clients-01:02:03:04:05:ff',
     'unit_of_measurement': None,
   })
@@ -408,7 +408,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_cpu_utilization',
     'unique_id': 'cpu_utilization-01:02:03:04:05:ff',
     'unit_of_measurement': '%',
   })
@@ -458,7 +458,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_memory_utilization',
     'unique_id': 'memory_utilization-01:02:03:04:05:ff',
     'unit_of_measurement': '%',
   })
@@ -573,7 +573,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_state',
     'unique_id': 'device_state-01:02:03:04:05:ff',
     'unit_of_measurement': None,
   })
@@ -684,7 +684,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_clients',
     'unique_id': 'device_clients-10:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -1638,7 +1638,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'device_state',
     'unique_id': 'device_state-10:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -1749,7 +1749,7 @@
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wlan_clients',
     'unique_id': 'wlan_clients-012345678910111213141516',
     'unit_of_measurement': None,
   })
