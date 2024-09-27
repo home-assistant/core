@@ -16,10 +16,16 @@
     },
     "switch": {
       "block_client": {
-        "default": "mdi:ethernet"
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
       },
       "dpi_restriction": {
-        "default": "mdi:network"
+        "default": "mdi:network",
+        "state": {
+          "off": "mdi:network-off"
+        }
       },
       "port_forward_control": {
         "default": "mdi:upload-network"
@@ -28,10 +34,16 @@
         "default": "mdi:security-network"
       },
       "poe_port_control": {
-        "default": "mdi:ethernet"
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
       },
       "wlan_control": {
-        "default": "mdi:wifi-check"
+        "default": "mdi:wifi-check",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
       }
     }
   },
