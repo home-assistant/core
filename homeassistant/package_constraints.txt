@@ -5,7 +5,7 @@ aiodiscover==2.1.0
 aiodns==3.2.0
 aiohasupervisor==0.1.0
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.6
+aiohttp==3.10.7
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -63,7 +63,7 @@ uv==0.4.15
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.13.0
+yarl==1.13.1
 zeroconf==0.135.0
 
 # Constrain pycryptodome to avoid vulnerability
@@ -77,9 +77,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.62.3
-grpcio-status==1.62.3
-grpcio-reflection==1.62.3
+grpcio==1.66.1
+grpcio-status==1.66.1
+grpcio-reflection==1.66.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

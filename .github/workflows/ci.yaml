@@ -645,7 +645,7 @@ jobs:
       - name: Process licenses
         run: |
           . venv/bin/activate
-          python -m script.licenses
+          python -m script.licenses licenses.json
 
   pylint:
     name: Check pylint
@@ -819,7 +819,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: Split tests for full run ${{ matrix.python-version }}
+    name: Split tests for full run Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
