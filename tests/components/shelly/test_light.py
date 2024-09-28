@@ -853,6 +853,7 @@ async def test_rpc_cct_light(
     mock_rpc_device.call_rpc.assert_called_once_with("CCT.Set", {"id": 0, "on": True})
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_BRIGHTNESS] == 196  # 77% of 255
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3666
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 3333
