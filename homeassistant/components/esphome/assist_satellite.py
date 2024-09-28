@@ -133,7 +133,7 @@ class EsphomeAssistSatellite(
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=0
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
     @property
@@ -179,7 +179,13 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
-        config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
+        try:
+            config = await self.cli.get_voice_assistant_configuration(
+                _CONFIG_TIMEOUT_SEC
+            )
+        except TimeoutError:
+            # Placeholder config will be used
+            return
 
         # Update available/active wake words
         self._satellite_config.available_wake_words = [
