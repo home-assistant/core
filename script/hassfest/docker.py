@@ -42,15 +42,9 @@ RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
-    && if [ "${{BUILD_ARCH}}" = "i386" ]; then \
-        linux32 uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    else \
-        uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    fi
+    && uv pip install \
+        --no-build \
+        -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
@@ -172,8 +166,9 @@ def _generate_files(config: Config) -> list[File]:
         + 10
     ) * 1000
 
-    package_versions = _get_package_versions(
-        Path("requirements_test.txt"), {"pipdeptree", "tqdm", "uv"}
+    package_versions = _get_package_versions(Path("requirements.txt"), {"uv"})
+    package_versions |= _get_package_versions(
+        Path("requirements_test.txt"), {"pipdeptree", "tqdm"}
     )
     package_versions |= _get_package_versions(
         Path("requirements_test_pre_commit.txt"), {"ruff"}

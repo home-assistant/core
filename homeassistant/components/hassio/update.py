@@ -304,5 +304,5 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
             await async_update_core(self.hass, version=version, backup=backup)
         except HassioAPIError as err:
             raise HomeAssistantError(
-                f"Error updating Home Assistant Core {err}"
+                f"Error updating Home Assistant Core: {err}"
             ) from err

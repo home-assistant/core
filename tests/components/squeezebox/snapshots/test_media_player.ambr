@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'squeezebox',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Ralph Irving',
+    'model': 'SqueezeLite',
+    'model_id': None,
+    'name': 'Test Player',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_entity_registry[media_player.test_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'squeezebox',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3077055>,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[media_player.test_player-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Player',
+      'group_members': list([
+      ]),
+      'is_volume_muted': True,
+      'media_album_name': 'None',
+      'media_artist': 'None',
+      'media_channel': 'None',
+      'media_duration': 1,
+      'media_position': 1,
+      'media_title': 'None',
+      'query_result': dict({
+      }),
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'supported_features': <MediaPlayerEntityFeature: 3077055>,
+      'volume_level': 0.01,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

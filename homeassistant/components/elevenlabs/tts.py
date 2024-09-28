@@ -137,7 +137,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
         _LOGGER.debug("Options: %s", options)
-        voice_id = options[ATTR_VOICE]
+        voice_id = options.get(ATTR_VOICE, self._default_voice_id)
         try:
             audio = await self._client.generate(
                 text=message,

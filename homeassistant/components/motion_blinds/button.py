@@ -26,7 +26,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for blind in motion_gateway.device_list.values():
-        if blind.limit_status == LimitStatus.Limit3Detected.name:
+        if blind.limit_status in (
+            LimitStatus.Limit3Detected.name,
+            {
+                "T": LimitStatus.Limit3Detected.name,
+                "B": LimitStatus.Limit3Detected.name,
+            },
+        ):
             entities.append(MotionGoFavoriteButton(coordinator, blind))
             entities.append(MotionSetFavoriteButton(coordinator, blind))
 

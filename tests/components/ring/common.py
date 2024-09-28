@@ -13,9 +13,10 @@ from tests.common import MockConfigEntry
 
 async def setup_platform(hass: HomeAssistant, platform: Platform) -> None:
     """Set up the ring platform and prerequisites."""
-    MockConfigEntry(domain=DOMAIN, data={"username": "foo", "token": {}}).add_to_hass(
-        hass
-    )
+    if not hass.config_entries.async_has_entries(DOMAIN):
+        MockConfigEntry(
+            domain=DOMAIN, data={"username": "foo", "token": {}}
+        ).add_to_hass(hass)
     with patch("homeassistant.components.ring.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done(wait_background_tasks=True)

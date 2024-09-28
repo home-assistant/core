@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TedeeConfigEntry
+from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity
 
@@ -108,7 +109,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                f"Failed to unlock the door. Lock {self._lock.lock_id}"
+                translation_domain=DOMAIN,
+                translation_key="unlock_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -121,7 +124,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                f"Failed to lock the door. Lock {self._lock.lock_id}"
+                translation_domain=DOMAIN,
+                translation_key="lock_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
 
 
@@ -143,5 +148,7 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                f"Failed to unlatch the door. Lock {self._lock.lock_id}"
+                translation_domain=DOMAIN,
+                translation_key="open_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
