@@ -185,7 +185,7 @@ async def device_source_mock(
 
 @pytest.fixture
 def config_entry_mock_retry() -> MockConfigEntry:
-    """Mock a config entry for this platform."""
+    """Mock a config entry for this platform with config option retry=True."""
     return MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
@@ -199,7 +199,6 @@ def config_entry_mock_retry() -> MockConfigEntry:
         options={
             CONF_RETRY: True,
         },
-        
     )
 
 
