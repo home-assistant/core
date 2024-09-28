@@ -24,9 +24,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "DLNA Digital Media Service configuration",
+        "title": "DLNA Digital Media Server configuration",
         "data": {
-          "retry": "Try to reconnect when disconnected?"
+          "retry": "Always try to connect to offline servers before browsing or playing media"
         }
       }
     }
