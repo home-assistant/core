@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -39,7 +40,7 @@ from .const import (
     OPTION_SOURCE_PREFIX,
     OPTION_SOURCES,
 )
-from .receiver import Receiver, ReceiverInfo, async_discover, async_interview
+from .receiver import ReceiverInfo, async_discover, async_interview
 
 CONF_SCHEMA_CONFIGURE = vol.Schema(
     {
@@ -75,12 +76,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_infos: dict[str, Receiver] = {}
+        self._discovered_infos: dict[str, ReceiverInfo] = {}
         self._receiver_info: ReceiverInfo
 
     def _createOnkyoEntry(
         self, config: ReceiverConfig, host: str, name: str, options: dict | None = None
-    ):
+    ) -> ConfigFlowResult:
         merged_options = {
             OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
             OPTION_SOURCES: config.sources,
@@ -298,7 +299,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 }
             )
 
-        schema: dict[str, Any] = OrderedDict()
+        schema: dict[Any, Selector] = OrderedDict()
         schema[
             vol.Required(
                 OPTION_MAX_VOLUME,
