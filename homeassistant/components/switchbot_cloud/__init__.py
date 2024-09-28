@@ -17,10 +17,10 @@ from .coordinator import SwitchBotCoordinator
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
-    Platform.LOCK,
 ]
 
 
