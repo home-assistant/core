@@ -5,10 +5,16 @@ from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
-from . import ATTR_DURATION, ATTR_ZONE_MODE, DOMAIN, SVC_SET_ZONE_OVERRIDE
+from . import (
+    ATTR_DURATION,
+    ATTR_ZONE_MODE,
+    DOMAIN,
+    SVC_SET_ZONE_OVERRIDE,
+    GeniusHubCoordinator,
+)
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
@@ -22,38 +28,19 @@ GH_DEVICE_ATTRS = {
 }
 
 
-class GeniusEntity(Entity):
+class GeniusEntity(CoordinatorEntity[GeniusHubCoordinator]):
     """Base for all Genius Hub entities."""
-
-    _attr_should_poll = False
-
-    def __init__(self) -> None:
-        """Initialize the entity."""
-        self._unique_id: str | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
-
-    async def _refresh(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-        self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
 
 
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, broker, device) -> None:
+    def __init__(self, coordinator: GeniusHubCoordinator, device) -> None:
         """Initialize the Device."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._device = device
-        self._unique_id = f"{broker.hub_uid}_device_{device.id}"
+        self._attr_unique_id = f"{coordinator.unique_id}_device_{device.id}"
         self._last_comms: datetime | None = None
         self._state_attr = None
 
@@ -75,31 +62,35 @@ class GeniusDevice(GeniusEntity):
 
         return attrs
 
-    async def async_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Update an entity's state data."""
         if "_state" in self._device.data:  # only via v3 API
             self._last_comms = dt_util.utc_from_timestamp(
                 self._device.data["_state"]["lastComms"]
             )
+        super()._handle_coordinator_update()
 
 
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self, broker, zone) -> None:
+    def __init__(self, coordinator: GeniusHubCoordinator, zone) -> None:
         """Initialize the Zone."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._zone = zone
-        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
+        self._attr_unique_id = f"{coordinator.unique_id}_zone_{zone.id}"
 
-    async def _refresh(self, payload: dict | None = None) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self._handle_service_call)
+        )
+
+    async def _handle_service_call(self, payload: dict) -> None:
         """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
-
-        if payload["unique_id"] != self._unique_id:
+        if payload["unique_id"] != self._attr_unique_id:
             return
 
         if payload["service"] == SVC_SET_ZONE_OVERRIDE:

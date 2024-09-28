@@ -10,7 +10,7 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusHubConfigEntry
+from . import GeniusHubConfigEntry, GeniusHubCoordinator
 from .entity import GeniusHeatingZone
 
 STATE_AUTO = "auto"
@@ -40,11 +40,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub water heater entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusWaterHeater(broker, z)
-        for z in broker.client.zone_objs
+        GeniusWaterHeater(coordinator, z)
+        for z in coordinator.client.zone_objs
         if z.data.get("type") in GH_HEATERS
     )
 
@@ -57,9 +57,9 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 
-    def __init__(self, broker, zone) -> None:
+    def __init__(self, coordinator: GeniusHubCoordinator, zone) -> None:
         """Initialize the water_heater device."""
-        super().__init__(broker, zone)
+        super().__init__(coordinator, zone)
 
         self._max_temp = 80.0
         self._min_temp = 30.0

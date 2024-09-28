@@ -20,11 +20,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub binary sensor entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusBinarySensor(broker, d, GH_STATE_ATTR)
-        for d in broker.client.device_objs
+        GeniusBinarySensor(coordinator, d, GH_STATE_ATTR)
+        for d in coordinator.client.device_objs
         if GH_TYPE in d.data["type"]
     )
 
