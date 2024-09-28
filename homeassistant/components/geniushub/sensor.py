@@ -96,7 +96,7 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._hub = coordinator.client
-        self._unique_id = f"{coordinator.unique_id}_{GH_LEVEL_MAPPING[level]}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{GH_LEVEL_MAPPING[level]}"
 
         self._attr_name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
