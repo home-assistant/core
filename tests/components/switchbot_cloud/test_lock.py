@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from switchbot_api import Device
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,8 +13,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
 
@@ -45,16 +43,16 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
     await hass.async_block_till_done()
 
     lock_id = "lock.lock_1"
-    assert hass.states.get(lock_id).state == STATE_LOCKED
+    assert hass.states.get(lock_id).state == LockState.LOCKED
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
-    assert hass.states.get(lock_id).state == STATE_UNLOCKED
+    assert hass.states.get(lock_id).state == LockState.UNLOCKED
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: lock_id}, blocking=True
         )
-    assert hass.states.get(lock_id).state == STATE_LOCKED
+    assert hass.states.get(lock_id).state == LockState.LOCKED
