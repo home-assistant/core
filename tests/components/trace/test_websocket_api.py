@@ -47,7 +47,7 @@ async def _setup_automation_or_script(
 ) -> None:
     """Set up automations or scripts from automation config."""
     if domain == "script":
-        configs = {config["id"]: {"sequence": config["action"]} for config in configs}
+        configs = {config["id"]: {"sequence": config["actions"]} for config in configs}
 
     if script_config:
         if domain == "automation":
@@ -85,7 +85,7 @@ async def _run_automation_or_script(
 
 def _assert_raw_config(domain, config, trace):
     if domain == "script":
-        config = {"sequence": config["action"]}
+        config = {"sequence": config["actions"]}
     assert trace["config"] == config
 
 
@@ -152,20 +152,20 @@ async def test_get_trace(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"service": "test.automation"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"service": "test.automation"},
     }
     moon_config = {
         "id": "moon",
-        "trigger": [
+        "triggers": [
             {"platform": "event", "event_type": "test_event2"},
             {"platform": "event", "event_type": "test_event3"},
         ],
-        "condition": {
+        "conditions": {
             "condition": "template",
             "value_template": "{{ trigger.event.event_type=='test_event2' }}",
         },
-        "action": {"event": "another_event"},
+        "actions": {"event": "another_event"},
     }
 
     sun_action = {
@@ -551,13 +551,13 @@ async def test_trace_overflow(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"event": "some_event"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"event": "some_event"},
     }
     moon_config = {
         "id": "moon",
-        "trigger": {"platform": "event", "event_type": "test_event2"},
-        "action": {"event": "another_event"},
+        "triggers": {"platform": "event", "event_type": "test_event2"},
+        "actions": {"event": "another_event"},
     }
     await _setup_automation_or_script(
         hass, domain, [sun_config, moon_config], stored_traces=stored_traces
@@ -632,13 +632,13 @@ async def test_restore_traces_overflow(
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"event": "some_event"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"event": "some_event"},
     }
     moon_config = {
         "id": "moon",
-        "trigger": {"platform": "event", "event_type": "test_event2"},
-        "action": {"event": "another_event"},
+        "triggers": {"platform": "event", "event_type": "test_event2"},
+        "actions": {"event": "another_event"},
     }
     await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
     await hass.async_start()
@@ -713,13 +713,13 @@ async def test_restore_traces_late_overflow(
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"event": "some_event"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"event": "some_event"},
     }
     moon_config = {
         "id": "moon",
-        "trigger": {"platform": "event", "event_type": "test_event2"},
-        "action": {"event": "another_event"},
+        "triggers": {"platform": "event", "event_type": "test_event2"},
+        "actions": {"event": "another_event"},
     }
     await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
     await hass.async_start()
@@ -765,8 +765,8 @@ async def test_trace_no_traces(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"event": "some_event"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"event": "some_event"},
     }
     await _setup_automation_or_script(hass, domain, [sun_config], stored_traces=0)
 
@@ -832,20 +832,20 @@ async def test_list_traces(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"service": "test.automation"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"service": "test.automation"},
     }
     moon_config = {
         "id": "moon",
-        "trigger": [
+        "triggers": [
             {"platform": "event", "event_type": "test_event2"},
             {"platform": "event", "event_type": "test_event3"},
         ],
-        "condition": {
+        "conditions": {
             "condition": "template",
             "value_template": "{{ trigger.event.event_type=='test_event2' }}",
         },
-        "action": {"event": "another_event"},
+        "actions": {"event": "another_event"},
     }
     await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
 
@@ -965,8 +965,8 @@ async def test_nested_traces(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"service": "script.moon"},
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"service": "script.moon"},
     }
     moon_config = {"moon": {"sequence": {"event": "another_event"}}}
     await _setup_automation_or_script(hass, domain, [sun_config], moon_config)
@@ -1036,8 +1036,8 @@ async def test_breakpoints(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": [
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": [
             {"event": "event0"},
             {"event": "event1"},
             {"event": "event2"},
@@ -1206,8 +1206,8 @@ async def test_breakpoints_2(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": [
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": [
             {"event": "event0"},
             {"event": "event1"},
             {"event": "event2"},
@@ -1311,8 +1311,8 @@ async def test_breakpoints_3(
 
     sun_config = {
         "id": "sun",
-        "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": [
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": [
             {"event": "event0"},
             {"event": "event1"},
             {"event": "event2"},

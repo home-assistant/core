@@ -45,6 +45,7 @@ class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
             identifiers={(DOMAIN, lock.sid())},
             via_device=(DOMAIN, coordinator.entry.data[CONF_USERNAME]),
         )
+        self.lock_data = lock
 
 
 class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):

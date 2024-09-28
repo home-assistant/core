@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
-from typing import Any
+from typing import Any, Self
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
@@ -155,7 +155,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
-        self.context[CONF_HOST] = self._host
 
         if not self._host or ipaddress.ip_address(self._host).is_link_local:
             return self.async_abort(reason="ignore_ip6_link_local")
@@ -166,9 +165,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._host:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         if entry := await self.async_check_configured_entry():
             if uuid and not entry.unique_id:
@@ -183,6 +181,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None

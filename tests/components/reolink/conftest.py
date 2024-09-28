@@ -52,7 +52,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
@@ -66,6 +66,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
+        host_mock.is_hub = False
         host_mock.mac_address = TEST_MAC
         host_mock.uid = TEST_UID
         host_mock.onvif_enabled = True

@@ -15,8 +15,6 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -125,7 +123,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_change_time"
     )
     assert state
-    assert state.state == "1970-01-01T00:00:00+00:00"
+    assert state.state == "2024-09-20T18:00:00+00:00"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{CONF_FAKE_NAME} Next scheduled change time"
@@ -289,13 +287,6 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
                 ATTR_TEMPERATURE: 23,
             },
             [call(23)],
-        ),
-        (
-            {
-                ATTR_TARGET_TEMP_HIGH: 16,
-                ATTR_TARGET_TEMP_LOW: 10,
-            },
-            [],
         ),
     ],
 )
