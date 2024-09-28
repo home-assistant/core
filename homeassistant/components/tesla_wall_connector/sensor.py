@@ -1,4 +1,5 @@
 """Sensors for Tesla Wall Connector."""
+
 from dataclasses import dataclass
 import logging
 
@@ -20,14 +21,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    WallConnectorData,
-    WallConnectorEntity,
-    WallConnectorLambdaValueGetterMixin,
-)
+from . import WallConnectorData
 from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
+from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
+
+EVSE_STATE = {
+    0: "booting",
+    1: "not_connected",
+    2: "connected",
+    4: "ready",
+    6: "negotiating",
+    7: "error",
+    8: "charging_finished",
+    9: "waiting_car",
+    10: "charging_reduced",
+    11: "charging",
+}
 
 
 @dataclass(frozen=True)
@@ -40,15 +51,43 @@ class WallConnectorSensorDescription(
 WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="evse_state",
-        translation_key="evse_state",
+        translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
+        entity_registry_enabled_default=False,
+    ),
+    WallConnectorSensorDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: EVSE_STATE.get(
+            data[WALLCONNECTOR_DATA_VITALS].evse_state
+        ),
+        options=list(EVSE_STATE.values()),
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
         translation_key="handle_temp_c",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].handle_temp_c, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WallConnectorSensorDescription(
+        key="pcba_temp_c",
+        translation_key="pcba_temp_c",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].pcba_temp_c, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WallConnectorSensorDescription(
+        key="mcu_temp_c",
+        translation_key="mcu_temp_c",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].mcu_temp_c, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,8 +165,18 @@ WALL_CONNECTOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     WallConnectorSensorDescription(
+        key="session_energy_wh",
+        translation_key="session_energy_wh",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    WallConnectorSensorDescription(
         key="energy_kWh",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -138,7 +187,7 @@ WALL_CONNECTOR_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
     wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -148,7 +197,7 @@ async def async_setup_entry(
         for description in WALL_CONNECTOR_SENSORS
     ]
 
-    async_add_devices(all_entities)
+    async_add_entities(all_entities)
 
 
 class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):

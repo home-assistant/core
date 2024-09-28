@@ -1,4 +1,5 @@
 """The Mullvad VPN integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

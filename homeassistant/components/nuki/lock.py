@@ -1,8 +1,9 @@
 """Nuki.io lock platform."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, TypeVar
+from typing import Any
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
@@ -16,18 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiEntity, NukiEntryData
-from .const import (
-    ATTR_BATTERY_CRITICAL,
-    ATTR_ENABLE,
-    ATTR_NUKI_ID,
-    ATTR_UNLATCH,
-    DOMAIN as NUKI_DOMAIN,
-    ERROR_STATES,
-)
+from . import NukiEntryData
+from .const import ATTR_ENABLE, ATTR_UNLATCH, DOMAIN as NUKI_DOMAIN, ERROR_STATES
+from .entity import NukiEntity
 from .helpers import CannotConnect
-
-_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 
 async def async_setup_entry(
@@ -63,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
+class NukiDeviceEntity[_NukiDeviceT: NukiDevice](NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
     _attr_has_entity_name = True
@@ -75,14 +68,6 @@ class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._nuki_device.nuki_id
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the device specific state attributes."""
-        return {
-            ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
-            ATTR_NUKI_ID: self._nuki_device.nuki_id,
-        }
 
     @property
     def available(self) -> bool:

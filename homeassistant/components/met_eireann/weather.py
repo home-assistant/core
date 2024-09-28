@@ -1,4 +1,5 @@
 """Support for Met Éireann weather service."""
+
 import logging
 from types import MappingProxyType
 from typing import Any, cast
@@ -52,17 +53,15 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entity_registry = er.async_get(hass)
 
-    entities = [MetEireannWeather(coordinator, config_entry.data, False)]
-
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(config_entry.data, True),
     ):
-        entities.append(MetEireannWeather(coordinator, config_entry.data, True))
+        entity_registry.async_remove(entity_id)
 
-    async_add_entities(entities)
+    async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
 def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
@@ -92,19 +91,15 @@ class MetEireannWeather(
         self,
         coordinator: DataUpdateCoordinator[MetEireannWeatherData],
         config: MappingProxyType[str, Any],
-        hourly: bool,
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config, hourly)
+        self._attr_unique_id = _calculate_unique_id(config, False)
         self._config = config
-        self._hourly = hourly
-        name_appendix = " Hourly" if hourly else ""
         if (name := self._config.get(CONF_NAME)) is not None:
-            self._attr_name = f"{name}{name_appendix}"
+            self._attr_name = name
         else:
-            self._attr_name = f"{DEFAULT_NAME}{name_appendix}"
-        self._attr_entity_registry_enabled_default = not hourly
+            self._attr_name = DEFAULT_NAME
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
@@ -177,11 +172,6 @@ class MetEireannWeather(
                 ).isoformat()
             ha_forecast.append(ha_item)
         return ha_forecast
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(self._hourly)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast]:

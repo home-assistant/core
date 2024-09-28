@@ -1,11 +1,13 @@
 """Test for smart home alexa support."""
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
-import homeassistant.components.camera as camera
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
@@ -20,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -118,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass, expected_endpoints=1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -880,7 +884,7 @@ async def test_direction_fan(hass: HomeAssistant) -> None:
             payload={},
             instance=None,
         )
-        assert call.data
+    assert call.data
 
 
 async def test_preset_mode_fan(
@@ -1821,12 +1825,6 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
             payload={"deltaPositionMilliseconds": 30000},
         )
 
-        assert "event" in msg
-        msg = msg["event"]
-        assert msg["header"]["name"] == "ErrorResponse"
-        assert msg["header"]["namespace"] == "Alexa.Video"
-        assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
-
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass: HomeAssistant) -> None:
@@ -1983,7 +1981,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2300,7 +2298,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2605,8 +2603,15 @@ async def test_stop_valve(
 
 
 async def assert_percentage_changes(
-    hass, adjustments, namespace, name, endpoint, parameter, service, changed_parameter
-):
+    hass: HomeAssistant,
+    adjustments,
+    namespace,
+    name,
+    endpoint,
+    parameter,
+    service,
+    changed_parameter,
+) -> None:
     """Assert an API request making percentage changes works.
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
@@ -2620,8 +2625,15 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
-):
+    hass: HomeAssistant,
+    adjustments: list[tuple[int | str, int, bool]],
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    changed_parameter: str | None,
+    instance: str,
+) -> None:
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.
@@ -3116,6 +3128,136 @@ async def test_thermostat(hass: HomeAssistant) -> None:
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
+
+
+async def test_onoff_thermostat(hass: HomeAssistant) -> None:
+    """Test onoff thermostat discovery."""
+    on_off_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    hass.config.units = METRIC_SYSTEM
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": 20.0,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 19.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": on_off_features,
+            "hvac_modes": ["auto"],
+            "min_temp": 7,
+            "max_temp": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    properties = await reported_properties(hass, "climate#test_thermostat")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "COOL")
+    properties.assert_equal(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+        {"value": 20.0, "scale": "CELSIUS"},
+    )
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 19.0, "scale": "CELSIUS"}
+    )
+
+    thermostat_capability = get_capability(capabilities, "Alexa.ThermostatController")
+    assert thermostat_capability is not None
+    configuration = thermostat_capability["configuration"]
+    assert configuration["supportsScheduling"] is False
+
+    supported_modes = ["AUTO"]
+    for mode in supported_modes:
+        assert mode in configuration["supportedModes"]
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpoint": {"value": 21.0, "scale": "CELSIUS"}},
+    )
+    assert call.data["temperature"] == 21.0
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal(
+        "Alexa.ThermostatController",
+        "targetSetpoint",
+        {"value": 21.0, "scale": "CELSIUS"},
+    )
+
+    msg = await assert_request_fails(
+        "Alexa.ThermostatController",
+        "SetTargetTemperature",
+        "climate#test_thermostat",
+        "climate.set_temperature",
+        hass,
+        payload={"targetSetpoint": {"value": 0.0, "scale": "CELSIUS"}},
+    )
+    assert msg["event"]["payload"]["type"] == "TEMPERATURE_VALUE_OUT_OF_RANGE"
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOn",
+        "climate#test_thermostat",
+        "climate.turn_on",
+        hass,
+    )
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "climate#test_thermostat",
+        "climate.turn_off",
+        hass,
+    )
+
+    # Test the power controller is not enabled when there is no `off` mode
+    device = (
+        "climate.test_thermostat",
+        "cool",
+        {
+            "temperature": 20.0,
+            "target_temp_high": None,
+            "target_temp_low": None,
+            "current_temperature": 19.0,
+            "friendly_name": "Test Thermostat",
+            "supported_features": ClimateEntityFeature.TARGET_TEMPERATURE,
+            "hvac_modes": ["auto"],
+            "min_temp": 7,
+            "max_temp": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "climate#test_thermostat"
+    assert appliance["displayCategories"][0] == "THERMOSTAT"
+    assert appliance["friendlyName"] == "Test Thermostat"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.ThermostatController",
+        "Alexa.TemperatureSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
 
 
 async def test_water_heater(hass: HomeAssistant) -> None:
@@ -3695,7 +3837,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(
             hass, get_default_config(hass), request, enabled=False
         )
-        await hass.async_block_till_done()
 
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
@@ -4533,7 +4674,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )
@@ -5332,9 +5473,8 @@ async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -5363,9 +5503,8 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -5520,6 +5659,6 @@ async def test_alexa_config(
     with patch.object(test_config, "_auth", AsyncMock()):
         test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
-        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")

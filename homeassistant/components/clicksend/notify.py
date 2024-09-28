@@ -1,4 +1,5 @@
 """Clicksend platform for notify component."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -9,7 +10,10 @@ from typing import Any
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
@@ -30,19 +34,13 @@ TIMEOUT = 5
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_RECIPIENT, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
-            }
-        )
-    )
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_RECIPIENT, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
+    }
 )
 
 

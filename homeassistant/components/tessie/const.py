@@ -1,4 +1,5 @@
 """Constants used by Tessie integration."""
+
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
@@ -37,6 +38,15 @@ class TessieSeatHeaterOptions(StrEnum):
     HIGH = "high"
 
 
+class TessieSeatCoolerOptions(StrEnum):
+    """Tessie seat cooler options."""
+
+    OFF = "off"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 class TessieClimateKeeper(StrEnum):
     """Tessie Climate Keeper Modes."""
 
@@ -68,3 +78,28 @@ class TessieChargeCableLockStates(StrEnum):
 
     ENGAGED = "Engaged"
     DISENGAGED = "Disengaged"
+
+
+TessieChargeStates = {
+    "Starting": "starting",
+    "Charging": "charging",
+    "Stopped": "stopped",
+    "Complete": "complete",
+    "Disconnected": "disconnected",
+    "NoPower": "no_power",
+}
+
+
+class TessieWallConnectorStates(IntEnum):
+    """Tessie Wall Connector states."""
+
+    BOOTING = 0
+    CHARGING = 1
+    DISCONNECTED = 2
+    CONNECTED = 4
+    SCHEDULED = 5
+    NEGOTIATING = 6
+    ERROR = 7
+    CHARGING_FINISHED = 8
+    WAITING_CAR = 9
+    CHARGING_REDUCED = 10

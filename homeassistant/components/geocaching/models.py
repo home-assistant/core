@@ -1,4 +1,5 @@
 """Models for the Geocaching integration."""
+
 from typing import TypedDict
 
 

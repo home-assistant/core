@@ -1,4 +1,5 @@
 """Support for EZVIZ camera."""
+
 import logging
 
 from pyezviz.client import EzvizClient
@@ -104,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if sensor_type == ATTR_TYPE_CAMERA and hass.data[DOMAIN]:
         for item in hass.config_entries.async_entries(domain=DOMAIN):
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                _LOGGER.info("Reload Ezviz main account with camera entry")
+                _LOGGER.debug("Reload Ezviz main account with camera entry")
                 await hass.config_entries.async_reload(item.entry_id)
                 return True
 

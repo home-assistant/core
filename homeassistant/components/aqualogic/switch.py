@@ -1,4 +1,5 @@
 """Support for AquaLogic switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,10 @@ from typing import Any
 from aqualogic.core import States
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +33,7 @@ SWITCH_TYPES = {
     "aux_7": "Aux 7",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCH_TYPES)): vol.All(
             cv.ensure_list, [vol.In(SWITCH_TYPES)]
@@ -45,13 +49,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the switch platform."""
-    switches = []
-
     processor: AquaLogicProcessor = hass.data[DOMAIN]
-    for switch_type in config[CONF_MONITORED_CONDITIONS]:
-        switches.append(AquaLogicSwitch(processor, switch_type))
 
-    async_add_entities(switches)
+    async_add_entities(
+        AquaLogicSwitch(processor, switch_type)
+        for switch_type in config[CONF_MONITORED_CONDITIONS]
+    )
 
 
 class AquaLogicSwitch(SwitchEntity):

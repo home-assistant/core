@@ -1,4 +1,5 @@
 """The tests for the Async Media player helper functions."""
+
 import pytest
 
 import homeassistant.components.media_player as mp
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 class SimpleMediaPlayer(mp.MediaPlayerEntity):
     """Media player test class."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the test media player."""
         self.hass = hass
         self._volume = 0
@@ -110,7 +111,7 @@ class DescrMediaPlayer(SimpleMediaPlayer):
 
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
-def player(hass, request):
+def player(hass: HomeAssistant, request: pytest.FixtureRequest) -> mp.MediaPlayerEntity:
     """Return a media player."""
     return request.param(hass)
 

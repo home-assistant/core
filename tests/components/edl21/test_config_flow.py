@@ -22,7 +22,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -30,7 +30,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         VALID_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_TITLE
     assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
 
@@ -49,5 +49,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         data=VALID_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

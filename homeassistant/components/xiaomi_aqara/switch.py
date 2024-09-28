@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara binary sensors."""
+
 import logging
 from typing import Any
 
@@ -7,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

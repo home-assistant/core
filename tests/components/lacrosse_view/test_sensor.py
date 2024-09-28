@@ -1,4 +1,5 @@
 """Test the LaCrosse View sensors."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -31,8 +32,9 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -41,7 +43,7 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature")
 
 
@@ -52,8 +54,12 @@ async def test_sensor_permission(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_NO_PERMISSION_SENSOR]
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensors",
+            return_value=[TEST_NO_PERMISSION_SENSOR],
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -61,7 +67,7 @@ async def test_sensor_permission(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
     assert not hass.states.get("sensor.test_temperature")
     assert "This account does not have permission to read Test" in caplog.text
 
@@ -73,8 +79,11 @@ async def test_field_not_supported(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_UNSUPPORTED_SENSOR]
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_UNSUPPORTED_SENSOR]
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -83,7 +92,7 @@ async def test_field_not_supported(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_some_unsupported_field") is None
     assert "Unsupported sensor field" in caplog.text
 
@@ -105,9 +114,12 @@ async def test_field_types(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[test_input],
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensors",
+            return_value=[test_input],
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -116,7 +128,7 @@ async def test_field_types(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get(f"sensor.test_{entity_id}").state == expected
 
 
@@ -125,9 +137,12 @@ async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_NO_FIELD_SENSOR],
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensors",
+            return_value=[TEST_NO_FIELD_SENSOR],
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -136,7 +151,7 @@ async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
@@ -145,9 +160,12 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_MISSING_FIELD_DATA_SENSOR],
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_sensors",
+            return_value=[TEST_MISSING_FIELD_DATA_SENSOR],
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -156,5 +174,5 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unknown"

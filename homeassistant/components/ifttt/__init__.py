@@ -1,4 +1,5 @@
 """Support to trigger Maker IFTTT recipes."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

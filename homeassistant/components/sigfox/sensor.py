@@ -1,4 +1,5 @@
 """Sensor for SigFox devices."""
+
 from __future__ import annotations
 
 import datetime
@@ -10,7 +11,10 @@ from urllib.parse import urljoin
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +29,7 @@ CONF_API_LOGIN = "api_login"
 CONF_API_PASSWORD = "api_password"
 DEFAULT_NAME = "sigfox"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_LOGIN): cv.string,
         vol.Required(CONF_API_PASSWORD): cv.string,
@@ -51,10 +55,7 @@ def setup_platform(
     auth = sigfox.auth
     devices = sigfox.devices
 
-    sensors = []
-    for device in devices:
-        sensors.append(SigfoxDevice(device, auth, name))
-    add_entities(sensors, True)
+    add_entities((SigfoxDevice(device, auth, name) for device in devices), True)
 
 
 def epoch_to_datetime(epoch_time):
@@ -91,10 +92,7 @@ class SigfoxAPI:
         """Get a list of device types."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        device_types = []
-        for device in json.loads(response.text)["data"]:
-            device_types.append(device["id"])
-        return device_types
+        return [device["id"] for device in json.loads(response.text)["data"]]
 
     def get_devices(self, device_types):
         """Get the device_id of each device registered."""
@@ -104,8 +102,7 @@ class SigfoxAPI:
             url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)["data"]
-            for device in devices_data:
-                devices.append(device["id"])
+            devices.extend(device["id"] for device in devices_data)
         return devices
 
     @property

@@ -1,4 +1,5 @@
 """The Global Disaster Alert and Coordination System (GDACS) integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

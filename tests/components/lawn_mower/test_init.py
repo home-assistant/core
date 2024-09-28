@@ -1,4 +1,5 @@
 """The tests for the lawn mower integration."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock
 
@@ -51,7 +52,7 @@ class MockLawnMowerEntity(LawnMowerEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -66,8 +67,8 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.LAWN_MOWER
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.LAWN_MOWER]
         )
         return True
 
@@ -113,13 +114,13 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity1.entity_id)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     entity_state = hass.states.get(entity1.entity_id)
 
     assert entity_state
@@ -175,4 +176,4 @@ async def test_lawn_mower_state(hass: HomeAssistant) -> None:
     lawn_mower.hass = hass
     lawn_mower.start_mowing()
 
-    assert lawn_mower.state == str(LawnMowerActivity.MOWING)
+    assert lawn_mower.state == LawnMowerActivity.MOWING

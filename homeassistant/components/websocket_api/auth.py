@@ -1,4 +1,5 @@
 """Handle the auth of a connection."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -80,9 +81,7 @@ class AuthPhase:
             raise Disconnect from err
 
         if (access_token := valid_msg.get("access_token")) and (
-            refresh_token := await self._hass.auth.async_validate_access_token(
-                access_token
-            )
+            refresh_token := self._hass.auth.async_validate_access_token(access_token)
         ):
             conn = ActiveConnection(
                 self._logger,
@@ -91,10 +90,10 @@ class AuthPhase:
                 refresh_token.user,
                 refresh_token,
             )
-            conn.subscriptions[
-                "auth"
-            ] = self._hass.auth.async_register_revoke_token_callback(
-                refresh_token.id, self._cancel_ws
+            conn.subscriptions["auth"] = (
+                self._hass.auth.async_register_revoke_token_callback(
+                    refresh_token.id, self._cancel_ws
+                )
             )
             await self._send_bytes_text(AUTH_OK_MESSAGE)
             self._logger.debug("Auth OK")

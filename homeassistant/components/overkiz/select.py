@@ -1,4 +1,5 @@
 """Support for Overkiz select."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -17,16 +18,11 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizSelectDescription(SelectEntityDescription):
+    """Class to describe an Overkiz select entity."""
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
-
-
-@dataclass(frozen=True)
-class OverkizSelectDescription(SelectEntityDescription, OverkizSelectDescriptionMixin):
-    """Class to describe an Overkiz select entity."""
 
 
 def _select_option_open_closed_pedestrian(
@@ -147,15 +143,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizSelect(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizSelect(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

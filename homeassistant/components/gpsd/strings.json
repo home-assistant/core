@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of GPSD."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latitude": { "name": "[%key:common::config_flow::data::latitude%]" },
+      "longitude": { "name": "[%key:common::config_flow::data::longitude%]" },
+      "elevation": { "name": "[%key:common::config_flow::data::elevation%]" },
+      "time": {
+        "name": "[%key:component::time_date::selector::display_options::options::time%]"
+      },
+      "climb": { "name": "Climb" },
+      "mode": {
+        "name": "[%key:common::config_flow::data::mode%]",
+        "state": {
+          "2d_fix": "2D Fix",
+          "3d_fix": "3D Fix"
+        },
+        "state_attributes": {
+          "latitude": { "name": "[%key:common::config_flow::data::latitude%]" },
+          "longitude": {
+            "name": "[%key:common::config_flow::data::longitude%]"
+          },
+          "elevation": {
+            "name": "[%key:common::config_flow::data::elevation%]"
+          },
+          "gps_time": {
+            "name": "[%key:component::time_date::selector::display_options::options::time%]"
+          },
+          "speed": {
+            "name": "[%key:component::sensor::entity_component::speed::name%]"
+          },
+          "climb": {
+            "name": "[%key:component::gpsd::entity::sensor::climb::name%]"
+          },
+          "mode": { "name": "[%key:common::config_flow::data::mode%]" }
+        }
+      }
+    }
+  }
+}

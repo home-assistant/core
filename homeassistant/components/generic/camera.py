@@ -1,4 +1,5 @@
 """Support for IP Cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +9,7 @@ import logging
 from typing import Any
 
 import httpx
+import voluptuous as vol
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -26,10 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.template import Template
 
 from . import DOMAIN
 from .const import (
@@ -89,18 +91,11 @@ class GenericCamera(Camera):
         self._password = device_info.get(CONF_PASSWORD)
         self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
-        if (
-            not isinstance(self._still_image_url, template_helper.Template)
-            and self._still_image_url
-        ):
-            self._still_image_url = cv.template(self._still_image_url)
         if self._still_image_url:
-            self._still_image_url.hass = hass
+            self._still_image_url = Template(self._still_image_url, hass)
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         if self._stream_source:
-            if not isinstance(self._stream_source, template_helper.Template):
-                self._stream_source = cv.template(self._stream_source)
-            self._stream_source.hass = hass
+            self._stream_source = Template(self._stream_source, hass)
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
         if self._stream_source:
@@ -138,6 +133,12 @@ class GenericCamera(Camera):
             url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
+            return self._last_image
+
+        try:
+            vol.Schema(vol.Url())(url)
+        except vol.Invalid as err:
+            _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
             return self._last_image
 
         if url == self._last_url and self._limit_refetch:

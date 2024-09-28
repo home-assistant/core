@@ -1,4 +1,5 @@
 """Support for Niko Home Control."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 async def async_setup_platform(
@@ -66,7 +67,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = light.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if light._state["type"] == 2:
+        if light._state["type"] == 2:  # noqa: SLF001
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -119,3 +120,4 @@ class NikoHomeControlData:
             if state["id"] == aid:
                 return state["value1"]
         _LOGGER.error("Failed to retrieve state off unknown light")
+        return None

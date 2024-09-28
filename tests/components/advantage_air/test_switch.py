@@ -27,8 +27,6 @@ async def test_cover_async_setup_entry(
 
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     # Test Fresh Air Switch Entity
     entity_id = "switch.myzone_fresh_air"
     state = hass.states.get(entity_id)
@@ -61,7 +59,7 @@ async def test_cover_async_setup_entry(
     entity_id = "switch.myzone_myfan"
     assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-myfan"
 

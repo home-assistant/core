@@ -1,4 +1,5 @@
 """Support for Flo Water Monitor sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -12,16 +13,14 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
-
-WATER_ICON = "mdi:water"
-GAUGE_ICON = "mdi:gauge"
 
 
 async def async_setup_entry(
@@ -59,7 +58,6 @@ async def async_setup_entry(
 class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
-    _attr_icon = WATER_ICON
     _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = SensorDeviceClass.WATER
@@ -97,9 +95,9 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
 class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
-    _attr_icon = GAUGE_ICON
-    _attr_native_unit_of_measurement = "gpm"
+    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.GALLONS_PER_MINUTE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_translation_key = "current_flow_rate"
 
     def __init__(self, device):

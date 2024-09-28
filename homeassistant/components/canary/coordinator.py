@@ -1,4 +1,5 @@
 """Provides the Canary DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,9 +46,9 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
 
             for device in location.devices:
                 if device.is_online:
-                    readings_by_device_id[
-                        device.device_id
-                    ] = self.canary.get_latest_readings(device.device_id)
+                    readings_by_device_id[device.device_id] = (
+                        self.canary.get_latest_readings(device.device_id)
+                    )
 
         return {
             "locations": locations_by_id,

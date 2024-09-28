@@ -1,11 +1,12 @@
 """Support for Denon AVR receivers using their HTTP interface."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from denonavr import DenonAVR
 from denonavr.const import (
@@ -21,6 +22,7 @@ from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
     AvrNetworkError,
+    AvrProcessingError,
     AvrTimoutError,
     DenonAvrError,
 )
@@ -98,11 +100,6 @@ TELNET_EVENTS = {
     "Z3",
 }
 
-_DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
 DENON_STATE_MAPPING = {
     STATE_ON: MediaPlayerState.ON,
     STATE_OFF: MediaPlayerState.OFF,
@@ -128,7 +125,6 @@ async def async_setup_entry(
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
-        await receiver_zone.async_setup()
         entities.append(
             DenonDevice(
                 receiver_zone,
@@ -155,14 +151,14 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_UPDATE_AUDYSSEY,
-        {},
+        None,
         f"async_{SERVICE_UPDATE_AUDYSSEY}",
     )
 
     async_add_entities(entities, update_before_add=True)
 
 
-def async_log_errors(
+def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log errors occurred when calling a Denon AVR receiver.
@@ -175,7 +171,6 @@ def async_log_errors(
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         available = True
         try:
             return await func(self, *args, **kwargs)
@@ -201,6 +196,16 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
+        except AvrProcessingError:
+            available = True
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Update of Denon AVR receiver at host %s not complete. "
+                        "Device is still available"
+                    ),
+                    self._receiver.host,
+                )
         except AvrForbiddenError:
             available = False
             if self.available:
@@ -220,16 +225,14 @@ def async_log_errors(
                 func.__name__,
                 err,
             )
-        except DenonAvrError as err:
+        except DenonAvrError:
             available = False
             _LOGGER.exception(
-                "Error %s occurred in method %s for Denon AVR receiver",
-                err,
-                func.__name__,
+                "Error occurred in method %s for Denon AVR receiver", func.__name__
             )
         finally:
             if available and not self.available:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
@@ -274,8 +277,6 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
-        self._telnet_was_healthy: bool | None = None
-
     async def _telnet_callback(self, zone: str, event: str, parameter: str) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
@@ -299,6 +300,8 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
+        if self._receiver.telnet_connected:
+            await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors
@@ -306,23 +309,12 @@ class DenonDevice(MediaPlayerEntity):
         """Get the latest status information from device."""
         receiver = self._receiver
 
-        # We can only skip the update if telnet was healthy after
-        # the last update and is still healthy now to ensure that
-        # we don't miss any state changes while telnet is down
-        # or reconnecting.
-        if (
-            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
-        ) and self._telnet_was_healthy:
+        # We skip the update if telnet is healthy.
+        # When telnet recovers it automatically updates all properties.
+        if receiver.telnet_connected and receiver.telnet_healthy:
             return
 
-        # if async_update raises an exception, we don't want to skip the next update
-        # so we set _telnet_was_healthy to None here and only set it to the value
-        # before the update if the update was successful
-        self._telnet_was_healthy = None
-
         await receiver.async_update()
-
-        self._telnet_was_healthy = telnet_is_healthy
 
         if self._update_audyssey:
             await receiver.async_update_audyssey()
@@ -453,9 +445,6 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        # Ensure that the AVR is turned on, which is necessary for input
-        # switch to work.
-        await self.async_turn_on()
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors

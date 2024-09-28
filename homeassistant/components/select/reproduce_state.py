@@ -1,4 +1,5 @@
 """Reproduce a Select entity state."""
+
 from __future__ import annotations
 
 import asyncio

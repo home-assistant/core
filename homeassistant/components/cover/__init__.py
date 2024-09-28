@@ -1,12 +1,14 @@
 """Support for Cover devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -28,10 +30,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -42,21 +41,17 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "cover"
-SCAN_INTERVAL = timedelta(seconds=15)
-
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class CoverDeviceClass(StrEnum):
@@ -158,18 +153,18 @@ def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for covers."""
-    component = hass.data[DOMAIN] = EntityComponent[CoverEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[CoverEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, {}, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER, None, "async_open_cover", [CoverEntityFeature.OPEN]
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, {}, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER, None, "async_close_cover", [CoverEntityFeature.CLOSE]
     )
 
     component.async_register_entity_service(
@@ -184,33 +179,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER, {}, "async_stop_cover", [CoverEntityFeature.STOP]
+        SERVICE_STOP_COVER, None, "async_stop_cover", [CoverEntityFeature.STOP]
     )
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
         SERVICE_OPEN_COVER_TILT,
-        {},
+        None,
         "async_open_cover_tilt",
         [CoverEntityFeature.OPEN_TILT],
     )
 
     component.async_register_entity_service(
         SERVICE_CLOSE_COVER_TILT,
-        {},
+        None,
         "async_close_cover_tilt",
         [CoverEntityFeature.CLOSE_TILT],
     )
 
     component.async_register_entity_service(
         SERVICE_STOP_COVER_TILT,
-        {},
+        None,
         "async_stop_cover_tilt",
         [CoverEntityFeature.STOP_TILT],
     )
@@ -228,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TOGGLE_COVER_TILT,
-        {},
+        None,
         "async_toggle_tilt",
         [CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT],
     )
@@ -238,14 +233,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -378,7 +371,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -386,7 +379,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -478,18 +471,33 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         else:
             await self.async_close_cover_tilt(**kwargs)
 
-    def _get_toggle_function(
+    def _get_toggle_function[**_P, _R](
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
+        # If we are opening or closing and we support stopping, then we should stop
         if self.supported_features & CoverEntityFeature.STOP and (
             self.is_closing or self.is_opening
         ):
             return fns["stop"]
-        if self.is_closed:
+
+        # If we are fully closed or in the process of closing, then we should open
+        if self.is_closed or self.is_closing:
             return fns["open"]
-        if self._cover_is_last_toggle_direction_open:
+
+        # If we are fully open or in the process of opening, then we should close
+        if self.current_cover_position == 100 or self.is_opening:
             return fns["close"]
-        return fns["open"]
+
+        # We are any of:
+        # * fully open but do not report `current_cover_position`
+        # * stopped partially open
+        # * either opening or closing, but do not report them
+        # If we previously reported opening/closing, we should move in the opposite direction.
+        # Otherwise, we must assume we are (partially) open and should always close.
+        # Note: _cover_is_last_toggle_direction_open will always remain True if we never report opening/closing.
+        return (
+            fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
+        )
 
 
 # These can be removed if no deprecated constant are in this module anymore

@@ -1,4 +1,5 @@
 """Tests for 1-Wire integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -31,7 +32,7 @@ def setup_owproxy_mock_devices(
         )
 
     # Ensure enough read side effect
-    dir_side_effect = [main_dir_return_value] + sub_dir_side_effect
+    dir_side_effect = [main_dir_return_value, *sub_dir_side_effect]
     read_side_effect = (
         main_read_side_effect
         + sub_read_side_effect
@@ -101,7 +102,9 @@ def _setup_owproxy_mock_device_reads(
     device_sensors = mock_device.get(platform, [])
     if platform is Platform.SENSOR and device_id.startswith("12"):
         # We need to check if there is TAI8570 plugged in
-        for expected_sensor in device_sensors:
-            sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
-    for expected_sensor in device_sensors:
-        sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
+        sub_read_side_effect.extend(
+            expected_sensor[ATTR_INJECT_READS] for expected_sensor in device_sensors
+        )
+    sub_read_side_effect.extend(
+        expected_sensor[ATTR_INJECT_READS] for expected_sensor in device_sensors
+    )

@@ -1,4 +1,5 @@
 """Base entity for Neato."""
+
 from __future__ import annotations
 
 from pybotvac import Robot

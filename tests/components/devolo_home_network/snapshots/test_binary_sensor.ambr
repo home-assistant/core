@@ -4,11 +4,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
       'friendly_name': 'Mock Title Connected to router',
-      'icon': 'mdi:router-network',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_connected_to_router',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -30,11 +30,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
-    'original_icon': 'mdi:router-network',
+    'original_icon': None,
     'original_name': 'Connected to router',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,

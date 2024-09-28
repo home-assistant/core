@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,6 @@ from stringcase import snakecase
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity, Router
+from . import Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -28,12 +28,13 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
 )
+from .entity import HuaweiLteBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = dict[str, Any]
+type _HostType = dict[str, Any]
 
 
 def _get_hosts(
@@ -70,11 +71,10 @@ async def async_setup_entry(
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
     )
-    for entity in registry.entities.values():
-        if (
-            entity.domain == DEVICE_TRACKER_DOMAIN
-            and entity.config_entry_id == config_entry.entry_id
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity.unique_id.partition("-")[2]
             # Do not add known wired clients if not tracking them (any more)
             skip = False
@@ -193,11 +193,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     @property
     def _device_unique_id(self) -> str:
         return self.mac_address
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return SourceType.ROUTER."""
-        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str | None:

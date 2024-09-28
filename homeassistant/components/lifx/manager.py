@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,9 +41,12 @@ SERVICE_EFFECT_FLAME = "effect_flame"
 SERVICE_EFFECT_MORPH = "effect_morph"
 SERVICE_EFFECT_MOVE = "effect_move"
 SERVICE_EFFECT_PULSE = "effect_pulse"
+SERVICE_EFFECT_SKY = "effect_sky"
 SERVICE_EFFECT_STOP = "effect_stop"
 
 ATTR_CHANGE = "change"
+ATTR_CLOUD_SATURATION_MIN = "cloud_saturation_min"
+ATTR_CLOUD_SATURATION_MAX = "cloud_saturation_max"
 ATTR_CYCLES = "cycles"
 ATTR_DIRECTION = "direction"
 ATTR_PALETTE = "palette"
@@ -51,6 +55,7 @@ ATTR_POWER_OFF = "power_off"
 ATTR_POWER_ON = "power_on"
 ATTR_SATURATION_MAX = "saturation_max"
 ATTR_SATURATION_MIN = "saturation_min"
+ATTR_SKY_TYPE = "sky_type"
 ATTR_SPEED = "speed"
 ATTR_SPREAD = "spread"
 
@@ -58,6 +63,7 @@ EFFECT_FLAME = "FLAME"
 EFFECT_MORPH = "MORPH"
 EFFECT_MOVE = "MOVE"
 EFFECT_OFF = "OFF"
+EFFECT_SKY = "SKY"
 
 EFFECT_FLAME_DEFAULT_SPEED = 3
 
@@ -70,6 +76,13 @@ EFFECT_MOVE_DIRECTION_RIGHT = "right"
 EFFECT_MOVE_DIRECTION_LEFT = "left"
 
 EFFECT_MOVE_DIRECTIONS = [EFFECT_MOVE_DIRECTION_LEFT, EFFECT_MOVE_DIRECTION_RIGHT]
+
+EFFECT_SKY_DEFAULT_SPEED = 50
+EFFECT_SKY_DEFAULT_SKY_TYPE = "Clouds"
+EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN = 50
+EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX = 180
+
+EFFECT_SKY_SKY_TYPES = ["Sunrise", "Sunset", "Clouds"]
 
 PULSE_MODE_BLINK = "blink"
 PULSE_MODE_BREATHE = "breathe"
@@ -136,13 +149,6 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
 
 LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
 
-SERVICES = (
-    SERVICE_EFFECT_STOP,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_COLORLOOP,
-)
-
 LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
@@ -182,6 +188,28 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
         ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
         ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
     }
+)
+
+LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=86400)),
+        ATTR_SKY_TYPE: vol.In(EFFECT_SKY_SKY_TYPES),
+        ATTR_CLOUD_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+        ATTR_CLOUD_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+        ATTR_PALETTE: vol.All(cv.ensure_list, [HSBK_SCHEMA]),
+    }
+)
+
+
+SERVICES = (
+    SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_FLAME,
+    SERVICE_EFFECT_MORPH,
+    SERVICE_EFFECT_MOVE,
+    SERVICE_EFFECT_PULSE,
+    SERVICE_EFFECT_SKY,
+    SERVICE_EFFECT_STOP,
 )
 
 
@@ -262,6 +290,13 @@ class LIFXManager:
 
         self.hass.services.async_register(
             DOMAIN,
+            SERVICE_EFFECT_SKY,
+            service_handler,
+            schema=LIFX_EFFECT_SKY_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
             SERVICE_EFFECT_STOP,
             service_handler,
             schema=LIFX_EFFECT_STOP_SCHEMA,
@@ -297,7 +332,7 @@ class LIFXManager:
 
         elif service == SERVICE_EFFECT_MORPH:
             theme_name = kwargs.get(ATTR_THEME, "exciting")
-            palette = kwargs.get(ATTR_PALETTE, None)
+            palette = kwargs.get(ATTR_PALETTE)
 
             if palette is not None:
                 theme = Theme()
@@ -327,7 +362,7 @@ class LIFXManager:
                         direction=kwargs.get(
                             ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
                         ),
-                        theme_name=kwargs.get(ATTR_THEME, None),
+                        theme_name=kwargs.get(ATTR_THEME),
                         power_on=kwargs.get(ATTR_POWER_ON, False),
                     )
                     for coordinator in coordinators
@@ -373,6 +408,39 @@ class LIFXManager:
                 saturation_min=saturation_min,
             )
             await self.effects_conductor.start(effect, bulbs)
+
+        elif service == SERVICE_EFFECT_SKY:
+            palette = kwargs.get(ATTR_PALETTE)
+            if palette is not None:
+                theme = Theme()
+                for hsbk in palette:
+                    theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
+
+            speed = kwargs.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED)
+            sky_type = kwargs.get(ATTR_SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE)
+
+            cloud_saturation_min = kwargs.get(
+                ATTR_CLOUD_SATURATION_MIN,
+                EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN,
+            )
+            cloud_saturation_max = kwargs.get(
+                ATTR_CLOUD_SATURATION_MAX,
+                EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX,
+            )
+
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_matrix_effect(
+                        effect=EFFECT_SKY,
+                        speed=speed,
+                        sky_type=sky_type,
+                        cloud_saturation_min=cloud_saturation_min,
+                        cloud_saturation_max=cloud_saturation_max,
+                        palette=theme.colors,
+                    )
+                    for coordinator in coordinators
+                )
+            )
 
         elif service == SERVICE_EFFECT_STOP:
             await self.effects_conductor.stop(bulbs)

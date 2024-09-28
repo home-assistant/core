@@ -1,8 +1,10 @@
 """Support for Homekit climate devices."""
+
 from __future__ import annotations
 
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -47,12 +49,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,6 +135,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     """The base HomeKit Controller climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -180,7 +177,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             features |= ClimateEntityFeature.FAN_MODE
@@ -199,7 +196,8 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
+        return [
+            *super().get_characteristic_types(),
             CharacteristicsTypes.ACTIVE,
             CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE,
             CharacteristicsTypes.TARGET_HEATER_COOLER_STATE,
@@ -477,7 +475,8 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
+        return [
+            *super().get_characteristic_types(),
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
             CharacteristicsTypes.HEATING_COOLING_TARGET,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,
@@ -633,7 +632,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 
     @property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         min_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -643,7 +642,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         max_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET

@@ -1,8 +1,10 @@
 """Storage for auth models."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import hmac
+import itertools
 from logging import getLogger
 from typing import Any
 
@@ -17,6 +19,7 @@ from .const import (
     GROUP_ID_ADMIN,
     GROUP_ID_READ_ONLY,
     GROUP_ID_USER,
+    REFRESH_TOKEN_EXPIRATION,
 )
 from .permissions import system_policies
 from .permissions.models import PermissionLookup
@@ -27,6 +30,17 @@ STORAGE_KEY = "auth"
 GROUP_NAME_ADMIN = "Administrators"
 GROUP_NAME_USER = "Users"
 GROUP_NAME_READ_ONLY = "Read Only"
+
+# We always save the auth store after we load it since
+# we may migrate data and do not want to have to do it again
+# but we don't want to do it during startup so we schedule
+# the first save 5 minutes out knowing something else may
+# want to save the auth store before then, and since Storage
+# will honor the lower of the two delays, it will save it
+# faster if something else saves it.
+INITIAL_LOAD_SAVE_DELAY = 300
+
+DEFAULT_SAVE_DELAY = 1
 
 
 class AuthStore:
@@ -48,6 +62,7 @@ class AuthStore:
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
+        self._token_id_to_user_id: dict[str, str] = {}
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
@@ -90,14 +105,18 @@ class AuthStore:
             "perm_lookup": self._perm_lookup,
         }
 
-        for attr_name, value in (
-            ("is_owner", is_owner),
-            ("is_active", is_active),
-            ("local_only", local_only),
-            ("system_generated", system_generated),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs.update(
+            {
+                attr_name: value
+                for attr_name, value in (
+                    ("is_owner", is_owner),
+                    ("is_active", is_active),
+                    ("local_only", local_only),
+                    ("system_generated", system_generated),
+                )
+                if value is not None
+            }
+        )
 
         new_user = models.User(**kwargs)
 
@@ -121,7 +140,10 @@ class AuthStore:
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
-        self._users.pop(user.id)
+        user = self._users.pop(user.id)
+        for refresh_token_id in user.refresh_tokens:
+            del self._token_id_to_user_id[refresh_token_id]
+        user.refresh_tokens.clear()
         self._async_schedule_save()
 
     async def async_update_user(
@@ -186,6 +208,7 @@ class AuthStore:
         client_icon: str | None = None,
         token_type: str = models.TOKEN_TYPE_NORMAL,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        expire_at: float | None = None,
         credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
@@ -194,6 +217,7 @@ class AuthStore:
             "client_id": client_id,
             "token_type": token_type,
             "access_token_expiration": access_token_expiration,
+            "expire_at": expire_at,
             "credential": credential,
         }
         if client_name:
@@ -202,32 +226,31 @@ class AuthStore:
             kwargs["client_icon"] = client_icon
 
         refresh_token = models.RefreshToken(**kwargs)
-        user.refresh_tokens[refresh_token.id] = refresh_token
+        token_id = refresh_token.id
+        user.refresh_tokens[token_id] = refresh_token
+        self._token_id_to_user_id[token_id] = user.id
 
         self._async_schedule_save()
         return refresh_token
 
-    async def async_remove_refresh_token(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
+    @callback
+    def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Remove a refresh token."""
-        for user in self._users.values():
-            if user.refresh_tokens.pop(refresh_token.id, None):
-                self._async_schedule_save()
-                break
+        refresh_token_id = refresh_token.id
+        if user_id := self._token_id_to_user_id.get(refresh_token_id):
+            del self._users[user_id].refresh_tokens[refresh_token_id]
+            del self._token_id_to_user_id[refresh_token_id]
+            self._async_schedule_save()
 
-    async def async_get_refresh_token(
-        self, token_id: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        for user in self._users.values():
-            refresh_token = user.refresh_tokens.get(token_id)
-            if refresh_token is not None:
-                return refresh_token
-
+        if user_id := self._token_id_to_user_id.get(token_id):
+            return self._users[user_id].refresh_tokens.get(token_id)
         return None
 
-    async def async_get_refresh_token_by_token(
+    @callback
+    def async_get_refresh_token_by_token(
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
@@ -241,15 +264,51 @@ class AuthStore:
         return found
 
     @callback
+    def async_get_refresh_tokens(self) -> list[models.RefreshToken]:
+        """Get all refresh tokens."""
+        return list(
+            itertools.chain.from_iterable(
+                user.refresh_tokens.values() for user in self._users.values()
+            )
+        )
+
+    @callback
     def async_log_refresh_token_usage(
         self, refresh_token: models.RefreshToken, remote_ip: str | None = None
     ) -> None:
         """Update refresh token last used information."""
         refresh_token.last_used_at = dt_util.utcnow()
         refresh_token.last_used_ip = remote_ip
+        if refresh_token.expire_at:
+            refresh_token.expire_at = (
+                refresh_token.last_used_at.timestamp() + REFRESH_TOKEN_EXPIRATION
+            )
         self._async_schedule_save()
 
-    async def async_load(self) -> None:
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        if enable_expiry:
+            if refresh_token.expire_at is None:
+                refresh_token.expire_at = (
+                    refresh_token.last_used_at or dt_util.utcnow()
+                ).timestamp() + REFRESH_TOKEN_EXPIRATION
+                self._async_schedule_save()
+        else:
+            refresh_token.expire_at = None
+            self._async_schedule_save()
+
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        credentials.data = data
+        self._async_schedule_save()
+
+    async def async_load(self) -> None:  # noqa: C901
         """Load the users."""
         if self._loaded:
             raise RuntimeError("Auth storage is already loaded")
@@ -431,6 +490,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
+                expire_at=rt_dict.get("expire_at"),
                 version=rt_dict.get("version"),
             )
             if "credential_id" in rt_dict:
@@ -439,11 +499,22 @@ class AuthStore:
 
         self._groups = groups
         self._users = users
+        self._build_token_id_to_user_id()
+        self._async_schedule_save(INITIAL_LOAD_SAVE_DELAY)
 
     @callback
-    def _async_schedule_save(self) -> None:
+    def _build_token_id_to_user_id(self) -> None:
+        """Build a map of token id to user id."""
+        self._token_id_to_user_id = {
+            token_id: user_id
+            for user_id, user in self._users.items()
+            for token_id in user.refresh_tokens
+        }
+
+    @callback
+    def _async_schedule_save(self, delay: float = DEFAULT_SAVE_DELAY) -> None:
         """Save users."""
-        self._store.async_delay_save(self._data_to_save, 1)
+        self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
@@ -504,6 +575,7 @@ class AuthStore:
                 if refresh_token.last_used_at
                 else None,
                 "last_used_ip": refresh_token.last_used_ip,
+                "expire_at": refresh_token.expire_at,
                 "credential_id": refresh_token.credential.id
                 if refresh_token.credential
                 else None,
@@ -532,6 +604,7 @@ class AuthStore:
         read_only_group = _system_read_only_group()
         groups[read_only_group.id] = read_only_group
         self._groups = groups
+        self._build_token_id_to_user_id()
 
 
 def _system_admin_group() -> models.Group:

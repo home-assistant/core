@@ -1,4 +1,5 @@
 """Demo platform for the vacuum component."""
+
 from __future__ import annotations
 
 from datetime import datetime

@@ -18,6 +18,9 @@
     "carbon_monoxide": {
       "default": "mdi:molecule-co"
     },
+    "conductivity": {
+      "default": "mdi:sprout-outline"
+    },
     "current": {
       "default": "mdi:current-ac"
     },
@@ -96,10 +99,10 @@
     "power_factor": {
       "default": "mdi:angle-acute"
     },
-    "preciptation": {
+    "precipitation": {
       "default": "mdi:weather-rainy"
     },
-    "preciptation_intensity": {
+    "precipitation_intensity": {
       "default": "mdi:weather-pouring"
     },
     "pressure": {
@@ -117,7 +120,7 @@
     "speed": {
       "default": "mdi:speedometer"
     },
-    "sulfur_dioxide": {
+    "sulphur_dioxide": {
       "default": "mdi:molecule"
     },
     "temperature": {

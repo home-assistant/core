@@ -1,13 +1,15 @@
 """Config flow for Kodi integration."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,8 +19,8 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -33,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_http(hass: core.HomeAssistant, data):
+async def validate_http(hass: HomeAssistant, data):
     """Validate the user input allows us to connect over HTTP."""
 
     host = data[CONF_HOST]
@@ -56,7 +58,7 @@ async def validate_http(hass: core.HomeAssistant, data):
         raise InvalidAuth from error
 
 
-async def validate_ws(hass: core.HomeAssistant, data):
+async def validate_ws(hass: HomeAssistant, data):
     """Validate the user input allows us to connect over WS."""
     if not (ws_port := data.get(CONF_WS_PORT)):
         return
@@ -77,14 +79,14 @@ async def validate_ws(hass: core.HomeAssistant, data):
         await kwc.connect()
         if not kwc.connected:
             _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
-            raise WSCannotConnect()
+            raise WSCannotConnect
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
 
 
-class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kodi."""
 
     VERSION = 1
@@ -102,7 +104,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
@@ -132,13 +134,15 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_ws_port()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None):
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is None:
             return self.async_show_form(
@@ -148,7 +152,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -166,7 +172,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -174,7 +180,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_user_form(errors)
 
-    async def async_step_credentials(self, user_input=None):
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle username and password input."""
         errors = {}
 
@@ -191,7 +199,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -199,7 +207,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_credentials_form(errors)
 
-    async def async_step_ws_port(self, user_input=None):
+    async def async_step_ws_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle websocket port of discovered node."""
         errors = {}
 
@@ -214,7 +224,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_ws(self.hass, self._get_data())
             except WSCannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -222,28 +232,32 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_ws_port_form(errors)
 
-    async def async_step_import(self, data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML."""
         reason = None
         try:
-            await validate_http(self.hass, data)
-            await validate_ws(self.hass, data)
+            await validate_http(self.hass, import_data)
+            await validate_ws(self.hass, import_data)
         except InvalidAuth:
             _LOGGER.exception("Invalid Kodi credentials")
             reason = "invalid_auth"
         except CannotConnect:
             _LOGGER.exception("Cannot connect to Kodi")
             reason = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
+            return self.async_create_entry(
+                title=import_data[CONF_NAME], data=import_data
+            )
 
         return self.async_abort(reason=reason)
 
     @callback
-    def _show_credentials_form(self, errors=None):
+    def _show_credentials_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -256,7 +270,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors or {}
+            step_id="credentials", data_schema=schema, errors=errors
         )
 
     @callback
@@ -298,8 +312,8 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _get_data(self):
-        data = {
+    def _get_data(self) -> dict[str, Any]:
+        return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -310,16 +324,14 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
 
-        return data
 
-
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class WSCannotConnect(exceptions.HomeAssistantError):
+class WSCannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to websocket."""

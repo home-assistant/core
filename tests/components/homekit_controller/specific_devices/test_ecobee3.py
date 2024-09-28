@@ -2,6 +2,7 @@
 
 https://github.com/home-assistant/core/issues/15336
 """
+
 from typing import Any
 from unittest import mock
 
@@ -107,6 +108,8 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                         ClimateEntityFeature.TARGET_TEMPERATURE
                         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                         | ClimateEntityFeature.TARGET_HUMIDITY
+                        | ClimateEntityFeature.TURN_OFF
+                        | ClimateEntityFeature.TURN_ON
                     ),
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],
@@ -200,6 +203,7 @@ async def test_ecobee3_setup_connection_failure(
     # We just advance time by 5 minutes so that the retry happens, rather
     # than manually invoking async_setup_entry.
     await time_changed(hass, 5 * 60)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "00:00:00:00:00:00_1_16"
@@ -282,8 +286,13 @@ async def test_ecobee3_remove_sensors_at_runtime(
     await device_config_changed(hass, accessories)
 
     assert hass.states.get("binary_sensor.kitchen") is None
+    assert entity_registry.async_get("binary_sensor.kitchen") is None
+
     assert hass.states.get("binary_sensor.porch") is None
+    assert entity_registry.async_get("binary_sensor.porch") is None
+
     assert hass.states.get("binary_sensor.basement") is None
+    assert entity_registry.async_get("binary_sensor.basement") is None
 
     # Now add the sensors back
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
@@ -300,8 +309,13 @@ async def test_ecobee3_remove_sensors_at_runtime(
 
     # Ensure the sensors are back
     assert hass.states.get("binary_sensor.kitchen") is not None
+    assert occ1.id == entity_registry.async_get("binary_sensor.kitchen").id
+
     assert hass.states.get("binary_sensor.porch") is not None
+    assert occ2.id == entity_registry.async_get("binary_sensor.porch").id
+
     assert hass.states.get("binary_sensor.basement") is not None
+    assert occ3.id == entity_registry.async_get("binary_sensor.basement").id
 
 
 async def test_ecobee3_services_and_chars_removed(
@@ -331,10 +345,15 @@ async def test_ecobee3_services_and_chars_removed(
 
     # Make sure the climate entity is still there
     assert hass.states.get("climate.homew") is not None
+    assert entity_registry.async_get("climate.homew") is not None
 
     # Make sure the basement temperature sensor is gone
     assert hass.states.get("sensor.basement_temperature") is None
+    assert entity_registry.async_get("select.basement_temperature") is None
 
     # Make sure the current mode select and clear hold button are gone
     assert hass.states.get("select.homew_current_mode") is None
+    assert entity_registry.async_get("select.homew_current_mode") is None
+
     assert hass.states.get("button.homew_clear_hold") is None
+    assert entity_registry.async_get("button.homew_clear_hold") is None

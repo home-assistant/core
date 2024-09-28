@@ -38,10 +38,9 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def update_servers(self) -> None:
         """Update list of test servers."""
         test_servers = self.api.get_servers()
-        test_servers_list = []
-        for servers in test_servers.values():
-            for server in servers:
-                test_servers_list.append(server)
+        test_servers_list = [
+            server for servers in test_servers.values() for server in servers
+        ]
         for server in sorted(
             test_servers_list,
             key=lambda server: (

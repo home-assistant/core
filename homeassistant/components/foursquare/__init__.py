@@ -1,11 +1,13 @@
 """Support for the Foursquare (Swarm) API."""
+
 from http import HTTPStatus
 import logging
 
+from aiohttp import web
 import requests
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -84,11 +86,11 @@ class FoursquarePushReceiver(HomeAssistantView):
     url = "/api/foursquare"
     name = "foursquare"
 
-    def __init__(self, push_secret):
+    def __init__(self, push_secret: str) -> None:
         """Initialize the OAuth callback view."""
         self.push_secret = push_secret
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response | None:
         """Accept the POST from Foursquare."""
         try:
             data = await request.json()
@@ -105,4 +107,5 @@ class FoursquarePushReceiver(HomeAssistantView):
             )
             return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
-        request.app["hass"].bus.async_fire(EVENT_PUSH, data)
+        request.app[KEY_HASS].bus.async_fire(EVENT_PUSH, data)
+        return None

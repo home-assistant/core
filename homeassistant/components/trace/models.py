@@ -1,4 +1,5 @@
 """Containers for a script or automation trace."""
+
 from __future__ import annotations
 
 import abc
@@ -15,7 +16,10 @@ from homeassistant.helpers.trace import (
     trace_set_child_id,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.limited_size_dict import LimitedSizeDict
 import homeassistant.util.uuid as uuid_util
+
+type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 class BaseTrace(abc.ABC):

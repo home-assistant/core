@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+
 from collections.abc import Callable
 import logging
 
@@ -17,7 +18,7 @@ from .const import (
     MODEL_AIRQUALITYMONITOR_S1,
     MODEL_AIRQUALITYMONITOR_V1,
 )
-from .device import XiaomiMiioEntity
+from .entity import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 

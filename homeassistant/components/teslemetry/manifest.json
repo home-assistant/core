@@ -1,0 +1,11 @@
+{
+  "domain": "teslemetry",
+  "name": "Teslemetry",
+  "codeowners": ["@Bre77"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/teslemetry",
+  "iot_class": "cloud_polling",
+  "loggers": ["tesla-fleet-api"],
+  "quality_scale": "platinum",
+  "requirements": ["tesla-fleet-api==0.7.8"]
+}

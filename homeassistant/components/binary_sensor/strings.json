@@ -55,6 +55,9 @@
       "is_on": "[%key:common::device_automation::condition_type::is_on%]",
       "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
@@ -240,8 +243,8 @@
     "power": {
       "name": "Power",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
       }
     },
     "presence": {

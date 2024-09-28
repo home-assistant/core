@@ -1,5 +1,6 @@
 """Tests for the EZVIZ integration."""
-from unittest.mock import patch
+
+from unittest.mock import _patch, patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -82,26 +83,20 @@ API_LOGIN_RETURN_VALIDATE = {
 }
 
 
-def _patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry() -> _patch:
+    """Patch async_setup_entry."""
     return patch(
         "homeassistant.components.ezviz.async_setup_entry",
-        return_value=return_value,
+        return_value=True,
     )
 
 
-async def init_integration(
-    hass: HomeAssistant,
-    *,
-    data: dict = ENTRY_CONFIG,
-    options: dict = ENTRY_OPTIONS,
-    skip_entry_setup: bool = False,
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the EZVIZ integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
     entry.add_to_hass(hass)
 
-    if not skip_entry_setup:
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry

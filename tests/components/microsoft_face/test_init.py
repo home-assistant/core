@@ -1,5 +1,5 @@
 """The tests for the microsoft face platform."""
-import asyncio
+
 from unittest.mock import patch
 
 import pytest
@@ -31,7 +31,7 @@ async def setup_homeassistant(hass: HomeAssistant):
     await async_setup_component(hass, "homeassistant", {})
 
 
-def create_group(hass, name):
+def create_group(hass: HomeAssistant, name: str) -> None:
     """Create a new person group.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -40,7 +40,7 @@ def create_group(hass, name):
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_CREATE_GROUP, data))
 
 
-def delete_group(hass, name):
+def delete_group(hass: HomeAssistant, name: str) -> None:
     """Delete a person group.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -49,7 +49,7 @@ def delete_group(hass, name):
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DELETE_GROUP, data))
 
 
-def train_group(hass, group):
+def train_group(hass: HomeAssistant, group: str) -> None:
     """Train a person group.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -58,7 +58,7 @@ def train_group(hass, group):
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TRAIN_GROUP, data))
 
 
-def create_person(hass, group, name):
+def create_person(hass: HomeAssistant, group: str, name: str) -> None:
     """Create a person in a group.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -69,7 +69,7 @@ def create_person(hass, group, name):
     )
 
 
-def delete_person(hass, group, name):
+def delete_person(hass: HomeAssistant, group: str, name: str) -> None:
     """Delete a person in a group.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -80,7 +80,9 @@ def delete_person(hass, group, name):
     )
 
 
-def face_person(hass, group, person, camera_entity):
+def face_person(
+    hass: HomeAssistant, group: str, person: str, camera_entity: str
+) -> None:
     """Add a new face picture to a person.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -134,15 +136,15 @@ async def test_setup_component_test_entities(
     """Set up component."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
 
     with assert_setup_component(3, mf.DOMAIN):
@@ -202,15 +204,15 @@ async def test_service_person(
     """Set up component, test person services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
 
     with assert_setup_component(3, mf.DOMAIN):
@@ -220,7 +222,7 @@ async def test_service_person(
 
     aioclient_mock.post(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_create_person.json"),
+        text=load_fixture("create_person.json", "microsoft_face"),
     )
     aioclient_mock.delete(
         ENDPOINT_URL.format(
@@ -274,15 +276,15 @@ async def test_service_face(
     """Set up component, test person face services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("microsoft_face_persongroups.json"),
+        text=load_fixture("persongroups.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("microsoft_face_persons.json"),
+        text=load_fixture("persons.json", "microsoft_face"),
     )
 
     CONFIG["camera"] = {"platform": "demo"}
@@ -339,7 +341,7 @@ async def test_service_status_timeout(
     aioclient_mock.put(
         ENDPOINT_URL.format("persongroups/service_group"),
         status=400,
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
     with assert_setup_component(3, mf.DOMAIN):

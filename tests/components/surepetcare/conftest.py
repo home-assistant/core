@@ -1,4 +1,5 @@
 """Define fixtures available for all tests."""
+
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +17,7 @@ from tests.common import MockConfigEntry
 async def _mock_call(method, resource):
     if method == "GET" and resource == MESTART_RESOURCE:
         return {"data": MOCK_API_DATA}
+    return None
 
 
 @pytest.fixture

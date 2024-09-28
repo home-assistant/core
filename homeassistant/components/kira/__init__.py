@@ -1,4 +1,5 @@
 """KIRA interface to receive UDP packets from an IR-IP bridge."""
+
 import logging
 import os
 
@@ -110,7 +111,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up the KIRA module and load platform."""
         # note: module_name is not the HA device name. it's just a unique name
         # to ensure the component and platform can share information
-        module_name = ("%s_%d" % (DOMAIN, idx)) if idx else DOMAIN
+        module_name = f"{DOMAIN}_{idx}" if idx else DOMAIN
         device_name = module_conf.get(CONF_NAME, DOMAIN)
         port = module_conf.get(CONF_PORT, DEFAULT_PORT)
         host = module_conf.get(CONF_HOST, DEFAULT_HOST)
@@ -140,7 +141,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Stop the KIRA receiver."""
         for receiver in hass.data[DOMAIN][CONF_SENSOR].values():
             receiver.stop()
-        _LOGGER.info("Terminated receivers")
+        _LOGGER.debug("Terminated receivers")
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_kira)
 

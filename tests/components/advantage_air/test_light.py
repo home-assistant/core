@@ -1,6 +1,5 @@
 """Test the Advantage Air Switch Platform."""
 
-
 from unittest.mock import AsyncMock
 
 from homeassistant.components.light import (

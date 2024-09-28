@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "button": {
+      "synchronize_clock": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
+    "number": {
+      "grid_export_limit": {
+        "default": "mdi:transmission-tower"
+      },
+      "battery_discharge_depth": {
+        "default": "mdi:battery-arrow-down"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/uvc",
   "iot_class": "local_polling",
   "loggers": ["uvcclient"],
-  "requirements": ["uvcclient==0.11.0"]
+  "requirements": ["uvcclient==0.12.1"]
 }

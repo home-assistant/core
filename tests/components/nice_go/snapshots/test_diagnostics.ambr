@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'coordinator_data': dict({
+      '1': dict({
+        'barrier_status': 'closed',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '1',
+        'light_status': True,
+        'name': 'Test Garage 1',
+        'vacation_mode': False,
+      }),
+      '2': dict({
+        'barrier_status': 'open',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '2',
+        'light_status': False,
+        'name': 'Test Garage 2',
+        'vacation_mode': True,
+      }),
+      '3': dict({
+        'barrier_status': 'closed',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '3',
+        'light_status': None,
+        'name': 'Test Garage 3',
+        'vacation_mode': False,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'email': '**REDACTED**',
+        'password': '**REDACTED**',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'nice_go',
+      'entry_id': 'acefdd4b3a4a0911067d1cf51414201e',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

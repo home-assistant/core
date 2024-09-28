@@ -1,4 +1,5 @@
 """Tests for the motionEye integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,8 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from motioneye_client.const import DEFAULT_PORT
 
-from homeassistant.components.motioneye import get_motioneye_entity_unique_id
 from homeassistant.components.motioneye.const import DOMAIN
+from homeassistant.components.motioneye.entity import get_motioneye_entity_unique_id
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL

@@ -1,4 +1,5 @@
 """Sensor for Supervisord process status."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,10 @@ import xmlrpc.client
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +24,7 @@ ATTR_GROUP = "group"
 
 DEFAULT_URL = "http://localhost:9001/RPC2"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url}
 )
 

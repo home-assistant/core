@@ -1,11 +1,11 @@
 """Coordinator for lookin devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
-_DataT = TypeVar("_DataT")
 
 
 class LookinPushCoordinator:
@@ -41,7 +40,7 @@ class LookinPushCoordinator:
         return is_active
 
 
-class LookinDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+class LookinDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator to gather data for a specific lookin devices."""
 
     def __init__(

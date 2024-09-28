@@ -1,7 +1,7 @@
 """Helpers to deal with Cast devices."""
+
 from __future__ import annotations
 
-import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
@@ -80,7 +80,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"
@@ -162,7 +162,7 @@ class CastStatusListener(
         self._valid = True
         self._mz_mgr = mz_mgr
 
-        if cast_device._cast_info.is_audio_group:
+        if cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.add_multizone(chromecast)
         if mz_only:
             return
@@ -170,7 +170,7 @@ class CastStatusListener(
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if not cast_device._cast_info.is_audio_group:
+        if not cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, status):
@@ -183,10 +183,10 @@ class CastStatusListener(
         if self._valid:
             self._cast_device.new_media_status(status)
 
-    def load_media_failed(self, item, error_code):
+    def load_media_failed(self, queue_item_id, error_code):
         """Handle reception of a new MediaStatus."""
         if self._valid:
-            self._cast_device.load_media_failed(item, error_code)
+            self._cast_device.load_media_failed(queue_item_id, error_code)
 
     def new_connection_status(self, status):
         """Handle reception of a new ConnectionStatus."""
@@ -214,8 +214,7 @@ class CastStatusListener(
 
         All following callbacks won't be forwarded.
         """
-        # pylint: disable-next=protected-access
-        if self._cast_device._cast_info.is_audio_group:
+        if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
@@ -249,7 +248,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
     """Fetch a playlist from the given url."""
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(url, timeout=5) as resp:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
             charset = resp.charset or "utf-8"
             if resp.content_type in supported_content_types:
                 raise PlaylistSupported
@@ -257,7 +256,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
                 playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
             except ValueError as err:
                 raise PlaylistError(f"Could not decode playlist {url}") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise PlaylistError(f"Timeout while fetching playlist {url}") from err
     except aiohttp.client_exceptions.ClientError as err:
         raise PlaylistError(f"Error while fetching playlist {url}") from err
@@ -295,10 +294,7 @@ async def parse_m3u(hass, url):
                 continue
             length = info[0].split(" ", 1)
             title = info[1].strip()
-        elif line.startswith("#EXT-X-VERSION:"):
-            # HLS stream, supported by cast devices
-            raise PlaylistSupported("HLS")
-        elif line.startswith("#EXT-X-STREAM-INF:"):
+        elif line.startswith(("#EXT-X-VERSION:", "#EXT-X-STREAM-INF:")):
             # HLS stream, supported by cast devices
             raise PlaylistSupported("HLS")
         elif line.startswith("#"):
@@ -363,7 +359,7 @@ async def parse_pls(hass, url):
 
 async def parse_playlist(hass, url):
     """Parse an m3u or pls playlist."""
-    if url.endswith(".m3u") or url.endswith(".m3u8"):
+    if url.endswith((".m3u", ".m3u8")):
         playlist = await parse_m3u(hass, url)
     else:
         playlist = await parse_pls(hass, url)

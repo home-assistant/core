@@ -1,33 +1,18 @@
 """Support for Vallox ventilation units."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import date
 import ipaddress
 import logging
-from typing import Any, NamedTuple
-from uuid import UUID
+from typing import NamedTuple
 
-from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox, ValloxApiException
-from vallox_websocket_api.vallox import (
-    get_model as _api_get_model,
-    get_next_filter_change_date as _api_get_next_filter_change_date,
-    get_sw_version as _api_get_sw_version,
-    get_uuid as _api_get_uuid,
-)
+from vallox_websocket_api import Profile, Vallox, ValloxApiException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -35,11 +20,9 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
-    METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
-    METRIC_KEY_PROFILE_FAN_SPEED_HOME,
-    STATE_SCAN_INTERVAL,
+    I18N_KEY_TO_VALLOX_PROFILE,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,10 +42,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS: list[str] = [
-    Platform.SENSOR,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.DATE,
+    Platform.FAN,
     Platform.NUMBER,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
@@ -73,6 +57,18 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
         vol.Required(ATTR_PROFILE_FAN_SPEED): vol.All(
             vol.Coerce(int), vol.Clamp(min=0, max=100)
         )
+    }
+)
+
+ATTR_PROFILE = "profile"
+ATTR_DURATION = "duration"
+
+SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+    {
+        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
+        vol.Optional(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        ),
     }
 )
 
@@ -87,6 +83,7 @@ class ServiceMethodDetails(NamedTuple):
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
+SERVICE_SET_PROFILE = "set_profile"
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
@@ -101,62 +98,10 @@ SERVICE_TO_METHOD = {
         method="async_set_profile_fan_speed_boost",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
     ),
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
+    ),
 }
-
-
-@dataclass
-class ValloxState:
-    """Describes the current state of the unit."""
-
-    metric_cache: dict[str, Any] = field(default_factory=dict)
-    profile: VALLOX_PROFILE = VALLOX_PROFILE.NONE
-
-    def get_metric(self, metric_key: str) -> StateType:
-        """Return cached state value."""
-
-        if (value := self.metric_cache.get(metric_key)) is None:
-            return None
-
-        if not isinstance(value, (str, int, float)):
-            return None
-
-        return value
-
-    @property
-    def model(self) -> str | None:
-        """Return the model, if any."""
-        model = _api_get_model(self.metric_cache)
-
-        if model == "Unknown":
-            return None
-
-        return model
-
-    @property
-    def sw_version(self) -> str:
-        """Return the SW version."""
-        return _api_get_sw_version(self.metric_cache)
-
-    @property
-    def uuid(self) -> UUID | None:
-        """Return cached UUID value."""
-        uuid = _api_get_uuid(self.metric_cache)
-        if not isinstance(uuid, UUID):
-            raise TypeError
-        return uuid
-
-    def get_next_filter_change_date(self) -> date | None:
-        """Return the next filter change date."""
-        next_filter_change_date = _api_get_next_filter_change_date(self.metric_cache)
-
-        if not isinstance(next_filter_change_date, date):
-            return None
-
-        return next_filter_change_date
-
-
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
-    """The DataUpdateCoordinator for Vallox."""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -166,26 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = Vallox(host)
 
-    async def async_update_data() -> ValloxState:
-        """Fetch state update."""
-        _LOGGER.debug("Updating Vallox state cache")
-
-        try:
-            metric_cache = await client.fetch_metrics()
-            profile = await client.get_profile()
-
-        except ValloxApiException as err:
-            raise UpdateFailed("Error during state cache update") from err
-
-        return ValloxState(metric_cache, profile)
-
-    coordinator = ValloxDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{name} DataUpdateCoordinator",
-        update_interval=STATE_SCAN_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator = ValloxDataUpdateCoordinator(hass, name, client)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -227,7 +153,7 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(
-        self, client: Vallox, coordinator: DataUpdateCoordinator[ValloxState]
+        self, client: Vallox, coordinator: ValloxDataUpdateCoordinator
     ) -> None:
         """Initialize the proxy."""
         self._client = client
@@ -240,14 +166,11 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Home fan speed to: %d%%", fan_speed)
 
         try:
-            await self._client.set_values(
-                {METRIC_KEY_PROFILE_FAN_SPEED_HOME: fan_speed}
-            )
-            return True
-
+            await self._client.set_fan_speed(Profile.HOME, fan_speed)
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_away(
         self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
@@ -256,14 +179,11 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Away fan speed to: %d%%", fan_speed)
 
         try:
-            await self._client.set_values(
-                {METRIC_KEY_PROFILE_FAN_SPEED_AWAY: fan_speed}
-            )
-            return True
-
+            await self._client.set_fan_speed(Profile.AWAY, fan_speed)
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_boost(
         self, fan_speed: int = DEFAULT_FAN_SPEED_BOOST
@@ -272,14 +192,27 @@ class ValloxServiceHandler:
         _LOGGER.debug("Setting Boost fan speed to: %d%%", fan_speed)
 
         try:
-            await self._client.set_values(
-                {METRIC_KEY_PROFILE_FAN_SPEED_BOOST: fan_speed}
-            )
-            return True
-
+            await self._client.set_fan_speed(Profile.BOOST, fan_speed)
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
             return False
+        return True
+
+    async def async_set_profile(
+        self, profile: str, duration: int | None = None
+    ) -> bool:
+        """Activate profile for given duration."""
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
+        try:
+            await self._client.set_profile(
+                I18N_KEY_TO_VALLOX_PROFILE[profile], duration
+            )
+        except ValloxApiException as err:
+            _LOGGER.error(
+                "Error setting profile %d for duration %s: %s", profile, duration, err
+            )
+            return False
+        return True
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
@@ -299,24 +232,3 @@ class ValloxServiceHandler:
         # be observed by all parties involved.
         if result:
             await self._coordinator.async_request_refresh()
-
-
-class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
-    """Representation of a Vallox entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
-        """Initialize a Vallox entity."""
-        super().__init__(coordinator)
-
-        self._device_uuid = self.coordinator.data.uuid
-        assert self.coordinator.config_entry is not None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_uuid))},
-            manufacturer=DEFAULT_NAME,
-            model=self.coordinator.data.model,
-            name=name,
-            sw_version=self.coordinator.data.sw_version,
-            configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
-        )

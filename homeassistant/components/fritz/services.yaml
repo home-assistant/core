@@ -1,31 +1,3 @@
-reconnect:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
-reboot:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
-
-cleanup:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: fritz
-          entity:
-            device_class: connectivity
 set_guest_wifi_password:
   fields:
     device_id:

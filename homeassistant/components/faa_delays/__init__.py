@@ -1,4 +1,5 @@
 """The FAA Delays integration."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant

@@ -1,4 +1,5 @@
 """Constants for the Backup integration."""
+
 from logging import getLogger
 
 DOMAIN = "backup"
@@ -12,4 +13,5 @@ EXCLUDE_FROM_BACKUP = [
     "*.log",
     "backups/*.tar",
     "OZW_Log.txt",
+    "tts/*",
 ]

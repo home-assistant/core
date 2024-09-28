@@ -1,4 +1,5 @@
 """Support for climate devices through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,8 +28,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
 MODE_TO_STATE = {
@@ -55,6 +56,7 @@ OPERATING_STATE_TO_ACTION = {
     "pending cool": HVACAction.COOLING,
     "pending heat": HVACAction.HEATING,
     "vent economizer": HVACAction.FAN,
+    "wind": HVACAction.FAN,
 }
 
 AC_MODE_TO_STATE = {
@@ -66,6 +68,7 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
+    "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
     HVACMode.HEAT_COOL: "auto",
@@ -86,7 +89,7 @@ FAN_OSCILLATION_TO_SWING = {
     value: key for key, value in SWING_TO_FAN_OSCILLATION.items()
 }
 
-
+WIND = "wind"
 WINDFREE = "windFree"
 
 UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
@@ -140,7 +143,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Or must have all of these thermostat capabilities
     thermostat_capabilities = [
         Capability.temperature_measurement,
-        Capability.thermostat_cooling_setpoint,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode,
     ]
@@ -162,6 +164,8 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
@@ -173,6 +177,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         flags = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(
             Capability.thermostat_fan_mode, Capability.thermostat
@@ -341,6 +347,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _hvac_modes: list[HVACMode]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device) -> None:
         """Init the class."""
@@ -353,7 +360,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
         features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(Capability.fan_oscillation_mode):
             features |= ClimateEntityFeature.SWING_MODE
@@ -381,11 +391,17 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         # Turn on the device if it's off before setting mode.
         if not self._device.status.switch:
             tasks.append(self._device.switch_on(set_status=True))
-        tasks.append(
-            self._device.set_air_conditioner_mode(
-                STATE_TO_AC_MODE[hvac_mode], set_status=True
-            )
-        )
+
+        mode = STATE_TO_AC_MODE[hvac_mode]
+        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" mode the AirConditioner new mode has to be "wind"
+        # The conversion make the mode change working
+        # The conversion is made only for device that wrongly has capability "wind" instead "fan_only"
+        if hvac_mode == HVACMode.FAN_ONLY:
+            supported_modes = self._device.status.supported_ac_modes
+            if WIND in supported_modes:
+                mode = WIND
+
+        tasks.append(self._device.set_air_conditioner_mode(mode, set_status=True))
         await asyncio.gather(*tasks)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates

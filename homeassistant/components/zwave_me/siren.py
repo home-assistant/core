@@ -1,4 +1,5 @@
 """Representation of a sirenBinary."""
+
 from typing import Any
 
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
@@ -7,8 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.SIREN
 

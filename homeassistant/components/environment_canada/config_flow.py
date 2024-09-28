@@ -1,12 +1,14 @@
 """Config flow for Environment Canada integration."""
+
 import logging
-import xml.etree.ElementTree as et
+from typing import Any
+import xml.etree.ElementTree as ET
 
 import aiohttp
 from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
@@ -40,18 +42,20 @@ async def validate_input(data):
     }
 
 
-class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Environment Canada weather."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 info = await validate_input(user_input)
-            except (et.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId):
+            except (ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId):
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
@@ -60,7 +64,7 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "bad_station_id"
                 else:
                     errors["base"] = "error_response"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

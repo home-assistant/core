@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "departures": {
+        "default": "mdi:bus"
+      }
+    }
+  }
+}

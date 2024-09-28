@@ -1,22 +1,22 @@
 """Config flow for Samsung SyncThru."""
 
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_URL
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 
-class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     """Samsung SyncThru config flow."""
 
     VERSION = 1
@@ -24,13 +24,17 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     url: str
     name: str
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user initiated flow."""
         if user_input is None:
             return await self._async_show_form(step_id="user")
         return await self._async_check_and_create("user", user_input)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle SSDP initiated flow."""
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
@@ -60,7 +64,9 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: self.name}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery confirmation by user."""
         if user_input is not None:
             return await self._async_check_and_create("confirm", user_input)

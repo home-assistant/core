@@ -2,20 +2,20 @@
 
 from datetime import datetime, timedelta
 
+from astral import LocationInfo
+import astral.sun
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.sun as sun
+from homeassistant.helpers import sun
 import homeassistant.util.dt as dt_util
 
 
 def test_next_events(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -89,8 +89,6 @@ def test_next_events(hass: HomeAssistant) -> None:
 def test_date_events(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -116,8 +114,6 @@ def test_date_events(hass: HomeAssistant) -> None:
 def test_date_events_default_date(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -144,8 +140,6 @@ def test_date_events_default_date(hass: HomeAssistant) -> None:
 def test_date_events_accepts_datetime(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 

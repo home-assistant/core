@@ -3,9 +3,11 @@
 from typing import Any
 from unittest.mock import patch
 
-from aioairzone_cloud.common import OperationMode
+from aioairzone_cloud.common import OperationMode, UserAccessType
 from aioairzone_cloud.const import (
+    API_ACCESS_TYPE,
     API_ACTIVE,
+    API_AIR_ACTIVE,
     API_AQ_ACTIVE,
     API_AQ_MODE_CONF,
     API_AQ_MODE_VALUES,
@@ -14,6 +16,7 @@ from aioairzone_cloud.const import (
     API_AQ_PM_10,
     API_AQ_PRESENT,
     API_AQ_QUALITY,
+    API_AZ_ACS,
     API_AZ_AIDOO,
     API_AZ_AIDOO_PRO,
     API_AZ_SYSTEM,
@@ -21,11 +24,21 @@ from aioairzone_cloud.const import (
     API_CELSIUS,
     API_CONFIG,
     API_CONNECTION_DATE,
+    API_CONSUMPTION_UE,
+    API_CPU_WS,
     API_DEVICE_ID,
     API_DEVICES,
+    API_DISCH_COMP_TEMP_UE,
     API_DISCONNECTION_DATE,
+    API_DOUBLE_SET_POINT,
     API_ERRORS,
+    API_EXCH_HEAT_TEMP_IU,
+    API_EXCH_HEAT_TEMP_UE,
+    API_EXT_TEMP,
     API_FAH,
+    API_FREE,
+    API_FREE_MEM,
+    API_GENERAL,
     API_GROUP_ID,
     API_GROUPS,
     API_HUMIDITY,
@@ -38,9 +51,16 @@ from aioairzone_cloud.const import (
     API_MODE_AVAIL,
     API_NAME,
     API_OLD_ID,
+    API_PC_UE,
+    API_PE_UE,
     API_POWER,
+    API_POWERFUL_MODE,
+    API_RAD_ACTIVE,
+    API_RADIO_BATTERY_PERCENT,
+    API_RADIO_COVERAGE_PERCENT,
     API_RANGE_MAX_AIR,
     API_RANGE_MIN_AIR,
+    API_RANGE_SP_MAX_ACS,
     API_RANGE_SP_MAX_AUTO_AIR,
     API_RANGE_SP_MAX_COOL_AIR,
     API_RANGE_SP_MAX_DRY_AIR,
@@ -48,6 +68,7 @@ from aioairzone_cloud.const import (
     API_RANGE_SP_MAX_HOT_AIR,
     API_RANGE_SP_MAX_STOP_AIR,
     API_RANGE_SP_MAX_VENT_AIR,
+    API_RANGE_SP_MIN_ACS,
     API_RANGE_SP_MIN_AUTO_AIR,
     API_RANGE_SP_MIN_COOL_AIR,
     API_RANGE_SP_MIN_DRY_AIR,
@@ -55,6 +76,8 @@ from aioairzone_cloud.const import (
     API_RANGE_SP_MIN_HOT_AIR,
     API_RANGE_SP_MIN_STOP_AIR,
     API_RANGE_SP_MIN_VENT_AIR,
+    API_RETURN_TEMP,
+    API_SETPOINT,
     API_SP_AIR_AUTO,
     API_SP_AIR_COOL,
     API_SP_AIR_DRY,
@@ -70,9 +93,16 @@ from aioairzone_cloud.const import (
     API_STAT_RSSI,
     API_STAT_SSID,
     API_STATUS,
+    API_STEP,
+    API_SYSTEM_FW,
     API_SYSTEM_NUMBER,
+    API_SYSTEM_TYPE,
+    API_TANK_TEMP,
+    API_THERMOSTAT_FW,
+    API_THERMOSTAT_TYPE,
     API_TYPE,
     API_WARNINGS,
+    API_WORK_TEMP,
     API_WS_CONNECTED,
     API_WS_FW,
     API_WS_ID,
@@ -83,7 +113,7 @@ from aioairzone_cloud.const import (
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
 
-from homeassistant.components.airzone_cloud import DOMAIN
+from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -105,6 +135,11 @@ GET_INSTALLATION_MOCK = {
             API_GROUP_ID: "grp1",
             API_NAME: "Group",
             API_DEVICES: [
+                {
+                    API_DEVICE_ID: "dhw1",
+                    API_TYPE: API_AZ_ACS,
+                    API_WS_ID: WS_ID,
+                },
                 {
                     API_DEVICE_ID: "system1",
                     API_TYPE: API_AZ_SYSTEM,
@@ -169,6 +204,7 @@ GET_INSTALLATIONS_MOCK = {
         {
             API_INSTALLATION_ID: CONFIG[CONF_ID],
             API_NAME: "House",
+            API_ACCESS_TYPE: UserAccessType.ADMIN,
             API_WS_IDS: [
                 WS_ID,
                 WS_ID_AIDOO,
@@ -187,6 +223,12 @@ GET_WEBSERVER_MOCK = {
         API_STAT_AP_MAC: "00:00:00:00:00:00",
     },
     API_STATUS: {
+        API_CPU_WS: {
+            API_GENERAL: 32,
+        },
+        API_FREE_MEM: {
+            API_FREE: 42616,
+        },
         API_IS_CONNECTED: True,
         API_STAT_QUALITY: 4,
         API_STAT_RSSI: -56,
@@ -230,6 +272,42 @@ GET_WEBSERVER_MOCK_AIDOO_PRO = {
 }
 
 
+def mock_get_device_config(device: Device) -> dict[str, Any]:
+    """Mock API device config."""
+
+    if device.get_id() == "aidoo_pro":
+        return {
+            API_CONSUMPTION_UE: 3,
+            API_DISCH_COMP_TEMP_UE: {API_CELSIUS: 121, API_FAH: -250},
+            API_EXCH_HEAT_TEMP_IU: {API_CELSIUS: 26, API_FAH: 79},
+            API_EXCH_HEAT_TEMP_UE: {API_CELSIUS: -25, API_FAH: -13},
+            API_EXT_TEMP: {API_CELSIUS: 29, API_FAH: 84},
+            API_PC_UE: 0.15,
+            API_PE_UE: 0.02,
+            API_RETURN_TEMP: {API_CELSIUS: 26, API_FAH: 79},
+            API_WORK_TEMP: {API_CELSIUS: 25, API_FAH: 77},
+        }
+    if device.get_id() == "system1":
+        return {
+            API_SYSTEM_FW: "3.35",
+            API_SYSTEM_TYPE: "c6",
+        }
+    if device.get_id() == "zone1":
+        return {
+            API_THERMOSTAT_FW: "3.52",
+            API_THERMOSTAT_TYPE: "blueface",
+        }
+    if device.get_id() == "zone2":
+        return {
+            API_THERMOSTAT_FW: "3.33",
+            API_THERMOSTAT_TYPE: "thinkradio",
+            API_RADIO_BATTERY_PERCENT: 54,
+            API_RADIO_COVERAGE_PERCENT: 76,
+        }
+
+    return {}
+
+
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
 
@@ -268,6 +346,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "aidoo_pro":
         return {
             API_ACTIVE: True,
+            API_DOUBLE_SET_POINT: True,
             API_ERRORS: [],
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [
@@ -279,7 +358,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             ],
             API_SP_AIR_AUTO: {API_CELSIUS: 22, API_FAH: 72},
             API_SP_AIR_COOL: {API_CELSIUS: 22, API_FAH: 72},
-            API_SP_AIR_HEAT: {API_CELSIUS: 22, API_FAH: 72},
+            API_SP_AIR_HEAT: {API_CELSIUS: 18, API_FAH: 64},
             API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_AUTO_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_COOL_AIR: {API_CELSIUS: 30, API_FAH: 86},
@@ -295,6 +374,21 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {API_CELSIUS: 20, API_FAH: 68},
+            API_WARNINGS: [],
+        }
+    if device.get_id() == "dhw1":
+        return {
+            API_ACTIVE: False,
+            API_ERRORS: [],
+            API_POWER: False,
+            API_POWERFUL_MODE: False,
+            API_SETPOINT: {API_CELSIUS: 48, API_FAH: 118},
+            API_RANGE_SP_MAX_ACS: {API_CELSIUS: 60, API_FAH: 140},
+            API_RANGE_SP_MIN_ACS: {API_CELSIUS: 40, API_FAH: 104},
+            API_STEP: {API_CELSIUS: 1, API_FAH: 1},
+            API_TANK_TEMP: {API_CELSIUS: 45.5, API_FAH: 114},
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
             API_WARNINGS: [],
         }
     if device.get_id() == "system1":
@@ -324,6 +418,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone1":
         return {
             API_ACTIVE: True,
+            API_AIR_ACTIVE: True,
             API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
@@ -332,6 +427,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_AQ_PM_10: 3,
             API_AQ_PRESENT: True,
             API_AQ_QUALITY: "good",
+            API_DOUBLE_SET_POINT: False,
             API_HUMIDITY: 30,
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [
@@ -340,6 +436,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
                 OperationMode.VENTILATION.value,
                 OperationMode.DRY.value,
             ],
+            API_RAD_ACTIVE: False,
             API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
             API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},
@@ -368,6 +465,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone2":
         return {
             API_ACTIVE: False,
+            API_AIR_ACTIVE: False,
             API_AQ_ACTIVE: False,
             API_AQ_MODE_CONF: "auto",
             API_AQ_MODE_VALUES: ["off", "on", "auto"],
@@ -376,9 +474,11 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_AQ_PM_10: 3,
             API_AQ_PRESENT: True,
             API_AQ_QUALITY: "good",
+            API_DOUBLE_SET_POINT: False,
             API_HUMIDITY: 24,
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [],
+            API_RAD_ACTIVE: False,
             API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
             API_RANGE_SP_MAX_COOL_AIR: {API_FAH: 86, API_CELSIUS: 30},
             API_RANGE_SP_MAX_DRY_AIR: {API_FAH: 86, API_CELSIUS: 30},
@@ -432,21 +532,31 @@ async def async_init_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
-        side_effect=mock_get_device_status,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
-        return_value=GET_INSTALLATION_MOCK,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
-        return_value=GET_INSTALLATIONS_MOCK,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        side_effect=mock_get_webserver,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
+            side_effect=mock_get_device_config,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
+            side_effect=mock_get_device_status,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
+            return_value=GET_INSTALLATION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
+            return_value=GET_INSTALLATIONS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
+            side_effect=mock_get_webserver,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
+            return_value=None,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

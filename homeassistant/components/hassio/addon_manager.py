@@ -1,4 +1,5 @@
 """Provide add-on management."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,13 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial, wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
+
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import (
+    AddonState as SupervisorAddonState,
+    InstalledAddonComplete,
+)
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -16,26 +23,20 @@ from .handler import (
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_info,
     async_get_addon_store_info,
     async_install_addon,
-    async_restart_addon,
     async_set_addon_options,
-    async_start_addon,
-    async_stop_addon,
-    async_uninstall_addon,
     async_update_addon,
+    get_supervisor_client,
 )
 
-_AddonManagerT = TypeVar("_AddonManagerT", bound="AddonManager")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-_FuncType = Callable[Concatenate[_AddonManagerT, _P], Awaitable[_R]]
-_ReturnFuncType = Callable[Concatenate[_AddonManagerT, _P], Coroutine[Any, Any, _R]]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
+type _ReturnFuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, _P], Coroutine[Any, Any, _R]
+]
 
 
-def api_error(
+def api_error[_AddonManagerT: AddonManager, **_P, _R](
     error_message: str,
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
@@ -54,7 +55,7 @@ def api_error(
             """Wrap an add-on manager method."""
             try:
                 return_value = await func(self, *args, **kwargs)
-            except HassioAPIError as err:
+            except (HassioAPIError, SupervisorError) as err:
                 raise AddonError(
                     f"{error_message.format(addon_name=self.addon_name)}: {err}"
                 ) from err
@@ -141,6 +142,7 @@ class AddonManager:
     @api_error("Failed to get the {addon_name} add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
+        supervisor_client = get_supervisor_client(self._hass)
         addon_store_info = await async_get_addon_store_info(self._hass, self.addon_slug)
         self._logger.debug("Add-on store info: %s", addon_store_info)
         if not addon_store_info["installed"]:
@@ -153,23 +155,23 @@ class AddonManager:
                 version=None,
             )
 
-        addon_info = await async_get_addon_info(self._hass, self.addon_slug)
+        addon_info = await supervisor_client.addons.addon_info(self.addon_slug)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
-            available=addon_info["available"],
-            hostname=addon_info["hostname"],
-            options=addon_info["options"],
+            available=addon_info.available,
+            hostname=addon_info.hostname,
+            options=addon_info.options,
             state=addon_state,
-            update_available=addon_info["update_available"],
-            version=addon_info["version"],
+            update_available=addon_info.update_available,
+            version=addon_info.version,
         )
 
     @callback
-    def async_get_addon_state(self, addon_info: dict[str, Any]) -> AddonState:
+    def async_get_addon_state(self, addon_info: InstalledAddonComplete) -> AddonState:
         """Return the current state of the managed add-on."""
         addon_state = AddonState.NOT_RUNNING
 
-        if addon_info["state"] == "started":
+        if addon_info.state == SupervisorAddonState.STARTED:
             addon_state = AddonState.RUNNING
         if self._install_task and not self._install_task.done():
             addon_state = AddonState.INSTALLING
@@ -184,28 +186,32 @@ class AddonManager:
         options = {"options": config}
         await async_set_addon_options(self._hass, self.addon_slug, options)
 
+    def _check_addon_available(self, addon_info: AddonInfo) -> None:
+        """Check if the managed add-on is available."""
+
+        if not addon_info.available:
+            raise AddonError(f"{self.addon_name} add-on is not available")
+
     @api_error("Failed to install the {addon_name} add-on")
     async def async_install_addon(self) -> None:
         """Install the managed add-on."""
         addon_info = await self.async_get_addon_info()
 
-        if not addon_info.available:
-            raise AddonError(f"{self.addon_name} add-on is not available anymore")
+        self._check_addon_available(addon_info)
 
         await async_install_addon(self._hass, self.addon_slug)
 
     @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the managed add-on."""
-        await async_uninstall_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.uninstall_addon(self.addon_slug)
 
     @api_error("Failed to update the {addon_name} add-on")
     async def async_update_addon(self) -> None:
         """Update the managed add-on if needed."""
         addon_info = await self.async_get_addon_info()
 
-        if not addon_info.available:
-            raise AddonError(f"{self.addon_name} add-on is not available anymore")
+        self._check_addon_available(addon_info)
 
         if addon_info.state is AddonState.NOT_INSTALLED:
             raise AddonError(f"{self.addon_name} add-on is not installed")
@@ -219,17 +225,17 @@ class AddonManager:
     @api_error("Failed to start the {addon_name} add-on")
     async def async_start_addon(self) -> None:
         """Start the managed add-on."""
-        await async_start_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.start_addon(self.addon_slug)
 
     @api_error("Failed to restart the {addon_name} add-on")
     async def async_restart_addon(self) -> None:
         """Restart the managed add-on."""
-        await async_restart_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.restart_addon(self.addon_slug)
 
     @api_error("Failed to stop the {addon_name} add-on")
     async def async_stop_addon(self) -> None:
         """Stop the managed add-on."""
-        await async_stop_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.stop_addon(self.addon_slug)
 
     @api_error("Failed to create a backup of the {addon_name} add-on")
     async def async_create_backup(self) -> None:
@@ -380,7 +386,7 @@ class AddonManager:
                     self._logger.error(err)
                     break
 
-        return self._hass.async_create_task(addon_operation())
+        return self._hass.async_create_task(addon_operation(), eager_start=False)
 
 
 class AddonError(HomeAssistantError):

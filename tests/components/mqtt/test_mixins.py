@@ -10,13 +10,12 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
-    Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from tests.typing import MqttMockHAClientGenerator
 
 
 @pytest.mark.parametrize(
@@ -37,10 +36,8 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
         }
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_availability_with_shared_state_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the state is not changed twice.
 
@@ -296,13 +293,11 @@ async def test_availability_with_shared_state_topic(
         "entity_name_startswith_device_name2",
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@pytest.mark.usefixtures("mqtt_client_mock")
 async def test_default_entity_and_device_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_client_mock: MqttMockPahoClient,
-    mqtt_config_entry_data,
     caplog: pytest.LogCaptureFixture,
     entity_id: str,
     friendly_name: str,
@@ -338,12 +333,13 @@ async def test_default_entity_and_device_name(
 
     # Assert that no issues ware registered
     assert len(events) == 0
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Assert that no issues ware registered
+    assert len(events) == 0
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_name_attribute_is_set_or_not(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test frendly name with device_class set.
 
@@ -396,3 +392,59 @@ async def test_name_attribute_is_set_or_not(
 
     assert state is not None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "availability_topic": "test-topic",
+                    "availability_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "availability": {
+                        "topic": "test-topic",
+                        "value_template": "{{ value_json.some_var * 1 }}",
+                    },
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "json_attributes_topic": "test-topic",
+                    "json_attributes_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        },
+    ],
+    ids=[
+        "availability_template1",
+        "availability_template2",
+        "json_attributes_template",
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

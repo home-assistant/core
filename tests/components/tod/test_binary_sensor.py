@@ -1,5 +1,6 @@
 """Test Times of the Day Binary Sensor."""
-from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,21 +16,21 @@ from tests.common import assert_setup_component, async_fire_time_changed
 
 
 @pytest.fixture
-def hass_time_zone():
+def hass_time_zone() -> str:
     """Return default hass timezone."""
     return "US/Pacific"
 
 
 @pytest.fixture(autouse=True)
-def setup_fixture(hass, hass_time_zone):
+async def setup_fixture(hass: HomeAssistant, hass_time_zone: str) -> None:
     """Set up things to be run when tests are started."""
     hass.config.latitude = 50.27583
     hass.config.longitude = 18.98583
-    hass.config.set_time_zone(hass_time_zone)
+    await hass.config.async_set_time_zone(hass_time_zone)
 
 
 @pytest.fixture
-def hass_tz_info(hass):
+def hass_tz_info(hass: HomeAssistant) -> tzinfo | None:
     """Return timezone info for the hass timezone."""
     return dt_util.get_time_zone(hass.config.time_zone)
 
@@ -657,7 +658,9 @@ async def test_dst1(
     assert state.state == STATE_OFF
 
 
-async def test_dst2(hass, freezer, hass_tz_info):
+async def test_dst2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch in the East."""
     hass.config.time_zone = "CET"
     dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
@@ -683,7 +686,9 @@ async def test_dst2(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_dst3(hass, freezer, hass_tz_info):
+async def test_dst3(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch forward in the West."""
     hass.config.time_zone = "US/Pacific"
     dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
@@ -711,7 +716,9 @@ async def test_dst3(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_dst4(hass, freezer, hass_tz_info):
+async def test_dst4(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch backward in the West."""
     hass.config.time_zone = "US/Pacific"
     dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
@@ -822,7 +829,7 @@ async def test_dst6(
 
 
 @pytest.mark.freeze_time("2019-01-10 18:43:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_not_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -848,7 +855,7 @@ async def test_simple_before_after_does_not_loop_utc_not_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:43:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -874,7 +881,7 @@ async def test_simple_before_after_does_not_loop_utc_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-11 06:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_fire_at_before(
     hass: HomeAssistant,
 ) -> None:
@@ -900,7 +907,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_before(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_fire_at_after(
     hass: HomeAssistant,
 ) -> None:
@@ -926,7 +933,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_after(
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
-@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+@pytest.mark.parametrize("hass_time_zone", ["UTC"])
 async def test_simple_before_after_does_not_loop_utc_both_before_now(
     hass: HomeAssistant,
 ) -> None:
@@ -952,7 +959,7 @@ async def test_simple_before_after_does_not_loop_utc_both_before_now(
 
 
 @pytest.mark.freeze_time("2019-01-10 17:43:00+01:00")
-@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+@pytest.mark.parametrize("hass_time_zone", ["Europe/Berlin"])
 async def test_simple_before_after_does_not_loop_berlin_not_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -978,7 +985,7 @@ async def test_simple_before_after_does_not_loop_berlin_not_in_range(
 
 
 @pytest.mark.freeze_time("2019-01-11 00:43:00+01:00")
-@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+@pytest.mark.parametrize("hass_time_zone", ["Europe/Berlin"])
 async def test_simple_before_after_does_not_loop_berlin_in_range(
     hass: HomeAssistant,
 ) -> None:
@@ -1003,7 +1010,9 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id."""
     config = {
         "binary_sensor": [
@@ -1019,7 +1028,6 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("binary_sensor.evening")
+    entity = entity_registry.async_get("binary_sensor.evening")
 
     assert entity.unique_id == "very_unique_id"

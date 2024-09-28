@@ -1,4 +1,5 @@
 """Module that groups code required to handle state restore for component."""
+
 from __future__ import annotations
 
 import asyncio

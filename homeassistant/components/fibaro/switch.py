@@ -1,4 +1,5 @@
 """Support for Fibaro switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,8 +12,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -28,7 +30,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroSwitch(FibaroDevice, SwitchEntity):
+class FibaroSwitch(FibaroEntity, SwitchEntity):
     """Representation of a Fibaro Switch."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:

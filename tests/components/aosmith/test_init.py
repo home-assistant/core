@@ -50,14 +50,24 @@ async def test_config_entry_not_ready_get_energy_use_data_error(
     """Test the config entry not ready when get_energy_use_data fails."""
     mock_config_entry.add_to_hass(hass)
 
-    get_devices_fixture = [build_device_fixture(False, False, True)]
+    get_devices_fixture = [
+        build_device_fixture(
+            heat_pump=True,
+            mode_pending=False,
+            setpoint_pending=False,
+            has_vacation_mode=True,
+        )
+    ]
 
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        return_value=get_devices_fixture,
-    ), patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
-        side_effect=AOSmithUnknownException("Unknown error"),
+    with (
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+            return_value=get_devices_fixture,
+        ),
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
+            side_effect=AOSmithUnknownException("Unknown error"),
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

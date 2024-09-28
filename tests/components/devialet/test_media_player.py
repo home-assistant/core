@@ -1,4 +1,5 @@
 """Test the Devialet init."""
+
 from unittest.mock import PropertyMock, patch
 
 from devialet import DevialetApi

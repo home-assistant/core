@@ -1,4 +1,5 @@
 """Config flow for the Daikin platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,14 +8,15 @@ from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from pydaikin.daikin_base import Appliance, DaikinException
+from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
+from pydaikin.exceptions import DaikinException
+from pydaikin.factory import DaikinFactory
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
@@ -22,7 +24,7 @@ from .const import DOMAIN, KEY_MAC, TIMEOUT
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -49,7 +51,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         key: str | None = None,
         uuid: str | None = None,
         password: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Register new entry."""
         if not self.unique_id:
             await self.async_set_unique_id(mac)
@@ -68,7 +70,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _create_device(
         self, host: str, key: str | None = None, password: str | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create device."""
         # BRP07Cxx devices needs uuid together with key
         if key:
@@ -82,14 +84,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             async with asyncio.timeout(TIMEOUT):
-                device = await Appliance.factory(
+                device: Appliance = await DaikinFactory(
                     host,
                     async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,
                 )
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             self.host = None
             return self.async_show_form(
                 step_id="user",
@@ -109,7 +111,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=self.schema,
                 errors={"base": "unknown"},
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
                 step_id="user",
@@ -122,7 +124,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
@@ -141,7 +143,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
         devices = Discovery().poll(ip=discovery_info.host)

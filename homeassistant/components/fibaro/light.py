@@ -1,4 +1,5 @@
 """Support for Fibaro lights."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -21,8 +22,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 PARALLEL_UPDATES = 2
 
@@ -61,7 +63,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroLight(FibaroDevice, LightEntity):
+class FibaroLight(FibaroEntity, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:

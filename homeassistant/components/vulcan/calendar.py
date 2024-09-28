@@ -1,4 +1,5 @@
 """Support for Vulcan Calendar platform."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -110,11 +111,11 @@ class VulcanCalendarEntity(CalendarEntity):
         event_list = []
         for item in events:
             event = CalendarEvent(
-                start=datetime.combine(item["date"], item["time"].from_).astimezone(
-                    ZoneInfo("Europe/Warsaw")
+                start=datetime.combine(
+                    item["date"], item["time"].from_, ZoneInfo("Europe/Warsaw")
                 ),
-                end=datetime.combine(item["date"], item["time"].to).astimezone(
-                    ZoneInfo("Europe/Warsaw")
+                end=datetime.combine(
+                    item["date"], item["time"].to, ZoneInfo("Europe/Warsaw")
                 ),
                 summary=item["lesson"],
                 location=item["room"],
@@ -132,7 +133,7 @@ class VulcanCalendarEntity(CalendarEntity):
             events = await get_lessons(self.client)
 
             if not self.available:
-                _LOGGER.info("Restored connection with API")
+                _LOGGER.warning("Restored connection with API")
                 self._attr_available = True
 
             if events == []:
@@ -164,10 +165,10 @@ class VulcanCalendarEntity(CalendarEntity):
         )
         self._event = CalendarEvent(
             start=datetime.combine(
-                new_event["date"], new_event["time"].from_
-            ).astimezone(ZoneInfo("Europe/Warsaw")),
-            end=datetime.combine(new_event["date"], new_event["time"].to).astimezone(
-                ZoneInfo("Europe/Warsaw")
+                new_event["date"], new_event["time"].from_, ZoneInfo("Europe/Warsaw")
+            ),
+            end=datetime.combine(
+                new_event["date"], new_event["time"].to, ZoneInfo("Europe/Warsaw")
             ),
             summary=new_event["lesson"],
             location=new_event["room"],

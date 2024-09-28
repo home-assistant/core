@@ -1,4 +1,5 @@
 """Test the Trafikverket weatherstation config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -27,15 +28,18 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -45,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Vallby"
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -83,7 +87,7 @@ async def test_flow_fails(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -112,23 +116,19 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -136,7 +136,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "1234567891", "station": "Vallby"}
 
@@ -175,16 +175,9 @@ async def test_reauth_flow_fails(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -197,5 +190,5 @@ async def test_reauth_flow_fails(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}

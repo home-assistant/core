@@ -1,4 +1,5 @@
 """Constants for the Overkiz (by Somfy) integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -94,6 +95,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.ATLANTIC_PASS_APC_HEAT_PUMP: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)

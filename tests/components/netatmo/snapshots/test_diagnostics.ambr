@@ -608,6 +608,8 @@
         'webhook_id': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'netatmo',
       'minor_version': 1,
       'options': dict({
@@ -628,6 +630,15 @@
             'lon_ne': '**REDACTED**',
             'lon_sw': '**REDACTED**',
             'mode': 'max',
+            'show_on_map': True,
+          }),
+          'Home min': dict({
+            'area_name': 'Home min',
+            'lat_ne': '**REDACTED**',
+            'lat_sw': '**REDACTED**',
+            'lon_ne': '**REDACTED**',
+            'lon_sw': '**REDACTED**',
+            'mode': 'min',
             'show_on_map': True,
           }),
         }),

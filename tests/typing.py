@@ -1,8 +1,9 @@
 """Typing helpers for Home Assistant tests."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 from aiohttp import ClientWebSocketResponse
@@ -19,15 +20,16 @@ class MockHAClientWebSocket(ClientWebSocketResponse):
 
     client: TestClient
     send_json_auto_id: Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
+    remove_device: Callable[[str, str], Coroutine[Any, Any, Any]]
 
 
-ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
-MqttMockPahoClient = MagicMock
+type ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
+type MqttMockPahoClient = MagicMock
 """MagicMock for `paho.mqtt.client.Client`"""
-MqttMockHAClient = MagicMock
+type MqttMockHAClient = MagicMock
 """MagicMock for `homeassistant.components.mqtt.MQTT`."""
-MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHAClient]]
+type MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHAClient]]
 """MagicMock generator for `homeassistant.components.mqtt.MQTT`."""
-RecorderInstanceGenerator: TypeAlias = Callable[..., Coroutine[Any, Any, "Recorder"]]
+type RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, Recorder]]
 """Instance generator for `homeassistant.components.recorder.Recorder`."""
-WebSocketGenerator = Callable[..., Coroutine[Any, Any, MockHAClientWebSocket]]
+type WebSocketGenerator = Callable[..., Coroutine[Any, Any, MockHAClientWebSocket]]

@@ -1,4 +1,5 @@
 """Support for Fibaro locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,8 +12,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -28,7 +30,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroLock(FibaroDevice, LockEntity):
+class FibaroLock(FibaroEntity, LockEntity):
     """Representation of a Fibaro Lock."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
@@ -43,7 +45,7 @@ class FibaroLock(FibaroDevice, LockEntity):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self.action("unsecure")
+        self.action("unsecure")  # codespell:ignore unsecure
         self._attr_is_locked = False
 
     def update(self) -> None:

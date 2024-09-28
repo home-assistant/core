@@ -1,4 +1,5 @@
 """Support for KNX/IP numeric values."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -21,14 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_RESPOND_TO_READ,
-    CONF_STATE_ADDRESS,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-)
-from .knx_entity import KnxEntity
+from . import KNXModule
+from .const import CONF_RESPOND_TO_READ, CONF_STATE_ADDRESS, KNX_ADDRESS, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import NumberSchema
 
 
@@ -38,10 +34,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.NUMBER]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.NUMBER]
 
-    async_add_entities(KNXNumber(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXNumber(knx_module, entity_config) for entity_config in config)
 
 
 def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
@@ -56,14 +52,17 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     )
 
 
-class KNXNumber(KnxEntity, RestoreNumber):
+class KNXNumber(KnxYamlEntity, RestoreNumber):
     """Representation of a KNX number."""
 
     _device: NumericValue
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX number."""
-        super().__init__(_create_numeric_value(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_numeric_value(knx_module.xknx, config),
+        )
         self._attr_native_max_value = config.get(
             NumberSchema.CONF_MAX,
             self._device.sensor_value.dpt_class.value_max,

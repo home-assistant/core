@@ -1,4 +1,5 @@
 """Test the Z-Wave JS sensor platform."""
+
 import copy
 
 import pytest
@@ -8,7 +9,6 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -22,10 +22,13 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_RESET_METER,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
+from homeassistant.components.zwave_js.sensor import (
+    CONTROLLER_STATISTICS_KEY_MAP,
+    NODE_STATISTICS_KEY_MAP,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -50,14 +53,19 @@ from .common import (
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     METER_ENERGY_SENSOR,
-    NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def test_numeric_sensor(
-    hass: HomeAssistant, multisensor_6, express_controls_ezmultipli, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    multisensor_6,
+    express_controls_ezmultipli,
+    integration,
 ) -> None:
     """Test the numeric sensor."""
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
@@ -76,8 +84,7 @@ async def test_numeric_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BATTERY_SENSOR)
+    entity_entry = entity_registry.async_get(BATTERY_SENSOR)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
@@ -209,76 +216,33 @@ async def test_energy_sensors(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
 
 
-async def test_disabled_notification_sensor(
-    hass: HomeAssistant, multisensor_6, integration
+async def test_basic_cc_sensor(
+    hass: HomeAssistant, client, basic_cc_sensor, integration
 ) -> None:
-    """Test sensor is created from Notification CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_SENSOR)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-    # Test enabling entity
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
-    assert updated_entry != entity_entry
-    assert updated_entry.disabled is False
-
-    # reload integration and check if entity is correctly there
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
-    assert state.state == "Motion detection"
-    assert state.attributes[ATTR_VALUE] == 8
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["idle", "Motion detection"]
-
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": multisensor_6.node_id,
-            "args": {
-                "commandClassName": "Notification",
-                "commandClass": 113,
-                "endpoint": 0,
-                "property": "Home Security",
-                "propertyKey": "Motion sensor status",
-                "newValue": None,
-                "prevValue": 0,
-                "propertyName": "Home Security",
-                "propertyKeyName": "Motion sensor status",
-            },
-        },
-    )
-
-    multisensor_6.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
-    assert state
-    assert state.state == STATE_UNKNOWN
+    """Test a Basic CC sensor gets discovered correctly."""
+    state = hass.states.get("sensor.foo_basic")
+    assert state is not None
+    assert state.state == "255.0"
 
 
 async def test_config_parameter_sensor(
-    hass: HomeAssistant, climate_adc_t3000, lock_id_lock_as_id150, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000,
+    lock_id_lock_as_id150,
+    integration,
 ) -> None:
     """Test config parameter sensor is created."""
     sensor_entity_id = "sensor.adc_t3000_system_configuration_cool_stages"
     sensor_with_states_entity_id = "sensor.adc_t3000_power_source"
-    ent_reg = er.async_get(hass)
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.disabled
         assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+        updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 
@@ -294,8 +258,8 @@ async def test_config_parameter_sensor(
     assert state
     assert state.state == "C-Wire"
 
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
@@ -306,19 +270,17 @@ async def test_config_parameter_sensor(
 
 
 async def test_controller_status_sensor(
-    hass: HomeAssistant, client, integration
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, client, integration
 ) -> None:
     """Test controller status sensor is created and gets updated on controller state changes."""
     entity_id = "sensor.z_stick_gen5_usb_controller_status"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "ready"
-    assert state.attributes[ATTR_ICON] == "mdi:check"
 
     event = Event(
         "status changed",
@@ -328,7 +290,6 @@ async def test_controller_status_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unresponsive"
-    assert state.attributes[ATTR_ICON] == "mdi:bell-off"
 
     # Test transitions work
     event = Event(
@@ -339,7 +300,6 @@ async def test_controller_status_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "jammed"
-    assert state.attributes[ATTR_ICON] == "mdi:lock"
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
@@ -347,13 +307,16 @@ async def test_controller_status_sensor(
 
 
 async def test_node_status_sensor(
-    hass: HomeAssistant, client, lock_id_lock_as_id150, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    lock_id_lock_as_id150,
+    integration,
 ) -> None:
     """Test node status sensor is created and gets updated on node state changes."""
     node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(node_status_entity_id)
+    entity_entry = entity_registry.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -365,33 +328,24 @@ async def test_node_status_sensor(
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "dead"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:robot-dead"
-    )
 
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "awake"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "asleep"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "alive"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON]
-        == "mdi:heart-pulse"
-    )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
@@ -402,7 +356,7 @@ async def test_node_status_sensor(
     node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.node_status",
@@ -412,7 +366,7 @@ async def test_node_status_sensor(
 
     # Assert a controller status sensor entity is not created for a node
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.controller_status",
@@ -423,6 +377,7 @@ async def test_node_status_sensor(
 
 async def test_node_status_sensor_not_ready(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
@@ -433,8 +388,7 @@ async def test_node_status_sensor_not_ready(
     node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150_not_ready
     assert not node.ready
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(node_status_entity_id)
+    entity_entry = entity_registry.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert hass.states.get(node_status_entity_id)
@@ -518,13 +472,18 @@ async def test_reset_meter(
         "test", 1, "test"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESET_METER,
             {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
             blocking=True,
         )
+
+    assert str(err.value) == (
+        "Failed to reset meters on node Node(node_id=102) endpoint 0: "
+        "zwave_error: Z-Wave error 1 - test"
+    )
 
 
 async def test_meter_attributes(
@@ -747,11 +706,63 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
 }
 
 
-async def test_statistics_sensors(
-    hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
+async def test_statistics_sensors_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zp3111_state,
+    client,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test statistics sensors."""
-    ent_reg = er.async_get(hass)
+    """Test statistics migration sensor."""
+    node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"
+    node_base_unique_id = f"{client.driver.controller.home_id}.22.statistics"
+
+    # Create entity registry records for the old statistics keys
+    for base_unique_id, key_map in (
+        (controller_base_unique_id, CONTROLLER_STATISTICS_KEY_MAP),
+        (node_base_unique_id, NODE_STATISTICS_KEY_MAP),
+    ):
+        # old key
+        for key in key_map.values():
+            entity_registry.async_get_or_create(
+                "sensor", DOMAIN, f"{base_unique_id}_{key}"
+            )
+
+    # Set up integration
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Validate that entity unique ID's have changed
+    for base_unique_id, key_map in (
+        (controller_base_unique_id, CONTROLLER_STATISTICS_KEY_MAP),
+        (node_base_unique_id, NODE_STATISTICS_KEY_MAP),
+    ):
+        for new_key, old_key in key_map.items():
+            # If the key has changed, the old entity should not exist
+            if new_key != old_key:
+                assert not entity_registry.async_get_entity_id(
+                    "sensor", DOMAIN, f"{base_unique_id}_{old_key}"
+                )
+            assert entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{base_unique_id}_{new_key}"
+            )
+
+
+async def test_statistics_sensors_no_last_seen(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zp3111,
+    client,
+    integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test all statistics sensors but last seen which is enabled by default."""
 
     for prefix, suffixes in (
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
@@ -760,12 +771,12 @@ async def test_statistics_sensors(
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key in suffixes:
-            entry = ent_reg.async_get(f"{prefix}{suffix_key}")
+            entry = entity_registry.async_get(f"{prefix}{suffix_key}")
             assert entry
             assert entry.disabled
             assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-            ent_reg.async_update_entity(entry.entity_id, **{"disabled_by": None})
+            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
 
     # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)
@@ -786,7 +797,7 @@ async def test_statistics_sensors(
         ),
     ):
         for suffix_key in suffixes:
-            entry = ent_reg.async_get(f"{prefix}{suffix_key}")
+            entry = entity_registry.async_get(f"{prefix}{suffix_key}")
             assert entry
             assert not entry.disabled
             assert entry.disabled_by is None
@@ -856,6 +867,7 @@ async def test_statistics_sensors(
                     "repeaterRSSI": [],
                     "routeFailedBetween": [],
                 },
+                "lastSeen": "2024-01-01T00:00:00+0000",
             },
         },
     )
@@ -889,6 +901,20 @@ async def test_statistics_sensors(
             *NODE_STATISTICS_SUFFIXES_UNKNOWN,
         ]
     )
+
+
+async def test_last_seen_statistics_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
+) -> None:
+    """Test last_seen statistics sensors."""
+    entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert not entry.disabled
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2024-01-01T12:00:00+00:00"
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {

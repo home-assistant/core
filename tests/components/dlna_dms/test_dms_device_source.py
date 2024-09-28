@@ -1,7 +1,8 @@
 """Test the browse and resolve methods of DmsDeviceSource."""
+
 from __future__ import annotations
 
-from typing import Final, Union
+from typing import Final
 from unittest.mock import ANY, Mock, call
 
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
@@ -12,9 +13,8 @@ import pytest
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DLNA_SORT_CRITERIA, DOMAIN
 from homeassistant.components.dlna_dms.dms import DidlPlayMedia
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import BrowseMediaSource
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import BrowseMediaSource, Unresolvable
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -37,7 +37,7 @@ pytestmark = [
 ]
 
 
-BrowseResultList = list[Union[didl_lite.DidlObject, didl_lite.Descriptor]]
+type BrowseResultList = list[didl_lite.DidlObject | didl_lite.Descriptor]
 
 
 async def async_resolve_media(
@@ -66,7 +66,7 @@ async def test_catch_request_error_unavailable(
 ) -> None:
     """Test the device is checked for availability before trying requests."""
     # DmsDevice notifies of disconnect via SSDP
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
         ssdp.SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -248,7 +248,7 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
     res_mime: Final = "audio/mpeg"
 
     search_directory_result = []
-    for ob_id, ob_title in zip(object_ids, path.split("/")):
+    for ob_id, ob_title in zip(object_ids, path.split("/"), strict=False):
         didl_item = didl_lite.Item(
             id=ob_id,
             restricted="false",
@@ -273,7 +273,9 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             metadata_filter=["id", "upnp:class", "dc:title"],
             requested_count=1,
         )
-        for parent_id, title in zip(["0"] + object_ids[:-1], path.split("/"))
+        for parent_id, title in zip(
+            ["0"] + object_ids[:-1], path.split("/"), strict=False
+        )
     ]
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
@@ -289,7 +291,9 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             metadata_filter=["id", "upnp:class", "dc:title"],
             requested_count=1,
         )
-        for parent_id, title in zip(["0"] + object_ids[:-1], path.split("/"))
+        for parent_id, title in zip(
+            ["0"] + object_ids[:-1], path.split("/"), strict=False
+        )
     ]
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
@@ -304,7 +308,7 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
 
     # Setup expected calls
     search_directory_result = []
-    for ob_id, ob_title in zip(object_ids, path.split("/")):
+    for ob_id, ob_title in zip(object_ids, path.split("/"), strict=False):
         didl_item = didl_lite.Item(
             id=ob_id,
             restricted="false",
@@ -345,7 +349,9 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
             metadata_filter=["id", "upnp:class", "dc:title"],
             requested_count=1,
         )
-        for parent_id, title in zip(["0"] + object_ids[:-1], path.split("/"))
+        for parent_id, title in zip(
+            ["0"] + object_ids[:-1], path.split("/"), strict=False
+        )
     ]
     assert result.didl_metadata.id == object_ids[-1]
     # 2nd level should also be browsed
@@ -607,7 +613,7 @@ async def test_browse_media_object(hass: HomeAssistant, dms_device_mock: Mock) -
     assert not result.can_play
     assert result.can_expand
     assert result.children
-    for child, title in zip(result.children, child_titles):
+    for child, title in zip(result.children, child_titles, strict=False):
         assert isinstance(child, BrowseMediaSource)
         assert child.identifier == f"{MOCK_SOURCE_ID}/:{title}_id"
         assert child.title == title
@@ -745,7 +751,7 @@ async def test_browse_media_search(hass: HomeAssistant, dms_device_mock: Mock) -
     assert result.title == "Search results"
     assert result.children
 
-    for obj, child in zip(object_details, result.children):
+    for obj, child in zip(object_details, result.children, strict=False):
         assert isinstance(child, BrowseMediaSource)
         assert child.identifier == f"{MOCK_SOURCE_ID}/:{obj[0]}"
         assert child.title == obj[1]

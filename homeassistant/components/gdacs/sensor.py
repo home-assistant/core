@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import GdacsFeedEntityManager
-from .const import DEFAULT_ICON, DOMAIN, FEED
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +49,10 @@ class GdacsSensor(SensorEntity):
     """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
-    _attr_icon = DEFAULT_ICON
     _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "alerts"
 
     def __init__(
         self, config_entry: ConfigEntry, manager: GdacsFeedEntityManager
@@ -132,16 +133,16 @@ class GdacsSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes: dict[str, Any] = {}
-        for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_LAST_TIMESTAMP, self._last_timestamp),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_STATUS, self._status),
+                (ATTR_LAST_UPDATE, self._last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
+                (ATTR_LAST_TIMESTAMP, self._last_timestamp),
+                (ATTR_CREATED, self._created),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_REMOVED, self._removed),
+            )
+            if value or isinstance(value, bool)
+        }

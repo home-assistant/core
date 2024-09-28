@@ -1,12 +1,16 @@
 """Support for Lupusec System alarm control panels."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+
+import lupupy
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -14,39 +18,50 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an alarm control panel for a Lupusec device."""
-    if discovery_info is None:
-        return
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    data = hass.data[LUPUSEC_DOMAIN]
+    alarm = await hass.async_add_executor_job(data.get_alarm)
 
-    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm())]
-
-    add_entities(alarm_devices)
+    async_add_entities([LupusecAlarm(data, alarm, config_entry.entry_id)])
 
 
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
-    _attr_icon = "mdi:security"
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
+
+    def __init__(
+        self, data: lupupy.Lupusec, device: lupupy.devices.LupusecAlarm, entry_id: str
+    ) -> None:
+        """Initialize the LupusecAlarm class."""
+        super().__init__(device)
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=device.name,
+            manufacturer="Lupus Electronics",
+            model=f"Lupusec-XT{data.model}",
+        )
 
     @property
     def state(self) -> str | None:

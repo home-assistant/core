@@ -1,4 +1,5 @@
 """Support for the HKO service."""
+
 from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,

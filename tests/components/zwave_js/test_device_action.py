@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device actions."""
+
 from unittest.mock import patch
 
 import pytest

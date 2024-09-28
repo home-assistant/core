@@ -1,4 +1,5 @@
 """The tests for lutron caseta logbook."""
+
 from unittest.mock import patch
 
 from homeassistant.components.lutron_caseta.const import (
@@ -52,7 +53,11 @@ async def test_humanify_lutron_caseta_button_event(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry.entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry.entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     keypad = keypads["9"]
     dr_device_id = keypad["dr_device_id"]

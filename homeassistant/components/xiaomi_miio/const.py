@@ -1,4 +1,5 @@
 """Constants for the Xiaomi Miio component."""
+
 from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_E2,
     ROCKROBO_S4,
@@ -59,6 +60,7 @@ MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3C = "zhimi.airpurifier.mb4"
+MODEL_AIRPURIFIER_3C_REV_A = "zhimi.airp.mb4a"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_M1 = "zhimi.airpurifier.m1"
 MODEL_AIRPURIFIER_M2 = "zhimi.airpurifier.m2"
@@ -66,6 +68,7 @@ MODEL_AIRPURIFIER_MA1 = "zhimi.airpurifier.ma1"
 MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
 MODEL_AIRPURIFIER_PRO = "zhimi.airpurifier.v6"
 MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
+MODEL_AIRPURIFIER_PROH_EU = "zhimi.airpurifier.vb2"
 MODEL_AIRPURIFIER_PRO_V7 = "zhimi.airpurifier.v7"
 MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
 MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
@@ -122,8 +125,10 @@ MODELS_FAN_MIOT = [
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_PROH_EU,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4,

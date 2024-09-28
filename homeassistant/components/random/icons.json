@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "random": {
+        "default": "mdi:dice-multiple"
+      }
+    },
+    "sensor": {
+      "random": {
+        "default": "mdi:dice-multiple"
+      }
+    }
+  }
+}

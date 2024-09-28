@@ -1,4 +1,5 @@
 """Support for getting data from websites with scraping."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -33,6 +33,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ScrapeConfigEntry
 from .const import CONF_INDEX, CONF_SELECT, DOMAIN
 from .coordinator import ScrapeCoordinator
 
@@ -66,10 +67,6 @@ async def async_setup_platform(
 
     entities: list[ScrapeSensor] = []
     for sensor_config in sensors_config:
-        value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = hass
-
         trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
@@ -84,7 +81,7 @@ async def async_setup_platform(
                 sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
-                value_template,
+                sensor_config.get(CONF_VALUE_TEMPLATE),
                 True,
             )
         )
@@ -93,12 +90,14 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ScrapeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Scrape sensor entry."""
     entities: list = []
 
-    coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     config = dict(entry.options)
     for sensor in config["sensor"]:
         sensor_config: ConfigType = vol.Schema(
@@ -112,9 +111,12 @@ async def async_setup_entry(
             Template(value_string, hass) if value_string is not None else None
         )
 
-        trigger_entity_config = {CONF_NAME: name}
+        trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
+                continue
+            if key == CONF_AVAILABILITY:
+                trigger_entity_config[key] = Template(sensor_config[key], hass)
                 continue
             trigger_entity_config[key] = sensor_config[key]
 

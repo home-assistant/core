@@ -1,4 +1,5 @@
 """Elmax switch platform."""
+
 import asyncio
 import logging
 from typing import Any
@@ -11,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
-from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
+from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,6 @@ async def async_setup_entry(
             if actuator.endpoint_id in known_devices:
                 continue
             entity = ElmaxSwitch(
-                panel=coordinator.panel_entry,
                 elmax_device=actuator,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

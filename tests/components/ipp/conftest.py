@@ -1,4 +1,5 @@
 """Fixtures for IPP integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -38,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.ipp.async_setup_entry", return_value=True
@@ -59,9 +60,7 @@ async def mock_printer(
 
 
 @pytest.fixture
-def mock_ipp_config_flow(
-    mock_printer: Printer,
-) -> Generator[None, MagicMock, None]:
+def mock_ipp_config_flow(mock_printer: Printer) -> Generator[MagicMock]:
     """Return a mocked IPP client."""
 
     with patch(
@@ -73,9 +72,7 @@ def mock_ipp_config_flow(
 
 
 @pytest.fixture
-def mock_ipp(
-    request: pytest.FixtureRequest, mock_printer: Printer
-) -> Generator[None, MagicMock, None]:
+def mock_ipp(mock_printer: Printer) -> Generator[MagicMock]:
     """Return a mocked IPP client."""
 
     with patch(

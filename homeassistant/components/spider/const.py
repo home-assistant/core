@@ -1,4 +1,5 @@
 """Constants for the Spider integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "spider"

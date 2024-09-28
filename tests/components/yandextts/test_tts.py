@@ -1,6 +1,8 @@
 """The tests for the Yandex SpeechKit speech platform."""
-import asyncio
+
 from http import HTTPStatus
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,14 +24,13 @@ URL = "https://tts.voicetech.yandex.net/generate?"
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:
@@ -201,7 +202,7 @@ async def test_service_say_timeout(
     aioclient_mock.get(
         URL,
         status=HTTPStatus.OK,
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
         params=url_param,
     )
 

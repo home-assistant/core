@@ -1,4 +1,5 @@
 """Initialization of ATAG One sensor platform."""
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -10,7 +11,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, AtagEntity
+from . import DOMAIN
+from .entity import AtagEntity
 
 SENSORS = {
     "Outside Temperature": "outside_temp",

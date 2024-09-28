@@ -1,4 +1,5 @@
 """The tests for the Group Binary Sensor platform."""
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.group import DOMAIN
 from homeassistant.const import (

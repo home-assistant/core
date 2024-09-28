@@ -1,4 +1,5 @@
 """Tracking for bluetooth devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +15,7 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -40,7 +41,7 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_REQUEST_RSSI): cv.boolean,

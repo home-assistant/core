@@ -1,4 +1,5 @@
 """Constants for the StreamLabs integration."""
+
 import logging
 
 DOMAIN = "streamlabswater"

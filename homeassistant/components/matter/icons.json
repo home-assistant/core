@@ -1,0 +1,60 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "muted": {
+        "default": "mdi:bell-off"
+      }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-pause"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "auto": "mdi:fan-auto",
+              "natural_wind": "mdi:tailwind",
+              "sleep_wind": "mdi:sleep"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "operational_state": {
+        "default": "mdi:play-pause"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
+      }
+    }
+  }
+}

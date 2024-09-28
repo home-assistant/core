@@ -1,4 +1,5 @@
 """Support for VersaSense MicroPnP devices."""
+
 import logging
 
 import pyversasense as pyv
@@ -54,7 +55,7 @@ async def _configure_entities(hass, config, consumer):
     switch_info = {}
 
     for mac, device in devices.items():
-        _LOGGER.info("Device connected: %s %s", device.name, mac)
+        _LOGGER.debug("Device connected: %s %s", device.name, mac)
         hass.data[DOMAIN][mac] = {}
 
         for peripheral_id, peripheral in device.peripherals.items():

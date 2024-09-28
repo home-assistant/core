@@ -1,4 +1,5 @@
 """Support for RFXtrx sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,8 +39,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
+from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +150,7 @@ SENSOR_TYPES = (
         translation_key="total_energy_usage",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",
@@ -254,18 +256,15 @@ async def async_setup_entry(
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
-        entities: list[Entity] = []
-        for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
-            entities.append(
-                RfxtrxSensor(
-                    event.device,
-                    device_id,
-                    SENSOR_TYPES_DICT[data_type],
-                    event=event if auto else None,
-                )
+        return [
+            RfxtrxSensor(
+                event.device,
+                device_id,
+                SENSOR_TYPES_DICT[data_type],
+                event=event if auto else None,
             )
-
-        return entities
+            for data_type in set(event.values) & set(SENSOR_TYPES_DICT)
+        ]
 
     await async_setup_platform_entry(
         hass, config_entry, async_add_entities, _supported, _constructor

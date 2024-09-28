@@ -1,4 +1,5 @@
 """Support for Roborock button."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,30 +7,21 @@ from dataclasses import dataclass
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from .const import DOMAIN
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .entity import RoborockEntityV1
 
 
-@dataclass(frozen=True)
-class RoborockButtonDescriptionMixin:
-    """Define an entity description mixin for button entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockButtonDescription(ButtonEntityDescription):
+    """Describes a Roborock button entity."""
 
     command: RoborockCommand
     param: list | dict | None
-
-
-@dataclass(frozen=True)
-class RoborockButtonDescription(
-    ButtonEntityDescription, RoborockButtonDescriptionMixin
-):
-    """Describes a Roborock button entity."""
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
@@ -70,37 +62,37 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
     async_add_entities(
         RoborockButtonEntity(
-            f"{description.key}_{slugify(device_id)}",
             coordinator,
             description,
         )
-        for device_id, coordinator in coordinators.items()
+        for coordinator in config_entry.runtime_data.v1
         for description in CONSUMABLE_BUTTON_DESCRIPTIONS
+        if isinstance(coordinator, RoborockDataUpdateCoordinator)
     )
 
 
-class RoborockButtonEntity(RoborockEntity, ButtonEntity):
+class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
     """A class to define Roborock button entities."""
 
     entity_description: RoborockButtonDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockButtonDescription,
     ) -> None:
         """Create a button entity."""
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator.device_info,
+            coordinator.api,
+        )
         self.entity_description = entity_description
 
     async def async_press(self) -> None:

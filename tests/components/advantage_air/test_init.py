@@ -1,4 +1,5 @@
 """Test the Advantage Air Initialization."""
+
 from unittest.mock import AsyncMock
 
 from advantage_air import ApiError

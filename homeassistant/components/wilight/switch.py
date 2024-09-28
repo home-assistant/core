@@ -1,4 +1,5 @@
 """Support for WiLight switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
 
@@ -55,10 +57,6 @@ VALID_TRIGGER_INDEX = vol.All(
 # Descriptions of the valve switch entities
 DESC_WATERING = "watering"
 DESC_PAUSE = "pause"
-
-# Icons of the valve switch entities
-ICON_WATERING = "mdi:water"
-ICON_PAUSE = "mdi:pause-circle-outline"
 
 
 def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
@@ -149,7 +147,6 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
     _attr_translation_key = "watering"
-    _attr_icon = ICON_WATERING
 
     @property
     def is_on(self) -> bool:
@@ -266,7 +263,6 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     _attr_translation_key = "pause"
-    _attr_icon = ICON_PAUSE
 
     @property
     def is_on(self) -> bool:

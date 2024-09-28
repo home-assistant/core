@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/dominos",
   "iot_class": "cloud_polling",
   "loggers": ["pizzapi"],
-  "requirements": ["pizzapi==0.0.3"]
+  "requirements": ["pizzapi==0.0.6"]
 }

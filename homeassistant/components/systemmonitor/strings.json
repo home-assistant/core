@@ -5,7 +5,7 @@
     },
     "step": {
       "user": {
-        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
+        "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
       }
     }
   },
@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "process": {
+        "name": "Process {process}"
+      }
+    },
     "sensor": {
       "disk_free": {
         "name": "Disk free {mount_point}"

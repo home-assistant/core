@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -6,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import sonos, zeroconf
 from homeassistant.components.sonos import SonosDiscoveryManager
 from homeassistant.components.sonos.const import (
@@ -15,6 +16,7 @@ from homeassistant.components.sonos.const import (
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -45,12 +47,12 @@ async def test_creating_entry_sets_up_media_player(
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -95,21 +97,23 @@ async def test_async_poll_manual_hosts_warnings(
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
     manager.hosts.add("10.10.10.10")
-    with caplog.at_level(logging.DEBUG), patch.object(
-        manager, "_async_handle_discovery_message"
-    ), patch(
-        "homeassistant.components.sonos.async_call_later"
-    ) as mock_async_call_later, patch(
-        "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch(
-        "homeassistant.components.sonos.sync_get_visible_zones",
-        side_effect=[
-            OSError(),
-            OSError(),
-            [],
-            [],
-            OSError(),
-        ],
+    with (
+        caplog.at_level(logging.DEBUG),
+        patch.object(manager, "_async_handle_discovery_message"),
+        patch(
+            "homeassistant.components.sonos.async_call_later"
+        ) as mock_async_call_later,
+        patch("homeassistant.components.sonos.async_dispatcher_send"),
+        patch(
+            "homeassistant.components.sonos.sync_get_visible_zones",
+            side_effect=[
+                OSError(),
+                OSError(),
+                [],
+                [],
+                OSError(),
+            ],
+        ),
     ):
         # First call fails, it should be logged as a WARNING message
         caplog.clear()
@@ -134,7 +138,7 @@ async def test_async_poll_manual_hosts_warnings(
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
         record = caplog.records[0]
-        assert record.levelname == "INFO"
+        assert record.levelname == "WARNING"
         assert "Connection reestablished to Sonos device" in record.message
         assert mock_async_call_later.call_count == 3
 
@@ -157,7 +161,7 @@ async def test_async_poll_manual_hosts_warnings(
 class _MockSoCoOsError(MockSoCo):
     @property
     def visible_zones(self):
-        raise OSError()
+        raise OSError
 
 
 class _MockSoCoVisibleZones(MockSoCo):
@@ -209,6 +213,8 @@ async def test_async_poll_manual_hosts_1(
             not in caplog.text
         )
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_2(
     hass: HomeAssistant,
@@ -232,6 +238,8 @@ async def test_async_poll_manual_hosts_2(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_async_poll_manual_hosts_3(
@@ -257,6 +265,8 @@ async def test_async_poll_manual_hosts_3(
             in caplog.text
         )
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_4(
     hass: HomeAssistant,
@@ -280,6 +290,8 @@ async def test_async_poll_manual_hosts_4(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             not in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 class SpeakerActivity:
@@ -344,6 +356,8 @@ async def test_async_poll_manual_hosts_5(
             assert "Activity on Living Room" in caplog.text
             assert "Activity on Bedroom" in caplog.text
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_6(
     hass: HomeAssistant,
@@ -368,7 +382,7 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.0, 60])
         await _setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
@@ -376,15 +390,13 @@ async def test_async_poll_manual_hosts_6(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            # The discovery events should not fire, wait with a timeout.
-            with pytest.raises(asyncio.TimeoutError):
-                async with asyncio.timeout(1.0):
-                    await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
             assert "Activity on Bedroom" not in caplog.text
             assert speaker_1_activity.call_count == 0
             assert speaker_2_activity.call_count == 0
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_async_poll_manual_hosts_7(
@@ -413,6 +425,8 @@ async def test_async_poll_manual_hosts_7(
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_8(
     hass: HomeAssistant,
@@ -439,3 +453,4 @@ async def test_async_poll_manual_hosts_8(
     assert "media_player.basement" in entity_registry.entities
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
+    await hass.async_block_till_done(wait_background_tasks=True)

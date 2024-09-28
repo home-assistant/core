@@ -1,9 +1,10 @@
 """Support for the iZone HVAC."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -34,7 +35,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import (
     DATA_CONFIG,
@@ -47,11 +48,7 @@ from .const import (
     IZONE,
 )
 
-_DeviceT = TypeVar("_DeviceT", bound="ControllerDevice | ZoneDevice")
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-_FuncType = Callable[Concatenate[_T, _P], _R]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +65,7 @@ ATTR_AIRFLOW = "airflow"
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
-IZONE_SERVICE_AIRFLOW_SCHEMA = {
+IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
     vol.Required(ATTR_AIRFLOW): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
     ),
@@ -88,9 +85,9 @@ async def async_setup_entry(
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
+            _LOGGER.debug("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
-        _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
+        _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
         async_add_entities([device])
@@ -118,7 +115,7 @@ async def async_setup_entry(
     )
 
 
-def _return_on_connection_error(
+def _return_on_connection_error[_DeviceT: ControllerDevice | ZoneDevice, **_P, _R, _T](
     ret: _T = None,  # type: ignore[assignment]
 ) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
     def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
@@ -144,12 +141,17 @@ class ControllerDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
         # otherwise the unit determines which zone to use as target. See interface manual p. 8
@@ -243,9 +245,9 @@ class ControllerDevice(ClimateEntity):
             return
 
         if available:
-            _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
+            _LOGGER.warning("Reconnected controller %s ", self._controller.device_uid)
         else:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Controller %s disconnected due to exception: %s",
                 self._controller.device_uid,
                 ex,
@@ -439,6 +441,9 @@ class ZoneDevice(ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
+    _attr_supported_features = (
+        ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+    )
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""

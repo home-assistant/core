@@ -1,4 +1,5 @@
 """Tests for the services module."""
+
 from pyheos import CommandFailedError, HeosError, const
 import pytest
 
@@ -12,8 +13,10 @@ from homeassistant.components.heos.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 
-async def setup_component(hass, config_entry):
+
+async def setup_component(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the component for testing."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})

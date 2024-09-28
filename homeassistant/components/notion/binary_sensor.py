@@ -1,10 +1,11 @@
 """Support for Notion binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
 
-from aionotion.sensor.models import ListenerKind
+from aionotion.listener.models import ListenerKind
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,7 +17,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NotionEntity
 from .const import (
     DOMAIN,
     LOGGER,
@@ -30,7 +30,8 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
-from .model import NotionEntityDescription
+from .coordinator import NotionDataUpdateCoordinator
+from .entity import NotionEntity, NotionEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -109,7 +110,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -118,12 +119,11 @@ async def async_setup_entry(
                 listener_id,
                 sensor.uuid,
                 sensor.bridge.id,
-                sensor.system_id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()
             for description in BINARY_SENSOR_DESCRIPTIONS
-            if description.listener_kind == listener.listener_kind
+            if description.listener_kind.value == listener.definition_id
             and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
@@ -138,6 +138,6 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.listener.insights.primary.value:
-            LOGGER.warning("Unknown listener structure: %s", self.listener.dict())
+            LOGGER.warning("Unknown listener structure: %s", self.listener)
             return False
         return self.listener.insights.primary.value == self.entity_description.on_state

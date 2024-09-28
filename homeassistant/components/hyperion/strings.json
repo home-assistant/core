@@ -80,6 +80,11 @@
       "usb_capture": {
         "name": "Component USB capture"
       }
+    },
+    "sensor": {
+      "visible_priority": {
+        "name": "Visible priority"
+      }
     }
   }
 }

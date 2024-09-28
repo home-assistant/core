@@ -1,4 +1,5 @@
 """Support for haveibeenpwned (email breaches) sensor."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +33,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_API_KEY): cv.string,
@@ -48,11 +52,7 @@ def setup_platform(
     api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
-    devices = []
-    for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email))
-
-    add_entities(devices)
+    add_entities(HaveIBeenPwnedSensor(data, email) for email in emails)
 
 
 class HaveIBeenPwnedSensor(SensorEntity):

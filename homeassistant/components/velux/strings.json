@@ -1,4 +1,22 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Velux",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
   "services": {
     "reboot_gateway": {
       "name": "Reboot gateway",

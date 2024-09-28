@@ -1,4 +1,5 @@
 """Tests for the Elgato Key Light config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -28,14 +29,14 @@ async def test_full_user_flow_implementation(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -65,7 +66,7 @@ async def test_full_zeroconf_flow_implementation(
 
     assert result.get("description_placeholders") == {"serial_number": "CN11A1A00001"}
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
@@ -77,7 +78,7 @@ async def test_full_zeroconf_flow_implementation(
         result["flow_id"], user_input={}
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -96,7 +97,7 @@ async def test_connection_error(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
     assert result.get("step_id") == "user"
 
@@ -122,7 +123,7 @@ async def test_zeroconf_connection_error(
     )
 
     assert result.get("reason") == "cannot_connect"
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
 
 
 @pytest.mark.usefixtures("mock_elgato")
@@ -137,7 +138,7 @@ async def test_user_device_exists_abort(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -161,7 +162,7 @@ async def test_zeroconf_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -182,7 +183,7 @@ async def test_zeroconf_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -211,7 +212,7 @@ async def test_zeroconf_during_onboarding(
         ),
     )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1

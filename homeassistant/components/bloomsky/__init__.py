@@ -1,4 +1,5 @@
 """Support for BloomSky weather station."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging

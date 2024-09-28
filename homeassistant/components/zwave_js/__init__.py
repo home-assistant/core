@@ -1,13 +1,14 @@
 """The Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
@@ -78,6 +79,8 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
@@ -85,6 +88,8 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
     CONF_S0_LEGACY_KEY,
     CONF_S2_ACCESS_CONTROL_KEY,
@@ -97,6 +102,7 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LIB_LOGGER,
     LOGGER,
+    LR_ADDON_VERSION,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
@@ -136,6 +142,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.async_update_entry(
                 entry, unique_id=str(entry.unique_id)
             )
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
+    services.async_register()
+
     return True
 
 
@@ -168,26 +180,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key="invalid_server_version",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+    except (TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
     LOGGER.info("Connected to Zwave JS Server")
 
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
-
     # Set up websocket API
     async_register_api(hass)
+    entry.runtime_data = {}
 
     # Create a task to allow the config entry to be unloaded before the driver is ready.
     # Unloading the config entry is needed if the client listen task errors.
     start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})[
-        DATA_START_CLIENT_TASK
-    ] = start_client_task
+    entry.runtime_data[DATA_START_CLIENT_TASK] = start_client_task
 
     return True
 
@@ -196,9 +202,8 @@ async def start_client(
     hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
 ) -> None:
     """Start listening with the client."""
-    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    entry_hass_data[DATA_CLIENT] = client
-    driver_events = entry_hass_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
+    entry.runtime_data[DATA_CLIENT] = client
+    driver_events = entry.runtime_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
@@ -207,7 +212,7 @@ async def start_client(
     listen_task = asyncio.create_task(
         client_listen(hass, entry, client, driver_events.ready)
     )
-    entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
+    entry.runtime_data[DATA_CLIENT_LISTEN_TASK] = listen_task
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
     )
@@ -282,7 +287,8 @@ class DriverEvents:
             for node in controller.nodes.values()
         ]
 
-        # Devices that are in the device registry that are not known by the controller can be removed
+        # Devices that are in the device registry that are not known by the controller
+        # can be removed
         for device in stored_devices:
             if device not in known_devices:
                 self.dev_reg.async_remove_device(device.id)
@@ -305,7 +311,8 @@ class DriverEvents:
             controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
-                    self.controller_events.async_on_node_added(event["node"])
+                    self.controller_events.async_on_node_added(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -324,8 +331,8 @@ class DriverEvents:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
             self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
+                self.hass.config_entries.async_forward_entry_setups(
+                    self.config_entry, [platform]
                 )
             )
         await self.platform_setup_tasks[platform]
@@ -346,7 +353,7 @@ class ControllerEvents:
         self.discovered_value_ids: dict[str, set[str]] = defaultdict(set)
         self.driver_events = driver_events
         self.dev_reg = driver_events.dev_reg
-        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(
+        self.registered_unique_ids: dict[str, dict[Platform, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
         self.node_events = NodeEvents(hass, self)
@@ -413,7 +420,8 @@ class ControllerEvents:
             node.on(
                 "ready",
                 lambda event: self.hass.async_create_task(
-                    self.node_events.async_on_node_ready(event["node"])
+                    self.node_events.async_on_node_ready(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -509,25 +517,46 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        device = self.dev_reg.async_get_device(identifiers={device_id})
+        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
         via_device_id = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
             via_device_id = get_device_id(driver, controller.own_node)
 
-        # Replace the device if it can be determined that this node is not the
-        # same product as it was previously.
-        if (
-            device_id_ext
-            and device
-            and len(device.identifiers) == 2
-            and device_id_ext not in device.identifiers
-        ):
-            self.remove_device(device)
-            device = None
-
         if device_id_ext:
+            # If there is a device with this node ID but with a different hardware
+            # signature, remove the node ID based identifier from it. The hardware
+            # signature can be different for one of two reasons: 1) in the ideal
+            # scenario, the node was replaced with a different node that's a different
+            # device entirely, or 2) the device erroneously advertised the wrong
+            # hardware identifiers (this is known to happen due to poor RF conditions).
+            # While we would like to remove the old device automatically for case 1, we
+            # have no way to distinguish between these reasons so we leave it up to the
+            # user to remove the old device manually.
+            if (
+                node_id_device
+                and len(node_id_device.identifiers) == 2
+                and device_id_ext not in node_id_device.identifiers
+            ):
+                new_identifiers = node_id_device.identifiers.copy()
+                new_identifiers.remove(device_id)
+                self.dev_reg.async_update_device(
+                    node_id_device.id, new_identifiers=new_identifiers
+                )
+            # If there is an orphaned device that already exists with this hardware
+            # based identifier, add the node ID based identifier to the orphaned
+            # device.
+            if (
+                hardware_device := self.dev_reg.async_get_device(
+                    identifiers={device_id_ext}
+                )
+            ) and len(hardware_device.identifiers) == 1:
+                new_identifiers = hardware_device.identifiers.copy()
+                new_identifiers.add(device_id)
+                self.dev_reg.async_update_device(
+                    hardware_device.id, new_identifiers=new_identifiers
+                )
             ids = {device_id, device_id_ext}
         else:
             ids = {device_id}
@@ -769,9 +798,12 @@ class NodeEvents:
             return
 
         driver = self.controller_events.driver_events.driver
-        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
-            "notification"
-        ]
+        notification: (
+            EntryControlNotification
+            | NotificationNotification
+            | PowerLevelNotification
+            | MultilevelSwitchNotification
+        ) = event["notification"]
         device = self.dev_reg.async_get_device(
             identifiers={get_device_id(driver, notification.node)}
         )
@@ -893,7 +925,7 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
 
@@ -907,11 +939,10 @@ async def client_listen(
 
 async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Disconnect client."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    client: ZwaveClient = data[DATA_CLIENT]
-    listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
-    start_client_task: asyncio.Task = data[DATA_START_CLIENT_TASK]
-    driver_events: DriverEvents = data[DATA_DRIVER_EVENTS]
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    listen_task: asyncio.Task = entry.runtime_data[DATA_CLIENT_LISTEN_TASK]
+    start_client_task: asyncio.Task = entry.runtime_data[DATA_START_CLIENT_TASK]
+    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
     listen_task.cancel()
     start_client_task.cancel()
     platform_setup_tasks = driver_events.platform_setup_tasks.values()
@@ -931,24 +962,19 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    info = hass.data[DOMAIN][entry.entry_id]
-    client: ZwaveClient = info[DATA_CLIENT]
-    driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
-
-    tasks: list[Coroutine] = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
+    platforms = [
+        platform
         for platform, task in driver_events.platform_setup_tasks.items()
         if not task.cancel()
     ]
-
-    unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
 
     if client.connected and client.driver:
         await async_disable_server_logging_if_needed(hass, entry, client.driver)
-    if DATA_CLIENT_LISTEN_TASK in info:
+    if DATA_CLIENT_LISTEN_TASK in entry.runtime_data:
         await disconnect_client(hass, entry)
-
-    hass.data[DOMAIN].pop(entry.entry_id)
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -984,6 +1010,38 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+
+    # Driver may not be ready yet so we can't allow users to remove a device since
+    # we need to check if the device is still known to the controller
+    if (driver := client.driver) is None:
+        LOGGER.error("Driver for %s is not ready", config_entry.title)
+        return False
+
+    # If a node is found on the controller that matches the hardware based identifier
+    # on the device, prevent the device from being removed.
+    if next(
+        (
+            node
+            for node in driver.controller.nodes.values()
+            if get_device_id_ext(driver, node) in device_entry.identifiers
+        ),
+        None,
+    ):
+        return False
+
+    controller_events: ControllerEvents = config_entry.runtime_data[
+        DATA_DRIVER_EVENTS
+    ].controller_events
+    controller_events.registered_unique_ids.pop(device_entry.id, None)
+    controller_events.discovered_value_ids.pop(device_entry.id, None)
+    return True
+
+
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
@@ -1000,8 +1058,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
+    lr_s2_access_control_key: str = entry.data.get(CONF_LR_S2_ACCESS_CONTROL_KEY, "")
+    lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
-
     addon_config = {
         CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
@@ -1009,6 +1068,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
+    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+        addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
+        addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1048,6 +1110,21 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         updates[CONF_S2_AUTHENTICATED_KEY] = addon_s2_authenticated_key
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
+
+    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
+        LR_ADDON_VERSION
+    ):
+        addon_lr_s2_access_control_key = addon_options.get(
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
+        )
+        addon_lr_s2_authenticated_key = addon_options.get(
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
+        )
+        if lr_s2_access_control_key != addon_lr_s2_access_control_key:
+            updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
+        if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
+            updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 

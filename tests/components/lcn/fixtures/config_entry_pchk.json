@@ -6,17 +6,18 @@
   "password": "lcn",
   "sk_num_tries": 0,
   "dim_mode": "STEPS200",
+  "acknowledge": false,
   "devices": [
     {
       "address": [0, 7, false],
-      "name": "",
+      "name": "TestModule",
       "hardware_serial": -1,
       "software_serial": -1,
       "hardware_type": -1
     },
     {
       "address": [0, 5, true],
-      "name": "",
+      "name": "TestGroup",
       "hardware_serial": -1,
       "software_serial": -1,
       "hardware_type": -1
@@ -119,6 +120,44 @@
       "domain_data": {
         "motor": "MOTOR1",
         "reverse_time": "RT1200"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Climate1",
+      "resource": "var1.r1varsetpoint",
+      "domain": "climate",
+      "domain_data": {
+        "source": "VAR1",
+        "setpoint": "R1VARSETPOINT",
+        "lockable": true,
+        "min_temp": 0.0,
+        "max_temp": 40.0,
+        "unit_of_measurement": "°C"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Romantic",
+      "resource": "0.0",
+      "domain": "scene",
+      "domain_data": {
+        "register": 0,
+        "scene": 0,
+        "outputs": ["OUTPUT1", "OUTPUT2", "RELAY1"],
+        "transition": null
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Romantic Transition",
+      "resource": "0.1",
+      "domain": "scene",
+      "domain_data": {
+        "register": 0,
+        "scene": 1,
+        "outputs": ["OUTPUT1", "OUTPUT2", "RELAY1"],
+        "transition": 10
       }
     },
     {

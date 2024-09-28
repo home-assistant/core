@@ -1,16 +1,16 @@
 """Test Dynalite config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_get as async_get_issue_registry,
-)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -19,9 +19,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("first_con", "second_con", "exp_type", "exp_result", "exp_reason"),
     [
-        (True, True, "create_entry", config_entries.ConfigEntryState.LOADED, ""),
+        (True, True, "create_entry", ConfigEntryState.LOADED, ""),
         (False, False, "abort", None, "cannot_connect"),
-        (True, False, "create_entry", config_entries.ConfigEntryState.SETUP_RETRY, ""),
+        (True, False, "create_entry", ConfigEntryState.SETUP_RETRY, ""),
     ],
 )
 async def test_flow(
@@ -31,10 +31,10 @@ async def test_flow(
     exp_type,
     exp_result,
     exp_reason,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Run a flow with or without errors and return result."""
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
+    issue = issue_registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
     assert issue is None
     host = "1.2.3.4"
     with patch(
@@ -52,12 +52,12 @@ async def test_flow(
         assert result["result"].state == exp_result
     if exp_reason:
         assert result["reason"] == exp_reason
-    issue = registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{dynalite.DOMAIN}"
     )
     assert issue is not None
     assert issue.issue_domain == dynalite.DOMAIN
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
 async def test_deprecated(
@@ -85,7 +85,7 @@ async def test_existing(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host},
         )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -115,7 +115,7 @@ async def test_existing_update(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 2
         assert mock_dyn_dev().configure.mock_calls[1][1][0]["port"] == port2
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -135,11 +135,11 @@ async def test_two_entries(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host2},
         )
-    assert result["type"] == "create_entry"
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
-async def test_setup_user(hass):
+async def test_setup_user(hass: HomeAssistant) -> None:
     """Test configuration via the user flow."""
     host = "3.4.5.6"
     port = 1234
@@ -147,7 +147,7 @@ async def test_setup_user(hass):
         dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -160,8 +160,8 @@ async def test_setup_user(hass):
             {"host": host, "port": port},
         )
 
-    assert result["type"] == "create_entry"
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].state is ConfigEntryState.LOADED
     assert result["title"] == host
     assert result["data"] == {
         "host": host,
@@ -169,7 +169,7 @@ async def test_setup_user(hass):
     }
 
 
-async def test_setup_user_existing_host(hass):
+async def test_setup_user_existing_host(hass: HomeAssistant) -> None:
     """Test that when we setup a host that is defined, we get an error."""
     host = "3.4.5.6"
     MockConfigEntry(
@@ -187,5 +187,5 @@ async def test_setup_user_existing_host(hass):
             {"host": host, "port": 1234},
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
