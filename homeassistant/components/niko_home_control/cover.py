@@ -1,15 +1,9 @@
 """Setup NikoHomeControlcover."""
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -123,33 +117,11 @@ class NikoHomeControlCover(CoverEntity):
         # 253 = stop
         self._cover.turn_on(COVER_STOP)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Set the cover position."""
-        _LOGGER.debug("Set cover position: %s", self.name)
-        self._moving = True
-        target = kwargs.get(ATTR_POSITION, 100)
-
-        if target > self.current_cover_position:
-            self._cover.turn_on(COVER_OPEN)
-            while target > self.current_cover_position:
-                await asyncio.sleep(1)
-
-        else:
-            self._cover.turn_on(COVER_CLOSE)
-            while target < self.current_cover_position:
-                await asyncio.sleep(1)
-
-        self.stop_cover()
-        self._moving = False
-
     def update_state(self, state):
         """Update HA state."""
-        self._cover.update_state(state)
-
-    async def async_added_to_hass(self):
-        """Run when this Entity has been added to HA."""
-        self._cover.register_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Entity being removed from hass."""
-        self._cover.remove_callback(self.async_write_ha_state)
+        _LOGGER.debug("Update state: %s", self.name)
+        _LOGGER.debug("State: %s", state)
+        self._cover.state = state
+        self._attr_is_closed = state == 0
+        self._attr_current_cover_position = state
+        self.async_write_ha_state()

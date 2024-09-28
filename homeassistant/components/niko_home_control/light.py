@@ -79,11 +79,6 @@ class NikoHomeControlLight(LightEntity):
         """A Niko Action action_id."""
         return self._light.action_id
 
-    def update_state(self, state):
-        """Update HA state."""
-        self._attr_is_on = state != 0
-        self.async_write_ha_state()
-
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
@@ -94,13 +89,13 @@ class NikoHomeControlLight(LightEntity):
         _LOGGER.debug("Turn off: %s", self.name)
         self._light.turn_off()
 
-    async def async_added_to_hass(self):
-        """Run when this Entity has been added to HA."""
-        self._light.register_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Entity being removed from hass."""
-        self._light.remove_callback(self.async_write_ha_state)
+    def update_state(self, state):
+        """Update HA state."""
+        _LOGGER.debug("Update state: %s", self.name)
+        _LOGGER.debug("State: %s", state)
+        self._light.state = state
+        self._attr_is_on = state > 0
+        self.async_write_ha_state()
 
 
 class NikoHomeControlDimmableLight(NikoHomeControlLight):
@@ -109,23 +104,27 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
     def __init__(self, light, hub):
         """Set up the Niko Home Control Dimmable Light platform."""
         super().__init__(light, hub)
-
         self._attr_unique_id = f"dimmable-{light.action_id}"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_brightness = light.state * 2.55
 
-    def update_state(self, state):
-        """Update HA state."""
-        self._light.update_state(state)
-
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
         _LOGGER.debug("Brightness: %s", kwargs.get(ATTR_BRIGHTNESS, 255))
-        self._light.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
+        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turn off: %s", self.name)
         self._light.turn_off()
+
+    def update_state(self, state):
+        """Update HA state."""
+        _LOGGER.debug("Update state: %s", self.name)
+        _LOGGER.debug("State: %s", state)
+        self._light.state = state
+        self._attr_is_on = state != 0
+        self._attr_brightness = state * 2.55
+        self.async_write_ha_state()

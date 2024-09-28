@@ -30,6 +30,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     hub = Hub(hass, data["name"], data["host"], data["port"])
 
     if not hub:
+        # should check if the port and host are valid
         # If there is an error, raise an exception to notify HA that there was a
         # problem. The UI will also show there was a problem
         raise CannotConnect
@@ -53,11 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
-                # The error string is set here, and should be translated.
-                # This example does not currently cover translations, see the
-                # comments on `DATA_SCHEMA` for further details.
-                # Set the error on the `host` field, not the entire form.
                 errors["host"] = "cannot_connect"
+            except InvalidPort:
+                errors["port"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
