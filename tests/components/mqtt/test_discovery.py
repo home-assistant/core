@@ -1625,24 +1625,33 @@ async def test_mqtt_discovery_flow_starts_once(
 
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "")
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        with caplog.at_level(logging.DEBUG):
-            async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "")
-            await hass.async_block_till_done(wait_background_tasks=True)
-            assert "Ignoring already processed discovery message" in caplog.text
-
         assert len(flow_calls) == 1
         assert flow_calls[0].topic == "comp/discovery/bla/config1"
+        assert flow_calls[0].payload == "initial message"
 
-        await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "")
+        with caplog.at_level(logging.DEBUG):
+            async_fire_mqtt_message(
+                hass, "comp/discovery/bla/config1", "initial message"
+            )
+            await hass.async_block_till_done(wait_background_tasks=True)
+            assert "Ignoring already processed discovery message" in caplog.text
+            assert len(flow_calls) == 1
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(flow_calls) == 2
         assert flow_calls[1].topic == "comp/discovery/bla/config2"
+        assert flow_calls[1].payload == "initial message"
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "update message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(flow_calls) == 3
+        assert flow_calls[2].topic == "comp/discovery/bla/config2"
+        assert flow_calls[2].payload == "update message"
 
         assert not mqtt_client_mock.unsubscribe.called
 
