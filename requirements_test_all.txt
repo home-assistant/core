@@ -440,7 +440,7 @@ anthropic==0.31.2
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.8.0
+apprise==1.9.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -1944,7 +1944,7 @@ pyudev==0.24.1
 pyuptimerobot==22.2.0
 
 # homeassistant.components.vera
-pyvera==0.3.13
+pyvera==0.3.15
 
 # homeassistant.components.vesync
 pyvesync==2.1.12
@@ -2326,7 +2326,7 @@ voip-utils==0.1.0
 volvooncall==0.10.3
 
 # homeassistant.components.verisure
-vsure==2.6.6
+vsure==2.6.7
 
 # homeassistant.components.vulcan
 vulcan-api==2.3.2

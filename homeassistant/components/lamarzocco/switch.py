@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
 
@@ -83,6 +84,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             await self.entity_description.control_fn(self.coordinator.device, True)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
+                translation_domain=DOMAIN,
                 translation_key="switch_on_error",
                 translation_placeholders={"key": self.entity_description.key},
             ) from exc
@@ -94,6 +96,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             await self.entity_description.control_fn(self.coordinator.device, False)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
+                translation_domain=DOMAIN,
                 translation_key="switch_off_error",
                 translation_placeholders={"name": self.entity_description.key},
             ) from exc
@@ -132,6 +135,7 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
             await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
+                translation_domain=DOMAIN,
                 translation_key="auto_on_off_error",
                 translation_placeholders={"id": self._identifier, "state": str(state)},
             ) from exc

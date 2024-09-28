@@ -467,7 +467,7 @@ anthropic==0.31.2
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.8.0
+apprise==1.9.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -2441,7 +2441,7 @@ pyuptimerobot==22.2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.13
+pyvera==0.3.15
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -2928,7 +2928,7 @@ volkszaehler==0.4.0
 volvooncall==0.10.3
 
 # homeassistant.components.verisure
-vsure==2.6.6
+vsure==2.6.7
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1

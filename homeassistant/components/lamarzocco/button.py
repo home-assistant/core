@@ -13,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -61,6 +62,7 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.device)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
+                translation_domain=DOMAIN,
                 translation_key="button_error",
                 translation_placeholders={
                     "key": self.entity_description.key,
