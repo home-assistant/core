@@ -129,6 +129,7 @@ async def async_setup_entry(
     )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
+    next_year = dt_util.now().year + 1
 
     # Add custom holidays
     try:
@@ -153,8 +154,8 @@ async def async_setup_entry(
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
             if _date := dt_util.parse_date(remove_holiday):
-                if _date.year <= dt_util.now().year + 1:
-                    # Only check and raise issues for current year and next year
+                if _date.year <= next_year:
+                    # Only check and raise issues for current and next year
                     async_create_issue(
                         hass,
                         DOMAIN,
