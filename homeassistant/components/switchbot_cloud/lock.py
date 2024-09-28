@@ -41,13 +41,13 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self.send_command(LockCommands.LOCK)
+        await self.send_api_command(LockCommands.LOCK)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
 
-        await self.send_command(LockCommands.UNLOCK)
+        await self.send_api_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
         self.async_write_ha_state()
