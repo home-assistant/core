@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -382,15 +381,10 @@ async def async_start(  # noqa: C901
             return
         if TYPE_CHECKING:
             assert mqtt_data.data_config_flow_lock
-        key = f"{integration}_{msg.subscribed_topic}"
 
         # Lock to prevent initiating many parallel config flows.
         # Note: The lock is not intended to prevent a race, only for performance
         async with mqtt_data.data_config_flow_lock:
-            # Already unsubscribed
-            if key not in integration_unsubscribe:
-                return
-
             data = MqttServiceInfo(
                 topic=msg.topic,
                 payload=msg.payload,
@@ -399,18 +393,15 @@ async def async_start(  # noqa: C901
                 subscribed_topic=msg.subscribed_topic,
                 timestamp=msg.timestamp,
             )
-            result = await hass.config_entries.flow.async_init(
+            await hass.config_entries.flow.async_init(
                 integration, context={"source": DOMAIN}, data=data
             )
-            if (
-                result
-                and result["type"] == FlowResultType.ABORT
-                and result["reason"] == "single_instance_allowed"
-            ):
-                integration_unsubscribe.pop(key)()
-            else:
+            if msg.payload:
                 # Update the last discovered config message
                 integration_discovery_discovered[msg.topic] = hash(msg.payload)
+            elif msg.topic in integration_discovery_discovered:
+                # Cleanup hash if discovery payload is empty
+                del integration_discovery_discovered[msg.topic]
 
     integration_unsubscribe.update(
         {
