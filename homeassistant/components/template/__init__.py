@@ -70,6 +70,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Register template as valid domain for Blueprint
     async_get_blueprints(hass)
 
+    # Add some default blueprints to blueprints/template, does nothing
+    # if blueprints/template already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(
+        async_get_blueprints(hass).async_populate(), eager_start=True
+    )
+
     if DOMAIN in config:
         await _process_config(hass, config)
 
