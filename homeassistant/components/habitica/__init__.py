@@ -203,6 +203,7 @@ async def async_setup_entry(
                     translation_key="service_call_exception",
                 ) from e
             else:
+                await coordinator.async_request_refresh()
                 return response
         raise ServiceValidationError(
             translation_domain=DOMAIN,
