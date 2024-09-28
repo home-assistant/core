@@ -90,6 +90,9 @@
   "services": {
     "api_call": {
       "service": "mdi:console"
+    },
+    "cast_skill": {
+      "service": "mdi:creation-outline"
     }
   }
 }

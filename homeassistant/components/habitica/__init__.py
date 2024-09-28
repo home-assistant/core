@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
@@ -18,16 +19,29 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
+    ATTR_CONFIG_ENTRY,
     ATTR_DATA,
     ATTR_PATH,
+    ATTR_SKILL,
+    ATTR_TASK,
     CONF_API_USER,
     DEFAULT_URL,
     DOMAIN,
@@ -92,6 +106,13 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ARGS): dict,
     }
 )
+SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_SKILL): cv.string,
+        vol.Optional(ATTR_TASK): cv.string,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -121,6 +142,64 @@ async def async_setup_entry(
 
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
+
+    async def cast_skill(call: ServiceCall) -> ServiceResponse:
+        """Skill action."""
+        entry: HabiticaConfigEntry | None
+        if entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY]):
+            coordinator = entry.runtime_data
+            skill = {
+                "pickpocket": "pickPocket",
+                "backstab": "backStab",
+                "smash": "smash",
+                "fireball": "fireball",
+            }
+            try:
+                task_id = next(
+                    task["id"]
+                    for task in coordinator.data.tasks
+                    if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
+                    or call.data[ATTR_TASK] == task["text"]
+                )
+            except StopIteration as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_call_task_not_found",
+                ) from e
+
+            try:
+                response: dict[str, Any] = await coordinator.api.user.class_.cast[
+                    skill[call.data[ATTR_SKILL]]
+                ].post(targetId=task_id)
+            except ClientResponseError as e:
+                if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                    ) from e
+                if e.status == HTTPStatus.UNAUTHORIZED:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_not_enough_mana",
+                    ) from e
+                if e.status == HTTPStatus.NOT_FOUND:
+                    # could also be task not found, but the task is looked up
+                    # before the request, so most likely wrong skill selected
+                    # or the skill hasn't been unlocked yet.
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_skill_not_found",
+                    ) from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_call_exception",
+                ) from e
+            else:
+                return response
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="sevice_entry_not_found",
+        )
 
     async def handle_api_call(call: ServiceCall) -> None:
         name = call.data[ATTR_NAME]
@@ -189,6 +268,15 @@ async def async_setup_entry(
             DOMAIN, SERVICE_API_CALL, handle_api_call, schema=SERVICE_API_CALL_SCHEMA
         )
 
+    if not hass.services.has_service(DOMAIN, "cast_skill"):
+        hass.services.async_register(
+            DOMAIN,
+            "cast_skill",
+            cast_skill,
+            schema=SERVICE_CAST_SKILL_SCHEMA,
+            supports_response=SupportsResponse.ONLY,
+        )
+
     return True
 
 
@@ -196,4 +284,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         hass.services.async_remove(DOMAIN, SERVICE_API_CALL)
+        hass.services.async_remove(DOMAIN, "cast_skill")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
