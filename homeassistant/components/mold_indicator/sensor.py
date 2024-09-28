@@ -91,6 +91,7 @@ async def async_setup_platform(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                None,
             )
         ],
         False,
@@ -119,6 +120,7 @@ async def async_setup_entry(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                entry.entry_id,
             )
         ],
         False,
@@ -142,10 +144,12 @@ class MoldIndicator(SensorEntity):
         outdoor_temp_sensor: str,
         indoor_humidity_sensor: str,
         calib_factor: float,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self._state: str | None = None
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
