@@ -399,7 +399,6 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=lambda config, _status, key: key not in config,
     ),
     "power_rgb": RpcSensorDescription(
         key="rgb",
@@ -571,7 +570,6 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        removal_condition=lambda config, _status, key: key not in config,
     ),
     "voltage_rgb": RpcSensorDescription(
         key="rgb",
@@ -671,7 +669,6 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        removal_condition=lambda config, _status, key: key not in config,
     ),
     "current_rgb": RpcSensorDescription(
         key="rgb",
@@ -783,7 +780,6 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        removal_condition=lambda config, _status, key: key not in config,
     ),
     "energy_rgb": RpcSensorDescription(
         key="rgb",
