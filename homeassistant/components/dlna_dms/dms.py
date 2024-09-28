@@ -134,7 +134,7 @@ def catch_request_errors[_DlnaDmsDeviceMethod: DmsDeviceSource, _R](
     async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _R:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available and self.retry:
-            # try once to connect, ignore exception to stay in this process.
+            # Try once to connect.
             LOGGER.debug(
                 "Device at: %s is not available, attempting reconnection", self.location
             )
@@ -144,14 +144,8 @@ def catch_request_errors[_DlnaDmsDeviceMethod: DmsDeviceSource, _R](
                 LOGGER.debug(
                     "Couldn't connect immediately, during attempted reconnect: %r", err
                 )
-            if not self.available:
-                LOGGER.warning(
-                    "Device at: %s disappeared when trying to call %s",
-                    self.location,
-                    func.__name__,
-                )
-                raise DeviceConnectionError("DMS is not connected")
-        elif not self.available:
+                raise DeviceConnectionError("DMS could not be reconnected") from err
+        if not self.available:
             LOGGER.warning(
                 "Device at: %s disappeared when trying to call %s",
                 self.location,
