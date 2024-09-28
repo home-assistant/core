@@ -57,6 +57,53 @@
     'state': 'high',
   })
 # ---
+# name: test_all_entities[sensor.body_last_session-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.body_last_session',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last session',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_session',
+    'unique_id': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_last_session',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.body_last_session-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Body+ Last session',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.body_last_session',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-09-04T22:39:39+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.henk_active_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -657,7 +657,7 @@ WORKOUT_SENSORS = [
 class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
-    value_fn: Callable[[Device], StateType]
+    value_fn: Callable[[Device], StateType | datetime]
 
 
 DEVICE_SENSORS = [
@@ -667,7 +667,13 @@ DEVICE_SENSORS = [
         options=["low", "medium", "high"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda device: device.battery,
-    )
+    ),
+    WithingsDeviceSensorEntityDescription(
+        key="last_session",
+        translation_key="last_session",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: device.last_session_date,
+    ),
 ]
 
 
@@ -1004,6 +1010,6 @@ class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.device)
