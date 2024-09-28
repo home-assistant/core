@@ -133,7 +133,7 @@ def catch_request_errors[_DlnaDmsDeviceMethod: DmsDeviceSource, _R](
     @functools.wraps(func)
     async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _R:
         """Catch UpnpError errors and check availability before and after request."""
-        if not self.available and self.retry:
+        if not self.available and self._retry:
             # Try once to connect.
             LOGGER.debug(
                 "Device at: %s is not available, attempting reconnection", self.location
@@ -302,6 +302,11 @@ class DmsDeviceSource:
 
     # Device connection/disconnection
 
+    @property
+    def _retry(self) -> bool | False:
+        """Return a boolean for retrying during browsing or playing media."""
+        return self.config_entry.options.get(CONF_RETRY) or False
+        
     async def device_connect(self) -> None:
         """Connect to the device now that it's available."""
         LOGGER.debug("Connecting to device at %s", self.location)
@@ -371,11 +376,6 @@ class DmsDeviceSource:
     def icon(self) -> str | None:
         """Return an URL to an icon for the media server."""
         return self._device.icon if self._device else None
-
-    @property
-    def retry(self) -> bool | False:
-        """Return an URL to an icon for the media server."""
-        return self.config_entry.options.get(CONF_RETRY) or False
 
     # MediaSource methods
 
