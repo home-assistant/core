@@ -641,6 +641,10 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    FroniusSensorEntityDescription(
+        key="backup_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 STORAGE_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
