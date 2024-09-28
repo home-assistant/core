@@ -162,6 +162,7 @@ def ws_start_preview(
         outdoor_temp,
         indoor_hum,
         msg["user_input"].get(CONF_CALIBRATION_FACTOR),
+        None,
     )
     preview_entity.hass = hass
 
