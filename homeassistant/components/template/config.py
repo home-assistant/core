@@ -6,7 +6,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.blueprint import is_blueprint_instance_config
+from homeassistant.components.blueprint import (
+    BLUEPRINT_INSTANCE_FIELDS,
+    is_blueprint_instance_config,
+)
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -16,9 +19,10 @@ from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
+    CONF_NAME,
     CONF_SENSORS,
     CONF_UNIQUE_ID,
-    Platform,
+    CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -47,6 +51,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
         vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
         ),
@@ -77,6 +82,13 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
     }
 )
 
+TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+).extend(BLUEPRINT_INSTANCE_FIELDS.schema)
+
 
 class TemplateConfig(dict):
     """Dummy class to allow adding attributes."""
@@ -88,7 +100,6 @@ class TemplateConfig(dict):
 async def _async_resolve_blueprints(
     hass: HomeAssistant,
     config: ConfigType,
-    expected_platform: Platform,
 ) -> TemplateConfig:
     """If a config item requires a blueprint, resolve that item to an actual config."""
     raw_config = None
@@ -98,17 +109,22 @@ async def _async_resolve_blueprints(
         raw_config = dict(config)
 
     if is_blueprint_instance_config(config):
+        config = TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA(config)
         blueprints = async_get_blueprints(hass)
 
         blueprint_inputs = await blueprints.async_inputs_from_config(config)
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         config = blueprint_inputs.async_substitute()
-        if expected_platform not in config:
-            raise vol.Invalid("Expected platform not in blueprint")
-        for key, value in config[expected_platform].items():
-            config[key] = value
-        del config[expected_platform]
+
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        if len(platforms) > 1:
+            raise vol.Invalid("more than one platform defined per blueprint")
+        if len(platforms) == 1:
+            platform = platforms.pop()
+            for prop in (CONF_NAME, CONF_UNIQUE_ID, CONF_VARIABLES):
+                if prop in config:
+                    config[platform][prop] = config.pop(prop)
         raw_config = dict(config)
 
     template_config = TemplateConfig(config)
@@ -121,15 +137,9 @@ async def _async_resolve_blueprints(
 async def async_validate_config_section(hass: HomeAssistant, config: ConfigType):
     """Validate an entire config section for the template integration."""
 
-    for platform in PLATFORMS:
-        if platform not in config:
-            continue
-
-        config[platform] = cv.ensure_list(config[platform])
-        for idx, cfg in enumerate(config[platform]):
-            config[platform][idx] = await _async_resolve_blueprints(hass, cfg, platform)
-
-    validated_config = CONFIG_SECTION_SCHEMA(config)
+    validated_config = CONFIG_SECTION_SCHEMA(
+        await _async_resolve_blueprints(hass, config)
+    )
 
     if CONF_TRIGGER in validated_config:
         validated_config[CONF_TRIGGER] = await async_validate_trigger_config(

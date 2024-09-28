@@ -4,7 +4,6 @@ from collections.abc import Iterator
 import contextlib
 from os import PathLike
 import pathlib
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -61,16 +60,8 @@ async def test_inverted_binary_sensor(
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
-    def set_occupancy_state(state: str, extra: dict[str, Any]) -> None:
-        hass.states.async_set(
-            "binary_sensor.occupancy", state, {"friendly_name": "Occupancy", **extra}
-        )
-
-    set_occupancy_state("School", {})
-
-    assert await async_setup_component(
-        hass, "zone", {"zone": {"name": "School", "latitude": 1, "longitude": 2}}
-    )
+    hass.states.async_set("binary_sensor.foo", "on", {"friendly_name": "Foo"})
+    hass.states.async_set("binary_sensor.bar", "off", {"friendly_name": "Bar"})
 
     with patch_blueprint(
         "inverted_binary_sensor.yaml",
@@ -80,22 +71,36 @@ async def test_inverted_binary_sensor(
             hass,
             "template",
             {
-                "template": {
-                    "binary_sensor": {
+                "template": [
+                    {
                         "use_blueprint": {
                             "path": "inverted_binary_sensor.yaml",
-                            "input": {"original_entity": "binary_sensor.occupancy"},
+                            "input": {"original_entity": "binary_sensor.foo"},
                         },
-                        "name": "Vacancy",
-                    }
-                }
+                        "name": "Inverted foo",
+                    },
+                    {
+                        "use_blueprint": {
+                            "path": "inverted_binary_sensor.yaml",
+                            "input": {"original_entity": "binary_sensor.bar"},
+                        },
+                        "name": "Inverted bar",
+                    },
+                ]
             },
         )
 
-    set_occupancy_state("on", {})
+    hass.states.async_set("binary_sensor.foo", "off", {"friendly_name": "Foo"})
+    hass.states.async_set("binary_sensor.bar", "on", {"friendly_name": "Bar"})
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.occupancy").state == "on"
-    vacancy = hass.states.get("binary_sensor.vacancy")
-    assert vacancy
-    assert vacancy.state == "off"
+    assert hass.states.get("binary_sensor.foo").state == "off"
+    assert hass.states.get("binary_sensor.bar").state == "on"
+
+    inverted_foo = hass.states.get("binary_sensor.inverted_foo")
+    assert inverted_foo
+    assert inverted_foo.state == "on"
+
+    inverted_bar = hass.states.get("binary_sensor.inverted_bar")
+    assert inverted_bar
+    assert inverted_bar.state == "off"
