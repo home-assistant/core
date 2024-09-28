@@ -2113,7 +2113,7 @@ slackclient==2.5.0
 smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.16
+smhi-pkg==1.0.18
 
 # homeassistant.components.snapcast
 snapcast==2.3.6
