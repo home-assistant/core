@@ -227,18 +227,9 @@ class DlnaDmsOptionsFlowHandler(OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=options)
 
-        fields: VolDictType = {}
-
-        def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
-            """Add a field to with a suggested value.
-
-            For bools, use the existing value as default, or fallback to False.
-            """
-            if validator is bool:
-                fields[vol.Required(key, default=options.get(key, False))] = validator
-
-        # listen_port can be blank or 0 for "bind any free port"
-        _add_with_suggestion(CONF_RETRY, bool)
+        fields: VolDictType = {
+            vol.Required(CONF_RETRY, default=options.get(CONF_RETRY, False)]: bool,
+        }
 
         return self.async_show_form(
             step_id="init",
