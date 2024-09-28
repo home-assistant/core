@@ -725,7 +725,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.FEET,
         UnitOfLength.INCHES,
-        UnitOfLength.NAUTICALMILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
     ),

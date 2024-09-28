@@ -1568,7 +1568,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):
             return False
-        for other_flow in flows:
+        for other_flow in set(flows):
             if other_flow is not flow and flow.is_matching(other_flow):  # type: ignore[arg-type]
                 return True
         return False

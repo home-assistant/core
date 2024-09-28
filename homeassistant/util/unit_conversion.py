@@ -158,12 +158,12 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.FEET: 1 / _FOOT_TO_M,
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
-        UnitOfLength.NAUTICALMILES: 1 / _NAUTICAL_MILE_TO_M,
+        UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.MILES,
-        UnitOfLength.NAUTICALMILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.FEET,
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
