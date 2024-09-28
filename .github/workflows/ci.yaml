@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 10
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2024.10"
+  HA_SHORT_VERSION: "2024.11"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -231,7 +231,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -277,7 +277,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.2.0
         id: python
@@ -317,7 +317,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.2.0
         id: python
@@ -357,7 +357,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.2.0
         id: python
@@ -447,7 +447,7 @@ jobs:
           - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
@@ -466,7 +466,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -550,7 +550,7 @@ jobs:
           sudo apt-get -y install \
             libturbojpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -583,7 +583,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -617,7 +617,7 @@ jobs:
       && needs.info.outputs.requirements == 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -645,7 +645,7 @@ jobs:
       - name: Process licenses
         run: |
           . venv/bin/activate
-          python -m script.licenses
+          python -m script.licenses licenses.json
 
   pylint:
     name: Check pylint
@@ -660,7 +660,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -707,7 +707,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -752,7 +752,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -815,7 +815,11 @@ jobs:
     needs:
       - info
       - base
-    name: Split tests for full run
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+    name: Split tests for full run Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -827,12 +831,12 @@ jobs:
             libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/checkout@v4.2.0
+      - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
@@ -891,7 +895,7 @@ jobs:
             libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -1011,7 +1015,7 @@ jobs:
             libturbojpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -1137,7 +1141,7 @@ jobs:
             libturbojpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -1232,7 +1236,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.8
         with:
@@ -1283,7 +1287,7 @@ jobs:
             libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
@@ -1370,7 +1374,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.8
         with:

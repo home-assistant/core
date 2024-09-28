@@ -7,8 +7,11 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CONF_NAME, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -22,6 +25,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
     TextSelector,
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_CALIBRATION_FACTOR,
@@ -31,6 +35,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .sensor import MoldIndicator
 
 
 async def validate_duplicate(
@@ -75,12 +80,14 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_CONFIG,
         validate_user_input=validate_duplicate,
+        preview="mold_indicator",
     ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
         DATA_SCHEMA_OPTIONS,
         validate_user_input=validate_duplicate,
+        preview="mold_indicator",
     )
 }
 
@@ -94,3 +101,71 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "mold_indicator/start_preview",
+        vol.Required("flow_id"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("user_input"): dict,
+    }
+)
+@callback
+def ws_start_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a preview."""
+
+    if msg["flow_type"] == "config_flow":
+        flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
+        flow_sets = hass.config_entries.flow._handler_progress_index.get(  # noqa: SLF001
+            flow_status["handler"]
+        )
+        assert flow_sets
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        indoor_temp = msg["user_input"].get(CONF_INDOOR_TEMP)
+        outdoor_temp = msg["user_input"].get(CONF_OUTDOOR_TEMP)
+        indoor_hum = msg["user_input"].get(CONF_INDOOR_HUMIDITY)
+        name = msg["user_input"].get(CONF_NAME)
+    else:
+        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        if not config_entry:
+            raise HomeAssistantError("Config entry not found")
+        indoor_temp = config_entry.options[CONF_INDOOR_TEMP]
+        outdoor_temp = config_entry.options[CONF_OUTDOOR_TEMP]
+        indoor_hum = config_entry.options[CONF_INDOOR_HUMIDITY]
+        name = config_entry.options[CONF_NAME]
+
+    @callback
+    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
+        """Forward config entry state events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"], {"attributes": attributes, "state": state}
+            )
+        )
+
+    preview_entity = MoldIndicator(
+        hass,
+        name,
+        hass.config.units is METRIC_SYSTEM,
+        indoor_temp,
+        outdoor_temp,
+        indoor_hum,
+        msg["user_input"].get(CONF_CALIBRATION_FACTOR),
+    )
+    preview_entity.hass = hass
+
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+        async_preview_updated
+    )
