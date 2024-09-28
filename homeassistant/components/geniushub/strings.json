@@ -33,7 +33,19 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-
+  "entity": {
+    "sensor": {
+      "error": {
+        "name": "Errors"
+      },
+      "warning": {
+        "name": "Warnings"
+      },
+      "information": {
+        "name": "Information"
+      }
+    }
+  },
   "services": {
     "set_zone_mode": {
       "name": "Set zone mode",

@@ -8,10 +8,11 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import GeniusHubConfigEntry
+from . import DOMAIN, GeniusHubConfigEntry
 from .entity import GeniusDevice, GeniusEntity
 
 GH_STATE_ATTR = "batteryLevel"
@@ -53,8 +54,6 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         super().__init__(broker, device)
 
         self._state_attr = state_attr
-
-        self._attr_name = f"{device.type} {device.id}"
 
     @property
     def icon(self) -> str:
@@ -98,9 +97,13 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         self._hub = broker.client
         self._unique_id = f"{broker.hub_uid}_{GH_LEVEL_MAPPING[level]}"
 
-        self._attr_name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
+        self._attr_translation_key = level
         self._level = level
         self._issues: list = []
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, broker.hub_uid)},
+            name="GeniusHub",
+        )
 
     @property
     def native_value(self) -> int:
