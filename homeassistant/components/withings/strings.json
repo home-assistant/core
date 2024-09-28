@@ -315,9 +315,6 @@
           "medium": "Medium",
           "high": "High"
         }
-      },
-      "last_session": {
-        "name": "Last session"
       }
     }
   }
