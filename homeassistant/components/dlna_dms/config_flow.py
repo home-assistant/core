@@ -20,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_RETRY, CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
 from .util import generate_source_id
@@ -228,7 +229,7 @@ class DlnaDmsOptionsFlowHandler(OptionsFlow):
                 return self.async_create_entry(title="", data=options)
 
         fields: VolDictType = {
-            vol.Required(CONF_RETRY, default=options.get(CONF_RETRY, False)]: bool,
+            vol.Required(CONF_RETRY, default=options.get(CONF_RETRY, False)): bool,
         }
 
         return self.async_show_form(
