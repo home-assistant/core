@@ -29,6 +29,7 @@ from .entity import (
 from .util import ReolinkConfigEntry, ReolinkData
 
 POLL_AFTER_INSTALL = 120
+POLL_PROGRESS = 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,6 +106,8 @@ class ReolinkUpdateEntity(
         self.entity_description = entity_description
         super().__init__(reolink_data, channel, reolink_data.firmware_coordinator)
         self._cancel_update: CALLBACK_TYPE | None = None
+        self._cancel_progress: CALLBACK_TYPE | None = None
+        self._installing: bool = False
 
     @property
     def installed_version(self) -> str | None:
@@ -124,13 +127,29 @@ class ReolinkUpdateEntity(
         return new_firmware.version_string
 
     @property
+    def in_progress(self) -> bool | int | None:
+        """Update installation progress."""
+        progress = self._host.api.sw_upload_progress(self._channel)
+        if progress < 100:
+            return progress
+        return False
+
+    @property
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         supported_features = UpdateEntityFeature.INSTALL
         new_firmware = self._host.api.firmware_update_available(self._channel)
         if isinstance(new_firmware, NewSoftwareVersion):
             supported_features |= UpdateEntityFeature.RELEASE_NOTES
+            supported_features |= UpdateEntityFeature.PROGRESS
         return supported_features
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self._installing:
+            return True
+        return super().available
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
@@ -148,6 +167,10 @@ class ReolinkUpdateEntity(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
+        self._installing = True
+        self._cancel_progress = async_call_later(
+            self.hass, POLL_PROGRESS, self._async_update_progress
+        )
         try:
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
@@ -155,9 +178,18 @@ class ReolinkUpdateEntity(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
         finally:
+            self._installing = False
             self.async_write_ha_state()
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
+            )
+
+    async def _async_update_progress(self, now: datetime | None = None) -> None:
+        """Request update."""
+        self.async_write_ha_state()
+        if self._installing:
+            self._cancel_progress = async_call_later(
+                self.hass, POLL_PROGRESS, self._async_update_progress
             )
 
     async def _async_update_future(self, now: datetime | None = None) -> None:
@@ -176,6 +208,8 @@ class ReolinkUpdateEntity(
             self._host.firmware_ch_list.remove(self._channel)
         if self._cancel_update is not None:
             self._cancel_update()
+        if self._cancel_progress is not None:
+            self._cancel_progress()
 
 
 class ReolinkHostUpdateEntity(
@@ -196,6 +230,8 @@ class ReolinkHostUpdateEntity(
         self.entity_description = entity_description
         super().__init__(reolink_data, reolink_data.firmware_coordinator)
         self._cancel_update: CALLBACK_TYPE | None = None
+        self._cancel_progress: CALLBACK_TYPE | None = None
+        self._installing: bool = False
 
     @property
     def installed_version(self) -> str | None:
@@ -215,13 +251,29 @@ class ReolinkHostUpdateEntity(
         return new_firmware.version_string
 
     @property
+    def in_progress(self) -> bool | int | None:
+        """Update installation progress."""
+        progress = self._host.api.sw_upload_progress()
+        if progress < 100:
+            return progress
+        return False
+
+    @property
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         supported_features = UpdateEntityFeature.INSTALL
         new_firmware = self._host.api.firmware_update_available()
         if isinstance(new_firmware, NewSoftwareVersion):
             supported_features |= UpdateEntityFeature.RELEASE_NOTES
+            supported_features |= UpdateEntityFeature.PROGRESS
         return supported_features
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self._installing:
+            return True
+        return super().available
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
@@ -239,6 +291,10 @@ class ReolinkHostUpdateEntity(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
+        self._installing = True
+        self._cancel_progress = async_call_later(
+            self.hass, POLL_PROGRESS, self._async_update_progress
+        )
         try:
             await self._host.api.update_firmware()
         except ReolinkError as err:
@@ -246,9 +302,18 @@ class ReolinkHostUpdateEntity(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
         finally:
+            self._installing = False
             self.async_write_ha_state()
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
+            )
+
+    async def _async_update_progress(self, now: datetime | None = None) -> None:
+        """Request update."""
+        self.async_write_ha_state()
+        if self._installing:
+            self._cancel_progress = async_call_later(
+                self.hass, POLL_PROGRESS, self._async_update_progress
             )
 
     async def _async_update_future(self, now: datetime | None = None) -> None:
@@ -267,3 +332,5 @@ class ReolinkHostUpdateEntity(
             self._host.firmware_ch_list.remove(None)
         if self._cancel_update is not None:
             self._cancel_update()
+        if self._cancel_progress is not None:
+            self._cancel_progress()
