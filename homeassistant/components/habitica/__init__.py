@@ -165,6 +165,7 @@ async def async_setup_entry(
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="service_call_task_not_found",
+                    translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
                 ) from e
 
             try:
