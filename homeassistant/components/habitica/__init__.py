@@ -149,10 +149,10 @@ async def async_setup_entry(
         if entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY]):
             coordinator = entry.runtime_data
             skill = {
-                "pickpocket": "pickPocket",
-                "backstab": "backStab",
-                "smash": "smash",
-                "fireball": "fireball",
+                "pickpocket": {"spellId": "pickPocket", "cost": "10 MP"},
+                "backstab": {"spellId": "backStab", "cost": "15 MP"},
+                "smash": {"spellId": "smash", "cost": "10 MP"},
+                "fireball": {"spellId": "fireball", "cost": "10 MP"},
             }
             try:
                 task_id = next(
@@ -169,7 +169,7 @@ async def async_setup_entry(
 
             try:
                 response: dict[str, Any] = await coordinator.api.user.class_.cast[
-                    skill[call.data[ATTR_SKILL]]
+                    skill[call.data[ATTR_SKILL]]["spellId"]
                 ].post(targetId=task_id)
             except ClientResponseError as e:
                 if e.status == HTTPStatus.TOO_MANY_REQUESTS:
@@ -181,6 +181,10 @@ async def async_setup_entry(
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="service_call_not_enough_mana",
+                        translation_placeholders={
+                            "cost": skill[call.data[ATTR_SKILL]]["cost"],
+                            "mana": f"{int(coordinator.data.user.get("stats", {}).get("mp", 0))} MP",
+                        },
                     ) from e
                 if e.status == HTTPStatus.NOT_FOUND:
                     # could also be task not found, but the task is looked up
@@ -189,6 +193,9 @@ async def async_setup_entry(
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="service_call_skill_not_found",
+                        translation_placeholders={
+                            "skill": f"'{call.data[ATTR_SKILL]}'"
+                        },
                     ) from e
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

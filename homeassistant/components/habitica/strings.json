@@ -148,6 +148,15 @@
     },
     "service_call_exception": {
       "message": "Unable to connect to Habitica, try again later"
+    },
+    "service_call_not_enough_mana": {
+      "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
+    },
+    "service_call_skill_not_found": {
+      "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
+    },
+    "sevice_entry_not_found": {
+      "message": "Unable to cast skill, the selected character is currently not configured or loaded in Home Assistant."
     }
   },
   "issues": {
