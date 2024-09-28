@@ -292,6 +292,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
             self._run_variables = {}
+            self._blueprint_inputs = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
@@ -299,6 +300,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
             self._run_variables = config.get(CONF_VARIABLES, {})
+            self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""

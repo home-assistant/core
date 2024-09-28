@@ -144,7 +144,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
         for coordinator in coordinators:
             coordinator.async_remove()
 
-    async def init_coordinator(hass, conf_section):
+    async def init_coordinator(hass: HomeAssistant, conf_section):
         coordinator = TriggerUpdateCoordinator(hass, conf_section)
         await coordinator.async_setup(hass_config)
         return coordinator
