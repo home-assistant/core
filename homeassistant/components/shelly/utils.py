@@ -575,10 +575,7 @@ def async_remove_orphaned_entities(
 
         key = match.group()
         if key not in keys:
-            if key_suffix is not None:
-                orphaned_entities.append(f"{key}-{key_suffix}")
-            else:
-                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
