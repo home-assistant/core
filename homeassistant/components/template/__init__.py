@@ -56,9 +56,10 @@ def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[s
 def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
     """Return the blueprint the template is based on or None."""
     for platform in async_get_platforms(hass, DOMAIN):
-        if template_entity := platform.entities.get(entity_id):
-            if isinstance(template_entity, TemplateEntity):
-                return template_entity.referenced_blueprint
+        if isinstance(
+            (template_entity := platform.entities.get(entity_id)), TemplateEntity
+        ):
+            return template_entity.referenced_blueprint
     return None
 
 
