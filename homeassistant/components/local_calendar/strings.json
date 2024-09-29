@@ -6,11 +6,22 @@
         "description": "Please choose a name for your new calendar",
         "data": {
           "calendar_name": "Calendar Name",
-          "import_ics": "import events from an iCal file (.ics)?"
+          "import": "Optional Import"
         }
       },
       "import": {
         "description": "You can import events in iCal format (.ics file)."
+      }
+    },
+    "error": {
+      "invalid_ics_file": "Invalid .ics file"
+    }
+  },
+  "selector": {
+    "import": {
+      "options": {
+        "create_empty": "Create an Empty Calendar",
+        "import_ics_file": "Import a iCalendar file (.ics)"
       }
     }
   }

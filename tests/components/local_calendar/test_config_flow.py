@@ -10,15 +10,16 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.local_calendar.const import (
+    ATTR_CREATE_EMPTY,
+    ATTR_IMPORT_ICS_FILE,
     CONF_CALENDAR_NAME,
     CONF_ICS_FILE,
-    CONF_IMPORT_ICS,
+    CONF_IMPORT,
     CONF_STORAGE_KEY,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +35,9 @@ def mock_ics_content():
 
 
 @pytest.fixture
-def mock_process_uploaded_file(tmp_path: Path, mock_ics_content: str) -> Generator[MagicMock, None, None]:
+def mock_process_uploaded_file(
+    tmp_path: Path, mock_ics_content: str
+) -> Generator[MagicMock, None, None]:
     """Mock upload ics file."""
     file_id_ics = str(uuid4())
 
@@ -85,6 +88,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "My Calendar"
     assert result2["data"] == {
         CONF_CALENDAR_NAME: "My Calendar",
+        CONF_IMPORT: ATTR_CREATE_EMPTY,
         CONF_STORAGE_KEY: "my_calendar",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -103,7 +107,7 @@ async def test_form_import_ics(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT_ICS: True},
+        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT: ATTR_IMPORT_ICS_FILE},
     )
     assert result2["type"] is FlowResultType.FORM
 
@@ -145,6 +149,7 @@ async def test_duplicate_name(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
+
 @pytest.mark.parametrize("mock_ics_content", [b"invalid-ics-content"])
 async def test_invalid_ics(
     hass: HomeAssistant,
@@ -159,13 +164,15 @@ async def test_invalid_ics(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT_ICS: True},
+        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT: ATTR_IMPORT_ICS_FILE},
     )
     assert result2["type"] is FlowResultType.FORM
 
     file_id = mock_process_uploaded_file.file_id
-    with pytest.raises(HomeAssistantError):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
-        )
+    # with pytest.raises(HomeAssistantError):
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {CONF_ICS_FILE: "invalid_ics_file"}
