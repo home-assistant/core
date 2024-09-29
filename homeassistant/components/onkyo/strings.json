@@ -4,15 +4,15 @@
     "step": {
       "user": {
         "menu_options": {
-          "eiscp_discovery": "Use Onkyo discovery",
-          "manual": "Manual entry"
+          "manual": "Manual entry",
+          "eiscp_discovery": "Use Onkyo discovery"
         }
       },
       "manual": {
+        "description": "Manual device entry.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
-        },
-        "description": "Manual device entry."
+        }
       },
       "configure_receiver": {
         "description": "Configure {name}",

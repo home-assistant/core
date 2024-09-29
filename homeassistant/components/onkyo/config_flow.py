@@ -105,7 +105,39 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         return self.async_show_menu(
-            step_id="user", menu_options=["eiscp_discovery", "manual"]
+            step_id="user", menu_options=["manual", "eiscp_discovery"]
+        )
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual device entry."""
+        errors = {}
+
+        if user_input is not None:
+            info: ReceiverInfo | None
+            host = user_input[CONF_HOST]
+            try:
+                info = await async_interview(host)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            if info is not None:
+                self._receiver_info = info
+                return await self.async_step_configure_receiver()
+
+            if "base" not in errors:
+                errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_HOST, default=""): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_eiscp_discovery(
@@ -145,38 +177,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="eiscp_discovery",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_names)}),
-        )
-
-    async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle manual device entry."""
-        errors = {}
-
-        if user_input is not None:
-            info: ReceiverInfo | None
-            host = user_input[CONF_HOST]
-            try:
-                info = await async_interview(host)
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if info is not None:
-                self._receiver_info = info
-                return await self.async_step_configure_receiver()
-
-            if "base" not in errors:
-                errors["base"] = "cannot_connect"
-
-        return self.async_show_form(
-            step_id="manual",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_HOST, default=""): str,
-                }
-            ),
-            errors=errors,
         )
 
     async def async_step_configure_receiver(
