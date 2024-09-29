@@ -27,7 +27,7 @@ dependencies    = [
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor
     "aiohasupervisor==0.1.0",
-    "aiohttp==3.10.7",
+    "aiohttp==3.10.8",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
