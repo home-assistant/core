@@ -59,6 +59,8 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional("raw_blueprint_inputs"): cv.match_all,
+        vol.Optional("raw_config"): cv.match_all,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
         ),
@@ -86,7 +88,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(WEATHER_DOMAIN): vol.All(
             cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
         ),
-    }
+    },
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
@@ -127,19 +129,19 @@ async def _async_resolve_blueprints(
                     config[platform][prop] = config.pop(prop)
         raw_config = dict(config)
 
-    template_config = TemplateConfig(config)
+    template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
     template_config.raw_config = raw_config
 
     return template_config
 
 
-async def async_validate_config_section(hass: HomeAssistant, config: ConfigType):
+async def async_validate_config_section(
+    hass: HomeAssistant, config: ConfigType
+) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
-    validated_config = CONFIG_SECTION_SCHEMA(
-        await _async_resolve_blueprints(hass, config)
-    )
+    validated_config: TemplateConfig = await _async_resolve_blueprints(hass, config)
 
     if CONF_TRIGGER in validated_config:
         validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
@@ -163,7 +165,9 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
     for cfg in cv.ensure_list(config[DOMAIN]):
         try:
-            cfg = await async_validate_config_section(hass, cfg)
+            template_config: TemplateConfig = await async_validate_config_section(
+                hass, cfg
+            )
         except vol.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
@@ -183,7 +187,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
-            if old_key not in cfg:
+            if old_key not in template_config:
                 continue
 
             if not legacy_warn_printed:
@@ -195,11 +199,13 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                     "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
                 )
 
-            definitions = list(cfg[new_key]) if new_key in cfg else []
-            definitions.extend(transform(hass, cfg[old_key]))
-            cfg = {**cfg, new_key: definitions}
+            definitions = (
+                list(template_config[new_key]) if new_key in template_config else []
+            )
+            definitions.extend(transform(hass, template_config[old_key]))
+            template_config = TemplateConfig({**template_config, new_key: definitions})
 
-        config_sections.append(cfg)
+        config_sections.append(template_config)
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
