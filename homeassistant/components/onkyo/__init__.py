@@ -49,6 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Unload Onkyo config entry."""
+    # pylint: disable-next=import-outside-toplevel
+    from .media_player import DATA_MP_ENTITIES
+
+    del hass.data[DATA_MP_ENTITIES][entry.entry_id]
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     receiver = entry.runtime_data

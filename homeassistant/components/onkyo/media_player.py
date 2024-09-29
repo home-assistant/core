@@ -47,7 +47,7 @@ from .receiver import Receiver, async_discover
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_MP_ENTITIES: HassKey[list[dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
+DATA_MP_ENTITIES: HassKey[dict[str, dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -136,12 +136,14 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 async def async_register_services(hass: HomeAssistant) -> None:
     """Register Onkyo services."""
 
+    hass.data.setdefault(DATA_MP_ENTITIES, {})
+
     async def async_service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         entity_ids = service.data[ATTR_ENTITY_ID]
 
         targets: list[OnkyoMediaPlayer] = []
-        for receiver_entities in hass.data[DATA_MP_ENTITIES]:
+        for receiver_entities in hass.data[DATA_MP_ENTITIES].values():
             targets.extend(
                 entity
                 for entity in receiver_entities.values()
@@ -257,10 +259,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up MediaPlayer for config entry."""
     receiver = entry.runtime_data
-    all_entities = hass.data.setdefault(DATA_MP_ENTITIES, [])
+    all_entities = hass.data[DATA_MP_ENTITIES]
 
     entities: dict[str, OnkyoMediaPlayer] = {}
-    all_entities.append(entities)
+    all_entities[entry.entry_id] = entities
 
     volume_resolution = entry.data[CONF_VOLUME_RESOLUTION]
     max_volume = entry.options[OPTION_MAX_VOLUME]
