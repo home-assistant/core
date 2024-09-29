@@ -169,7 +169,6 @@ async def test_invalid_ics(
     assert result2["type"] is FlowResultType.FORM
 
     file_id = mock_process_uploaded_file.file_id
-    # with pytest.raises(HomeAssistantError):
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
