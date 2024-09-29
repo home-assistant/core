@@ -222,34 +222,23 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
+        _LOGGER.debug("Import flow user input: %s", user_input)
 
-        _LOGGER.debug("import flow user input: %s", user_input)
-
-        host: str | None = user_input.get(CONF_HOST)
-        name: str | None = user_input.get(CONF_NAME)
-        max_volume: str = user_input.get(OPTION_MAX_VOLUME, OPTION_MAX_VOLUME_DEFAULT)
-        volume_resolution: int = user_input.get(
-            CONF_RECEIVER_MAX_VOLUME, CONF_VOLUME_RESOLUTION_DEFAULT
-        )
-        sources: dict[str, str] = user_input.get(OPTION_SOURCES, {})
-
-        # Sanity check, should be there
-        if host is None:
-            _LOGGER.error("Import error, host is not set")
-            return self.async_abort(reason="cannot_connect")
+        host: str = user_input[CONF_HOST]
+        name: str = user_input[CONF_NAME]
+        max_volume: str = user_input[OPTION_MAX_VOLUME]
+        volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
+        sources: dict[str, str] = user_input[OPTION_SOURCES]
 
         info: ReceiverInfo | None
         try:
             info = await async_interview(host)
         except Exception:
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Import flow interview error for host %s", host)
             return self.async_abort(reason="cannot_connect")
 
         if info is None:
-            _LOGGER.exception(
-                "Receiver with hostname %s not reachable at this moment. Aborting import",
-                host,
-            )
+            _LOGGER.error("Import flow interview error for host %s", host)
             return self.async_abort(reason="cannot_connect")
 
         unique_id = info.identifier
@@ -263,8 +252,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self._createOnkyoEntry(
             ReceiverConfig(volume_resolution, sources),
             host,
-            # Default to model name if no name is given through YAML.
-            name or info.model_name,
+            name,
             options,
         )
 

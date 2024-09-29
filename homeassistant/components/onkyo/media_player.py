@@ -116,10 +116,12 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 )
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
+DEFAULT_NAME = "Onkyo Receiver"
+
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(OPTION_MAX_VOLUME, default=OPTION_MAX_VOLUME_DEFAULT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
