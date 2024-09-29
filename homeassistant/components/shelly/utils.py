@@ -569,7 +569,7 @@ def async_remove_orphaned_entities(
             continue
         if key_suffix is not None and key_suffix not in entity.unique_id:
             continue
-        # we are looking for the component ID, e.g. boolean:201
+        # we are looking for the component ID, e.g. boolean:201, em1data:1
         if not (match := re.search(r"[a-z\d]+:\d+", entity.unique_id)):
             continue
 
