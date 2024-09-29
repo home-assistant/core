@@ -6,7 +6,7 @@
         "description": "Please choose a name for your new calendar",
         "data": {
           "calendar_name": "Calendar Name",
-          "import": "Optional Import"
+          "import": "Starting Data"
         }
       },
       "import": {
@@ -20,8 +20,8 @@
   "selector": {
     "import": {
       "options": {
-        "create_empty": "Create an Empty Calendar",
-        "import_ics_file": "Import a iCalendar file (.ics)"
+        "create_empty": "Create an empty calendar",
+        "import_ics_file": "Upload an iCalendar file (.ics)"
       }
     }
   }
