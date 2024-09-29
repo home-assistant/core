@@ -1224,10 +1224,10 @@ async def async_setup_entry(
 
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
+            virtual_component_ids = get_virtual_component_ids(
+                coordinator.device.config, SENSOR_PLATFORM
+            )
             for component in ("enum", "number", "text"):
-                virtual_component_ids = get_virtual_component_ids(
-                    coordinator.device.config, SENSOR_PLATFORM
-                )
                 async_remove_orphaned_entities(
                     hass,
                     config_entry.entry_id,
