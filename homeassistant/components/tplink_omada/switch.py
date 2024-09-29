@@ -25,11 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OmadaConfigEntry
-from .controller import (
-    OmadaGatewayCoordinator,
-    OmadaSiteController,
-    OmadaSwitchPortCoordinator,
-)
+from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -44,7 +40,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = config_entry.runtime_data
+    controller = config_entry.runtime_data
     omada_client = controller.omada_client
 
     # Naming fun. Omada switches, as in the network hardware

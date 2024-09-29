@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .controller import OmadaClientsCoordinator, OmadaSiteController
+from .controller import OmadaClientsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device trackers and scanners."""
 
-    controller: OmadaSiteController = config_entry.runtime_data
+    controller = config_entry.runtime_data
 
     site_id = config_entry.data[CONF_SITE]
 

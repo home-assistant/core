@@ -19,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OmadaConfigEntry
-from .controller import OmadaSiteController
 from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -95,7 +94,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = config_entry.runtime_data
+    controller = config_entry.runtime_data
 
     devices = controller.devices_coordinator.data
 
