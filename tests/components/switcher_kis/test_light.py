@@ -31,49 +31,62 @@ ENTITY_ID2 = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_2"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
+@pytest.mark.parametrize(
+    ("entity_id", "light_id", "device_state"),
+    [
+        (ENTITY_ID, 0, [DeviceState.OFF, DeviceState.ON]),
+        (ENTITY_ID2, 1, [DeviceState.ON, DeviceState.OFF]),
+    ],
+)
 async def test_light(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_bridge,
+    mock_api,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_id: str,
+    light_id: int,
+    device_state: list[DeviceState],
 ) -> None:
     """Test the light."""
     await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     # Test initial state - light on
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
-    # Test state change on --> off for light 1
-    monkeypatch.setattr(DEVICE, "lights", [DeviceState.OFF, DeviceState.ON])
+    # Test state change on --> off for light
+    monkeypatch.setattr(DEVICE, "lights", device_state)
     mock_bridge.mock_callbacks([DEVICE])
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
-    # Test turning on light 1
+    # Test turning on light
     with patch(
         "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light",
     ) as mock_set_light:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
         assert mock_api.call_count == 2
-        mock_set_light.assert_called_once_with(DeviceState.ON, 0)
-        state = hass.states.get(ENTITY_ID)
+        mock_set_light.assert_called_once_with(DeviceState.ON, light_id)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_ON
 
-    # Test turning off light 1
+    # Test turning off light
     with patch(
         "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light"
     ) as mock_set_light:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
         assert mock_api.call_count == 4
-        mock_set_light.assert_called_once_with(DeviceState.OFF, 0)
-        state = hass.states.get(ENTITY_ID)
+        mock_set_light.assert_called_once_with(DeviceState.OFF, light_id)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
 
 
@@ -139,50 +152,3 @@ async def test_light_control_fail(
         mock_control_device.assert_called_once_with(DeviceState.ON, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_light2(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test the light."""
-    await init_integration(hass, USERNAME, TOKEN)
-    assert mock_bridge
-
-    # Test initial state - light on
-    state = hass.states.get(ENTITY_ID2)
-    assert state.state == STATE_ON
-
-    # # Test state change on --> off for light 2
-    monkeypatch.setattr(DEVICE, "lights", [DeviceState.ON, DeviceState.OFF])
-    mock_bridge.mock_callbacks([DEVICE])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID2)
-    assert state.state == STATE_OFF
-
-    # Test turning on light 2
-    with patch(
-        "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light",
-    ) as mock_set_light:
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID2}, blocking=True
-        )
-
-        assert mock_api.call_count == 2
-        mock_set_light.assert_called_once_with(DeviceState.ON, 1)
-        state = hass.states.get(ENTITY_ID2)
-        assert state.state == STATE_ON
-
-    # Test turning off light 2
-    with patch(
-        "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light"
-    ) as mock_set_light:
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID2}, blocking=True
-        )
-
-        assert mock_api.call_count == 4
-        mock_set_light.assert_called_once_with(DeviceState.OFF, 1)
-        state = hass.states.get(ENTITY_ID2)
-        assert state.state == STATE_OFF
