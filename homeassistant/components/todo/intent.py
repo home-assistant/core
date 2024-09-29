@@ -11,6 +11,7 @@ from . import TodoItem, TodoItemStatus, TodoListEntity
 from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
+INTENT_LIST_REMOVE_ITEM = "HassListRemoveItem"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -71,4 +72,54 @@ class ListAddItemIntent(intent.IntentHandler):
                 )
             ]
         )
+        return response
+
+
+class ListRemoveItemIntent(intent.IntentHandler):
+    """Handle ListRemoveItem intents."""
+
+    intent_type = INTENT_LIST_REMOVE_ITEM
+    description = "Remove item from a todo list"
+    slot_schema = {
+        vol.Required("item"): intent.non_empty_string,
+        vol.Required("name"): intent.non_empty_string,
+    }
+    platforms = {DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+
+        slots = self.async_validate_slots(intent_obj.slots)
+        item = slots["item"]["value"]
+        list_name = slots["name"]["value"]
+
+        target_list: TodoListEntity | None = None
+
+        # Find matching list
+        match_constraints = intent.MatchTargetsConstraints(
+            name=list_name, domains=[DOMAIN], assistant=intent_obj.assistant
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        target_list = hass.data[DATA_COMPONENT].get_entity(
+            match_result.states[0].entity_id
+        )
+        if target_list is None:
+            raise intent.IntentHandleError(f"No to-do list: {list_name}")
+
+        # Find in List
+        found = await target_list.async_find_todo_item(item)
+        if not found or not found.uid:
+            raise intent.IntentHandleError(f"Item {item} not found on list")
+
+        # Remove Item from List
+        await target_list.async_delete_todo_items(uids=[found.uid])
+
+        response = intent_obj.create_response()
+        response.response_type = intent.IntentResponseType.ACTION_DONE
         return response
