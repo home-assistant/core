@@ -22,6 +22,7 @@ from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -43,31 +44,22 @@ DATA_COMPONENT: HassKey[EntityComponent[TemplateEntity]] = HassKey(DOMAIN)
 def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all templates that reference the blueprint."""
     return [
-        template_entity.entity_id
-        for platform in PLATFORMS
-        if platform in hass.data
-        for template_entity in hass.data[platform].entities
-        if template_entity.referenced_blueprint == blueprint_path
+        entity_id
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity_id, template_entity in platform.entities.items()
+        if isinstance(template_entity, TemplateEntity)
+        and template_entity.referenced_blueprint == blueprint_path
     ]
 
 
 @callback
 def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
     """Return the blueprint the template is based on or None."""
-    template_entities = [
-        hass.data[platform].get_entity(entity_id)
-        for platform in PLATFORMS
-        if platform in hass.data
-    ]
-
-    if len(template_entities) != 1:
-        return None
-
-    template_entity: TemplateEntity | None = template_entities.pop()
-    if template_entity is None:
-        return None
-
-    return template_entity.referenced_blueprint
+    for platform in async_get_platforms(hass, DOMAIN):
+        if template_entity := platform.entities.get(entity_id):
+            if isinstance(template_entity, TemplateEntity):
+                return template_entity.referenced_blueprint
+    return None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
