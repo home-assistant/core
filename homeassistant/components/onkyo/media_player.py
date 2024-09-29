@@ -190,9 +190,10 @@ async def async_setup_platform(
             )
             if entity_id is not None:
                 _LOGGER.debug(
-                    "Migrating unique_id from [%s] to [%s]",
+                    "Migrating unique_id from [%s] to [%s] for entity %s",
                     old_unique_id,
                     new_unique_id,
+                    entity_id,
                 )
                 registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
@@ -205,41 +206,7 @@ async def async_setup_platform(
             results.append((host, result))
 
     _LOGGER.debug("Importing yaml results: %s", results)
-    if results:
-        if all(
-            result.get("type") == FlowResultType.CREATE_ENTRY
-            or result.get("reason") == "already_configured"
-            for _, result in results
-        ):
-            async_create_issue(
-                hass,
-                HOMEASSISTANT_DOMAIN,
-                f"deprecated_yaml_{DOMAIN}",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                breaks_in_ha_version="2025.2.0",
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "onkyo",
-                },
-            )
-        else:
-            for host, result in results:
-                if error := result.get("reason"):
-                    async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"deprecated_yaml_import_issue_{host}_{error}",
-                        breaks_in_ha_version="2025.2.0",
-                        is_fixable=False,
-                        issue_domain=DOMAIN,
-                        severity=IssueSeverity.WARNING,
-                        translation_key=f"deprecated_yaml_import_issue_{error}",
-                        translation_placeholders={"host": f"{host}"},
-                    )
-    else:
+    if not results:
         async_create_issue(
             hass,
             DOMAIN,
@@ -249,6 +216,43 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_no_discover",
+        )
+
+    all_successful = True
+    for host, result in results:
+        if (
+            result.get("type") == FlowResultType.CREATE_ENTRY
+            or result.get("reason") == "already_configured"
+        ):
+            continue
+        if error := result.get("reason"):
+            all_successful = False
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{host}_{error}",
+                breaks_in_ha_version="2025.2.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{error}",
+                translation_placeholders={"host": f"{host}"},
+            )
+
+    if all_successful:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.2.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "onkyo",
+            },
         )
 
 
