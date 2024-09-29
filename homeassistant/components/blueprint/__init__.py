@@ -8,6 +8,7 @@ from . import websocket_api
 from .const import CONF_USE_BLUEPRINT, DOMAIN  # noqa: F401
 from .errors import (  # noqa: F401
     BlueprintException,
+    BlueprintInUse,
     BlueprintWithNameException,
     FailedToLoad,
     InvalidBlueprint,

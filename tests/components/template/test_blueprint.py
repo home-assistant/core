@@ -12,6 +12,7 @@ from homeassistant.components import template
 from homeassistant.components.blueprint import (
     BLUEPRINT_SCHEMA,
     Blueprint,
+    BlueprintInUse,
     DomainBlueprints,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -37,6 +38,33 @@ def patch_blueprint(
 
         return Blueprint(
             yaml.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=BLUEPRINT_SCHEMA,
+        )
+
+    with patch(
+        "homeassistant.components.blueprint.models.DomainBlueprints._load_blueprint",
+        mock_load_blueprint,
+    ):
+        yield
+
+
+@contextlib.contextmanager
+def patch_invalid_blueprint() -> Iterator[None]:
+    """Patch blueprint returning an invalid one."""
+
+    @callback
+    def mock_load_blueprint(self, path):
+        return Blueprint(
+            {
+                "blueprint": {
+                    "domain": "template",
+                    "name": "Invalid template blueprint",
+                },
+                "binary_sensor": {},
+                "sensor": {},
+            },
             expected_domain=self.domain,
             path=path,
             schema=BLUEPRINT_SCHEMA,
@@ -111,3 +139,66 @@ async def test_inverted_binary_sensor(
     assert len(inverted_binary_sensor_blueprint_instances) == 2
 
     assert len(template.templates_with_blueprint(hass, "dummy.yaml")) == 0
+
+    with pytest.raises(BlueprintInUse):
+        await template.async_get_blueprints(hass).async_remove_blueprint(
+            "inverted_binary_sensor.yaml"
+        )
+
+
+async def test_invalid_blueprint(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an invalid blueprint definition."""
+
+    with patch_invalid_blueprint():
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "use_blueprint": {
+                            "path": "invalid.yaml",
+                        },
+                        "name": "Invalid blueprint instance",
+                    },
+                ]
+            },
+        )
+
+    assert "more than one platform defined per blueprint" in caplog.text
+    assert await template.async_get_blueprints(hass).async_get_blueprints() == {}
+
+
+async def test_no_blueprint(hass: HomeAssistant) -> None:
+    """Test templates without blueprints."""
+    with patch_blueprint(
+        "inverted_binary_sensor.yaml",
+        BUILTIN_BLUEPRINT_FOLDER / "inverted_binary_sensor.yaml",
+    ):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {"binary_sensor": {"name": "test entity", "state": "off"}},
+                    # A real sensor is needed
+                    {
+                        "use_blueprint": {
+                            "path": "inverted_binary_sensor.yaml",
+                            "input": {"original_entity": "binary_sensor.foo"},
+                        },
+                        "name": "inverted entity",
+                    },
+                ]
+            },
+        )
+
+    hass.states.async_set("binary_sensor.foo", "off", {"friendly_name": "Foo"})
+    await hass.async_block_till_done()
+
+    assert (
+        len(template.templates_with_blueprint(hass, "inverted_binary_sensor.yaml")) == 1
+    )
+    assert template.blueprint_in_template(hass, "binary_sensor.test_entity") is None
