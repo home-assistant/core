@@ -46,7 +46,6 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Local Calendar."""
 
     VERSION = 1
-    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
