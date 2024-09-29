@@ -1214,6 +1214,14 @@ async def async_setup_entry(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
             )
 
+            async_remove_orphaned_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                SENSOR_PLATFORM,
+                list(coordinator.device.status.keys()),
+            )
+
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
             for component in ("enum", "number", "text"):

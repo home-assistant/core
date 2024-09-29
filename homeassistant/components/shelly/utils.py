@@ -515,7 +515,7 @@ def async_remove_shelly_rpc_entities(
     entity_reg = er.async_get(hass)
     for key in keys:
         if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
-            LOGGER.debug("Removing entity: %s", entity_id)
+            LOGGER.error("Removing entity: %s", entity_id)
             entity_reg.async_remove(entity_id)
 
 
@@ -570,7 +570,7 @@ def async_remove_orphaned_entities(
         if key_suffix is not None and key_suffix not in entity.unique_id:
             continue
         # we are looking for the component ID, e.g. boolean:201
-        if not (match := re.search(r"[a-z]+:\d+", entity.unique_id)):
+        if not (match := re.search(r"[a-z\d]+:\d+", entity.unique_id)):
             continue
 
         key = match.group()
@@ -578,7 +578,7 @@ def async_remove_orphaned_entities(
             if key_suffix is not None:
                 orphaned_entities.append(f"{key}-{key_suffix}")
             else:
-                orphaned_entities.append(key)
+                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
