@@ -43,6 +43,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
@@ -570,7 +571,7 @@ def async_remove_orphaned_entities(
         if key_suffix is not None and key_suffix not in entity.unique_id:
             continue
         # we are looking for the component ID, e.g. boolean:201, em1data:1
-        if not (match := re.search(r"[a-z\d]+:\d+", entity.unique_id)):
+        if not (match := re.search(COMPONENT_ID_PATTERN, entity.unique_id)):
             continue
 
         key = match.group()
