@@ -42,12 +42,11 @@ DATA_COMPONENT: HassKey[EntityComponent[TemplateEntity]] = HassKey(DOMAIN)
 @callback
 def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
     """Return all templates that reference the blueprint."""
-    if DOMAIN not in hass.data:
-        return []
-
     return [
         template_entity.entity_id
-        for template_entity in hass.data[DATA_COMPONENT].entities
+        for platform in PLATFORMS
+        if platform in hass.data
+        for template_entity in hass.data[platform].entities
         if template_entity.referenced_blueprint == blueprint_path
     ]
 
@@ -55,10 +54,17 @@ def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[s
 @callback
 def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
     """Return the blueprint the template is based on or None."""
-    if DATA_COMPONENT not in hass.data:
+    template_entities = [
+        hass.data[platform].get_entity(entity_id)
+        for platform in PLATFORMS
+        if platform in hass.data
+    ]
+
+    if len(template_entities) != 1:
         return None
 
-    if (template_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is None:
+    template_entity: TemplateEntity | None = template_entities.pop()
+    if template_entity is None:
         return None
 
     return template_entity.referenced_blueprint
