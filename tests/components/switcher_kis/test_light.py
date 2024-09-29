@@ -42,7 +42,7 @@ async def test_light(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
-    # # Test state change on --> off for light 1
+    # Test state change on --> off for light 1
     monkeypatch.setattr(DEVICE, "lights", [DeviceState.OFF, DeviceState.ON])
     mock_bridge.mock_callbacks([DEVICE])
     await hass.async_block_till_done()
