@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "menu_options": {
@@ -17,7 +16,7 @@
       "configure_receiver": {
         "description": "Configure {name}",
         "data": {
-          "volume_resolution": "The value of 'maximum volume' of the receiver",
+          "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume",
           "sources": "List of input sources this receiver supports"
         }
       }
@@ -27,7 +26,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
@@ -116,10 +116,6 @@
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Onkyo YAML configuration import failed",
       "description": "Configuring Onkyo using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Onkyo YAML configuration import failed",
-      "description": "Configuring Onkyo using YAML is being removed but there was an unknown error when importing your YAML configuration for host {host}.\n\nEnsure the imported configuration is correct and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }

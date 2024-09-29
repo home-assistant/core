@@ -1,22 +1,21 @@
 """Constants for the Onkyo integration."""
 
 DOMAIN = "onkyo"
-BRAND_NAME = "Onkyo"
 
 DEVICE_INTERVIEW_TIMEOUT = 5
 DEVICE_DISCOVERY_TIMEOUT = 5
 
-OPTION_SOURCE_PREFIX = "source."
-OPTION_SOURCES = "sources"
+CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
+CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
+
+CONF_VOLUME_RESOLUTION = "volume_resolution"
+CONF_VOLUME_RESOLUTION_DEFAULT = 50
+
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100
 
-CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
-CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
-CONF_DEVICE = "device"
-CONF_VOLUME_RESOLUTION = "volume_resolution"
-CONF_VOLUME_RESOLUTION_DEFAULT = 80
-CONF_SOURCES_DEFAULT = {
+OPTION_SOURCES = "sources"
+OPTION_SOURCES_DEFAULT = {
     "tv": "TV",
     "bd": "Bluray",
     "game": "Game",
@@ -30,9 +29,10 @@ CONF_SOURCES_DEFAULT = {
     "video7": "Video 7",
     "fm": "Radio",
 }
-# this should be kept in sync with strings.json for dynamic options generation
+# This should be kept in sync with strings.json for dynamic options generation
 # to work correctly.
-CONF_SOURCES_ALLOWED = [
+OPTION_SOURCE_PREFIX = "source."
+OPTION_SOURCES_ALLOWED = [
     "aiplay",
     "am",
     "aux1",

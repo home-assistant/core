@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     info = await async_interview(host)
     if info is None:
-        raise ConfigEntryNotReady(f"Unable to connect to : {host}")
+        raise ConfigEntryNotReady(f"Unable to connect to: {host}")
 
     receiver = await Receiver.async_create(info)
 

@@ -35,12 +35,12 @@ from . import OnkyoConfigEntry
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME_DEFAULT,
-    CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
     OPTION_SOURCES,
+    OPTION_SOURCES_DEFAULT,
     ZONES,
 )
 from .receiver import Receiver, async_discover
@@ -128,7 +128,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
         ): cv.positive_int,
-        vol.Optional(OPTION_SOURCES, default=CONF_SOURCES_DEFAULT): {
+        vol.Optional(OPTION_SOURCES, default=OPTION_SOURCES_DEFAULT): {
             cv.string: cv.string
         },
     }

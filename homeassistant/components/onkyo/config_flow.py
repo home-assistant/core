@@ -1,7 +1,5 @@
 """Config flow for Onkyo."""
 
-from collections import OrderedDict
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -14,7 +12,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -28,10 +26,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    BRAND_NAME,
     CONF_RECEIVER_MAX_VOLUME,
-    CONF_SOURCES_ALLOWED,
-    CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     CONF_VOLUME_RESOLUTION_DEFAULT,
     DOMAIN,
@@ -39,20 +34,26 @@ from .const import (
     OPTION_MAX_VOLUME_DEFAULT,
     OPTION_SOURCE_PREFIX,
     OPTION_SOURCES,
+    OPTION_SOURCES_ALLOWED,
+    OPTION_SOURCES_DEFAULT,
 )
 from .receiver import ReceiverInfo, async_discover, async_interview
 
-CONF_SCHEMA_CONFIGURE = vol.Schema(
+_LOGGER = logging.getLogger(__name__)
+
+CONF_DEVICE = "device"
+
+STEP_CONFIGURE_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_VOLUME_RESOLUTION,
             default=CONF_VOLUME_RESOLUTION_DEFAULT,
         ): vol.In([50, 80, 100, 200]),
         vol.Required(
-            OPTION_SOURCES, default=list(CONF_SOURCES_DEFAULT.keys())
+            OPTION_SOURCES, default=list(OPTION_SOURCES_DEFAULT.keys())
         ): SelectSelector(
             SelectSelectorConfig(
-                options=CONF_SOURCES_ALLOWED,
+                options=OPTION_SOURCES_ALLOWED,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
@@ -60,50 +61,19 @@ CONF_SCHEMA_CONFIGURE = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class ReceiverConfig:
-    """Onkyo Receiver configuration."""
-
-    volume_resolution: int
-    sources: dict[str, str]
-
 
 class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Onkyo config flow."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_infos: dict[str, ReceiverInfo] = {}
         self._receiver_info: ReceiverInfo
-
-    def _createOnkyoEntry(
-        self, config: ReceiverConfig, host: str, name: str, options: dict | None = None
-    ) -> ConfigFlowResult:
-        merged_options = {
-            OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-            OPTION_SOURCES: config.sources,
-        }
-
-        if options is not None:
-            merged_options = merged_options | options
-
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_HOST: host,
-                CONF_VOLUME_RESOLUTION: config.volume_resolution,
-            },
-            options=merged_options,
-        )
+        self._discovered_infos: dict[str, ReceiverInfo] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
         return self.async_show_menu(
             step_id="user", menu_options=["manual", "eiscp_discovery"]
         )
@@ -115,20 +85,19 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            info: ReceiverInfo | None
+            info: ReceiverInfo | None = None
             host = user_input[CONF_HOST]
             try:
                 info = await async_interview(host)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
-            if info is not None:
-                self._receiver_info = info
-                return await self.async_step_configure_receiver()
-
-            if "base" not in errors:
-                errors["base"] = "cannot_connect"
+            else:
+                if info is None:
+                    errors["base"] = "cannot_connect"
+                else:
+                    self._receiver_info = info
+                    return await self.async_step_configure_receiver()
 
         return self.async_show_form(
             step_id="manual",
@@ -143,8 +112,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_eiscp_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the step to discover devices."""
-
+        """Start eiscp discovery and handle user device selection."""
         if user_input is not None:
             self._receiver_info = self._discovered_infos[user_input[CONF_DEVICE]]
             return await self.async_step_configure_receiver()
@@ -155,7 +123,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
         }
 
-        infos = await async_discover()
+        try:
+            infos = await async_discover()
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
         _LOGGER.debug("Discovered devices: %s", infos)
 
         self._discovered_infos = {}
@@ -166,11 +139,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 info.identifier not in current_unique_ids
                 and info.host not in current_hosts
             ):
-                devices_names[info.identifier] = (
-                    f"{BRAND_NAME} {info.model_name} ({info.host}:{info.port})"
-                )
+                devices_names[info.identifier] = f"{info.model_name} ({info.host})"
 
-        # Check if there is at least one device
         if not devices_names:
             return self.async_abort(reason="no_devices_found")
 
@@ -183,30 +153,29 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the configuration of a single receiver."""
+        _LOGGER.debug("Configure receiver info: %s", self._receiver_info)
 
         if user_input is not None:
-            return self._createOnkyoEntry(
-                ReceiverConfig(
-                    user_input[CONF_VOLUME_RESOLUTION],
+            return self.async_create_entry(
+                title=self._receiver_info.model_name,
+                data={
+                    CONF_HOST: self._receiver_info.host,
+                    CONF_VOLUME_RESOLUTION: user_input[CONF_VOLUME_RESOLUTION],
+                },
+                options={
+                    OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
                     # Preseed the sources with a dictionary where keys and values are equal.
-                    dict(
+                    OPTION_SOURCES: dict(
                         zip(
                             user_input[OPTION_SOURCES],
                             user_input[OPTION_SOURCES],
                             strict=False,
                         )
                     ),
-                ),
-                self._receiver_info.host,
-                self._receiver_info.model_name,
+                },
             )
 
         unique_id = self._receiver_info.identifier
-        _LOGGER.debug(
-            "Found receiver with ip %s, setting unique_id to %s",
-            self._receiver_info.host,
-            unique_id,
-        )
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._receiver_info.host}
@@ -217,7 +186,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "name": f"{self._receiver_info.model_name} ({self._receiver_info.host})"
             },
-            data_schema=CONF_SCHEMA_CONFIGURE,
+            data_schema=STEP_CONFIGURE_SCHEMA,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
@@ -245,15 +214,16 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
-        options = {
-            OPTION_MAX_VOLUME: max_volume,
-        }
-
-        return self._createOnkyoEntry(
-            ReceiverConfig(volume_resolution, sources),
-            host,
-            name,
-            options,
+        return self.async_create_entry(
+            title=name,
+            data={
+                CONF_HOST: host,
+                CONF_VOLUME_RESOLUTION: volume_resolution,
+            },
+            options={
+                OPTION_MAX_VOLUME: max_volume,
+                OPTION_SOURCES: sources,
+            },
         )
 
     @staticmethod
@@ -272,13 +242,11 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-
-        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
                 data={
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
-                    # Unfold the source dictionary from the settings list
+                    # Remove the source prefix.
                     OPTION_SOURCES: {
                         key[len(OPTION_SOURCE_PREFIX) :]: value
                         for (key, value) in user_input.items()
@@ -287,32 +255,27 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 }
             )
 
-        schema: dict[Any, Selector] = OrderedDict()
-        schema[
-            vol.Required(
-                OPTION_MAX_VOLUME,
-                default=self.config_entry.options.get(OPTION_MAX_VOLUME),
+        schema_dict: dict[Any, Selector] = {}
+
+        max_volume: int = self.config_entry.options[OPTION_MAX_VOLUME]
+        schema_dict[vol.Required(OPTION_MAX_VOLUME, default=max_volume)] = (
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)
             )
-        ] = NumberSelector(
-            NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)
         )
 
-        # Handle options for sources selected at configuration.
-        sources = self.config_entry.options.get(OPTION_SOURCES)
-        if sources is not None:
-            for source in sources:
-                schema[
-                    vol.Optional(
-                        f"{OPTION_SOURCE_PREFIX}{source}", default=sources[source]
-                    )
-                ] = TextSelector()
+        sources: dict[str, str] = self.config_entry.options[OPTION_SOURCES]
+        for source in sources:
+            # Add the source prefix.
+            schema_dict[
+                vol.Required(f"{OPTION_SOURCE_PREFIX}{source}", default=sources[source])
+            ] = TextSelector()
 
-        options_schema = vol.Schema(schema)
+        schema = vol.Schema(schema_dict)
 
         return self.async_show_form(
             step_id="init",
-            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                options_schema, self.config_entry.options
+                schema, self.config_entry.options
             ),
         )
