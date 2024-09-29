@@ -9,6 +9,7 @@ from lmcloud.const import (
     PhysicalKey,
     PrebrewMode,
 )
+from lmcloud.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -19,6 +20,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_init_integration
@@ -379,3 +381,46 @@ async def test_not_existing_key_entities(
         for key in range(1, KEYS_PER_MODEL[MachineModel.GS3_AV] + 1):
             state = hass.states.get(f"number.{serial_number}_{entity}_key_{key}")
             assert state is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_number_error(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test number entities raise error on service call."""
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+
+    state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
+    assert state
+
+    mock_lamarzocco.set_temp.side_effect = RequestNotSuccessful("Boom")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
+                ATTR_VALUE: 94,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "number_exception"
+
+    state = hass.states.get(f"number.{serial_number}_dose_key_1")
+    assert state
+
+    mock_lamarzocco.set_dose.side_effect = RequestNotSuccessful("Boom")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: f"number.{serial_number}_dose_key_1",
+                ATTR_VALUE: 99,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "number_exception_key"

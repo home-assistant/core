@@ -106,6 +106,17 @@ HOST_SENSORS = (
         value=lambda api: api.wifi_signal,
         supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
     ),
+    ReolinkHostSensorEntityDescription(
+        key="cpu_usage",
+        cmd_key="GetPerformance",
+        translation_key="cpu_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda api: api.cpu_usage,
+        supported=lambda api: api.supported(None, "performance"),
+    ),
 )
 
 HDD_SENSORS = (

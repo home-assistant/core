@@ -393,8 +393,7 @@ async def async_start(  # noqa: C901
             if (
                 result
                 and result["type"] == FlowResultType.ABORT
-                and result["reason"]
-                in ("already_configured", "single_instance_allowed")
+                and result["reason"] == "single_instance_allowed"
             ):
                 integration_unsubscribe.pop(key)()
 

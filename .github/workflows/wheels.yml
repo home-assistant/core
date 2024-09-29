@@ -32,7 +32,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
@@ -119,7 +119,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.8
@@ -163,7 +163,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.8
@@ -205,11 +205,9 @@ jobs:
           # Some dependencies still require 'cython<3'
           # and don't yet use isolated build environments.
           # Build these first.
-          # grpcio: https://github.com/grpc/grpc/issues/33918
           # pydantic: https://github.com/pydantic/pydantic/issues/7689
 
           touch requirements_old-cython.txt
-          cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
 
       - name: Build wheels (old cython)
