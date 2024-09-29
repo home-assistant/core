@@ -135,7 +135,7 @@ def async_setup_rpc_entry(
         config_entry.entry_id,
         coordinator.mac,
         LIGHT_DOMAIN,
-        list(coordinator.device.status.keys()),
+        coordinator.device.status.keys(),
     )
 
 

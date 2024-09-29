@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from types import MappingProxyType
@@ -549,7 +550,7 @@ def async_remove_orphaned_entities(
     config_entry_id: str,
     mac: str,
     platform: str,
-    keys: list[str],
+    keys: Iterable[str],
     key_suffix: str | None = None,
 ) -> None:
     """Remove orphaned entities."""
