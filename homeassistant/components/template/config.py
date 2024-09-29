@@ -40,7 +40,14 @@ from . import (
     sensor as sensor_platform,
     weather as weather_platform,
 )
-from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ACTION,
+    CONF_CONDITION,
+    CONF_TRIGGER,
+    DOMAIN,
+    PLATFORMS,
+    TemplateConfig,
+)
 from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
@@ -88,13 +95,6 @@ TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 ).extend(BLUEPRINT_INSTANCE_FIELDS.schema)
-
-
-class TemplateConfig(dict):
-    """Dummy class to allow adding attributes."""
-
-    raw_config: ConfigType | None = None
-    raw_blueprint_inputs: ConfigType | None = None
 
 
 async def _async_resolve_blueprints(
