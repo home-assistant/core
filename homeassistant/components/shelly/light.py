@@ -118,17 +118,17 @@ def async_setup_rpc_entry(
         )
         return
 
+    entities: list[RpcShellyLightBase] = []
     if light_key_ids := get_rpc_key_ids(coordinator.device.status, "light"):
-        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
-
+        entities.extend(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
     if cct_key_ids := get_rpc_key_ids(coordinator.device.status, "cct"):
-        async_add_entities(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
-
+        entities.extend(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
     if rgb_key_ids := get_rpc_key_ids(coordinator.device.status, "rgb"):
-        async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
-
+        entities.extend(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
     if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
-        async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
+        entities.extend(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
+
+    async_add_entities(entities)
 
     async_remove_orphaned_entities(
         hass,
