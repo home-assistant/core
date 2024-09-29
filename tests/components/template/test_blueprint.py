@@ -14,13 +14,10 @@ from homeassistant.components.blueprint import (
     Blueprint,
     DomainBlueprints,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
-
-from tests.common import MockConfigEntry
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(template.__file__).parent / "blueprints"
 
@@ -56,10 +53,6 @@ async def test_inverted_binary_sensor(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test inverted binary sensor blueprint."""
-    config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    config_entry.add_to_hass(hass)
-
     hass.states.async_set("binary_sensor.foo", "on", {"friendly_name": "Foo"})
     hass.states.async_set("binary_sensor.bar", "off", {"friendly_name": "Bar"})
 
@@ -104,3 +97,17 @@ async def test_inverted_binary_sensor(
     inverted_bar = hass.states.get("binary_sensor.inverted_bar")
     assert inverted_bar
     assert inverted_bar.state == "off"
+
+    foo_template = template.blueprint_in_template(hass, "binary_sensor.foo")
+    inverted_foo_template = template.blueprint_in_template(
+        hass, "binary_sensor.inverted_foo"
+    )
+    assert foo_template is None
+    assert inverted_foo_template == "inverted_binary_sensor.yaml"
+
+    inverted_binary_sensor_blueprint_instances = template.templates_with_blueprint(
+        hass, "inverted_binary_sensor.yaml"
+    )
+    assert len(inverted_binary_sensor_blueprint_instances) == 2
+
+    assert len(template.templates_with_blueprint(hass, "dummy.yaml")) == 0
