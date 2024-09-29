@@ -37,7 +37,7 @@ def mock_ics_content():
 @pytest.fixture
 def mock_process_uploaded_file(
     tmp_path: Path, mock_ics_content: str
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock upload ics file."""
     file_id_ics = str(uuid4())
 
