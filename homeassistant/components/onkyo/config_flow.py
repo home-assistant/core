@@ -194,17 +194,18 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Import flow user input: %s", user_input)
 
         host: str = user_input[CONF_HOST]
-        name: str = user_input[CONF_NAME]
+        name: str | None = user_input.get(CONF_NAME)
         max_volume: float = float(user_input[OPTION_MAX_VOLUME])
         volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
         sources: dict[str, str] = user_input[OPTION_SOURCES]
 
-        info: ReceiverInfo | None
-        try:
-            info = await async_interview(host)
-        except Exception:
-            _LOGGER.exception("Import flow interview error for host %s", host)
-            return self.async_abort(reason="cannot_connect")
+        info: ReceiverInfo | None = user_input.get("info")
+        if info is None:
+            try:
+                info = await async_interview(host)
+            except Exception:
+                _LOGGER.exception("Import flow interview error for host %s", host)
+                return self.async_abort(reason="cannot_connect")
 
         if info is None:
             _LOGGER.error("Import flow interview error for host %s", host)
@@ -213,6 +214,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = info.identifier
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
+
+        name = name or info.model_name
 
         return self.async_create_entry(
             title=name,

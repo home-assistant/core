@@ -114,14 +114,13 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 )
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
-DEFAULT_NAME = "Onkyo Receiver"
 CONF_MAX_VOLUME_DEFAULT = 100
 CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
@@ -203,7 +202,7 @@ async def async_setup_platform(
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data=config | {CONF_HOST: info.host} | {CONF_NAME: info.model_name},
+                data=config | {CONF_HOST: info.host} | {"info": info},
             )
             results.append((host, result))
 
