@@ -57,6 +57,7 @@ FLOWS = {
         "anthropic",
         "aosmith",
         "apcupsd",
+        "appartme",
         "apple_tv",
         "aprilaire",
         "apsystems",

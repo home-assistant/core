@@ -1,0 +1,102 @@
+{
+  "options": {
+    "step": {
+      "init": {
+        "title": "Appartme Options",
+        "description": "Adjust the options for the Appartme System.",
+        "data": {
+          "update_interval": "Update Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "interval_too_short": "Update interval must be at least {min_interval} seconds.",
+      "invalid_int": "Please enter a valid integer."
+    }
+  },
+  "entity": {
+    "switch": {
+      "fifth_channel": {
+        "name": "Additional Channel"
+      },
+      "sockets": {
+        "name": "Sockets"
+      }
+    },
+    "light": {
+      "lighting": {
+        "name": "Lighting"
+      }
+    },
+    "valve": {
+      "water": {
+        "name": "Water"
+      }
+    },
+    "climate": {
+      "thermostat_mode": {
+        "name": "Heating"
+      }
+    },
+    "sensor": {
+      "total_current": {
+        "name": "Total Current"
+      },
+      "phase_1_current": {
+        "name": "Current (phase 1)"
+      },
+      "phase_2_current": {
+        "name": "Current (phase 2)"
+      },
+      "phase_3_current": {
+        "name": "Current (phase 3)"
+      },
+      "total_voltage": {
+        "name": "Total Voltage"
+      },
+      "phase_1_voltage": {
+        "name": "Voltage (phase 1)"
+      },
+      "phase_2_voltage": {
+        "name": "Voltage (phase 2)"
+      },
+      "phase_3_voltage": {
+        "name": "Voltage (phase 3)"
+      },
+      "total_power": {
+        "name": "Total Power"
+      },
+      "phase_1_power": {
+        "name": "Power (phase 1)"
+      },
+      "phase_2_power": {
+        "name": "Power (phase 2)"
+      },
+      "phase_3_power": {
+        "name": "Power (phase 3)"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  }
+}
