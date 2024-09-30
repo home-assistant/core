@@ -29,4 +29,5 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 .. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/.github/assets/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/
 .. |ohf-logo| image:: https://www.openhomefoundation.org/badges/home-assistant.png
+   :alt: Home Assistant - A project from the Open Home Foundation
    :target: https://www.openhomefoundation.org/
