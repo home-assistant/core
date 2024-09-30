@@ -12,6 +12,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .binary_sensor import (
+    POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS,
+    FroniusBinarySensorEntityDescription,
+)
 from .const import (
     SOLAR_NET_ID_POWER_FLOW,
     SOLAR_NET_ID_SYSTEM,
@@ -30,6 +34,7 @@ from .sensor import (
 
 if TYPE_CHECKING:
     from . import FroniusSolarNet
+    from .binary_sensor import _FroniusBinarySensorEntity
     from .sensor import _FroniusSensorEntity
 
 
@@ -41,6 +46,7 @@ class FroniusCoordinatorBase(
     default_interval: timedelta
     error_interval: timedelta
     valid_descriptions: list[FroniusSensorEntityDescription]
+    valid_binary_descriptions: list[FroniusBinarySensorEntityDescription] | None = None
 
     MAX_FAILED_UPDATES = 3
 
@@ -51,6 +57,9 @@ class FroniusCoordinatorBase(
         # unregistered_descriptors are used to create entities in platform module
         self.unregistered_descriptors: dict[
             SolarNetId, list[FroniusSensorEntityDescription]
+        ] = {}
+        self.unregistered_binary_descriptors: dict[
+            SolarNetId, list[FroniusBinarySensorEntityDescription]
         ] = {}
         super().__init__(*args, update_interval=self.default_interval, **kwargs)
 
@@ -79,6 +88,10 @@ class FroniusCoordinatorBase(
                     self.unregistered_descriptors[solar_net_id] = (
                         self.valid_descriptions.copy()
                     )
+                    if self.valid_binary_descriptions:
+                        self.unregistered_binary_descriptors[solar_net_id] = (
+                            self.valid_binary_descriptions.copy()
+                        )
             return data
 
     @callback
@@ -121,6 +134,49 @@ class FroniusCoordinatorBase(
         _add_entities_for_unregistered_descriptors()
         self.solar_net.config_entry.async_on_unload(
             self.async_add_listener(_add_entities_for_unregistered_descriptors)
+        )
+
+    @callback
+    def add_binary_entities_for_seen_keys[_FroniusEntityT: _FroniusBinarySensorEntity](
+        self,
+        async_add_entities: AddEntitiesCallback,
+        entity_constructor: type[_FroniusEntityT],
+    ) -> None:
+        """Add entities for received keys and registers listener for future seen keys.
+
+        Called from a platforms `async_setup_entry`.
+        """
+
+        @callback
+        def _add_binary_entities_for_unregistered_descriptors() -> None:
+            """Add entities for keys seen for the first time."""
+            new_entities: list[_FroniusEntityT] = []
+            for solar_net_id, device_data in self.data.items():
+                remaining_unregistered_descriptors = []
+                for description in self.unregistered_binary_descriptors[solar_net_id]:
+                    key = description.response_key or description.key
+                    if key not in device_data:
+                        remaining_unregistered_descriptors.append(description)
+                        continue
+                    if device_data[key]["value"] is None:
+                        remaining_unregistered_descriptors.append(description)
+                        continue
+                    new_entities.append(
+                        entity_constructor(
+                            coordinator=self,
+                            description=description,
+                            solar_net_id=solar_net_id,
+                        )
+                    )
+                self.unregistered_binary_descriptors[solar_net_id] = (
+                    remaining_unregistered_descriptors
+                )
+
+            async_add_entities(new_entities)
+
+        _add_binary_entities_for_unregistered_descriptors()
+        self.solar_net.config_entry.async_on_unload(
+            self.async_add_listener(_add_binary_entities_for_unregistered_descriptors)
         )
 
 
@@ -205,6 +261,7 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
     default_interval = timedelta(seconds=10)
     error_interval = timedelta(minutes=3)
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
+    valid_binary_descriptions = POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
