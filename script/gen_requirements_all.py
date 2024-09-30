@@ -96,9 +96,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.59.0
-grpcio-status==1.59.0
-grpcio-reflection==1.59.0
+grpcio==1.62.3
+grpcio-status==1.62.3
+grpcio-reflection==1.62.3
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -127,7 +127,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.0
+numpy==1.26.4
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -138,7 +138,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.17
+pydantic==1.10.18
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -202,12 +202,6 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
-
-# pyasn1.compat.octets was removed in pyasn1 0.6.1 and breaks some integrations
-# and tests that import it directly
-# https://github.com/pyasn1/pyasn1/pull/60
-# https://github.com/lextudio/pysnmp/issues/114
-pyasn1==0.6.0
 """
 
 GENERATED_MESSAGE = (

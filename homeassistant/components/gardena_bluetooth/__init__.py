@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import Coordinator, DeviceUnavailable
+from .coordinator import DeviceUnavailable, GardenaBluetoothCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -75,7 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=model,
     )
 
-    coordinator = Coordinator(hass, LOGGER, client, uuids, device, address)
+    coordinator = GardenaBluetoothCoordinator(
+        hass, LOGGER, client, uuids, device, address
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -87,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: GardenaBluetoothCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.async_shutdown()
 
     return unload_ok

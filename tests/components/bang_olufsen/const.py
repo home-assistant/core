@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
+    ListeningModeRef,
     OverlayPlayRequest,
     OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
@@ -197,3 +198,14 @@ TEST_DEEZER_INVALID_FLOW = ApiException(
         data='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
     ),
 )
+TEST_SOUND_MODE = 123
+TEST_SOUND_MODE_2 = 234
+TEST_SOUND_MODE_NAME = "Test Listening Mode"
+TEST_ACTIVE_SOUND_MODE_NAME = f"{TEST_SOUND_MODE_NAME} ({TEST_SOUND_MODE})"
+TEST_ACTIVE_SOUND_MODE_NAME_2 = f"{TEST_SOUND_MODE_NAME} ({TEST_SOUND_MODE_2})"
+TEST_LISTENING_MODE_REF = ListeningModeRef(href="", id=TEST_SOUND_MODE_2)
+TEST_SOUND_MODES = [
+    TEST_ACTIVE_SOUND_MODE_NAME,
+    TEST_ACTIVE_SOUND_MODE_NAME_2,
+    f"{TEST_SOUND_MODE_NAME} 2 (345)",
+]

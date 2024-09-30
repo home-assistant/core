@@ -1,5 +1,6 @@
 """Assist satellite Websocket API."""
 
+import asyncio
 from dataclasses import asdict, replace
 from typing import Any
 
@@ -10,9 +11,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import uuid as uuid_util
 
-from .const import DOMAIN
+from .connection_test import CONNECTION_TEST_URL_BASE
+from .const import (
+    CONNECTION_TEST_DATA,
+    DATA_COMPONENT,
+    DOMAIN,
+    AssistSatelliteEntityFeature,
+)
 from .entity import AssistSatelliteEntity
+
+CONNECTION_TEST_TIMEOUT = 30
 
 
 @callback
@@ -21,9 +31,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_intercept_wake_word)
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_set_wake_words)
+    websocket_api.async_register_command(hass, websocket_test_connection)
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/intercept_wake_word",
@@ -38,8 +48,7 @@ async def websocket_intercept_wake_word(
     msg: dict[str, Any],
 ) -> None:
     """Intercept the next wake word from a satellite."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
@@ -77,8 +86,7 @@ def websocket_get_configuration(
     msg: dict[str, Any],
 ) -> None:
     """Get the current satellite configuration."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
@@ -92,7 +100,6 @@ def websocket_get_configuration(
     connection.send_result(msg["id"], config_dict)
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/set_wake_words",
@@ -108,8 +115,7 @@ async def websocket_set_wake_words(
     msg: dict[str, Any],
 ) -> None:
     """Set the active wake words for the satellite."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
@@ -143,3 +149,57 @@ async def websocket_set_wake_words(
         replace(config, active_wake_words=actual_ids)
     )
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_satellite/test_connection",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+    }
+)
+@websocket_api.async_response
+async def websocket_test_connection(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Test the connection between the device and Home Assistant.
+
+    Send an announcement to the device with a special media id.
+    """
+    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
+    satellite = component.get_entity(msg["entity_id"])
+    if satellite is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+    if not (satellite.supported_features or 0) & AssistSatelliteEntityFeature.ANNOUNCE:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_SUPPORTED,
+            "Entity does not support announce",
+        )
+        return
+
+    # Announce and wait for event
+    connection_test_data = hass.data[CONNECTION_TEST_DATA]
+    connection_id = uuid_util.random_uuid_hex()
+    connection_test_event = asyncio.Event()
+    connection_test_data[connection_id] = connection_test_event
+
+    hass.async_create_background_task(
+        satellite.async_internal_announce(
+            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}"
+        ),
+        f"assist_satellite_connection_test_{msg['entity_id']}",
+    )
+
+    try:
+        async with asyncio.timeout(CONNECTION_TEST_TIMEOUT):
+            await connection_test_event.wait()
+            connection.send_result(msg["id"], {"status": "success"})
+    except TimeoutError:
+        connection.send_result(msg["id"], {"status": "timeout"})
+    finally:
+        connection_test_data.pop(connection_id, None)

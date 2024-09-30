@@ -18,8 +18,10 @@ from kasa import (
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
+from kasa.smart.modules.alarm import Alarm
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.tplink import (
     CONF_AES_KEYS,
     CONF_ALIAS,
@@ -181,6 +183,21 @@ async def snapshot_platform(
             assert state == snapshot(
                 name=f"{entity_entry.entity_id}-state"
             ), f"state snapshot failed for {entity_entry.entity_id}"
+
+
+async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
+    """Set up an automation for tests."""
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": alias,
+                "trigger": {"platform": "state", "entity_id": entity_id, "to": "on"},
+                "action": {"action": "notify.notify", "metadata": {}, "data": {}},
+            }
+        },
+    )
 
 
 def _mock_protocol() -> BaseProtocol:
@@ -387,6 +404,15 @@ def _mocked_fan_module(effect) -> Fan:
     return fan
 
 
+def _mocked_alarm_module(device):
+    alarm = MagicMock(auto_spec=Alarm, name="Mocked alarm")
+    alarm.active = False
+    alarm.play = AsyncMock()
+    alarm.stop = AsyncMock()
+
+    return alarm
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -453,6 +479,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
+    Module.Alarm: _mocked_alarm_module,
 }
 
 

@@ -212,8 +212,6 @@ class NestCamera(Camera):
             raise HomeAssistantError(f"Nest API error: {err}") from err
         return stream.answer_sdp
 
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration."""
-        return WebRTCClientConfiguration(
-            await self._async_get_rtc_configuration(), "dataSendChannel"
-        )
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration adjustable per integration."""
+        return WebRTCClientConfiguration(data_channel="dataSendChannel")

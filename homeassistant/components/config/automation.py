@@ -70,7 +70,16 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         updated_value = {CONF_ID: config_key}
 
         # Iterate through some keys that we want to have ordered in the output
-        for key in ("alias", "description", "trigger", "condition", "action"):
+        for key in (
+            "alias",
+            "description",
+            "triggers",
+            "trigger",
+            "conditions",
+            "condition",
+            "actions",
+            "action",
+        ):
             if key in new_value:
                 updated_value[key] = new_value[key]
 

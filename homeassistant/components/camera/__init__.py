@@ -71,10 +71,12 @@ from .const import (  # noqa: F401
     CONF_DURATION,
     CONF_LOOKBACK,
     DATA_CAMERA_PREFS,
+    DATA_COMPONENT,
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraState,
     StreamType,
 )
 from .helper import get_camera_from_entity_id
@@ -83,7 +85,6 @@ from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,
-    RTCConfiguration,
     RTCIceServer,
     WebRTCClientConfiguration,
     async_get_supported_providers,
@@ -110,9 +111,11 @@ ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
 
-STATE_RECORDING: Final = "recording"
-STATE_STREAMING: Final = "streaming"
-STATE_IDLE: Final = "idle"
+# These constants are deprecated as of Home Assistant 2024.10
+# Please use the StreamType enum instead.
+_DEPRECATED_STATE_RECORDING = DeprecatedConstantEnum(CameraState.RECORDING, "2025.10")
+_DEPRECATED_STATE_STREAMING = DeprecatedConstantEnum(CameraState.STREAMING, "2025.10")
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(CameraState.IDLE, "2025.10")
 
 
 class CameraEntityFeature(IntFlag):
@@ -327,7 +330,7 @@ async def async_get_still_stream(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the camera component."""
-    component = hass.data[DOMAIN] = EntityComponent[Camera](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[Camera](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -410,14 +413,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -630,10 +631,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
-            return STATE_RECORDING
+            return CameraState.RECORDING
         if self.is_streaming:
-            return STATE_STREAMING
-        return STATE_IDLE
+            return CameraState.STREAMING
+        return CameraState.IDLE
 
     @cached_property
     def is_on(self) -> bool:
@@ -733,18 +734,21 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC providers."""
         return self._webrtc_providers
 
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration adjustable per integration."""
+        return WebRTCClientConfiguration()
+
     @final
-    async def _async_get_rtc_configuration(self) -> RTCConfiguration:
-        """Return the RTC configuration."""
+    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        config = await self._async_get_webrtc_client_configuration()
 
         ice_servers = await asyncio.gather(
             *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
         )
-        return RTCConfiguration(ice_servers=ice_servers)
+        config.configuration.ice_servers.extend(ice_servers)
 
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration."""
-        return WebRTCClientConfiguration(await self._async_get_rtc_configuration())
+        return config
 
     async def async_handle_web_rtc_close(self, sdp_session_id: str) -> None:
         """Do any cleanup following an RTC stream ending."""
@@ -924,8 +928,9 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-    stream_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
+    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
+        msg["entity_id"]
+    )
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 
@@ -942,14 +947,14 @@ async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
     try:
-        entity_prefs = await prefs.async_update(entity_id, **changes)
+        entity_prefs = await hass.data[DATA_CAMERA_PREFS].async_update(
+            entity_id, **changes
+        )
     except HomeAssistantError as ex:
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
