@@ -2726,6 +2726,16 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return True if other_flow is matching this flow."""
         raise NotImplementedError
 
+    @callback
+    def _get_entry_from_context(self) -> ConfigEntry:
+        """Return current entry from if other_flow is matching this flow."""
+        config_entry_id = self.context["entry_id"]
+        entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if entry is None:
+            raise UnknownEntry(config_entry_id)
+
+        return entry
+
 
 class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Flow to set options for a configuration entry."""
