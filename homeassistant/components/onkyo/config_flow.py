@@ -66,10 +66,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Onkyo config flow."""
 
     _receiver_info: ReceiverInfo
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._discovered_infos: dict[str, ReceiverInfo] = {}
+    _discovered_infos: dict[str, ReceiverInfo]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -87,6 +84,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
+            _LOGGER.debug("Config flow start manual: %s", host)
             try:
                 info = await async_interview(host)
             except Exception:
@@ -127,6 +125,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_configure_receiver()
 
+        _LOGGER.debug("Config flow start eiscp discovery")
+
         current_unique_ids = self._async_current_ids()
         current_hosts = {
             entry.data[CONF_HOST]
@@ -163,8 +163,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the configuration of a single receiver."""
-        _LOGGER.debug("Configure receiver info: %s", self._receiver_info)
-
         if user_input is not None:
             sources_str: dict[str, str] = {}
             for value_str in user_input[OPTION_SOURCES]:
@@ -173,7 +171,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 source = InputSource(value)
                 sources_str.setdefault(source.value_hex, source.meaning)
 
-            return self.async_create_entry(
+            result = self.async_create_entry(
                 title=self._receiver_info.model_name,
                 data={
                     CONF_HOST: self._receiver_info.host,
@@ -184,6 +182,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     OPTION_SOURCES: sources_str,
                 },
             )
+            _LOGGER.debug("Configured receiver, result: %s", result)
+            return result
+
+        _LOGGER.debug("Configure receiver, info: %s", self._receiver_info)
 
         return self.async_show_form(
             step_id="configure_receiver",
