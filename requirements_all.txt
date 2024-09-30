@@ -109,7 +109,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.2
+RestrictedPython==7.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -1016,7 +1016,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.3
+gotailwind==0.2.4
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
