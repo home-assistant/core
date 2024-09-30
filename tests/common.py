@@ -1063,7 +1063,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Start a reauthentication flow."""
+        """Start a reauthentication flow for a config entry.
+
+        This helper method should be aligned with `ConfigEntry._async_init_reauth`.
+        """
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={
