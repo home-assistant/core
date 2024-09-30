@@ -141,7 +141,7 @@ async def integration_fixture(
     config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.mysensors.device.Debouncer", autospec=True
+        "homeassistant.components.mysensors.entity.Debouncer", autospec=True
     ) as debouncer_class:
 
         def debouncer(

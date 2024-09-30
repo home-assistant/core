@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
-    DOMAIN,
+    DOMAIN as EVENT_DOMAIN,
     PLATFORM_SCHEMA as EVENT_PLATFORM_SCHEMA,
     EventEntity,
 )
@@ -40,7 +40,7 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = EVENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(EVENT_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }

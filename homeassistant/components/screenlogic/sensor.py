@@ -12,7 +12,7 @@ from screenlogicpy.device_const.pump import PUMP_TYPE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -267,7 +267,7 @@ async def async_setup_entry(
             chem_sensor_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, chem_sensor_data_path)
             continue
         if gateway.get_data(*chem_sensor_data_path):
             chem_sensor_description = dataclasses.replace(
@@ -282,7 +282,7 @@ async def async_setup_entry(
             scg_sensor_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, scg_sensor_data_path)
             continue
         if gateway.get_data(*scg_sensor_data_path):
             scg_sensor_description = dataclasses.replace(

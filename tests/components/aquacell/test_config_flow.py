@@ -79,6 +79,7 @@ async def test_full_flow(
     ("exception", "error"),
     [
         (ApiException, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationFailed, "invalid_auth"),
         (Exception, "unknown"),
     ],

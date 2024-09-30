@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     ColorMode,
@@ -144,11 +143,6 @@ class Light(LightEntity, ZHAEntity):
         return self.entity_data.entity.max_mireds
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hs color value [int, int]."""
-        return self.entity_data.entity.hs_color
-
-    @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self.entity_data.entity.xy_color
@@ -185,7 +179,6 @@ class Light(LightEntity, ZHAEntity):
             flash=kwargs.get(ATTR_FLASH),
             color_temp=kwargs.get(ATTR_COLOR_TEMP),
             xy_color=kwargs.get(ATTR_XY_COLOR),
-            hs_color=kwargs.get(ATTR_HS_COLOR),
         )
         self.async_write_ha_state()
 
@@ -207,7 +200,6 @@ class Light(LightEntity, ZHAEntity):
             brightness=state.attributes.get(ATTR_BRIGHTNESS),
             color_temp=state.attributes.get(ATTR_COLOR_TEMP),
             xy_color=state.attributes.get(ATTR_XY_COLOR),
-            hs_color=state.attributes.get(ATTR_HS_COLOR),
             color_mode=(
                 HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes[ATTR_COLOR_MODE])]
                 if state.attributes.get(ATTR_COLOR_MODE) is not None

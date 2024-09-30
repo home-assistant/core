@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.button import (
-    DOMAIN,
+    DOMAIN as BUTTON_DOMAIN,
     PLATFORM_SCHEMA as BUTTON_PLATFORM_SCHEMA,
     SERVICE_PRESS,
     ButtonEntity,
@@ -34,7 +34,7 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = BUTTON_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -113,7 +113,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
-            DOMAIN,
+            BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,

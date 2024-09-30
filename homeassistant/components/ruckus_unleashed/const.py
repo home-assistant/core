@@ -1,4 +1,4 @@
-"""Constants for the Ruckus Unleashed integration."""
+"""Constants for the Ruckus integration."""
 
 from homeassistant.const import Platform
 

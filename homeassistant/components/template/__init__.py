@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 import logging
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
@@ -18,11 +25,13 @@ from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -67,6 +76,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.options.get(CONF_DEVICE_ID),
     )
 
+    for key in (CONF_MAX, CONF_MIN, CONF_STEP):
+        if key not in entry.options:
+            continue
+        if isinstance(entry.options[key], str):
+            raise ConfigEntryError(
+                f"The '{entry.options.get(CONF_NAME) or ""}' number template needs to "
+                f"be reconfigured, {key} must be a number, got '{entry.options[key]}'"
+            )
+
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )
@@ -88,19 +106,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
-    coordinators: list[TriggerUpdateCoordinator] | None = hass.data.pop(DOMAIN, None)
+    coordinators = hass.data.pop(DATA_COORDINATORS, None)
 
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
             coordinator.async_remove()
 
-    async def init_coordinator(hass, conf_section):
+    async def init_coordinator(
+        hass: HomeAssistant, conf_section: dict[str, Any]
+    ) -> TriggerUpdateCoordinator:
         coordinator = TriggerUpdateCoordinator(hass, conf_section)
         await coordinator.async_setup(hass_config)
         return coordinator
 
-    coordinator_tasks = []
+    coordinator_tasks: list[Coroutine[Any, Any, TriggerUpdateCoordinator]] = []
 
     for conf_section in hass_config[DOMAIN]:
         if CONF_TRIGGER in conf_section:
@@ -124,4 +144,4 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                 )
 
     if coordinator_tasks:
-        hass.data[DOMAIN] = await asyncio.gather(*coordinator_tasks)
+        hass.data[DATA_COORDINATORS] = await asyncio.gather(*coordinator_tasks)

@@ -1,5 +1,7 @@
 """Config flow for Squeezebox integration."""
 
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -24,9 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 5
 
 
-def _base_schema(discovery_info=None):
+def _base_schema(
+    discovery_info: dict[str, Any] | None = None,
+) -> vol.Schema:
     """Generate base schema."""
-    base_schema = {}
+    base_schema: dict[Any, Any] = {}
     if discovery_info and CONF_HOST in discovery_info:
         base_schema.update(
             {
@@ -71,14 +75,14 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
-        self.discovery_info = None
+        self.discovery_info: dict[str, Any] | None = None
 
-    async def _discover(self, uuid=None):
+    async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
         self.discovery_info = None
         discovery_event = asyncio.Event()
 
-        def _discovery_callback(server):
+        def _discovery_callback(server: Server) -> None:
             if server.uuid:
                 # ignore already configured uuids
                 for entry in self._async_current_entries():
@@ -156,7 +160,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_edit(self, user_input=None):
+    async def async_step_edit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
         errors = {}
         if user_input:
@@ -171,7 +177,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_integration_discovery(self, discovery_info):
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
         if "uuid" in discovery_info:

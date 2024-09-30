@@ -1,0 +1,46 @@
+[
+  {
+    "mode": "ZB",
+    "type": 0,
+    "notes": "<b>SMLIGHT latest Coordinator release for CC2674P10 chips [16-Jul-2024]</b>:<br>- +20dB TRANSMIT POWER SUPPORT;<br>- SDK 7.41 based (latest);<br>",
+    "rev": "20240716",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06p10/znp-SLZB-06P10-20240716.bin",
+    "ver": "20240716",
+    "dev": false,
+    "prod": true,
+    "baud": 115200
+  },
+  {
+    "mode": "ZB",
+    "type": 1,
+    "notes": "<b>SMLIGHT latest ROUTER release for CC2674P10 chips [16-Jul-2024]</b>:<br>- SDK 7.41 based (latest);<br><a href='https://smlight.tech/legal/licenses/restrictive-smlight-slzb06-v20240328.txt' target='_blank' aria-current='true'><span>Terms of use</span></a><span>",
+    "rev": "20240716",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06p10/zr-ZR_SLZB-06P10-20240716.bin",
+    "ver": "20240716",
+    "dev": false,
+    "prod": true,
+    "baud": 0
+  },
+  {
+    "mode": "ZB",
+    "type": 0,
+    "notes": "<b>SMLIGHT Coordinator release for CC2674P10 chips [15-Mar-2024]</b>:<br>- Engineering (dev) version, not recommended (INT);<br>- SDK 7.40 based (latest);<br>- Baudrate: 115200;<br><a href='https://smlight.tech/legal/licenses/restrictive-smlight-slzb06-v20240328.txt' target='_blank' aria-current='true'><span>Terms of use</span></a><span>",
+    "rev": "20240315",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06p10/znp_LP_EM_CC2674P10_SM_tirtos7_ticlangNR.bin",
+    "ver": "20240315",
+    "dev": false,
+    "prod": false,
+    "baud": 115200
+  },
+  {
+    "mode": "ZB",
+    "type": 0,
+    "notes": "<b>SMLIGHT Coordinator release for CC2674P10 chips [14-Mar-2024]</b>:<br>- Factory flashed firmware (EXT);<br>- SDK 7.40 based (latest);<br>- Baudrate: 115200;<br><a href='https://smlight.tech/legal/licenses/restrictive-smlight-slzb06-v20240328.txt' target='_blank' aria-current='true'><span>Terms of use</span></a><span>",
+    "rev": "20240314",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/zigbee/slzb06p10/znp_LP_EM_CC2674P10_SM_tirtos7_ticlangNP.bin",
+    "ver": "20240314",
+    "dev": false,
+    "prod": false,
+    "baud": 115200
+  }
+]

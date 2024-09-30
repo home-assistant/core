@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
@@ -178,7 +178,7 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
-    hass.services.async_register(DOMAIN, service_name, async_update)
+    hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 
 class FluxSwitch(SwitchEntity, RestoreEntity):

@@ -64,7 +64,9 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: self.name}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery confirmation by user."""
         if user_input is not None:
             return await self._async_check_and_create("confirm", user_input)

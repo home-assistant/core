@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -42,13 +43,14 @@ from .statistics import (
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
+    update_statistics_issues,
     validate_statistics,
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
 UNIT_SCHEMA = vol.Schema(
     {
-        vol.Optional("conductivity"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
@@ -79,6 +81,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
+    websocket_api.async_register_command(hass, ws_update_statistics_issues)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
 
@@ -289,6 +292,24 @@ async def ws_validate_statistics(
         hass,
     )
     connection.send_result(msg["id"], statistic_ids)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_statistics_issues",
+    }
+)
+@websocket_api.async_response
+async def ws_update_statistics_issues(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Update statistics issues."""
+    instance = get_instance(hass)
+    await instance.async_add_executor_job(
+        update_statistics_issues,
+        hass,
+    )
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

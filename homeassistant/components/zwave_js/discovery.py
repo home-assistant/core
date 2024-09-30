@@ -885,17 +885,6 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.BOOLEAN},
         ),
     ),
-    ZWaveDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        hint="notification",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-        allow_multi=True,
-    ),
     # binary sensor for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -956,19 +945,6 @@ DISCOVERY_SCHEMAS = [
             property={VALUE_PROPERTY},
         ),
         data_template=NumericSensorDataTemplate(),
-    ),
-    # special list sensors (Notification CC)
-    ZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
-        hint="list_sensor",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-        allow_multi=True,
-        entity_registry_enabled_default=False,
     ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
@@ -1196,6 +1172,7 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
             any_available_states={(0, "idle")},
         ),
+        allow_multi=True,
     ),
     # event
     # stateful = False
@@ -1218,6 +1195,43 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="notification",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+        # set allow-multi to true because some of the notification sensors
+        # can not be mapped to a binary sensor and must be handled as a regular sensor
+        allow_multi=True,
+    ),
+    # alarmType, alarmLevel (Notification CC)
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="notification_alarm",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            property={"alarmType", "alarmLevel"},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    # fallback sensors within Notification CC
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="notification",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+    ),
 ]
 
 
@@ -1237,8 +1251,11 @@ def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
-    discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
+        # abort if attribute(s) already discovered
+        if value.value_id in discovered_value_ids[device.id]:
+            continue
+
         # check manufacturer_id, product_id, product_type
         if (
             (
@@ -1342,10 +1359,9 @@ def async_discover_single_value(
             entity_category=schema.entity_category,
         )
 
+        # prevent re-discovery of the (primary) value if not allowed
         if not schema.allow_multi:
-            # return early since this value may not be discovered
-            # by other schemas/platforms
-            return
+            discovered_value_ids[device.id].add(value.value_id)
 
     if value.command_class == CommandClass.CONFIGURATION:
         yield from async_discover_single_configuration_value(
