@@ -346,11 +346,13 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _title: str
+    unique_id: str
+
     def __init__(self) -> None:
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
-        self._title: str | None = None
         self._usb_discovery = False
 
     @property
