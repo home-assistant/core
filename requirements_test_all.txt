@@ -863,7 +863,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.3
+gotailwind==0.2.4
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
