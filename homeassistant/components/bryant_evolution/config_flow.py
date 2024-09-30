@@ -68,10 +68,7 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             system_zone = await _enumerate_sz(user_input[CONF_FILENAME])
             if len(system_zone) != 0:
-                our_entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                )
-                assert our_entry is not None, "Could not find own entry"
+                our_entry = self._get_entry_from_context()
                 return self.async_update_reload_and_abort(
                     entry=our_entry,
                     data={
