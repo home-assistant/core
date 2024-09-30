@@ -9,15 +9,10 @@ from azure.kusto.ingest import StreamDescriptor
 import pytest
 
 from homeassistant.components import azure_data_explorer
-from homeassistant.components.azure_data_explorer.const import (
-    CONF_SEND_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.azure_data_explorer.const import CONF_SEND_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entityfilter import EntityFilter
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import FilterTest
@@ -98,27 +93,6 @@ async def test_put_event_on_queue_with_queueing_client(
     await hass.async_block_till_done()
     mock_queued_ingest.assert_called_once()
     assert type(mock_queued_ingest.call_args.args[0]) is StreamDescriptor
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test the popping of the filter and further import of the config."""
-    config = {
-        DOMAIN: {
-            "filter": {
-                "include_domains": ["light"],
-                "include_entity_globs": ["sensor.included_*"],
-                "include_entities": ["binary_sensor.included"],
-                "exclude_domains": ["light"],
-                "exclude_entity_globs": ["sensor.excluded_*"],
-                "exclude_entities": ["binary_sensor.excluded"],
-            },
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert isinstance(hass.data[DOMAIN], EntityFilter)
 
 
 async def test_unload_entry(
