@@ -195,7 +195,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host: str = user_input[CONF_HOST]
         name: str = user_input[CONF_NAME]
-        max_volume: str = user_input[OPTION_MAX_VOLUME]
+        max_volume: float = float(user_input[OPTION_MAX_VOLUME])
         volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
         sources: dict[str, str] = user_input[OPTION_SOURCES]
 
@@ -257,7 +257,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         schema_dict: dict[Any, Selector] = {}
 
-        max_volume: int = self.config_entry.options[OPTION_MAX_VOLUME]
+        max_volume: float = self.config_entry.options[OPTION_MAX_VOLUME]
         schema_dict[vol.Required(OPTION_MAX_VOLUME, default=max_volume)] = (
             NumberSelector(
                 NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)

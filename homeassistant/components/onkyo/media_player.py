@@ -34,11 +34,9 @@ from homeassistant.util.hass_dict import HassKey
 from . import OnkyoConfigEntry
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
-    CONF_RECEIVER_MAX_VOLUME_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
-    OPTION_MAX_VOLUME_DEFAULT,
     OPTION_SOURCES,
     OPTION_SOURCES_DEFAULT,
     ZONES,
@@ -117,12 +115,14 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 DEFAULT_NAME = "Onkyo Receiver"
+CONF_MAX_VOLUME_DEFAULT = 100
+CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(OPTION_MAX_VOLUME, default=OPTION_MAX_VOLUME_DEFAULT): vol.All(
+        vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
         vol.Optional(
@@ -325,7 +325,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         zone: str,
         *,
         volume_resolution: int,
-        max_volume: int,
+        max_volume: float,
         sources: dict[str, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
