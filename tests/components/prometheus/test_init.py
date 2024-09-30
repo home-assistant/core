@@ -94,7 +94,7 @@ class EntityMetric:
     metric_name: str
     labels: dict[str, str]
 
-    def __init__(self, metric_name: str, **kwargs) -> None:
+    def __init__(self, metric_name: str, **kwargs: Any) -> None:
         """Create a new EntityMetric based on metric name and labels."""
         self.metric_name = metric_name
         self.labels = kwargs
@@ -189,6 +189,62 @@ def test_entity_metric_generates_metric_string_with_value() -> None:
         'friendly_name="Outside Temperature"}'
         " 17.2"
     )
+
+
+def test_entity_metric_raises_exception_without_required_labels() -> None:
+    """Test using EntityMetric to raise exception when required labels are missing."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    with pytest.raises(AssertionError):
+        EntityMetric(
+            metric_name="homeassistant_sensor_temperature_celsius",
+            friendly_name="Outside Temperature",
+            entity=f"{domain}.{object_id}",
+        ).withValue(17.2)
+
+    with pytest.raises(AssertionError):
+        EntityMetric(
+            metric_name="homeassistant_sensor_temperature_celsius",
+            domain=domain,
+            entity=f"{domain}.{object_id}",
+        ).withValue(17.2)
+
+    with pytest.raises(AssertionError):
+        EntityMetric(
+            metric_name="homeassistant_sensor_temperature_celsius",
+            domain=domain,
+            friendly_name="Outside Temperature",
+        ).withValue(17.2)
+
+
+def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
+    """Test using EntityMetric to format a simple metric string with labels alphabetically ordered."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+
+    static_metric_string = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"}'
+        " 17.2"
+    )
+
+    ordered_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain=domain,
+        entity=f"{domain}.{object_id}",
+        friendly_name="Outside Temperature",
+    ).withValue(17.2)
+    assert ordered_entity_metric._metric_string == static_metric_string
+
+    unordered_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        friendly_name="Outside Temperature",
+        entity=f"{domain}.{object_id}",
+        domain=domain,
+    ).withValue(17.2)
+    assert unordered_entity_metric._metric_string == static_metric_string
 
 
 def test_entity_metric_generates_metric_string_with_mode_value() -> None:
