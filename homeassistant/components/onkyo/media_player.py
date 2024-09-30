@@ -38,8 +38,8 @@ from .const import (
     DOMAIN,
     OPTION_MAX_VOLUME,
     OPTION_SOURCES,
-    OPTION_SOURCES_DEFAULT,
     ZONES,
+    InputSource,
     VolumeResolution,
 )
 from .receiver import Receiver, async_discover
@@ -61,7 +61,11 @@ SUPPORT_ONKYO = (
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
-DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
+DEFAULT_PLAYABLE_SOURCES = (
+    InputSource.from_single_meaning("fm"),
+    InputSource.from_single_meaning("am"),
+    InputSource.from_single_meaning("tuner"),
+)
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
@@ -117,6 +121,20 @@ SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 CONF_MAX_VOLUME_DEFAULT = 100
 CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
+CONF_SOURCES_DEFAULT = {
+    "tv": "TV",
+    "bd": "Bluray",
+    "game": "Game",
+    "aux1": "Aux1",
+    "video1": "Video 1",
+    "video2": "Video 2",
+    "video3": "Video 3",
+    "video4": "Video 4",
+    "video5": "Video 5",
+    "video6": "Video 6",
+    "video7": "Video 7",
+    "fm": "Radio",
+}
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
@@ -128,7 +146,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
         ): cv.positive_int,
-        vol.Optional(OPTION_SOURCES, default=OPTION_SOURCES_DEFAULT): {
+        vol.Optional(OPTION_SOURCES, default=CONF_SOURCES_DEFAULT): {
             cv.string: cv.string
         },
     }
@@ -264,7 +282,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MediaPlayer for config entry."""
-    receiver = entry.runtime_data
+    data = entry.runtime_data
+
+    receiver = data.receiver
     all_entities = hass.data[DATA_MP_ENTITIES]
 
     entities: dict[str, OnkyoMediaPlayer] = {}
@@ -272,7 +292,7 @@ async def async_setup_entry(
 
     volume_resolution: VolumeResolution = entry.data[CONF_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
-    sources = entry.options[OPTION_SOURCES]
+    sources = data.sources
 
     def connect_callback(receiver: Receiver) -> None:
         if not receiver.first_connect:
@@ -326,7 +346,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         *,
         volume_resolution: VolumeResolution,
         max_volume: float,
-        sources: dict[str, str],
+        sources: dict[InputSource, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -411,7 +431,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source = self._reverse_mapping[source]
+            source = self._reverse_mapping[source].meaning_singles[0]
         self._update_receiver(
             "input-selector" if self._zone == "main" else "selector", source
         )
@@ -497,18 +517,20 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def _parse_source(self, source_raw: str | int | tuple[str]) -> None:
+    def _parse_source(self, source_raw: str | int | tuple[str, ...]) -> None:
         # source is either a tuple of values or a single value,
         # so we convert to a tuple, when it is a single value.
         if isinstance(source_raw, str | int):
-            source = (str(source_raw),)
+            meaning = str(source_raw)
         else:
-            source = source_raw
-        for value in source:
-            if value in self._source_mapping:
-                self._attr_source = self._source_mapping[value]
-                return
-        self._attr_source = "_".join(source)
+            meaning = source_raw[0]
+
+        source = InputSource.from_single_meaning(meaning)
+        if source in self._source_mapping:
+            self._attr_source = self._source_mapping[source]
+            return
+
+        self._attr_source = meaning
 
     @callback
     def _parse_audio_information(

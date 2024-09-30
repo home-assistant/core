@@ -1,5 +1,7 @@
 """The onkyo component."""
 
+from dataclasses import dataclass
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -7,14 +9,23 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_SOURCES, InputSource
 from .receiver import Receiver, async_interview
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type OnkyoConfigEntry = ConfigEntry[Receiver]
+
+@dataclass
+class OnkyoData:
+    "Config Entry data."
+
+    receiver: Receiver
+    sources: dict[InputSource, str]
+
+
+type OnkyoConfigEntry = ConfigEntry[OnkyoData]
 
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
@@ -38,7 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     receiver = await Receiver.async_create(info)
 
-    entry.runtime_data = receiver
+    sources_str: dict[str, str] = entry.options[OPTION_SOURCES]
+    sources = {InputSource(int(k, 16)): v for k, v in sources_str.items()}
+
+    entry.runtime_data = OnkyoData(receiver, sources)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -56,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    receiver = entry.runtime_data
+    receiver = entry.runtime_data.receiver
     receiver.conn.close()
 
     return unload_ok
