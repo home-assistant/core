@@ -260,14 +260,18 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 msg.topic,
             )
             return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_native_value = None
+            return
+
         if self._numeric_state_expected:
             if payload == "":
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-            elif payload == PAYLOAD_NONE:
-                self._attr_native_value = None
             else:
                 self._attr_native_value = payload
             return
+
         if self.options and payload not in self.options:
             _LOGGER.warning(
                 "Ignoring invalid option received on topic '%s', got '%s', allowed: %s",

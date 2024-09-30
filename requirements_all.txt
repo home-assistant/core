@@ -945,7 +945,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.4
+gcal-sync==6.1.5
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1695,7 +1695,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.5.2
+py-synologydsm-api==2.5.3
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2023,7 +2023,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.6.2
+pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.5.0
@@ -2992,7 +2992,7 @@ xiaomi-ble==0.32.0
 xknx==3.2.0
 
 # homeassistant.components.knx
-xknxproject==3.7.1
+xknxproject==3.8.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
