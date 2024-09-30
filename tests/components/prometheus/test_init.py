@@ -247,16 +247,16 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
     assert unordered_entity_metric._metric_string == static_metric_string
 
 
-def test_entity_metric_generates_metric_string_with_mode_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with a mode value included."""
-    entity_metric = EntityMetric(
+def test_entity_metric_generates_metric_string_with_non_required_labels() -> None:
+    """Test using EntityMetric to format a simple metric string but with extra labels and values included."""
+    mode_entity_metric = EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
         mode="away",
     ).withValue(1.0)
-    assert entity_metric._metric_string == (
+    assert mode_entity_metric._metric_string == (
         "climate_preset_mode{"
         'domain="climate",'
         'entity="climate.ecobee",'
@@ -266,17 +266,14 @@ def test_entity_metric_generates_metric_string_with_mode_value() -> None:
         " 1.0"
     )
 
-
-def test_entity_metric_generates_metric_string_with_action_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with an action value included."""
-    entity_metric = EntityMetric(
+    action_entity_metric = EntityMetric(
         metric_name="climate_action",
         domain="climate",
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="heating",
     ).withValue(1.0)
-    assert entity_metric._metric_string == (
+    assert action_entity_metric._metric_string == (
         "climate_action{"
         'action="heating",'
         'domain="climate",'
@@ -286,17 +283,14 @@ def test_entity_metric_generates_metric_string_with_action_value() -> None:
         " 1.0"
     )
 
-
-def test_entity_metric_generates_metric_string_with_state_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with a state value included."""
-    entity_metric = EntityMetric(
+    state_entity_metric = EntityMetric(
         metric_name="cover_state",
         domain="cover",
         friendly_name="Curtain",
         entity="cover.curtain",
         state="open",
     ).withValue(1.0)
-    assert entity_metric._metric_string == (
+    assert state_entity_metric._metric_string == (
         "cover_state{"
         'domain="cover",'
         'entity="cover.curtain",'
@@ -305,6 +299,31 @@ def test_entity_metric_generates_metric_string_with_state_value() -> None:
         "}"
         " 1.0"
     )
+
+    foo_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    ).withValue(17.2)
+    assert foo_entity_metric._metric_string == (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+        " 17.2"
+    )
+
+
+def test_entity_metric_generates_metric_string_with_action_value() -> None:
+    """Test using EntityMetric to format a simple metric string but with an action value included."""
+
+
+def test_entity_metric_generates_metric_string_with_state_value() -> None:
+    """Test using EntityMetric to format a simple metric string but with a state value included."""
 
 
 @pytest.fixture(name="client")
