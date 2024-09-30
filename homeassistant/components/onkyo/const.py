@@ -1,5 +1,6 @@
 """Constants for the Onkyo integration."""
 
+import typing
 from typing import Literal
 
 DOMAIN = "onkyo"
@@ -12,6 +13,9 @@ CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 type VolumeResolution = Literal[50, 80, 100, 200]
 CONF_VOLUME_RESOLUTION = "volume_resolution"
 CONF_VOLUME_RESOLUTION_DEFAULT: VolumeResolution = 50
+VOLUME_RESOLUTION_ALLOWED: tuple[VolumeResolution, ...] = typing.get_args(
+    VolumeResolution.__value__
+)
 
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100.0

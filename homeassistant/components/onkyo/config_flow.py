@@ -1,7 +1,6 @@
 """Config flow for Onkyo."""
 
 import logging
-import typing
 from typing import Any
 
 import voluptuous as vol
@@ -37,7 +36,7 @@ from .const import (
     OPTION_SOURCES,
     OPTION_SOURCES_ALLOWED,
     OPTION_SOURCES_DEFAULT,
-    VolumeResolution,
+    VOLUME_RESOLUTION_ALLOWED,
 )
 from .receiver import ReceiverInfo, async_discover, async_interview
 
@@ -50,7 +49,7 @@ STEP_CONFIGURE_SCHEMA = vol.Schema(
         vol.Required(
             CONF_VOLUME_RESOLUTION,
             default=CONF_VOLUME_RESOLUTION_DEFAULT,
-        ): vol.In(typing.get_args(VolumeResolution)),
+        ): vol.In(VOLUME_RESOLUTION_ALLOWED),
         vol.Required(
             OPTION_SOURCES, default=list(OPTION_SOURCES_DEFAULT.keys())
         ): SelectSelector(
@@ -201,9 +200,9 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host: str = user_input[CONF_HOST]
         name: str | None = user_input.get(CONF_NAME)
-        max_volume: float = float(user_input[OPTION_MAX_VOLUME])
-        volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
-        sources: dict[str, str] = user_input[OPTION_SOURCES]
+        user_max_volume: int = user_input[OPTION_MAX_VOLUME]
+        user_volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
+        user_sources: dict[str, str] = user_input[OPTION_SOURCES]
 
         info: ReceiverInfo | None = user_input.get("info")
         if info is None:
@@ -222,6 +221,17 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         name = name or info.model_name
+
+        volume_resolution = VOLUME_RESOLUTION_ALLOWED[0]
+        for volume_resolution_allowed in VOLUME_RESOLUTION_ALLOWED:
+            if user_volume_resolution < volume_resolution_allowed:
+                break
+            volume_resolution = volume_resolution_allowed
+
+        max_volume = user_max_volume * user_volume_resolution / volume_resolution
+
+        option_sources_allowed = set(OPTION_SOURCES_ALLOWED)
+        sources = {k: v for k, v in user_sources.items() if k in option_sources_allowed}
 
         return self.async_create_entry(
             title=name,
