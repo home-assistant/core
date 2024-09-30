@@ -1,0 +1,11 @@
+{
+  "domain": "appartme",
+  "name": "Appartme System",
+  "after_dependencies": [],
+  "codeowners": ["@MiloszSlabs"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "logbook"],
+  "documentation": "https://api.appartme.cloud/docs/",
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
