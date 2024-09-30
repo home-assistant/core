@@ -58,10 +58,7 @@ async def test_setup_entry_unload(
     assert laundrify_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_migrate_entry_minor_version_1_2(
-    hass: HomeAssistant,
-    laundrify_api_mock,
-) -> None:
+async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
     """Test migrating a 1.1 config entry to 1.2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
