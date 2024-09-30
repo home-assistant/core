@@ -37,11 +37,10 @@ _cmds = dict(
 class InputSource(Enum):
     """Receiver input source."""
 
-    __single_meaning_mapping: ClassVar[dict[str, Self]] = {}  # type: ignore[misc]
+    __meaning_mapping: ClassVar[dict[str, Self]] = {}  # type: ignore[misc]
 
     value_hex: str
-    value_meaning: str
-    value_meaning_singles: tuple[str, ...]
+    value_meanings: tuple[str, ...]
 
     _ignore_ = "InputSource _k _v _value"
 
@@ -63,19 +62,16 @@ class InputSource(Enum):
         obj._value_ = value
         obj.value_hex = value_hex
 
-        meaning_singles: tuple[str, ...]
+        meanings: tuple[str, ...]
         if isinstance(meanings_raw, str):
-            meaning = meanings_raw
-            meaning_singles = (meanings_raw,)
+            meanings = (meanings_raw,)
         else:
-            meaning_singles = meanings_raw
-            meaning = ", ".join(meanings_raw)
+            meanings = meanings_raw
 
-        obj.value_meaning = meaning
-        obj.value_meaning_singles = meaning_singles
+        obj.value_meanings = meanings
 
-        for meaning_single in meaning_singles:
-            cls.__single_meaning_mapping[meaning_single] = obj
+        for meaning in meanings:
+            cls.__meaning_mapping[meaning] = obj
 
         return obj
 
@@ -89,14 +85,14 @@ class InputSource(Enum):
         """
 
     @classmethod
-    def from_single_meaning(cls, meaning: str) -> Self:
+    def from_meaning(cls, meaning: str) -> Self:
         """Create InputSource enum from single meaning."""
-        return cls.__single_meaning_mapping[meaning]
+        return cls.__meaning_mapping[meaning]
 
     @classmethod
-    def all_single_meanings(cls) -> set[str]:
+    def all_meanings(cls) -> set[str]:
         """All InputSource single meanings."""
-        return set(cls.__single_meaning_mapping)
+        return set(cls.__meaning_mapping)
 
 
 OPTION_SOURCES = "sources"

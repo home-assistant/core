@@ -62,9 +62,9 @@ SUPPORT_ONKYO = (
 )
 
 DEFAULT_PLAYABLE_SOURCES = (
-    InputSource.from_single_meaning("fm"),
-    InputSource.from_single_meaning("am"),
-    InputSource.from_single_meaning("tuner"),
+    InputSource.from_meaning("fm"),
+    InputSource.from_meaning("am"),
+    InputSource.from_meaning("tuner"),
 )
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
@@ -431,7 +431,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source = self._reverse_mapping[source].value_meaning_singles[0]
+            source = self._reverse_mapping[source].value_meanings[0]
         self._update_receiver(
             "input-selector" if self._zone == "main" else "selector", source
         )
@@ -525,7 +525,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         else:
             meaning = source_raw[0]
 
-        source = InputSource.from_single_meaning(meaning)
+        source = InputSource.from_meaning(meaning)
         if source in self._source_mapping:
             self._attr_source = self._source_mapping[source]
             return

@@ -169,7 +169,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Remove the source prefix.
                 value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
                 source = InputSource(value)
-                sources_str.setdefault(source.value_hex, source.value_meaning)
+                source_name = ", ".join(source.value_meanings)
+                sources_str.setdefault(source.value_hex, source_name)
 
             result = self.async_create_entry(
                 title=self._receiver_info.model_name,
@@ -233,11 +234,11 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             100, user_max_volume * user_volume_resolution / volume_resolution
         )
 
-        all_meanings = InputSource.all_single_meanings()
+        all_meanings = InputSource.all_meanings()
         sources_str: dict[str, str] = {}
         for meaning, source_name in user_sources.items():
             if meaning in all_meanings:
-                source = InputSource.from_single_meaning(meaning)
+                source = InputSource.from_meaning(meaning)
                 sources_str[source.value_hex] = source_name
 
         return self.async_create_entry(
