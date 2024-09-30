@@ -67,9 +67,10 @@ STEP_CONFIGURE_SCHEMA = vol.Schema(
 class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Onkyo config flow."""
 
+    _receiver_info: ReceiverInfo
+
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._receiver_info: ReceiverInfo
         self._discovered_infos: dict[str, ReceiverInfo] = {}
 
     async def async_step_user(
@@ -87,7 +88,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            info: ReceiverInfo | None = None
             host = user_input[CONF_HOST]
             try:
                 info = await async_interview(host)
@@ -99,13 +99,17 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     self._receiver_info = info
+                    await self.async_set_unique_id(
+                        info.identifier, raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_configured(updates=user_input)
                     return await self.async_step_configure_receiver()
 
         return self.async_show_form(
             step_id="manual",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_HOST, default=""): str,
+                    vol.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
@@ -117,6 +121,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start eiscp discovery and handle user device selection."""
         if user_input is not None:
             self._receiver_info = self._discovered_infos[user_input[CONF_DEVICE]]
+            await self.async_set_unique_id(
+                self._receiver_info.identifier, raise_on_progress=False
+            )
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._receiver_info.host}
+            )
             return await self.async_step_configure_receiver()
 
         current_unique_ids = self._async_current_ids()
@@ -166,7 +176,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
                 options={
                     OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-                    # Preseed the sources with a dictionary where keys and values are equal.
+                    # Pre-seed the sources with a dictionary where keys and values are equal.
                     OPTION_SOURCES: dict(
                         zip(
                             user_input[OPTION_SOURCES],
@@ -176,12 +186,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 },
             )
-
-        unique_id = self._receiver_info.identifier
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._receiver_info.host}
-        )
 
         return self.async_show_form(
             step_id="configure_receiver",
@@ -214,7 +218,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         unique_id = info.identifier
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         name = name or info.model_name
