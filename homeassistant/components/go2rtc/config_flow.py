@@ -54,7 +54,7 @@ class Go2RTCConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if is_docker_env() and (binary := self._get_binary()):
             return self.async_create_entry(
-                title="go2rtc",
+                title=DOMAIN,
                 data={CONF_BINARY: binary, CONF_HOST: "http://localhost:1984/"},
             )
 
@@ -69,7 +69,7 @@ class Go2RTCConfigFlow(ConfigFlow, domain=DOMAIN):
             if error := await _validate_url(user_input[CONF_HOST]):
                 errors[CONF_HOST] = error
             else:
-                return self.async_create_entry(title="go2rtc", data=user_input)
+                return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
             step_id="host",

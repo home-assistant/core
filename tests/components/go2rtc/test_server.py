@@ -1,5 +1,6 @@
 """Tests for the go2rtc server."""
 
+import asyncio
 from collections.abc import Generator
 import subprocess
 from unittest.mock import MagicMock, patch
@@ -35,7 +36,7 @@ def mock_popen() -> Generator[MagicMock]:
 
 
 @pytest.mark.usefixtures("mock_tempfile")
-def test_server_run_success(mock_popen: MagicMock, server: Server) -> None:
+async def test_server_run_success(mock_popen: MagicMock, server: Server) -> None:
     """Test that the server runs successfully."""
     mock_process = MagicMock()
     mock_process.poll.return_value = None  # Simulate process running
@@ -48,6 +49,7 @@ def test_server_run_success(mock_popen: MagicMock, server: Server) -> None:
     mock_popen.return_value.__enter__.return_value = mock_process
 
     server.start()
+    await asyncio.sleep(0)
 
     # Check that Popen was called with the right arguments
     mock_popen.assert_called_once_with(
