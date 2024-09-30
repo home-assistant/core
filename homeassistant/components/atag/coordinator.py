@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type AtagConfigEntry = ConfigEntry[AtagDataUpdateCoordinator]
+
 
 class AtagDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Atag data update coordinator."""

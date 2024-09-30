@@ -12,13 +12,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import DOMAIN
+from .coordinator import AtagConfigEntry, AtagDataUpdateCoordinator
 from .entity import AtagEntity
 
 PRESET_MAP = {
@@ -33,11 +32,10 @@ HVAC_MODES = [HVACMode.AUTO, HVACMode.HEAT]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: AtagConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Load a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtagThermostat(coordinator, Platform.CLIMATE)])
+    async_add_entities([AtagThermostat(entry.runtime_data, "climate")])
 
 
 class AtagThermostat(AtagEntity, ClimateEntity):
@@ -50,7 +48,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, coordinator, atag_id):
+    def __init__(self, coordinator: AtagDataUpdateCoordinator, atag_id: str) -> None:
         """Initialize an Atag climate device."""
         super().__init__(coordinator, atag_id)
         self._attr_temperature_unit = coordinator.atag.climate.temp_unit
