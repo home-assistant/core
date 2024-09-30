@@ -11,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
+from .const import DOMAIN
 from .entity import NiceGOEntity
 
 
@@ -50,7 +51,11 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
         try:
             await self.coordinator.api.light_on(self._device_id)
         except (ApiError, ClientError) as error:
-            raise HomeAssistantError("Error while turning on the light") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="light_on_error",
+                translation_placeholders={"exception": str(error)},
+            ) from error
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -58,4 +63,8 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
         try:
             await self.coordinator.api.light_off(self._device_id)
         except (ApiError, ClientError) as error:
-            raise HomeAssistantError("Error while turning off the light") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="light_off_error",
+                translation_placeholders={"exception": str(error)},
+            ) from error

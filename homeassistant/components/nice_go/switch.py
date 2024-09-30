@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
+from .const import DOMAIN
 from .entity import NiceGOEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,11 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
         try:
             await self.coordinator.api.vacation_mode_on(self.data.id)
         except (ApiError, ClientError) as error:
-            raise HomeAssistantError("Error while turning on the switch") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={"exception": str(error)},
+            ) from error
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -58,4 +63,8 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
         try:
             await self.coordinator.api.vacation_mode_off(self.data.id)
         except (ApiError, ClientError) as error:
-            raise HomeAssistantError("Error while turning off the switch") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={"exception": str(error)},
+            ) from error
