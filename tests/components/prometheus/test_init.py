@@ -88,7 +88,7 @@ PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
 
 @dataclass(frozen=True)
-class EntityTestMetricInfo:
+class EntityMetric:
     """Class for all entity data in a single prometheus metric."""
 
     metric_name: str
@@ -102,7 +102,7 @@ class EntityTestMetricInfo:
 
     @classmethod
     def from_entity_id(cls, entity_id: str, **kwargs) -> Self:
-        """Construct EntityTestMetricInfo using full entity_id instead of parts."""
+        """Construct EntityMetric using full entity_id instead of parts."""
         domain, object_id = entity_id.split(".")
         return cls(
             metric_name=kwargs["metric_name"],
@@ -142,12 +142,12 @@ class EntityTestMetricInfo:
         )
 
 
-def _assert_metric_present(body, metric_info: EntityTestMetricInfo) -> None:
+def _assert_metric_present(body, metric_info: EntityMetric) -> None:
     """Assert metrics text body contains metric for entity."""
     assert metric_info.get_full_metric_string() in body
 
 
-def _assert_metric_not_present(body, metric_info: EntityTestMetricInfo) -> None:
+def _assert_metric_not_present(body, metric_info: EntityMetric) -> None:
     """Assert metrics text body does not contain metric for entity."""
     assert metric_info.get_full_metric_string() not in body
 
@@ -161,10 +161,10 @@ class FilterTest:
 
 
 def test_metric_info_generates_entity() -> None:
-    """Test using EntityTestMetricInfo to format a simple metric string but with a value included."""
+    """Test using EntityMetric to format a simple metric string but with a value included."""
     domain = "sensor"
     object_id = "outside_temperature"
-    metric_info = EntityTestMetricInfo(
+    metric_info = EntityMetric(
         metric_name="homeassistant_sensor_temperature_celsius",
         domain=domain,
         friendly_name="Outside Temperature",
@@ -175,8 +175,8 @@ def test_metric_info_generates_entity() -> None:
 
 
 def test_metric_info_generates_metric_string_with_value() -> None:
-    """Test using EntityTestMetricInfo to format a simple metric string but with a metric value included."""
-    metric_info = EntityTestMetricInfo(
+    """Test using EntityMetric to format a simple metric string but with a metric value included."""
+    metric_info = EntityMetric(
         metric_name="homeassistant_sensor_temperature_celsius",
         domain="sensor",
         friendly_name="Outside Temperature",
@@ -193,7 +193,7 @@ def test_metric_info_generates_metric_string_with_value() -> None:
 
 
 def test_metric_info_generates_info_from_entity_id() -> None:
-    """Test using EntityTestMetricInfo from entity_id matches constructor EntityTestMetricInfo."""
+    """Test using EntityMetric from entity_id matches constructor EntityMetric."""
     domain = "sensor"
     object_id = "outside_temperature"
     entity_id = f"{domain}.{object_id}"
@@ -201,7 +201,7 @@ def test_metric_info_generates_info_from_entity_id() -> None:
     metric_name = "homeassistant_sensor_temperature_celsius"
     friendly_name = "Outside Temperature"
     metric_value = "12.3"
-    metric_info_from_entity_id = EntityTestMetricInfo.from_entity_id(
+    metric_info_from_entity_id = EntityMetric.from_entity_id(
         entity_id,
         metric_name=metric_name,
         friendly_name=friendly_name,
@@ -209,7 +209,7 @@ def test_metric_info_generates_info_from_entity_id() -> None:
     )
     assert metric_info_from_entity_id.entity == entity_id
 
-    metric_info_with_constructor = EntityTestMetricInfo(
+    metric_info_with_constructor = EntityMetric(
         metric_name=metric_name,
         domain=domain,
         friendly_name=friendly_name,
@@ -222,8 +222,8 @@ def test_metric_info_generates_info_from_entity_id() -> None:
 
 
 def test_metric_info_generates_metric_string_with_mode_value() -> None:
-    """Test using EntityTestMetricInfo to format a simple metric string but with a mode value included."""
-    metric_info = EntityTestMetricInfo(
+    """Test using EntityMetric to format a simple metric string but with a mode value included."""
+    metric_info = EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
         friendly_name="Ecobee",
@@ -243,8 +243,8 @@ def test_metric_info_generates_metric_string_with_mode_value() -> None:
 
 
 def test_metric_info_generates_metric_string_with_action_value() -> None:
-    """Test using EntityTestMetricInfo to format a simple metric string but with an action value included."""
-    metric_info = EntityTestMetricInfo(
+    """Test using EntityMetric to format a simple metric string but with an action value included."""
+    metric_info = EntityMetric(
         metric_name="climate_action",
         domain="climate",
         friendly_name="HeatPump",
@@ -264,8 +264,8 @@ def test_metric_info_generates_metric_string_with_action_value() -> None:
 
 
 def test_metric_info_generates_metric_string_with_state_value() -> None:
-    """Test using EntityTestMetricInfo to format a simple metric string but with a state value included."""
-    metric_info = EntityTestMetricInfo(
+    """Test using EntityMetric to format a simple metric string but with a state value included."""
+    metric_info = EntityMetric(
         metric_name="cover_state",
         domain="cover",
         friendly_name="Curtain",
@@ -350,7 +350,7 @@ async def test_setup_enumeration(
     body = await generate_latest_metrics(client)
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="homeassistant_sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -375,7 +375,7 @@ async def test_view_empty_namespace(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Radio Energy",
@@ -386,7 +386,7 @@ async def test_view_empty_namespace(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="last_updated_time_seconds",
             domain="sensor",
             friendly_name="Radio Energy",
@@ -411,7 +411,7 @@ async def test_view_default_namespace(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="homeassistant_sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -430,7 +430,7 @@ async def test_sensor_unit(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_unit_kwh",
             domain="sensor",
             friendly_name="Television Energy",
@@ -441,7 +441,7 @@ async def test_sensor_unit(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_unit_sek_per_kwh",
             domain="sensor",
             friendly_name="Electricity price",
@@ -452,7 +452,7 @@ async def test_sensor_unit(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_unit_u0xb0",
             domain="sensor",
             friendly_name="Wind Direction",
@@ -463,7 +463,7 @@ async def test_sensor_unit(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_unit_u0xb5g_per_mu0xb3",
             domain="sensor",
             friendly_name="SPS30 PM <1µm Weight concentration",
@@ -482,7 +482,7 @@ async def test_sensor_without_unit(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_state",
             domain="sensor",
             friendly_name="Trend Gradient",
@@ -493,7 +493,7 @@ async def test_sensor_without_unit(
 
     _assert_metric_not_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_state",
             domain="sensor",
             friendly_name="Text",
@@ -504,7 +504,7 @@ async def test_sensor_without_unit(
 
     _assert_metric_not_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_unit_text",
             domain="sensor",
             friendly_name="Text Unit",
@@ -523,7 +523,7 @@ async def test_sensor_device_class(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Fahrenheit",
@@ -534,7 +534,7 @@ async def test_sensor_device_class(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -545,7 +545,7 @@ async def test_sensor_device_class(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -556,7 +556,7 @@ async def test_sensor_device_class(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_power_kwh",
             domain="sensor",
             friendly_name="Radio Energy",
@@ -567,7 +567,7 @@ async def test_sensor_device_class(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_timestamp_seconds",
             domain="sensor",
             friendly_name="Timestamp",
@@ -587,7 +587,7 @@ async def test_input_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="input_number_state",
             domain=domain,
             friendly_name="Threshold",
@@ -598,7 +598,7 @@ async def test_input_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="input_number_state",
             domain=domain,
             friendly_name="None",
@@ -609,7 +609,7 @@ async def test_input_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="input_number_state_celsius",
             domain=domain,
             friendly_name="Target temperature",
@@ -629,7 +629,7 @@ async def test_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="number_state",
             domain=domain,
             friendly_name="Threshold",
@@ -640,7 +640,7 @@ async def test_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="number_state",
             domain=domain,
             friendly_name="None",
@@ -651,7 +651,7 @@ async def test_number(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="number_state_celsius",
             domain=domain,
             friendly_name="Target temperature",
@@ -670,7 +670,7 @@ async def test_battery(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="battery_level_percent",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -691,7 +691,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_current_temperature_celsius",
             domain=domain,
             friendly_name="HeatPump",
@@ -702,7 +702,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_target_temperature_celsius",
             domain=domain,
             friendly_name="HeatPump",
@@ -713,7 +713,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_target_temperature_low_celsius",
             domain=domain,
             friendly_name="Ecobee",
@@ -724,7 +724,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_target_temperature_high_celsius",
             domain=domain,
             friendly_name="Ecobee",
@@ -735,7 +735,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_target_temperature_celsius",
             domain=domain,
             friendly_name="Fritz!DECT",
@@ -746,7 +746,7 @@ async def test_climate(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_preset_mode",
             domain=domain,
             friendly_name="Ecobee",
@@ -757,7 +757,7 @@ async def test_climate(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_fan_mode",
             domain=domain,
             friendly_name="Ecobee",
@@ -779,7 +779,7 @@ async def test_humidifier(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="humidifier_target_humidity_percent",
             domain=domain,
             friendly_name="Humidifier",
@@ -790,7 +790,7 @@ async def test_humidifier(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="humidifier_state",
             domain=domain,
             friendly_name="Dehumidifier",
@@ -801,7 +801,7 @@ async def test_humidifier(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="humidifier_mode",
             domain=domain,
             friendly_name="Hygrostat",
@@ -813,7 +813,7 @@ async def test_humidifier(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="humidifier_mode",
             domain=domain,
             friendly_name="Hygrostat",
@@ -835,7 +835,7 @@ async def test_attributes(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="switch_state",
             domain=domain,
             friendly_name="Boolean",
@@ -846,7 +846,7 @@ async def test_attributes(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="switch_attr_boolean",
             domain=domain,
             friendly_name="Boolean",
@@ -857,7 +857,7 @@ async def test_attributes(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="switch_state",
             domain=domain,
             friendly_name="Number",
@@ -868,7 +868,7 @@ async def test_attributes(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="switch_attr_number",
             domain=domain,
             friendly_name="Number",
@@ -889,7 +889,7 @@ async def test_binary_sensor(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="binary_sensor_state",
             domain=domain,
             friendly_name="Door",
@@ -900,7 +900,7 @@ async def test_binary_sensor(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="binary_sensor_state",
             domain=domain,
             friendly_name="Window",
@@ -921,7 +921,7 @@ async def test_input_boolean(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="input_boolean_state",
             domain=domain,
             friendly_name="Test",
@@ -931,7 +931,7 @@ async def test_input_boolean(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="input_boolean_state",
             domain=domain,
             friendly_name="Helper",
@@ -951,7 +951,7 @@ async def test_light(
     domain = "light"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="light_brightness_percent",
             domain=domain,
             friendly_name="Desk",
@@ -962,7 +962,7 @@ async def test_light(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="light_brightness_percent",
             domain=domain,
             friendly_name="Wall",
@@ -973,7 +973,7 @@ async def test_light(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="light_brightness_percent",
             domain=domain,
             friendly_name="TV",
@@ -984,7 +984,7 @@ async def test_light(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="light_brightness_percent",
             domain=domain,
             friendly_name="PC",
@@ -995,7 +995,7 @@ async def test_light(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="light_brightness_percent",
             domain=domain,
             friendly_name="Hallway",
@@ -1015,7 +1015,7 @@ async def test_lock(
     domain = "lock"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="lock_state",
             domain=domain,
             friendly_name="Front Door",
@@ -1026,7 +1026,7 @@ async def test_lock(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="lock_state",
             domain=domain,
             friendly_name="Kitchen Door",
@@ -1046,7 +1046,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_state",
             domain=domain,
             friendly_name="Fan 1",
@@ -1057,7 +1057,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_speed_percent",
             domain=domain,
             friendly_name="Fan 1",
@@ -1068,7 +1068,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_is_oscillating",
             domain=domain,
             friendly_name="Fan 1",
@@ -1079,7 +1079,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_direction_reversed",
             domain=domain,
             friendly_name="Fan 1",
@@ -1090,7 +1090,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_preset_mode",
             domain=domain,
             friendly_name="Fan 1",
@@ -1102,7 +1102,7 @@ async def test_fan(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="fan_direction_reversed",
             domain=domain,
             friendly_name="Reverse Fan",
@@ -1123,7 +1123,7 @@ async def test_alarm_control_panel(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="alarm_control_panel_state",
             domain=domain,
             friendly_name="Alarm Control Panel 1",
@@ -1135,7 +1135,7 @@ async def test_alarm_control_panel(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="alarm_control_panel_state",
             domain=domain,
             friendly_name="Alarm Control Panel 1",
@@ -1147,7 +1147,7 @@ async def test_alarm_control_panel(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="alarm_control_panel_state",
             domain=domain,
             friendly_name="Alarm Control Panel 2",
@@ -1159,7 +1159,7 @@ async def test_alarm_control_panel(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="alarm_control_panel_state",
             domain=domain,
             friendly_name="Alarm Control Panel 2",
@@ -1182,7 +1182,7 @@ async def test_cover(
     for testcover in data:
         _assert_metric_present(
             body,
-            EntityTestMetricInfo.from_entity_id(
+            EntityMetric.from_entity_id(
                 cover_entities[testcover].entity_id,
                 metric_name="cover_state",
                 friendly_name=cover_entities[testcover].original_name,
@@ -1195,7 +1195,7 @@ async def test_cover(
 
         _assert_metric_present(
             body,
-            EntityTestMetricInfo.from_entity_id(
+            EntityMetric.from_entity_id(
                 cover_entities[testcover].entity_id,
                 metric_name="cover_state",
                 friendly_name=cover_entities[testcover].original_name,
@@ -1208,7 +1208,7 @@ async def test_cover(
 
         _assert_metric_present(
             body,
-            EntityTestMetricInfo.from_entity_id(
+            EntityMetric.from_entity_id(
                 cover_entities[testcover].entity_id,
                 metric_name="cover_state",
                 friendly_name=cover_entities[testcover].original_name,
@@ -1221,7 +1221,7 @@ async def test_cover(
 
         _assert_metric_present(
             body,
-            EntityTestMetricInfo.from_entity_id(
+            EntityMetric.from_entity_id(
                 cover_entities[testcover].entity_id,
                 metric_name="cover_state",
                 friendly_name=cover_entities[testcover].original_name,
@@ -1235,7 +1235,7 @@ async def test_cover(
         if testcover == "cover_position":
             _assert_metric_present(
                 body,
-                EntityTestMetricInfo.from_entity_id(
+                EntityMetric.from_entity_id(
                     cover_entities[testcover].entity_id,
                     metric_name="cover_position",
                     friendly_name=cover_entities[testcover].original_name,
@@ -1246,7 +1246,7 @@ async def test_cover(
         if testcover == "cover_tilt_position":
             _assert_metric_present(
                 body,
-                EntityTestMetricInfo.from_entity_id(
+                EntityMetric.from_entity_id(
                     cover_entities[testcover].entity_id,
                     metric_name="cover_tilt_position",
                     friendly_name=cover_entities[testcover].original_name,
@@ -1265,7 +1265,7 @@ async def test_device_tracker(
     domain = "device_tracker"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="device_tracker_state",
             domain=domain,
             friendly_name="Phone",
@@ -1275,7 +1275,7 @@ async def test_device_tracker(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="device_tracker_state",
             domain=domain,
             friendly_name="Watch",
@@ -1295,7 +1295,7 @@ async def test_person(
     domain = "person"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="person_state",
             domain=domain,
             friendly_name="Arthur",
@@ -1305,7 +1305,7 @@ async def test_person(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="person_state",
             domain=domain,
             friendly_name="Ford",
@@ -1325,7 +1325,7 @@ async def test_counter(
     domain = "counter"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="counter_value",
             domain=domain,
             friendly_name="None",
@@ -1345,7 +1345,7 @@ async def test_update(
     domain = "update"
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="update_state",
             domain=domain,
             friendly_name="Firmware",
@@ -1355,7 +1355,7 @@ async def test_update(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="update_state",
             domain=domain,
             friendly_name="Addon",
@@ -1379,7 +1379,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1390,7 +1390,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1401,7 +1401,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1412,7 +1412,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1423,7 +1423,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1435,7 +1435,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1483,7 +1483,7 @@ async def test_renaming_entity_name(
     # Check if new metrics created
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature Renamed",
@@ -1494,7 +1494,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature Renamed",
@@ -1505,7 +1505,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump Renamed",
@@ -1517,7 +1517,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump Renamed",
@@ -1530,7 +1530,7 @@ async def test_renaming_entity_name(
     # Keep other sensors
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1541,7 +1541,7 @@ async def test_renaming_entity_name(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1565,7 +1565,7 @@ async def test_renaming_entity_id(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1576,7 +1576,7 @@ async def test_renaming_entity_id(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1587,7 +1587,7 @@ async def test_renaming_entity_id(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1598,7 +1598,7 @@ async def test_renaming_entity_id(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1627,7 +1627,7 @@ async def test_renaming_entity_id(
     # Check if new metrics created
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1638,7 +1638,7 @@ async def test_renaming_entity_id(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1650,7 +1650,7 @@ async def test_renaming_entity_id(
     # Keep other sensors
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1660,7 +1660,7 @@ async def test_renaming_entity_id(
     )
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1684,7 +1684,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1695,7 +1695,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1706,7 +1706,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1717,7 +1717,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1728,7 +1728,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1740,7 +1740,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1768,7 +1768,7 @@ async def test_deleting_entity(
     # Keep other sensors
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1779,7 +1779,7 @@ async def test_deleting_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1805,7 +1805,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1816,7 +1816,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1825,7 +1825,7 @@ async def test_disabling_entity(
         ),
     )
 
-    state_change_metric_string = EntityTestMetricInfo(
+    state_change_metric_string = EntityMetric(
         metric_name="state_change_created",
         domain="sensor",
         friendly_name="Outside Temperature",
@@ -1835,7 +1835,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1846,7 +1846,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1857,7 +1857,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1869,7 +1869,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="climate_action",
             domain="climate",
             friendly_name="HeatPump",
@@ -1903,7 +1903,7 @@ async def test_disabling_entity(
     # Keep other sensors
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1914,7 +1914,7 @@ async def test_disabling_entity(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1939,7 +1939,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1950,7 +1950,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1961,7 +1961,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -1972,7 +1972,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1983,7 +1983,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -1994,7 +1994,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -2014,7 +2014,7 @@ async def test_entity_becomes_unavailable_with_export(
     # Check that only the availability changed on sensor_1.
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -2025,7 +2025,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -2036,7 +2036,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -2048,7 +2048,7 @@ async def test_entity_becomes_unavailable_with_export(
     # The other sensor should be unchanged.
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_humidity_percent",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -2059,7 +2059,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -2070,7 +2070,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Humidity",
@@ -2087,7 +2087,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="sensor_temperature_celsius",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -2098,7 +2098,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="state_change_total",
             domain="sensor",
             friendly_name="Outside Temperature",
@@ -2109,7 +2109,7 @@ async def test_entity_becomes_unavailable_with_export(
 
     _assert_metric_present(
         body,
-        EntityTestMetricInfo(
+        EntityMetric(
             metric_name="entity_available",
             domain="sensor",
             friendly_name="Outside Temperature",
