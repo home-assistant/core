@@ -158,7 +158,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._host.api.camera_online(self._channel) and super().available
+        return super().available and self._host.api.camera_online(self._channel)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
