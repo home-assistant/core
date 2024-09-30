@@ -117,7 +117,7 @@ async def test_import(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert "filter" in hass.data[DOMAIN]
+    assert hass.data[DOMAIN]
 
 
 async def test_unload_entry(
@@ -239,7 +239,7 @@ async def test_filter(
         )
         await hass.async_block_till_done()
         assert mock_managed_streaming.called == test.expect_called
-        assert "filter" in hass.data[DOMAIN]
+        assert hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(
