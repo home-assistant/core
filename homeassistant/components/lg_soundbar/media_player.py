@@ -220,7 +220,7 @@ class LGDevice(MediaPlayerEntity):
         """Turn the media player off."""
         self._set_power(False)
 
-    def _set_power(self, status) -> None:
+    def _set_power(self, status: bool) -> None:
         """Set the media player state."""
         self._device.send_packet(
             {"cmd": "set", "data": {"b_powerkey": status}, "msg": "SPK_LIST_VIEW_INFO"}
