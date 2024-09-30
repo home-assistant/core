@@ -43,28 +43,28 @@ class AtagSensor(AtagEntity, SensorEntity):
         """Initialize Atag sensor."""
         super().__init__(coordinator, SENSORS[sensor])
         self._attr_name = sensor
-        if coordinator.data.report[self._id].sensorclass in (
+        if coordinator.atag.report[self._id].sensorclass in (
             SensorDeviceClass.PRESSURE,
             SensorDeviceClass.TEMPERATURE,
         ):
-            self._attr_device_class = coordinator.data.report[self._id].sensorclass
-        if coordinator.data.report[self._id].measure in (
+            self._attr_device_class = coordinator.atag.report[self._id].sensorclass
+        if coordinator.atag.report[self._id].measure in (
             UnitOfPressure.BAR,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
             PERCENTAGE,
             UnitOfTime.HOURS,
         ):
-            self._attr_native_unit_of_measurement = coordinator.data.report[
+            self._attr_native_unit_of_measurement = coordinator.atag.report[
                 self._id
             ].measure
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.report[self._id].state
+        return self.coordinator.atag.report[self._id].state
 
     @property
     def icon(self):
         """Return icon."""
-        return self.coordinator.data.report[self._id].icon
+        return self.coordinator.atag.report[self._id].icon
