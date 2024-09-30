@@ -275,11 +275,11 @@ class ConfigFlowContext(FlowContext, total=False):
     confirm_only: bool
     discovery_key: DiscoveryKey
     entry_id: str
-    title_placeholders: Mapping[str, str | None]
+    title_placeholders: Mapping[str, str]
     unique_id: str | None
 
 
-class ConfigFlowResult(FlowResult, total=False):
+class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     minor_version: int
