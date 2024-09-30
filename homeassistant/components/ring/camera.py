@@ -152,12 +152,12 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
         await self._device.close_rtc_stream(sdp_session_id)
 
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration."""
-        config = await super().async_get_webrtc_client_configuration()
-        config.audio_direction = WebRTCClientConfiguration.TransportDirection.SENDRECV
-        config.requires_close = True
-        return config
+        return WebRTCClientConfiguration(
+            audio_direction=WebRTCClientConfiguration.TransportDirection.SENDRECV,
+            requires_close=True,
+        )
 
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
