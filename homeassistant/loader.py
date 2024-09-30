@@ -206,7 +206,7 @@ class USBMatcherOptional(TypedDict, total=False):
 
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
-    """Matcher for the bluetooth integration."""
+    """Matcher for the USB integration."""
 
 
 @dataclass(slots=True)
