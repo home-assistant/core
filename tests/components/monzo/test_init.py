@@ -1,4 +1,4 @@
-"""Tests for config flow."""
+"""Tests for component initialisation."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock
