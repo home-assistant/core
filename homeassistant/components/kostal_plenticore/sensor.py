@@ -748,6 +748,13 @@ SENSOR_PROCESS_DATA = [
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
+        module_id="scb:event",
+        key="Event:ActiveErrorCnt",
+        name="Active Errors",
+        icon="mdi:alert",
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
         module_id="_virt_",
         key="pv_P",
         name="Sum power of all PV DC inputs",
