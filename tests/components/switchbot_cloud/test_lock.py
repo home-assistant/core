@@ -8,12 +8,7 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -38,9 +33,6 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
 
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.data[DOMAIN][entry.entry_id].devices.locks) == 1
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
 
     lock_id = "lock.lock_1"
     assert hass.states.get(lock_id).state == LockState.LOCKED
