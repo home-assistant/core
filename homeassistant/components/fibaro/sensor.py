@@ -113,7 +113,7 @@ async def async_setup_entry(
         FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
         for device in controller.fibaro_devices[Platform.SENSOR]
         # Some sensor devices do not have a value but report power or energy.
-        # This sensors are added to the sensor list but need to be excluded
+        # These sensors are added to the sensor list but need to be excluded
         # here as the FibaroSensor expects a value. One example is the
         # Qubino 3 phase power meter.
         if device.value.has_value
