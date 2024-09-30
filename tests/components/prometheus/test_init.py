@@ -1376,13 +1376,12 @@ async def test_disabling_entity(
         entity="sensor.outside_temperature",
     ).withValue(1.0).assertInBody(body)
 
-    state_change_metric_string = EntityMetric(
+    EntityMetric(
         metric_name="state_change_created",
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
-    )._metric_name_string
-    assert any(state_change_metric_string in metric for metric in body)
+    ).assertInBody(body)
 
     EntityMetric(
         metric_name="sensor_humidity_percent",
