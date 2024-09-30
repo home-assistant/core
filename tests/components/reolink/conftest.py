@@ -92,6 +92,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.camera_sw_version_update_required.return_value = False
         host_mock.camera_uid.return_value = TEST_UID_CAM
+        host_mock.camera_online.return_value = True
         host_mock.channel_for_uid.return_value = 0
         host_mock.get_encoding.return_value = "h264"
         host_mock.firmware_update_available.return_value = False
