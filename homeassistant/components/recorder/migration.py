@@ -2620,7 +2620,7 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
         instance.states_meta_manager.active = True
         with contextlib.suppress(SQLAlchemyError):
             migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
-            migrate.do_migrate(instance, session)
+            migrate.queue_migration(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
