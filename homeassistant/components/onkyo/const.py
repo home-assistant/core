@@ -1,5 +1,7 @@
 """Constants for the Onkyo integration."""
 
+from typing import Literal
+
 DOMAIN = "onkyo"
 
 DEVICE_INTERVIEW_TIMEOUT = 5
@@ -7,8 +9,9 @@ DEVICE_DISCOVERY_TIMEOUT = 5
 
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 
+type VolumeResolution = Literal[50, 80, 100, 200]
 CONF_VOLUME_RESOLUTION = "volume_resolution"
-CONF_VOLUME_RESOLUTION_DEFAULT = 50
+CONF_VOLUME_RESOLUTION_DEFAULT: VolumeResolution = 50
 
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100.0

@@ -1,6 +1,7 @@
 """Config flow for Onkyo."""
 
 import logging
+import typing
 from typing import Any
 
 import voluptuous as vol
@@ -36,6 +37,7 @@ from .const import (
     OPTION_SOURCES,
     OPTION_SOURCES_ALLOWED,
     OPTION_SOURCES_DEFAULT,
+    VolumeResolution,
 )
 from .receiver import ReceiverInfo, async_discover, async_interview
 
@@ -48,7 +50,7 @@ STEP_CONFIGURE_SCHEMA = vol.Schema(
         vol.Required(
             CONF_VOLUME_RESOLUTION,
             default=CONF_VOLUME_RESOLUTION_DEFAULT,
-        ): vol.In([50, 80, 100, 200]),
+        ): vol.In(typing.get_args(VolumeResolution)),
         vol.Required(
             OPTION_SOURCES, default=list(OPTION_SOURCES_DEFAULT.keys())
         ): SelectSelector(

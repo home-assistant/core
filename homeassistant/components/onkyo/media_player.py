@@ -40,6 +40,7 @@ from .const import (
     OPTION_SOURCES,
     OPTION_SOURCES_DEFAULT,
     ZONES,
+    VolumeResolution,
 )
 from .receiver import Receiver, async_discover
 
@@ -269,8 +270,8 @@ async def async_setup_entry(
     entities: dict[str, OnkyoMediaPlayer] = {}
     all_entities[entry.entry_id] = entities
 
-    volume_resolution = entry.data[CONF_VOLUME_RESOLUTION]
-    max_volume = entry.options[OPTION_MAX_VOLUME]
+    volume_resolution: VolumeResolution = entry.data[CONF_VOLUME_RESOLUTION]
+    max_volume: float = entry.options[OPTION_MAX_VOLUME]
     sources = entry.options[OPTION_SOURCES]
 
     def connect_callback(receiver: Receiver) -> None:
@@ -323,7 +324,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         receiver: Receiver,
         zone: str,
         *,
-        volume_resolution: int,
+        volume_resolution: VolumeResolution,
         max_volume: float,
         sources: dict[str, str],
     ) -> None:
