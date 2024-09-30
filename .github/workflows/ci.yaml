@@ -645,7 +645,7 @@ jobs:
       - name: Process licenses
         run: |
           . venv/bin/activate
-          python -m script.licenses
+          python -m script.licenses licenses.json
 
   pylint:
     name: Check pylint
@@ -815,7 +815,11 @@ jobs:
     needs:
       - info
       - base
-    name: Split tests for full run
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+    name: Split tests for full run Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -828,11 +832,11 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.0
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv

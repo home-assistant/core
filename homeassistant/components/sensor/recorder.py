@@ -693,15 +693,12 @@ def _update_issues(
             if state_class is None:
                 # Sensor no longer has a valid state class
                 report_issue(
-                    "unsupported_state_class",
+                    "state_class_removed",
                     entity_id,
-                    {
-                        "statistic_id": entity_id,
-                        "state_class": state_class,
-                    },
+                    {"statistic_id": entity_id},
                 )
             else:
-                clear_issue("unsupported_state_class", entity_id)
+                clear_issue("state_class_removed", entity_id)
 
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)

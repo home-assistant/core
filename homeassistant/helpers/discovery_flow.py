@@ -78,7 +78,9 @@ def _async_init_flow(
     # which can overload devices since zeroconf/ssdp updates can happen
     # multiple times in the same minute
     if (
-        hass.config_entries.flow.async_has_matching_flow(domain, context, data)
+        hass.config_entries.flow.async_has_matching_discovery_flow(
+            domain, context, data
+        )
         or hass.is_stopping
     ):
         return None

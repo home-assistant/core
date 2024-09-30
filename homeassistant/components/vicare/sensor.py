@@ -178,6 +178,30 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
+        key="dhw_storage_temperature",
+        translation_key="dhw_storage_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterStorageTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_top_temperature",
+        translation_key="dhw_storage_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHotWaterStorageTemperatureTop(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_bottom_temperature",
+        translation_key="dhw_storage_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHotWaterStorageTemperatureBottom(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
         key="hotwater_gas_consumption_today",
         translation_key="hotwater_gas_consumption_today",
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterToday(),
@@ -750,6 +774,20 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
         value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
+    ),
+    ViCareSensorEntityDescription(
+        key="room_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getTemperature(),
+    ),
+    ViCareSensorEntityDescription(
+        key="room_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getHumidity(),
     ),
 )
 
