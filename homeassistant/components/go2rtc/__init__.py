@@ -15,6 +15,34 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_BINARY
 from .server import Server
 
+_SUPPORTED_STREAMS = (
+    "bubble",
+    "dvrip",
+    "expr",
+    "ffmpeg",
+    "gopro",
+    "homekit",
+    "http",
+    "https",
+    "httpx",
+    "isapi",
+    "ivideon",
+    "kasa",
+    "nest",
+    "onvif",
+    "roborock",
+    "rtmp",
+    "rtmps",
+    "rtmpx",
+    "rtsp",
+    "rtsps",
+    "rtspx",
+    "tapo",
+    "tcp",
+    "webrtc",
+    "webtorrent",
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WebRTC from a config entry."""
@@ -41,11 +69,7 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return any(
-            stream_source.startswith(prefix)
-            for prefix in ("rtsp://", "rtsps://", "rtmp://")
-        )
-        # todo
+        return any(stream_source.startswith(prefix) for prefix in _SUPPORTED_STREAMS)
 
     async def async_handle_web_rtc_offer(
         self, camera: Camera, offer_sdp: str
