@@ -2728,7 +2728,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
     @callback
     def _get_entry_from_context(self) -> ConfigEntry:
-        """Return current entry from if other_flow is matching this flow."""
+        """Return current config entry, based on context['entry_id']."""
         config_entry_id = self.context["entry_id"]
         entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if entry is None:
