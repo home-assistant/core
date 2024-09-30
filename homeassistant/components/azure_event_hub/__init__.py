@@ -7,6 +7,7 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
@@ -36,11 +37,12 @@ from .const import (
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
     DATA_FILTER,
-    DATA_HUB,
     DEFAULT_MAX_DELAY,
     DOMAIN,
     FILTER_STATES,
 )
+
+type AzureEventHubConfigEntry = ConfigEntry[AzureEventHub]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +94,9 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
     hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     hub = AzureEventHub(
@@ -104,21 +108,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hub.async_test_connection()
     except EventHubError as err:
         raise ConfigEntryNotReady("Could not connect to Azure Event Hub") from err
-    hass.data[DOMAIN][DATA_HUB] = hub
+    entry.runtime_data = hub
+    entry.async_on_unload(hub.async_stop)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hub.async_start()
     return True
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_listener(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> None:
     """Update listener for options."""
-    hass.data[DOMAIN][DATA_HUB].update_options(entry.options)
+    entry.runtime_data.update_options(entry.options)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hub = hass.data[DOMAIN].pop(DATA_HUB)
-    await hub.async_stop()
     return True
 
 
@@ -172,7 +179,7 @@ class AzureEventHub:
         await self.async_send(None)
         await self._queue.join()
 
-    def update_options(self, new_options: dict[str, Any]) -> None:
+    def update_options(self, new_options: MappingProxyType[str, Any]) -> None:
         """Update options."""
         self._send_interval = new_options[CONF_SEND_INTERVAL]
 
