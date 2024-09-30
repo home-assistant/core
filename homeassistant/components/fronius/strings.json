@@ -294,6 +294,9 @@
       },
       "backup_mode": {
         "name": "Backup Mode"
+      },
+      "battery_standby": {
+        "name": "Battery Standby"
       }
     }
   }
