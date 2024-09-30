@@ -253,13 +253,12 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             reauth_entry = self._get_entry_from_context()
-            entry_data = reauth_entry.data
             errors, _, description_placeholders = await self._async_try_connect(
-                {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
+                {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data={**entry_data, **user_input}
+                    reauth_entry, data={**reauth_entry.data, **user_input}
                 )
 
         return self.async_show_form(
