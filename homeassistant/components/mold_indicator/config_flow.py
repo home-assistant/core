@@ -49,7 +49,7 @@ async def validate_duplicate(
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
         vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
         )
     }
 )
