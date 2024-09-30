@@ -32,7 +32,7 @@ habluetooth==3.4.0
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240927.0
+home-assistant-frontend==20240930.0
 home-assistant-intents==2024.9.23
 httpx==0.27.2
 ifaddr==0.2.0
@@ -77,9 +77,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.66.1
-grpcio-status==1.66.1
-grpcio-reflection==1.66.1
+grpcio==1.66.2
+grpcio-status==1.66.2
+grpcio-reflection==1.66.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

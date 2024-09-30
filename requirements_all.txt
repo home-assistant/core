@@ -109,7 +109,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.2
+RestrictedPython==7.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -945,7 +945,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.4
+gcal-sync==6.1.5
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1016,7 +1016,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.3
+gotailwind==0.2.4
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240927.0
+home-assistant-frontend==20240930.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -2023,7 +2023,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.6.2
+pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.5.0
@@ -2992,7 +2992,7 @@ xiaomi-ble==0.32.0
 xknx==3.2.0
 
 # homeassistant.components.knx
-xknxproject==3.7.1
+xknxproject==3.8.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
@@ -3032,7 +3032,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.08.06
+yt-dlp==2024.09.27
 
 # homeassistant.components.zamg
 zamg==0.3.6
@@ -3059,7 +3059,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.58.0
+zwave-js-server-python==0.58.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
