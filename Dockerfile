@@ -10,8 +10,6 @@ ENV \
     UV_SYSTEM_PYTHON=true
 
 ARG QEMU_CPU
-# Needs to be redefine inside the FROM statement to be set for RUN commands
-ARG BUILD_ARCH
 
 # Install uv
 RUN pip3 install uv==0.4.15
@@ -46,6 +44,8 @@ RUN \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
+# Needs to be redefine inside the FROM statement to be set for RUN commands
+ARG BUILD_ARCH
 # Get go2rtc binary
 RUN \
     case "${BUILD_ARCH}" in \

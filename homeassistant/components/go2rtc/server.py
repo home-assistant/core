@@ -1,4 +1,4 @@
-"""Utils for go2rtc component."""
+"""Go2rtc server."""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ class Server(Thread):
 
     def run(self) -> None:
         """Run the server."""
+        _LOGGER.debug("Starting go2rtc server")
         self._stop_requested = False
         with (
             NamedTemporaryFile(prefix="go2rtc", suffix=".yaml") as file,
@@ -39,7 +40,14 @@ class Server(Thread):
                     break
                 _LOGGER.debug(line[:-1].decode())
 
+            _LOGGER.debug("Terminating go2rtc server")
             process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                _LOGGER.warning("Go2rtc server didn't terminate gracefully.Killing it")
+                process.kill()
+        _LOGGER.debug("Go2rtc server has been stopped")
 
     def stop(self) -> None:
         """Stop the server."""

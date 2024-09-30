@@ -545,6 +545,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/glances/ @engrbm87
 /tests/components/glances/ @engrbm87
 /homeassistant/components/go2rtc/ @home-assistant/core
+/tests/components/go2rtc/ @home-assistant/core
 /homeassistant/components/goalzero/ @tkdrob
 /tests/components/goalzero/ @tkdrob
 /homeassistant/components/gogogate2/ @vangorra

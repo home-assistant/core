@@ -13,18 +13,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BINARY
-from .utils import Server
-
-type WebRTCConfigEntry = ConfigEntry[Server]
+from .server import Server
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WebRTCConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WebRTC from a config entry."""
     if binary := entry.data.get(CONF_BINARY):
         # HA will manage the binary
         server = Server(binary)
         entry.async_on_unload(server.stop)
-        entry.runtime_data = server
         server.start()
 
     client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
