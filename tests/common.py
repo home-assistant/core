@@ -1064,10 +1064,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
-        return await start_reauth_flow(hass, self, context, data)
+        return await _start_reauth_flow(hass, self, context, data)
 
 
-async def start_reauth_flow(
+async def _start_reauth_flow(
     hass: HomeAssistant,
     entry: ConfigEntry,
     context: dict[str, Any] | None = None,
