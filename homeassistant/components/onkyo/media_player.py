@@ -468,9 +468,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
             # AMP_VOL / (VOL_RESOLUTION * (MAX_VOL / 100))
-            self._attr_volume_level = value / (
+            volume_level: float = value / (
                 self._volume_resolution * self._max_volume / 100
             )
+            self._attr_volume_level = min(1, volume_level)
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
         elif command in ["selector", "input-selector"]:
