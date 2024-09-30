@@ -223,13 +223,15 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         name = name or info.model_name
 
-        volume_resolution = VOLUME_RESOLUTION_ALLOWED[0]
+        volume_resolution = VOLUME_RESOLUTION_ALLOWED[-1]
         for volume_resolution_allowed in VOLUME_RESOLUTION_ALLOWED:
-            if user_volume_resolution < volume_resolution_allowed:
+            if user_volume_resolution <= volume_resolution_allowed:
+                volume_resolution = volume_resolution_allowed
                 break
-            volume_resolution = volume_resolution_allowed
 
-        max_volume = user_max_volume * user_volume_resolution / volume_resolution
+        max_volume = min(
+            100, user_max_volume * user_volume_resolution / volume_resolution
+        )
 
         all_meanings = InputSource.all_single_meanings()
         sources: dict[InputSource, str] = {}
