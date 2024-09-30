@@ -315,12 +315,22 @@ async def test_set_temperature(
 @pytest.mark.parametrize(
     ("service_data", "target_temperature", "current_preset", "expected_call_args"),
     [
+        # mode off always sets target temperature to 0
         ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, PRESET_COMFORT, [call(0)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16)]),
         ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, PRESET_ECO, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, None, [call(0)]),
+        # mode heat sets target temperature based on current scheduled preset,
+        # when not already in mode heat
         ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_COMFORT, [call(22)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 18, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, None, [call(22)]),
+        # mode heat does not set target temperature, when already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, None, []),
         ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, None, []),
     ],
 )
 async def test_set_hvac_mode(
@@ -335,12 +345,12 @@ async def test_set_hvac_mode(
     device = FritzDeviceClimateMock()
     device.target_temperature = target_temperature
 
-    # Configure the mock to requested preset
     if current_preset is PRESET_COMFORT:
         device.nextchange_temperature = device.eco_temperature
-    else:
-        # This is the default value of FritzDeviceClimateMock
+    elif current_preset is PRESET_ECO:
         device.nextchange_temperature = device.comfort_temperature
+    else:
+        device.nextchange_endperiod = 0
 
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
