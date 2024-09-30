@@ -2828,7 +2828,7 @@ def test_deprecated_stream_type_constants(
     module: ModuleType,
 ) -> None:
     """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.11")
 
 
 @pytest.mark.parametrize(
@@ -2845,4 +2845,4 @@ def test_deprecated_state_constants(
     module: ModuleType,
 ) -> None:
     """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.11")

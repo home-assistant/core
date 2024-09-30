@@ -49,9 +49,9 @@ class LightState(StrEnum):
     OFF = "off"
 
 
-# The STATE_ON constant is deprecated as of Home Assistant 2024.10
+# The STATE_ON constant is deprecated as of Home Assistant 2024.11
 # Please use the LightState enum instead.
-_DEPRECATED_STATE_ON = DeprecatedConstantEnum(LightState.ON, "2025.10")
+_DEPRECATED_STATE_ON = DeprecatedConstantEnum(LightState.ON, "2025.11")
 
 
 class LightEntityFeature(IntFlag):
