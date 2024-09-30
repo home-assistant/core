@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime as dt
 from typing import Any, Literal, cast
 
@@ -319,8 +320,8 @@ async def ws_update_statistics_issues(
         vol.Required("statistic_ids"): [str],
     }
 )
-@callback
-def ws_clear_statistics(
+@websocket_api.async_response
+async def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Clear statistics for a list of statistic_ids.
@@ -328,7 +329,23 @@ def ws_clear_statistics(
     Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
     wait until the job is completed.
     """
-    get_instance(hass).async_clear_statistics(msg["statistic_ids"])
+    done_event = asyncio.Event()
+
+    def clear_statistics_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
+    get_instance(hass).async_clear_statistics(
+        msg["statistic_ids"], on_done=clear_statistics_done
+    )
+    async with asyncio.timeout(10):
+        try:
+            await done_event.wait()
+        except TimeoutError:
+            connection.send_error(
+                msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
+            )
+            return
+
     connection.send_result(msg["id"])
 
 
