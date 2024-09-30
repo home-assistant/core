@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 from aussiebb.asyncio import AussieBB
 from aussiebb.exceptions import UnrecognisedServiceType
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,7 +18,20 @@ from .const import DEFAULT_UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class AussieBroadandDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AussieBroadbandServiceData(TypedDict, total=False):
+    """Aussie Broadband service information, extended with the coordinator."""
+
+    coordinator: AussieBroadbandDataUpdateCoordinator
+    description: str
+    name: str
+    service_id: str
+    type: str
+
+
+type AussieBroadbandConfigEntry = ConfigEntry[list[AussieBroadbandServiceData]]
+
+
+class AussieBroadbandDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Aussie Broadand data update coordinator."""
 
     def __init__(self, hass: HomeAssistant, client: AussieBB, service_id: str) -> None:
