@@ -227,9 +227,6 @@ def register_ice_server(
 
     The registering integration is responsible to implement caching if needed.
     """
-    if DOMAIN not in hass.data:
-        raise ValueError("Unexpected state, camera not loaded")
-
     servers = hass.data.setdefault(DATA_ICE_SERVERS, [])
 
     def remove() -> None:
