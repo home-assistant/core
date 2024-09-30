@@ -234,11 +234,11 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         all_meanings = InputSource.all_single_meanings()
-        sources: dict[InputSource, str] = {}
-        for meaning, value in user_sources.items():
+        sources_str: dict[str, str] = {}
+        for meaning, source_name in user_sources.items():
             if meaning in all_meanings:
                 source = InputSource.from_single_meaning(meaning)
-                sources[source] = value
+                sources_str[source.value_hex] = source_name
 
         return self.async_create_entry(
             title=name,
@@ -248,7 +248,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             options={
                 OPTION_MAX_VOLUME: max_volume,
-                OPTION_SOURCES: sources,
+                OPTION_SOURCES: sources_str,
             },
         )
 
