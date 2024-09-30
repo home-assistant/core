@@ -318,14 +318,6 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     )
 
 
-def test_entity_metric_generates_metric_string_with_action_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with an action value included."""
-
-
-def test_entity_metric_generates_metric_string_with_state_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with a state value included."""
-
-
 @pytest.fixture(name="client")
 async def setup_prometheus_client(
     hass: HomeAssistant,
