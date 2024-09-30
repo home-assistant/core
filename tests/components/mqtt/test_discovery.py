@@ -1503,7 +1503,7 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert len(flow_calls) == 1
 
-        # A updated message gets starts a new flow
+        # An updated message gets starts a new flow
         await hass.async_block_till_done(wait_background_tasks=True)
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "update message")
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1589,7 +1589,7 @@ async def test_mqtt_discovery_flow_starts_once(
         assert flow_calls[2].topic == "comp/discovery/bla/config2"
         assert flow_calls[2].payload == "update message"
 
-        # And empty message triggers a flow to allow cleanup
+        # An empty message triggers a flow to allow cleanup
         async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "")
         await hass.async_block_till_done(wait_background_tasks=True)
 

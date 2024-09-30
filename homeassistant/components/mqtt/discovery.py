@@ -191,7 +191,7 @@ async def async_start(  # noqa: C901
     """Start MQTT Discovery."""
     mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
-    integration_discovery_discovered: dict[str, int] = {}
+    integration_discovery_messages: dict[str, int] = {}
 
     @callback
     def _async_add_component(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -369,8 +369,8 @@ async def async_start(  # noqa: C901
     ) -> None:
         """Process the received message."""
         if (
-            msg.topic in integration_discovery_discovered
-            and integration_discovery_discovered[msg.topic] == hash(msg.payload)
+            msg.topic in integration_discovery_messages
+            and integration_discovery_messages[msg.topic] == hash(msg.payload)
         ):
             _LOGGER.debug(
                 "Ignoring already processed discovery message for '%s' on topic %s: %s",
@@ -398,10 +398,10 @@ async def async_start(  # noqa: C901
             )
             if msg.payload:
                 # Update the last discovered config message
-                integration_discovery_discovered[msg.topic] = hash(msg.payload)
-            elif msg.topic in integration_discovery_discovered:
+                integration_discovery_messages[msg.topic] = hash(msg.payload)
+            elif msg.topic in integration_discovery_messages:
                 # Cleanup hash if discovery payload is empty
-                del integration_discovery_discovered[msg.topic]
+                del integration_discovery_messages[msg.topic]
 
     integration_unsubscribe.update(
         {
