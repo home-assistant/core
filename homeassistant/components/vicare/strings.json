@@ -362,12 +362,6 @@
           "production": "Producing"
         }
       },
-      "room_temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "room_humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "supply_temperature": {
         "name": "Supply temperature"
       },
