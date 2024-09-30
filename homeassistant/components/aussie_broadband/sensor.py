@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SERVICE_ID
+from .coordinator import AussieBroadandDataUpdateCoordinator
 
 
 @dataclass(frozen=True)
@@ -131,7 +132,9 @@ async def async_setup_entry(
     )
 
 
-class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
+class AussieBroadandSensorEntity(
+    CoordinatorEntity[AussieBroadandDataUpdateCoordinator], SensorEntity
+):
     """Base class for Aussie Broadband metric sensors."""
 
     _attr_has_entity_name = True
