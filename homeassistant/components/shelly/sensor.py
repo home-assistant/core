@@ -1232,7 +1232,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 coordinator.mac,
                 SENSOR_PLATFORM,
-                coordinator.device.status.keys(),
+                coordinator.device.status,
             )
 
             # the user can remove virtual components from the device configuration, so
