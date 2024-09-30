@@ -110,4 +110,4 @@ async def test_update_failed(
         await hass.async_block_till_done()
         updater.assert_called_once()
         assert not coordinator.last_update_success
-        assert coordinator.data.id == UID
+        assert coordinator.atag.id == UID
