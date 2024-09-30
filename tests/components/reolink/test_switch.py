@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -301,6 +302,15 @@ async def test_switch(
         )
 
     reolink_connect.set_recording.reset_mock(side_effect=True)
+
+    reolink_connect.camera_online.return_value = False
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    reolink_connect.camera_online.return_value = True
 
 
 async def test_host_switch(
