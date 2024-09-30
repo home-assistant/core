@@ -16,6 +16,7 @@ from homeassistant.components.azure_data_explorer.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -117,7 +118,7 @@ async def test_import(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
+    assert isinstance(hass.data[DOMAIN], EntityFilter)
 
 
 async def test_unload_entry(
@@ -239,7 +240,6 @@ async def test_filter(
         )
         await hass.async_block_till_done()
         assert mock_managed_streaming.called == test.expect_called
-        assert hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(
