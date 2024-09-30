@@ -431,7 +431,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source = self._reverse_mapping[source].meaning_singles[0]
+            source = self._reverse_mapping[source].value_meaning_singles[0]
         self._update_receiver(
             "input-selector" if self._zone == "main" else "selector", source
         )

@@ -40,8 +40,8 @@ class InputSource(Enum):
     __single_meaning_mapping: ClassVar[dict[str, Self]] = {}  # type: ignore[misc]
 
     value_hex: str
-    meaning: str  # type: ignore[misc]
-    meaning_singles: tuple[str, ...]  # type: ignore[misc]
+    value_meaning: str
+    value_meaning_singles: tuple[str, ...]
 
     _ignore_ = "InputSource _k _v _value"
 
@@ -71,8 +71,8 @@ class InputSource(Enum):
             meaning_singles = meanings_raw
             meaning = ", ".join(meanings_raw)
 
-        obj.meaning = meaning  # type: ignore[misc]
-        obj.meaning_singles = meaning_singles  # type: ignore[misc]
+        obj.value_meaning = meaning
+        obj.value_meaning_singles = meaning_singles
 
         for meaning_single in meaning_singles:
             cls.__single_meaning_mapping[meaning_single] = obj

@@ -169,7 +169,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Remove the source prefix.
                 value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
                 source = InputSource(value)
-                sources_str.setdefault(source.value_hex, source.meaning)
+                sources_str.setdefault(source.value_hex, source.value_meaning)
 
             result = self.async_create_entry(
                 title=self._receiver_info.model_name,
