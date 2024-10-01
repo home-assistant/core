@@ -11,7 +11,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -26,6 +26,7 @@ from homeassistant.components.statistics.sensor import (
     CONF_SAMPLES_MAX_BUFFER_SIZE,
     CONF_STATE_CHARACTERISTIC,
     STAT_MEAN,
+    STAT_SOURCE_VALUE_VALID,
     StatisticsSensor,
 )
 from homeassistant.const import (
@@ -45,7 +46,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+    mock_restore_cache_with_extra_data,
+)
 from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
@@ -1701,3 +1707,49 @@ async def test_device_id(
     statistics_entity = entity_registry.async_get("sensor.statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_restored_state(hass: HomeAssistant) -> None:
+    """Test restored state."""
+
+    fake_state = ha.State(
+        "sensor.test",
+        state="1",
+        attributes={
+            STAT_SOURCE_VALUE_VALID: True,
+            ATTR_UNIT_OF_MEASUREMENT: "W",
+        },
+    )
+
+    # Home assistant is not running yet
+    hass.set_state(ha.CoreState.not_running)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                fake_state,
+                {"native_value": 1, "native_unit_of_measurement": "W"},
+            )
+        ],
+    )
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 100,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "1"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "W"

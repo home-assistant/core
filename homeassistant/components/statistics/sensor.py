@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 import logging
 import math
 import statistics
@@ -18,8 +19,8 @@ from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -322,7 +323,7 @@ async def async_setup_entry(
     )
 
 
-class StatisticsSensor(SensorEntity):
+class StatisticsSensor(RestoreSensor):
     """Representation of a Statistics sensor."""
 
     _attr_should_poll = False
@@ -358,9 +359,9 @@ class StatisticsSensor(SensorEntity):
         self.samples_keep_last: bool = samples_keep_last
         self._precision: int = precision
         self._percentile: int = percentile
-        self._value: StateType | datetime = None
+        self._value: StateType | date | datetime | Decimal = None
         self._unit_of_measurement: str | None = None
-        self._available: bool = False
+        self._available: bool = True
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
@@ -429,6 +430,13 @@ class StatisticsSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        last_sensor_state = await self.async_get_last_sensor_data()
+        if last_state and last_sensor_state and last_state.state != STATE_UNAVAILABLE:
+            self._value = last_sensor_state.native_value
+            self._unit_of_measurement = last_sensor_state.native_unit_of_measurement
+
         self.async_on_remove(
             async_at_start(self.hass, self._async_stats_sensor_startup)
         )
@@ -520,7 +528,7 @@ class StatisticsSensor(SensorEntity):
         return SensorStateClass.MEASUREMENT
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         return self._value
 
