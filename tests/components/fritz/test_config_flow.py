@@ -452,7 +452,10 @@ async def test_reconfigure_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await mock_config.start_reconfigure_flow(hass)
+        result = await mock_config.start_reconfigure_flow(
+            hass,
+            context={"show_advanced_options": show_advanced_options},
+        )
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reconfigure_confirm"
