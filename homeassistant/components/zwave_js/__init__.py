@@ -100,6 +100,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
     LR_ADDON_VERSION,
@@ -623,7 +624,7 @@ class NodeEvents:
         )
 
         # add listeners to handle new values that get added later
-        for event in ("value added", "value updated", "metadata updated"):
+        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
@@ -722,7 +723,7 @@ class NodeEvents:
         # add listener for value updated events
         self.config_entry.async_on_unload(
             disc_info.node.on(
-                "value updated",
+                EVENT_VALUE_UPDATED,
                 lambda event: self.async_on_value_updated_fire_event(
                     value_updates_disc_info, event["value"]
                 ),
