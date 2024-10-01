@@ -324,7 +324,7 @@ async def test_reconfigure_flow_flow_duplicate(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
 
