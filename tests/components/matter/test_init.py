@@ -64,6 +64,7 @@ async def test_entry_setup_unload(
     await hass.async_block_till_done()
 
     assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
