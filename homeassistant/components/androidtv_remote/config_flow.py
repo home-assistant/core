@@ -58,13 +58,14 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    api: AndroidTVRemote
+    host: str
+    name: str
+    mac: str
+
     def __init__(self) -> None:
         """Initialize a new AndroidTVRemoteConfigFlow."""
-        self.api: AndroidTVRemote | None = None
         self.reauth_entry: ConfigEntry | None = None
-        self.host: str | None = None
-        self.name: str | None = None
-        self.mac: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -72,13 +73,11 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.host = user_input["host"]
-            assert self.host
+            self.host = user_input[CONF_HOST]
             api = create_api(self.hass, self.host, enable_ime=False)
             try:
                 await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
-                assert self.mac
                 await self.async_set_unique_id(format_mac(self.mac))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 return await self._async_start_pair()
@@ -94,7 +93,6 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_start_pair(self) -> ConfigFlowResult:
         """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
-        assert self.host
         self.api = create_api(self.hass, self.host, enable_ime=False)
         await self.api.async_generate_cert_if_missing()
         await self.api.async_start_pairing()
@@ -108,14 +106,12 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 pin = user_input["pin"]
-                assert self.api
                 await self.api.async_finish_pairing(pin)
                 if self.reauth_entry:
                     await self.hass.config_entries.async_reload(
                         self.reauth_entry.entry_id
                     )
                     return self.async_abort(reason="reauth_successful")
-                assert self.name
                 return self.async_create_entry(
                     title=self.name,
                     data={
@@ -155,9 +151,9 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Android TV device found via zeroconf: %s", discovery_info)
         self.host = discovery_info.host
         self.name = discovery_info.name.removesuffix("._androidtvremote2._tcp.local.")
-        self.mac = discovery_info.properties.get("bt")
-        if not self.mac:
+        if not (mac := discovery_info.properties.get("bt")):
             return self.async_abort(reason="cannot_connect")
+        self.mac = mac
         await self.async_set_unique_id(format_mac(self.mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
