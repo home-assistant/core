@@ -6422,24 +6422,30 @@ async def test_get_reauth_entry(
                 reason = "Entry not found"
             else:
                 reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reauth_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"Found entry {entry.title}: {entry_id}"
             return self.async_abort(reason=reason)
 
     # A reauth flow finds the config entry from context
     with mock_config_flow("test", TestFlow):
         result = await entry.start_reauth_flow(hass)
-        assert result["reason"] == "Found entry test_title"
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
 
     # A reconfigure flow does not have access to the config entry
     with mock_config_flow("test", TestFlow):
         result = await entry.start_reconfigure_flow(hass)
-        assert result["reason"] == "Entry not found"
+        assert result["reason"] == "Entry not found: -"
 
     # A user flow does not have access to the config entry
     with mock_config_flow("test", TestFlow):
         result = await manager.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["reason"] == "Entry not found"
+        assert result["reason"] == "Entry not found: -"
 
 
 async def test_get_reconfigure_entry(
@@ -6481,24 +6487,30 @@ async def test_get_reconfigure_entry(
                 reason = "Entry not found"
             else:
                 reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reconfigure_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"Found entry {entry.title}: {entry_id}"
             return self.async_abort(reason=reason)
 
     # A reauth flow does not have access to the config entry from context
     with mock_config_flow("test", TestFlow):
         result = await entry.start_reauth_flow(hass)
-        assert result["reason"] == "Entry not found"
+        assert result["reason"] == "Entry not found: -"
 
     # A reconfigure flow finds the config entry
     with mock_config_flow("test", TestFlow):
         result = await entry.start_reconfigure_flow(hass)
-        assert result["reason"] == "Found entry test_title"
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
 
     # A user flow does not have access to the config entry
     with mock_config_flow("test", TestFlow):
         result = await manager.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["reason"] == "Entry not found"
+        assert result["reason"] == "Entry not found: -"
 
 
 async def test_reauth_helper_alignment(
