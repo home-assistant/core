@@ -767,6 +767,15 @@
       },
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
+      },
+      "remote_temperature": {
+        "name": "Remote temperature"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
       }
     },
     "select": {
@@ -853,6 +862,12 @@
       },
       "setpoint_response_time": {
         "name": "Setpoint response time"
+      },
+      "display_orientation": {
+        "name": "Display orientation"
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature"
       }
     },
     "sensor": {
@@ -1023,6 +1038,9 @@
       },
       "motor_stepcount": {
         "name": "Motor stepcount"
+      },
+      "operating_mode": {
+        "name": "Operating mode"
       }
     },
     "switch": {
@@ -1127,6 +1145,12 @@
       },
       "adaptation_run_enabled": {
         "name": "Adaptation run enabled"
+      },
+      "window_open": {
+        "name": "Window open"
+      },
+      "boost_heating": {
+        "name": "Boost heating"
       }
     }
   }
