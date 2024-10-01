@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any, cast
+from typing import Any, Self, cast
 
 from flux_led.const import (
     ATTR_ID,
@@ -60,6 +60,8 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Magic Home Integration."""
 
     VERSION = 1
+
+    host: str | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -149,10 +151,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         assert device is not None
         await self._async_set_discovered_mac(device, self._allow_update_mac)
         host = device[ATTR_IPADDR]
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         if not device[ATTR_MODEL_DESCRIPTION]:
             mac_address = device[ATTR_ID]
             assert mac_address is not None
@@ -172,6 +173,10 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device = device
                 await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None

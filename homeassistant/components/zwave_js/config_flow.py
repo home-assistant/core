@@ -346,11 +346,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _title: str
+
     def __init__(self) -> None:
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
-        self._title: str | None = None
         self._usb_discovery = False
 
     @property
@@ -394,6 +395,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual({CONF_URL: self.ws_address})
 
         assert self.ws_address
+        assert self.unique_id
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={

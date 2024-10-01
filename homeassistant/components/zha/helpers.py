@@ -170,7 +170,7 @@ if TYPE_CHECKING:
     from .entity import ZHAEntity
     from .update import ZHAFirmwareUpdateCoordinator
 
-    _LogFilterType = Filter | Callable[[LogRecord], bool]
+    type _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 

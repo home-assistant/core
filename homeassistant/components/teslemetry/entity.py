@@ -4,6 +4,7 @@ from abc import abstractmethod
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from tesla_fleet_api.const import Scope
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,6 +32,7 @@ class TeslemetryEntity(
     """Parent class for all Teslemetry entities."""
 
     _attr_has_entity_name = True
+    scoped: bool
 
     def __init__(
         self,
@@ -38,12 +40,10 @@ class TeslemetryEntity(
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator,
-        api: VehicleSpecific | EnergySpecific,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
         super().__init__(coordinator)
-        self.api = api
         self.key = key
         self._attr_translation_key = self.key
         self._async_update_attrs()
@@ -87,16 +87,22 @@ class TeslemetryEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
-    def raise_for_scope(self):
+    def raise_for_scope(self, scope: Scope):
         """Raise an error if a scope is not available."""
         if not self.scoped:
-            raise ServiceValidationError("Missing required scope")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_scope",
+                translation_placeholders={"scope": scope},
+            )
 
 
 class TeslemetryVehicleEntity(TeslemetryEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
+    api: VehicleSpecific
+    vehicle: TeslemetryVehicleData
 
     def __init__(
         self,
@@ -105,11 +111,11 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
 
-        self._attr_unique_id = f"{data.vin}-{key}"
+        self.api = data.api
         self.vehicle = data
-
+        self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
-        super().__init__(data.coordinator, data.api, key)
+        super().__init__(data.coordinator, key)
 
     @property
     def _value(self) -> Any | None:
@@ -124,20 +130,26 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
 
+    api: EnergySpecific
+
     def __init__(
         self,
         data: TeslemetryEnergyData,
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Live entity."""
+
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.live_coordinator, data.api, key)
+        super().__init__(data.live_coordinator, key)
 
 
 class TeslemetryEnergyInfoEntity(TeslemetryEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
+
+    api: EnergySpecific
 
     def __init__(
         self,
@@ -145,10 +157,12 @@ class TeslemetryEnergyInfoEntity(TeslemetryEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.info_coordinator, data.api, key)
+        super().__init__(data.info_coordinator, key)
 
 
 class TeslemetryEnergyHistoryEntity(TeslemetryEntity):
@@ -160,18 +174,19 @@ class TeslemetryEnergyHistoryEntity(TeslemetryEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.history_coordinator, data.api, key)
+        super().__init__(data.history_coordinator, key)
 
 
-class TeslemetryWallConnectorEntity(
-    TeslemetryEntity, CoordinatorEntity[TeslemetryEnergySiteLiveCoordinator]
-):
+class TeslemetryWallConnectorEntity(TeslemetryEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
+    api: EnergySpecific
 
     def __init__(
         self,
@@ -180,6 +195,8 @@ class TeslemetryWallConnectorEntity(
         key: str,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
+
+        self.api = data.api
         self.din = din
         self._attr_unique_id = f"{data.id}-{din}-{key}"
 
@@ -200,7 +217,7 @@ class TeslemetryWallConnectorEntity(
             model=model,
         )
 
-        super().__init__(data.live_coordinator, data.api, key)
+        super().__init__(data.live_coordinator, key)
 
     @property
     def _value(self) -> int:
