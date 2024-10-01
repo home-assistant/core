@@ -149,7 +149,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return acquired_token, errors
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
