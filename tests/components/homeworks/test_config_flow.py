@@ -246,7 +246,7 @@ async def test_reconfigure_flow(
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -314,7 +314,7 @@ async def test_reconfigure_flow_flow_duplicate(
         context={"source": SOURCE_RECONFIGURE, "entry_id": entry1.entry_id},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -324,7 +324,7 @@ async def test_reconfigure_flow_flow_duplicate(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
 
@@ -339,7 +339,7 @@ async def test_reconfigure_flow_flow_no_change(
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -387,7 +387,7 @@ async def test_reconfigure_flow_credentials_password_only(
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -398,7 +398,7 @@ async def test_reconfigure_flow_credentials_password_only(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {"base": "need_username_with_password"}
 
 
