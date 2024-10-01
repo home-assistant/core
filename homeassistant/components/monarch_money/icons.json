@@ -6,5 +6,10 @@
       "savings": { "default": "mdi:piggy-bank-outline" },
       "savings_rate": { "default": "mdi:cash-sync" }
     }
+  },
+  "services": {
+    "get_holdings": {
+      "service": "mdi:chart-box-multiple"
+    }
   }
 }

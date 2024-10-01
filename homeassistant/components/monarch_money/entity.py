@@ -1,12 +1,17 @@
 """Monarch money entity definition."""
 
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from typedmonarchmoney import TypedMonarchMoney
+from typedmonarchmoney.models import (
+    MonarchAccount,
+    MonarchCashflowSummary,
+    MonarchHoldings,
+)
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
@@ -81,3 +86,17 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
         return self.coordinator.data.account_data[self._account_id]
+
+    async def async_get_holdings(self):
+        """Get holdings."""
+        LOGGER.error(
+            f"async_get_holdings for account {self._account_id} - {self.account_data.id} {self.account_data.data_provider} {self.account_data.name}"
+        )
+        client: TypedMonarchMoney = self.coordinator.client
+        holdings: MonarchHoldings = await client.get_account_holdings_for_id(
+            self._account_id
+        )
+        LOGGER.warning(f"holdings: {holdings}")
+        if holdings:
+            return holdings.to_json()
+        return "{}"
