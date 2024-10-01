@@ -287,7 +287,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(entry.unique_id)
 
         self.context["title_placeholders"] = {
-            CONF_SERIAL: self.unique_id,
+            CONF_SERIAL: self.unique_id or "-",
             CONF_HOST: host,
         }
 
