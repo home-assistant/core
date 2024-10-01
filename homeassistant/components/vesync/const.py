@@ -67,3 +67,5 @@ SKU_TO_BASE_DEVICE = {
     "LAP-EL551S-WEU": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-WUS": "EverestAir",  # Alt ID Model EverestAir
 }
+
+DEFAULT_SCAN_INTERVAL: int = 15
