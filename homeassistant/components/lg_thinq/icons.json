@@ -97,6 +97,86 @@
       "sleep_timer_relative_hour_to_stop_for_location": {
         "default": "mdi:bed-clock"
       }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "current_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "growth_mode": {
+        "default": "mdi:sprout-outline"
+      },
+      "growth_mode_for_location": {
+        "default": "mdi:sprout-outline"
+      },
+      "wind_volume": {
+        "default": "mdi:wind-power-outline"
+      },
+      "wind_volume_for_location": {
+        "default": "mdi:wind-power-outline"
+      },
+      "day_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "day_target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "night_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "night_target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_state": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_state_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "current_state": {
+        "default": "mdi:list-status"
+      },
+      "current_state_for_location": {
+        "default": "mdi:list-status"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "used_time": {
+        "default": "mdi:air-filter"
+      },
+      "current_job_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "current_job_mode_stick_cleaner": {
+        "default": "mdi:dots-circle"
+      },
+      "personalization_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "cock_state": {
+        "default": "mdi:air-filter"
+      },
+      "sterilizing_state": {
+        "default": "mdi:water-alert-outline"
+      },
+      "water_type": {
+        "default": "mdi:water"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      }
     }
   }
 }
