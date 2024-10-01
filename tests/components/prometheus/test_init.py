@@ -116,13 +116,17 @@ class EntityMetric:
         )
         return f"{self.metric_name}{{{labels}}}"
 
-    def assertInBody(self, body: list[str]):
-        """Assert that this metric exists in the provided Prometheus output."""
-        assert any(line.startswith(self._metric_name_string) for line in body)
+    def _in_metrics(self, metrics: list[str]) -> bool:
+        """Report whether this metric exists in the provided Prometheus output."""
+        return any(line.startswith(self._metric_name_string) for line in metrics)
 
-    def assertNotInBody(self, body: list[str]):
+    def assertInBody(self, metrics: list[str]):
+        """Assert that this metric exists in the provided Prometheus output."""
+        assert self._in_metrics(metrics)
+
+    def assertNotInBody(self, metrics: list[str]):
         """Assert that this metric does not exist in Prometheus output."""
-        assert self._metric_name_string not in body
+        assert not self._in_metrics(metrics)
 
 
 class EntityMetricWithValue(EntityMetric):
@@ -141,9 +145,9 @@ class EntityMetricWithValue(EntityMetric):
         value = floatToGoString(self.value)
         return f"{self._metric_name_string} {value}"
 
-    def assertInBody(self, body: list[str]):
+    def assertInBody(self, metrics: list[str]):
         """Assert that this metric exists in the provided Prometheus output."""
-        assert self._metric_string in body
+        assert self._metric_string in metrics
 
 
 @dataclass
@@ -501,7 +505,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text Unit",
         entity="sensor.text_unit",
-    ).withValue(0.0).assertNotInBody(body)
+    ).withValue(0.0).assertInBody(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
