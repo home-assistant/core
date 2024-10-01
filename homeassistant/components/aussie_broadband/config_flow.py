@@ -99,7 +99,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             if not (errors := await self.async_auth(data)):
-                entry = self._get_context_entry()
+                entry = self._get_reauth_entry()
                 return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_show_form(

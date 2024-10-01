@@ -2377,6 +2377,20 @@ class ConfigFlow(ConfigEntryBaseFlow):
             HANDLERS.register(domain)(cls)
 
     @property
+    def _reauth_entry_id(self) -> str | None:
+        """Return reauth entry id."""
+        if self.source == SOURCE_REAUTH:
+            return self.context.get("entry_id")
+        return None
+
+    @property
+    def _reconfigure_entry_id(self) -> str | None:
+        """Return reconfigure entry id."""
+        if self.source == SOURCE_RECONFIGURE:
+            return self.context.get("entry_id")
+        return None
+
+    @property
     def unique_id(self) -> str | None:
         """Return unique ID if available."""
         if not self.context:
@@ -2727,15 +2741,30 @@ class ConfigFlow(ConfigEntryBaseFlow):
         raise NotImplementedError
 
     @callback
-    def _get_context_entry(self) -> ConfigEntry:
-        """Return the config entry linked to the current context.
+    def _get_reauth_entry(self) -> ConfigEntry:
+        """Return the reauth config entry linked to the current context.
 
-        This can be used to access the underlying entry in reauth and
-        reconfigure flows, and will fail if `entry_id` is not part of
-        the context.
+        Note: to check if you are within a reauth flow, check if
+        `self.source == SOURCE_REAUTH`.
         """
-        if "entry_id" in self.context and (
-            entry := self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if self._reauth_entry_id and (
+            entry := self.hass.config_entries.async_get_entry(self._reauth_entry_id)
+        ):
+            return entry
+
+        raise UnknownEntry
+
+    @callback
+    def _get_reconfigure_entry(self) -> ConfigEntry:
+        """Return the reconfigure config entry linked to the current context.
+
+        Note: to check if you are within a reauth flow, check if
+        `self.source == SOURCE_RECONFIGURE`.
+        """
+        if self._reconfigure_entry_id and (
+            entry := self.hass.config_entries.async_get_entry(
+                self._reconfigure_entry_id
+            )
         ):
             return entry
 
