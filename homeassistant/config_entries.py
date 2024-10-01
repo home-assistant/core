@@ -2734,12 +2734,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reconfigure flows, and will fail if `entry_id` is not part of
         the context.
         """
-        config_entry_id = self.context["entry_id"]
-        entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if entry is None:
-            raise UnknownEntry(config_entry_id)
+        if "entry_id" in self.context and (
+            entry := self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        ):
+            return entry
 
-        return entry
+        raise UnknownEntry
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
