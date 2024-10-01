@@ -44,10 +44,10 @@ from .const import (
 
 def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema for gateways."""
-    base_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
+    schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
-        base_schema = base_schema.extend(
+        schema = schema.extend(
             {
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
@@ -57,7 +57,7 @@ def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
             }
         )
 
-    return base_schema
+    return schema
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
