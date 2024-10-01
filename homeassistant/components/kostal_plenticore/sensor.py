@@ -750,7 +750,7 @@ SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="scb:event",
         key="Event:ActiveErrorCnt",
-        name="Active Errors",
+        name="Active Alarms",
         icon="mdi:alert",
         formatter="format_round",
     ),
