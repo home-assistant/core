@@ -4,19 +4,12 @@ import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_locks import Lock
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    STATE_JAMMED,
-    STATE_LOCKING,
-    STATE_UNLOCKING,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import Event, HomeAssistant
 
@@ -40,27 +33,27 @@ async def test_lock_unlock(hass: HomeAssistant, hk_driver, events: list[Event]) 
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_LOCKED)
+    hass.states.async_set(entity_id, LockState.LOCKED)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 1
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_LOCKING)
+    hass.states.async_set(entity_id, LockState.LOCKING)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, LockState.UNLOCKED)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNLOCKING)
+    hass.states.async_set(entity_id, LockState.UNLOCKING)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 1
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_JAMMED)
+    hass.states.async_set(entity_id, LockState.JAMMED)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 2
     assert acc.char_target_state.value == 0
@@ -78,7 +71,7 @@ async def test_lock_unlock(hass: HomeAssistant, hk_driver, events: list[Event]) 
     assert acc.char_target_state.value == 0
     assert acc.available is False
 
-    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, LockState.UNLOCKED)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0

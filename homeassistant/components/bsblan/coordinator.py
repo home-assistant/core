@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
 
-from bsblan import BSBLAN, BSBLANConnectionError, State
+from bsblan import BSBLAN, BSBLANConnectionError, Sensor, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -19,6 +19,7 @@ class BSBLanCoordinatorData:
     """BSBLan data stored in the Home Assistant data object."""
 
     state: State
+    sensor: Sensor
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
@@ -54,6 +55,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         """Get state and sensor data from BSB-Lan device."""
         try:
             state = await self.client.state()
+            sensor = await self.client.sensor()
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST] if self.config_entry else "unknown"
             raise UpdateFailed(
@@ -61,4 +63,4 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
             ) from err
 
         self.update_interval = self._get_update_interval()
-        return BSBLanCoordinatorData(state=state)
+        return BSBLanCoordinatorData(state=state, sensor=sensor)

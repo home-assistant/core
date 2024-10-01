@@ -9,7 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
-from . import DOMAIN
+from .const import DOMAIN
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
@@ -25,11 +25,12 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _title: str
+
     def __init__(self) -> None:
         """Initialize the WiLight flow."""
         self._host = None
         self._serial_number = None
-        self._title = None
         self._model_name = None
         self._wilight_components: list[str] = []
         self._components_text = ""

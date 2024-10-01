@@ -1,7 +1,10 @@
 """Test the Insteon APIs for configuring the integration."""
 
+import asyncio
+import json
 from unittest.mock import patch
 
+from homeassistant.components import insteon
 from homeassistant.components.insteon.api.device import ID, TYPE
 from homeassistant.components.insteon.const import (
     CONF_HUB_VERSION,
@@ -18,8 +21,10 @@ from .const import (
     MOCK_USER_INPUT_PLM,
 )
 from .mock_connection import mock_failed_connection, mock_successful_connection
+from .mock_devices import MockDevices
 from .mock_setup import async_mock_setup
 
+from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -389,3 +394,55 @@ async def test_remove_device_override_no_overrides(
 
     config_entry = hass.config_entries.async_get_entry("abcde12345")
     assert not config_entry.options.get(CONF_OVERRIDE)
+
+
+async def test_get_broken_links(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting broken ALDB links."""
+
+    ws_client, _, _, _ = await async_mock_setup(hass, hass_ws_client)
+    devices = MockDevices()
+    await devices.async_load()
+    aldb_data = json.loads(load_fixture("insteon/aldb_data.json"))
+    devices.fill_aldb("33.33.33", aldb_data)
+    await asyncio.sleep(1)
+    with patch.object(insteon.api.config, "devices", devices):
+        await ws_client.send_json({ID: 2, TYPE: "insteon/config/get_broken_links"})
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        assert len(msg["result"]) == 5
+
+
+async def test_get_unknown_devices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting unknown Insteon devices."""
+
+    ws_client, _, _, _ = await async_mock_setup(hass, hass_ws_client)
+    devices = MockDevices()
+    await devices.async_load()
+    aldb_data = {
+        "4095": {
+            "memory": 4095,
+            "in_use": True,
+            "controller": False,
+            "high_water_mark": False,
+            "bit5": True,
+            "bit4": False,
+            "group": 0,
+            "target": "FFFFFF",
+            "data1": 0,
+            "data2": 0,
+            "data3": 0,
+        },
+    }
+    devices.fill_aldb("33.33.33", aldb_data)
+    with patch.object(insteon.api.config, "devices", devices):
+        await ws_client.send_json({ID: 2, TYPE: "insteon/config/get_unknown_devices"})
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        assert len(msg["result"]) == 1
+        await asyncio.sleep(0.1)

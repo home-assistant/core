@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
-SAFE_QUERY_PARAMS: Final = ["height", "width"]
+SAFE_QUERY_PARAMS: Final = frozenset(("height", "width"))
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"

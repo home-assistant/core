@@ -7,7 +7,12 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
-from homeassistant.components.lcn.const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from homeassistant.components.lcn.const import (
+    CONF_ACKNOWLEDGE,
+    CONF_DIM_MODE,
+    CONF_SK_NUM_TRIES,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_BASE,
     CONF_DEVICES,
@@ -31,6 +36,7 @@ CONFIG_DATA = {
     CONF_PASSWORD: "lcn",
     CONF_SK_NUM_TRIES: 0,
     CONF_DIM_MODE: "STEPS200",
+    CONF_ACKNOWLEDGE: False,
 }
 
 CONNECTION_DATA = {CONF_HOST: "pchk", **CONFIG_DATA}

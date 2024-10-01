@@ -549,7 +549,7 @@ async def test_zwave_js_event(
                         "config_entry_id": integration.entry_id,
                         "event_source": "controller",
                         "event": "inclusion started",
-                        "event_data": {"secure": True},
+                        "event_data": {"strategy": 0},
                     },
                     "action": {
                         "event": "controller_event_data_filter",
@@ -667,7 +667,7 @@ async def test_zwave_js_event(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": False,
+            "strategy": 2,
         },
     )
     client.driver.controller.receive_event(event)
@@ -691,7 +691,7 @@ async def test_zwave_js_event(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": True,
+            "strategy": 0,
         },
     )
     client.driver.controller.receive_event(event)

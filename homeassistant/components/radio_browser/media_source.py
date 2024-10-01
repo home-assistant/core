@@ -8,12 +8,12 @@ from radios import FilterBy, Order, RadioBrowser, Station
 from radios.radio_browser import pycountry
 
 from homeassistant.components.media_player import MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.core import HomeAssistant, callback
 

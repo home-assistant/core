@@ -38,7 +38,7 @@ import homeassistant.util.color as color_util
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
-from ..mixins import MqttEntity
+from ..entity import MqttEntity
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,

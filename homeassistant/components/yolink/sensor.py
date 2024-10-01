@@ -175,8 +175,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR]
-        and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS,
+        exists_fn=lambda device: (
+            device.device_type in [ATTR_DEVICE_TH_SENSOR]
+            and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS
+        ),
     ),
     YoLinkSensorEntityDescription(
         key="temperature",
@@ -248,8 +250,9 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         should_update_entity=lambda value: value is not None,
-        exists_fn=lambda device: device.device_type
-        in ATTR_DEVICE_WATER_METER_CONTROLLER,
+        exists_fn=lambda device: (
+            device.device_type in ATTR_DEVICE_WATER_METER_CONTROLLER
+        ),
     ),
     YoLinkSensorEntityDescription(
         key="power",
