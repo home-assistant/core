@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
@@ -84,19 +84,6 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
 
     async def async_get_holdings(self):
         """Get holdings."""
-
-        LOGGER.error(
-            f"async_get_holdings for account {self._account_id} - {self.account_data.id} {self.account_data.data_provider} {self.account_data.name}"
-        )
-
         if holdings := self.account_data.holdings:
-            #     return
-            #
-            # client: TypedMonarchMoney = self.coordinator.client
-            # holdings: MonarchHoldings = await client.get_account_holdings_for_id(
-            #     self._account_id
-            # )
-            # LOGGER.warning(f"holdings: {holdings}")
-            # if holdings:
             return holdings.to_json()
         return "{}"
