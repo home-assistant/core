@@ -350,6 +350,7 @@ def label_mock(hass: HomeAssistant) -> None:
         unique_id="with_label1_from_device",
         platform="test",
         device_id=device_has_label1.id,
+        area_id=area_without_labels.id,
     )
     entity_with_label1_and_label2_from_device = er.RegistryEntry(
         entity_id="light.with_label1_and_label2_from_device",
