@@ -13,7 +13,7 @@ from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -24,6 +24,10 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
