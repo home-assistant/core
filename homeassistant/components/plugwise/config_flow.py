@@ -136,12 +136,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {
-                    CONF_HOST: discovery_info.host,
-                    CONF_NAME: _name,
-                    CONF_PORT: discovery_info.port,
-                    CONF_USERNAME: self._username,
-                },
+                "title_placeholders": {CONF_NAME: _name},
                 "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                 ),

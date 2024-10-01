@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.3.0
+PyViCare==2.34.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1630,7 +1630,7 @@ prayer-times-calculator-offline==1.0.3
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus-client==0.17.1
+prometheus-client==0.21.0
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
