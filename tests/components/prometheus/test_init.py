@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Self
 from unittest import mock
 
 from freezegun import freeze_time
@@ -94,17 +94,26 @@ class EntityMetric:
     metric_name: str
     labels: dict[str, str]
 
+    @classmethod
+    def required_labels(cls) -> list[str]:
+        """List of all required labels for a Prometheus metric."""
+        return [
+            "domain",
+            "friendly_name",
+            "entity",
+        ]
+
     def __init__(self, metric_name: str, **kwargs: Any) -> None:
         """Create a new EntityMetric based on metric name and labels."""
         self.metric_name = metric_name
         self.labels = kwargs
 
         # Labels that are required for all entities.
-        for labelname in ("domain", "friendly_name", "entity"):
+        for labelname in self.required_labels():
             assert labelname in self.labels
             assert self.labels[labelname] != ""
 
-    def withValue(self, value: float):
+    def withValue(self, value: float) -> Self:
         """Return a metric with value."""
         return EntityMetricWithValue(self, value)
 
@@ -120,11 +129,11 @@ class EntityMetric:
         """Report whether this metric exists in the provided Prometheus output."""
         return any(line.startswith(self._metric_name_string) for line in metrics)
 
-    def assert_in_metrics(self, metrics: list[str]):
+    def assert_in_metrics(self, metrics: list[str]) -> None:
         """Assert that this metric exists in the provided Prometheus output."""
         assert self._in_metrics(metrics)
 
-    def assert_not_in_metrics(self, metrics: list[str]):
+    def assert_not_in_metrics(self, metrics: list[str]) -> None:
         """Assert that this metric does not exist in Prometheus output."""
         assert not self._in_metrics(metrics)
 
@@ -145,7 +154,7 @@ class EntityMetricWithValue(EntityMetric):
         value = floatToGoString(self.value)
         return f"{self._metric_name_string} {value}"
 
-    def assert_in_metrics(self, metrics: list[str]):
+    def assert_in_metrics(self, metrics: list[str]) -> None:
         """Assert that this metric exists in the provided Prometheus output."""
         assert self._metric_string in metrics
 
@@ -199,26 +208,42 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
     """Test using EntityMetric to raise exception when required labels are missing."""
     domain = "sensor"
     object_id = "outside_temperature"
-    with pytest.raises(AssertionError):
-        EntityMetric(
-            metric_name="homeassistant_sensor_temperature_celsius",
-            friendly_name="Outside Temperature",
-            entity=f"{domain}.{object_id}",
-        ).withValue(17.2)
+    test_kwargs = {
+        "metric_name": "homeassistant_sensor_temperature_celsius",
+        "domain": domain,
+        "friendly_name": "Outside Temperature",
+        "entity": f"{domain}.{object_id}",
+    }
 
-    with pytest.raises(AssertionError):
-        EntityMetric(
-            metric_name="homeassistant_sensor_temperature_celsius",
-            domain=domain,
-            entity=f"{domain}.{object_id}",
-        ).withValue(17.2)
+    assert len(EntityMetric.required_labels()) > 0
 
-    with pytest.raises(AssertionError):
-        EntityMetric(
-            metric_name="homeassistant_sensor_temperature_celsius",
-            domain=domain,
-            friendly_name="Outside Temperature",
-        ).withValue(17.2)
+    for labelname in EntityMetric.required_labels():
+        label_kwargs = dict(test_kwargs)
+        # Delete the required label and ensure we get an exception
+        del label_kwargs[labelname]
+        with pytest.raises(AssertionError):
+            EntityMetric(**label_kwargs)
+
+
+def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> None:
+    """Test using EntityMetric to raise exception when required label value is empty string."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    test_kwargs = {
+        "metric_name": "homeassistant_sensor_temperature_celsius",
+        "domain": domain,
+        "friendly_name": "Outside Temperature",
+        "entity": f"{domain}.{object_id}",
+    }
+
+    assert len(EntityMetric.required_labels()) > 0
+
+    for labelname in EntityMetric.required_labels():
+        label_kwargs = dict(test_kwargs)
+        # Replace the required label with "" and ensure we get an exception
+        label_kwargs[labelname] = ""
+        with pytest.raises(AssertionError):
+            EntityMetric(**label_kwargs)
 
 
 def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
@@ -230,7 +255,9 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
         "homeassistant_sensor_temperature_celsius{"
         'domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}'
+        'friendly_name="Outside Temperature",'
+        'zed_label="foo"'
+        "}"
         " 17.2"
     )
 
@@ -239,13 +266,15 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
         domain=domain,
         entity=f"{domain}.{object_id}",
         friendly_name="Outside Temperature",
+        zed_label="foo",
     ).withValue(17.2)
     assert ordered_entity_metric._metric_string == static_metric_string
 
     unordered_entity_metric = EntityMetric(
         metric_name="homeassistant_sensor_temperature_celsius",
-        friendly_name="Outside Temperature",
+        zed_label="foo",
         entity=f"{domain}.{object_id}",
+        friendly_name="Outside Temperature",
         domain=domain,
     ).withValue(17.2)
     assert unordered_entity_metric._metric_string == static_metric_string
