@@ -13,7 +13,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity, handle_sending_exception
+from .entity import (
+    AutomowerControlEntity,
+    WorkAreaControlEntity,
+    _work_area_translation_key,
+    handle_sending_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +46,13 @@ async def async_setup_entry(
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
+        if coordinator.data[mower_id].capabilities.work_areas:
+            _work_areas = coordinator.data[mower_id].work_areas
+            if _work_areas is not None:
+                entities.extend(
+                    WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                    for work_area_id in _work_areas
+                )
     async_add_entities(entities)
 
 
@@ -128,6 +140,47 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
             self.mower_id, self.stay_out_zone_uid, True
+        )
+
+
+class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
+    """Defining the Automower work area switch."""
+
+    def __init__(
+        self,
+        coordinator: AutomowerDataUpdateCoordinator,
+        mower_id: str,
+        work_area_id: int,
+    ) -> None:
+        """Set up Automower switch."""
+        super().__init__(mower_id, coordinator, work_area_id)
+        key = "work_area"
+        self._attr_translation_key = _work_area_translation_key(work_area_id, key)
+        self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
+        if self.work_area_attributes.name == "my_lawn":
+            self._attr_translation_placeholders = {
+                "work_area": self.work_area_attributes.name
+            }
+        else:
+            self._attr_name = self.work_area_attributes.name
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self.work_area_attributes.enabled
+
+    @handle_sending_exception(poll_after_sending=True)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.coordinator.api.commands.workarea_settings(
+            self.mower_id, self.work_area_id, enabled=False
+        )
+
+    @handle_sending_exception(poll_after_sending=True)
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.coordinator.api.commands.workarea_settings(
+            self.mower_id, self.work_area_id, enabled=True
         )
 
 

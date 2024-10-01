@@ -109,6 +109,12 @@
     "switch": {
       "siren": {
         "name": "[%key:component::siren::title%]"
+      },
+      "in_home_chime": {
+        "name": "In-home chime"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
       }
     }
   },

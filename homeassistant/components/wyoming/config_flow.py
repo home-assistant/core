@@ -13,7 +13,7 @@ from homeassistant.components import zeroconf
 if TYPE_CHECKING:
     from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -126,7 +126,6 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        self.context[CONF_NAME] = self._name
         self.context["title_placeholders"] = {"name": self._name}
 
         self._service = service

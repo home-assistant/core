@@ -17,14 +17,12 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,20 +40,20 @@ async def async_setup_entry(
     @callback
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
-        if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
-            async_add_entities([SwitcherCoverEntity(coordinator)])
+        if coordinator.data.device_type.category in (
+            DeviceCategory.SHUTTER,
+            DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
+        ):
+            async_add_entities([SwitcherCoverEntity(coordinator, 0)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
     )
 
 
-class SwitcherCoverEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], CoverEntity
-):
+class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
@@ -65,14 +63,16 @@ class SwitcherCoverEntity(
         | CoverEntityFeature.STOP
     )
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int | None = None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._cover_id = cover_id
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        )
 
         self._update_data()
 
@@ -102,6 +102,7 @@ class SwitcherCoverEntity(
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
+                self.coordinator.token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (TimeoutError, OSError, RuntimeError) as err:
@@ -117,16 +118,18 @@ class SwitcherCoverEntity(
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api(API_SET_POSITON, 0)
+        await self._async_call_api(API_SET_POSITON, 0, self._cover_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api(API_SET_POSITON, 100)
+        await self._async_call_api(API_SET_POSITON, 100, self._cover_id)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
+        await self._async_call_api(
+            API_SET_POSITON, kwargs[ATTR_POSITION], self._cover_id
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._async_call_api(API_STOP)
+        await self._async_call_api(API_STOP, self._cover_id)

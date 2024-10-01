@@ -31,7 +31,7 @@
           "mode": "[%key:common::config_flow::data::mode%]"
         },
         "data_description": {
-          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select 'Cloud'.\n\nSelect 'Self-hosted' only if you have a working self-hosted instance."
+          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select **Cloud**.\n\nSelect **Self-hosted** only if you have a working self-hosted instance."
         }
       }
     }

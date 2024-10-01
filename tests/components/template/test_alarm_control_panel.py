@@ -107,7 +107,8 @@ TEMPLATE_ALARM_CONFIG = {
         },
     ],
 )
-async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
 
     for set_state in (
@@ -179,7 +180,8 @@ async def test_setup_config_entry(
         },
     ],
 )
-async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_optimistic_states(hass: HomeAssistant) -> None:
     """Test the optimistic state."""
 
     state = hass.states.get(TEMPLATE_NAME)
@@ -269,8 +271,9 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_syntax_error(
-    hass: HomeAssistant, msg, start_ha, caplog_setup_text
+    hass: HomeAssistant, msg, caplog_setup_text
 ) -> None:
     """Test templating syntax error."""
     assert len(hass.states.async_all("alarm_control_panel")) == 0
@@ -295,7 +298,8 @@ async def test_template_syntax_error(
         },
     ],
 )
-async def test_name(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_name(hass: HomeAssistant) -> None:
     """Test the accessibility of the name attribute."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state is not None
@@ -326,8 +330,9 @@ async def test_name(hass: HomeAssistant, start_ha) -> None:
         "alarm_trigger",
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_actions(
-    hass: HomeAssistant, service, start_ha, call_service_events: list[Event]
+    hass: HomeAssistant, service, call_service_events: list[Event]
 ) -> None:
     """Test alarm actions."""
     await hass.services.async_call(
@@ -363,7 +368,8 @@ async def test_actions(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one alarm control panel per id."""
     assert len(hass.states.async_all()) == 1
 
@@ -435,9 +441,8 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_code_config(
-    hass: HomeAssistant, code_format, code_arm_required, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_code_config(hass: HomeAssistant, code_format, code_arm_required) -> None:
     """Test configuration options related to alarm code."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state.attributes.get("code_format") == code_format
