@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -141,6 +142,12 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to reconfigure a config entry."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to reconfigure a config entry."""
@@ -179,7 +186,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._entry is not None
         host = self._entry.data[CONF_HOST]
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
             description_placeholders={"device": self._entry.title},
             errors=errors,

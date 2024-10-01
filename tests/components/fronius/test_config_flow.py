@@ -361,7 +361,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     with (
         patch(
@@ -493,7 +493,7 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     with (
         patch(
