@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from babel import Locale, UnknownLocaleError
@@ -112,7 +113,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="province", data_schema=province_schema)
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle the re-configuration of a province."""
         self.config_entry = self.hass.config_entries.async_get_entry(
