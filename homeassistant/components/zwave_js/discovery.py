@@ -1363,6 +1363,7 @@ def async_discover_single_value(
         if not schema.allow_multi:
             discovered_value_ids[device.id].add(value.value_id)
 
+    # prevent re-discovery of the (primary) value after all schemas have been checked
     discovered_value_ids[device.id].add(value.value_id)
 
     if value.command_class == CommandClass.CONFIGURATION:
