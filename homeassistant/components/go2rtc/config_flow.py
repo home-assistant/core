@@ -11,7 +11,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.package import is_docker_env
 
 from .const import CONF_BINARY, DOMAIN
@@ -20,6 +22,7 @@ _VALID_URL_SCHEMA = {"http", "https"}
 
 
 async def _validate_url(
+    hass: HomeAssistant,
     value: str,
 ) -> str | None:
     """Validate the URL and return error or None if it's valid."""
@@ -31,7 +34,7 @@ async def _validate_url(
         return "invalid_url"
 
     try:
-        client = Go2RtcClient(value)
+        client = Go2RtcClient(async_get_clientsession(hass), value)
         await client.streams.list()
     except Exception:  # noqa: BLE001
         return "cannot_connect"
@@ -66,7 +69,7 @@ class Go2RTCConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step to use selfhosted go2rtc server."""
         errors = {}
         if user_input is not None:
-            if error := await _validate_url(user_input[CONF_HOST]):
+            if error := await _validate_url(self.hass, user_input[CONF_HOST]):
                 errors[CONF_HOST] = error
             else:
                 return self.async_create_entry(title=DOMAIN, data=user_input)

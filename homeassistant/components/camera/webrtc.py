@@ -52,7 +52,7 @@ class RTCIceServer(_RTCBaseModel):
     See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
     """
 
-    urls: list[str]
+    urls: list[str] | str
     username: str | None = None
     credential: str | None = None
 
@@ -266,9 +266,6 @@ def register_ice_server(
 
     The registering integration is responsible to implement caching if needed.
     """
-    if DOMAIN not in hass.data:
-        raise ValueError("Unexpected state, camera not loaded")
-
     servers = hass.data.setdefault(DATA_ICE_SERVERS, [])
 
     def remove() -> None:
