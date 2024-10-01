@@ -18,10 +18,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BangOlufsenData
 from .const import (
-    BEO_REMOTE_CONTROL_FUNCTIONS,
+    BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
     BEO_REMOTE_KEYS,
-    BEO_REMOTE_LIGHT_FUNCTIONS,
+    BEO_REMOTE_LIGHT_KEYS,
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
     DEVICE_BUTTON_EVENTS,
@@ -80,7 +80,7 @@ async def async_setup_entry(
                     remote,
                     f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
                 )
-                for key_type in BEO_REMOTE_KEYS + BEO_REMOTE_LIGHT_FUNCTIONS
+                for key_type in (*BEO_REMOTE_KEYS, BEO_REMOTE_LIGHT_KEYS)
             ]
         )
 
@@ -93,7 +93,7 @@ async def async_setup_entry(
                     remote,
                     f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
                 )
-                for key_type in BEO_REMOTE_KEYS + BEO_REMOTE_CONTROL_FUNCTIONS
+                for key_type in (*BEO_REMOTE_KEYS, BEO_REMOTE_CONTROL_KEYS)
             ]
         )
 
@@ -104,7 +104,7 @@ class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = DEVICE_BUTTON_EVENTS
+    _attr_event_types = list(DEVICE_BUTTON_EVENTS)
     _attr_icon = "mdi:gesture-tap-button"
 
     def __init__(
@@ -141,7 +141,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEntity, EventEntity):
     """Event class for Beoremote One key events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = BEO_REMOTE_KEY_EVENTS
+    _attr_event_types = list(BEO_REMOTE_KEY_EVENTS)
     _attr_icon = "mdi:remote"
 
     def __init__(

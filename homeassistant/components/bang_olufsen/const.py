@@ -210,7 +210,8 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
-DEVICE_BUTTONS: Final[list[str]] = [
+CONF_SUBTYPE: Final[str] = "subtype"
+DEVICE_BUTTONS: Final[tuple[str, ...]] = (
     "Bluetooth",
     "Microphone",
     "Next",
@@ -221,35 +222,21 @@ DEVICE_BUTTONS: Final[list[str]] = [
     "Preset4",
     "Previous",
     "Volume",
-]
-DEVICE_BUTTON_EVENTS: Final[list[str]] = [
+)
+
+DEVICE_BUTTON_EVENTS: Final[tuple[str, ...]] = (
     "shortPress (Release)",
     "longPress (Timeout)",
     "longPress (Release)",
     "veryLongPress (Timeout)",
     "veryLongPress (Release)",
-]
+)
 
 BEO_REMOTE_SUBMENU_CONTROL: Final[str] = "Control"
 BEO_REMOTE_SUBMENU_LIGHT: Final[str] = "Light"
-BEO_REMOTE_CONTROL_FUNCTIONS: Final[list[str]] = [
-    "Func1",
-    "Func11",
-    "Func16",
-    "Func6",
-]
-BEO_REMOTE_LIGHT_FUNCTIONS: Final[list[str]] = [
-    "Func1",
-    "Func11",
-    "Func12",
-    "Func13",
-    "Func14",
-    "Func15",
-    "Func16",
-    "Func17",
-]
 
-BEO_REMOTE_KEYS: Final[list[str]] = [
+# Common for both submenus
+BEO_REMOTE_KEYS: Final[tuple[str, ...]] = (
     "Blue",
     "Digit0",
     "Digit1",
@@ -273,5 +260,39 @@ BEO_REMOTE_KEYS: Final[list[str]] = [
     "Up",
     "Wind",
     "Yellow",
-]
-BEO_REMOTE_KEY_EVENTS: Final[list[str]] = ["KeyPress", "KeyRelease"]
+)
+
+# "keys" that are unique to the Control and Light submenus
+BEO_REMOTE_CONTROL_KEYS: Final[tuple[str, ...]] = (
+    "Func1",
+    "Func11",
+    "Func16",
+    "Func6",
+)
+
+BEO_REMOTE_LIGHT_KEYS: Final[tuple[str, ...]] = (
+    "Func1",
+    "Func11",
+    "Func12",
+    "Func13",
+    "Func14",
+    "Func15",
+    "Func16",
+    "Func17",
+)
+
+
+BEO_REMOTE_KEY_EVENTS: Final[tuple[str, ...]] = ("KeyPress", "KeyRelease")
+
+BEO_REMOTE_SUBMENUS: Final[tuple[str, str]] = (
+    BEO_REMOTE_SUBMENU_CONTROL,
+    BEO_REMOTE_SUBMENU_LIGHT,
+)
+
+
+DEVICE_TRIGGER_TYPES: Final[tuple[str, ...]] = (
+    *DEVICE_BUTTONS,
+    *(f"{submenu}/{key}" for submenu in BEO_REMOTE_SUBMENUS for key in BEO_REMOTE_KEYS),
+    *(f"{BEO_REMOTE_SUBMENU_CONTROL}/{key}" for key in BEO_REMOTE_CONTROL_KEYS),
+    *(f"{BEO_REMOTE_SUBMENU_CONTROL}/{key}" for key in BEO_REMOTE_LIGHT_KEYS),
+)

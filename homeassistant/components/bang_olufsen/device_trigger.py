@@ -24,144 +24,26 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BANG_OLUFSEN_EVENT, DOMAIN
-
-DEFAULT_TRIGGERS = (
-    "Bluetooth_longPress",
-    "Bluetooth_shortPress",
-    "Microphone_shortPress",
-    "Next_shortPress",
-    "PlayPause_longPress",
-    "PlayPause_shortPress",
-    "Preset1_shortPress",
-    "Preset2_shortPress",
-    "Preset3_shortPress",
-    "Preset4_shortPress",
-    "Previous_shortPress",
-)
-
-REMOTE_TRIGGERS = (
-    "Control/Blue_KeyPress",
-    "Control/Blue_KeyRelease",
-    "Control/Digit0_KeyPress",
-    "Control/Digit0_KeyRelease",
-    "Control/Digit1_KeyPress",
-    "Control/Digit1_KeyRelease",
-    "Control/Digit2_KeyPress",
-    "Control/Digit2_KeyRelease",
-    "Control/Digit3_KeyPress",
-    "Control/Digit3_KeyRelease",
-    "Control/Digit4_KeyPress",
-    "Control/Digit4_KeyRelease",
-    "Control/Digit5_KeyPress",
-    "Control/Digit5_KeyRelease",
-    "Control/Digit6_KeyPress",
-    "Control/Digit6_KeyRelease",
-    "Control/Digit7_KeyPress",
-    "Control/Digit7_KeyRelease",
-    "Control/Digit8_KeyPress",
-    "Control/Digit8_KeyRelease",
-    "Control/Digit9_KeyPress",
-    "Control/Digit9_KeyRelease",
-    "Control/Down_KeyPress",
-    "Control/Down_KeyRelease",
-    "Control/Func1_KeyPress",
-    "Control/Func1_KeyRelease",
-    "Control/Func11_KeyPress",
-    "Control/Func11_KeyRelease",
-    "Control/Func16_KeyPress",
-    "Control/Func16_KeyRelease",
-    "Control/Func6_KeyPress",
-    "Control/Func6_KeyRelease",
-    "Control/Green_KeyPress",
-    "Control/Green_KeyRelease",
-    "Control/Left_KeyPress",
-    "Control/Left_KeyRelease",
-    "Control/Play_KeyPress",
-    "Control/Play_KeyRelease",
-    "Control/Red_KeyPress",
-    "Control/Red_KeyRelease",
-    "Control/Rewind_KeyPress",
-    "Control/Rewind_KeyRelease",
-    "Control/Right_KeyPress",
-    "Control/Right_KeyRelease",
-    "Control/Select_KeyPress",
-    "Control/Select_KeyRelease",
-    "Control/Stop_KeyPress",
-    "Control/Stop_KeyRelease",
-    "Control/Up_KeyPress",
-    "Control/Up_KeyRelease",
-    "Control/Wind_KeyPress",
-    "Control/Wind_KeyRelease",
-    "Control/Yellow_KeyPress",
-    "Control/Yellow_KeyRelease",
-    "Light/Blue_KeyPress",
-    "Light/Blue_KeyRelease",
-    "Light/Digit0_KeyPress",
-    "Light/Digit0_KeyRelease",
-    "Light/Digit1_KeyPress",
-    "Light/Digit1_KeyRelease",
-    "Light/Digit2_KeyPress",
-    "Light/Digit2_KeyRelease",
-    "Light/Digit3_KeyPress",
-    "Light/Digit3_KeyRelease",
-    "Light/Digit4_KeyPress",
-    "Light/Digit4_KeyRelease",
-    "Light/Digit5_KeyPress",
-    "Light/Digit5_KeyRelease",
-    "Light/Digit6_KeyPress",
-    "Light/Digit6_KeyRelease",
-    "Light/Digit7_KeyPress",
-    "Light/Digit7_KeyRelease",
-    "Light/Digit8_KeyPress",
-    "Light/Digit8_KeyRelease",
-    "Light/Digit9_KeyPress",
-    "Light/Digit9_KeyRelease",
-    "Light/Down_KeyPress",
-    "Light/Down_KeyRelease",
-    "Light/Func1_KeyPress",
-    "Light/Func1_KeyRelease",
-    "Light/Func11_KeyPress",
-    "Light/Func11_KeyRelease",
-    "Light/Func12_KeyPress",
-    "Light/Func12_KeyRelease",
-    "Light/Func13_KeyPress",
-    "Light/Func13_KeyRelease",
-    "Light/Func14_KeyPress",
-    "Light/Func14_KeyRelease",
-    "Light/Func15_KeyPress",
-    "Light/Func15_KeyRelease",
-    "Light/Func16_KeyPress",
-    "Light/Func16_KeyRelease",
-    "Light/Func17_KeyPress",
-    "Light/Func17_KeyRelease",
-    "Light/Green_KeyPress",
-    "Light/Green_KeyRelease",
-    "Light/Left_KeyPress",
-    "Light/Left_KeyRelease",
-    "Light/Play_KeyPress",
-    "Light/Play_KeyRelease",
-    "Light/Red_KeyPress",
-    "Light/Red_KeyRelease",
-    "Light/Rewind_KeyPress",
-    "Light/Rewind_KeyRelease",
-    "Light/Right_KeyPress",
-    "Light/Right_KeyRelease",
-    "Light/Select_KeyPress",
-    "Light/Select_KeyRelease",
-    "Light/Stop_KeyPress",
-    "Light/Stop_KeyRelease",
-    "Light/Up_KeyPress",
-    "Light/Up_KeyRelease",
-    "Light/Wind_KeyPress",
-    "Light/Wind_KeyRelease",
-    "Light/Yellow_KeyPress",
-    "Light/Yellow_KeyRelease",
+from .const import (
+    BANG_OLUFSEN_EVENT,
+    BEO_REMOTE_CONTROL_KEYS,
+    BEO_REMOTE_KEY_EVENTS,
+    BEO_REMOTE_KEYS,
+    BEO_REMOTE_LIGHT_KEYS,
+    BEO_REMOTE_SUBMENU_CONTROL,
+    BEO_REMOTE_SUBMENU_LIGHT,
+    BEO_REMOTE_SUBMENUS,
+    CONF_SUBTYPE,
+    DEVICE_BUTTON_EVENTS,
+    DEVICE_BUTTONS,
+    DEVICE_TRIGGER_TYPES,
+    DOMAIN,
 )
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(REMOTE_TRIGGERS + DEFAULT_TRIGGERS),
+        vol.Required(CONF_SUBTYPE): vol.In(DEVICE_TRIGGER_TYPES),
+        vol.Required(CONF_TYPE): vol.In(BEO_REMOTE_KEY_EVENTS + DEVICE_BUTTON_EVENTS),
     }
 )
 
@@ -195,20 +77,72 @@ async def async_get_triggers(
     )
 
     # Always add default triggers
-    trigger_types: list[str] = list(DEFAULT_TRIGGERS)
-
-    if remote_control_available:
-        trigger_types.extend(REMOTE_TRIGGERS)
-
-    return [
+    triggers: list[dict[str, Any]] = [
         {
             CONF_PLATFORM: CONF_DEVICE,
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: trigger_type,
+            CONF_SUBTYPE: device_button,
         }
-        for trigger_type in trigger_types
+        for device_button in DEVICE_BUTTONS
+        for trigger_type in DEVICE_BUTTON_EVENTS
     ]
+    # Add remote triggers if available
+    if remote_control_available:
+        # Add common triggers
+        triggers.extend(
+            [
+                {
+                    CONF_PLATFORM: CONF_DEVICE,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_TYPE: trigger_type,
+                    CONF_SUBTYPE: remote_button,
+                }
+                for remote_button in [
+                    f"{submenu}/{key}"
+                    for submenu in BEO_REMOTE_SUBMENUS
+                    for key in BEO_REMOTE_KEYS
+                ]
+                for trigger_type in BEO_REMOTE_KEY_EVENTS
+            ]
+        )
+        # Add Control triggers
+        triggers.extend(
+            [
+                {
+                    CONF_PLATFORM: CONF_DEVICE,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_TYPE: trigger_type,
+                    CONF_SUBTYPE: remote_button,
+                }
+                for remote_button in [
+                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key}"
+                    for key in BEO_REMOTE_CONTROL_KEYS
+                ]
+                for trigger_type in BEO_REMOTE_KEY_EVENTS
+            ]
+        )
+
+        # Add Light triggers
+        triggers.extend(
+            [
+                {
+                    CONF_PLATFORM: CONF_DEVICE,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_TYPE: trigger_type,
+                    CONF_SUBTYPE: remote_button,
+                }
+                for remote_button in [
+                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key}" for key in BEO_REMOTE_LIGHT_KEYS
+                ]
+                for trigger_type in BEO_REMOTE_KEY_EVENTS
+            ]
+        )
+    return triggers
 
 
 async def async_attach_trigger(
@@ -218,14 +152,14 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: CONF_EVENT,
             event_trigger.CONF_EVENT_TYPE: BANG_OLUFSEN_EVENT,
             event_trigger.CONF_EVENT_DATA: {
-                CONF_TYPE: config[CONF_TYPE],
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                CONF_TYPE: config[CONF_TYPE],
+                CONF_SUBTYPE: config[CONF_SUBTYPE],
             },
         }
     )

@@ -29,6 +29,7 @@ from homeassistant.util.enum import try_parse_enum
 from .const import (
     BANG_OLUFSEN_EVENT,
     BANG_OLUFSEN_WEBSOCKET_EVENT,
+    CONF_SUBTYPE,
     CONNECTION_STATUS,
     WebsocketNotification,
 )
@@ -115,7 +116,8 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self.hass.bus.async_fire(
             BANG_OLUFSEN_EVENT,
             event_data={
-                CONF_TYPE: f"{notification.key}_{notification.type}",
+                CONF_TYPE: notification.type,
+                CONF_SUBTYPE: notification.key,
                 CONF_DEVICE_ID: self._device.id,
             },
         )
@@ -132,7 +134,8 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self.hass.bus.async_fire(
             BANG_OLUFSEN_EVENT,
             event_data={
-                CONF_TYPE: f"{notification.button}_{notification.state}",
+                CONF_TYPE: notification.state,
+                CONF_SUBTYPE: notification.button,
                 CONF_DEVICE_ID: self._device.id,
             },
         )
