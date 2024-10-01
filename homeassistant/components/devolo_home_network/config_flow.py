@@ -120,9 +120,11 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauthentication."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
             self.host = entry_data[CONF_IP_ADDRESS]
-            self.context["title_placeholders"][PRODUCT] = (
-                entry.runtime_data.device.product
-            )
+            placeholders = {
+                **self.context["title_placeholders"],
+                PRODUCT: entry.runtime_data.device.product,
+            }
+            self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
