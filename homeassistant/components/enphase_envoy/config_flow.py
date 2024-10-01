@@ -294,7 +294,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._reconnect_entry.unique_id)
 
         self.context["title_placeholders"] = {
-            CONF_SERIAL: self.unique_id,
+            CONF_SERIAL: self.unique_id or "-",
             CONF_HOST: host,
         }
 
