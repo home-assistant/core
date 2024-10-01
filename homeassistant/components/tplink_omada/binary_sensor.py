@@ -17,22 +17,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import OmadaGatewayCoordinator, OmadaSiteController
+from . import OmadaConfigEntry
+from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OmadaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
 
     gateway_coordinator = controller.gateway_coordinator
     if not gateway_coordinator:
