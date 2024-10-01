@@ -502,3 +502,21 @@ async def test_entrypoint_cache_control(
     assert resp1.headers["Cache-Control"] == "no-store, max-age=0"
 
     assert "Cache-Control" not in resp2.headers
+
+
+async def test_no_follow_logs_compress(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that we do not compress follow logs."""
+    aioclient_mock.get("http://127.0.0.1/supervisor/logs/follow")
+    aioclient_mock.get("http://127.0.0.1/supervisor/logs")
+
+    resp1 = await hassio_client.get("/api/hassio/supervisor/logs/follow")
+    resp2 = await hassio_client.get("/api/hassio/supervisor/logs")
+
+    # Check we got right response
+    assert resp1.status == HTTPStatus.OK
+    assert resp1.headers.get("Content-Encoding") is None
+
+    assert resp2.status == HTTPStatus.OK
+    assert resp2.headers.get("Content-Encoding") == "deflate"
