@@ -96,6 +96,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     ip_address: str
     username: str | None
     password: str | None
+    unique_id: str
 
     async def _validate_and_create_camera_rtsp(self, data: dict) -> ConfigFlowResult:
         """Try DESCRIBE on RTSP camera with credentials."""
