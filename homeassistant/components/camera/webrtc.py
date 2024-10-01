@@ -51,7 +51,7 @@ class RTCIceServer(_RTCBaseModel):
     See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
     """
 
-    urls: list[str]
+    urls: list[str] | str
     username: str | None = None
     credential: str | None = None
 

@@ -134,7 +134,7 @@ async def test_async_register_ice_server(
     async def get_ice_sercer() -> RTCIceServer:
         nonlocal called
         called += 1
-        return RTCIceServer(urls=["stun:example.com"])
+        return RTCIceServer(urls="stun:example.com")
 
     unregister = register_ice_server(hass, get_ice_sercer)
     assert not called
@@ -142,7 +142,7 @@ async def test_async_register_ice_server(
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     config = await camera.async_get_webrtc_client_configuration()
 
-    assert config.configuration.ice_servers == [RTCIceServer(urls=["stun:example.com"])]
+    assert config.configuration.ice_servers == [RTCIceServer(urls="stun:example.com")]
     assert called == 1
 
     # register another ICE server
@@ -161,7 +161,7 @@ async def test_async_register_ice_server(
 
     config = await camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == [
-        RTCIceServer(urls=["stun:example.com"]),
+        RTCIceServer(urls="stun:example.com"),
         RTCIceServer(
             urls=["stun:example2.com", "turn:example2.com"],
             username="user",
@@ -210,7 +210,7 @@ async def test_ws_get_client_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "configuration": {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+        "configuration": {"iceServers": [{"urls": "stun:stun.l.google.com:19302"}]}
     }
 
 

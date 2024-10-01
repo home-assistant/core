@@ -403,7 +403,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def get_ice_servers() -> RTCIceServer:
         # The following servers will replaced before the next stable release with
         # STUN server provided by Home Assistant. Used Google ones for testing purposes.
-        return RTCIceServer(urls=["stun:stun.l.google.com:19302"])
+        return RTCIceServer(urls="stun:stun.l.google.com:19302")
 
     register_ice_server(hass, get_ice_servers)
     return True
