@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -141,7 +142,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         self._is_reconfigure_flow = True

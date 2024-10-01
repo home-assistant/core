@@ -4332,6 +4332,26 @@ async def test_validate_unit_change_convertible(
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
 
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test",
@@ -4531,6 +4551,26 @@ async def test_validate_statistics_unit_change_no_device_class(
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
 
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test",
@@ -4626,6 +4666,20 @@ async def test_validate_statistics_state_class_removed(
         ],
     }
     await assert_validation_result(hass, client, expected, {"state_class_removed"})
+
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test", "unavailable", attributes=_attributes, timestamp=now.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test", "unknown", attributes=_attributes, timestamp=now.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
 
 
 @pytest.mark.parametrize(
@@ -4870,6 +4924,26 @@ async def test_validate_statistics_unit_change_no_conversion(
         ],
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
+
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
 
     # Original unit - empty response
     hass.states.async_set(

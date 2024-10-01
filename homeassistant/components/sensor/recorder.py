@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 import datetime
 from functools import partial
 import itertools
@@ -177,6 +178,14 @@ def _entity_history_to_float_and_state(
         except (ValueError, TypeError):
             pass
     return float_states
+
+
+def _is_numeric(state: State) -> bool:
+    """Return if the state is numeric."""
+    with suppress(ValueError, TypeError):
+        if (num_state := float(state.state)) is not None and math.isfinite(num_state):
+            return True
+    return False
 
 
 def _normalize_states(
@@ -684,13 +693,14 @@ def _update_issues(
     """Update repair issues."""
     for state in sensor_states:
         entity_id = state.entity_id
+        numeric = _is_numeric(state)
         state_class = try_parse_enum(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if state_class is None:
+            if numeric and state_class is None:
                 # Sensor no longer has a valid state class
                 report_issue(
                     "state_class_removed",
@@ -703,7 +713,7 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if not _equivalent_units({state_unit, metadata_unit}):
+                if numeric and not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
                         "units_changed",
@@ -717,7 +727,7 @@ def _update_issues(
                     )
                 else:
                     clear_issue("units_changed", entity_id)
-            elif state_unit not in converter.VALID_UNITS:
+            elif numeric and state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
