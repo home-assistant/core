@@ -102,17 +102,14 @@ class AlexaConfig(AbstractConfig):
     @core.callback
     def async_invalidate_access_token(self) -> None:
         """Invalidate access token."""
-        assert self._auth is not None
         self._auth.async_invalidate_access_token()
 
     async def async_get_access_token(self) -> str | None:
         """Get an access token."""
-        assert self._auth is not None
         return await self._auth.async_get_access_token()
 
     async def async_accept_grant(self, code: str) -> str | None:
         """Accept a grant."""
-        assert self._auth is not None
         return await self._auth.async_do_auth(code)
 
 
