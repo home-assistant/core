@@ -59,8 +59,6 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional("raw_blueprint_inputs"): cv.match_all,
-        vol.Optional("raw_config"): cv.match_all,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
         ),
