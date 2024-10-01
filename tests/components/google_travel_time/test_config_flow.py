@@ -204,9 +204,10 @@ async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) ->
             "source": config_entries.SOURCE_RECONFIGURE,
             "entry_id": mock_config.entry_id,
         },
+        data=mock_config.data,
     )
     assert reconfigure_result["type"] is FlowResultType.FORM
-    assert reconfigure_result["step_id"] == "reconfigure"
+    assert reconfigure_result["step_id"] == "reconfigure_confirm"
 
     await assert_common_reconfigure_steps(hass, reconfigure_result)
 
@@ -234,6 +235,7 @@ async def test_reconfigure_invalid_config_entry(
             "source": config_entries.SOURCE_RECONFIGURE,
             "entry_id": mock_config.entry_id,
         },
+        data=mock_config.data,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
