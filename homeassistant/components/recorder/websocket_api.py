@@ -49,6 +49,8 @@ from .statistics import (
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
+CLEAR_STATISTICS_TIME_OUT = 10
+
 UNIT_SCHEMA = vol.Schema(
     {
         vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
@@ -337,14 +339,14 @@ async def ws_clear_statistics(
     get_instance(hass).async_clear_statistics(
         msg["statistic_ids"], on_done=clear_statistics_done
     )
-    async with asyncio.timeout(10):
-        try:
+    try:
+        async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):
             await done_event.wait()
-        except TimeoutError:
-            connection.send_error(
-                msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
-            )
-            return
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
+        )
+        return
 
     connection.send_result(msg["id"])
 
