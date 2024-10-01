@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -282,6 +282,7 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGER: Final = "trigger"
 CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
@@ -895,6 +896,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
+    NAUTICAL_MILES = "nmi"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(

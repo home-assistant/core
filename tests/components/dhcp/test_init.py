@@ -1201,7 +1201,14 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
         ),
     ],
 )
-@pytest.mark.parametrize("entry_source", [config_entries.SOURCE_IGNORE])
+@pytest.mark.parametrize(
+    "entry_source",
+    [
+        config_entries.SOURCE_DHCP,
+        config_entries.SOURCE_IGNORE,
+        config_entries.SOURCE_USER,
+    ],
+)
 async def test_dhcp_rediscover(
     hass: HomeAssistant,
     entry_domain: str,
@@ -1209,105 +1216,6 @@ async def test_dhcp_rediscover(
     entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
-
-    entry = MockConfigEntry(
-        domain=entry_domain,
-        discovery_keys=entry_discovery_keys,
-        unique_id="mock-unique-id",
-        state=config_entries.ConfigEntryState.LOADED,
-        source=entry_source,
-    )
-    entry.add_to_hass(hass)
-
-    address_data = {}
-    integration_matchers = dhcp.async_index_integration_matchers(
-        [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}]
-    )
-    packet = Ether(RAW_DHCP_REQUEST)
-
-    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
-        hass, integration_matchers, address_data
-    )
-    rediscovery_watcher = dhcp.RediscoveryWatcher(
-        hass, address_data, integration_matchers
-    )
-    rediscovery_watcher.async_start()
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        await async_handle_dhcp_packet(packet)
-        # Ensure no change is ignored
-        await async_handle_dhcp_packet(packet)
-
-    # Assert the cached MAC address is hexstring without :
-    assert address_data == {
-        "b8b7f16db533": {"hostname": "connect", "ip": "192.168.210.56"}
-    }
-
-    expected_context = {
-        "discovery_key": DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),
-        "source": config_entries.SOURCE_DHCP,
-    }
-    assert len(mock_init.mock_calls) == 1
-    assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == expected_context
-    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
-        ip="192.168.210.56",
-        hostname="connect",
-        macaddress="b8b7f16db533",
-    )
-
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        await hass.config_entries.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert len(mock_init.mock_calls) == 2
-        assert mock_init.mock_calls[0][1][0] == entry_domain
-        assert mock_init.mock_calls[0][2]["context"] == {"source": "unignore"}
-        assert mock_init.mock_calls[1][1][0] == "mock-domain"
-        assert mock_init.mock_calls[1][2]["context"] == expected_context
-
-
-@pytest.mark.parametrize(
-    (
-        "entry_domain",
-        "entry_discovery_keys",
-    ),
-    [
-        # Matching discovery key
-        (
-            "mock-domain",
-            {"dhcp": (DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),)},
-        ),
-        # Matching discovery key
-        (
-            "mock-domain",
-            {
-                "dhcp": (DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),),
-                "other": (DiscoveryKey(domain="other", key="blah", version=1),),
-            },
-        ),
-        # Matching discovery key, other domain
-        # Note: Rediscovery is not currently restricted to the domain of the removed
-        # entry. Such a check can be added if needed.
-        (
-            "comp",
-            {"dhcp": (DiscoveryKey(domain="dhcp", key="b8b7f16db533", version=1),)},
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    "entry_source", [config_entries.SOURCE_USER, config_entries.SOURCE_ZEROCONF]
-)
-async def test_dhcp_rediscover_2(
-    hass: HomeAssistant,
-    entry_domain: str,
-    entry_discovery_keys: tuple,
-    entry_source: str,
-) -> None:
-    """Test we reinitiate flows when an ignored config entry is removed.
-
-    This test can be merged with test_zeroconf_rediscover when
-    async_step_unignore has been removed from the ConfigFlow base class.
-    """
 
     entry = MockConfigEntry(
         domain=entry_domain,
@@ -1447,6 +1355,4 @@ async def test_dhcp_rediscover_no_match(
         await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert len(mock_init.mock_calls) == 1
-        assert mock_init.mock_calls[0][1][0] == entry_domain
-        assert mock_init.mock_calls[0][2]["context"] == {"source": "unignore"}
+        assert len(mock_init.mock_calls) == 0

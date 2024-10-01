@@ -1064,10 +1064,19 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
+        return await start_reauth_flow(hass, self, context, data)
+
+    async def start_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Start a reconfiguration flow."""
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={
-                "source": config_entries.SOURCE_REAUTH,
+                "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
                 "title_placeholders": {"name": self.title},
                 "unique_id": self.unique_id,
@@ -1075,6 +1084,29 @@ class MockConfigEntry(config_entries.ConfigEntry):
             | (context or {}),
             data=self.data | (data or {}),
         )
+
+
+async def start_reauth_flow(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    context: dict[str, Any] | None = None,
+    data: dict[str, Any] | None = None,
+) -> ConfigFlowResult:
+    """Start a reauthentication flow for a config entry.
+
+    This helper method should be aligned with `ConfigEntry._async_init_reauth`.
+    """
+    return await hass.config_entries.flow.async_init(
+        entry.domain,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        }
+        | (context or {}),
+        data=entry.data | (data or {}),
+    )
 
 
 def patch_yaml_files(files_dict, endswith=True):
