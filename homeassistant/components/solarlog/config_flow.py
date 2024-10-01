@@ -138,40 +138,47 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         if TYPE_CHECKING:
-            assert entry is not None
+            assert self._entry is not None
 
         if user_input is not None:
             if not user_input[CONF_HAS_PWD] or user_input.get(CONF_PASSWORD, "") == "":
                 user_input[CONF_PASSWORD] = ""
                 user_input[CONF_HAS_PWD] = False
                 return self.async_update_reload_and_abort(
-                    entry,
+                    self._entry,
                     reason="reconfigure_successful",
-                    data={**entry.data, **user_input},
+                    data={**self._entry.data, **user_input},
                 )
 
             if await self._test_extended_data(
-                entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
+                self._entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
             ):
                 # if password has been provided, only save if extended data is available
                 return self.async_update_reload_and_abort(
-                    entry,
+                    self._entry,
                     reason="reconfigure_successful",
-                    data={**entry.data, **user_input},
+                    data={**self._entry.data, **user_input},
                 )
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_HAS_PWD, default=entry.data[CONF_HAS_PWD]): bool,
+                    vol.Optional(
+                        CONF_HAS_PWD, default=self._entry.data[CONF_HAS_PWD]
+                    ): bool,
                     vol.Optional(CONF_PASSWORD): str,
                 }
             ),
