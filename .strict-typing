@@ -156,6 +156,7 @@ homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dlna_dms.*
 homeassistant.components.dnsip.*
+homeassistant.components.domika.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.downloader.*

@@ -34,7 +34,7 @@ def db_context_manager() -> AbstractAsyncContextManager:
 
 
 @pytest.fixture
-def database_get_session(db_context_manager) -> Generator[AsyncMock, None, None]:
+def database_get_session(db_context_manager) -> Generator[AsyncMock]:
     """Set up the Domika integration for testing."""
     with patch(
         "domika_ha_framework.database.core.get_session",
@@ -82,7 +82,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_ha_event_flow() -> Generator[AsyncMock, None, None]:
+def mock_ha_event_flow() -> Generator[AsyncMock]:
     """Mock the ha_event.flow."""
     with patch(
         "homeassistant.components.domika.ha_event_flow",

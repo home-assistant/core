@@ -15,7 +15,7 @@ from tests.typing import MockHAClientWebSocket
 
 
 @pytest.fixture
-def mock_subscription_flow() -> Generator[AsyncMock, None, None]:
+def mock_subscription_flow() -> Generator[AsyncMock]:
     """Mock the ha_event.flow."""
     with patch(
         "homeassistant.components.domika.subscription.router.subscription_flow",

@@ -15,7 +15,7 @@ from tests.typing import MockHAClientWebSocket
 
 
 @pytest.fixture
-def mock_device_service() -> Generator[AsyncMock, None, None]:
+def mock_device_service() -> Generator[AsyncMock]:
     """Mock the dashboard.router.device_service."""
     with patch(
         "homeassistant.components.domika.dashboard.router.device_service",
@@ -25,7 +25,7 @@ def mock_device_service() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_dashboard_service() -> Generator[AsyncMock, None, None]:
+def mock_dashboard_service() -> Generator[AsyncMock]:
     """Mock the dashboard.router.dashboard_service."""
     with patch(
         "homeassistant.components.domika.dashboard.router.dashboard_service",
