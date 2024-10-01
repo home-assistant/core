@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -9,7 +10,7 @@ import pypck
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_DEVICES,
@@ -113,6 +114,8 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    _context_entry: ConfigEntry
+
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
         # validate the imported connection parameters
@@ -193,31 +196,41 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=data[CONF_HOST], data=data)
 
     async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Reconfigure LCN configuration."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        self._context_entry = entry
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
         errors = None
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         if user_input is not None:
-            user_input[CONF_HOST] = entry.data[CONF_HOST]
+            user_input[CONF_HOST] = self._context_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(entry.entry_id)
+            await self.hass.config_entries.async_unload(self._context_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
             if errors is None:
-                data = entry.data.copy()
+                data = self._context_entry.data.copy()
                 data.update(user_input)
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_setup(entry.entry_id)
+                self.hass.config_entries.async_update_entry(
+                    self._context_entry, data=data
+                )
+                await self.hass.config_entries.async_setup(self._context_entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
 
-            await self.hass.config_entries.async_setup(entry.entry_id)
+            await self.hass.config_entries.async_setup(self._context_entry.entry_id)
 
         return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
+            step_id="reconfigure_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, self._context_entry.data
+            ),
             errors=errors or {},
         )
