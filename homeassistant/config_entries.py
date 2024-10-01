@@ -2377,18 +2377,18 @@ class ConfigFlow(ConfigEntryBaseFlow):
             HANDLERS.register(domain)(cls)
 
     @property
-    def _reauth_entry_id(self) -> str | None:
+    def _reauth_entry_id(self) -> str:
         """Return reauth entry id."""
         if self.source == SOURCE_REAUTH:
-            return self.context.get("entry_id")
-        return None
+            return self.context["entry_id"]  # type: ignore[no-any-return]
+        raise ValueError(f"Invalid source: {self.source}")
 
     @property
-    def _reconfigure_entry_id(self) -> str | None:
+    def _reconfigure_entry_id(self) -> str:
         """Return reconfigure entry id."""
         if self.source == SOURCE_RECONFIGURE:
-            return self.context.get("entry_id")
-        return None
+            return self.context["entry_id"]  # type: ignore[no-any-return]
+        raise ValueError(f"Invalid source: {self.source}")
 
     @property
     def unique_id(self) -> str | None:
@@ -2747,7 +2747,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         Note: to check if you are within a reauth flow, check if
         `self.source == SOURCE_REAUTH`.
         """
-        if self._reauth_entry_id and (
+        if self.source == SOURCE_REAUTH and (
             entry := self.hass.config_entries.async_get_entry(self._reauth_entry_id)
         ):
             return entry
@@ -2758,10 +2758,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _get_reconfigure_entry(self) -> ConfigEntry:
         """Return the reconfigure config entry linked to the current context.
 
-        Note: to check if you are within a reauth flow, check if
+        Note: to check if you are within a reconfigure flow, check if
         `self.source == SOURCE_RECONFIGURE`.
         """
-        if self._reconfigure_entry_id and (
+        if self.source == SOURCE_RECONFIGURE and (
             entry := self.hass.config_entries.async_get_entry(
                 self._reconfigure_entry_id
             )
