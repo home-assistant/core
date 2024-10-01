@@ -501,7 +501,7 @@
         "state": {
           "auto": "Low power",
           "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
-          "mop": "Mop",
+          "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
           "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
           "off": "[%key:common::state::off%]",
           "turbo": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::turbo%]"
