@@ -24,6 +24,6 @@ async def test_all_entities(
 ) -> None:
     """Test all entities."""
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
-        await setup_integration(hass, mock_config_entry, mock_thinq_api)
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
