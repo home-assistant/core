@@ -50,6 +50,7 @@ from homeassistant.components.fan import (
     DIRECTION_REVERSE,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
+from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -67,14 +68,12 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
     UnitOfEnergy,
     UnitOfTemperature,
 )
@@ -1571,7 +1570,7 @@ async def lock_fixture(
         suggested_object_id="front_door",
         original_name="Front Door",
     )
-    set_state_with_entry(hass, lock_1, STATE_LOCKED)
+    set_state_with_entry(hass, lock_1, LockState.LOCKED)
     data["lock_1"] = lock_1
 
     lock_2 = entity_registry.async_get_or_create(
@@ -1581,7 +1580,7 @@ async def lock_fixture(
         suggested_object_id="kitchen_door",
         original_name="Kitchen Door",
     )
-    set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
+    set_state_with_entry(hass, lock_2, LockState.UNLOCKED)
     data["lock_2"] = lock_2
 
     await hass.async_block_till_done()

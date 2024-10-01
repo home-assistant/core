@@ -97,8 +97,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.properties.get("mac")
         # fallback for legacy firmware
         if mac is None:
-            info = await self.client.get_info()
+            try:
+                info = await self.client.get_info()
+            except SmlightConnectionError:
+                # User is likely running unsupported ESPHome firmware
+                return self.async_abort(reason="cannot_connect")
             mac = info.MAC
+
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured()
 

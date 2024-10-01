@@ -341,7 +341,7 @@ class ModbusHub:
                 self._log_error(err, error_state=False)
                 return
             message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
+            _LOGGER.warning(message)
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""

@@ -16,20 +16,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,6 +106,17 @@ HOST_SENSORS = (
         value=lambda api: api.wifi_signal,
         supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
     ),
+    ReolinkHostSensorEntityDescription(
+        key="cpu_usage",
+        cmd_key="GetPerformance",
+        translation_key="cpu_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda api: api.cpu_usage,
+        supported=lambda api: api.supported(None, "performance"),
+    ),
 )
 
 HDD_SENSORS = (
@@ -126,11 +135,11 @@ HDD_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[
         ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity

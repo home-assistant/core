@@ -19,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
 from .entity import AdsEntity
+from .hub import AdsHub
 
 DEFAULT_NAME = "ADS binary sensor"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
@@ -50,7 +51,13 @@ def setup_platform(
 class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     """Representation of ADS binary sensors."""
 
-    def __init__(self, ads_hub, name, ads_var, device_class):
+    def __init__(
+        self,
+        ads_hub: AdsHub,
+        name: str,
+        ads_var: str,
+        device_class: BinarySensorDeviceClass | None,
+    ) -> None:
         """Initialize ADS binary sensor."""
         super().__init__(ads_hub, name, ads_var)
         self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING

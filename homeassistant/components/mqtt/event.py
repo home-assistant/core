@@ -26,7 +26,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON, PAYLOAD_NONE
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
     MqttValueTemplate,

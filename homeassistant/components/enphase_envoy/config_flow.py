@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
@@ -311,6 +311,9 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id is not None
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
@@ -326,6 +329,6 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             ),
             description_placeholders={
                 CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data.get("host"),
+                CONF_HOST: self.config_entry.data[CONF_HOST],
             },
         )

@@ -7,7 +7,7 @@ from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -369,11 +369,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 # rebuild ordered list of entity_ids that are in the group, master is first
                 self._group_list = self.rebuild_bluesound_group()
 
-                # the sleep is needed to make sure that the
-                # devices is synced
-                await asyncio.sleep(1)
-                await self.async_trigger_sync_on_all()
-
             self.async_write_ha_state()
         except PlayerUnreachableError:
             self._attr_available = False
@@ -418,13 +413,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._is_master = slaves is not None
 
         self.async_write_ha_state()
-
-    async def async_trigger_sync_on_all(self) -> None:
-        """Trigger sync status update on all devices."""
-        _LOGGER.debug("Trigger sync status on all devices")
-
-        for player in self.hass.data[DATA_BLUESOUND]:
-            await player.force_update_sync_status()
 
     async def async_update_captures(self) -> None:
         """Update Capture sources."""
@@ -697,13 +685,13 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         device_group = self._group_name.split("+")
 
-        sorted_entities = sorted(
+        sorted_entities: list[BluesoundPlayer] = sorted(
             self.hass.data[DATA_BLUESOUND],
             key=lambda entity: entity.is_master,
             reverse=True,
         )
         return [
-            entity.name
+            cast(str, entity.name)
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]

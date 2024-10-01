@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
 from .entity import AdsEntity
+from .hub import AdsHub
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -57,7 +58,7 @@ def setup_platform(
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 
-    ads_var_is_closed: str | None = config.get(CONF_ADS_VAR)
+    ads_var_is_closed: str = config[CONF_ADS_VAR]
     ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
     ads_var_pos_set: str | None = config.get(CONF_ADS_VAR_SET_POS)
     ads_var_open: str | None = config.get(CONF_ADS_VAR_OPEN)
@@ -88,16 +89,16 @@ class AdsCover(AdsEntity, CoverEntity):
 
     def __init__(
         self,
-        ads_hub,
-        ads_var_is_closed,
-        ads_var_position,
-        ads_var_pos_set,
-        ads_var_open,
-        ads_var_close,
-        ads_var_stop,
-        name,
-        device_class,
-    ):
+        ads_hub: AdsHub,
+        ads_var_is_closed: str,
+        ads_var_position: str | None,
+        ads_var_pos_set: str | None,
+        ads_var_open: str | None,
+        ads_var_close: str | None,
+        ads_var_stop: str | None,
+        name: str,
+        device_class: CoverDeviceClass | None,
+    ) -> None:
         """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
         if self._attr_unique_id is None:

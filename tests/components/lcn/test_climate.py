@@ -5,15 +5,15 @@ from unittest.mock import patch
 from pypck.inputs import ModStatusVar, Unknown
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import Var, VarUnit, VarValue
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-# pylint: disable=hass-component-root-import
-from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DOMAIN as DOMAIN_CLIMATE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -26,6 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockModuleConnection, init_integration
@@ -141,16 +142,17 @@ async def test_set_temperature(hass: HomeAssistant, entry: MockConfigEntry) -> N
         # wrong temperature set via service call with high/low attributes
         var_abs.return_value = False
 
-        await hass.services.async_call(
-            DOMAIN_CLIMATE,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: "climate.climate1",
-                ATTR_TARGET_TEMP_LOW: 24.5,
-                ATTR_TARGET_TEMP_HIGH: 25.5,
-            },
-            blocking=True,
-        )
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN_CLIMATE,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: "climate.climate1",
+                    ATTR_TARGET_TEMP_LOW: 24.5,
+                    ATTR_TARGET_TEMP_HIGH: 25.5,
+                },
+                blocking=True,
+            )
 
         var_abs.assert_not_awaited()
 

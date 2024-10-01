@@ -19,8 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
+class VeraLight(VeraEntity[veraApi.VeraDimmer], LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
     _attr_is_on = False
@@ -50,7 +50,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
     ) -> None:
         """Initialize the light."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
