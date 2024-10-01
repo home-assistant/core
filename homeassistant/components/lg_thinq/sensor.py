@@ -165,6 +165,7 @@ TEMPERATURE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
 WATER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.WATER_TYPE: SensorEntityDescription(
         key=ThinQProperty.WATER_TYPE,
+        device_class=SensorDeviceClass.ENUM,
         translation_key=ThinQProperty.WATER_TYPE,
     ),
 }
