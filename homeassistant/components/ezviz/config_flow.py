@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
@@ -273,6 +273,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
+        if TYPE_CHECKING:
+            # A unique ID is passed in via the discovery info
+            assert self.unique_id is not None
         self.context["title_placeholders"] = {ATTR_SERIAL: self.unique_id}
         self.ip_address = discovery_info[CONF_IP_ADDRESS]
 
