@@ -159,7 +159,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step when using network/gateway setups."""
-        errors = dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if self.discovery_info:
@@ -191,6 +191,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=_base_schema(self.discovery_info),
+            data_schema=base_schema(self.discovery_info),
             errors=errors,
         )
