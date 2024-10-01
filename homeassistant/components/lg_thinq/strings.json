@@ -175,13 +175,13 @@
         "name": "{location} temperature"
       },
       "light_status": {
-        "name": "[%key:component::binary_sensor::entity_component::light::name%]"
+        "name": "Light"
       },
       "fan_speed": {
-        "name": "[%key:component::fan::title%]"
+        "name": "Fan"
       },
       "lamp_brightness": {
-        "name": "[%key:component::binary_sensor::entity_component::light::name%]"
+        "name": "[%key:component::lg_thinq::entity::number::light_status::name%]"
       },
       "wind_temperature": {
         "name": "Wind temperature"
