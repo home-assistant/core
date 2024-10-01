@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable
+from collections.abc import AsyncIterable
 from functools import partial
 import io
 from itertools import chain
@@ -130,7 +130,6 @@ class EsphomeAssistSatellite(
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._tts_streaming_task: asyncio.Task | None = None
         self._udp_server: VoiceAssistantUDPServer | None = None
-        self._remove_callbacks: set[Callable[[], None]] = set()
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
@@ -213,7 +212,7 @@ class EsphomeAssistSatellite(
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
             # TCP audio
-            self._remove_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -223,7 +222,7 @@ class EsphomeAssistSatellite(
             )
         else:
             # UDP audio
-            self._remove_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -236,7 +235,7 @@ class EsphomeAssistSatellite(
             assert (self.registry_entry is not None) and (
                 self.registry_entry.device_id is not None
             )
-            self._remove_callbacks.add(
+            self.async_on_remove(
                 async_register_timer_handler(
                     self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
@@ -263,12 +262,6 @@ class EsphomeAssistSatellite(
 
         self._is_running = False
         self._stop_pipeline()
-
-        # Unsubscribe from voice assistant events, etc.
-        for remove_cb in self._remove_callbacks:
-            remove_cb()
-
-        self._remove_callbacks.clear()
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
