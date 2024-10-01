@@ -132,6 +132,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
 
+    # Set default fabric
+    await matter_client.set_default_fabric_label(hass.config.location_name or "Home")
+
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
