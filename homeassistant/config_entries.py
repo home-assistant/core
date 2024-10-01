@@ -2727,8 +2727,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
         raise NotImplementedError
 
     @callback
-    def _get_entry_from_context(self) -> ConfigEntry:
-        """Return current config entry, based on context['entry_id']."""
+    def _get_context_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current context.
+
+        This can be used to access the underlying entry in reauth and
+        reconfigure flows, and will fail if `entry_id` is not part of
+        the context.
+        """
         config_entry_id = self.context["entry_id"]
         entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if entry is None:
