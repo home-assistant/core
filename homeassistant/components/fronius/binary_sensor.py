@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -12,15 +12,18 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .entity import FroniusEntityDescription, _FroniusEntity
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
-    from .coordinator import FroniusCoordinatorBase, FroniusPowerFlowUpdateCoordinator
+    from .coordinator import FroniusPowerFlowUpdateCoordinator
 
 
 @dataclass(frozen=True)
-class FroniusBinarySensorEntityDescription(BinarySensorEntityDescription):
+class FroniusBinarySensorEntityDescription(
+    FroniusEntityDescription, BinarySensorEntityDescription
+):
     """Describes Fronius binary_sensor entity."""
 
     default_value: bool | None = None
@@ -55,30 +58,10 @@ POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS: list[FroniusBinarySensorEntityDescription
 ]
 
 
-class _FroniusBinarySensorEntity(
-    CoordinatorEntity["FroniusCoordinatorBase"], BinarySensorEntity
-):
+class _FroniusBinarySensorEntity(_FroniusEntity, BinarySensorEntity):
     """Defines a Fronius binary_sensor entity."""
 
     entity_description: FroniusBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: FroniusCoordinatorBase,
-        description: FroniusBinarySensorEntityDescription,
-        solar_net_id: str,
-    ) -> None:
-        """Set up an individual Fronius meter sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self.response_key = description.response_key or description.key
-        self.solar_net_id = solar_net_id
-        self._attr_native_value = self._get_entity_value()
-        self._attr_translation_key = description.key
-
-    def _device_data(self) -> dict[str, Any]:
-        """Extract information for SolarNet device from coordinator data."""
-        return self.coordinator.data[self.solar_net_id]
 
     def _get_entity_value(self) -> bool | None:
         """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
