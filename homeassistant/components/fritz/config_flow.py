@@ -335,7 +335,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    async def async_step_reconfigure(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reconfigure flow ."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert self._entry
