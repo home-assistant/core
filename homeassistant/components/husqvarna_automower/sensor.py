@@ -380,7 +380,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
 
 @dataclass(frozen=True, kw_only=True)
 class WorkAreaSensorEntityDescription(SensorEntityDescription):
-    """Describes Automower work area number entity."""
+    """Describes the work area sensor entities."""
 
     exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], int | datetime | None]
