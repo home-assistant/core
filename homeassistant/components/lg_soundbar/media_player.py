@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import temescal
 
 from homeassistant.components.media_player import (
@@ -95,14 +97,7 @@ class LGDevice(MediaPlayerEntity):
         """Handle responses from the speakers."""
         data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
-            if "i_bass" in data:
-                self._bass = data["i_bass"]
-            if "i_treble" in data:
-                self._treble = data["i_treble"]
-            if "ai_eq_list" in data:
-                self._equalisers = data["ai_eq_list"]
-            if "i_curr_eq" in data:
-                self._equaliser = data["i_curr_eq"]
+            self._update_equalisers(data)
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
@@ -118,7 +113,7 @@ class LGDevice(MediaPlayerEntity):
                 if data["b_powerstatus"]:
                     self._attr_state = MediaPlayerState.ON
                 else:
-                    self._attr_state = MediaPlayerState.OFF        
+                    self._attr_state = MediaPlayerState.OFF
         elif response["msg"] == "FUNC_VIEW_INFO":
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
@@ -143,6 +138,17 @@ class LGDevice(MediaPlayerEntity):
                 self._attr_name = data["s_user_name"]
 
         self.schedule_update_ha_state()
+
+    def _update_equalisers(self, data: dict[str, Any]) -> None:
+        """Update the equalisers."""
+        if "i_bass" in data:
+            self._bass = data["i_bass"]
+        if "i_treble" in data:
+            self._treble = data["i_treble"]
+        if "ai_eq_list" in data:
+            self._equalisers = data["ai_eq_list"]
+        if "i_curr_eq" in data:
+            self._equaliser = data["i_curr_eq"]
 
     def update(self) -> None:
         """Trigger updates from the device."""
@@ -211,7 +217,7 @@ class LGDevice(MediaPlayerEntity):
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self._device.set_eq(temescal.equalisers.index(sound_mode))
-        
+
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._set_power(True)
@@ -224,5 +230,4 @@ class LGDevice(MediaPlayerEntity):
         """Set the media player state."""
         self._device.send_packet(
             {"cmd": "set", "data": {"b_powerkey": status}, "msg": "SPK_LIST_VIEW_INFO"}
-        )    
-       
+        )
