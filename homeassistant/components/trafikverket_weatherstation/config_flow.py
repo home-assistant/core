@@ -17,6 +17,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_STATION, DOMAIN
 
@@ -116,5 +121,58 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): cv.string}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-configuration with Trafikverket."""
+
+        self.entry = self._get_reconfigure_entry()
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-configuration with Trafikverket."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            try:
+                await self.validate_input(
+                    user_input[CONF_API_KEY], user_input[CONF_STATION]
+                )
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoWeatherStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleWeatherStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    self.entry,
+                    title=user_input[CONF_STATION],
+                    data=user_input,
+                    reason="reconfigure_successful",
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                    vol.Required(CONF_STATION): TextSelector(),
+                }
+            ),
+            {**self.entry.data, **(user_input or {})},
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=schema,
             errors=errors,
         )
