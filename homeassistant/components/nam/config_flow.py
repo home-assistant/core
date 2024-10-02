@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -72,11 +72,9 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self.host: str
-        self.entry: ConfigEntry
-        self._config: NamConfig
+    _config: NamConfig
+    entry: ConfigEntry
+    host: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -189,8 +187,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.entry = entry
+        self.entry = self._get_reauth_entry()
         self.host = entry_data[CONF_HOST]
         self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
@@ -229,13 +226,8 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.host = entry.data[CONF_HOST]
-        self.entry = entry
+        self.entry = self._get_reconfigure_entry()
+        self.host = self.entry.data[CONF_HOST]
 
         return await self.async_step_reconfigure_confirm()
 
