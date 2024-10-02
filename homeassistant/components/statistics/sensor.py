@@ -434,7 +434,8 @@ class StatisticsSensor(SensorEntity):
         )
 
     def _add_state_to_queue(self, new_state: State, loaded_from_db: bool) -> None:
-        """Add the state to the queue (historic values loaded from the database are added on the opposite end)."""
+        """Add the state to the queue."""
+        # historic values loaded from the database are added on the opposite end)
         value: float | bool
         if (not loaded_from_db) or (len(self.ages) == 0):
             self._available = new_state.state != STATE_UNAVAILABLE
@@ -645,7 +646,10 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
-        """Fetch the states from the database. In principle this should also load the last value before the time interval for the time based functions. However, this would mean loading the complete history without time or number limit, which is maybe a little too much effort."""
+        """Fetch the states from the database."""
+        # In principle this should also load the last value before the time interval
+        # for the time based functions. However, this would mean loading the complete
+        # history without time or number limit, which is probably too much effort.
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         lower_entity_id = self._source_entity_id.lower()
         if self._samples_max_age is not None:
