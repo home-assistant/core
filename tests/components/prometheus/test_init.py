@@ -643,7 +643,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text Unit",
         entity="sensor.text_unit",
-    ).withValue(0.0).assert_in_metrics(body)
+    ).assert_not_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])

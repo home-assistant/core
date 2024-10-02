@@ -693,14 +693,14 @@ class PrometheusMetrics:
     @staticmethod
     def _sensor_fallback_metric(state: State, unit: str | None) -> str | None:
         """Get metric from fallback logic for compatibility."""
-        if unit in (None, ""):
-            try:
-                state_helper.state_as_number(state)
-            except ValueError:
-                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
-                return None
-            return "sensor_state"
-        return f"sensor_unit_{unit}"
+        try:
+            state_helper.state_as_number(state)
+        except ValueError:
+            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+            return None
+        if unit not in (None, ""):
+            return f"sensor_unit_{unit}"
+        return "sensor_state"
 
     @staticmethod
     def _unit_string(unit: str | None) -> str | None:
