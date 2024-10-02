@@ -186,20 +186,20 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_PORT] = self.discovery_info.port
             user_input[CONF_USERNAME] = self._username
 
-            try:
-                api = await validate_input(self.hass, user_input)
-            except ConnectionFailedError:
-                errors[CONF_BASE] = "cannot_connect"
-            except InvalidAuthentication:
-                errors[CONF_BASE] = "invalid_auth"
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
-            except (InvalidXMLError, ResponseError):
-                errors[CONF_BASE] = "response_error"
-            except UnsupportedDeviceError:
-                errors[CONF_BASE] = "unsupported"
-            except Exception:  # noqa: BLE001
-                errors[CONF_BASE] = "unknown"
+        try:
+            api = await validate_input(self.hass, user_input)
+        except ConnectionFailedError:
+            errors[CONF_BASE] = "cannot_connect"
+        except InvalidAuthentication:
+            errors[CONF_BASE] = "invalid_auth"
+        except InvalidSetupError:
+            errors[CONF_BASE] = "invalid_setup"
+        except (InvalidXMLError, ResponseError):
+            errors[CONF_BASE] = "response_error"
+        except UnsupportedDeviceError:
+            errors[CONF_BASE] = "unsupported"
+        except Exception:  # noqa: BLE001
+            errors[CONF_BASE] = "unknown"
 
         if errors:
             return self.async_show_form(
