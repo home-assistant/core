@@ -2361,7 +2361,7 @@ python-mpd2==3.1.1
 python-mystrom==2.2.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.4.0
+python-opendata-transport==0.5.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
