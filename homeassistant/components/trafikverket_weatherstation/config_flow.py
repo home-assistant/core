@@ -129,7 +129,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-configuration with Trafikverket."""
 
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -137,7 +137,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm re-configuration with Trafikverket."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
 
         if user_input:
             try:
