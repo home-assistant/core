@@ -120,49 +120,6 @@ def async_register_webrtc_provider(
     return remove_provider
 
 
-_RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
-
-# An RtspToWebRtcProvider accepts these inputs:
-#     stream_source: The RTSP url
-#     offer_sdp: The WebRTC SDP offer
-#     stream_id: A unique id for the stream, used to update an existing source
-# The output is the SDP answer, or None if the source or offer is not eligible.
-# The Callable may throw HomeAssistantError on failure.
-type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
-
-
-class _CameraRtspToWebRTCProvider(CameraWebRTCProvider):
-    def __init__(self, fn: RtspToWebRtcProviderType) -> None:
-        """Initialize the RTSP to WebRTC provider."""
-        self._fn = fn
-
-    async def async_is_supported(self, stream_source: str) -> bool:
-        """Return if this provider is supports the Camera as source."""
-        return any(stream_source.startswith(prefix) for prefix in _RTSP_PREFIXES)
-
-    async def async_handle_web_rtc_offer(
-        self, camera: Camera, offer_sdp: str
-    ) -> str | None:
-        """Handle the WebRTC offer and return an answer."""
-        if not (stream_source := await camera.stream_source()):
-            return None
-
-        return await self._fn(stream_source, offer_sdp, camera.entity_id)
-
-
-def async_register_rtsp_to_web_rtc_provider(
-    hass: HomeAssistant,
-    domain: str,
-    provider: RtspToWebRtcProviderType,
-) -> Callable[[], None]:
-    """Register an RTSP to WebRTC provider.
-
-    The first provider to satisfy the offer will be used.
-    """
-    provider_instance = _CameraRtspToWebRTCProvider(provider)
-    return async_register_webrtc_provider(hass, provider_instance)
-
-
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
 
@@ -234,3 +191,49 @@ def register_ice_server(
 
     servers.append(get_ice_server_fn)
     return remove
+
+
+# The following code is legacy code that was introduced with rtsp_to_webrtc and will be deprecated/removed in the future.
+# Left it so custom integrations can still use it.
+
+_RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
+
+# An RtspToWebRtcProvider accepts these inputs:
+#     stream_source: The RTSP url
+#     offer_sdp: The WebRTC SDP offer
+#     stream_id: A unique id for the stream, used to update an existing source
+# The output is the SDP answer, or None if the source or offer is not eligible.
+# The Callable may throw HomeAssistantError on failure.
+type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
+
+
+class _CameraRtspToWebRTCProvider(CameraWebRTCProvider):
+    def __init__(self, fn: RtspToWebRtcProviderType) -> None:
+        """Initialize the RTSP to WebRTC provider."""
+        self._fn = fn
+
+    async def async_is_supported(self, stream_source: str) -> bool:
+        """Return if this provider is supports the Camera as source."""
+        return any(stream_source.startswith(prefix) for prefix in _RTSP_PREFIXES)
+
+    async def async_handle_web_rtc_offer(
+        self, camera: Camera, offer_sdp: str
+    ) -> str | None:
+        """Handle the WebRTC offer and return an answer."""
+        if not (stream_source := await camera.stream_source()):
+            return None
+
+        return await self._fn(stream_source, offer_sdp, camera.entity_id)
+
+
+def async_register_rtsp_to_web_rtc_provider(
+    hass: HomeAssistant,
+    domain: str,
+    provider: RtspToWebRtcProviderType,
+) -> Callable[[], None]:
+    """Register an RTSP to WebRTC provider.
+
+    The first provider to satisfy the offer will be used.
+    """
+    provider_instance = _CameraRtspToWebRTCProvider(provider)
+    return async_register_webrtc_provider(hass, provider_instance)
