@@ -1582,7 +1582,7 @@ python-awair==0.2.4
 python-bsblan==0.5.16
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.20
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
