@@ -88,7 +88,7 @@ async def init_reconfigure_flow(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     # original entry
     assert mock_entry.data["host"] == "192.168.100.50"

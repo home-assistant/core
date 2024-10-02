@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -64,6 +65,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
         vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -80,6 +82,7 @@ async def async_setup_platform(
     outdoor_temp_sensor: str = config[CONF_OUTDOOR_TEMP]
     indoor_humidity_sensor: str = config[CONF_INDOOR_HUMIDITY]
     calib_factor: float = config[CONF_CALIBRATION_FACTOR]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -91,6 +94,7 @@ async def async_setup_platform(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                unique_id,
             )
         ],
         False,
@@ -119,6 +123,7 @@ async def async_setup_entry(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                entry.entry_id,
             )
         ],
         False,
@@ -142,10 +147,12 @@ class MoldIndicator(SensorEntity):
         outdoor_temp_sensor: str,
         indoor_humidity_sensor: str,
         calib_factor: float,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self._state: str | None = None
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor

@@ -28,7 +28,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -60,6 +60,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
         self._noise_required: bool | None = None
@@ -152,12 +153,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @property
-    def _name(self) -> str | None:
-        return self.context.get(CONF_NAME)
+    def _name(self) -> str:
+        return self.__name or "ESPHome"
 
     @_name.setter
     def _name(self, value: str) -> None:
-        self.context[CONF_NAME] = value
+        self.__name = value
         self.context["title_placeholders"] = {"name": self._name}
 
     async def _async_try_fetch_device_info(self) -> ConfigFlowResult:

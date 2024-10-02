@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -207,6 +208,8 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _context_entry: ConfigEntry
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -235,28 +238,33 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if TYPE_CHECKING:
             assert entry
+        self._context_entry = entry
+        return await self.async_step_reconfigure_confirm()
 
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
         errors: dict[str, str] | None = None
-        user_input = user_input or {}
-        if user_input:
+        if user_input is not None:
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    entry,
+                    self._context_entry,
                     data=user_input,
                     reason="reconfigure_successful",
                 )
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, entry.data.copy()
+                RECONFIGURE_SCHEMA, self._context_entry.data.copy()
             ),
             errors=errors,
         )
