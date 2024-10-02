@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from httpx import HTTPStatusError
 from pyezbeq import models
 import pytest
 
@@ -77,3 +78,8 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def mock_get_version():
+    """Mock the get_version method."""
+    raise HTTPStatusError("Mocked HTTP Status Error", request=None, response=None)

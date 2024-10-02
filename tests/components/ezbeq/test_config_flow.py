@@ -9,6 +9,7 @@ from homeassistant.components import ezbeq
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from .conftest import mock_get_version
 from .const import MOCK_CONFIG
 
 pytestmark = pytest.mark.asyncio
@@ -28,7 +29,7 @@ async def test_full_flow(
 
     # patch the connection test
     with patch(
-        "homeassistant.components.ezbeq.config_flow.EzBEQConfigFlow.test_connection",
+        "pyezbeq.ezbeq.EzbeqClient.get_version",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -58,8 +59,8 @@ async def test_fail_connection(
 
     # patch the connection test
     with patch(
-        "homeassistant.components.ezbeq.config_flow.EzBEQConfigFlow.test_connection",
-        return_value=False,
+        "pyezbeq.ezbeq.EzbeqClient.get_version",
+        side_effect=mock_get_version,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
