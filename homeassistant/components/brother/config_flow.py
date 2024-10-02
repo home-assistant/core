@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
@@ -50,11 +50,12 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize."""
         self.brother: Brother
         self.host: str | None = None
-        self.entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -145,13 +146,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.entry = entry
-
+        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -159,9 +154,6 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors = {}
-
-        if TYPE_CHECKING:
-            assert self.entry is not None
 
         if user_input is not None:
             try:
