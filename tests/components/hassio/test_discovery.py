@@ -8,11 +8,11 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform

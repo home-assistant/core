@@ -39,6 +39,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio  # noqa: F401
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo  # noqa: F401
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
@@ -96,7 +97,7 @@ from .coordinator import (
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
-from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
+from .discovery import async_setup_discovery_view  # noqa: F401
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,

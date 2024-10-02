@@ -4,18 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
 import voluptuous as vol
 
-if TYPE_CHECKING:
-    from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN
 

@@ -4,7 +4,6 @@ import aiohttp
 
 from homeassistant import config_entries
 from homeassistant.components.adguard.const import DOMAIN
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker

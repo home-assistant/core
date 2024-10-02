@@ -20,7 +20,6 @@ from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
-    HassioServiceInfo,
     is_hassio,
 )
 from homeassistant.config_entries import (
@@ -58,6 +57,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .addon import get_addon_manager

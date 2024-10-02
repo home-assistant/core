@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -21,9 +21,6 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
-
-if TYPE_CHECKING:
-    from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -33,6 +30,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.util.json import json_loads_object
 
