@@ -2280,12 +2280,6 @@
           "iot_class": "cloud_push",
           "name": "Google Cloud"
         },
-        "google_domains": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Google Domains"
-        },
         "google_generative_ai_conversation": {
           "integration_type": "service",
           "config_flow": true,
