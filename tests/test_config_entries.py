@@ -6424,7 +6424,7 @@ async def test_get_reauth_entry(
                 reason = f"Found entry {entry.title}"
             try:
                 entry_id = self._reauth_entry_id
-            except ValueError:
+            except AttributeError:
                 reason = f"{reason}: -"
             else:
                 reason = f"Found entry {entry.title}: {entry_id}"
@@ -6489,7 +6489,7 @@ async def test_get_reconfigure_entry(
                 reason = f"Found entry {entry.title}"
             try:
                 entry_id = self._reconfigure_entry_id
-            except ValueError:
+            except AttributeError:
                 reason = f"{reason}: -"
             else:
                 reason = f"Found entry {entry.title}: {entry_id}"

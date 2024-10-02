@@ -2381,14 +2381,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return reauth entry id."""
         if self.source == SOURCE_REAUTH:
             return self.context["entry_id"]  # type: ignore[no-any-return]
-        raise ValueError(f"Invalid source: {self.source}")
+        raise AttributeError
 
     @property
     def _reconfigure_entry_id(self) -> str:
         """Return reconfigure entry id."""
         if self.source == SOURCE_RECONFIGURE:
             return self.context["entry_id"]  # type: ignore[no-any-return]
-        raise ValueError(f"Invalid source: {self.source}")
+        raise AttributeError
 
     @property
     def unique_id(self) -> str | None:
