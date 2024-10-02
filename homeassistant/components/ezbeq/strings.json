@@ -25,9 +25,6 @@
     "sensor": {
       "current_profile": {
         "name": "Current Profile"
-      },
-      "devices": {
-        "name": "Discovered Devices"
       }
     }
   }
