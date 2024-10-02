@@ -50,7 +50,7 @@ STEP_CONFIGURE_SCHEMA = vol.Schema(
             CONF_VOLUME_RESOLUTION,
             default=CONF_VOLUME_RESOLUTION_DEFAULT,
         ): vol.In(VOLUME_RESOLUTION_ALLOWED),
-        vol.Required(OPTION_SOURCES): SelectSelector(
+        vol.Required(OPTION_SOURCES, default=[]): SelectSelector(
             SelectSelectorConfig(
                 options=OPTION_SOURCES_ALLOWED,
                 multiple=True,
@@ -161,37 +161,44 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the configuration of a single receiver."""
-        if user_input is not None:
-            sources_str: dict[str, str] = {}
-            for value_str in user_input[OPTION_SOURCES]:
-                # Remove the source prefix.
-                value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
-                source = InputSource(value)
-                source_name = ", ".join(source.value_meanings)
-                sources_str.setdefault(source.value_hex, source_name)
+        errors = {}
 
-            result = self.async_create_entry(
-                title=self._receiver_info.model_name,
-                data={
-                    CONF_HOST: self._receiver_info.host,
-                    CONF_VOLUME_RESOLUTION: user_input[CONF_VOLUME_RESOLUTION],
-                },
-                options={
-                    OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-                    OPTION_SOURCES: sources_str,
-                },
-            )
-            _LOGGER.debug("Configured receiver, result: %s", result)
-            return result
+        if user_input is not None:
+            user_sources: list[str] = user_input[OPTION_SOURCES]
+            if not user_sources:
+                errors[OPTION_SOURCES] = "empty_source_list"
+            else:
+                sources_str: dict[str, str] = {}
+                for value_str in user_sources:
+                    # Remove the source prefix.
+                    value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
+                    source = InputSource(value)
+                    source_name = ", ".join(source.value_meanings)
+                    sources_str.setdefault(source.value_hex, source_name)
+
+                result = self.async_create_entry(
+                    title=self._receiver_info.model_name,
+                    data={
+                        CONF_HOST: self._receiver_info.host,
+                        CONF_VOLUME_RESOLUTION: user_input[CONF_VOLUME_RESOLUTION],
+                    },
+                    options={
+                        OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+                        OPTION_SOURCES: sources_str,
+                    },
+                )
+                _LOGGER.debug("Configured receiver, result: %s", result)
+                return result
 
         _LOGGER.debug("Configuring receiver, info: %s", self._receiver_info)
 
         return self.async_show_form(
             step_id="configure_receiver",
+            data_schema=STEP_CONFIGURE_SCHEMA,
+            errors=errors,
             description_placeholders={
                 "name": f"{self._receiver_info.model_name} ({self._receiver_info.host})"
             },
-            data_schema=STEP_CONFIGURE_SCHEMA,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:

@@ -23,6 +23,7 @@ VOLUME_RESOLUTION_ALLOWED: tuple[VolumeResolution, ...] = typing.get_args(
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100.0
 
+
 _cmds_base = pyeiscp.commands.COMMANDS
 _cmds = dict(
     sorted(
@@ -32,6 +33,8 @@ _cmds = dict(
         }.items()
     )
 )
+del _cmds["2C"]  # USB(TOGGLE)
+del _cmds["7F"]  # OFF
 
 
 class InputSource(Enum):
@@ -40,7 +43,7 @@ class InputSource(Enum):
     __meaning_mapping: ClassVar[dict[str, Self]] = {}  # type: ignore[misc]
 
     value_hex: str
-    value_meanings: tuple[str, ...]
+    value_meanings: list[str]
 
     _ignore_ = "InputSource _k _v _value"
 
@@ -48,8 +51,6 @@ class InputSource(Enum):
     for _k, _v in _cmds.items():
         try:
             _value = int(_k, 16)
-            if _value == 0x7F:
-                continue
             InputSource["I" + _k] = _value, _k.lower(), _v["name"]
         except ValueError:
             pass
@@ -62,11 +63,11 @@ class InputSource(Enum):
         obj._value_ = value
         obj.value_hex = value_hex
 
-        meanings: tuple[str, ...]
+        meanings: list[str]
         if isinstance(meanings_raw, str):
-            meanings = (meanings_raw,)
+            meanings = [meanings_raw.upper()]
         else:
-            meanings = meanings_raw
+            meanings = [m.upper() for m in meanings_raw]
 
         obj.value_meanings = meanings
 
