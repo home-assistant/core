@@ -570,9 +570,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_clear_statistics(self, statistic_ids: list[str]) -> None:
+    def async_clear_statistics(
+        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+    ) -> None:
         """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(statistic_ids))
+        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
 
     @callback
     def async_update_statistics_metadata(

@@ -2116,6 +2116,30 @@ async def test_clear_statistics(
     assert response["result"] == {"sensor.test2": expected_response["sensor.test2"]}
 
 
+async def test_clear_statistics_time_out(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing statistics with time-out error."""
+    client = await hass_ws_client()
+
+    with (
+        patch.object(recorder.tasks.ClearStatisticsTask, "run"),
+        patch.object(recorder.websocket_api, "CLEAR_STATISTICS_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "clear_statistics timed out",
+    }
+
+
 @pytest.mark.parametrize(
     ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
