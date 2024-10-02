@@ -118,6 +118,7 @@ def async_register_webrtc_provider(
         DATA_WEBRTC_PROVIDERS, set()
     )
 
+    @callback
     def remove_provider() -> None:
         providers.remove(provider)
         hass.async_create_task(_async_refresh_providers(hass))

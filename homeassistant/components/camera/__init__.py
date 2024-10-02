@@ -402,12 +402,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
-    async def get_ice_servers() -> RTCIceServer:
+    async def get_ice_server() -> RTCIceServer:
         # The following servers will replaced before the next stable release with
         # STUN server provided by Home Assistant. Used Google ones for testing purposes.
         return RTCIceServer(urls="stun:stun.l.google.com:19302")
 
-    register_ice_server(hass, get_ice_servers)
+    register_ice_server(hass, get_ice_server)
     return True
 
 
@@ -716,8 +716,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Returns True if any state was updated (and needs to be written)
         """
         old_providers = self._webrtc_providers
-        self._webrtc_providers = await self._async_get_supported_webrtc_providers()
-        if old_providers != self._webrtc_providers:
+        new_providers = await self._async_get_supported_webrtc_providers()
+        self._webrtc_providers = new_providers
+        if old_providers != new_providers:
             self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_providers(
