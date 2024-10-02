@@ -68,6 +68,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data=MOCK_CONFIG,
         unique_id=MOCK_CONFIG[CONF_HOST],
         title="EzBEQ",
+        entry_id="01J959G9VRJH1TFGKW53GSZ11N",
     )
 
 
