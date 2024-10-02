@@ -4,13 +4,13 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsConnectionError,
     HomeassistantAnalyticsNotModifiedError,
 )
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.analytics_insights.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -20,6 +20,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -28,18 +29,6 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    unique_ids = ["total_active_installations", "total_reports_integrations"]
-
-    for unique_id in unique_ids:
-        entity_registry.async_get_or_create(
-            domain=Platform.SENSOR,
-            platform=DOMAIN,
-            unique_id=unique_id,
-            config_entry=mock_config_entry,
-            suggested_object_id=unique_id,
-            disabled_by=None,
-        )
-
     with patch(
         "homeassistant.components.analytics_insights.PLATFORMS",
         [Platform.SENSOR],
