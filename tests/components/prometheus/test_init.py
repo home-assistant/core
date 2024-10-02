@@ -527,7 +527,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text",
         entity="sensor.text",
-    ).withValue(0.0).assert_not_in_metrics(body)
+    ).assert_not_in_metrics(body)
 
     EntityMetric(
         metric_name="sensor_unit_text",
