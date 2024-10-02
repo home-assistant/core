@@ -48,6 +48,15 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         )
         for i in range(CONNECTIONS_COUNT)
     ],
+    *[
+        SwissPublicTransportSensorEntityDescription(
+            key=f"line{i or ''}",
+            translation_key=f"line{i}",
+            value_fn=lambda data_connection: data_connection["line"],
+            index=i,
+        )
+        for i in range(CONNECTIONS_COUNT)
+    ],
     SwissPublicTransportSensorEntityDescription(
         key="duration",
         device_class=SensorDeviceClass.DURATION,
