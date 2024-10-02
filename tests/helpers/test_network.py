@@ -727,7 +727,7 @@ async def test_get_current_request_url_with_known_host(
 
 
 @patch(
-    "homeassistant.components.hassio.is_hassio",
+    "homeassistant.helpers.network.is_hassio",
     Mock(return_value={"hostname": "homeassistant"}),
 )
 @patch(
