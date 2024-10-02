@@ -4,7 +4,7 @@ from collections.abc import Iterator
 import contextlib
 from os import PathLike
 import pathlib
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -15,10 +15,13 @@ from homeassistant.components.blueprint import (
     BlueprintInUse,
     DomainBlueprints,
 )
+from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
+
+from tests.common import async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(template.__file__).parent / "blueprints"
 
@@ -144,6 +147,34 @@ async def test_inverted_binary_sensor(
         await template.async_get_blueprints(hass).async_remove_blueprint(
             "inverted_binary_sensor.yaml"
         )
+
+
+async def test_domain_blueprint(hass: HomeAssistant) -> None:
+    """Test DomainBlueprint services."""
+    reload_handler_calls = async_mock_service(hass, DOMAIN, SERVICE_RELOAD)
+    mock_create_file = AsyncMock()
+    mock_create_file.return_value = True
+
+    with patch(
+        "homeassistant.components.blueprint.models.DomainBlueprints._create_file",
+        mock_create_file,
+    ):
+        await template.async_get_blueprints(hass).async_add_blueprint(
+            Blueprint(
+                {
+                    "blueprint": {
+                        "domain": DOMAIN,
+                        "name": "Test",
+                    },
+                },
+                expected_domain="template",
+                path="xxx",
+                schema=BLUEPRINT_SCHEMA,
+            ),
+            "xxx",
+            True,
+        )
+    assert len(reload_handler_calls) == 1
 
 
 async def test_invalid_blueprint(
