@@ -8,9 +8,13 @@
         }
       },
       "manual": {
-        "description": "Manual device entry.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "eiscp_discovery": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "configure_receiver": {

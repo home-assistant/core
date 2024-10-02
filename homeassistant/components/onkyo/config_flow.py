@@ -127,12 +127,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Config flow start eiscp discovery")
 
-        current_unique_ids = self._async_current_ids()
-        current_hosts = {
-            entry.data[CONF_HOST]
-            for entry in self._async_current_entries(include_ignore=False)
-        }
-
         try:
             infos = await async_discover()
         except Exception:
@@ -142,21 +136,25 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered devices: %s", infos)
 
         self._discovered_infos = {}
-        devices_names = {}
+        discovered_names = {}
+        current_unique_ids = self._async_current_ids()
         for info in infos:
+            if info.identifier in current_unique_ids:
+                continue
             self._discovered_infos[info.identifier] = info
-            if (
-                info.identifier not in current_unique_ids
-                and info.host not in current_hosts
-            ):
-                devices_names[info.identifier] = f"{info.model_name} ({info.host})"
+            device_name = f"{info.model_name} ({info.host})"
+            discovered_names[info.identifier] = device_name
 
-        if not devices_names:
+        _LOGGER.debug("Discovered new devices: %s", self._discovered_infos)
+
+        if not discovered_names:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
             step_id="eiscp_discovery",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_names)}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_DEVICE): vol.In(discovered_names)}
+            ),
         )
 
     async def async_step_configure_receiver(
@@ -186,7 +184,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Configured receiver, result: %s", result)
             return result
 
-        _LOGGER.debug("Configure receiver, info: %s", self._receiver_info)
+        _LOGGER.debug("Configuring receiver, info: %s", self._receiver_info)
 
         return self.async_show_form(
             step_id="configure_receiver",
