@@ -58,6 +58,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _entry: ConfigEntry
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -67,7 +69,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize FRITZ!Box Tools flow."""
         self._host: str | None = None
-        self._entry: ConfigEntry | None = None
         self._name: str = ""
         self._password: str = ""
         self._use_tls: bool = False
@@ -278,7 +279,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle flow upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self._entry = self._get_reauth_entry()
         self._host = entry_data[CONF_HOST]
         self._port = entry_data[CONF_PORT]
         self._username = entry_data[CONF_USERNAME]
@@ -321,7 +322,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors={"base": error}
             )
 
-        assert isinstance(self._entry, ConfigEntry)
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
@@ -339,8 +339,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfigure flow ."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert self._entry
+        self._entry = self._get_reconfigure_entry()
         self._host = self._entry.data[CONF_HOST]
         self._port = self._entry.data[CONF_PORT]
         self._username = self._entry.data[CONF_USERNAME]
@@ -394,7 +393,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input={**user_input, CONF_PORT: self._port}, errors={"base": error}
             )
 
-        assert isinstance(self._entry, ConfigEntry)
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
