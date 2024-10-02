@@ -9,9 +9,7 @@ import it.
 
 from __future__ import annotations
 
-from functools import partial
-
-from propcache import cached_property as _cached_property
+from functools import cached_property as _cached_property, partial
 
 from homeassistant.helpers.deprecation import (
     DeprecatedAlias,

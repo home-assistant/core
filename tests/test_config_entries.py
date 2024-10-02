@@ -11,7 +11,6 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from propcache import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -966,7 +965,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         if (
             key.startswith("__")
             or callable(func)
-            or type(func) in (cached_property, property)
+            or type(func).__name__ in ("cached_property", "property")
         ):
             continue
         assert key in dict_repr or key in excluded_from_dict
