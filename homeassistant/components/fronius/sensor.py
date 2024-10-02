@@ -66,33 +66,35 @@ async def async_setup_entry(
 
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, InverterSensor
+            async_add_entities, InverterSensor, FroniusSensorEntityDescription
         )
     if solar_net.logger_coordinator is not None:
         solar_net.logger_coordinator.add_entities_for_seen_keys(
-            async_add_entities, LoggerSensor
+            async_add_entities, LoggerSensor, FroniusSensorEntityDescription
         )
     if solar_net.meter_coordinator is not None:
         solar_net.meter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, MeterSensor
+            async_add_entities, MeterSensor, FroniusSensorEntityDescription
         )
     if solar_net.ohmpilot_coordinator is not None:
         solar_net.ohmpilot_coordinator.add_entities_for_seen_keys(
-            async_add_entities, OhmpilotSensor
+            async_add_entities, OhmpilotSensor, FroniusSensorEntityDescription
         )
     if solar_net.power_flow_coordinator is not None:
         solar_net.power_flow_coordinator.add_entities_for_seen_keys(
-            async_add_entities, PowerFlowSensor
+            async_add_entities, PowerFlowSensor, FroniusSensorEntityDescription
         )
     if solar_net.storage_coordinator is not None:
         solar_net.storage_coordinator.add_entities_for_seen_keys(
-            async_add_entities, StorageSensor
+            async_add_entities, StorageSensor, FroniusSensorEntityDescription
         )
 
     @callback
     def async_add_new_entities(coordinator: FroniusInverterUpdateCoordinator) -> None:
         """Add newly found inverter entities."""
-        coordinator.add_entities_for_seen_keys(async_add_entities, InverterSensor)
+        coordinator.add_entities_for_seen_keys(
+            async_add_entities, InverterSensor, FroniusEntityDescription
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -115,7 +117,7 @@ class FroniusSensorEntityDescription(FroniusEntityDescription, SensorEntityDescr
     value_fn: Callable[[StateType], StateType] | None = None
 
 
-INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+INVERTER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_day",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -227,7 +229,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-LOGGER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+LOGGER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="co2_factor",
         state_class=SensorStateClass.MEASUREMENT,
@@ -242,7 +244,7 @@ LOGGER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+METER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="current_ac_phase_1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -477,7 +479,7 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_real_ac_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -515,7 +517,7 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_day",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -642,7 +644,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-STORAGE_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+STORAGE_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="capacity_maximum",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,

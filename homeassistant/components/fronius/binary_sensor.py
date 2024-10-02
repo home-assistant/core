@@ -39,12 +39,14 @@ async def async_setup_entry(
     solar_net = config_entry.runtime_data
 
     if solar_net.power_flow_coordinator is not None:
-        solar_net.power_flow_coordinator.add_binary_entities_for_seen_keys(
-            async_add_entities, PowerFlowBinarySensor
+        solar_net.power_flow_coordinator.add_entities_for_seen_keys(
+            async_add_entities,
+            PowerFlowBinarySensor,
+            FroniusBinarySensorEntityDescription,
         )
 
 
-POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS: list[FroniusBinarySensorEntityDescription] = [
+POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusBinarySensorEntityDescription(
         name="Backup mode",
         key="backup_mode",
