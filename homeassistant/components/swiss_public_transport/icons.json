@@ -22,13 +22,7 @@
       "delay": {
         "default": "mdi:clock-plus"
       },
-      "line0": {
-        "default": "mdi:transit-connection-variant"
-      },
-      "line1": {
-        "default": "mdi:transit-connection-variant"
-      },
-      "line2": {
+      "line": {
         "default": "mdi:transit-connection-variant"
       }
     }

@@ -47,14 +47,8 @@
       "delay": {
         "name": "Delay"
       },
-      "line0": {
+      "line": {
         "name": "Line"
-      },
-      "line1": {
-        "name": "Line +1"
-      },
-      "line2": {
-        "name": "Line +2"
       }
     }
   },
