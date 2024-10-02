@@ -9,6 +9,7 @@ from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
+    NotConnected,
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
@@ -133,7 +134,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Matter client not ready") from err
 
     # Set default fabric
-    await matter_client.set_default_fabric_label(hass.config.location_name or "Home")
+    try:
+        await matter_client.set_default_fabric_label(
+            hass.config.location_name or "Home"
+        )
+    except NotConnected as err:
+        raise ConfigEntryNotReady("Matter client not connected") from err
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
