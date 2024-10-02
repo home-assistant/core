@@ -47,6 +47,8 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str | bytes | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -61,7 +63,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            host = self.context.get(CONF_HOST) or user_input[CONF_HOST]
+            host = self.host or user_input[CONF_HOST]
             self._async_abort_entries_match({CONF_HOST: host})
 
             _client = Client(
@@ -86,7 +88,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         host_schema: VolDictType = (
-            {vol.Required(CONF_HOST): str} if CONF_HOST not in self.context else {}
+            {vol.Required(CONF_HOST): str} if not self.host else {}
         )
 
         return self.async_show_form(
@@ -122,7 +124,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: host})
 
-        self.context[CONF_HOST] = host
+        self.host = host
         self.context["title_placeholders"] = {
             "name": friendly_name,
             "host": host,

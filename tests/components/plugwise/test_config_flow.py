@@ -12,7 +12,7 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import API, DEFAULT_PORT, DOMAIN, PW_TYPE
+from homeassistant.components.plugwise.const import DEFAULT_PORT, DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -123,7 +123,6 @@ async def test_form(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -168,7 +167,6 @@ async def test_zeroconf_flow(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -204,7 +202,6 @@ async def test_zeroconf_flow_stretch(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME2,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -308,7 +305,6 @@ async def test_flow_errors(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

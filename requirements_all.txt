@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.3.0
+PyViCare==2.34.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240930.0
+home-assistant-frontend==20241002.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -1630,7 +1630,7 @@ prayer-times-calculator-offline==1.0.3
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus-client==0.17.1
+prometheus-client==0.21.0
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
@@ -2322,7 +2322,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.7.0
+python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.3.0

@@ -119,7 +119,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
