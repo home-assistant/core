@@ -9,7 +9,7 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import cached_property, partial
+from functools import partial
 import logging
 import os
 from random import SystemRandom
@@ -18,6 +18,7 @@ from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

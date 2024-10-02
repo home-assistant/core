@@ -54,6 +54,7 @@ dependencies    = [
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==43.0.1",
     "Pillow==10.4.0",
+    "propcache==0.0.0",
     "pyOpenSSL==24.2.1",
     "orjson==3.10.7",
     "packaging>=23.1",

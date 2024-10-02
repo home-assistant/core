@@ -5,13 +5,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from propcache import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

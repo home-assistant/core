@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from functools import cached_property
 import logging
 from typing import final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -89,13 +89,13 @@ class DateTimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     def device_class(self) -> None:
         """Return entity device class."""
-        return None
+        return
 
     @cached_property
     @final
     def state_attributes(self) -> None:
         """Return the state attributes."""
-        return None
+        return
 
     @property
     @final

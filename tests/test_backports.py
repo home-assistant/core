@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import cached_property
 from types import ModuleType
 from typing import Any
 
+from propcache import cached_property
 import pytest
 
 from homeassistant.backports import (
