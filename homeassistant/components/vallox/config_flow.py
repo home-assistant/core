@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from vallox_websocket_api import Vallox, ValloxApiException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -39,6 +40,8 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the Vallox integration."""
 
     VERSION = 1
+
+    _context_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,23 +86,29 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the Vallox device host address."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry
+        self._context_entry = entry
+        return await self.async_step_reconfigure_confirm()
 
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Vallox device host address."""
         if not user_input:
             return self.async_show_form(
-                step_id="reconfigure",
+                step_id="reconfigure_confirm",
                 data_schema=self.add_suggested_values_to_schema(
-                    CONFIG_SCHEMA, {CONF_HOST: entry.data.get(CONF_HOST)}
+                    CONFIG_SCHEMA, {CONF_HOST: self._context_entry.data.get(CONF_HOST)}
                 ),
             )
 
         updated_host = user_input[CONF_HOST]
 
-        if entry.data.get(CONF_HOST) != updated_host:
+        if self._context_entry.data.get(CONF_HOST) != updated_host:
             self._async_abort_entries_match({CONF_HOST: updated_host})
 
         errors: dict[str, str] = {}
@@ -115,13 +124,13 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "unknown"
         else:
             return self.async_update_reload_and_abort(
-                entry,
-                data={**entry.data, CONF_HOST: updated_host},
+                self._context_entry,
+                data={**self._context_entry.data, CONF_HOST: updated_host},
                 reason="reconfigure_successful",
             )
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA, {CONF_HOST: updated_host}
             ),

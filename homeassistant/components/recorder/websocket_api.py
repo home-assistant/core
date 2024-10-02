@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime as dt
 from typing import Any, Literal, cast
 
@@ -43,9 +44,12 @@ from .statistics import (
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
+    update_statistics_issues,
     validate_statistics,
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
+
+UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
@@ -80,6 +84,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
+    websocket_api.async_register_command(hass, ws_update_statistics_issues)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
 
@@ -292,6 +297,24 @@ async def ws_validate_statistics(
     connection.send_result(msg["id"], statistic_ids)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_statistics_issues",
+    }
+)
+@websocket_api.async_response
+async def ws_update_statistics_issues(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Update statistics issues."""
+    instance = get_instance(hass)
+    await instance.async_add_executor_job(
+        update_statistics_issues,
+        hass,
+    )
+    connection.send_result(msg["id"])
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -337,17 +360,33 @@ async def ws_get_statistics_metadata(
         vol.Required("unit_of_measurement"): vol.Any(str, None),
     }
 )
-@callback
-def ws_update_statistics_metadata(
+@websocket_api.async_response
+async def ws_update_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
     Only the normalized unit of measurement can be updated.
     """
+    done_event = asyncio.Event()
+
+    def update_statistics_metadata_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
     get_instance(hass).async_update_statistics_metadata(
-        msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
+        msg["statistic_id"],
+        new_unit_of_measurement=msg["unit_of_measurement"],
+        on_done=update_statistics_metadata_done,
     )
+    try:
+        async with asyncio.timeout(UPDATE_STATISTICS_METADATA_TIME_OUT):
+            await done_event.wait()
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "update_statistics_metadata timed out"
+        )
+        return
+
     connection.send_result(msg["id"])
 
 

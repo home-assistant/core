@@ -1,6 +1,7 @@
 """Config flow for the integration."""
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -41,17 +42,17 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_step(user_input)
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the device."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reconfigure_confirm(user_input)
+        return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self._handle_config_step(user_input, step_id="reconfigure")
+        return await self._handle_config_step(user_input, step_id="reconfigure_confirm")
 
     async def _handle_config_step(
         self, user_input: dict[str, Any] | None = None, step_id: str = "user"

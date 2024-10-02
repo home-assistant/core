@@ -28,7 +28,7 @@ _MODULES: dict[str, set[str]] = {
     "assist_satellite": {"AssistSatelliteEntity", "AssistSatelliteEntityDescription"},
     "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
     "button": {"ButtonEntity", "ButtonEntityDescription"},
-    "calendar": {"CalendarEntity"},
+    "calendar": {"CalendarEntity", "CalendarEntityDescription"},
     "camera": {"Camera", "CameraEntityDescription"},
     "climate": {"ClimateEntity", "ClimateEntityDescription"},
     "coordinator": {"DataUpdateCoordinator"},
@@ -36,7 +36,13 @@ _MODULES: dict[str, set[str]] = {
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity", "TrackerEntity"},
+    "device_tracker": {
+        "DeviceTrackerEntity",
+        "ScannerEntity",
+        "ScannerEntityDescription",
+        "TrackerEntity",
+        "TrackerEntityDescription",
+    },
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},
@@ -76,16 +82,23 @@ _MODULES: dict[str, set[str]] = {
 }
 _ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
     {
+        "alert",
         "automation",
         "counter",
+        "dominos",
         "input_boolean",
+        "input_button",
         "input_datetime",
         "input_number",
+        "input_select",
         "input_text",
+        "microsoft_face",
         "person",
+        "plant",
+        "remember_the_milk",
+        "schedule",
         "script",
         "tag",
-        "template",
         "timer",
     }
 )
