@@ -199,9 +199,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-        self._context_entry = entry
+        self._context_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
