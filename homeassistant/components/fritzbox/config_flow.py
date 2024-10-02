@@ -43,9 +43,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._entry: ConfigEntry | None = None
         self._host: str | None = None
         self._name: str | None = None
         self._password: str | None = None
@@ -62,7 +63,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _update_entry(self) -> None:
-        assert self._entry is not None
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
@@ -184,9 +184,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._entry = entry
+        self._entry = self._get_reauth_entry()
         self._host = entry_data[CONF_HOST]
         self._name = str(entry_data[CONF_HOST])
         self._username = entry_data[CONF_USERNAME]
@@ -228,9 +226,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._entry = entry
+        self._entry = self._get_reconfigure_entry()
         self._name = self._entry.data[CONF_HOST]
         self._host = self._entry.data[CONF_HOST]
         self._username = self._entry.data[CONF_USERNAME]
