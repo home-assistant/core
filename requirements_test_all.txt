@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.1
+PyChromecast==14.0.2
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.3.0
+PyViCare==2.34.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.2
+RestrictedPython==7.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -863,7 +863,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.3
+gotailwind==0.2.4
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
@@ -943,10 +943,10 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240930.0
+home-assistant-frontend==20241002.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.9.23
+home-assistant-intents==2024.10.2
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1331,7 +1331,7 @@ praw==7.5.0
 prayer-times-calculator-offline==1.0.3
 
 # homeassistant.components.prometheus
-prometheus-client==0.17.1
+prometheus-client==0.21.0
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
@@ -1849,7 +1849,7 @@ python-fullykiosk==0.0.14
 # python-gammu==3.2.4
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.7.0
+python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.3.0
@@ -1879,7 +1879,7 @@ python-mpd2==3.1.1
 python-mystrom==2.2.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.4.0
+python-opendata-transport==0.5.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
