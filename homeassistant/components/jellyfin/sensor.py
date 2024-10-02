@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import JellyfinConfigEntry
+from . import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .coordinator import JellyfinDataT
-from .entity import JellyfinEntity
+from .entity import JellyfinServerEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,16 +50,25 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     async_add_entities(
-        JellyfinSensor(data.coordinators[coordinator_type], description)
+        JellyfinServerSensor(data.coordinators[coordinator_type], description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 
 
-class JellyfinSensor(JellyfinEntity, SensorEntity):
+class JellyfinServerSensor(JellyfinServerEntity, SensorEntity):
     """Defines a Jellyfin sensor entity."""
 
-    _attr_has_entity_name = True
     entity_description: JellyfinSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: JellyfinDataUpdateCoordinator,
+        description: JellyfinSensorEntityDescription,
+    ) -> None:
+        """Initialize Jellyfin sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.server_id}-{description.key}"
 
     @property
     def native_value(self) -> StateType:
