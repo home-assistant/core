@@ -13,7 +13,6 @@ from homeassistant.components.hassio import (
     HassioAPIError,
     async_get_green_settings,
     async_set_green_settings,
-    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -23,6 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.hassio import is_hassio
 
 from .const import DOMAIN
 

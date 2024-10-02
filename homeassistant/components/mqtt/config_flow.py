@@ -16,12 +16,7 @@ from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonManager,
-    AddonState,
-    is_hassio,
-)
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -41,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,

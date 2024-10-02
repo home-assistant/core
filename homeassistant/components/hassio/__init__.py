@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import datetime
+from functools import partial
 import logging
 import os
 import re
@@ -37,9 +38,21 @@ from homeassistant.helpers import (
     discovery_flow,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    deprecated_function,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio  # noqa: F401
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo  # noqa: F401
+from homeassistant.helpers.hassio import (
+    get_supervisor_ip as _get_supervisor_ip,
+    is_hassio as _is_hassio,
+)
+from homeassistant.helpers.service_info.hassio import (
+    HassioServiceInfo as _HassioServiceInfo,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
@@ -125,6 +138,17 @@ from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
+get_supervisor_ip = deprecated_function(
+    "homeassistant.helpers.hassio.get_supervisor_ip", breaks_in_ha_version="2025.11"
+)(_get_supervisor_ip)
+is_hassio = deprecated_function(
+    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
+)(_is_hassio)
+_DEPRECATED_HassioServiceInfo = DeprecatedConstant(
+    _HassioServiceInfo,
+    "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
+    "2025.11",
+)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -525,3 +549,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

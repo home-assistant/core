@@ -18,7 +18,6 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
-    is_hassio,
 )
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
@@ -37,6 +36,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
