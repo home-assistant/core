@@ -150,5 +150,7 @@ set_sensors_used_in_climate:
       selector:
         device:
           multiple: true
-          filter:
-            manufacturer: ecobee
+          integration: ecobee
+          entity:
+            - domain: climate
+            - domain: sensor
