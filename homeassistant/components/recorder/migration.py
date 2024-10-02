@@ -105,6 +105,7 @@ from .statistics import cleanup_statistics_timestamp_migration, get_start_time
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
+    database_job_retry_wrapper_method,
     execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job_method,
@@ -2263,40 +2264,24 @@ class DataMigrationStatus:
     migration_done: bool
 
 
-class BaseRunTimeMigration(ABC):
-    """Base class for run time migrations."""
+class BaseMigration(ABC):
+    """Base class for migrations."""
 
     index_to_drop: tuple[str, str] | None = None
     required_schema_version = 0
     migration_version = 1
     migration_id: str
-    task = MigrationTask
 
     def __init__(self, schema_version: int, migration_changes: dict[str, int]) -> None:
         """Initialize a new BaseRunTimeMigration."""
         self.schema_version = schema_version
         self.migration_changes = migration_changes
 
-    def migrate_all(
-        self, instance: Recorder, session_maker: Callable[[], Session]
-    ) -> None:
-        """Migrate all data."""
-        with session_scope(session=session_maker()) as session:
-            if not self.needs_migrate(instance, session):
-                self.migration_done(instance, session)
-                return
-        while not self.migrate_data(instance):
-            pass
-
-    def queue_migration(self, instance: Recorder, session: Session) -> None:
-        """Start migration if needed."""
-        if self.needs_migrate(instance, session):
-            instance.queue_task(self.task(self))
-        else:
-            self.migration_done(instance, session)
-
-    @retryable_database_job_method("migrate data")
+    @abstractmethod
     def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, return True if migration is completed."""
+
+    def _migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
         if status.migration_done:
@@ -2351,7 +2336,45 @@ class BaseRunTimeMigration(ABC):
         return needs_migrate.needs_migrate
 
 
-class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
+class BaseOffLineMigration(BaseMigration):
+    """Base class for off line migrations."""
+
+    def migrate_all(
+        self, instance: Recorder, session_maker: Callable[[], Session]
+    ) -> None:
+        """Migrate all data."""
+        with session_scope(session=session_maker()) as session:
+            if not self.needs_migrate(instance, session):
+                self.migration_done(instance, session)
+                return
+        while not self.migrate_data(instance):
+            pass
+
+    @database_job_retry_wrapper_method("migrate data", 10)
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseRunTimeMigration(BaseMigration):
+    """Base class for run time migrations."""
+
+    task = MigrationTask
+
+    def queue_migration(self, instance: Recorder, session: Session) -> None:
+        """Start migration if needed."""
+        if self.needs_migrate(instance, session):
+            instance.queue_task(self.task(self))
+        else:
+            self.migration_done(instance, session)
+
+    @retryable_database_job_method("migrate data")
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseMigrationWithQuery(BaseMigration):
     """Base class for run time migrations."""
 
     @abstractmethod
@@ -2368,7 +2391,7 @@ class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
         )
 
 
-class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
+class StatesContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2411,7 +2434,7 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
+class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2454,7 +2477,7 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
@@ -2532,7 +2555,7 @@ class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseRunTimeMigrationWithQuery):
+class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
@@ -2709,7 +2732,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
         return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-class EntityIDPostMigration(BaseRunTimeMigrationWithQuery):
+class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to remove old entity_id strings from states."""
 
     migration_id = "entity_id_post_migration"
@@ -2738,9 +2761,7 @@ LIVE_DATA_MIGRATORS = (
 )
 
 
-def _mark_migration_done(
-    session: Session, migration: type[BaseRunTimeMigration]
-) -> None:
+def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
     """Mark a migration as done in the database."""
     session.merge(
         MigrationChanges(
