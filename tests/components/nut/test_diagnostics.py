@@ -39,5 +39,5 @@ async def test_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-    assert result["entry"] == entry_dict
+    assert result["entry"] == entry_dict | {"discovery_keys": {}}
     assert result["nut_data"] == nut_data_dict

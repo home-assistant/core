@@ -58,7 +58,7 @@ async def test_scene_activate(
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test the scene is removed when the config entry is unloaded."""
     await init_integration(hass, entry)
-    await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_SCENE)
 
+    await hass.config_entries.async_unload(entry.entry_id)
     state = hass.states.get("scene.romantic")
     assert state.state == STATE_UNAVAILABLE

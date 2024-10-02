@@ -13,7 +13,7 @@
           "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
       },
-      "reconfigure": {
+      "reconfigure_confirm": {
         "description": "[%key:component::enphase_envoy::config::step::user::description%]",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -164,6 +164,18 @@
       },
       "lifetime_consumption_phase": {
         "name": "Lifetime energy consumption {phase_name}"
+      },
+      "balanced_net_consumption": {
+        "name": "balanced net power consumption"
+      },
+      "lifetime_balanced_net_consumption": {
+        "name": "Lifetime balanced net energy consumption"
+      },
+      "balanced_net_consumption_phase": {
+        "name": "balanced net power consumption {phase_name}"
+      },
+      "lifetime_balanced_net_consumption_phase": {
+        "name": "Lifetime balanced net energy consumption {phase_name}"
       },
       "lifetime_net_consumption": {
         "name": "Lifetime net energy consumption"

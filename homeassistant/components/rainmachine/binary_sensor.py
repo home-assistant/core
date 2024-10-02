@@ -11,9 +11,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RainMachineConfigEntry, RainMachineEntity
+from . import RainMachineConfigEntry
 from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import (
     EntityDomainReplacementStrategy,
     async_finish_entity_domain_replacements,

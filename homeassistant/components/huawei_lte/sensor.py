@@ -30,7 +30,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -44,6 +44,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     SENSOR_KEYS,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -47,6 +47,8 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for devolo Home Network."""
 
     VERSION = 1
+
+    host: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -88,7 +90,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_IP_ADDRESS: discovery_info.host}
         )
 
-        self.context[CONF_HOST] = discovery_info.host
+        self.host = discovery_info.host
         self.context["title_placeholders"] = {
             PRODUCT: discovery_info.properties["Product"],
             CONF_NAME: discovery_info.hostname.split(".")[0],
@@ -103,7 +105,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         title = self.context["title_placeholders"][CONF_NAME]
         if user_input is not None:
             data = {
-                CONF_IP_ADDRESS: self.context[CONF_HOST],
+                CONF_IP_ADDRESS: self.host,
                 CONF_PASSWORD: "",
             }
             return self.async_create_entry(title=title, data=data)
@@ -117,10 +119,12 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.context[CONF_HOST] = entry_data[CONF_IP_ADDRESS]
-            self.context["title_placeholders"][PRODUCT] = (
-                entry.runtime_data.device.product
-            )
+            self.host = entry_data[CONF_IP_ADDRESS]
+            placeholders = {
+                **self.context["title_placeholders"],
+                PRODUCT: entry.runtime_data.device.product,
+            }
+            self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -139,7 +143,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         assert reauth_entry is not None
 
         data = {
-            CONF_IP_ADDRESS: self.context[CONF_HOST],
+            CONF_IP_ADDRESS: self.host,
             CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
         return self.async_update_reload_and_abort(reauth_entry, data=data)
