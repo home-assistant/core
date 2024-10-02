@@ -26,7 +26,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def validate_input(self, sensor_api: str, station: str) -> None:
         """Validate input from user input."""
@@ -80,7 +80,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
 
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -91,8 +91,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
-
-            assert self.entry is not None
 
             try:
                 await self.validate_input(api_key, self.entry.data[CONF_STATION])
