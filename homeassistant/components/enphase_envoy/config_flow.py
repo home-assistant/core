@@ -79,7 +79,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
                 [self.ip_address]
             )
-        elif not self._reauth_entry:
+        elif self.source != SOURCE_REAUTH:
             schema[vol.Required(CONF_HOST)] = str
 
         default_username = ""
