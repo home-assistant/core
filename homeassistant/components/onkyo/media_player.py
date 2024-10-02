@@ -530,7 +530,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._attr_source = self._source_mapping[source]
             return
 
-        self._attr_source = meaning
+        source_meanings = ", ".join(source.value_meanings)
+        _LOGGER.error(
+            'Input source "%s" not in source list: %s', source_meanings, self.entity_id
+        )
+        self._attr_source = source_meanings
 
     @callback
     def _parse_audio_information(
