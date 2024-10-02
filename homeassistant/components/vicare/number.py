@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import HeatingProgram, ViCareDevice, ViCareRequiredKeysMixin
-from .utils import get_circuits, is_supported
+from .utils import get_circuits, get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +51,18 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 
 DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
+        key="dhw_temperature",
+        translation_key="dhw_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature(value),
+        min_value_getter=lambda api: api.getDomesticHotWaterMinTemperature(),
+        max_value_getter=lambda api: api.getDomesticHotWaterMaxTemperature(),
+        native_step=1,
+    ),
+    ViCareNumberEntityDescription(
         key="dhw_secondary_temperature",
         translation_key="dhw_secondary_temperature",
         entity_category=EntityCategory.CONFIG,
@@ -62,6 +74,34 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_min_value=10,
         native_max_value=60,
         native_step=1,
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_on",
+        translation_key="dhw_hysteresis_switch_on",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOn(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOn(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnStepping(),
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_off",
+        translation_key="dhw_hysteresis_switch_off",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOff(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOff(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffStepping(),
     ),
 )
 
@@ -239,6 +279,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
+                get_device_serial(device.api),
                 device.config,
                 device.api,
             )
@@ -249,6 +290,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
+                get_device_serial(device.api),
                 device.config,
                 device.api,
                 circuit,
@@ -284,12 +326,15 @@ class ViCareNumber(ViCareEntity, NumberEntity):
     def __init__(
         self,
         description: ViCareNumberEntityDescription,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(description.key, device_config, device, component)
+        super().__init__(
+            description.key, device_serial, device_config, device, component
+        )
         self.entity_description = description
 
     @property

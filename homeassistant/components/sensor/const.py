@@ -182,7 +182,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -350,8 +350,8 @@ class SensorDeviceClass(StrEnum):
     """Generic speed.
 
     Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
-    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
-    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`, `mm/s`
+    - USCS / imperial: `in/d`, `in/h`, `in/s`, `ft/s`, `mph`
     - Nautical: `kn`
     - Beaufort: `Beaufort`
     """

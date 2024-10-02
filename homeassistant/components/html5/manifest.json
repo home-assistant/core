@@ -1,10 +1,12 @@
 {
   "domain": "html5",
   "name": "HTML5 Push Notifications",
-  "codeowners": [],
+  "codeowners": ["@alexyao2015"],
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/html5",
   "iot_class": "cloud_push",
   "loggers": ["http_ece", "py_vapid", "pywebpush"],
-  "requirements": ["pywebpush==1.14.1"]
+  "requirements": ["pywebpush==1.14.1"],
+  "single_config_entry": true
 }

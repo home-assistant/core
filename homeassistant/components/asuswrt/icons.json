@@ -24,6 +24,21 @@
       },
       "load_avg_15m": {
         "default": "mdi:cpu-32-bit"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "cpu_core_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_used": {
+        "default": "mdi:memory"
       }
     }
   }

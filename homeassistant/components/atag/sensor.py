@@ -11,7 +11,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, AtagEntity
+from . import DOMAIN
+from .entity import AtagEntity
 
 SENSORS = {
     "Outside Temperature": "outside_temp",

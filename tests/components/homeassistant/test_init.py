@@ -7,7 +7,6 @@ import voluptuous as vol
 import yaml
 
 from homeassistant import config
-import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     ATTR_SAFE_MODE,
@@ -44,15 +43,6 @@ from tests.common import (
     async_mock_service,
     patch_yaml_files,
 )
-
-
-async def test_is_on(hass: HomeAssistant) -> None:
-    """Test is_on method."""
-    with pytest.raises(
-        RuntimeError,
-        match="Detected code that uses homeassistant.components.is_on. This is deprecated and will stop working",
-    ):
-        assert comps.is_on(hass, "light.Bowl")
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:

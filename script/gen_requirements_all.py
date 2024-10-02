@@ -6,7 +6,6 @@ from __future__ import annotations
 import difflib
 import importlib
 from operator import itemgetter
-import os
 from pathlib import Path
 import pkgutil
 import re
@@ -82,8 +81,8 @@ URL_PIN = (
 )
 
 
-CONSTRAINT_PATH = os.path.join(
-    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+CONSTRAINT_PATH = (
+    Path(__file__).parent.parent / "homeassistant" / "package_constraints.txt"
 )
 CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
@@ -119,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.4.0
+anyio==4.6.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -128,7 +127,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.0
+numpy==1.26.4
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -206,12 +205,6 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
-
-# pyasn1.compat.octets was removed in pyasn1 0.6.1 and breaks some integrations
-# and tests that import it directly
-# https://github.com/pyasn1/pyasn1/pull/60
-# https://github.com/lextudio/pysnmp/issues/114
-pyasn1==0.6.0
 """
 
 GENERATED_MESSAGE = (
@@ -262,8 +255,7 @@ def explore_module(package: str, explore_children: bool) -> list[str]:
 
 def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
-    with open("pyproject.toml", "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
     return dependencies
 
@@ -534,7 +526,7 @@ def diff_file(filename: str, content: str) -> list[str]:
 
 def main(validate: bool, ci: bool) -> int:
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return 1
 
@@ -596,7 +588,7 @@ def main(validate: bool, ci: bool) -> int:
 def _get_hassfest_config() -> Config:
     """Get hassfest config."""
     return Config(
-        root=Path(".").absolute(),
+        root=Path().absolute(),
         specific_integrations=None,
         action="validate",
         requirements=True,

@@ -49,7 +49,7 @@ FIRST_ZONE = 11
 
 
 @callback
-def _sources_from_config(data):
+def _sources_from_config(data: dict[str, str]) -> dict[str, str]:
     sources_config = {
         str(idx + 1): data.get(source) for idx, source in enumerate(SOURCES)
     }
@@ -134,7 +134,9 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 @callback
-def _key_for_source(index, source, previous_sources):
+def _key_for_source(
+    index: int, source: str, previous_sources: dict[str, str]
+) -> vol.Required:
     return vol.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
@@ -147,7 +149,9 @@ class Ws66iOptionsFlowHandler(OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(

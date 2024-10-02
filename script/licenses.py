@@ -149,7 +149,6 @@ EXCEPTIONS = {
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
-    "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
@@ -164,15 +163,13 @@ EXCEPTIONS = {
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
 
 TODO = {
     "aiocache": AwesomeVersion(
-        "0.12.2"
+        "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 

@@ -11,7 +11,8 @@ from aioelectricitymaps import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.co2signal import DOMAIN, config_flow
+from homeassistant.components.co2signal import config_flow
+from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -198,17 +199,10 @@ async def test_reauth(
     """Test reauth flow."""
     config_entry.add_to_hass(hass)
 
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=None,
-    )
+    init_result = await config_entry.start_reauth_flow(hass)
 
     assert init_result["type"] is FlowResultType.FORM
-    assert init_result["step_id"] == "reauth"
+    assert init_result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",

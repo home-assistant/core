@@ -625,26 +625,8 @@ async def async_setup_entry(
 ) -> None:
     """Initialize sensors."""
 
-    # Migrate original gas meter sensor to ExternalDevice
-    # This is sensor that was directly linked to the P1 Meter
-    # Migration can be removed after 2024.8.0
     ent_reg = er.async_get(hass)
     data = entry.runtime_data.data.data
-    if (
-        entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{entry.unique_id}_total_gas_m3"
-        )
-    ) and data.gas_unique_id is not None:
-        ent_reg.async_update_entity(
-            entity_id,
-            new_unique_id=f"{DOMAIN}_gas_meter_{data.gas_unique_id}",
-        )
-
-    # Remove old gas_unique_id sensor
-    if entity_id := ent_reg.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{entry.unique_id}_gas_unique_id"
-    ):
-        ent_reg.async_remove(entity_id)
 
     # Initialize default sensors
     entities: list = [

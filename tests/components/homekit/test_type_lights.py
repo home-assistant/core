@@ -27,7 +27,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
 from homeassistant.const import (
@@ -83,8 +83,8 @@ async def test_light_basic(hass: HomeAssistant, hk_driver, events: list[Event]) 
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
 
@@ -160,8 +160,8 @@ async def test_light_brightness(
     assert acc.char_brightness.value == 40
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     hk_driver.set_characteristics(
         {
@@ -296,7 +296,7 @@ async def test_light_color_temperature(
     assert acc.char_color_temp.value == 190
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
 
@@ -372,7 +372,7 @@ async def test_light_color_temperature_and_rgb_color(
     char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     hk_driver.set_characteristics(
         {
@@ -549,7 +549,7 @@ async def test_light_rgb_color(
     assert acc.char_saturation.value == 90
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -671,7 +671,7 @@ async def test_light_rgb_with_color_temp(
     assert acc.char_brightness.value == 100
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -791,7 +791,7 @@ async def test_light_rgbwx_with_color_temp_and_brightness(
     assert acc.char_brightness.value == 100
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
     char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
@@ -858,7 +858,7 @@ async def test_light_rgb_or_w_lights(
     assert acc.char_color_temp.value == 153
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -985,7 +985,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     assert acc.char_brightness.value == 100
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -1100,7 +1100,7 @@ async def test_light_rgbww_with_color_temp_conversion(
     assert acc.char_brightness.value == 100
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -1221,7 +1221,7 @@ async def test_light_rgbw_with_color_temp_conversion(
     assert acc.char_brightness.value == 100
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
@@ -1325,7 +1325,7 @@ async def test_light_set_brightness_and_color(
     assert acc.char_saturation.value == 9
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     hk_driver.set_characteristics(
         {
@@ -1432,7 +1432,7 @@ async def test_light_set_brightness_and_color_temp(
     assert acc.char_color_temp.value == 224
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     hk_driver.set_characteristics(
         {

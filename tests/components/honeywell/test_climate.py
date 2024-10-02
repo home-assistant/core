@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -22,7 +21,6 @@ from homeassistant.components.climate import (
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -40,7 +38,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -217,53 +214,6 @@ async def test_mode_service_calls(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
-            blocking=True,
-        )
-
-
-async def test_auxheat_service_calls(
-    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-) -> None:
-    """Test controlling the auxheat through service calls."""
-    await init_integration(hass, config_entry)
-    entity_id = f"climate.{device.name}"
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: True},
-        blocking=True,
-    )
-    device.set_system_mode.assert_called_once_with("emheat")
-
-    device.set_system_mode.reset_mock()
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: False},
-        blocking=True,
-    )
-    device.set_system_mode.assert_called_once_with("heat")
-
-    device.set_system_mode.reset_mock()
-    device.set_system_mode.side_effect = aiosomecomfort.SomeComfortError
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_AUX_HEAT,
-            {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: True},
-            blocking=True,
-        )
-    device.set_system_mode.assert_called_once_with("emheat")
-
-    device.set_system_mode.reset_mock()
-    device.set_system_mode.side_effect = aiosomecomfort.SomeComfortError
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_AUX_HEAT,
-            {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: False},
             blocking=True,
         )
 
@@ -1238,37 +1188,6 @@ async def test_async_update_errors(
 
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
-
-
-async def test_aux_heat_off_service_call(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device: MagicMock,
-    config_entry: MagicMock,
-) -> None:
-    """Test aux heat off turns of system when no heat configured."""
-    device.raw_ui_data["SwitchHeatAllowed"] = False
-    device.raw_ui_data["SwitchAutoAllowed"] = False
-    device.raw_ui_data["SwitchEmergencyHeatAllowed"] = True
-
-    await init_integration(hass, config_entry)
-
-    entity_id = f"climate.{device.name}"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == HVACMode.OFF
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: False},
-        blocking=True,
-    )
-    device.set_system_mode.assert_called_once_with("off")
 
 
 async def test_unique_id(
