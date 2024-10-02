@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
         severity=ir.IssueSeverity.ERROR,
         translation_key="integration_removed",
         translation_placeholders={
+            "link": "https://www.ithodaalderop.nl/additionelespiderproducten",
             "entries": "/config/integrations/integration/spider",
         },
     )
