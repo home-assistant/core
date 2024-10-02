@@ -1,6 +1,5 @@
 """Test service for Tibber integration."""
 
-import asyncio
 import datetime as dt
 from unittest.mock import MagicMock
 
@@ -8,14 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.components.tibber.services import PRICE_SERVICE_NAME, __get_prices
-from homeassistant.core import ServiceCall
+from homeassistant.components.tibber.services import PRICE_SERVICE_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import dt as dt_util
 
-STARTTIME = dt.datetime.fromtimestamp(1615766400).replace(
-    tzinfo=dt_util.get_default_time_zone()
-)
+STARTTIME = dt.datetime.fromtimestamp(1615766400).replace(tzinfo=dt.UTC)
 
 
 def generate_mock_home_data():
@@ -32,14 +28,14 @@ def generate_mock_home_data():
                                 "today": [
                                     {
                                         "startsAt": STARTTIME.isoformat(),
-                                        "total": 0.46914,
+                                        "total": 0.36914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
                                         "startsAt": (
                                             STARTTIME + dt.timedelta(hours=1)
                                         ).isoformat(),
-                                        "total": 0.46914,
+                                        "total": 0.36914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                 ],
@@ -73,14 +69,14 @@ def generate_mock_home_data():
                                 "today": [
                                     {
                                         "startsAt": STARTTIME.isoformat(),
-                                        "total": 0.46914,
+                                        "total": 0.36914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
                                         "startsAt": (
                                             STARTTIME + dt.timedelta(hours=1)
                                         ).isoformat(),
-                                        "total": 0.46914,
+                                        "total": 0.36914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                 ],
@@ -110,96 +106,60 @@ def generate_mock_home_data():
     return mock_homes
 
 
-def create_mock_tibber_connection():
-    """Create a mock tibber connection."""
-    tibber_connection = MagicMock()
-    tibber_connection.get_homes.return_value = generate_mock_home_data()
-    return tibber_connection
-
-
-def create_mock_hass():
-    """Create a mock hass object."""
-    mock_hass = MagicMock
-    mock_hass.data = {"tibber": create_mock_tibber_connection()}
-    return mock_hass
-
-
+@pytest.mark.parametrize(
+    "data",
+    [
+        {},
+        {"start": STARTTIME.isoformat()},
+        {
+            "start": STARTTIME.isoformat(),
+            "end": (STARTTIME + dt.timedelta(days=1)).isoformat(),
+        },
+    ],
+)
 async def test_get_prices(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    data,
 ) -> None:
     """Test __get_prices with mock data."""
     freezer.move_to(STARTTIME)
-    tomorrow = STARTTIME + dt.timedelta(days=1)
-    call = ServiceCall(
-        DOMAIN,
-        PRICE_SERVICE_NAME,
-        {"start": STARTTIME.date().isoformat(), "end": tomorrow.date().isoformat()},
+    mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
+
+    result = await hass.services.async_call(
+        DOMAIN, PRICE_SERVICE_NAME, data, blocking=True, return_response=True
     )
-
-    result = await __get_prices(call, hass=create_mock_hass())
-
-    assert result == {
-        "prices": {
-            "first_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
-            "second_home": [
-                {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-                {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
-                },
-            ],
-        }
-    }
-
-
-async def test_get_prices_no_input(
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test __get_prices with no input."""
-    freezer.move_to(STARTTIME)
-    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {})
-
-    result = await __get_prices(call, hass=create_mock_hass())
+    await hass.async_block_till_done()
 
     assert result == {
         "prices": {
             "first_home": [
                 {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
+                    "start_time": dt.datetime.fromisoformat(STARTTIME.isoformat()),
+                    # back and forth conversion to deal with HAFakeDatetime vs real datetime being different types
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
+                    "start_time": dt.datetime.fromisoformat(
+                        (STARTTIME + dt.timedelta(hours=1)).isoformat()
+                    ),
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": STARTTIME,
-                    "price": 0.46914,
+                    "start_time": dt.datetime.fromisoformat(STARTTIME.isoformat()),
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
+                    "start_time": dt.datetime.fromisoformat(
+                        (STARTTIME + dt.timedelta(hours=1)).isoformat()
+                    ),
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
@@ -208,16 +168,24 @@ async def test_get_prices_no_input(
 
 
 async def test_get_prices_start_tomorrow(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test __get_prices with start date tomorrow."""
     freezer.move_to(STARTTIME)
     tomorrow = STARTTIME + dt.timedelta(days=1)
-    call = ServiceCall(
-        DOMAIN, PRICE_SERVICE_NAME, {"start": tomorrow.date().isoformat()}
-    )
 
-    result = await __get_prices(call, hass=create_mock_hass())
+    mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        PRICE_SERVICE_NAME,
+        {"start": tomorrow.isoformat()},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
 
     assert result == {
         "prices": {
@@ -228,7 +196,7 @@ async def test_get_prices_start_tomorrow(
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": tomorrow + dt.timedelta(hours=1),
+                    "start_time": (tomorrow + dt.timedelta(hours=1)),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -240,7 +208,7 @@ async def test_get_prices_start_tomorrow(
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": tomorrow + dt.timedelta(hours=1),
+                    "start_time": (tomorrow + dt.timedelta(hours=1)),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -253,45 +221,54 @@ async def test_get_prices_start_tomorrow(
     "start_time",
     [
         STARTTIME.isoformat(),
-        STARTTIME.replace(tzinfo=None).isoformat(),
         (STARTTIME + dt.timedelta(hours=4))
         .replace(tzinfo=dt.timezone(dt.timedelta(hours=4)))
         .isoformat(),
     ],
 )
 async def test_get_prices_with_timezones(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     start_time: str,
 ) -> None:
     """Test __get_prices with timezone and without."""
     freezer.move_to(STARTTIME)
-    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": start_time})
 
-    result = await __get_prices(call, hass=create_mock_hass())
+    mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        PRICE_SERVICE_NAME,
+        {"start": start_time},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
 
     assert result == {
         "prices": {
             "first_home": [
                 {
                     "start_time": STARTTIME,
-                    "price": 0.46914,
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
                     "start_time": STARTTIME,
-                    "price": 0.46914,
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": STARTTIME + dt.timedelta(hours=1),
-                    "price": 0.46914,
+                    "price": 0.36914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
@@ -302,29 +279,53 @@ async def test_get_prices_with_timezones(
 @pytest.mark.parametrize(
     "start_time",
     [
-        (STARTTIME + dt.timedelta(hours=4)).isoformat(),
-        (STARTTIME + dt.timedelta(hours=4)).replace(tzinfo=None).isoformat(),
+        (STARTTIME + dt.timedelta(hours=2)).isoformat(),
+        (STARTTIME + dt.timedelta(hours=2))
+        .astimezone(tz=dt.timezone(dt.timedelta(hours=5)))
+        .isoformat(),
+        (STARTTIME + dt.timedelta(hours=2))
+        .astimezone(tz=dt.timezone(dt.timedelta(hours=8)))
+        .isoformat(),
+        (STARTTIME + dt.timedelta(hours=2))
+        .astimezone(tz=dt.timezone(dt.timedelta(hours=-8)))
+        .isoformat(),
     ],
 )
 async def test_get_prices_with_wrong_timezones(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     start_time: str,
 ) -> None:
     """Test __get_prices with timezone and without, while expecting it to fail."""
     freezer.move_to(STARTTIME)
-    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": start_time})
+    tomorrow = STARTTIME + dt.timedelta(days=1)
 
-    result = await __get_prices(call, hass=create_mock_hass())
+    mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        PRICE_SERVICE_NAME,
+        {"start": start_time, "end": tomorrow.isoformat()},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
     assert result == {"prices": {"first_home": [], "second_home": []}}
 
 
-async def test_get_prices_invalid_input() -> None:
+async def test_get_prices_invalid_input(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
+) -> None:
     """Test __get_prices with invalid input."""
 
-    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "test"})
-    task = asyncio.create_task(__get_prices(call, hass=create_mock_hass()))
-
-    with pytest.raises(ServiceValidationError) as excinfo:
-        await task
-
-    assert "Invalid datetime provided." in str(excinfo.value)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            PRICE_SERVICE_NAME,
+            {"start": "test"},
+            blocking=True,
+            return_response=True,
+        )
