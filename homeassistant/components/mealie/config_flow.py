@@ -32,7 +32,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     host: str | None = None
     verify_ssl: bool = True
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def check_connection(
         self, api_token: str
@@ -89,7 +89,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         self.host = entry_data[CONF_HOST]
         self.verify_ssl = entry_data.get(CONF_VERIFY_SSL, True)
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -102,7 +102,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_TOKEN],
             )
             if not errors:
-                assert self.entry
                 if self.entry.unique_id == user_id:
                     return self.async_update_reload_and_abort(
                         self.entry,
@@ -122,7 +121,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -137,7 +136,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_TOKEN],
             )
             if not errors:
-                assert self.entry
                 if self.entry.unique_id == user_id:
                     return self.async_update_reload_and_abort(
                         self.entry,
