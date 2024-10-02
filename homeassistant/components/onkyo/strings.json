@@ -179,18 +179,6 @@
     "source_57": "hdmi-7",
     "source_80": "main source"
   },
-  "services": {
-    "onkyo_select_hdmi_output": {
-      "name": "Onkyo Select HDMI output",
-      "description": "Change to the specified HDMI output on the selected receiver.",
-      "fields": {
-        "hdmi_output": {
-          "name": "HDMI Output",
-          "description": "The HDMI output to use."
-        }
-      }
-    }
-  },
   "issues": {
     "deprecated_yaml_import_issue_no_discover": {
       "title": "The Onkyo YAML configuration import failed",
