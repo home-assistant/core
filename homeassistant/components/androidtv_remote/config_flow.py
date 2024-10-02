@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -62,10 +63,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     host: str
     name: str
     mac: str
-
-    def __init__(self) -> None:
-        """Initialize a new AndroidTVRemoteConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
+    reauth_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -107,7 +105,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 pin = user_input["pin"]
                 await self.api.async_finish_pairing(pin)
-                if self.reauth_entry:
+                if self.source == SOURCE_REAUTH:
                     await self.hass.config_entries.async_reload(
                         self.reauth_entry.entry_id
                     )
@@ -185,9 +183,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host = entry_data[CONF_HOST]
         self.name = entry_data[CONF_NAME]
         self.mac = entry_data[CONF_MAC]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
