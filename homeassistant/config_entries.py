@@ -2377,20 +2377,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
             HANDLERS.register(domain)(cls)
 
     @property
-    def _reauth_entry_id(self) -> str:
-        """Return reauth entry id."""
-        if self.source == SOURCE_REAUTH:
-            return self.context["entry_id"]  # type: ignore[no-any-return]
-        raise AttributeError
-
-    @property
-    def _reconfigure_entry_id(self) -> str:
-        """Return reconfigure entry id."""
-        if self.source == SOURCE_RECONFIGURE:
-            return self.context["entry_id"]  # type: ignore[no-any-return]
-        raise AttributeError
-
-    @property
     def unique_id(self) -> str | None:
         """Return unique ID if available."""
         if not self.context:
@@ -2740,35 +2726,38 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return True if other_flow is matching this flow."""
         raise NotImplementedError
 
+    @property
+    def _reauth_entry_id(self) -> str:
+        """Return reauth entry id."""
+        if self.source != SOURCE_REAUTH:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_REAUTH}")
+        return self.context["entry_id"]  # type: ignore[no-any-return]
+
     @callback
     def _get_reauth_entry(self) -> ConfigEntry:
-        """Return the reauth config entry linked to the current context.
+        """Return the reauth config entry linked to the current context."""
+        if self.source != SOURCE_REAUTH:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_REAUTH}")
+        return cast(
+            ConfigEntry, self.hass.config_entries.async_get_entry(self._reauth_entry_id)
+        )
 
-        Note: to check if you are within a reauth flow, check if
-        `self.source == SOURCE_REAUTH`.
-        """
-        if self.source == SOURCE_REAUTH and (
-            entry := self.hass.config_entries.async_get_entry(self._reauth_entry_id)
-        ):
-            return entry
-
-        raise UnknownEntry
+    @property
+    def _reconfigure_entry_id(self) -> str:
+        """Return reconfigure entry id."""
+        if self.source != SOURCE_RECONFIGURE:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+        return self.context["entry_id"]  # type: ignore[no-any-return]
 
     @callback
     def _get_reconfigure_entry(self) -> ConfigEntry:
-        """Return the reconfigure config entry linked to the current context.
-
-        Note: to check if you are within a reconfigure flow, check if
-        `self.source == SOURCE_RECONFIGURE`.
-        """
-        if self.source == SOURCE_RECONFIGURE and (
-            entry := self.hass.config_entries.async_get_entry(
-                self._reconfigure_entry_id
-            )
-        ):
-            return entry
-
-        raise UnknownEntry
+        """Return the reconfigure config entry linked to the current context."""
+        if self.source != SOURCE_RECONFIGURE:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+        return cast(
+            ConfigEntry,
+            self.hass.config_entries.async_get_entry(self._reconfigure_entry_id),
+        )
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):

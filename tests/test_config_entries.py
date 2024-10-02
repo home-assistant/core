@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, UnknownEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
@@ -6418,16 +6418,16 @@ async def test_get_reauth_entry(
             """Confirm input."""
             try:
                 entry = self._get_reauth_entry()
-            except UnknownEntry:
+            except ValueError:
                 reason = "Entry not found"
             else:
                 reason = f"Found entry {entry.title}"
             try:
                 entry_id = self._reauth_entry_id
-            except AttributeError:
+            except ValueError:
                 reason = f"{reason}: -"
             else:
-                reason = f"Found entry {entry.title}: {entry_id}"
+                reason = f"{reason}: {entry_id}"
             return self.async_abort(reason=reason)
 
     # A reauth flow finds the config entry from context
@@ -6483,16 +6483,16 @@ async def test_get_reconfigure_entry(
             """Confirm input."""
             try:
                 entry = self._get_reconfigure_entry()
-            except UnknownEntry:
+            except ValueError:
                 reason = "Entry not found"
             else:
                 reason = f"Found entry {entry.title}"
             try:
                 entry_id = self._reconfigure_entry_id
-            except AttributeError:
+            except ValueError:
                 reason = f"{reason}: -"
             else:
-                reason = f"Found entry {entry.title}: {entry_id}"
+                reason = f"{reason}: {entry_id}"
             return self.async_abort(reason=reason)
 
     # A reauth flow does not have access to the config entry from context
