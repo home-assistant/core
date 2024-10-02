@@ -581,11 +581,12 @@ class Recorder(threading.Thread):
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
         new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
         self.queue_task(
             UpdateStatisticsMetadataTask(
-                statistic_id, new_statistic_id, new_unit_of_measurement
+                on_done, statistic_id, new_statistic_id, new_unit_of_measurement
             )
         )
 
