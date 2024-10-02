@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.3.0
+PyViCare==2.34.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -109,7 +109,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.2
+RestrictedPython==7.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -1016,7 +1016,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.3
+gotailwind==0.2.4
 
 # homeassistant.components.govee_ble
 govee-ble==0.40.0
@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240927.0
+home-assistant-frontend==20241002.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -1630,7 +1630,7 @@ prayer-times-calculator-offline==1.0.3
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus-client==0.17.1
+prometheus-client==0.21.0
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
@@ -2322,7 +2322,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.7.0
+python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.3.0
@@ -3059,7 +3059,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.58.0
+zwave-js-server-python==0.58.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

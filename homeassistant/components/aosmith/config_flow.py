@@ -23,7 +23,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_email: str | None = None
+    _reauth_email: str
 
     async def _async_validate_credentials(
         self, email: str, password: str
@@ -85,13 +85,14 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user's reauth credentials."""
         errors: dict[str, str] = {}
-        if user_input is not None and self._reauth_email is not None:
-            email = self._reauth_email
+        if user_input:
             password = user_input[CONF_PASSWORD]
             entry_id = self.context["entry_id"]
 
             if entry := self.hass.config_entries.async_get_entry(entry_id):
-                error = await self._async_validate_credentials(email, password)
+                error = await self._async_validate_credentials(
+                    self._reauth_email, password
+                )
                 if error is None:
                     self.hass.config_entries.async_update_entry(
                         entry,

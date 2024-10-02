@@ -6383,6 +6383,152 @@ async def test_async_has_matching_flow_not_implemented(
         manager.flow.async_has_matching_flow(flow)
 
 
+async def test_get_reauth_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test _get_context_entry behavior."""
+    entry = MockConfigEntry(
+        title="test_title",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            try:
+                entry = self._get_reauth_entry()
+            except ValueError as err:
+                reason = str(err)
+            except config_entries.UnknownEntry:
+                reason = "Entry not found"
+            else:
+                reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reauth_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"{reason}: {entry_id}"
+            return self.async_abort(reason=reason)
+
+    # A reauth flow finds the config entry from context
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass)
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
+
+    # The config entry is removed before the reauth flow is aborted
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass, context={"entry_id": "01JRemoved"})
+        assert result["reason"] == "Entry not found: 01JRemoved"
+
+    # A reconfigure flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["reason"] == "Source is reconfigure, expected reauth: -"
+
+    # A user flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["reason"] == "Source is user, expected reauth: -"
+
+
+async def test_get_reconfigure_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test _get_context_entry behavior."""
+    entry = MockConfigEntry(
+        title="test_title",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            try:
+                entry = self._get_reconfigure_entry()
+            except ValueError as err:
+                reason = str(err)
+            except config_entries.UnknownEntry:
+                reason = "Entry not found"
+            else:
+                reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reconfigure_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"{reason}: {entry_id}"
+            return self.async_abort(reason=reason)
+
+    # A reauth flow does not have access to the config entry from context
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass)
+        assert result["reason"] == "Source is reauth, expected reconfigure: -"
+
+    # A reconfigure flow finds the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
+
+    # A reconfigure flow finds the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reconfigure_flow(
+            hass, context={"entry_id": "01JRemoved"}
+        )
+        assert result["reason"] == "Entry not found: 01JRemoved"
+
+    # A user flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["reason"] == "Source is user, expected reconfigure: -"
+
+
 async def test_reauth_helper_alignment(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -6440,3 +6586,53 @@ async def test_reauth_helper_alignment(
     # Ensure context and init data are aligned
     assert helper_flow_context == reauth_flow_context
     assert helper_flow_init_data == reauth_flow_init_data
+
+
+async def test_reconfigure_helper_alignment(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test `start_reconfigure_flow` helper alignment.
+
+    It should be aligned with `ConfigEntry._async_init_reconfigure`.
+    """
+    entry = MockConfigEntry(
+        title="test_title",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    # Check context via auto-generated reconfigure
+    entry.async_start_reconfigure(hass)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    reconfigure_flow_context = flows[0]["context"]
+    reconfigure_flow_init_data = hass.config_entries.flow._progress[
+        flows[0]["flow_id"]
+    ].init_data
+
+    # Clear to make way for `start_reauth_flow` helper
+    manager.flow.async_abort(flows[0]["flow_id"])
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+    # Check context via `start_reconfigure_flow` helper
+    await entry.start_reconfigure_flow(hass)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    helper_flow_context = flows[0]["context"]
+    helper_flow_init_data = hass.config_entries.flow._progress[
+        flows[0]["flow_id"]
+    ].init_data
+
+    # Ensure context and init data are aligned
+    assert helper_flow_context == reconfigure_flow_context
+    assert helper_flow_init_data == reconfigure_flow_init_data
