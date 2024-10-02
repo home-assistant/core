@@ -1082,7 +1082,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
                 "unique_id": self.unique_id,
             }
             | (context or {}),
-            data=self.data | (data or {}),
+            data=data or {},
         )
 
 

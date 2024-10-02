@@ -1108,7 +1108,7 @@ class ConfigEntry(Generic[_DataT]):
                     "unique_id": self.unique_id,
                 }
                 | (context or {}),
-                data=self.data | (data or {}),
+                data=data or {},
             )
 
     @callback
