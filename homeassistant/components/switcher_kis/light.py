@@ -10,6 +10,7 @@ from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
     SwitcherSingleShutterDualLight,
+    SwitcherDualShutterSingleLight,
 )
 
 from homeassistant.components.light import ColorMode, LightEntity
@@ -48,6 +49,11 @@ async def async_setup_entry(
                     SwitcherLightEntity(coordinator, 1),
                 ]
             )
+        if (
+            coordinator.data.device_type.category
+            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
+        ):
+            async_add_entities([SwitcherLightEntity(coordinator, 0)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_light)
@@ -87,8 +93,15 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
         if self.control_result is not None:
             return self.control_result
 
-        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
-        return bool(data.lights[self._light_id] == DeviceState.ON)
+        if (
+            self.coordinator.data.device_type.category
+            == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
+        ):
+            data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
+            return bool(data.lights[self._light_id] == DeviceState.ON)
+
+        data = cast(SwitcherDualShutterSingleLight, self.coordinator.data)
+        return bool(data.lights == DeviceState.ON)
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
