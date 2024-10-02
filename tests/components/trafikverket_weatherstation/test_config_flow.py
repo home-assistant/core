@@ -281,3 +281,22 @@ async def test_reconfigure_flow_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567891", CONF_STATION: "Vallby_new"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {"api_key": "1234567891", "station": "Vallby_new"}
