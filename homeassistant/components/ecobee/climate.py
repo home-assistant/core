@@ -592,10 +592,7 @@ class Thermostat(ClimateEntity):
     @property
     def remote_sensors(self) -> list:
         """Return the remote sensor names of the thermostat."""
-        try:
-            sensors_info = self.thermostat["remoteSensors"]
-        except KeyError:
-            sensors_info = []
+        sensors_info = self.thermostat.get("remoteSensors", [])
         return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
 
     @property

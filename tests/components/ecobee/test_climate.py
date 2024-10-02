@@ -89,6 +89,7 @@ def ecobee_fixture():
         ],
     }
     mock_ecobee = mock.Mock()
+    mock_ecobee.get = mock.Mock(side_effect=vals.get)
     mock_ecobee.__getitem__ = mock.Mock(side_effect=vals.__getitem__)
     mock_ecobee.__setitem__ = mock.Mock(side_effect=vals.__setitem__)
     return mock_ecobee
