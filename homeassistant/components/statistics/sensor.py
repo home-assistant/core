@@ -403,7 +403,7 @@ class StatisticsSensor(SensorEntity):
         """Handle the sensor state changes."""
         if (new_state := event.data["new_state"]) is None:
             return
-        self._add_state_to_queue(new_state)
+        self._add_state_to_queue(new_state, False)
         self._async_purge_update_and_schedule()
 
         if self._preview_callback:
@@ -433,24 +433,31 @@ class StatisticsSensor(SensorEntity):
             async_at_start(self.hass, self._async_stats_sensor_startup)
         )
 
-    def _add_state_to_queue(self, new_state: State) -> None:
-        """Add the state to the queue."""
-        self._available = new_state.state != STATE_UNAVAILABLE
-        if new_state.state == STATE_UNAVAILABLE:
-            self.attributes[STAT_SOURCE_VALUE_VALID] = None
-            return
-        if new_state.state in (STATE_UNKNOWN, None, ""):
-            self.attributes[STAT_SOURCE_VALUE_VALID] = False
-            return
-
+    def _add_state_to_queue(self, new_state: State, loaded_from_db: bool) -> None:
+        """Add the state to the queue (historic values loaded from the database are added on the opposite end)."""
+        value: float | bool
+        if (not loaded_from_db) or (len(self.ages) == 0):
+            self._available = new_state.state != STATE_UNAVAILABLE
+            if new_state.state == STATE_UNAVAILABLE:
+                self.attributes[STAT_SOURCE_VALUE_VALID] = None
+                return
+            if new_state.state in (STATE_UNKNOWN, None, ""):
+                self.attributes[STAT_SOURCE_VALUE_VALID] = False
+                return
         try:
             if self.is_binary:
                 assert new_state.state in ("on", "off")
-                self.states.append(new_state.state == "on")
+                value = new_state.state == "on"
             else:
-                self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
-            self.attributes[STAT_SOURCE_VALUE_VALID] = True
+                value = float(new_state.state)
+            if (not loaded_from_db) or (len(self.ages) == 0):
+                self.attributes[STAT_SOURCE_VALUE_VALID] = True
+            if loaded_from_db:
+                self.states.appendleft(value)
+                self.ages.appendleft(new_state.last_updated)
+            else:
+                self.states.append(value)
+                self.ages.append(new_state.last_updated)
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
             _LOGGER.error(
@@ -638,7 +645,7 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
-        """Fetch the states from the database."""
+        """Fetch the states from the database. In principle this should also load the last value before the time interval for the time based functions. However, this would mean loading the complete history without time or number limit, which is maybe a little too much effort."""
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         lower_entity_id = self._source_entity_id.lower()
         if self._samples_max_age is not None:
@@ -666,8 +673,7 @@ class StatisticsSensor(SensorEntity):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
+        can limit the result to self._sample_size.
 
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
@@ -675,8 +681,8 @@ class StatisticsSensor(SensorEntity):
         if states := await get_instance(self.hass).async_add_executor_job(
             self._fetch_states_from_database
         ):
-            for state in reversed(states):
-                self._add_state_to_queue(state)
+            for state in states:
+                self._add_state_to_queue(state, True)
 
         self._async_purge_update_and_schedule()
 
