@@ -226,7 +226,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

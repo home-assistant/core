@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 import zoneinfo
@@ -130,7 +131,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(import_data)
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         config_entry = self.hass.config_entries.async_get_entry(

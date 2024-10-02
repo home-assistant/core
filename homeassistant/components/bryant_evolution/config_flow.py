@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -61,6 +62,12 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle integration reconfiguration."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle integration reconfiguration."""
@@ -83,5 +90,7 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = "cannot_connect"
         return self.async_show_form(
-            step_id="reconfigure", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="reconfigure_confirm",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
