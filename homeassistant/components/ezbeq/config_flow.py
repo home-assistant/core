@@ -8,7 +8,7 @@ from pyezbeq.consts import DEFAULT_PORT, DISCOVERY_ADDRESS
 from pyezbeq.ezbeq import EzbeqClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -28,7 +28,6 @@ class EzBEQConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ezbeq Profile Loader."""
 
     VERSION = 1
-    entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -60,9 +59,8 @@ class EzBEQConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.ezbeq_data.update(user_input)
-        # abort on same host
-        await self.async_set_unique_id(CONF_HOST)
-        self._abort_if_unique_id_configured()
+        # abort on same info
+        self._async_abort_entries_match()
 
         # make sure the connection is working
         if not await self.test_connection():

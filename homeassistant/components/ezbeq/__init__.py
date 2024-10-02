@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from pyezbeq.consts import DEFAULT_PORT, DISCOVERY_ADDRESS
 from pyezbeq.ezbeq import EzbeqClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
+from .const import DOMAIN
 from .coordinator import EzBEQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ type EzBEQConfigEntry = ConfigEntry[EzBEQCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> bool:
     """Set up ezbeq Profile Loader from a config entry."""
     _LOGGER.debug("Setting up ezbeq from a config entry")
-    host = entry.data.get(CONF_HOST, DISCOVERY_ADDRESS)
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
 
     client = EzbeqClient(host=host, port=port, logger=_LOGGER)
     coordinator = EzBEQCoordinator(hass, client)
@@ -32,6 +33,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # create a device for the server
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (
+                DOMAIN,
+                f"{coordinator.config_entry.entry_id}_{coordinator.config_entry.data[CONF_HOST]}",
+            )
+        },
+        name="EzBEQ",
+        manufacturer="EzBEQ",
+        sw_version=coordinator.client.version,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug("Finished setting up ezbeq from a config entry")
     return True

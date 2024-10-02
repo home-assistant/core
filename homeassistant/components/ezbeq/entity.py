@@ -1,5 +1,6 @@
 """Base class for ezbeq entities."""
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -12,14 +13,19 @@ class EzBEQEntity(CoordinatorEntity[EzBEQCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: EzBEQCoordinator) -> None:
+    def __init__(self, coordinator: EzBEQCoordinator, device_name: str) -> None:
         """Initialize ezbeq entity."""
         super().__init__(coordinator)
         assert coordinator.config_entry
-        assert coordinator.config_entry.unique_id
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
-            name="EzBEQ",
-            manufacturer="EzBEQ",
-            sw_version=coordinator.client.version,
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{device_name}")
+            },
+            name=device_name,
+            # in future, can expose model and manufacturer via library (minidsp, qsys, etc)
+            via_device=(
+                DOMAIN,
+                f"{coordinator.config_entry.entry_id}_{coordinator.config_entry.data[CONF_HOST]}",
+            ),
         )

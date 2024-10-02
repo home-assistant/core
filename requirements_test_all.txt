@@ -1517,7 +1517,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezbeq
-pyezbeq==0.0.7
+pyezbeq==0.0.8
 
 # homeassistant.components.ezviz
 pyezviz==0.2.1.2

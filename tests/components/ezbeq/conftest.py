@@ -1,8 +1,9 @@
 """Fixtures for ezbeq tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyezbeq import models
 import pytest
 
 from homeassistant.components import ezbeq
@@ -34,11 +35,28 @@ def mock_ezbeq_client() -> Generator[AsyncMock]:
         client.host = MOCK_CONFIG[CONF_HOST]
         client.port = MOCK_CONFIG[CONF_PORT]
         client.server_url = f"http://{MOCK_CONFIG[CONF_HOST]}:{MOCK_CONFIG[CONF_PORT]}"
-        client.current_profile = "Test Profile"
         client.current_media_type = "Movie"
         client.version = "1.0.0"
-        client.device_info = []
+        client.device_info = [
+            models.BeqDevice(
+                name="master",
+                mute=False,
+                type="minidsp",
+                currentProfile="Test Profile",
+                masterVolume=-10.0,
+                slots=[],
+            ),
+            models.BeqDevice(
+                name="master2",
+                mute=False,
+                type="minidsp",
+                currentProfile="Test Profile",
+                masterVolume=-5.0,
+                slots=[],
+            ),
+        ]
         client.client = AsyncMock()
+        client.get_device_profile = MagicMock(return_value="Test Profile")
         yield client
 
 

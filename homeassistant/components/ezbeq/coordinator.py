@@ -6,16 +6,21 @@ import logging
 from httpx import HTTPStatusError, RequestError
 from pyezbeq.errors import DeviceInfoEmpty
 from pyezbeq.ezbeq import EzbeqClient
-from pyezbeq.models import BeqDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+# circular dependency if imported
+type EzBEQConfigEntry = ConfigEntry[EzBEQCoordinator]
+
 
 class EzBEQCoordinator(DataUpdateCoordinator):
     """Coordinator for fetching ezbeq data."""
+
+    config_entry: EzBEQConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: EzbeqClient) -> None:
         """Initialize the coordinator."""
@@ -26,10 +31,6 @@ class EzBEQCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.client = client
-        self.current_profile = ""
-        self.current_media_type = ""
-        self.version = ""
-        self.devices: list[BeqDevice] = []
 
     async def _async_update_data(self):
         """Fetch data from the ezbeq API."""
@@ -39,13 +40,3 @@ class EzBEQCoordinator(DataUpdateCoordinator):
         except (DeviceInfoEmpty, HTTPStatusError, RequestError) as err:
             _LOGGER.error("Error fetching ezbeq data: %s", err)
             raise
-        self.devices = self.client.device_info
-        self.current_profile = self.client.current_profile
-        self.current_media_type = self.client.current_media_type
-        self.version = self.client.version
-        return {
-            "devices": self.devices,
-            "current_profile": self.current_profile,
-            "current_media_type": self.current_media_type,
-            "version": self.version,
-        }

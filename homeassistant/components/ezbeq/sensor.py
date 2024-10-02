@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
@@ -9,33 +10,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EzBEQConfigEntry
-from .const import CURRENT_PROFILE, DEVICES
+from .const import CURRENT_PROFILE, STATE_UNLOADED
 from .coordinator import EzBEQCoordinator
 from .entity import EzBEQEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
 class EzBEQSensorEntityDescription(SensorEntityDescription):
     """Describe EzBEQ sensor entity."""
 
-    value_fn: Callable[[EzBEQCoordinator], StateType]
+    value_fn: Callable[[EzBEQCoordinator, str], StateType]
 
 
 SENSORS: tuple[EzBEQSensorEntityDescription, ...] = (
     EzBEQSensorEntityDescription(
         key=CURRENT_PROFILE,
-        value_fn=lambda coordinator: coordinator.data.get(CURRENT_PROFILE)
-        if coordinator.data.get(CURRENT_PROFILE) != ""
-        else None,
+        value_fn=lambda coordinator, device_name: coordinator.client.get_device_profile(
+            device_name
+        )
+        if coordinator.client.get_device_profile(device_name) != ""
+        else STATE_UNLOADED,
         translation_key=CURRENT_PROFILE,
-    ),
-    EzBEQSensorEntityDescription(
-        key=DEVICES,
-        # make a list of device names
-        value_fn=lambda coordinator: ", ".join(
-            f"{device.name}" for device in coordinator.devices
-        ),
-        translation_key=DEVICES,
     ),
 )
 
@@ -47,7 +44,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor entities."""
     coordinator = entry.runtime_data
-    async_add_entities(EzBEQSensor(coordinator, description) for description in SENSORS)
+    _LOGGER.debug("Found %s devices", len(coordinator.client.device_info))
+    for device in coordinator.client.device_info:
+        _LOGGER.debug("Setting up sensors for device: %s", device)
+        async_add_entities(
+            EzBEQSensor(coordinator, description, device.name)
+            for description in SENSORS
+        )
 
 
 class EzBEQSensor(EzBEQEntity, SensorEntity):
@@ -57,13 +60,18 @@ class EzBEQSensor(EzBEQEntity, SensorEntity):
         self,
         coordinator: EzBEQCoordinator,
         description: EzBEQSensorEntityDescription,
+        device_name: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, device_name)
+        _LOGGER.debug("Creating sensor for device: %s", device_name)
         self.entity_description: EzBEQSensorEntityDescription = description
-        self._attr_unique_id = f"{coordinator.client.server_url}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{device_name}_{description.key}"
+        )
+        self._device_name = device_name
 
     @property
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator, self._device_name)

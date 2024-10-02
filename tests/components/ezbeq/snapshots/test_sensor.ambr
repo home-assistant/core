@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_setup_and_update[sensor.ezbeq_current_profile-entry]
+# name: test_sensor_setup_and_update[sensor.master2_current_profile-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ezbeq_current_profile',
+    'entity_id': 'sensor.master2_current_profile',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,24 +28,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'current_profile',
-    'unique_id': 'http://192.168.1.100:8080_current_profile',
+    'unique_id': '01J959G9VRJH1TFGKW53GSZ11N_master2_current_profile',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_setup_and_update[sensor.ezbeq_current_profile-state]
+# name: test_sensor_setup_and_update[sensor.master2_current_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'EzBEQ Current Profile',
+      'friendly_name': 'master2 Current Profile',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ezbeq_current_profile',
+    'entity_id': 'sensor.master2_current_profile',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Test Profile',
   })
 # ---
-# name: test_sensor_setup_and_update[sensor.ezbeq_discovered_devices-entry]
+# name: test_sensor_setup_and_update[sensor.master_current_profile-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -57,7 +57,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ezbeq_discovered_devices',
+    'entity_id': 'sensor.master_current_profile',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,25 +69,25 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Discovered Devices',
+    'original_name': 'Current Profile',
     'platform': 'ezbeq',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'devices',
-    'unique_id': 'http://192.168.1.100:8080_devices',
+    'translation_key': 'current_profile',
+    'unique_id': '01J959G9VRJH1TFGKW53GSZ11N_master_current_profile',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_setup_and_update[sensor.ezbeq_discovered_devices-state]
+# name: test_sensor_setup_and_update[sensor.master_current_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'EzBEQ Discovered Devices',
+      'friendly_name': 'master Current Profile',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ezbeq_discovered_devices',
+    'entity_id': 'sensor.master_current_profile',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'Test Profile',
   })
 # ---
