@@ -9,7 +9,12 @@ import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -33,7 +38,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,7 +50,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the device."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -76,7 +81,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.debug("MAC address found: %s", mac)
                     # abort if the detected mac differs from the one in the entry
-                    if self.entry:
+                    if self.source == SOURCE_RECONFIGURE:
                         existing_mac = self.entry.unique_id
                         if existing_mac != mac:
                             _LOGGER.debug(
