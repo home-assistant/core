@@ -131,12 +131,12 @@ async def test_async_register_ice_server(
 
     called = 0
 
-    async def get_ice_sercer() -> RTCIceServer:
+    async def get_ice_server() -> RTCIceServer:
         nonlocal called
         called += 1
         return RTCIceServer(urls="stun:example.com")
 
-    unregister = register_ice_server(hass, get_ice_sercer)
+    unregister = register_ice_server(hass, get_ice_server)
     assert not called
 
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
@@ -148,7 +148,7 @@ async def test_async_register_ice_server(
     # register another ICE server
     called_2 = 0
 
-    async def get_ice_sercer_2() -> RTCIceServer:
+    async def get_ice_server_2() -> RTCIceServer:
         nonlocal called_2
         called_2 += 1
         return RTCIceServer(
@@ -157,7 +157,7 @@ async def test_async_register_ice_server(
             credential="pass",
         )
 
-    unregister_2 = register_ice_server(hass, get_ice_sercer_2)
+    unregister_2 = register_ice_server(hass, get_ice_server_2)
 
     config = await camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == [
