@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN
+from .const import DATA_COMPONENT
 
 if TYPE_CHECKING:
     from . import Camera
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     """Get camera component from entity_id."""
-    component: EntityComponent[Camera] | None = hass.data.get(DOMAIN)
+    component = hass.data.get(DATA_COMPONENT)
     if component is None:
         raise HomeAssistantError("Camera integration not set up")
 

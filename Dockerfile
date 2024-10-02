@@ -44,7 +44,7 @@ RUN \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
-# Needs to be redefine inside the FROM statement to be set for RUN commands
+# Needs to be redefined inside the FROM statement to be set for RUN commands
 ARG BUILD_ARCH
 # Get go2rtc binary
 RUN \

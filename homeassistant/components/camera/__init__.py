@@ -714,8 +714,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Returns True if any state was updated (and needs to be written)
         """
         old_providers = self._webrtc_providers
-        self._webrtc_providers = await self._async_get_supported_webrtc_providers()
-        if old_providers != self._webrtc_providers:
+        new_providers = await self._async_get_supported_webrtc_providers()
+        self._webrtc_providers = new_providers
+        if old_providers != new_providers:
             self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_providers(

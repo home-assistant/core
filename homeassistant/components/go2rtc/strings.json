@@ -14,9 +14,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_url": "Invalid URL",
       "invalid_url_schema": "Invalid URL scheme.\nThe URL should start with `http://` or `https://`."
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }
