@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
-from tesla_fleet_api.const import VehicleDataEndpoint
+from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
@@ -17,12 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, TeslemetryState
+from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslemetryState
 
 VEHICLE_INTERVAL = timedelta(seconds=30)
 VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
+ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -178,3 +179,39 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(e.message) from e
 
         return flatten(data)
+
+
+class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site info from the Teslemetry API."""
+
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+        """Initialize Teslemetry Energy Info coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name=f"Teslemetry Energy History {api.energy_site_id}",
+            update_interval=ENERGY_HISTORY_INTERVAL,
+        )
+        self.api = api
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Teslemetry API."""
+
+        try:
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        self.updated_once = True
+
+        # Add all time periods together
+        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        for period in data.get("time_series", []):
+            for key in ENERGY_HISTORY_FIELDS:
+                output[key] += period.get(key, 0)
+
+        return output

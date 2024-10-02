@@ -63,6 +63,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             identifiers={(DOMAIN, self.roborock_device_info.device.duid)},
             manufacturer="Roborock",
             model=self.roborock_device_info.product.model,
+            model_id=self.roborock_device_info.product.model,
             sw_version=self.roborock_device_info.device.fv,
         )
         self.current_map: int | None = None

@@ -7,7 +7,7 @@ from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirGradientConfigEntry, AirGradientMeasurementCoordinator
+from . import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
 SCAN_INTERVAL = timedelta(hours=1)
@@ -20,18 +20,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Airgradient update platform."""
 
-    data = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
-    async_add_entities([AirGradientUpdate(data.measurement)], True)
+    async_add_entities([AirGradientUpdate(coordinator)], True)
 
 
 class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     """Representation of Airgradient Update."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    coordinator: AirGradientMeasurementCoordinator
 
-    def __init__(self, coordinator: AirGradientMeasurementCoordinator) -> None:
+    def __init__(self, coordinator: AirGradientCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.serial_number}-update"
@@ -44,7 +43,7 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     @property
     def installed_version(self) -> str:
         """Return the installed version of the entity."""
-        return self.coordinator.data.firmware_version
+        return self.coordinator.data.measures.firmware_version
 
     async def async_update(self) -> None:
         """Update the entity."""

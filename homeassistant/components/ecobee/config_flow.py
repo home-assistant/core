@@ -23,9 +23,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the ecobee flow."""
-        self._ecobee: Ecobee | None = None
+    _ecobee: Ecobee
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -59,7 +57,9 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_authorize(self, user_input=None):
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Present the user with the PIN so that the app can be authorized on ecobee.com."""
         errors = {}
 

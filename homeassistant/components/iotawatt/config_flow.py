@@ -75,7 +75,9 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Authenticate user if authentication is enabled on the IoTaWatt device."""
         if user_input is None:
             user_input = {}

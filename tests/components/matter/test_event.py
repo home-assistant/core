@@ -18,7 +18,7 @@ async def switch_node_fixture(
 ) -> MatterNode:
     """Fixture for a GenericSwitch node."""
     return await setup_integration_with_node_fixture(
-        hass, "generic-switch", matter_client
+        hass, "generic_switch", matter_client
     )
 
 
@@ -28,7 +28,7 @@ async def multi_switch_node_fixture(
 ) -> MatterNode:
     """Fixture for a GenericSwitch node with multiple buttons."""
     return await setup_integration_with_node_fixture(
-        hass, "generic-switch-multi", matter_client
+        hass, "generic_switch_multi", matter_client
     )
 
 

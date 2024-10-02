@@ -4,7 +4,7 @@
   "after_dependencies": ["zeroconf", "tag"],
   "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline", "bluetooth", "intent"],
+  "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
   "dhcp": [
     {
       "registered_devices": true
@@ -17,7 +17,7 @@
   "mqtt": ["esphome/discover/#"],
   "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==25.3.1",
+    "aioesphomeapi==27.0.0",
     "esphome-dashboard-api==1.2.3",
     "bleak-esphome==1.0.0"
   ],

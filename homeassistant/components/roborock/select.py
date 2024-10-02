@@ -1,5 +1,6 @@
 """Support for Roborock select."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,8 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
+from .const import MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -133,6 +135,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
                 )
+                # We need to wait after updating the map
+                # so that other commands will be executed correctly.
+                await asyncio.sleep(MAP_SLEEP)
                 break
 
     @property
@@ -143,6 +148,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if current_map := self.coordinator.current_map:
+        if (current_map := self.coordinator.current_map) is not None:
             return self.coordinator.maps[current_map].name
         return None

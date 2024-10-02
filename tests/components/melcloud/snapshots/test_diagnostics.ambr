@@ -7,6 +7,8 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'melcloud',
       'entry_id': 'TEST_ENTRY_ID',
       'minor_version': 1,

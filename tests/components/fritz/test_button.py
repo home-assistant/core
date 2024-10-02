@@ -5,11 +5,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fritz.const import DOMAIN, MeshRoles
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -21,24 +22,30 @@ from .const import (
     MOCK_USER_DATA,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_button_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test setup of Fritz!Tools buttons."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.BUTTON]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    buttons = hass.states.async_all(BUTTON_DOMAIN)
-    assert len(buttons) == 4
+    states = hass.states.async_all()
+    assert len(states) == 5
 
-    for button in buttons:
-        assert button.state == STATE_UNKNOWN
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 @pytest.mark.parametrize(

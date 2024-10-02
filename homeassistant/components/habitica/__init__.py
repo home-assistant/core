@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_URL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -125,6 +126,7 @@ async def async_setup_entry(
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
+
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
@@ -147,18 +149,16 @@ async def async_setup_entry(
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
-    websession = async_get_clientsession(hass)
-
-    url = config_entry.data[CONF_URL]
-    username = config_entry.data[CONF_API_USER]
-    password = config_entry.data[CONF_API_KEY]
+    websession = async_get_clientsession(
+        hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
+    )
 
     api = await hass.async_add_executor_job(
         HAHabitipyAsync,
         {
-            "url": url,
-            "login": username,
-            "password": password,
+            "url": config_entry.data[CONF_URL],
+            "login": config_entry.data[CONF_API_USER],
+            "password": config_entry.data[CONF_API_KEY],
         },
     )
     try:

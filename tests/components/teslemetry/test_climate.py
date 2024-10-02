@@ -1,6 +1,6 @@
 """Test the Teslemetry climate platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,8 +10,6 @@ from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
@@ -175,17 +173,6 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
 
-    # Set Temp do nothing
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 30,
-        },
-        blocking=True,
-    )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 40
     assert state.state == HVACMode.COOL
@@ -371,12 +358,21 @@ async def test_asleep_or_offline(
 
 async def test_climate_noscope(
     hass: HomeAssistant,
-    mock_metadata,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
     mock_metadata.return_value = METADATA_NOSCOPE
 
-    await setup_platform(hass, [Platform.CLIMATE])
+    entry = await setup_platform(hass, [Platform.CLIMATE])
+
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+
     entity_id = "climate.test_climate"
 
     with pytest.raises(ServiceValidationError):

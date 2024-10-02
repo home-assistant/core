@@ -51,7 +51,7 @@ from ..const import (
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
-from ..mixins import MqttEntity
+from ..entity import MqttEntity
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,

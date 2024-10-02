@@ -20,6 +20,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -34,6 +36,7 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_FILTER,
     DEFAULT_NAME,
     DEFAULT_OPTIONS,
     DOMAIN,
@@ -46,8 +49,18 @@ from .helpers import is_valid_config_entry
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_INCL_FILTER, default=""): TextSelector(),
-        vol.Optional(CONF_EXCL_FILTER, default=""): TextSelector(),
+        vol.Optional(CONF_INCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
         vol.Optional(CONF_REALTIME): BooleanSelector(),
         vol.Required(CONF_VEHICLE_TYPE): SelectSelector(
             SelectSelectorConfig(
@@ -88,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def default_options(hass: HomeAssistant) -> dict[str, str | bool]:
+def default_options(hass: HomeAssistant) -> dict[str, str | bool | list[str]]:
     """Get the default options."""
     defaults = DEFAULT_OPTIONS.copy()
     if hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -106,6 +119,10 @@ class WazeOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            if user_input.get(CONF_INCL_FILTER) is None:
+                user_input[CONF_INCL_FILTER] = DEFAULT_FILTER
+            if user_input.get(CONF_EXCL_FILTER) is None:
+                user_input[CONF_EXCL_FILTER] = DEFAULT_FILTER
             return self.async_create_entry(
                 title="",
                 data=user_input,
@@ -122,7 +139,7 @@ class WazeOptionsFlow(OptionsFlow):
 class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Waze Travel Time."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Init Config Flow."""

@@ -8,7 +8,11 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -32,7 +36,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(
@@ -138,7 +142,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_device_temperature")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.new_device_temperature")
     assert state
 
 
@@ -175,7 +179,7 @@ async def test_next_change_sensors(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    base_name = f"{DOMAIN}.{CONF_FAKE_NAME}"
+    base_name = f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
 
     state = hass.states.get(f"{base_name}_next_scheduled_change_time")
     assert state

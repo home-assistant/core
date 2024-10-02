@@ -42,7 +42,7 @@ async def air_purifier_fixture(
 ) -> MatterNode:
     """Fixture for a Air Purifier node (containing Fan cluster)."""
     return await setup_integration_with_node_fixture(
-        hass, "air-purifier", matter_client
+        hass, "air_purifier", matter_client
     )
 
 

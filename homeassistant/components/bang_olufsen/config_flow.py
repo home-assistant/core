@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_MODEL,
     DOMAIN,
 )
+from .util import get_serial_number_from_jid
 
 
 class EntryData(TypedDict, total=False):
@@ -110,7 +111,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
             self._beolink_jid = beolink_self.jid
-            self._serial_number = beolink_self.jid.split(".")[2].split("@")[0]
+            self._serial_number = get_serial_number_from_jid(beolink_self.jid)
 
             await self.async_set_unique_id(self._serial_number)
             self._abort_if_unique_id_configured()

@@ -1264,9 +1264,6 @@ def async_register_entity_service(
     """
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
-    # Do a sanity check to check this is a valid entity service schema,
-    # the check could be extended to require All/Any to have sub schema(s)
-    # with all entity service fields
     elif not cv.is_entity_service_schema(schema):
         # pylint: disable-next=import-outside-toplevel
         from .frame import report

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import pyeiscp
 import voluptuous as vol
@@ -24,11 +23,13 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.hass_dict import HassKey
+
+from .receiver import Receiver, ReceiverInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,16 +144,6 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-@dataclass
-class ReceiverInfo:
-    """Onkyo Receiver information."""
-
-    host: str
-    port: int
-    model_name: str
-    identifier: str
-
-
 async def async_register_services(hass: HomeAssistant) -> None:
     """Register Onkyo services."""
 
@@ -189,7 +180,7 @@ async def async_setup_platform(
     """Set up the Onkyo platform."""
     await async_register_services(hass)
 
-    receivers: dict[str, pyeiscp.Connection] = {}  # indexed by host
+    receivers: dict[str, Receiver] = {}  # indexed by host
     all_entities = hass.data.setdefault(DATA_MP_ENTITIES, [])
 
     host = config.get(CONF_HOST)
@@ -234,31 +225,34 @@ async def async_setup_platform(
             """Receiver (re)connected."""
             receiver = receivers[origin]
             _LOGGER.debug(
-                "Receiver (re)connected: %s (%s)", receiver.name, receiver.host
+                "Receiver (re)connected: %s (%s)", receiver.name, receiver.conn.host
             )
 
             for entity in entities.values():
                 entity.backfill_state()
 
         _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
-        receiver = await pyeiscp.Connection.create(
+        connection = await pyeiscp.Connection.create(
             host=info.host,
             port=info.port,
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
         )
 
-        receiver.model_name = info.model_name
-        receiver.identifier = info.identifier
-        receiver.name = name or info.model_name
-        receiver.discovered = discovered
+        receiver = Receiver(
+            conn=connection,
+            model_name=info.model_name,
+            identifier=info.identifier,
+            name=name or info.model_name,
+            discovered=discovered,
+        )
 
-        receivers[receiver.host] = receiver
+        receivers[connection.host] = receiver
 
         # Discover what zones are available for the receiver by querying the power.
         # If we get a response for the specific zone, it means it is available.
         for zone in ZONES:
-            receiver.query_property(zone, "power")
+            receiver.conn.query_property(zone, "power")
 
         # Add the main zone to entities, since it is always active.
         _LOGGER.debug("Adding Main Zone on %s", receiver.name)
@@ -274,8 +268,7 @@ async def async_setup_platform(
 
         _LOGGER.debug("Manually creating receiver: %s (%s)", name, host)
 
-        @callback
-        async def async_onkyo_interview_callback(conn: pyeiscp.Connection):
+        async def async_onkyo_interview_callback(conn: pyeiscp.Connection) -> None:
             """Receiver interviewed, connection not yet active."""
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
             _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
@@ -290,8 +283,7 @@ async def async_setup_platform(
     else:
         _LOGGER.debug("Discovering receivers")
 
-        @callback
-        async def async_onkyo_discovery_callback(conn: pyeiscp.Connection):
+        async def async_onkyo_discovery_callback(conn: pyeiscp.Connection) -> None:
             """Receiver discovered, connection not yet active."""
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
             _LOGGER.debug("Receiver discovered: %s (%s)", info.model_name, info.host)
@@ -304,9 +296,9 @@ async def async_setup_platform(
         )
 
     @callback
-    def close_receiver(_event):
+    def close_receiver(_event: Event) -> None:
         for receiver in receivers.values():
-            receiver.close()
+            receiver.conn.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_receiver)
 
@@ -323,7 +315,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        receiver: pyeiscp.Connection,
+        receiver: Receiver,
         sources: dict[str, str],
         zone: str,
         max_volume: int,
@@ -369,12 +361,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @callback
     def _update_receiver(self, propname: str, value: Any) -> None:
         """Update a property in the receiver."""
-        self._receiver.update_property(self._zone, propname, value)
+        self._receiver.conn.update_property(self._zone, propname, value)
 
     @callback
     def _query_receiver(self, propname: str) -> None:
         """Cause the receiver to send an update about a property."""
-        self._receiver.query_property(self._zone, propname)
+        self._receiver.conn.query_property(self._zone, propname)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -501,19 +493,23 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def _parse_source(self, source):
+    def _parse_source(self, source_raw: str | int | tuple[str]) -> None:
         # source is either a tuple of values or a single value,
         # so we convert to a tuple, when it is a single value.
-        if not isinstance(source, tuple):
-            source = (source,)
+        if isinstance(source_raw, str | int):
+            source = (str(source_raw),)
+        else:
+            source = source_raw
         for value in source:
             if value in self._source_mapping:
                 self._attr_source = self._source_mapping[value]
-                break
-            self._attr_source = "_".join(source)
+                return
+        self._attr_source = "_".join(source)
 
     @callback
-    def _parse_audio_information(self, audio_information):
+    def _parse_audio_information(
+        self, audio_information: tuple[str] | Literal["N/A"]
+    ) -> None:
         # If audio information is not available, N/A is returned,
         # so only update the audio information, when it is not N/A.
         if audio_information == "N/A":
@@ -529,7 +525,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         }
 
     @callback
-    def _parse_video_information(self, video_information):
+    def _parse_video_information(
+        self, video_information: tuple[str] | Literal["N/A"]
+    ) -> None:
         # If video information is not available, N/A is returned,
         # so only update the video information, when it is not N/A.
         if video_information == "N/A":
@@ -544,11 +542,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             if len(value) > 0
         }
 
-    def _query_av_info_delayed(self):
+    def _query_av_info_delayed(self) -> None:
         if self._zone == "main" and not self._query_timer:
 
             @callback
-            def _query_av_info():
+            def _query_av_info() -> None:
                 if self._supports_audio_info:
                     self._query_receiver("audio-information")
                 if self._supports_video_info:
