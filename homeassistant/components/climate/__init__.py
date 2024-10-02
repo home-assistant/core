@@ -287,8 +287,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: HVACAction | None = None
-    _attr_hvac_mode: HVACMode | None
-    _attr_hvac_modes: list[HVACMode]
+    _attr_hvac_mode: HVACMode | None = None
+    _attr_hvac_modes: list[HVACMode] = []
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: float = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
