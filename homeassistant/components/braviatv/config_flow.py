@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -207,8 +207,9 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ssdp.SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered device."""
-        parsed_url = urlparse(discovery_info.ssdp_location)
-        host = parsed_url.hostname
+        # We can cast the hostname to str because the ssdp_location is not bytes and
+        # not a relative url
+        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
 
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
