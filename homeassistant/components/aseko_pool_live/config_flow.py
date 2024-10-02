@@ -9,7 +9,12 @@ from typing import Any
 from aioaseko import Aseko, AsekoAPIError, AsekoInvalidCredentials
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 
 from .const import DOMAIN
@@ -29,7 +34,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         }
     )
 
-    reauth_entry: ConfigEntry | None = None
+    reauth_entry: ConfigEntry
 
     async def get_account_info(self, email: str, password: str) -> dict:
         """Get account info from the mobile API and the web API."""
@@ -46,7 +51,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        self.reauth_entry = None
         errors = {}
 
         if user_input is not None:
@@ -73,7 +77,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Store validated credentials."""
 
-        if self.reauth_entry:
+        if self.source == SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
                 self.reauth_entry,
                 title=info[CONF_EMAIL],
@@ -101,9 +105,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
 
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.reauth_entry = self._get_reauth_entry()
 
         return await self.async_step_reauth_confirm()
 
