@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.57
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240930.0
+home-assistant-frontend==20241002.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.23
@@ -2322,7 +2322,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.7.0
+python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v6.3.0
@@ -2361,7 +2361,7 @@ python-mpd2==3.1.1
 python-mystrom==2.2.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.4.0
+python-opendata-transport==0.5.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.1

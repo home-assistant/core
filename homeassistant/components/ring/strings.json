@@ -120,7 +120,7 @@
   },
   "issues": {
     "deprecated_entity": {
-      "title": "Detected deprecated `{platform}` entity usage",
+      "title": "Detected deprecated {platform} entity usage",
       "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }

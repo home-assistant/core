@@ -13,11 +13,7 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
 )
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -698,13 +694,7 @@ async def test_reconfigure(
 ) -> None:
     """Test we can reconfiger the entry."""
     await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {}
@@ -740,13 +730,7 @@ async def test_reconfigure_nochange(
 ) -> None:
     """Test we get the reconfigure form and apply nochange."""
     await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {}
@@ -782,13 +766,7 @@ async def test_reconfigure_otherenvoy(
 ) -> None:
     """Test entering ip of other envoy and prevent changing it based on serial."""
     await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {}
@@ -853,13 +831,7 @@ async def test_reconfigure_auth_failure(
     """Test changing credentials for existing host with auth failure."""
     await setup_integration(hass, config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -928,13 +900,7 @@ async def test_reconfigure_change_ip_to_existing(
     assert other_entry.data[CONF_USERNAME] == "other-username"
     assert other_entry.data[CONF_PASSWORD] == "other-password"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {}

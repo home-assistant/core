@@ -14,7 +14,7 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
@@ -175,14 +175,7 @@ async def test_reconfigure(
     await hass.async_block_till_done()
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 

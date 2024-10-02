@@ -134,13 +134,7 @@ async def test_reconfigure(
     """Test that reconfigure discovers additional systems and zones."""
 
     # Reconfigure with additional systems and zones.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_evolution_entry.entry_id,
-        },
-    )
+    result = await mock_evolution_entry.start_reconfigure_flow(hass)
     with (
         patch.object(
             BryantEvolutionLocalClient,
