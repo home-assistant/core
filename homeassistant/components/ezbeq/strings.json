@@ -24,7 +24,10 @@
   "entity": {
     "sensor": {
       "current_profile": {
-        "name": "Current Profile"
+        "name": "Current profile",
+        "state": {
+          "unloaded": "Unloaded"
+        }
       }
     }
   }

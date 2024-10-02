@@ -23,7 +23,6 @@ type EzBEQConfigEntry = ConfigEntry[EzBEQCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> bool:
     """Set up ezbeq Profile Loader from a config entry."""
-    _LOGGER.debug("Setting up ezbeq from a config entry")
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
@@ -41,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> boo
         identifiers={
             (
                 DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{coordinator.config_entry.data[CONF_HOST]}",
+                f"{coordinator.config_entry.entry_id}_{DOMAIN}",
             )
         },
         name="EzBEQ",

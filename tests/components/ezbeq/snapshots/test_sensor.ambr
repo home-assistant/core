@@ -23,7 +23,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current Profile',
+    'original_name': 'Current profile',
     'platform': 'ezbeq',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -35,7 +35,7 @@
 # name: test_sensor_setup_and_update[sensor.master2_current_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'master2 Current Profile',
+      'friendly_name': 'master2 Current profile',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.master2_current_profile',
@@ -69,7 +69,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current Profile',
+    'original_name': 'Current profile',
     'platform': 'ezbeq',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -81,7 +81,7 @@
 # name: test_sensor_setup_and_update[sensor.master_current_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'master Current Profile',
+      'friendly_name': 'master Current profile',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.master_current_profile',

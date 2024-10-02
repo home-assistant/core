@@ -3,7 +3,7 @@
 DOMAIN = "ezbeq"
 DEFAULT_PORT = 8080
 DEFAULT_NAME = "EzBEQ"
-STATE_UNLOADED = "Unloaded"
+STATE_UNLOADED = "unloaded"
 
 # Sensor data
 CURRENT_PROFILE = "current_profile"
