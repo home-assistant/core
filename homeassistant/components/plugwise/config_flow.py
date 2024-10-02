@@ -42,14 +42,15 @@ from .const import (
 )
 
 
-def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+def base_schema(
+    cf_input: ZeroconfServiceInfo | dict[str, Any] | None,
+) -> vol.Schema:
     """Generate base schema for gateways."""
-    schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
-    if not discovery_info:
-        schema = schema.extend(
+    if not cf_input:  # no discovery- or user-input available
+        return vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
@@ -57,7 +58,19 @@ def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
             }
         )
 
-    return schema
+    if isinstance(cf_input, ZeroconfServiceInfo):
+        return vol.Schema({vol.Required(CONF_PASSWORD): str})
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=cf_input[CONF_HOST]): str,
+            vol.Required(CONF_PASSWORD, default=cf_input[CONF_PASSWORD]): str,
+            vol.Optional(CONF_PORT, default=cf_input[CONF_PORT]): int,
+            vol.Required(CONF_USERNAME, default=cf_input[CONF_USERNAME]): vol.In(
+                {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+            ),
+        }
+    )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
@@ -161,11 +174,17 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step when using network/gateway setups."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            if self.discovery_info:
-                user_input[CONF_HOST] = self.discovery_info.host
-                user_input[CONF_PORT] = self.discovery_info.port
-                user_input[CONF_USERNAME] = self._username
+        if not user_input:
+            return self.async_show_form(
+                step_id=SOURCE_USER,
+                data_schema=base_schema(self.discovery_info),
+                errors=errors,
+            )
+
+        if self.discovery_info:
+            user_input[CONF_HOST] = self.discovery_info.host
+            user_input[CONF_PORT] = self.discovery_info.port
+            user_input[CONF_USERNAME] = self._username
 
             try:
                 api = await validate_input(self.hass, user_input)
@@ -181,16 +200,16 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_BASE] = "unsupported"
             except Exception:  # noqa: BLE001
                 errors[CONF_BASE] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=api.smile_name, data=user_input)
+        if errors:
+            return self.async_show_form(
+                step_id=SOURCE_USER,
+                data_schema=base_schema(user_input),
+                errors=errors,
+            )
 
-        return self.async_show_form(
-            step_id=SOURCE_USER,
-            data_schema=base_schema(self.discovery_info),
-            errors=errors,
+        await self.async_set_unique_id(
+            api.smile_hostname or api.gateway_id, raise_on_progress=False
         )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=api.smile_name, data=user_input)
