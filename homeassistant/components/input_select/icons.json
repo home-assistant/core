@@ -1,11 +1,25 @@
 {
   "services": {
-    "select_next": "mdi:skip-next",
-    "select_option": "mdi:check",
-    "select_previous": "mdi:skip-previous",
-    "select_first": "mdi:skip-backward",
-    "select_last": "mdi:skip-forward",
-    "set_options": "mdi:cog",
-    "reload": "mdi:reload"
+    "select_next": {
+      "service": "mdi:skip-next"
+    },
+    "select_option": {
+      "service": "mdi:check"
+    },
+    "select_previous": {
+      "service": "mdi:skip-previous"
+    },
+    "select_first": {
+      "service": "mdi:skip-backward"
+    },
+    "select_last": {
+      "service": "mdi:skip-forward"
+    },
+    "set_options": {
+      "service": "mdi:cog"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
   }
 }

@@ -164,13 +164,18 @@ async def test_options(
     )
     options = await hass.config_entries.options.async_configure(
         options_flow["flow_id"],
-        {ollama.CONF_PROMPT: "test prompt", ollama.CONF_MAX_HISTORY: 100},
+        {
+            ollama.CONF_PROMPT: "test prompt",
+            ollama.CONF_MAX_HISTORY: 100,
+            ollama.CONF_NUM_CTX: 32768,
+        },
     )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"] == {
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
+        ollama.CONF_NUM_CTX: 32768,
     }
 
 

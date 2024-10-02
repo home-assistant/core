@@ -6,7 +6,7 @@ from aiopyarr import exceptions
 import pytest
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -143,15 +143,7 @@ async def test_full_reauth_flow_implementation(
 ) -> None:
     """Test the manual reauth flow from start to finish."""
     entry = await setup_integration(hass, aioclient_mock)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

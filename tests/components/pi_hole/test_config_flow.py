@@ -96,7 +96,7 @@ async def test_flow_user_without_api_key(hass: HomeAssistant) -> None:
 
 async def test_flow_user_invalid(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid server."""
-    mocked_hole = _create_mocked_hole(True)
+    mocked_hole = _create_mocked_hole(raise_exception=True)
     with _patch_config_flow_hole(mocked_hole):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER

@@ -35,13 +35,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_entry(hass):
+async def mock_entry() -> MockConfigEntry:
     """Create a mock light entity."""
     return MockConfigEntry(domain=DOMAIN)
 
 
 @pytest.fixture
-async def mock_light(hass, mock_entry):
+async def mock_light(hass: HomeAssistant, mock_entry: MockConfigEntry) -> MagicMock:
     """Create a mock light entity."""
 
     mock_entry.add_to_hass(hass)

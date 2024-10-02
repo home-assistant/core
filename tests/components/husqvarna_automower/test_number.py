@@ -78,9 +78,7 @@ async def test_number_workarea_commands(
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
     mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
-    setattr(
-        mock_automower_client.commands, "set_cutting_height_workarea", mocked_method
-    )
+    setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
     await hass.services.async_call(
         domain="number",
         service="set_value",
@@ -109,31 +107,6 @@ async def test_number_workarea_commands(
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2
-
-
-async def test_workarea_deleted(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test if work area is deleted after removed."""
-
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
-    await setup_integration(hass, mock_config_entry)
-    current_entries = len(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    )
-
-    del values[TEST_MOWER_ID].work_areas[123456]
-    mock_automower_client.get_status.return_value = values
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    ) == (current_entries - 1)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -155,6 +155,24 @@ SENSOR_DESCRIPTIONS = {
     (ExtendedSensorDeviceClass.LOCK_METHOD, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.LOCK_METHOD), icon="mdi:key-variant"
     ),
+    # Duration of detected status (in minutes) for Occpancy Sensor
+    (
+        ExtendedSensorDeviceClass.DURATION_DETECTED,
+        Units.TIME_MINUTES,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.DURATION_DETECTED),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Duration of cleared status (in minutes) for Occpancy Sensor
+    (
+        ExtendedSensorDeviceClass.DURATION_CLEARED,
+        Units.TIME_MINUTES,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.DURATION_CLEARED),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 

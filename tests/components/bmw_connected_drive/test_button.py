@@ -165,7 +165,7 @@ async def test_service_call_success_state_change(
         (
             "button.i4_edrive40_find_vehicle",
             "device_tracker.i4_edrive40",
-            {"latitude": 123.456, "longitude": 34.5678, "direction": 121},
+            {"latitude": 12.345, "longitude": 34.5678, "direction": 121},
             {"latitude": 48.177334, "longitude": 11.556274, "direction": 180},
         ),
     ],

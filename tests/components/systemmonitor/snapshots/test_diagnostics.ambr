@@ -34,8 +34,10 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'systemmonitor',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
         'binary_sensor': dict({
           'process': list([

@@ -19,6 +19,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "off_grid_status": {
+        "name": "Off grid status"
+      },
+      "dc_1_short_circuit_error_status": {
+        "name": "DC 1 short circuit error status"
+      },
+      "dc_2_short_circuit_error_status": {
+        "name": "DC 2 short circuit error status"
+      },
+      "output_fault_status": {
+        "name": "Output fault status"
+      }
+    },
     "sensor": {
       "total_power": {
         "name": "Total power"

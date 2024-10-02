@@ -10,7 +10,11 @@
     }
   },
   "services": {
-    "sync": "mdi:sync",
-    "change_channel": "mdi:remote-tv"
+    "sync": {
+      "service": "mdi:sync"
+    },
+    "change_channel": {
+      "service": "mdi:remote-tv"
+    }
   }
 }

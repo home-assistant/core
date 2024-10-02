@@ -268,9 +268,7 @@ async def test_reauth_no_form(hass: HomeAssistant, mock_sense) -> None:
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=MOCK_CONFIG
-        )
+        result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
@@ -288,9 +286,7 @@ async def test_reauth_password(hass: HomeAssistant, mock_sense) -> None:
     mock_sense.return_value.authenticate.side_effect = SenseAuthenticationException
 
     # Reauth success without user input
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     mock_sense.return_value.authenticate.side_effect = None

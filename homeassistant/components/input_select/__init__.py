@@ -183,13 +183,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_FIRST,
-        {},
+        None,
         InputSelect.async_first.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_LAST,
-        {},
+        None,
         InputSelect.async_last.__name__,
     )
 
@@ -246,6 +246,7 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
+# pylint: disable-next=hass-enforce-class-module
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 

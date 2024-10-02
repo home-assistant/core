@@ -17,9 +17,11 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -40,6 +42,38 @@ async def test_entities(
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_update(
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the creation and values of the Chacon Dio covers."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_dio_chacon_client.get_status_details.return_value = {
+        "L4HActuator_idmock1": {
+            "id": "L4HActuator_idmock1",
+            "connected": True,
+            "openlevel": 51,
+            "movement": "stop",
+        }
+    }
+
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(COVER_ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 51
+    assert state.state == STATE_OPEN
 
 
 async def test_cover_actions(
@@ -100,7 +134,7 @@ async def test_cover_callbacks(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the creation and values of the Chacon Dio covers."""
+    """Test the callbacks on the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 

@@ -669,7 +669,6 @@ class _ScriptRun:
         trace_set_result(wait=self._variables["wait"])
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
-        wait_template.hass = self._hass
 
         # check if condition already okay
         if condition.async_template(self._hass, wait_template, self._variables, False):
@@ -1350,7 +1349,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | MappingProxyType[str, Any]
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
@@ -1429,7 +1428,6 @@ class Script:
 
         self._hass = hass
         self.sequence = sequence
-        template.attach(hass, self.sequence)
         self.name = name
         self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
@@ -1459,8 +1457,6 @@ class Script:
         self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
-        if self._variables_dynamic:
-            template.attach(hass, variables)
         self._copy_variables_on_run = copy_variables
 
     @property

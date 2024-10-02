@@ -3,6 +3,7 @@
 import base64
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FAKE_CAMERA_IMAGE
 
@@ -13,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_camera(accessory):
+def create_camera(accessory: Accessory) -> None:
     """Define camera characteristics."""
     accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
 

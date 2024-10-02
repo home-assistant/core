@@ -44,7 +44,7 @@ async def test_full_flow(
         CONF_CLIENT_SECRET: "client_secret",
         CONF_ACCESS_TOKEN: "access_token",
     }
-    assert result["result"].unique_id == "client_id"
+    assert result["result"].unique_id == "trwnh_mastodon_social"
 
 
 @pytest.mark.parametrize(

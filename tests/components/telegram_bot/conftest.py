@@ -1,10 +1,12 @@
 """Tests for the telegram_bot integration."""
 
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
+from typing import Any
 from unittest.mock import patch
 
 import pytest
-from telegram import Chat, Message, User
+from telegram import Bot, Chat, Message, User
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot import (
@@ -18,11 +20,12 @@ from homeassistant.const import (
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def config_webhooks():
+def config_webhooks() -> dict[str, Any]:
     """Fixture for a webhooks platform configuration."""
     return {
         DOMAIN: [
@@ -43,7 +46,7 @@ def config_webhooks():
 
 
 @pytest.fixture
-def config_polling():
+def config_polling() -> dict[str, Any]:
     """Fixture for a polling platform configuration."""
     return {
         DOMAIN: [
@@ -62,7 +65,7 @@ def config_polling():
 
 
 @pytest.fixture
-def mock_register_webhook():
+def mock_register_webhook() -> Generator[None]:
     """Mock calls made by telegram_bot when (de)registering webhook."""
     with (
         patch(
@@ -78,7 +81,7 @@ def mock_register_webhook():
 
 
 @pytest.fixture
-def mock_external_calls():
+def mock_external_calls() -> Generator[None]:
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
     message = Message(
@@ -86,30 +89,29 @@ def mock_external_calls():
         date=datetime.now(),
         chat=Chat(id=123456, type=ChatType.PRIVATE),
     )
+
+    class BotMock(Bot):
+        """Mock bot class."""
+
+        __slots__ = ()
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            """Initialize BotMock instance."""
+            super().__init__(*args, **kwargs)
+            self._bot_user = test_user
+
     with (
-        patch(
-            "telegram.Bot.get_me",
-            return_value=test_user,
-        ),
-        patch(
-            "telegram.Bot._bot_user",
-            test_user,
-        ),
-        patch(
-            "telegram.Bot.bot",
-            test_user,
-        ),
-        patch(
-            "telegram.Bot.send_message",
-            return_value=message,
-        ),
+        patch("homeassistant.components.telegram_bot.Bot", BotMock),
+        patch.object(BotMock, "get_me", return_value=test_user),
+        patch.object(BotMock, "bot", test_user),
+        patch.object(BotMock, "send_message", return_value=message),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield
 
 
 @pytest.fixture
-def mock_generate_secret_token():
+def mock_generate_secret_token() -> Generator[str]:
     """Mock secret token generated for webhook."""
     mock_secret_token = "DEADBEEF12345678DEADBEEF87654321"
     with patch(
@@ -217,12 +219,12 @@ def update_callback_query():
 
 @pytest.fixture
 async def webhook_platform(
-    hass,
-    config_webhooks,
-    mock_register_webhook,
-    mock_external_calls,
-    mock_generate_secret_token,
-):
+    hass: HomeAssistant,
+    config_webhooks: dict[str, Any],
+    mock_register_webhook: None,
+    mock_external_calls: None,
+    mock_generate_secret_token: str,
+) -> AsyncGenerator[None]:
     """Fixture for setting up the webhooks platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
@@ -235,7 +237,9 @@ async def webhook_platform(
 
 
 @pytest.fixture
-async def polling_platform(hass, config_polling, mock_external_calls):
+async def polling_platform(
+    hass: HomeAssistant, config_polling: dict[str, Any], mock_external_calls: None
+) -> None:
     """Fixture for setting up the polling platform using appropriate config and mocks."""
     await async_setup_component(
         hass,

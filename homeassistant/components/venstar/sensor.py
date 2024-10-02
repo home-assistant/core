@@ -23,9 +23,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VenstarEntity
 from .const import DOMAIN
 from .coordinator import VenstarDataUpdateCoordinator
+from .entity import VenstarEntity
 
 RUNTIME_HEAT1 = "heat1"
 RUNTIME_HEAT2 = "heat2"
@@ -75,7 +75,7 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
     name_fn: Callable[[str], str] | None
-    uom_fn: Callable[[Any], str | None]
+    uom_fn: Callable[[VenstarDataUpdateCoordinator], str | None]
 
 
 async def async_setup_entry(
@@ -99,11 +99,18 @@ async def async_setup_entry(
             )
 
         runtimes = coordinator.runtimes[-1]
-        entities.extend(
-            VenstarSensor(coordinator, config_entry, RUNTIME_ENTITY, sensor_name)
-            for sensor_name in runtimes
-            if sensor_name in RUNTIME_DEVICES
-        )
+        for sensor_name in runtimes:
+            if sensor_name in RUNTIME_DEVICES:
+                entities.append(
+                    VenstarSensor(
+                        coordinator, config_entry, RUNTIME_ENTITY, sensor_name
+                    )
+                )
+            entities.extend(
+                VenstarSensor(coordinator, config_entry, description, sensor_name)
+                for description in CONSUMABLE_ENTITIES
+                if description.key == sensor_name
+            )
 
     for description in INFO_ENTITIES:
         try:
@@ -222,6 +229,27 @@ RUNTIME_ENTITY = VenstarSensorEntityDescription(
     uom_fn=lambda _: UnitOfTime.MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda sensor_name: f"{RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
+)
+
+CONSUMABLE_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
+    VenstarSensorEntityDescription(
+        key="filterHours",
+        state_class=SensorStateClass.MEASUREMENT,
+        uom_fn=lambda _: UnitOfTime.HOURS,
+        value_fn=lambda coordinator, sensor_name: (
+            coordinator.runtimes[-1][sensor_name] / 100
+        ),
+        name_fn=None,
+        translation_key="filter_install_time",
+    ),
+    VenstarSensorEntityDescription(
+        key="filterDays",
+        state_class=SensorStateClass.MEASUREMENT,
+        uom_fn=lambda _: UnitOfTime.DAYS,
+        value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
+        name_fn=None,
+        translation_key="filter_usage",
+    ),
 )
 
 INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (

@@ -23,8 +23,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from .entity import IntegerTypeData, TuyaEntity
 from .util import remap_value
 
 

@@ -287,6 +287,7 @@ async def test_config_flow_reauth_success(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": "reauth", "entry_id": mock_entry.entry_id},
+            data=mock_entry.data,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -329,6 +330,7 @@ async def test_config_flow_reauth_fail_invalid_code(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": "reauth", "entry_id": mock_entry.entry_id},
+            data=mock_entry.data,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -366,6 +368,7 @@ async def test_config_flow_reauth_fail_code_request(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": "reauth", "entry_id": reauth_entry.entry_id},
+            data=mock_entry.data,
         )
 
     assert result["type"] is FlowResultType.ABORT

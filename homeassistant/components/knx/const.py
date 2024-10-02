@@ -3,24 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from enum import Enum
-from typing import Final, TypedDict
+from enum import Enum, StrEnum
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
-    PRESET_SLEEP,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import FAN_AUTO, FAN_OFF, HVACAction, HVACMode
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import KNXModule
 
 DOMAIN: Final = "knx"
+KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -76,8 +73,6 @@ CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
-# yaml config merged with config entry data
-DATA_KNX_CONFIG: Final = "knx_config"
 # original hass yaml config
 DATA_HASS_CONFIG: Final = "knx_hass_config"
 
@@ -134,6 +129,13 @@ class ColorTempModes(Enum):
     RELATIVE = "5.001"
 
 
+class FanZeroMode(StrEnum):
+    """Enum for setting the fan zero mode."""
+
+    OFF = FAN_OFF
+    AUTO = FAN_AUTO
+
+
 SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -173,13 +175,4 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.OFF: HVACAction.OFF,
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
-}
-
-PRESET_MODES: Final = {
-    # Map DPT 20.102 HVAC operating modes to HA presets
-    HVACOperationMode.AUTO: PRESET_NONE,
-    HVACOperationMode.BUILDING_PROTECTION: PRESET_ECO,
-    HVACOperationMode.ECONOMY: PRESET_SLEEP,
-    HVACOperationMode.STANDBY: PRESET_AWAY,
-    HVACOperationMode.COMFORT: PRESET_COMFORT,
 }

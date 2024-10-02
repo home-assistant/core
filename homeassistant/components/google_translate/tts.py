@@ -74,7 +74,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
         else:
             self._lang = lang
             self._tld = tld
-        self._attr_name = f"Google {self._lang} {self._tld}"
+        self._attr_name = f"Google Translate {self._lang} {self._tld}"
         self._attr_unique_id = config_entry.entry_id
 
     @property
@@ -130,7 +130,7 @@ class GoogleProvider(Provider):
         else:
             self._lang = lang
             self._tld = tld
-        self.name = "Google"
+        self.name = "Google Translate"
 
     @property
     def default_language(self) -> str:

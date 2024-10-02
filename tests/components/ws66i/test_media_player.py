@@ -1,6 +1,7 @@
 """The tests for WS66i Media player platform."""
 
 from collections import defaultdict
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -73,7 +74,7 @@ class AttrDict(dict):
 class MockWs66i:
     """Mock for pyws66i object."""
 
-    def __init__(self, fail_open=False, fail_zone_check=None):
+    def __init__(self, fail_open=False, fail_zone_check=None) -> None:
         """Init mock object."""
         self.zones = defaultdict(
             lambda: AttrDict(
@@ -170,7 +171,9 @@ async def _setup_ws66i_with_options(hass: HomeAssistant, ws66i) -> MockConfigEnt
     return config_entry
 
 
-async def _call_media_player_service(hass, name, data):
+async def _call_media_player_service(
+    hass: HomeAssistant, name: str, data: dict[str, Any]
+) -> None:
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, name, service_data=data, blocking=True
     )

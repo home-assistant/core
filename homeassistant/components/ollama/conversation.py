@@ -26,9 +26,11 @@ from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
+    DEFAULT_NUM_CTX,
     DOMAIN,
     MAX_HISTORY_SECONDS,
 )
@@ -106,6 +108,10 @@ class OllamaConversationEntity(
         self._history: dict[str, MessageHistory] = {}
         self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
@@ -114,6 +120,9 @@ class OllamaConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
+        self.entry.async_on_unload(
+            self.entry.add_update_listener(self._async_entry_update_listener)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -256,6 +265,7 @@ class OllamaConversationEntity(
                     stream=False,
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
@@ -334,3 +344,10 @@ class OllamaConversationEntity(
             message_history.messages = [
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
+
+    async def _async_entry_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)

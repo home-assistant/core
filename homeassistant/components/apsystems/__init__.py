@@ -13,7 +13,12 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_PORT
 from .coordinator import ApSystemsDataCoordinator
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 @dataclass

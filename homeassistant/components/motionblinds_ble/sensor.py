@@ -89,6 +89,7 @@ SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         register_callback_func=lambda device: device.register_signal_strength_callback,
         value_func=lambda value: value,
+        entity_registry_enabled_default=False,
     ),
 )
 

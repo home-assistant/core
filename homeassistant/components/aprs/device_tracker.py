@@ -159,7 +159,7 @@ class AprsListenerThread(threading.Thread):
         self.ais.set_filter(self.server_filter)
 
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Opening connection to %s with callsign %s", self.host, self.callsign
             )
             self.ais.connect()
@@ -170,7 +170,7 @@ class AprsListenerThread(threading.Thread):
         except (AprsConnectionError, LoginError) as err:
             self.start_complete(False, str(err))
         except OSError:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 
