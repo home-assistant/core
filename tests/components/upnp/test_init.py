@@ -202,6 +202,11 @@ async def test_async_setup_entry_force_poll(
 
     mock_igd_device.async_subscribe_services.assert_not_called()
 
+    # Ensure that the device is forced to poll.
+    mock_igd_device.async_get_traffic_and_status_data.assert_called_with(
+        None, force_poll=True
+    )
+
 
 @pytest.mark.usefixtures(
     "ssdp_instant_discovery",
@@ -235,3 +240,8 @@ async def test_async_setup_entry_force_poll_subscribe_error(
     # Load config_entry, should still be able to load, falling back to polling/the old functionality.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    # Ensure that the device is forced to poll.
+    mock_igd_device.async_get_traffic_and_status_data.assert_called_with(
+        None, force_poll=True
+    )
