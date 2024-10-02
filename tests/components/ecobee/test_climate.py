@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest import mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import const
@@ -20,6 +21,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
+
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 
@@ -432,11 +435,17 @@ async def test_remote_sensors(hass: HomeAssistant) -> None:
     assert sorted(remote_sensors) == sorted(["ecobee", "Remote Sensor 1"])
 
 
-async def test_remote_sensor_devices(hass: HomeAssistant) -> None:
+async def test_remote_sensor_devices(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test remote sensor devices."""
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    freezer.tick(100)
+    async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
-    assert sorted(state.attributes.get("available_sensors")) == sorted(["ecobee"])
+    assert sorted(state.attributes.get("available_sensors")) == sorted(
+        ["Remote Sensor 1", "ecobee"]
+    )
 
 
 async def test_active_sensors_in_preset_mode(hass: HomeAssistant) -> None:
