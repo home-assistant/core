@@ -249,9 +249,9 @@ def _get_timeout(path: str) -> ClientTimeout:
     return ClientTimeout(connect=10, total=300)
 
 
-def should_compress(content_type: str, path: str) -> bool:
+def should_compress(content_type: str, path: str | None = None) -> bool:
     """Return if we should compress a response."""
-    if NO_COMPRESS.match(path):
+    if path is not None and NO_COMPRESS.match(path):
         return False
     if content_type.startswith("image/"):
         return "svg" in content_type
