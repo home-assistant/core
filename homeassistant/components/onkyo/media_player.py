@@ -151,6 +151,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         },
     }
 )
+ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 
 
 async def async_register_services(hass: HomeAssistant) -> None:
@@ -236,6 +237,7 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_no_discover",
+            translation_placeholders={"url": ISSUE_URL_PLACEHOLDER},
         )
 
     all_successful = True
@@ -256,7 +258,10 @@ async def async_setup_platform(
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.WARNING,
                 translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders={"host": f"{host}"},
+                translation_placeholders={
+                    "host": host,
+                    "url": ISSUE_URL_PLACEHOLDER,
+                },
             )
 
     if all_successful:
