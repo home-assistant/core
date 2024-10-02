@@ -9,6 +9,7 @@ import pytest
 from typedmonarchmoney.models import (
     MonarchAccount,
     MonarchCashflowSummary,
+    MonarchHoldings,
     MonarchSubscription,
 )
 
@@ -48,13 +49,26 @@ def mock_config_api() -> Generator[AsyncMock]:
         acc["id"]: MonarchAccount(acc) for acc in account_json["accounts"]
     }
 
+    # Add holdings to return data
+
+    account_data_dict["900000000"].holdings = MonarchHoldings(
+        load_json_object_fixture("get_account_holdings_900000000.json", DOMAIN)
+    )
+
     cashflow_json: dict[str, Any] = json.loads(
         load_fixture("get_cashflow_summary.json", DOMAIN)
     )
     cashflow_summary = MonarchCashflowSummary(cashflow_json)
     subscription_details = MonarchSubscription(
-        json.loads(load_fixture("get_subscription_details.json", DOMAIN))
+        load_json_object_fixture("get_subscription_details.json", DOMAIN)
     )
+
+    async def mock_get_holdings(account_id: str | int) -> MonarchHoldings | None:
+        if account_id == "900000000":
+            return MonarchHoldings(
+                load_json_object_fixture("get_account_holdings_900000000.json", DOMAIN)
+            )
+        return None
 
     with (
         patch(
@@ -76,4 +90,7 @@ def mock_config_api() -> Generator[AsyncMock]:
         )
         instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
         instance.get_subscription_details = AsyncMock(return_value=subscription_details)
+
+        instance.get_account_holdings_for_id = AsyncMock(side_effect=mock_get_holdings)
+
         yield mock_class
