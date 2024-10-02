@@ -15,10 +15,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, StreamType
+from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
 
 if TYPE_CHECKING:
@@ -167,7 +166,7 @@ def async_register_rtsp_to_web_rtc_provider(
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
 
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     await asyncio.gather(
         *(camera.async_refresh_providers() for camera in component.entities)
     )

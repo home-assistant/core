@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
 
-    provider = WebRTCProvider(entry, client)
+    provider = WebRTCProvider(client)
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
@@ -62,9 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
-    def __init__(self, entry: ConfigEntry, client: Go2RtcClient) -> None:
+    def __init__(self, client: Go2RtcClient) -> None:
         """Initialize the WebRTC provider."""
-        self._entry = entry
         self._client = client
 
     async def async_is_supported(self, stream_source: str) -> bool:

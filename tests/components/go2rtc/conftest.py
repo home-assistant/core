@@ -1,15 +1,17 @@
 """Go2rtc test configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from go2rtc_client.client import _StreamClient, _WebRTCClient
 import pytest
 
 from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
-from tests.components.smhi.common import AsyncMock
+
+TEST_DOMAIN = "test"
 
 
 @pytest.fixture
@@ -35,8 +37,16 @@ def mock_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.streams.list = AsyncMock(return_value=[])
+        client.streams = Mock(spec_set=_StreamClient)
+        client.webrtc = Mock(spec_set=_WebRTCClient)
         yield client
+
+
+@pytest.fixture
+def mock_server() -> Generator[Mock]:
+    """Mock a go2rtc server."""
+    with patch("homeassistant.components.go2rtc.Server", autoSpec=True) as mock_server:
+        yield mock_server
 
 
 @pytest.fixture
