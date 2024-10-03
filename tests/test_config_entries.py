@@ -6599,9 +6599,7 @@ def test_state_not_stored_in_storage() -> None:
 
     Verify we don't start accidentally storing state in storage.
     """
-    entry = MockConfigEntry(
-        domain="test",
-    )
+    entry = MockConfigEntry(domain="test")
     loaded = json_loads(json_dumps(entry.as_storage_fragment))
     for key in config_entries.STATE_KEYS:
         assert key not in loaded
