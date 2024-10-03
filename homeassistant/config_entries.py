@@ -2336,8 +2336,9 @@ class ConfigEntries:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data to save."""
+        # typing does not know that the storage fragment will serialize to a dict
         return {
-            "entries": [entry.as_storage_fragment for entry in self._entries.values()]
+            "entries": [entry.as_storage_fragment for entry in self._entries.values()]  # type: ignore[misc]
         }
 
     async def async_wait_component(self, entry: ConfigEntry) -> bool:
