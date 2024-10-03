@@ -141,12 +141,12 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         self._entry = self._get_reconfigure_entry()
         return self.async_show_form(
-            step_id="user", data_schema=get_user_step_schema(entry_data)
+            step_id="user", data_schema=get_user_step_schema(self._entry.data.copy())
         )
 
     async def async_step_origin_menu(self, _: None = None) -> ConfigFlowResult:
