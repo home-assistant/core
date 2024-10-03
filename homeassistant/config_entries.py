@@ -1693,7 +1693,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         return self._domain_unique_id_index.get(domain, {}).get(unique_id)
 
 
-class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
+class ConfigEntryStore(storage.Store[dict[str, list[json_fragment]]]):
     """Class to help storing config entry data."""
 
     def __init__(self, hass: HomeAssistant) -> None:
