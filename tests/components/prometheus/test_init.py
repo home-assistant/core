@@ -351,6 +351,51 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     )
 
 
+def test_entity_metric_with_value_assert_in_metrics() -> None:
+    """Test using EntityMetricWithValue assert_in_metrics."""
+    temp_metric = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+        " 17.2"
+    )
+    climate_metric = (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+        " 1.0"
+    )
+    metrics = [
+        temp_metric,
+        climate_metric,
+    ]
+    temp_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    ).withValue(17.2)
+    assert temp_entity_metric._metric_string == temp_metric
+    temp_entity_metric.assert_in_metrics(metrics)
+
+    climate_entity_metric = EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    ).withValue(1)
+    assert climate_entity_metric._metric_string == climate_metric
+    climate_entity_metric.assert_in_metrics(metrics)
+
+
 @pytest.fixture(name="client")
 async def setup_prometheus_client(
     hass: HomeAssistant,
