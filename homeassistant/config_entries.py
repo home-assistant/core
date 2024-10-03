@@ -2779,7 +2779,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return reauth entry id."""
         if self.source != SOURCE_REAUTH:
             raise ValueError(f"Source is {self.source}, expected {SOURCE_REAUTH}")
-        return self.context["entry_id"]  # type: ignore[no-any-return]
+        return self.context["entry_id"]
 
     @callback
     def _get_reauth_entry(self) -> ConfigEntry:
@@ -2793,7 +2793,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return reconfigure entry id."""
         if self.source != SOURCE_RECONFIGURE:
             raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
-        return self.context["entry_id"]  # type: ignore[no-any-return]
+        return self.context["entry_id"]
 
     @callback
     def _get_reconfigure_entry(self) -> ConfigEntry:
