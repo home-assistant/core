@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity as entity_helper
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
@@ -31,6 +30,7 @@ from . import (
     area_registry,
     config_validation as cv,
     device_registry,
+    entity as entity_helper,
     entity_registry,
     floor_registry,
 )
