@@ -113,13 +113,17 @@ class ListRemoveItemIntent(intent.IntentHandler):
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 
-        # Find in List
-        found = await target_list.async_find_todo_item(item)
-        if not found or not found.uid:
-            raise intent.IntentHandleError(f"Item {item} not found on list")
+        # Find item in list
+        matching_item = None
+        for todo_item in target_list.todo_items or ():
+            if item in (todo_item.uid, todo_item.summary):
+                matching_item = todo_item
+                break
+        if not matching_item or not matching_item.uid:
+            raise intent.IntentHandleError(f"Item '{item}' not found on list")
 
         # Remove Item from List
-        await target_list.async_delete_todo_items(uids=[found.uid])
+        await target_list.async_delete_todo_items(uids=[matching_item.uid])
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE

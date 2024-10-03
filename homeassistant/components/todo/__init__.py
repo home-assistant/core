@@ -269,10 +269,6 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Delete an item in the To-do list."""
         raise NotImplementedError
 
-    async def async_find_todo_item(self, item: str) -> TodoItem | None:
-        """Find a To-do item by uid or summary name."""
-        return _find_by_uid_or_summary(item, self.todo_items)
-
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
