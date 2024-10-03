@@ -1104,9 +1104,11 @@ class ConfigEntry(Generic[_DataT]):
                 context={
                     "source": SOURCE_RECONFIGURE,
                     "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
                 }
                 | (context or {}),
-                data=data,
+                data=self.data | (data or {}),
             )
 
     @callback
