@@ -509,9 +509,11 @@ class ZHAGatewayProxy(EventBase):
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
         self._reload_task: asyncio.Task | None = None
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
+        config_entry.async_on_unload(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
         )
 
     @property
