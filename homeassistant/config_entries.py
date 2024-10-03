@@ -481,10 +481,10 @@ class ConfigEntry(Generic[_DataT]):
     def as_json_fragment(self) -> json_fragment:
         """Return JSON fragment of a config entry that is used for the API."""
         json_repr = {
-            "created_at": self.created_at,
+            "created_at": self.created_at.timestamp(),
             "entry_id": self.entry_id,
             "domain": self.domain,
-            "modified_at": self.modified_at,
+            "modified_at": self.modified_at.timestamp(),
             "title": self.title,
             "source": self.source,
             "state": self.state.value,
