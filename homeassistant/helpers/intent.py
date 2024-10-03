@@ -8,11 +8,11 @@ from collections.abc import Callable, Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
-from functools import cached_property
 from itertools import groupby
 import logging
 from typing import Any
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose

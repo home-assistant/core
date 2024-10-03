@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-from functools import cached_property
 import itertools
 import logging
 from typing import Any
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
