@@ -357,6 +357,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             return old
 
         new_values["modified_at"] = utcnow()
+        new_values["_cache"] = {}
 
         self.hass.verify_event_loop_thread("area_registry.async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)

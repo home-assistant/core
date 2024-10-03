@@ -1127,6 +1127,7 @@ class EntityRegistry(BaseRegistry):
             return old
 
         new_values["modified_at"] = utcnow()
+        new_values["cache"] = {}
 
         self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
@@ -1398,7 +1399,10 @@ class EntityRegistry(BaseRegistry):
                 continue
             # Add a time stamp when the deleted entity became orphaned
             self.deleted_entities[key] = attr.evolve(
-                deleted_entity, orphaned_timestamp=now_time, config_entry_id=None
+                deleted_entity,
+                orphaned_timestamp=now_time,
+                config_entry_id=None,
+                cache={},
             )
             self.async_schedule_save()
 
