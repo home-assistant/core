@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import attr
-from propcache import under_cached_property
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
@@ -46,9 +45,14 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+else:
+    from propcache import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 

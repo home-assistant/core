@@ -19,7 +19,6 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
-from propcache import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -65,7 +64,12 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
+else:
+    from propcache import under_cached_property
 
 DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
