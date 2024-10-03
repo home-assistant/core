@@ -495,7 +495,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_sensors.assert_called_once_with(0, "Climate1", ["Remote Sensor 1"])
+        mock_sensors.assert_called_once_with(0, "Climate1", sensor_ids=["rs:100"])
 
     # Update sensors without preset mode.
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
@@ -510,7 +510,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         # `temp` is the preset running because of a hold.
-        mock_sensors.assert_called_once_with(0, "temp", ["Remote Sensor 1"])
+        mock_sensors.assert_called_once_with(0, "temp", sensor_ids=["rs:100"])
 
     # Check that sensors are not updated when the sent sensors are the currently set sensors.
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:

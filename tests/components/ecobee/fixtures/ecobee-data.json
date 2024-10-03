@@ -1,7 +1,7 @@
 {
   "thermostatList": [
     {
-      "identifier": 8675309,
+      "identifier": "8675309",
       "name": "ecobee",
       "modelNumber": "athenaSmart",
       "utcTime": "2022-01-01 10:00:00",
