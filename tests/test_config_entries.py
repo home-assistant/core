@@ -989,7 +989,6 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_tries",
         "_setup_again_job",
         "_supports_options",
-        "_reconfigure_lock",
         "supports_reconfigure",
     }
 
