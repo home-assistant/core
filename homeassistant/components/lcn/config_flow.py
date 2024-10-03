@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -196,7 +195,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=data[CONF_HOST], data=data)
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
         self._context_entry = self._get_reconfigure_entry()
