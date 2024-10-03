@@ -1,5 +1,6 @@
 """Tests for the SMLIGHT update platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -126,7 +127,7 @@ async def test_update_firmware(
         sw_version="v2.5.2",
     )
 
-    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
