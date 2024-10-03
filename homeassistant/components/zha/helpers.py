@@ -569,11 +569,10 @@ class ZHAGatewayProxy(EventBase):
         assert ieee in self.device_proxies
 
         zha_device_proxy = self.device_proxies[ieee]
-        if entity_entry.unique_id not in zha_device_proxy.device.platform_entities:
+        entity_key = (entity_entry.domain, entity_entry.unique_id)
+        if entity_key not in zha_device_proxy.device.platform_entities:
             return
-        platform_entity = zha_device_proxy.device.platform_entities[
-            entity_entry.unique_id
-        ]
+        platform_entity = zha_device_proxy.device.platform_entities[entity_key]
         if entity_entry.disabled:
             platform_entity.disable()
         else:
