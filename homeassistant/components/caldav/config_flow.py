@@ -32,7 +32,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for caldav."""
 
     VERSION = 1
-    _reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -91,9 +91,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -101,7 +99,6 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
 
