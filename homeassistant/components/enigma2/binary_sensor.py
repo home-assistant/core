@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
 
 from openwebif.api import OpenWebIfDevice
 
@@ -10,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,12 +21,12 @@ from .coordinator import Enigma2UpdateCoordinator
 class Enigma2BinarySensorDescription(BinarySensorEntityDescription):
     """Describes Enigma2 binary sensors."""
 
-    value_fn: Callable[[OpenWebIfDevice], bool]
+    value_fn: Callable[[OpenWebIfDevice], bool | None]
 
 
 BINARY_SENSOR_TYPES: list[Enigma2BinarySensorDescription] = [
     Enigma2BinarySensorDescription(
-        value_fn=lambda device: bool(device.status.is_recording),
+        value_fn=lambda device: device.status.is_recording,
         key="is_recording",
         translation_key="is_recording",
     )
@@ -45,6 +43,7 @@ async def async_setup_entry(
         [
             Enigma2BinarySensor(entry.runtime_data, description)
             for description in BINARY_SENSOR_TYPES
+            if description.value_fn(entry.runtime_data.device) is not None
         ]
     )
 
@@ -69,10 +68,10 @@ class Enigma2BinarySensor(
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{(
             coordinator.device.mac_address
-            or cast(ConfigEntry, coordinator.config_entry).entry_id
+            or coordinator.config_entry.entry_id
         )}_{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return self.entity_description.value_fn(self.coordinator.device)
+        return bool(self.entity_description.value_fn(self.coordinator.device))
