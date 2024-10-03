@@ -80,6 +80,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.protocol = "rtsp"
         host_mock.channels = [0]
         host_mock.stream_channels = [0]
+        host_mock.new_devices = False
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
