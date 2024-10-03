@@ -17,6 +17,7 @@ INTENT_LIST_REMOVE_ITEM = "HassListRemoveItem"
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the todo intents."""
     intent.async_register(hass, ListAddItemIntent())
+    intent.async_register(hass, ListRemoveItemIntent())
 
 
 class ListAddItemIntent(intent.IntentHandler):
