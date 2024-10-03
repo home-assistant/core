@@ -5410,12 +5410,16 @@ async def test_starting_config_flow_on_single_config_entry(
 
     mock_platform(hass, "comp.config_flow", None)
 
+    context = {"source": source}
+    if source in {config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE}:
+        context["entry_id"] = entry.entry_id
+
     with patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
     ):
         result = await hass.config_entries.flow.async_init(
-            "comp", context={"source": source}, data=user_input
+            "comp", context=context, data=user_input
         )
 
     for key in expected_result:
@@ -5482,12 +5486,16 @@ async def test_starting_config_flow_on_single_config_entry_2(
 
     mock_platform(hass, "comp.config_flow", None)
 
+    context = {"source": source}
+    if source in {config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE}:
+        context["entry_id"] = ignored_entry.entry_id
+
     with patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
     ):
         result = await hass.config_entries.flow.async_init(
-            "comp", context={"source": source}, data=user_input
+            "comp", context=context, data=user_input
         )
 
     for key in expected_result:
