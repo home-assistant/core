@@ -233,7 +233,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to manually reconfigure a config entry."""
         self._reconnect_entry = self._get_reconfigure_entry()
