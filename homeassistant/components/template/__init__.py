@@ -15,13 +15,12 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -31,33 +30,9 @@ from homeassistant.util.hass_dict import HassKey
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
-from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
-
-
-@callback
-def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
-    """Return all template entity ids that reference the blueprint."""
-    return [
-        entity_id
-        for platform in async_get_platforms(hass, DOMAIN)
-        for entity_id, template_entity in platform.entities.items()
-        if isinstance(template_entity, TemplateEntity)
-        and template_entity.referenced_blueprint == blueprint_path
-    ]
-
-
-@callback
-def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Return the blueprint the template entity is based on or None."""
-    for platform in async_get_platforms(hass, DOMAIN):
-        if isinstance(
-            (template_entity := platform.entities.get(entity_id)), TemplateEntity
-        ):
-            return template_entity.referenced_blueprint
-    return None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

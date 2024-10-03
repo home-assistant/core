@@ -5,19 +5,42 @@ import logging
 from homeassistant.components import blueprint
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.singleton import singleton
 
 from .const import DOMAIN, TEMPLATE_BLUEPRINT_SCHEMA
+from .template_entity import TemplateEntity
 
 DATA_BLUEPRINTS = "template_blueprints"
 
 LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
+    """Return all template entity ids that reference the blueprint."""
+    return [
+        entity_id
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity_id, template_entity in platform.entities.items()
+        if isinstance(template_entity, TemplateEntity)
+        and template_entity.referenced_blueprint == blueprint_path
+    ]
+
+
+@callback
+def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the blueprint the template entity is based on or None."""
+    for platform in async_get_platforms(hass, DOMAIN):
+        if isinstance(
+            (template_entity := platform.entities.get(entity_id)), TemplateEntity
+        ):
+            return template_entity.referenced_blueprint
+    return None
+
+
 def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
     """Return True if any template references the blueprint."""
-    from . import templates_with_blueprint  # pylint: disable=import-outside-toplevel
-
     return len(templates_with_blueprint(hass, blueprint_path)) > 0
 
 

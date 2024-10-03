@@ -4,7 +4,7 @@ from collections.abc import Iterator
 import contextlib
 from os import PathLike
 import pathlib
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -129,19 +129,19 @@ async def test_inverted_binary_sensor(
     assert inverted_bar
     assert inverted_bar.state == "off"
 
-    foo_template = template.blueprint_in_template(hass, "binary_sensor.foo")
-    inverted_foo_template = template.blueprint_in_template(
+    foo_template = template.helpers.blueprint_in_template(hass, "binary_sensor.foo")
+    inverted_foo_template = template.helpers.blueprint_in_template(
         hass, "binary_sensor.inverted_foo"
     )
     assert foo_template is None
     assert inverted_foo_template == "inverted_binary_sensor.yaml"
 
-    inverted_binary_sensor_blueprint_entity_ids = template.templates_with_blueprint(
-        hass, "inverted_binary_sensor.yaml"
+    inverted_binary_sensor_blueprint_entity_ids = (
+        template.helpers.templates_with_blueprint(hass, "inverted_binary_sensor.yaml")
     )
     assert len(inverted_binary_sensor_blueprint_entity_ids) == 2
 
-    assert len(template.templates_with_blueprint(hass, "dummy.yaml")) == 0
+    assert len(template.helpers.templates_with_blueprint(hass, "dummy.yaml")) == 0
 
     with pytest.raises(BlueprintInUse):
         await template.async_get_blueprints(hass).async_remove_blueprint(
@@ -152,7 +152,7 @@ async def test_inverted_binary_sensor(
 async def test_domain_blueprint(hass: HomeAssistant) -> None:
     """Test DomainBlueprint services."""
     reload_handler_calls = async_mock_service(hass, DOMAIN, SERVICE_RELOAD)
-    mock_create_file = AsyncMock()
+    mock_create_file = MagicMock()
     mock_create_file.return_value = True
 
     with patch(
@@ -229,6 +229,14 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert (
-        len(template.templates_with_blueprint(hass, "inverted_binary_sensor.yaml")) == 1
+        len(
+            template.helpers.templates_with_blueprint(
+                hass, "inverted_binary_sensor.yaml"
+            )
+        )
+        == 1
     )
-    assert template.blueprint_in_template(hass, "binary_sensor.test_entity") is None
+    assert (
+        template.helpers.blueprint_in_template(hass, "binary_sensor.test_entity")
+        is None
+    )
