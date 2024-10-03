@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -142,9 +143,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self) -> None:
-        """Init Config Flow."""
-        self._entry: ConfigEntry | None = None
+    _entry: ConfigEntry
 
     @staticmethod
     @callback
@@ -169,7 +168,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_DESTINATION],
                 user_input[CONF_REGION],
             ):
-                if self._entry:
+                if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
                         self._entry,
                         title=user_input[CONF_NAME],
@@ -196,8 +195,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert self._entry
+        self._entry = self._get_reconfigure_entry()
 
         data = self._entry.data.copy()
         data[CONF_REGION] = data[CONF_REGION].lower()

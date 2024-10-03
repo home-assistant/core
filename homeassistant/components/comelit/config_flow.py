@@ -68,7 +68,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Comelit."""
 
     VERSION = 1
-    _reauth_entry: ConfigEntry | None
+    _reauth_entry: ConfigEntry
     _reauth_host: str
     _reauth_port: int
     _reauth_type: str
@@ -106,9 +106,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         self._reauth_host = entry_data[CONF_HOST]
         self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
         self._reauth_type = entry_data.get(CONF_TYPE, BRIDGE)
@@ -120,7 +118,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirm."""
-        assert self._reauth_entry
         errors = {}
 
         if user_input is not None:
