@@ -120,8 +120,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     {
                         CONF_HOST: entry_data[CONF_HOST],
-                        CONF_PORT: entry_data[CONF_PORT],
-                        CONF_TYPE: entry_data[CONF_TYPE],
+                        CONF_PORT: entry_data.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_TYPE: entry_data.get(CONF_TYPE, BRIDGE),
                     }
                     | user_input,
                 )
@@ -137,9 +137,9 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data={
                         CONF_HOST: entry_data[CONF_HOST],
-                        CONF_PORT: entry_data[CONF_PORT],
+                        CONF_PORT: entry_data.get(CONF_PORT, DEFAULT_PORT),
                         CONF_PIN: user_input[CONF_PIN],
-                        CONF_TYPE: entry_data[CONF_TYPE],
+                        CONF_TYPE: entry_data.get(CONF_TYPE, BRIDGE),
                     },
                 )
 
