@@ -111,12 +111,12 @@
   },
   "issues": {
     "deprecated_service_weather_get_forecast": {
-      "title": "Detected use of deprecated service `weather.get_forecast`",
+      "title": "Detected use of deprecated service weather.get_forecast",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]",
-            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to close this issue."
+            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **Submit** to close this issue."
           }
         }
       }

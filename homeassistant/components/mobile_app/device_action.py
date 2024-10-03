@@ -64,7 +64,6 @@ async def async_call_action_from_config(
             continue
 
         value_template = config[key]
-        template.attach(hass, value_template)
 
         try:
             service_data[key] = template.render_complex(value_template, variables)

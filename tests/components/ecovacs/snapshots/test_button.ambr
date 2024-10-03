@@ -229,7 +229,7 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
-# name: test_buttons[yna5x1][button.ozmo_950_reset_side_brushes_lifespan:entity-registry]
+# name: test_buttons[yna5x1][button.ozmo_950_reset_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -241,7 +241,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.ozmo_950_reset_side_brushes_lifespan',
+    'entity_id': 'button.ozmo_950_reset_side_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -253,7 +253,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset side brushes lifespan',
+    'original_name': 'Reset side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -262,13 +262,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[yna5x1][button.ozmo_950_reset_side_brushes_lifespan:state]
+# name: test_buttons[yna5x1][button.ozmo_950_reset_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Reset side brushes lifespan',
+      'friendly_name': 'Ozmo 950 Reset side brush lifespan',
     }),
     'context': <ANY>,
-    'entity_id': 'button.ozmo_950_reset_side_brushes_lifespan',
+    'entity_id': 'button.ozmo_950_reset_side_brush_lifespan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

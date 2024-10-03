@@ -13,8 +13,14 @@
     }
   },
   "services": {
-    "lock": "mdi:lock",
-    "open": "mdi:door-open",
-    "unlock": "mdi:lock-open-variant"
+    "lock": {
+      "service": "mdi:lock"
+    },
+    "open": {
+      "service": "mdi:door-open"
+    },
+    "unlock": {
+      "service": "mdi:lock-open-variant"
+    }
   }
 }

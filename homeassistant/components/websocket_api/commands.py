@@ -36,6 +36,10 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -366,14 +370,17 @@ def _send_handle_get_states_response(
 @callback
 def _forward_entity_changes(
     send_message: Callable[[str | bytes | dict[str, Any]], None],
-    entity_ids: set[str],
+    entity_ids: set[str] | None,
+    entity_filter: Callable[[str], bool] | None,
     user: User,
     message_id_as_bytes: bytes,
     event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
-    if entity_ids and entity_id not in entity_ids:
+    if (entity_ids and entity_id not in entity_ids) or (
+        entity_filter and not entity_filter(entity_id)
+    ):
         return
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
@@ -381,7 +388,7 @@ def _forward_entity_changes(
     if (
         not user.is_admin
         and not permissions.access_all_entities(POLICY_READ)
-        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+        and not permissions.check_entity(entity_id, POLICY_READ)
     ):
         return
     send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
@@ -392,43 +399,55 @@ def _forward_entity_changes(
     {
         vol.Required("type"): "subscribe_entities",
         vol.Optional("entity_ids"): cv.entity_ids,
+        **INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.schema,
     }
 )
 def handle_subscribe_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe entities command."""
-    entity_ids = set(msg.get("entity_ids", []))
+    entity_ids = set(msg.get("entity_ids", [])) or None
+    _filter = convert_include_exclude_filter(msg)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
-    message_id_as_bytes = str(msg["id"]).encode()
-    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
+    msg_id = msg["id"]
+    message_id_as_bytes = str(msg_id).encode()
+    connection.subscriptions[msg_id] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
             _forward_entity_changes,
             connection.send_message,
             entity_ids,
+            entity_filter,
             connection.user,
             message_id_as_bytes,
         ),
     )
-    connection.send_result(msg["id"])
+    connection.send_result(msg_id)
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
     try:
-        serialized_states = [
-            state.as_compressed_state_json
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        ]
+        if entity_ids or entity_filter:
+            serialized_states = [
+                state.as_compressed_state_json
+                for state in states
+                if (not entity_ids or state.entity_id in entity_ids)
+                and (not entity_filter or entity_filter(state.entity_id))
+            ]
+        else:
+            # Fast path when not filtering
+            serialized_states = [state.as_compressed_state_json for state in states]
     except (ValueError, TypeError):
         pass
     else:
-        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        _send_handle_entities_init_response(
+            connection, message_id_as_bytes, serialized_states
+        )
         return
 
     serialized_states = []
@@ -443,18 +462,22 @@ def handle_subscribe_entities(
                 ),
             )
 
-    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+    _send_handle_entities_init_response(
+        connection, message_id_as_bytes, serialized_states
+    )
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
+    connection: ActiveConnection,
+    message_id_as_bytes: bytes,
+    serialized_states: list[bytes],
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
         b"".join(
             (
                 b'{"id":',
-                str(msg_id).encode(),
+                message_id_as_bytes,
                 b',"type":"event","event":{"a":{',
                 b",".join(serialized_states),
                 b"}}}",
@@ -836,9 +859,9 @@ def handle_fire_event(
 @decorators.websocket_command(
     {
         vol.Required("type"): "validate_config",
-        vol.Optional("trigger"): cv.match_all,
-        vol.Optional("condition"): cv.match_all,
-        vol.Optional("action"): cv.match_all,
+        vol.Optional("triggers"): cv.match_all,
+        vol.Optional("conditions"): cv.match_all,
+        vol.Optional("actions"): cv.match_all,
     }
 )
 @decorators.async_response
@@ -853,9 +876,13 @@ async def handle_validate_config(
     result = {}
 
     for key, schema, validator in (
-        ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
-        ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
+        ("triggers", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
+        (
+            "conditions",
+            cv.CONDITIONS_SCHEMA,
+            condition.async_validate_conditions_config,
+        ),
+        ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue

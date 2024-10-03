@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from bring_api.bring import Bring
-from bring_api.exceptions import (
+from bring_api import (
+    Bring,
     BringAuthException,
     BringParseException,
     BringRequestException,
@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .coordinator import BringDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 

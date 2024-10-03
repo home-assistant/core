@@ -75,16 +75,25 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
-        for task_id in uids:
+        if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
             try:
-                await self.coordinator.api.tasks[task_id].delete()
+                await self.coordinator.api.tasks.clearCompletedTodos.post()
             except ClientResponseError as e:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key=f"delete_{self.entity_description.key}_failed",
+                    translation_key="delete_completed_todos_failed",
                 ) from e
+        else:
+            for task_id in uids:
+                try:
+                    await self.coordinator.api.tasks[task_id].delete()
+                except ClientResponseError as e:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key=f"delete_{self.entity_description.key}_failed",
+                    ) from e
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -112,9 +121,22 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 translation_key=f"move_{self.entity_description.key}_item_failed",
                 translation_placeholders={"pos": str(pos)},
             ) from e
+        else:
+            # move tasks in the coordinator until we have fresh data
+            tasks = self.coordinator.data.tasks
+            new_pos = (
+                tasks.index(next(task for task in tasks if task["id"] == previous_uid))
+                + 1
+                if previous_uid
+                else 0
+            )
+            old_pos = tasks.index(next(task for task in tasks if task["id"] == uid))
+            tasks.insert(new_pos, tasks.pop(old_pos))
+            await self.coordinator.async_request_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
+        refresh_required = False
         current_item = next(
             (task for task in (self.todo_items or []) if task.uid == item.uid),
             None,
@@ -123,7 +145,6 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
-            assert item.due
 
         if (
             self.entity_description.key is HabiticaTodoList.TODOS
@@ -133,18 +154,24 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         else:
             date = None
 
-        try:
-            await self.coordinator.api.tasks[item.uid].put(
-                text=item.summary,
-                notes=item.description or "",
-                date=date,
-            )
-        except ClientResponseError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key=f"update_{self.entity_description.key}_item_failed",
-                translation_placeholders={"name": item.summary or ""},
-            ) from e
+        if (
+            item.summary != current_item.summary
+            or item.description != current_item.description
+            or item.due != current_item.due
+        ):
+            try:
+                await self.coordinator.api.tasks[item.uid].put(
+                    text=item.summary,
+                    notes=item.description or "",
+                    date=date,
+                )
+                refresh_required = True
+            except ClientResponseError as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key=f"update_{self.entity_description.key}_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
 
         try:
             # Score up or down if item status changed
@@ -155,6 +182,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["up"].post()
                 )
+                refresh_required = True
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
                 and item.status == TodoItemStatus.NEEDS_ACTION
@@ -162,6 +190,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()
                 )
+                refresh_required = True
             else:
                 score_result = None
 
@@ -180,8 +209,8 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             persistent_notification.async_create(
                 self.hass, message=msg, title="Habitica"
             )
-
-        await self.coordinator.async_refresh()
+        if refresh_required:
+            await self.coordinator.async_request_refresh()
 
 
 class HabiticaTodosListEntity(BaseHabiticaListEntity):
@@ -245,7 +274,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
 
 class HabiticaDailiesListEntity(BaseHabiticaListEntity):

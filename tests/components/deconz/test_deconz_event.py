@@ -17,20 +17,13 @@ from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_RELATIVE_ROTARY_EVENT,
     RELATIVE_ROTARY_DECONZ_TO_EVENT,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_EVENT,
-    CONF_ID,
-    CONF_UNIQUE_ID,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import WebsocketDataType
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.mark.parametrize(
@@ -78,7 +71,7 @@ from tests.common import async_capture_events
 async def test_deconz_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz events."""
@@ -167,17 +160,6 @@ async def test_deconz_events(
     await sensor_ws_data({"id": "1", "name": "other name"})
     assert len(captured_events) == 4
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 3
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "alarm_system_payload",
@@ -246,7 +228,7 @@ async def test_deconz_events(
 async def test_deconz_alarm_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz alarm events."""
@@ -337,17 +319,6 @@ async def test_deconz_alarm_events(
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
     assert len(captured_events) == 4
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 4
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "sensor_payload",
@@ -380,7 +351,7 @@ async def test_deconz_alarm_events(
 async def test_deconz_presence_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz presence events."""
@@ -426,17 +397,6 @@ async def test_deconz_presence_events(
     await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
     assert len(captured_events) == 0
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 5
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "sensor_payload",
@@ -468,7 +428,7 @@ async def test_deconz_presence_events(
 async def test_deconz_relative_rotary_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
@@ -514,17 +474,6 @@ async def test_deconz_relative_rotary_events(
     await sensor_ws_data({"name": "123"})
     assert len(captured_events) == 0
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "sensor_payload",
@@ -549,7 +498,7 @@ async def test_deconz_relative_rotary_events(
 async def test_deconz_events_bad_unique_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify no devices are created if unique id is bad or missing."""
     assert len(hass.states.async_all()) == 1

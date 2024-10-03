@@ -29,7 +29,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self.entry: LidarrConfigEntry | None = None
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

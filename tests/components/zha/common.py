@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.zha.helpers import ZHADeviceProxy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
@@ -123,7 +124,9 @@ async def send_attributes_report(
     await hass.async_block_till_done()
 
 
-def find_entity_id(domain, zha_device, hass: HomeAssistant, qualifier=None):
+def find_entity_id(
+    domain: str, zha_device: ZHADeviceProxy, hass: HomeAssistant, qualifier=None
+) -> str | None:
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -136,11 +139,13 @@ def find_entity_id(domain, zha_device, hass: HomeAssistant, qualifier=None):
         for entity_id in entities:
             if qualifier in entity_id:
                 return entity_id
-    else:
-        return entities[0]
+        return None
+    return entities[0]
 
 
-def find_entity_ids(domain, zha_device, hass: HomeAssistant):
+def find_entity_ids(
+    domain: str, zha_device: ZHADeviceProxy, hass: HomeAssistant
+) -> list[str]:
     """Find the entity ids under the testing.
 
     This is used to get the entity id in order to get the state from the state

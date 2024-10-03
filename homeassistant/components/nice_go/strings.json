@@ -1,0 +1,77 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "switch": {
+      "vacation_mode": {
+        "name": "Vacation mode"
+      }
+    },
+    "event": {
+      "barrier_obstructed": {
+        "name": "Barrier obstructed",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "barrier_obstructed": "Barrier obstructed"
+            }
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "firmware_update_required": {
+      "title": "Firmware update required",
+      "description": "Your device ({device_name}) requires a firmware update on the Nice G.O. app in order to work with this integration. Please update the firmware on the Nice G.O. app and reconfigure this integration."
+    }
+  },
+  "exceptions": {
+    "close_cover_error": {
+      "message": "Error closing the barrier: {exception}"
+    },
+    "open_cover_error": {
+      "message": "Error opening the barrier: {exception}"
+    },
+    "light_on_error": {
+      "message": "Error while turning on the light: {exception}"
+    },
+    "light_off_error": {
+      "message": "Error while turning off the light: {exception}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on the switch: {exception}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off the switch: {exception}"
+    }
+  }
+}

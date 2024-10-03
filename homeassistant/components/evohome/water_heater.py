@@ -31,8 +31,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
+from .entity import EvoChild
 
 if TYPE_CHECKING:
     from . import EvoBroker
@@ -74,7 +74,7 @@ async def async_setup_platform(
 
 
 class EvoDHW(EvoChild, WaterHeaterEntity):
-    """Base for a Honeywell TCC DHW controller (aka boiler)."""
+    """Base for any evohome-compatible DHW controller."""
 
     _attr_name = "DHW controller"
     _attr_icon = "mdi:thermometer-lines"
@@ -84,7 +84,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _evo_device: evo.HotWater  # mypy hint
 
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.HotWater) -> None:
-        """Initialize an evohome DHW controller."""
+        """Initialize an evohome-compatible DHW controller."""
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.dhwId

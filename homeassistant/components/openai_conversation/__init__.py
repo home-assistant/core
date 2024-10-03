@@ -19,6 +19,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
@@ -88,7 +89,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
-    client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
+    client = openai.AsyncOpenAI(
+        api_key=entry.data[CONF_API_KEY],
+        http_client=get_async_client(hass),
+    )
+
+    # Cache current platform data which gets added to each request (caching done by library)
+    _ = await hass.async_add_executor_job(client.platform_headers)
+
     try:
         await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:

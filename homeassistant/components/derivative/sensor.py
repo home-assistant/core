@@ -10,9 +10,11 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -237,6 +239,16 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 )
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
+
+            # For total inreasing sensors, the value is expected to continuously increase.
+            # A negative derivative for a total increasing sensor likely indicates the
+            # sensor has been reset. To prevent inaccurate data, discard this sample.
+            if (
+                new_state.attributes.get(ATTR_STATE_CLASS)
+                == SensorStateClass.TOTAL_INCREASING
+                and new_derivative < 0
+            ):
+                return
 
             # add latest derivative to the window list
             self._state_list.append(

@@ -1,247 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'modes': dict({
-      'auto': dict({
-        'fanLevels': list([
-          'quiet',
-          'low',
-          'medium',
-        ]),
-        'horizontalSwing': list([
-          'stopped',
-          'fixedLeft',
-          'fixedCenterLeft',
-        ]),
-        'light': list([
-          'on',
-          'off',
-        ]),
-        'swing': list([
-          'stopped',
-          'fixedTop',
-          'fixedMiddleTop',
-        ]),
-        'temperatures': dict({
-          'C': dict({
-            'isNative': True,
-            'values': list([
-              10,
-              16,
-              17,
-              18,
-              19,
-              20,
-            ]),
-          }),
-          'F': dict({
-            'isNative': False,
-            'values': list([
-              64,
-              66,
-              68,
-            ]),
-          }),
-        }),
-      }),
-      'cool': dict({
-        'fanLevels': list([
-          'quiet',
-          'low',
-          'medium',
-        ]),
-        'horizontalSwing': list([
-          'stopped',
-          'fixedLeft',
-          'fixedCenterLeft',
-        ]),
-        'light': list([
-          'on',
-          'off',
-        ]),
-        'swing': list([
-          'stopped',
-          'fixedTop',
-          'fixedMiddleTop',
-        ]),
-        'temperatures': dict({
-          'C': dict({
-            'isNative': True,
-            'values': list([
-              10,
-              16,
-              17,
-              18,
-              19,
-              20,
-            ]),
-          }),
-          'F': dict({
-            'isNative': False,
-            'values': list([
-              64,
-              66,
-              68,
-            ]),
-          }),
-        }),
-      }),
-      'dry': dict({
-        'horizontalSwing': list([
-          'stopped',
-          'fixedLeft',
-          'fixedCenterLeft',
-        ]),
-        'light': list([
-          'on',
-          'off',
-        ]),
-        'swing': list([
-          'stopped',
-          'fixedTop',
-          'fixedMiddleTop',
-        ]),
-        'temperatures': dict({
-          'C': dict({
-            'isNative': True,
-            'values': list([
-              10,
-              16,
-              17,
-              18,
-              19,
-              20,
-            ]),
-          }),
-          'F': dict({
-            'isNative': False,
-            'values': list([
-              64,
-              66,
-              68,
-            ]),
-          }),
-        }),
-      }),
-      'fan': dict({
-        'fanLevels': list([
-          'quiet',
-          'low',
-          'medium',
-        ]),
-        'horizontalSwing': list([
-          'stopped',
-          'fixedLeft',
-          'fixedCenterLeft',
-        ]),
-        'light': list([
-          'on',
-          'off',
-        ]),
-        'swing': list([
-          'stopped',
-          'fixedTop',
-          'fixedMiddleTop',
-        ]),
-        'temperatures': dict({
-        }),
-      }),
-      'heat': dict({
-        'fanLevels': list([
-          'quiet',
-          'low',
-          'medium',
-        ]),
-        'horizontalSwing': list([
-          'stopped',
-          'fixedLeft',
-          'fixedCenterLeft',
-        ]),
-        'light': list([
-          'on',
-          'off',
-        ]),
-        'swing': list([
-          'stopped',
-          'fixedTop',
-          'fixedMiddleTop',
-        ]),
-        'temperatures': dict({
-          'C': dict({
-            'isNative': True,
-            'values': list([
-              10,
-              16,
-              17,
-              18,
-              19,
-              20,
-            ]),
-          }),
-          'F': dict({
-            'isNative': False,
-            'values': list([
-              63,
-              64,
-              66,
-            ]),
-          }),
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_diagnostics.1
-  dict({
-    'low': 'low',
-    'medium': 'medium',
-    'quiet': 'quiet',
-  })
-# ---
-# name: test_diagnostics.2
-  dict({
-    'fixedmiddletop': 'fixedMiddleTop',
-    'fixedtop': 'fixedTop',
-    'stopped': 'stopped',
-  })
-# ---
-# name: test_diagnostics.3
-  dict({
-    'fixedcenterleft': 'fixedCenterLeft',
-    'fixedleft': 'fixedLeft',
-    'stopped': 'stopped',
-  })
-# ---
-# name: test_diagnostics.4
-  dict({
-    'fanlevel': 'low',
-    'horizontalswing': 'stopped',
-    'light': 'on',
-    'mode': 'heat',
-    'on': True,
-    'swing': 'stopped',
-    'targettemperature': 21,
-    'temperatureunit': 'c',
-  })
-# ---
-# name: test_diagnostics.5
-  dict({
-    'fanlevel': 'high',
-    'horizontalswing': 'stopped',
-    'light': 'on',
-    'mode': 'cool',
-    'on': True,
-    'swing': 'stopped',
-    'targettemperature': 21,
-    'temperatureunit': 'c',
-  })
-# ---
-# name: test_diagnostics.6
-  dict({
-  })
-# ---
-# name: test_diagnostics[full_snapshot]
-  dict({
     'AAZZAAZZ': dict({
       'ac_states': dict({
         'fanLevel': 'low',
@@ -332,7 +91,8 @@
       'motion_sensors': dict({
       }),
       'name': 'Kitchen',
-      'pm25': 1,
+      'pm25': None,
+      'pm25_pure': 1,
       'pure_ac_integration': False,
       'pure_boost_enabled': False,
       'pure_conf': dict({
@@ -665,6 +425,7 @@
       }),
       'name': 'Hallway',
       'pm25': None,
+      'pm25_pure': None,
       'pure_ac_integration': None,
       'pure_boost_enabled': None,
       'pure_conf': dict({
@@ -791,7 +552,8 @@
       'motion_sensors': dict({
       }),
       'name': 'Bedroom',
-      'pm25': 1,
+      'pm25': None,
+      'pm25_pure': 1,
       'pure_ac_integration': False,
       'pure_boost_enabled': False,
       'pure_conf': dict({

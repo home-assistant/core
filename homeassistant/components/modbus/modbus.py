@@ -76,8 +76,8 @@ from .validators import check_config
 _LOGGER = logging.getLogger(__name__)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")
-RunEntry = namedtuple("RunEntry", "attr func")
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")  # noqa: PYI024
+RunEntry = namedtuple("RunEntry", "attr func")  # noqa: PYI024
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,
@@ -341,7 +341,7 @@ class ModbusHub:
                 self._log_error(err, error_state=False)
                 return
             message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
+            _LOGGER.warning(message)
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""

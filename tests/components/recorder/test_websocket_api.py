@@ -35,6 +35,7 @@ from .common import (
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 from .conftest import InstrumentedMigration
@@ -155,12 +156,17 @@ async def test_statistics_during_period(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=POWER_SENSOR_KW_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -608,7 +614,12 @@ async def test_statistic_during_period(
     }
 
     # Test we can automatically convert units
-    hass.states.async_set("sensor.test", None, attributes=ENERGY_SENSOR_WH_ATTRIBUTES)
+    hass.states.async_set(
+        "sensor.test",
+        None,
+        attributes=ENERGY_SENSOR_WH_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
     await client.send_json_auto_id(
         {
             "type": "recorder/statistic_during_period",
@@ -1265,11 +1276,13 @@ async def test_statistics_during_period_unit_conversion(
     converted_value,
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1350,12 +1363,16 @@ async def test_sum_statistics_during_period_unit_conversion(
     converted_value,
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 0, attributes=attributes)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 0, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1471,7 +1488,7 @@ async def test_statistics_during_period_in_the_past(
 ) -> None:
     """Test statistics_during_period in the past."""
     await hass.config.async_set_time_zone("UTC")
-    now = dt_util.utcnow().replace()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
@@ -1726,7 +1743,7 @@ async def test_list_statistic_ids(
     unit_class,
 ) -> None:
     """Test list_statistic_ids."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -1740,7 +1757,9 @@ async def test_list_statistic_ids(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
@@ -1890,7 +1909,7 @@ async def test_list_statistic_ids_unit_change(
     unit_class,
 ) -> None:
     """Test list_statistic_ids."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -1903,7 +1922,9 @@ async def test_list_statistic_ids_unit_change(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1926,7 +1947,9 @@ async def test_list_statistic_ids_unit_change(
     ]
 
     # Change the state unit
-    hass.states.async_set("sensor.test", 10, attributes=attributes2)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes2, timestamp=now.timestamp()
+    )
 
     await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
     response = await client.receive_json()
@@ -1961,11 +1984,23 @@ async def test_validate_statistics(
     await assert_validation_result(client, {})
 
 
+async def test_update_statistics_issues(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update_statistics_issues can be called."""
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+
 async def test_clear_statistics(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test removing statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES
@@ -1975,9 +2010,15 @@ async def test_clear_statistics(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test1", state, attributes=attributes)
-    hass.states.async_set("sensor.test2", state * 2, attributes=attributes)
-    hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test1", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test2", state * 2, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test3", state * 3, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -2075,6 +2116,30 @@ async def test_clear_statistics(
     assert response["result"] == {"sensor.test2": expected_response["sensor.test2"]}
 
 
+async def test_clear_statistics_time_out(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing statistics with time-out error."""
+    client = await hass_ws_client()
+
+    with (
+        patch.object(recorder.tasks.ClearStatisticsTask, "run"),
+        patch.object(recorder.websocket_api, "CLEAR_STATISTICS_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "clear_statistics timed out",
+    }
+
+
 @pytest.mark.parametrize(
     ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
@@ -2088,7 +2153,7 @@ async def test_update_statistics_metadata(
     new_display_unit,
 ) -> None:
     """Test removing statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2097,7 +2162,9 @@ async def test_update_statistics_metadata(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2173,11 +2240,36 @@ async def test_update_statistics_metadata(
     }
 
 
+async def test_update_statistics_metadata_time_out(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update statistics metadata with time-out error."""
+    client = await hass_ws_client()
+
+    with (
+        patch.object(recorder.tasks.UpdateStatisticsMetadataTask, "run"),
+        patch.object(recorder.websocket_api, "UPDATE_STATISTICS_METADATA_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/update_statistics_metadata",
+                "statistic_id": "sensor.test",
+                "unit_of_measurement": "dogs",
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "update_statistics_metadata timed out",
+    }
+
+
 async def test_change_statistics_unit(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test change unit of recorded statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2186,7 +2278,9 @@ async def test_change_statistics_unit(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2322,7 +2416,7 @@ async def test_change_statistics_unit_errors(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test change unit of recorded statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2376,7 +2470,9 @@ async def test_change_statistics_unit_errors(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2520,7 +2616,9 @@ async def test_recorder_info_migration_queue_exhausted(
             recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
         ),
     ):
-        async with async_test_recorder(hass, wait_recorder=False):
+        async with async_test_recorder(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        ):
             await hass.async_add_executor_job(
                 instrument_migration.migration_started.wait
             )
@@ -2599,7 +2697,7 @@ async def test_get_statistics_metadata(
     unit_class,
 ) -> None:
     """Test get_statistics_metadata."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -2678,10 +2776,14 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
-    hass.states.async_set("sensor.test2", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test2", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json_auto_id(

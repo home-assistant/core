@@ -15,33 +15,20 @@ from dsmr_parser import obis_references
 from dsmr_parser.obis_references import (
     BELGIUM_CURRENT_AVERAGE_DEMAND,
     BELGIUM_MAXIMUM_DEMAND_MONTH,
-    BELGIUM_MBUS1_DEVICE_TYPE,
-    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-    BELGIUM_MBUS1_METER_READING1,
-    BELGIUM_MBUS1_METER_READING2,
-    BELGIUM_MBUS2_DEVICE_TYPE,
-    BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-    BELGIUM_MBUS2_METER_READING1,
-    BELGIUM_MBUS2_METER_READING2,
-    BELGIUM_MBUS3_DEVICE_TYPE,
-    BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-    BELGIUM_MBUS3_METER_READING1,
-    BELGIUM_MBUS3_METER_READING2,
-    BELGIUM_MBUS4_DEVICE_TYPE,
-    BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-    BELGIUM_MBUS4_METER_READING1,
-    BELGIUM_MBUS4_METER_READING2,
     CURRENT_ELECTRICITY_USAGE,
     ELECTRICITY_ACTIVE_TARIFF,
     ELECTRICITY_EXPORTED_TOTAL,
     ELECTRICITY_IMPORTED_TOTAL,
     GAS_METER_READING,
     HOURLY_GAS_METER_READING,
+    MBUS_DEVICE_TYPE,
+    MBUS_EQUIPMENT_IDENTIFIER,
+    MBUS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
 
-from homeassistant.components.dsmr.sensor import SENSORS
+from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -562,20 +549,20 @@ async def test_belgian_meter(
         "BELGIUM_MAXIMUM_DEMAND_MONTH",
     )
     telegram.add(
-        BELGIUM_MBUS1_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS1_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 1),
             [
@@ -583,23 +570,23 @@ async def test_belgian_meter(
                 {"value": Decimal(745.695), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS1_METER_READING2",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS2_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 2), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS2_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 2),
             [{"value": "37464C4F32313139303333373332", "unit": ""}],
         ),
-        "BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS2_METER_READING1,
+        MBUS_METER_READING,
         MBusObject(
             (0, 2),
             [
@@ -607,23 +594,23 @@ async def test_belgian_meter(
                 {"value": Decimal(678.695), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS2_METER_READING1",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS3_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 3), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS3_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 3),
             [{"value": "37464C4F32313139303333373333", "unit": ""}],
         ),
-        "BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS3_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 3),
             [
@@ -631,23 +618,23 @@ async def test_belgian_meter(
                 {"value": Decimal(12.12), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS3_METER_READING2",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS4_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 4), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS4_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 4),
             [{"value": "37464C4F32313139303333373334", "unit": ""}],
         ),
-        "BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS4_METER_READING1,
+        MBUS_METER_READING,
         MBusObject(
             (0, 4),
             [
@@ -655,7 +642,7 @@ async def test_belgian_meter(
                 {"value": Decimal(13.13), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS4_METER_READING1",
+        "MBUS_METER_READING",
     )
     telegram.add(
         ELECTRICITY_ACTIVE_TARIFF,
@@ -777,20 +764,20 @@ async def test_belgian_meter_alt(
 
     telegram = Telegram()
     telegram.add(
-        BELGIUM_MBUS1_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS1_METER_READING1,
+        MBUS_METER_READING,
         MBusObject(
             (0, 1),
             [
@@ -798,23 +785,23 @@ async def test_belgian_meter_alt(
                 {"value": Decimal(123.456), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS1_METER_READING1",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS2_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 2), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS2_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 2),
             [{"value": "37464C4F32313139303333373332", "unit": ""}],
         ),
-        "BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS2_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 2),
             [
@@ -822,23 +809,23 @@ async def test_belgian_meter_alt(
                 {"value": Decimal(678.901), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS2_METER_READING2",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS3_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 3), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS3_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 3),
             [{"value": "37464C4F32313139303333373333", "unit": ""}],
         ),
-        "BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS3_METER_READING1,
+        MBUS_METER_READING,
         MBusObject(
             (0, 3),
             [
@@ -846,23 +833,23 @@ async def test_belgian_meter_alt(
                 {"value": Decimal(12.12), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS3_METER_READING1",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS4_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 4), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS4_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 4),
             [{"value": "37464C4F32313139303333373334", "unit": ""}],
         ),
-        "BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS4_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 4),
             [
@@ -870,7 +857,7 @@ async def test_belgian_meter_alt(
                 {"value": Decimal(13.13), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS4_METER_READING2",
+        "MBUS_METER_READING",
     )
 
     mock_entry = MockConfigEntry(
@@ -970,46 +957,46 @@ async def test_belgian_meter_mbus(
         "ELECTRICITY_ACTIVE_TARIFF",
     )
     telegram.add(
-        BELGIUM_MBUS1_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "006", "unit": ""}]),
-        "BELGIUM_MBUS1_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 1),
             [{"value": "37464C4F32313139303333373331", "unit": ""}],
         ),
-        "BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS2_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 2), [{"value": "003", "unit": ""}]),
-        "BELGIUM_MBUS2_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 2),
             [{"value": "37464C4F32313139303333373332", "unit": ""}],
         ),
-        "BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS3_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 3), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS3_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        MBUS_EQUIPMENT_IDENTIFIER,
         CosemObject(
             (0, 3),
             [{"value": "37464C4F32313139303333373333", "unit": ""}],
         ),
-        "BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER",
+        "MBUS_EQUIPMENT_IDENTIFIER",
     )
     telegram.add(
-        BELGIUM_MBUS3_METER_READING2,
+        MBUS_METER_READING,
         MBusObject(
             (0, 3),
             [
@@ -1017,15 +1004,15 @@ async def test_belgian_meter_mbus(
                 {"value": Decimal(12.12), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS3_METER_READING2",
+        "MBUS_METER_READING",
     )
     telegram.add(
-        BELGIUM_MBUS4_DEVICE_TYPE,
+        MBUS_DEVICE_TYPE,
         CosemObject((0, 4), [{"value": "007", "unit": ""}]),
-        "BELGIUM_MBUS4_DEVICE_TYPE",
+        "MBUS_DEVICE_TYPE",
     )
     telegram.add(
-        BELGIUM_MBUS4_METER_READING1,
+        MBUS_METER_READING,
         MBusObject(
             (0, 4),
             [
@@ -1033,7 +1020,7 @@ async def test_belgian_meter_mbus(
                 {"value": Decimal(13.13), "unit": "m3"},
             ],
         ),
-        "BELGIUM_MBUS4_METER_READING1",
+        "MBUS_METER_READING",
     )
 
     mock_entry = MockConfigEntry(
@@ -1057,20 +1044,32 @@ async def test_belgian_meter_mbus(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "unknown"
 
-    # check if gas consumption mbus2 is parsed correctly
+    # check if gas consumption mbus1 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption is None
 
-    # check if water usage mbus3 is parsed correctly
-    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
-    assert water_consumption is None
-
-    # check if gas consumption mbus4 is parsed correctly
+    # check if gas consumption mbus2 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
     assert gas_consumption is None
 
-    # check if gas consumption mbus4 is parsed correctly
+    # check if water usage mbus3 is parsed correctly
     water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption
+    assert water_consumption.state == "12.12"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if gas consumption mbus4 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
     assert water_consumption.state == "13.13"
     assert (
         water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
@@ -1522,7 +1521,79 @@ async def test_gas_meter_providing_energy_reading(
     )
 
 
-def test_all_obis_references_exists():
+async def test_heat_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if heat meter reading is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5",
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "004", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": "GJ"},
+            ],
+        ),
+        "MBUS_METER_READING",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    hass.loop.set_debug(True)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
+    assert heat_consumption.state == "745.695"
+    assert (
+        heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    )
+    assert (
+        heat_consumption.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.GIGA_JOULE
+    )
+    assert (
+        heat_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
+
+def test_all_obis_references_exists() -> None:
     """Verify that all attributes exist by name in database."""
     for sensor in SENSORS:
         assert hasattr(obis_references, sensor.obis_reference)
+
+    for sensors in SENSORS_MBUS_DEVICE_TYPE.values():
+        for sensor in sensors:
+            assert hasattr(obis_references, sensor.obis_reference)

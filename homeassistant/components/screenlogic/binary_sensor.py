@@ -9,7 +9,7 @@ from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -202,7 +202,9 @@ async def async_setup_entry(
             chem_sensor_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            cleanup_excluded_entity(
+                coordinator, BINARY_SENSOR_DOMAIN, chem_sensor_data_path
+            )
             continue
         if gateway.get_data(*chem_sensor_data_path):
             entities.append(
@@ -216,7 +218,9 @@ async def async_setup_entry(
             scg_sensor_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            cleanup_excluded_entity(
+                coordinator, BINARY_SENSOR_DOMAIN, scg_sensor_data_path
+            )
             continue
         if gateway.get_data(*scg_sensor_data_path):
             entities.append(

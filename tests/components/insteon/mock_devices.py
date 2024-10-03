@@ -30,7 +30,7 @@ class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
 class MockDevices:
     """Mock devices class."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Init the MockDevices class."""
         self._devices = {}
         self.modem = None
@@ -167,6 +167,14 @@ class MockDevices:
         if address:
             yield address
         await asyncio.sleep(0.01)
+
+    def values(self):
+        """Return the devices."""
+        return self._devices.values()
+
+    def items(self):
+        """Return the address, device pair."""
+        return self._devices.items()
 
     def subscribe(self, listener, force_strong_ref=False):
         """Mock the subscribe function."""

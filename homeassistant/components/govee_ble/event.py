@@ -35,6 +35,11 @@ MOTION_DESCRIPTION = EventEntityDescription(
     event_types=["motion"],
     device_class=EventDeviceClass.MOTION,
 )
+VIBRATION_DESCRIPTION = EventEntityDescription(
+    key="vibration",
+    event_types=["vibration"],
+    translation_key="vibration",
+)
 
 
 class GoveeBluetoothEventEntity(EventEntity):
@@ -95,6 +100,8 @@ async def async_setup_entry(
     sensor_type = model_info.sensor_type
     if sensor_type is SensorType.MOTION:
         descriptions = [MOTION_DESCRIPTION]
+    elif sensor_type is SensorType.VIBRATION:
+        descriptions = [VIBRATION_DESCRIPTION]
     elif sensor_type is SensorType.BUTTON:
         button_count = model_info.button_count
         descriptions = BUTTON_DESCRIPTIONS[0:button_count]

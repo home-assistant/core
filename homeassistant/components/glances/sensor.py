@@ -325,6 +325,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
 
     entity_description: GlancesSensorEntityDescription
     _attr_has_entity_name = True
+    _data_valid: bool = False
 
     def __init__(
         self,
@@ -351,14 +352,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     @property
     def available(self) -> bool:
         """Set sensor unavailable when native value is invalid."""
-        if super().available:
-            return (
-                not self._numeric_state_expected
-                or isinstance(value := self.native_value, (int, float))
-                or isinstance(value, str)
-                and value.isnumeric()
-            )
-        return False
+        return super().available and self._data_valid
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -368,10 +362,19 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
 
     def _update_native_value(self) -> None:
         """Update sensor native value from coordinator data."""
-        data = self.coordinator.data[self.entity_description.type]
-        if dict_val := data.get(self._sensor_label):
+        data = self.coordinator.data.get(self.entity_description.type)
+        if data and (dict_val := data.get(self._sensor_label)):
             self._attr_native_value = dict_val.get(self.entity_description.key)
-        elif self.entity_description.key in data:
+        elif data and (self.entity_description.key in data):
             self._attr_native_value = data.get(self.entity_description.key)
         else:
             self._attr_native_value = None
+        self._update_data_valid()
+
+    def _update_data_valid(self) -> None:
+        self._data_valid = self._attr_native_value is not None and (
+            not self._numeric_state_expected
+            or isinstance(self._attr_native_value, (int, float))
+            or isinstance(self._attr_native_value, str)
+            and self._attr_native_value.isnumeric()
+        )

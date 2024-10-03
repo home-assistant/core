@@ -63,7 +63,7 @@ def get_kodi_connection(
 class MockConnection:
     """A mock kodi connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the Kodi connection."""
         self._connected = connected
 
@@ -92,7 +92,7 @@ class MockConnection:
 class MockWSConnection:
     """A mock kodi websocket connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the websocket connection."""
         self._connected = connected
 

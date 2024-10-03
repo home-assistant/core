@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -20,7 +21,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -36,10 +37,10 @@ async def test_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -48,7 +49,7 @@ async def test_device_diagnostics(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test select platform."""
+    """Test device diagnostics platform."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

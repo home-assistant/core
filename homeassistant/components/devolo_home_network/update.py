@@ -26,6 +26,8 @@ from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class DevoloUpdateEntityDescription(UpdateEntityDescription):

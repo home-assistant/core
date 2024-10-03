@@ -207,8 +207,6 @@ class Doods(ImageProcessingEntity):
             ]
             self._covers = area_config[CONF_COVERS]
 
-        template.attach(hass, self._file_out)
-
         self._dconfig = dconfig
         self._matches = {}
         self._total_matches = 0
@@ -280,7 +278,7 @@ class Doods(ImageProcessingEntity):
                 )
 
         for path in paths:
-            _LOGGER.info("Saving results image to %s", path)
+            _LOGGER.debug("Saving results image to %s", path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 

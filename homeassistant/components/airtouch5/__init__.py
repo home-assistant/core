@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
 
 type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 

@@ -8,8 +8,11 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_number, input_select, media_player, switch
-from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
-from homeassistant.components.media_player.browse_media import BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaPlayerEntityFeature,
+)
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
@@ -55,7 +58,7 @@ def validate_config(config):
 class MockMediaPlayer(media_player.MediaPlayerEntity):
     """Mock media player for testing."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize the media player."""
         self.hass = hass
         self._name = name
@@ -220,7 +223,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
 
 
 @pytest.fixture
-async def mock_states(hass):
+async def mock_states(hass: HomeAssistant) -> Mock:
     """Set mock states used in tests."""
     result = Mock()
 
@@ -1279,6 +1282,7 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
 
     context = Context()
     hass.states.async_set("input_boolean.test", STATE_ON, context=context)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert hass.states.get("media_player.tv").state == STATE_OFF

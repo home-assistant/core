@@ -76,10 +76,12 @@ async def _assert_state(
     assert body == expected_image
 
 
+@respx.mock
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    imgbytes_jpg,
 ) -> None:
     """Test the config flow."""
 
@@ -538,6 +540,7 @@ async def test_trigger_image_custom_entity_picture(
     )
 
 
+@respx.mock
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

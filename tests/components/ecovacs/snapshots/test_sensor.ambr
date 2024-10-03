@@ -1,4 +1,152 @@
 # serializer version: 1
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_filter',
+    'unique_id': 'E1234567890000000003_lifespan_filter',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Filter lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_main_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Main brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_main_brush',
+    'unique_id': 'E1234567890000000003_lifespan_main_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Main brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_main_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_side_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_side_brush',
+    'unique_id': 'E1234567890000000003_lifespan_side_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Side brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_side_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_legacy_sensors[123][states]
+  list([
+    'sensor.e1234567890000000003_main_brush_lifespan',
+    'sensor.e1234567890000000003_side_brush_lifespan',
+    'sensor.e1234567890000000003_filter_lifespan',
+  ])
+# ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -910,7 +1058,7 @@
     'state': '80',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -922,7 +1070,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -934,7 +1082,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Side brushes lifespan',
+    'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -943,14 +1091,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brushes lifespan',
+      'friendly_name': 'Ozmo 950 Side brush lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

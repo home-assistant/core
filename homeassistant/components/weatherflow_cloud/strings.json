@@ -7,7 +7,7 @@
           "api_token": "Personal api token"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "description": "Reauthenticate with WeatherFlow",
         "data": {
           "api_token": "[%key:component::weatherflow_cloud::config::step::user::data::api_token%]"

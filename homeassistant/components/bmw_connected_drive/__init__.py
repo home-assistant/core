@@ -23,8 +23,6 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
 SERVICE_SCHEMA = vol.Schema(
     vol.Any(
         {vol.Required(ATTR_VIN): cv.string},

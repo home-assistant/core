@@ -25,19 +25,12 @@ class DoorBirdRequestView(HomeAssistantView):
         """Respond to requests from the device."""
         hass = request.app[KEY_HASS]
         token: str | None = request.query.get("token")
-        if (
-            token is None
-            or (door_station := get_door_station_by_token(hass, token)) is None
-        ):
+        if not token or not (door_station := get_door_station_by_token(hass, token)):
             return web.Response(
                 status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
-        if door_station:
-            event_data = door_station.get_event_data(event)
-        else:
-            event_data = {}
-
+        event_data = door_station.get_event_data(event)
         #
         # This integration uses a multiple different events.
         # It would be a major breaking change to change this to

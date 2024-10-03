@@ -20,15 +20,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,27 +106,23 @@ BINARY_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkBinarySensorEntity] = []
     for channel in reolink_data.host.api.channels:
         entities.extend(
-            [
-                ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
-                for entity_description in BINARY_PUSH_SENSORS
-                if entity_description.supported(reolink_data.host.api, channel)
-            ]
+            ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
+            for entity_description in BINARY_PUSH_SENSORS
+            if entity_description.supported(reolink_data.host.api, channel)
         )
         entities.extend(
-            [
-                ReolinkBinarySensorEntity(reolink_data, channel, entity_description)
-                for entity_description in BINARY_SENSORS
-                if entity_description.supported(reolink_data.host.api, channel)
-            ]
+            ReolinkBinarySensorEntity(reolink_data, channel, entity_description)
+            for entity_description in BINARY_SENSORS
+            if entity_description.supported(reolink_data.host.api, channel)
         )
 
     async_add_entities(entities)

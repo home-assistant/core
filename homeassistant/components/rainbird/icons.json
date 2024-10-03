@@ -22,7 +22,11 @@
     }
   },
   "services": {
-    "start_irrigation": "mdi:water",
-    "set_rain_delay": "mdi:water-sync"
+    "start_irrigation": {
+      "service": "mdi:water"
+    },
+    "set_rain_delay": {
+      "service": "mdi:water-sync"
+    }
   }
 }

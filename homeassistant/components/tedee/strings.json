@@ -53,12 +53,26 @@
       },
       "semi_locked": {
         "name": "Semi locked"
+      },
+      "uncalibrated": {
+        "name": "Lock uncalibrated"
       }
     },
     "sensor": {
       "pullspring_duration": {
         "name": "Pullspring duration"
       }
+    }
+  },
+  "exceptions": {
+    "lock_failed": {
+      "message": "Failed to lock the door. Lock {lock_id}"
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door. Lock {lock_id}"
+    },
+    "open_failed": {
+      "message": "Failed to unlatch the door. Lock {lock_id}"
     }
   }
 }

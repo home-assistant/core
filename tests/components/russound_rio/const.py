@@ -12,5 +12,5 @@ MOCK_CONFIG = {
     "port": PORT,
 }
 
-_CONTROLLER = namedtuple("Controller", ["mac_address", "controller_type"])
+_CONTROLLER = namedtuple("Controller", ["mac_address", "controller_type"])  # noqa: PYI024
 MOCK_CONTROLLERS = {1: _CONTROLLER(mac_address=HARDWARE_MAC, controller_type=MODEL)}

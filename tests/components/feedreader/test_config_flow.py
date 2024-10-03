@@ -11,9 +11,9 @@ from homeassistant.components.feedreader.const import (
     DEFAULT_MAX_ENTRIES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_URL
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -128,7 +128,9 @@ async def test_import(
     assert config_entries[0].data == expected_data
     assert config_entries[0].options == expected_options
 
-    assert issue_registry.async_get_issue(HA_DOMAIN, "deprecated_yaml_feedreader")
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_feedreader"
+    )
 
 
 async def test_import_errors(
@@ -160,14 +162,7 @@ async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     await hass.async_block_till_done()
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
@@ -199,14 +194,7 @@ async def test_reconfigure_errors(
     entry.add_to_hass(hass)
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
