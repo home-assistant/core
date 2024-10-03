@@ -77,7 +77,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize the Cloudflare config flow."""
@@ -89,7 +89,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Cloudflare."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -98,7 +98,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with Cloudflare."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and self.entry:
+        if user_input is not None:
             _, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
