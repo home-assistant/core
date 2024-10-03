@@ -16,6 +16,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
+    _reauth_entry: DevoloHomeNetworkConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -118,13 +120,13 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.host = entry_data[CONF_IP_ADDRESS]
-            placeholders = {
-                **self.context["title_placeholders"],
-                PRODUCT: entry.runtime_data.device.product,
-            }
-            self.context["title_placeholders"] = placeholders
+        self._reauth_entry = self._get_reauth_entry()
+        self.host = entry_data[CONF_IP_ADDRESS]
+        placeholders = {
+            **self.context["title_placeholders"],
+            PRODUCT: self._reauth_entry.runtime_data.device.product,
+        }
+        self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -137,13 +139,8 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA,
             )
 
-        reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert reauth_entry is not None
-
         data = {
             CONF_IP_ADDRESS: self.host,
             CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
-        return self.async_update_reload_and_abort(reauth_entry, data=data)
+        return self.async_update_reload_and_abort(self._reauth_entry, data=data)
