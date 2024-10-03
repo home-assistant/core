@@ -875,11 +875,6 @@ class DefaultAgent(ConversationEntity):
         start = time.monotonic()
 
         entity_registry = er.async_get(self.hass)
-        # states = [
-        #     state
-        #     for state in self.hass.states.async_all()
-        #     if async_should_expose(self.hass, DOMAIN, state.entity_id)
-        # ]
 
         # Gather entity names, keeping track of exposed names.
         # We try intent recognition with only exposed names first, then all names.
