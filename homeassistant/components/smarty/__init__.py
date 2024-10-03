@@ -59,6 +59,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
     discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
     discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
 
     def poll_device_update(event_time):
         """Update Smarty device."""
