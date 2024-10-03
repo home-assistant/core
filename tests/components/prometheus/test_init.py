@@ -351,8 +351,72 @@ def test_entity_metric_generates_metric_string_with_non_required_labels() -> Non
     )
 
 
-def test_entity_metric_with_value_assert_in_metrics() -> None:
-    """Test using EntityMetricWithValue assert_in_metrics."""
+def test_entity_metric_assert_helpers() -> None:
+    """Test using EntityMetric for both assert_in_metrics and assert_not_in_metrics."""
+    temp_metric = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+    )
+    climate_metric = (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+    )
+    excluded_cover_metric = (
+        "cover_state{"
+        'domain="cover",'
+        'entity="cover.curtain",'
+        'friendly_name="Curtain",'
+        'state="open"'
+        "}"
+    )
+    metrics = [
+        temp_metric,
+        climate_metric,
+    ]
+    # First make sure the excluded metric is not present
+    assert excluded_cover_metric not in metrics
+    # now check for actual metrics
+    temp_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    )
+    assert temp_entity_metric._metric_name_string == temp_metric
+    temp_entity_metric.assert_in_metrics(metrics)
+
+    climate_entity_metric = EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    )
+    assert climate_entity_metric._metric_name_string == climate_metric
+    climate_entity_metric.assert_in_metrics(metrics)
+
+    excluded_cover_entity_metric = EntityMetric(
+        metric_name="cover_state",
+        domain="cover",
+        friendly_name="Curtain",
+        entity="cover.curtain",
+        state="open",
+    )
+    assert excluded_cover_entity_metric._metric_name_string == excluded_cover_metric
+    excluded_cover_entity_metric.assert_not_in_metrics(metrics)
+
+
+def test_entity_metric_with_value_assert_helpers() -> None:
+    """Test using EntityMetricWithValue helpers, which is only assert_in_metrics."""
     temp_metric = (
         "homeassistant_sensor_temperature_celsius{"
         'domain="sensor",'
