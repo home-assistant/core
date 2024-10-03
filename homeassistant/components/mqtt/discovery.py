@@ -385,6 +385,7 @@ async def async_start(  # noqa: C901
                 continue
             topic = discovery_key.key
             discovery_message = integration_discovery_messages[topic]
+            del integration_discovery_messages[topic]
             _LOGGER.debug("Rediscover service on topic %s", topic)
             await async_integration_message_received(
                 discovery_message.integration, discovery_message.msg
