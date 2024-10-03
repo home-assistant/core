@@ -55,6 +55,7 @@ dependencies    = [
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==43.0.1",
     "Pillow==10.4.0",
+    "propcache==0.1.0",
     "pyOpenSSL==24.2.1",
     "orjson==3.10.7",
     "packaging>=23.1",
@@ -921,3 +922,7 @@ split-on-trailing-comma = false
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.ruff.lint.pydocstyle]
+property-decorators = ["propcache.cached_property"]
+
