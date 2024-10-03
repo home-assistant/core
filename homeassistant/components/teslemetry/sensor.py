@@ -384,7 +384,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         options=[
             "on_grid",
             "off_grid",
-            "off_grid_intentionally",
+            "off_grid_intentional",
             "off_grid_unintentional",
             "island_status_unknown",
         ],
