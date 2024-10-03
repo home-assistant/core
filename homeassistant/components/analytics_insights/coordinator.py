@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 class AnalyticsData:
     """Analytics data class."""
 
+    active_installations: int
+    reports_integrations: int
     core_integrations: dict[str, int]
     custom_integrations: dict[str, int]
 
@@ -76,7 +78,12 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             integration: get_custom_integration_value(custom_data, integration)
             for integration in self._tracked_custom_integrations
         }
-        return AnalyticsData(core_integrations, custom_integrations)
+        return AnalyticsData(
+            data.active_installations,
+            data.reports_integrations,
+            core_integrations,
+            custom_integrations,
+        )
 
 
 def get_custom_integration_value(

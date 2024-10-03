@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
 )
 from homeassistant.helpers.selector import (
@@ -38,18 +39,20 @@ from .const import (
 from .sensor import MoldIndicator
 
 
-async def validate_duplicate(
+async def validate_input(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate already existing entry."""
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
+    if user_input[CONF_CALIBRATION_FACTOR] == 0.0:
+        raise SchemaFlowError("calibration_is_zero")
     return user_input
 
 
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
         vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
         )
     }
 )
@@ -79,14 +82,14 @@ DATA_SCHEMA_CONFIG = vol.Schema(
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_CONFIG,
-        validate_user_input=validate_duplicate,
+        validate_user_input=validate_input,
         preview="mold_indicator",
     ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
         DATA_SCHEMA_OPTIONS,
-        validate_user_input=validate_duplicate,
+        validate_user_input=validate_input,
         preview="mold_indicator",
     )
 }

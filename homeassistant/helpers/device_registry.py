@@ -6,12 +6,13 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import attr
+from propcache import cached_property
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
