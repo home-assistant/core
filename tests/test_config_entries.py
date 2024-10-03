@@ -40,11 +40,13 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     MockConfigEntry,
@@ -6590,3 +6592,48 @@ async def test_reauth_helper_alignment(
     # Ensure context and init data are aligned
     assert helper_flow_context == reauth_flow_context
     assert helper_flow_init_data == reauth_flow_init_data
+
+
+def test_state_not_stored_in_storage() -> None:
+    """Test that state is not stored in storage.
+
+    Verify we don't start accidentally storing state in storage.
+    """
+    entry = MockConfigEntry(domain="test")
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    for key in config_entries.STATE_KEYS:
+        assert key not in loaded
+
+
+def test_storage_cache_is_cleared_on_entry_update(hass: HomeAssistant) -> None:
+    """Test that the storage cache is cleared when an entry is updated."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    hass.config_entries.async_update_entry(entry, data={"new": "data"})
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    assert "new" in loaded["data"]
+
+
+async def test_storage_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> None:
+    """Test that the storage cache is cleared when an entry is disabled."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    assert loaded["disabled_by"] == "user"
+
+
+async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> None:
+    """Test that the state cache is cleared when an entry is disabled."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    loaded = json_loads(json_dumps(entry.as_json_fragment))
+    assert loaded["disabled_by"] == "user"
