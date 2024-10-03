@@ -304,8 +304,7 @@ class RegistryEntry:
         # so the JSON serializer does not have to do
         # it every time
         return {
-            # mypy cannot work out attrs _cache factory
-            **self.as_partial_dict,  # type: ignore[arg-type]
+            **self.as_partial_dict,
             "aliases": list(self.aliases),
             "capabilities": self.capabilities,
             "device_class": self.device_class,
@@ -317,8 +316,7 @@ class RegistryEntry:
     def partial_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry."""
         try:
-            # mypy cannot work out attrs _cache factory
-            dict_repr = self.as_partial_dict  # type: ignore[arg-type]
+            dict_repr = self.as_partial_dict
             return json_bytes(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
@@ -1359,15 +1357,9 @@ class EntityRegistry(BaseRegistry):
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
         return {
-            "entities": [
-                # mypy cannot work out attrs _cache factory
-                entry.as_storage_fragment  # type: ignore[arg-type]
-                for entry in self.entities.values()
-            ],
+            "entities": [entry.as_storage_fragment for entry in self.entities.values()],
             "deleted_entities": [
-                # mypy cannot work out attrs _cache factory
-                entry.as_storage_fragment  # type: ignore[arg-type]
-                for entry in self.deleted_entities.values()
+                entry.as_storage_fragment for entry in self.deleted_entities.values()
             ],
         }
 
