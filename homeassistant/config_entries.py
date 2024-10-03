@@ -2334,7 +2334,7 @@ class ConfigEntries:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
+    def _data_to_save(self) -> dict[str, list[json_fragment]]:
         """Return data to save."""
         return {
             "entries": [entry.as_storage_fragment for entry in self._entries.values()]
