@@ -77,7 +77,12 @@ class NotificationCoordinator:
 
 
 class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
-    """Coordinator managing status of single NASweb device."""
+    """Coordinator managing status of single NASweb device.
+
+    Since status updates are managed through push notifications, this class schedules
+    periodic checks to ensure that devices are marked unavailable if updates
+    haven't been received for a prolonged period.
+    """
 
     def __init__(
         self, hass: HomeAssistant, webio_api: WebioAPI, name: str = "NASweb[default]"
@@ -136,12 +141,23 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             update_callback()
 
     async def _handle_max_update_interval(self, now: datetime) -> None:
-        """Handle max update interval occurrence."""
+        """Handle max update interval occurrence.
+
+        This method is called when `STATUS_UPDATE_MAX_TIME_INTERVAL` has passed without
+        receiving a status update. It only needs to trigger state update of entities
+        which then change their state accordingly.
+        """
         self._unsub_last_update_check = None
         if self._listeners:
             self.async_update_listeners()
 
     def _schedule_last_update_check(self) -> None:
+        """Schedule a task to trigger entities state update after `STATUS_UPDATE_MAX_TIME_INTERVAL`.
+
+        This method schedules a task (`_handle_max_update_interval`) to be executed after
+        `STATUS_UPDATE_MAX_TIME_INTERVAL` seconds without status update, which enables entities
+        to change their state to unavailable. After each status update this task is rescheduled.
+        """
         self._async_unsub_last_update_check()
         now = self._hass.loop.time()
         next_check = (
