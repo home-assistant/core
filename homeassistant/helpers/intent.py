@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity as entity_helper
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
@@ -612,6 +613,14 @@ def async_match_targets(  # noqa: C901
         # Filter by supported features
         candidates = list(_filter_by_features(constraints.features, candidates))
         if not candidates:
+            # Check if any unexposed entities match the supported features
+            for state in unexposed_states:
+                if (
+                    entity_helper.get_supported_features(hass, state.entity_id)
+                    == constraints.features
+                ):
+                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
             return MatchTargetsResult(False, MatchFailedReason.FEATURE)
 
     if constraints.device_classes:
@@ -620,6 +629,15 @@ def async_match_targets(  # noqa: C901
             _filter_by_device_classes(constraints.device_classes, candidates)
         )
         if not candidates:
+            # Check if any unexposed entities match the device class
+            for state in unexposed_states:
+                if (
+                    device_class := entity_helper.get_device_class(
+                        hass, state.entity_id
+                    )
+                ) and (str(device_class) in constraints.device_classes):
+                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
             return MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
 
     # Check floor/area constraints

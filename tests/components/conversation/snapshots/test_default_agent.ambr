@@ -168,7 +168,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, kitchen light is not exposed',
         }),
       }),
     }),
@@ -358,7 +358,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, kitchen light is not exposed',
         }),
       }),
     }),
