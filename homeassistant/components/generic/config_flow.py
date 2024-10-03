@@ -8,6 +8,7 @@ import contextlib
 from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
+import json
 import logging
 from typing import Any
 
@@ -370,7 +371,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                             title=self.title, data={}, options=self.user_input
                         )
                     # temporary preview for user to check the image
-                    self.context["preview_cam"] = user_input
                     return await self.async_step_user_confirm_still()
         elif self.user_input:
             user_input = self.user_input
@@ -393,7 +393,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.title, data={}, options=self.user_input
             )
         register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        encoded_user_input = json.dumps(self.user_input, separators=(",", ":"))
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?d={encoded_user_input}&t={datetime.now().isoformat()}"
         return self.async_show_form(
             step_id="user_confirm_still",
             data_schema=vol.Schema(
@@ -443,7 +444,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 }
                 self.user_input = data
                 # temporary preview for user to check the image
-                self.context["preview_cam"] = data
                 return await self.async_step_confirm_still()
         return self.async_show_form(
             step_id="init",
@@ -467,7 +467,8 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 data=self.user_input,
             )
         register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        encoded_user_input = json.dumps(self.user_input, separators=(",", ":"))
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?d={encoded_user_input}&t={datetime.now().isoformat()}"
         return self.async_show_form(
             step_id="confirm_still",
             data_schema=vol.Schema(
@@ -495,14 +496,14 @@ class CameraImagePreview(HomeAssistantView):
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         try:
-            flow = self.hass.config_entries.flow.async_get(flow_id)
+            self.hass.config_entries.flow.async_get(flow_id)
         except UnknownFlow:
             try:
-                flow = self.hass.config_entries.options.async_get(flow_id)
+                self.hass.config_entries.options.async_get(flow_id)
             except UnknownFlow as exc:
-                _LOGGER.warning("Unknown flow while getting image preview")
+                _LOGGER.warning("Unknown flow %s while getting image preview", flow_id)
                 raise web.HTTPNotFound from exc
-        user_input = flow["context"]["preview_cam"]
+        user_input = json.loads(request.query["d"])
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
