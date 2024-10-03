@@ -87,20 +87,15 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             password = user_input[CONF_PASSWORD]
-            entry_id = self.context["entry_id"]
 
-            if entry := self.hass.config_entries.async_get_entry(entry_id):
-                error = await self._async_validate_credentials(
-                    self._reauth_email, password
+            entry = self._get_reauth_entry()
+            error = await self._async_validate_credentials(self._reauth_email, password)
+            if error is None:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=entry.data | user_input,
                 )
-                if error is None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=entry.data | user_input,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                errors["base"] = error
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="reauth_confirm",

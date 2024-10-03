@@ -109,13 +109,9 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors=validation_result.errors,
             )
 
-        self.hass.config_entries.async_update_entry(
+        return self.async_update_reload_and_abort(
             self._reauth_entry, data=self._reauth_entry.data | user_input
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
