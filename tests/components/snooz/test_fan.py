@@ -200,7 +200,7 @@ async def test_restore_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    await create_mock_snooz_config_entry(hass, device)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
     state = hass.states.get(entity_id)
@@ -225,7 +225,7 @@ async def test_restore_unknown_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    await create_mock_snooz_config_entry(hass, device)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
     state = hass.states.get(entity_id)
