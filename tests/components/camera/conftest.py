@@ -114,11 +114,9 @@ def mock_camera_with_no_name_fixture(mock_camera_with_device: None) -> Generator
 
 
 @pytest.fixture(name="mock_stream")
-def mock_stream_fixture(hass: HomeAssistant) -> None:
+async def mock_stream_fixture(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform with streaming."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "stream", {"stream": {}})
-    )
+    assert await async_setup_component(hass, "stream", {"stream": {}})
 
 
 @pytest.fixture(name="mock_stream_source")
