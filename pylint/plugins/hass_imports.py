@@ -19,7 +19,7 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
-    "functools.cached_property": [
+    "functools": [
         ObsoleteImportMatch(
             reason="replaced by propcache.cached_property",
             constant=re.compile(r"^cached_property$"),
