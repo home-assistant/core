@@ -363,7 +363,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
-            if value == self._state_on:
+            if (isinstance(self._state_on, int) and value == self._state_on) or (
+                isinstance(self._state_on, list) and value in self._state_on
+            ):
                 self._attr_is_on = True
             elif value == self._state_off:
                 self._attr_is_on = False
