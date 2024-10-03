@@ -1527,8 +1527,7 @@
       "name": "Electric Kiwi",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "elevenlabs": {
       "name": "ElevenLabs",

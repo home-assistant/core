@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SCOPE_VALUES
@@ -45,8 +45,7 @@ class ElectricKiwiOauth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for Electric Kiwi."""
-        if self.source == SOURCE_REAUTH:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            return self.async_update_reload_and_abort(existing_entry, data=data)
         return await super().async_oauth_create_entry(data)
