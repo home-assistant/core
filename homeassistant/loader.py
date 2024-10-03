@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
-from functools import cached_property
 import importlib
 import logging
 import os
@@ -26,6 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from propcache import cached_property
 import voluptuous as vol
 
 from . import generated
