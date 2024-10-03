@@ -598,10 +598,7 @@ class Thermostat(ClimateEntity):
     @property
     def remote_sensor_devices(self) -> list:
         """Return the remote sensor device name_by_user or name for the thermostat."""
-        try:
-            sensors_info = self.thermostat["remoteSensors"]
-        except KeyError:
-            sensors_info = []
+        sensors_info = self.thermostat.get("remoteSensors", [])
 
         device_registry = dr.async_get(self._hass)
         return sorted(
