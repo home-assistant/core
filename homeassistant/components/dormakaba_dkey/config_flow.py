@@ -34,7 +34,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -121,9 +121,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthorization request."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -131,13 +129,11 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
-        reauth_entry = self._reauth_entry
-        assert reauth_entry is not None
 
         if user_input is not None:
             if (
                 discovery_info := async_last_service_info(
-                    self.hass, reauth_entry.data[CONF_ADDRESS], True
+                    self.hass, self._reauth_entry.data[CONF_ADDRESS], True
                 )
             ) is None:
                 errors = {"base": "no_longer_in_range"}
