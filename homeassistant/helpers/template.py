@@ -1067,7 +1067,7 @@ class TemplateStateBase(State):
         """
         return self._entity_id
 
-    @under_cached_property
+    @property
     def state(self) -> str:  # type: ignore[override]
         """Wrap State.state."""
         self._collect_state()
