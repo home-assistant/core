@@ -407,10 +407,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def remote(self) -> bool:
         """Is remote content."""
-        return (
-            self._player.current_track
-            and self._player.remote
-        )
+        return self._player.remote
 
     @property
     def query_result(self) -> dict | bool:
