@@ -8,7 +8,7 @@ import logging
 from pysmarty2 import Smarty
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +36,11 @@ async def async_setup_platform(
         OutdoorAirTemperatureSensor(name, smarty),
         SupplyFanSpeedSensor(name, smarty),
         ExtractFanSpeedSensor(name, smarty),
-        FilterDaysLeftSensor(name, smarty),
+        FiltersDaysLeftSensor(name, smarty),
+        FiltersReplaceDateSensor(name, smarty),
+        SystemStateSensor(name, smarty),
+        SoftwareVersionSensor(name, smarty),
+        ConfigurationVersionSensor(name, smarty),
     ]
 
     async_add_entities(sensors, True)
@@ -132,8 +136,8 @@ class SupplyFanSpeedSensor(SmartySensor):
         """Supply Fan Speed RPM Init."""
         super().__init__(
             name=f"{name} Supply Fan Speed",
-            device_class=None,
-            unit_of_measurement=None,
+            device_class=SensorDeviceClass.SPEED,
+            unit_of_measurement=REVOLUTIONS_PER_MINUTE,
             smarty=smarty,
         )
 
@@ -150,8 +154,8 @@ class ExtractFanSpeedSensor(SmartySensor):
         """Extract Fan Speed RPM Init."""
         super().__init__(
             name=f"{name} Extract Fan Speed",
-            device_class=None,
-            unit_of_measurement=None,
+            device_class=SensorDeviceClass.SPEED,
+            unit_of_measurement=REVOLUTIONS_PER_MINUTE,
             smarty=smarty,
         )
 
@@ -161,13 +165,32 @@ class ExtractFanSpeedSensor(SmartySensor):
         self._attr_native_value = self._smarty.extract_fan_speed
 
 
-class FilterDaysLeftSensor(SmartySensor):
-    """Filter Days Left."""
+class FiltersDaysLeftSensor(SmartySensor):
+    """Filters Days Left."""
 
     def __init__(self, name: str, smarty: Smarty) -> None:
         """Filter Days Left Init."""
         super().__init__(
-            name=f"{name} Filter Days Left",
+            name=f"{name} Filters Days Left",
+            device_class=SensorDeviceClass.DURATION,
+            unit_of_measurement=None,
+            smarty=smarty,
+        )
+
+    def update(self) -> None:
+        """Update state."""
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        days_left = self._smarty.filter_timer
+        self._attr_native_value = days_left
+
+
+class FiltersReplaceDateSensor(SmartySensor):
+    """Date When Filters Have To Be Replaced."""
+
+    def __init__(self, name: str, smarty: Smarty) -> None:
+        """Date When Filters Have To Be Replaced Init."""
+        super().__init__(
+            name=f"{name} Filters Replace Date",
             device_class=SensorDeviceClass.TIMESTAMP,
             unit_of_measurement=None,
             smarty=smarty,
@@ -181,3 +204,60 @@ class FilterDaysLeftSensor(SmartySensor):
         if days_left is not None and days_left != self._days_left:
             self._attr_native_value = dt_util.now() + dt.timedelta(days=days_left)
             self._days_left = days_left
+
+
+class SystemStateSensor(SmartySensor):
+    """System State."""
+
+    def __init__(self, name: str, smarty: Smarty) -> None:
+        """System State Init."""
+        super().__init__(
+            name=f"{name} System State",
+            device_class=None,
+            unit_of_measurement=None,
+            smarty=smarty,
+        )
+
+    def update(self) -> None:
+        """Update state."""
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        system_state = self._smarty.system_state
+        self._attr_native_value = system_state
+
+
+class SoftwareVersionSensor(SmartySensor):
+    """Software Version."""
+
+    def __init__(self, name: str, smarty: Smarty) -> None:
+        """System State Init."""
+        super().__init__(
+            name=f"{name} Software Version",
+            device_class=None,
+            unit_of_measurement=None,
+            smarty=smarty,
+        )
+
+    def update(self) -> None:
+        """Update state."""
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        software_version = self._smarty.get_software_version()
+        self._attr_native_value = software_version
+
+
+class ConfigurationVersionSensor(SmartySensor):
+    """Configuration Version."""
+
+    def __init__(self, name: str, smarty: Smarty) -> None:
+        """System State Init."""
+        super().__init__(
+            name=f"{name} Configuration Version",
+            device_class=None,
+            unit_of_measurement=None,
+            smarty=smarty,
+        )
+
+    def update(self) -> None:
+        """Update state."""
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        configuration_version = self._smarty.get_software_version()
+        self._attr_native_value = configuration_version
