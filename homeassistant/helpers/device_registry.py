@@ -1067,10 +1067,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return old
 
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
-            # Change modified_at if we are changing something that we store
+            # Change modified_at/cache if we are changing something that we store
             new_values["modified_at"] = utcnow()
+            new_values["cache"] = {}
 
-        new_values["cache"] = {}
         self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
