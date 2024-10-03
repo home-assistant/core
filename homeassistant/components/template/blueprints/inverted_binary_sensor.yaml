@@ -2,7 +2,7 @@ blueprint:
   name: Invert a binary sensor
   description: Creates a binary_sensor which holds the inverted value of a reference binary_sensor
   domain: template
-  source_url: http://example.com
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/template/blueprints/inverted_binary_sensor.yaml
   input:
     reference_entity:
       name: Binary sensor to be inverted
