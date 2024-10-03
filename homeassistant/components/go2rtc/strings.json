@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "host": {
+        "data": {
+          "host": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "host": "The URL of your go2rtc instance."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Invalid URL",
+      "invalid_url_schema": "Invalid URL scheme.\nThe URL should start with `http://` or `https://`."
+    }
+  }
+}
