@@ -1230,9 +1230,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
         return {
-            "devices": [entry.as_storage_fragment for entry in self.devices.values()],
+            "devices": [
+                # mypy cannot work out attrs _cache factory
+                entry.as_storage_fragment  # type: ignore[arg-type]
+                for entry in self.devices.values()
+            ],
             "deleted_devices": [
-                entry.as_storage_fragment for entry in self.deleted_devices.values()
+                # mypy cannot work out attrs _cache factory
+                entry.as_storage_fragment  # type: ignore[arg-type]
+                for entry in self.deleted_devices.values()
             ],
         }
 
