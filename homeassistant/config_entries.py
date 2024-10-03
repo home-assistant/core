@@ -1680,9 +1680,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self.check_unique_id(entry)
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
-            self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
-                entry.unique_id, []
-            ).append(entry)
+            domain_entries = self._domain_unique_id_index.setdefault(entry.domain, {})
+            if entry.unique_id in domain_entries:
+                raise ValueError(
+                    f"{entry.domain} config entry with unique id {entry.unique_id} already exists"
+                )
+            domain_entries.setdefault(entry.unique_id, []).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
         """Unindex an entry."""
