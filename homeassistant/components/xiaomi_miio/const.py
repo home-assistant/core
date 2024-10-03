@@ -500,3 +500,5 @@ FEATURE_FLAGS_FAN_P10_P11 = (
     | FEATURE_SET_LED
     | FEATURE_SET_DELAY_OFF_COUNTDOWN
 )
+# Device Actions Failure Messages
+SET_OP_MODE_FAIL_MSG = "Setting operation mode of the miio device failed."
