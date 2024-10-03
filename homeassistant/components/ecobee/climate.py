@@ -820,10 +820,25 @@ class Thermostat(ClimateEntity):
         # Get device name from device id.
         device_registry = dr.async_get(self.hass)
         sensor_names: list[str] = []
+        sensor_ids: list[str] = []
         for sensor in sensors:
             sensor_registry = device_registry.async_get(sensor)
             if sensor_registry and sensor_registry.name:
+                r_sensors = self.thermostat.get("remoteSensors", [])
+                code = next(iter(sensor_registry.identifiers))[1]
+                for r_sensor in r_sensors:
+                    if (  # occurs if remote sensor
+                        len(code) == 4 and r_sensor.get("code") == code
+                    ) or (  # occurs if thermostat
+                        len(code) != 4 and r_sensor.get("type") == "thermostat"
+                    ):
+                        sensor_ids.append(r_sensor.get("id"))  # noqa: PERF401
                 sensor_names.append(sensor_registry.name)
+
+        # Check that an id was found for each sensor
+        if len(sensor_names) != len(sensor_ids):
+            msg = "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
+            raise ServiceValidationError(msg)
 
         # Ensure sensors provided are available for thermostat or not empty.
         if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
@@ -844,7 +859,7 @@ class Thermostat(ClimateEntity):
             preset_mode,
         )
         self.data.ecobee.update_climate_sensors(
-            self.thermostat_index, preset_mode, sensor_names
+            self.thermostat_index, preset_mode, sensor_ids=sensor_ids
         )
         self.update_without_throttle = True
 
