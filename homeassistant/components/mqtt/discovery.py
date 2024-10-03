@@ -381,12 +381,17 @@ async def async_start(  # noqa: C901
     async def _async_handle_config_entry_removed(entry: ConfigEntry) -> None:
         """Handle integration config entry changes."""
         for discovery_key in entry.discovery_keys[DOMAIN]:
-            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+            if (
+                discovery_key.version != 1
+                or not isinstance(discovery_key.key, str)
+                or discovery_key.key not in integration_discovery_messages
+            ):
                 continue
             topic = discovery_key.key
             discovery_message = integration_discovery_messages[topic]
             del integration_discovery_messages[topic]
             _LOGGER.debug("Rediscover service on topic %s", topic)
+            # Initiate re-discovery
             await async_integration_message_received(
                 discovery_message.integration, discovery_message.msg
             )
