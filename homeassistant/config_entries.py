@@ -1256,6 +1256,23 @@ class ConfigEntriesFlowManager(
                 translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
+        if context.get("source") == SOURCE_RECONFIGURE and any(
+            flow
+            for flow in self.hass.config_entries.flow.async_progress_by_handler(
+                handler,
+                match_context={"entry_id": context["entry_id"]},
+                include_uninitialized=True,
+            )
+            if flow["context"].get("source") in {SOURCE_REAUTH, SOURCE_RECONFIGURE}
+        ):
+            return ConfigFlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow_id,
+                handler=handler,
+                reason="already_in_progress",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
+
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
