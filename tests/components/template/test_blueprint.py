@@ -1,4 +1,4 @@
-"""Test built-in blueprints."""
+"""Test blueprints."""
 
 from collections.abc import Iterator
 import contextlib
@@ -99,14 +99,14 @@ async def test_inverted_binary_sensor(
                     {
                         "use_blueprint": {
                             "path": "inverted_binary_sensor.yaml",
-                            "input": {"original_entity": "binary_sensor.foo"},
+                            "input": {"reference_entity": "binary_sensor.foo"},
                         },
                         "name": "Inverted foo",
                     },
                     {
                         "use_blueprint": {
                             "path": "inverted_binary_sensor.yaml",
-                            "input": {"original_entity": "binary_sensor.bar"},
+                            "input": {"reference_entity": "binary_sensor.bar"},
                         },
                         "name": "Inverted bar",
                     },
@@ -136,10 +136,10 @@ async def test_inverted_binary_sensor(
     assert foo_template is None
     assert inverted_foo_template == "inverted_binary_sensor.yaml"
 
-    inverted_binary_sensor_blueprint_instances = template.templates_with_blueprint(
+    inverted_binary_sensor_blueprint_entity_ids = template.templates_with_blueprint(
         hass, "inverted_binary_sensor.yaml"
     )
-    assert len(inverted_binary_sensor_blueprint_instances) == 2
+    assert len(inverted_binary_sensor_blueprint_entity_ids) == 2
 
     assert len(template.templates_with_blueprint(hass, "dummy.yaml")) == 0
 
@@ -214,11 +214,10 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
             {
                 "template": [
                     {"binary_sensor": {"name": "test entity", "state": "off"}},
-                    # A real sensor is needed
                     {
                         "use_blueprint": {
                             "path": "inverted_binary_sensor.yaml",
-                            "input": {"original_entity": "binary_sensor.foo"},
+                            "input": {"reference_entity": "binary_sensor.foo"},
                         },
                         "name": "inverted entity",
                     },

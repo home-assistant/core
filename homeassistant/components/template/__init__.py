@@ -21,7 +21,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
@@ -37,12 +36,10 @@ from .template_entity import TemplateEntity
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
-DATA_COMPONENT: HassKey[EntityComponent[TemplateEntity]] = HassKey(DOMAIN)
-
 
 @callback
 def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
-    """Return all templates that reference the blueprint."""
+    """Return all template entity ids that reference the blueprint."""
     return [
         entity_id
         for platform in async_get_platforms(hass, DOMAIN)
@@ -54,7 +51,7 @@ def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[s
 
 @callback
 def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Return the blueprint the template is based on or None."""
+    """Return the blueprint the template entity is based on or None."""
     for platform in async_get_platforms(hass, DOMAIN):
         if isinstance(
             (template_entity := platform.entities.get(entity_id)), TemplateEntity
@@ -67,16 +64,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
 
     # Register template as valid domain for Blueprint
-    async_get_blueprints(hass)
+    blueprints = async_get_blueprints(hass)
 
     # Add some default blueprints to blueprints/template, does nothing
     # if blueprints/template already exists but still has to create
     # an executor job to check if the folder exists so we run it in a
     # separate task to avoid waiting for it to finish setting up
     # since a tracked task will be waited at the end of startup
-    hass.async_create_task(
-        async_get_blueprints(hass).async_populate(), eager_start=True
-    )
+    hass.async_create_task(blueprints.async_populate(), eager_start=True)
 
     if DOMAIN in config:
         await _process_config(hass, config)

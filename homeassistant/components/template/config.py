@@ -139,7 +139,7 @@ async def async_validate_config_section(
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
-    validated_config: TemplateConfig = await _async_resolve_blueprints(hass, config)
+    validated_config = await _async_resolve_blueprints(hass, config)
 
     if CONF_TRIGGER in validated_config:
         validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
