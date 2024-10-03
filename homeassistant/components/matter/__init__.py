@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await matter_client.set_default_fabric_label(
             hass.config.location_name or "Home"
         )
-    except NotConnected as err:
+    except (NotConnected, MatterError) as err:
         raise ConfigEntryNotReady("Matter client not connected") from err
 
     if DOMAIN not in hass.data:
