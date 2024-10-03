@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime, timedelta
-import logging
 import statistics
 from typing import Any
 from unittest.mock import patch
@@ -48,9 +47,6 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
-
-_LOGGER = logging.getLogger(__name__)
-
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
