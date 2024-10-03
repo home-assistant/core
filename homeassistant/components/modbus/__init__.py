@@ -234,10 +234,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): vol.Any(
-                    cv.positive_int, [cv.positive_int]
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
                 ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
