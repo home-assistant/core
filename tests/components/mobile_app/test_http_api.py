@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 from tests.typing import ClientSessionGenerator
 
 
@@ -72,10 +72,33 @@ async def test_reregistration(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test that reregistrations overwrite the current entry."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    extra_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="io.homeassistant.mobile_app_test-mock-device-id",
+        data={
+            "device_id": "mock-device-id",
+            "app_data": {"foo": "bar"},
+            "app_id": "io.homeassistant.mobile_app_test",
+            "app_name": "Mobile App Tests",
+            "app_version": "1.0.0",
+            "device_name": "Test 1",
+            "manufacturer": "mobile_app",
+            "model": "Test",
+            "os_name": "Linux",
+            "os_version": "1.0",
+            "supports_encryption": False,
+            "webhook_id": "mock-webhook-id",
+        },
+    )
+    extra_config_entry.add_to_hass(hass)
 
     api_client = await hass_client()
-    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(entries) == 3
+    config_entry = entries[1]
+
     assert config_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -92,11 +115,13 @@ async def test_reregistration(
 
     entries = hass.config_entries.async_entries(DOMAIN)
 
-    assert len(entries) == 2
+    assert len(entries) == 3
 
     new_entry = entries[1]
     assert new_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
     assert new_entry.entry_id != config_entry.entry_id
+    assert new_entry.entry_id != extra_config_entry.entry_id
+    assert new_entry.state == ConfigEntryState.LOADED
 
 
 async def test_registration_encryption(
