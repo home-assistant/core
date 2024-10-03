@@ -68,7 +68,7 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return any(stream_source.startswith(prefix) for prefix in _SUPPORTED_STREAMS)
+        return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
 
     async def async_handle_web_rtc_offer(
         self, camera: Camera, offer_sdp: str

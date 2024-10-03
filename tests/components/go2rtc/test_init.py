@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFl
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -86,7 +85,6 @@ async def init_test_integration(
     integration_entity: MockCamera,
 ) -> None:
     """Initialize components."""
-    assert await async_setup_component(hass, "camera", {})
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry

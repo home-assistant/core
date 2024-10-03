@@ -11,8 +11,6 @@ from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
-TEST_DOMAIN = "test"
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
