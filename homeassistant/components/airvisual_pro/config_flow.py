@@ -76,9 +76,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from `airvisual` integration (see #83882)."""
@@ -88,9 +86,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -101,8 +97,6 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA
             )
-
-        assert self._reauth_entry
 
         validation_result = await async_validate_credentials(
             self._reauth_entry.data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]

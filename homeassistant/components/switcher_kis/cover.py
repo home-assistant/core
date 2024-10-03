@@ -17,14 +17,12 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,12 +51,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherCoverEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], CoverEntity
-):
+class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
@@ -78,9 +73,6 @@ class SwitcherCoverEntity(
         self._cover_id = cover_id
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        )
 
         self._update_data()
 

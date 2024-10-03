@@ -1544,6 +1544,35 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             notification_id=DISCOVERY_NOTIFICATION_ID,
         )
 
+    @callback
+    def async_has_matching_discovery_flow(
+        self, handler: str, match_context: dict[str, Any], data: Any
+    ) -> bool:
+        """Check if an existing matching discovery flow is in progress.
+
+        A flow with the same handler, context, and data.
+
+        If match_context is passed, only return flows with a context that is a
+        superset of match_context.
+        """
+        if not (flows := self._handler_progress_index.get(handler)):
+            return False
+        match_items = match_context.items()
+        for progress in flows:
+            if match_items <= progress.context.items() and progress.init_data == data:
+                return True
+        return False
+
+    @callback
+    def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
+        """Check if an existing matching flow is in progress."""
+        if not (flows := self._handler_progress_index.get(flow.handler)):
+            return False
+        for other_flow in set(flows):
+            if other_flow is not flow and flow.is_matching(other_flow):  # type: ignore[arg-type]
+                return True
+        return False
+
 
 class ConfigEntryItems(UserDict[str, ConfigEntry]):
     """Container for config items, maps config_entry_id -> entry.
@@ -2692,6 +2721,40 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason=reason)
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        raise NotImplementedError
+
+    @property
+    def _reauth_entry_id(self) -> str:
+        """Return reauth entry id."""
+        if self.source != SOURCE_REAUTH:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_REAUTH}")
+        return self.context["entry_id"]  # type: ignore[no-any-return]
+
+    @callback
+    def _get_reauth_entry(self) -> ConfigEntry:
+        """Return the reauth config entry linked to the current context."""
+        if entry := self.hass.config_entries.async_get_entry(self._reauth_entry_id):
+            return entry
+        raise UnknownEntry
+
+    @property
+    def _reconfigure_entry_id(self) -> str:
+        """Return reconfigure entry id."""
+        if self.source != SOURCE_RECONFIGURE:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+        return self.context["entry_id"]  # type: ignore[no-any-return]
+
+    @callback
+    def _get_reconfigure_entry(self) -> ConfigEntry:
+        """Return the reconfigure config entry linked to the current context."""
+        if entry := self.hass.config_entries.async_get_entry(
+            self._reconfigure_entry_id
+        ):
+            return entry
+        raise UnknownEntry
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
