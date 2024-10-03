@@ -72,9 +72,8 @@ OFF = "off"
         ),
     ],
 )
-async def test_setup_minimal(
-    hass: HomeAssistant, start_ha, entity_id, name, attributes
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_setup_minimal(hass: HomeAssistant, entity_id, name, attributes) -> None:
     """Test the setup."""
     state = hass.states.get(entity_id)
     assert state is not None
@@ -118,7 +117,8 @@ async def test_setup_minimal(
         ),
     ],
 )
-async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_setup(hass: HomeAssistant, entity_id) -> None:
     """Test the setup."""
     state = hass.states.get(entity_id)
     assert state is not None
@@ -234,7 +234,8 @@ async def test_setup_config_entry(
         ),
     ],
 )
-async def test_setup_invalid_sensors(hass: HomeAssistant, count, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_setup_invalid_sensors(hass: HomeAssistant, count) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
 
@@ -280,7 +281,8 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count, start_ha) -> No
         ),
     ],
 )
-async def test_icon_template(hass: HomeAssistant, start_ha, entity_id) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
     """Test icon template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("icon") == ""
@@ -332,9 +334,8 @@ async def test_icon_template(hass: HomeAssistant, start_ha, entity_id) -> None:
         ),
     ],
 )
-async def test_entity_picture_template(
-    hass: HomeAssistant, start_ha, entity_id
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_entity_picture_template(hass: HomeAssistant, entity_id) -> None:
     """Test entity_picture template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("entity_picture") == ""
@@ -382,7 +383,8 @@ async def test_entity_picture_template(
         ),
     ],
 )
-async def test_attribute_templates(hass: HomeAssistant, start_ha, entity_id) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_attribute_templates(hass: HomeAssistant, entity_id) -> None:
     """Test attribute_templates template."""
     state = hass.states.get(entity_id)
     assert state.attributes.get("test_attribute") == "It ."
@@ -426,7 +428,8 @@ async def setup_mock():
         },
     ],
 )
-async def test_match_all(hass: HomeAssistant, setup_mock, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_match_all(hass: HomeAssistant, setup_mock) -> None:
     """Test template that is rerendered on any state lifecycle."""
     init_calls = len(setup_mock.mock_calls)
 
@@ -453,7 +456,8 @@ async def test_match_all(hass: HomeAssistant, setup_mock, start_ha) -> None:
         },
     ],
 )
-async def test_event(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_event(hass: HomeAssistant) -> None:
     """Test the event."""
     state = hass.states.get("binary_sensor.test")
     assert state.state == OFF
@@ -563,7 +567,8 @@ async def test_event(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_template_delay_on_off(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_delay_on_off(hass: HomeAssistant) -> None:
     """Test binary sensor template delay on."""
     # Ensure the initial state is not on
     assert hass.states.get("binary_sensor.test_on").state != ON
@@ -641,8 +646,9 @@ async def test_template_delay_on_off(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_available_without_availability_template(
-    hass: HomeAssistant, start_ha, entity_id
+    hass: HomeAssistant, entity_id
 ) -> None:
     """Ensure availability is true without an availability_template."""
     state = hass.states.get(entity_id)
@@ -690,7 +696,8 @@ async def test_available_without_availability_template(
         ),
     ],
 )
-async def test_availability_template(hass: HomeAssistant, start_ha, entity_id) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_template(hass: HomeAssistant, entity_id) -> None:
     """Test availability template."""
     hass.states.async_set("sensor.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -725,8 +732,9 @@ async def test_availability_template(hass: HomeAssistant, start_ha, entity_id) -
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
@@ -752,8 +760,9 @@ async def test_invalid_attribute_template(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
 
@@ -858,8 +867,9 @@ async def test_no_update_template_match_all(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_unique_id(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique_id option only creates one binary sensor per id."""
     assert len(hass.states.async_all()) == 2
@@ -893,8 +903,9 @@ async def test_unique_id(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_validation_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, start_ha
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test binary sensor template delay on."""
     caplog.set_level(logging.ERROR)
@@ -957,9 +968,8 @@ async def test_template_validation_error(
         ),
     ],
 )
-async def test_availability_icon_picture(
-    hass: HomeAssistant, start_ha, entity_id
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_icon_picture(hass: HomeAssistant, entity_id) -> None:
     """Test name, icon and picture templates are rendered at setup."""
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
@@ -1116,8 +1126,9 @@ async def test_restore_state(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_trigger_entity(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity works."""
     await hass.async_block_till_done()
@@ -1186,9 +1197,8 @@ async def test_trigger_entity(
         },
     ],
 )
-async def test_template_with_trigger_templated_delay_on(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_with_trigger_templated_delay_on(hass: HomeAssistant) -> None:
     """Test binary sensor template with template delay on."""
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNKNOWN

@@ -44,5 +44,5 @@ def mock_russound() -> Generator[AsyncMock]:
             return_value=mock_client,
         ),
     ):
-        mock_client.enumerate_controllers.return_value = MOCK_CONTROLLERS
+        mock_client.controllers = MOCK_CONTROLLERS
         yield mock_client
