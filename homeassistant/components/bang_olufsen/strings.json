@@ -4,9 +4,7 @@
     "long_press_timeout": "Long press",
     "long_press_release": "Release of long press",
     "very_long_press_timeout": "Very long press",
-    "very_long_press_release": "Release of very long press",
-    "key_press": "Press",
-    "key_release": "Release"
+    "very_long_press_release": "Release of very long press"
   },
   "config": {
     "error": {
@@ -93,7 +91,7 @@
         }
       },
       "preset1": {
-        "name": "Preset 1",
+        "name": "Favourite 1",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -107,7 +105,7 @@
         }
       },
       "preset2": {
-        "name": "Preset 2",
+        "name": "Favourite 2",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -121,7 +119,7 @@
         }
       },
       "preset3": {
-        "name": "Preset 3",
+        "name": "Favourite 3",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -135,7 +133,7 @@
         }
       },
       "preset4": {
-        "name": "Preset 4",
+        "name": "Favourite 4",
         "state_attributes": {
           "event_type": {
             "state": {
