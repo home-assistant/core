@@ -3,12 +3,14 @@
 from binascii import unhexlify
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
 from homeassistant.components.mobile_app.const import CONF_SECRET, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -61,6 +63,40 @@ async def test_registration(
         entries[0].data["supports_encryption"]
         == REGISTER_CLEARTEXT["supports_encryption"]
     )
+
+
+async def test_reregistration(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+) -> None:
+    """Test that reregistrations overwrite the current entry."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    api_client = await hass_client()
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    assert config_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+
+    assert resp.status == HTTPStatus.CREATED
+    register_json = await resp.json()
+    assert CONF_WEBHOOK_ID in register_json
+    assert CONF_SECRET in register_json
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(entries) == 2
+
+    new_entry = entries[1]
+    assert new_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
+    assert new_entry.entry_id != config_entry.entry_id
 
 
 async def test_registration_encryption(
