@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime, timedelta
+import logging
 import statistics
 from typing import Any
 from unittest.mock import patch
@@ -48,8 +49,12 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
 
+_LOGGER = logging.getLogger(__name__)
+
+
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
+VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 async def test_unique_id(
@@ -1701,3 +1706,64 @@ async def test_device_id(
     statistics_entity = entity_registry.async_get("sensor.statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Verify that updates happening before reloading from the database are handled correctly."""
+
+    current_time = dt_util.utcnow()
+
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # Testing correct retrieval from recorder, thus we do not
+    # want purging to occur within the class itself.
+    def mock_purge(self, *args):
+        return
+
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    with (
+        freeze_time(current_time) as freezer,
+        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
+    ):
+        for value in VALUES_NUMERIC_LINEAR:
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+            current_time += timedelta(seconds=1)
+            freezer.move_to(current_time)
+
+        await async_wait_recording_done(hass)
+        # create the statistics component, get filled from database
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "average_step",
+                        "max_age": {"seconds": 10},
+                    },
+                ]
+            },
+        )
+        hass.states.async_set(
+            "sensor.test_monitored",
+            "10",
+            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+        )
+        await hass.async_block_till_done()
+
+    avg: float = float(hass.states.get("sensor.test").state)
+    assert avg >= 4.9
+    assert avg <= 5.1
