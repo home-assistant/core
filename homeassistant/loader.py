@@ -122,7 +122,7 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.10.1 because of
     # https://github.com/alandtse/alexa_media_player/issues/2579
     "alexa_media": BlockedIntegration(
-        AwesomeVersion("4.13.3"), "crashes Home Assistant"
+        AwesomeVersion("4.13.4"), "crashes Home Assistant"
     ),
 }
 
