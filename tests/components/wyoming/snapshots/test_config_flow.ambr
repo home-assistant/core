@@ -94,7 +94,6 @@
 # name: test_zeroconf_discovery
   FlowResultSnapshot({
     'context': dict({
-      'name': 'Test Satellite',
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Test Satellite',

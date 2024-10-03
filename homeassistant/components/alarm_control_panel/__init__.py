@@ -53,7 +53,7 @@ from .const import (  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
@@ -71,7 +71,7 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[AlarmControlPanelEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[AlarmControlPanelEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -124,12 +124,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):

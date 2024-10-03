@@ -19,7 +19,7 @@ from homeassistant.util.hass_dict import HassKey
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "geo_location"
-DOMAIN_DATA: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -34,7 +34,7 @@ ATTR_SOURCE = "source"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Geolocation component."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[GeolocationEvent](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[GeolocationEvent](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -43,12 +43,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

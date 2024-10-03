@@ -323,13 +323,7 @@ async def do_common_reconfiguration_steps(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    reconfigure_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
+    reconfigure_result = await entry.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "user"
 

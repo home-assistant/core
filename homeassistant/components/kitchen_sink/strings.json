@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "reauth_confirm": {
-        "description": "Select SUBMIT to reauthenticate"
+        "description": "Select **Submit** to reauthenticate"
       }
     }
   },
@@ -38,7 +38,7 @@
         "step": {
           "confirm": {
             "title": "The power supply needs to be replaced",
-            "description": "Select SUBMIT to confirm the power supply has been replaced"
+            "description": "Select **Submit** to confirm the power supply has been replaced"
           }
         }
       }
@@ -49,7 +49,7 @@
         "step": {
           "confirm": {
             "title": "Blinker fluid needs to be refilled",
-            "description": "Select SUBMIT when blinker fluid has been refilled"
+            "description": "Select **Submit** when blinker fluid has been refilled"
           }
         }
       }

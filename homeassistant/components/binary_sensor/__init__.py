@@ -29,7 +29,7 @@ from homeassistant.util.hass_dict import HassKey
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "binary_sensor"
-DOMAIN_DATA: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -219,7 +219,7 @@ _DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[BinarySensorEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BinarySensorEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -229,12 +229,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):

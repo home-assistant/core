@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
@@ -100,14 +101,6 @@ def mock_get_factory(install: str) -> Callable:
     return mock_get
 
 
-async def block_request(
-    self: Broker, method: HTTPMethod, url: str, **kwargs: Any
-) -> None:
-    """Fail if the code attempts any actual I/O via aiohttp."""
-
-    pytest.fail(f"Unexpected request: {method} {url}")
-
-
 @pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
@@ -117,8 +110,6 @@ def config() -> dict[str, str]:
     }
 
 
-@patch("evohomeasync.broker.Broker._make_request", block_request)
-@patch("evohomeasync2.broker.Broker._client", block_request)
 async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
@@ -128,6 +119,19 @@ async def setup_evohome(
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
+
+    # set the time zone as for the active evohome location
+    loc_idx: int = test_config.get("location_idx", 0)  # type: ignore[assignment]
+
+    try:
+        locn = user_locations_config_fixture(install)[loc_idx]
+    except IndexError:
+        if loc_idx == 0:
+            raise
+        locn = user_locations_config_fixture(install)[0]
+
+    utc_offset: int = locn["locationInfo"]["timeZone"]["currentOffsetMinutes"]  # type: ignore[assignment, call-overload, index]
+    dt_util.set_default_time_zone(timezone(timedelta(minutes=utc_offset)))
 
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
