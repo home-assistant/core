@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -66,34 +67,34 @@ async def async_setup_entry(
 
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, InverterSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, InverterSensor
         )
     if solar_net.logger_coordinator is not None:
         solar_net.logger_coordinator.add_entities_for_seen_keys(
-            async_add_entities, LoggerSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, LoggerSensor
         )
     if solar_net.meter_coordinator is not None:
         solar_net.meter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, MeterSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, MeterSensor
         )
     if solar_net.ohmpilot_coordinator is not None:
         solar_net.ohmpilot_coordinator.add_entities_for_seen_keys(
-            async_add_entities, OhmpilotSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, OhmpilotSensor
         )
     if solar_net.power_flow_coordinator is not None:
         solar_net.power_flow_coordinator.add_entities_for_seen_keys(
-            async_add_entities, PowerFlowSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, PowerFlowSensor
         )
     if solar_net.storage_coordinator is not None:
         solar_net.storage_coordinator.add_entities_for_seen_keys(
-            async_add_entities, StorageSensor, FroniusSensorEntityDescription
+            async_add_entities, Platform.SENSOR, StorageSensor
         )
 
     @callback
     def async_add_new_entities(coordinator: FroniusInverterUpdateCoordinator) -> None:
         """Add newly found inverter entities."""
         coordinator.add_entities_for_seen_keys(
-            async_add_entities, InverterSensor, FroniusEntityDescription
+            async_add_entities, Platform.SENSOR, InverterSensor
         )
 
     config_entry.async_on_unload(

@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,8 +41,8 @@ async def async_setup_entry(
     if solar_net.power_flow_coordinator is not None:
         solar_net.power_flow_coordinator.add_entities_for_seen_keys(
             async_add_entities,
+            Platform.BINARY_SENSOR,
             PowerFlowBinarySensor,
-            FroniusBinarySensorEntityDescription,
         )
 
 

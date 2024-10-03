@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyfronius import BadStatusError, FroniusError
 
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -41,7 +42,7 @@ class FroniusCoordinatorBase(
 
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: list[FroniusEntityDescription]
+    valid_descriptions: dict[Platform, list[FroniusEntityDescription]]
 
     MAX_FAILED_UPDATES = 3
 
@@ -51,7 +52,7 @@ class FroniusCoordinatorBase(
         self.solar_net = solar_net
         # unregistered_descriptors are used to create entities in platform module
         self.unregistered_descriptors: dict[
-            SolarNetId, list[FroniusEntityDescription]
+            SolarNetId, dict[Platform, list[FroniusEntityDescription]]
         ] = {}
         super().__init__(*args, update_interval=self.default_interval, **kwargs)
 
@@ -86,8 +87,8 @@ class FroniusCoordinatorBase(
     def add_entities_for_seen_keys[_FroniusEntityT: _FroniusEntity](
         self,
         async_add_entities: AddEntitiesCallback,
+        platform: Platform,
         entity_constructor: type[_FroniusEntityT],
-        filter_to: type[FroniusEntityDescription],
     ) -> None:
         """Add entities for received keys and registers listener for future seen keys.
 
@@ -102,10 +103,9 @@ class FroniusCoordinatorBase(
             new_entities: list[_FroniusEntityT] = []
             for solar_net_id, device_data in self.data.items():
                 remaining_unregistered_descriptors = []
-                for description in self.unregistered_descriptors[solar_net_id]:
-                    if not isinstance(description, filter_to):
-                        remaining_unregistered_descriptors.append(description)
-                        continue
+                for description in self.unregistered_descriptors[solar_net_id][
+                    platform
+                ]:
                     key = description.response_key or description.key
                     if key not in device_data:
                         remaining_unregistered_descriptors.append(description)
@@ -120,7 +120,7 @@ class FroniusCoordinatorBase(
                             solar_net_id=solar_net_id,
                         )
                     )
-                self.unregistered_descriptors[solar_net_id] = (
+                self.unregistered_descriptors[solar_net_id][platform] = (
                     remaining_unregistered_descriptors
                 )
             async_add_entities(new_entities)
@@ -136,7 +136,7 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
+    valid_descriptions = {Platform.SENSOR: INVERTER_ENTITY_DESCRIPTIONS}
 
     SILENT_RETRIES = 3
 
@@ -172,7 +172,7 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(hours=1)
     error_interval = timedelta(hours=1)
-    valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
+    valid_descriptions = {Platform.SENSOR: LOGGER_ENTITY_DESCRIPTIONS}
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -185,7 +185,7 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = METER_ENTITY_DESCRIPTIONS
+    valid_descriptions = {Platform.SENSOR: METER_ENTITY_DESCRIPTIONS}
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -198,7 +198,7 @@ class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = OHMPILOT_ENTITY_DESCRIPTIONS
+    valid_descriptions = {Platform.SENSOR: OHMPILOT_ENTITY_DESCRIPTIONS}
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -211,9 +211,10 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(seconds=10)
     error_interval = timedelta(minutes=3)
-    valid_descriptions = (
-        POWER_FLOW_ENTITY_DESCRIPTIONS + POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS
-    )
+    valid_descriptions = {
+        Platform.SENSOR: POWER_FLOW_ENTITY_DESCRIPTIONS,
+        Platform.BINARY_SENSOR: POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS,
+    }
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -226,7 +227,7 @@ class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase):
 
     default_interval = timedelta(minutes=1)
     error_interval = timedelta(minutes=10)
-    valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
+    valid_descriptions = {Platform.SENSOR: STORAGE_ENTITY_DESCRIPTIONS}
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
