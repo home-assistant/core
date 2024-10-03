@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp import CookieJar
 from pyloadapi.api import PyLoadAPI
@@ -101,7 +101,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pyLoad."""
 
     VERSION = 1
-    config_entry: PyLoadConfigEntry | None
+    config_entry: PyLoadConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -156,9 +156,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.config_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -166,9 +164,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
-
-        if TYPE_CHECKING:
-            assert self.config_entry
 
         if user_input is not None:
             new_input = self.config_entry.data | user_input
@@ -204,9 +199,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.config_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -214,9 +207,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the reconfiguration flow."""
         errors = {}
-
-        if TYPE_CHECKING:
-            assert self.config_entry
 
         if user_input is not None:
             try:

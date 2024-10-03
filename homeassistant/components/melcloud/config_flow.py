@@ -25,7 +25,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
@@ -82,7 +82,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with MELCloud."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -91,7 +91,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with MELCloud."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and self.entry:
+        if user_input is not None:
             aquired_token, errors = await self.async_reauthenticate_client(user_input)
 
             if not errors:
@@ -152,7 +152,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -161,7 +161,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
         acquired_token = None
-        assert self.entry
 
         if user_input is not None:
             user_input[CONF_USERNAME] = self.entry.data[CONF_USERNAME]

@@ -80,13 +80,13 @@ class DateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     def device_class(self) -> None:
         """Return the device class for the entity."""
-        return
+        return None
 
     @cached_property
     @final
     def state_attributes(self) -> None:
         """Return the state attributes."""
-        return
+        return None
 
     @property
     @final

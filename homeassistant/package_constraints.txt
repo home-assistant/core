@@ -38,6 +38,7 @@ httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
+mashumaro==3.13.1
 mutagen==1.47.0
 orjson==3.10.7
 packaging>=23.1
@@ -121,9 +122,6 @@ backoff>=2.0
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
 pydantic==1.10.18
-
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130

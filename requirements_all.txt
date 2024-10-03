@@ -807,7 +807,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.7
+elkm1-lib==2.2.10
 
 # homeassistant.components.elmax
 elmax-api==0.0.5
@@ -980,6 +980,9 @@ gitterpy==0.1.7
 
 # homeassistant.components.glances
 glances-api==0.8.0
+
+# homeassistant.components.go2rtc
+go2rtc-client==0.0.1b0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -2244,7 +2247,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.1
+pysmlight==0.1.2
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2301,7 +2304,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.18
+python-ecobee-api==0.2.20
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
@@ -2349,7 +2352,7 @@ python-linkplay==0.0.12
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.5.2
+python-matter-server==6.6.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
