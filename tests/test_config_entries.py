@@ -517,7 +517,7 @@ async def test_remove_entry_non_unique_unique_id(
     manager: config_entries.ConfigEntries,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that we can remove an entry."""
+    """Test that we can remove entry with colliding unique_id."""
     entry_1 = MockConfigEntry(
         domain="test_other", entry_id="test1", unique_id="not_unique"
     )
