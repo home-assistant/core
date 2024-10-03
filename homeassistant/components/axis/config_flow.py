@@ -149,10 +149,11 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return self.async_create_entry(title=title, data=self.config)
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Trigger a reconfiguration flow."""
-        return await self._redo_configuration(entry_data, keep_password=True)
+        entry = self._get_reconfigure_entry()
+        return await self._redo_configuration(entry.data, keep_password=True)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

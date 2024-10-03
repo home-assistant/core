@@ -2247,6 +2247,13 @@
         }
       }
     },
+    "go2rtc": {
+      "name": "go2rtc",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "single_config_entry": true
+    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",

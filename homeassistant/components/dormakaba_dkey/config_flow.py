@@ -15,7 +15,12 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_last_service_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ADDRESS
 
 from .const import CONF_ASSOCIATION_DATA, DOMAIN
@@ -34,7 +39,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -121,9 +126,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthorization request."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -131,13 +134,11 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
-        reauth_entry = self._reauth_entry
-        assert reauth_entry is not None
 
         if user_input is not None:
             if (
                 discovery_info := async_last_service_info(
-                    self.hass, reauth_entry.data[CONF_ADDRESS], True
+                    self.hass, self._reauth_entry.data[CONF_ADDRESS], True
                 )
             ) is None:
                 errors = {"base": "no_longer_in_range"}
@@ -183,9 +184,11 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: self._discovery_info.device.address,
                 CONF_ASSOCIATION_DATA: association_data.to_json(),
             }
-            if reauth_entry := self._reauth_entry:
-                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
+            if self.source == SOURCE_REAUTH:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=data
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
             return self.async_create_entry(
