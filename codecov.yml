@@ -1,5 +1,6 @@
 codecov:
   branch: dev
+
 coverage:
   status:
     project:
@@ -10,6 +11,7 @@ coverage:
         target: auto
         threshold: 1
         paths:
+          # Specify paths for required coverage
           - homeassistant/components/*/config_flow.py
           - homeassistant/components/*/device_action.py
           - homeassistant/components/*/device_condition.py
@@ -21,6 +23,7 @@ coverage:
           - homeassistant/components/*/media_source.py
           - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
+
     patch:
       default:
         target: auto
@@ -28,6 +31,7 @@ coverage:
         target: 100
         threshold: 0
         paths:
+          # Specify paths for required patch coverage
           - homeassistant/components/*/config_flow.py
           - homeassistant/components/*/device_action.py
           - homeassistant/components/*/device_condition.py
@@ -39,10 +43,10 @@ coverage:
           - homeassistant/components/*/media_source.py
           - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
+
 comment: false
 
-# To make partial tests possible,
-# we need to carry forward.
+# Carry forward flags for partial tests
 flag_management:
   default_rules:
     carryforward: false
