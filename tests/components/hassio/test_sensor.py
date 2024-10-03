@@ -28,7 +28,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
     _install_test_addon_stats_mock(aioclient_mock)

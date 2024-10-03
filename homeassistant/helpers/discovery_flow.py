@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from typing import Any, NamedTuple
+import dataclasses
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigFlowResult
 
 FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
@@ -18,10 +21,31 @@ DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
 )
 
 
+@dataclasses.dataclass(kw_only=True, slots=True)
+class DiscoveryKey:
+    """Serializable discovery key."""
+
+    domain: str
+    key: str | tuple[str, ...]
+    version: int
+
+    @classmethod
+    def from_json_dict(cls, json_dict: dict[str, Any]) -> Self:
+        """Construct from JSON dict."""
+        if type(key := json_dict["key"]) is list:
+            key = tuple(key)
+        return cls(domain=json_dict["domain"], key=key, version=json_dict["version"])
+
+
 @bind_hass
 @callback
 def async_create_flow(
-    hass: HomeAssistant, domain: str, context: dict[str, Any], data: Any
+    hass: HomeAssistant,
+    domain: str,
+    context: dict[str, Any],
+    data: Any,
+    *,
+    discovery_key: DiscoveryKey | None = None,
 ) -> None:
     """Create a discovery flow."""
     dispatcher: FlowDispatcher | None = None
@@ -30,6 +54,9 @@ def async_create_flow(
     elif hass.state is not CoreState.running:
         dispatcher = hass.data[DISCOVERY_FLOW_DISPATCHER] = FlowDispatcher(hass)
         dispatcher.async_setup()
+
+    if discovery_key:
+        context = context | {"discovery_key": discovery_key}
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):
@@ -51,7 +78,9 @@ def _async_init_flow(
     # which can overload devices since zeroconf/ssdp updates can happen
     # multiple times in the same minute
     if (
-        hass.config_entries.flow.async_has_matching_flow(domain, context, data)
+        hass.config_entries.flow.async_has_matching_discovery_flow(
+            domain, context, data
+        )
         or hass.is_stopping
     ):
         return None

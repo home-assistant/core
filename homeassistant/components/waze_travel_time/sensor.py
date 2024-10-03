@@ -183,8 +183,8 @@ class WazeTravelTimeData:
         )
         if self.origin is not None and self.destination is not None:
             # Grab options on every update
-            incl_filter = self.config_entry.options.get(CONF_INCL_FILTER)
-            excl_filter = self.config_entry.options.get(CONF_EXCL_FILTER)
+            incl_filter = self.config_entry.options[CONF_INCL_FILTER]
+            excl_filter = self.config_entry.options[CONF_EXCL_FILTER]
             realtime = self.config_entry.options[CONF_REALTIME]
             vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
             avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]

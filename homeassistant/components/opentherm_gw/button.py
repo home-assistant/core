@@ -12,16 +12,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
-from .const import (
-    DATA_GATEWAYS,
-    DATA_OPENTHERM_GW,
-    GATEWAY_DEVICE_DESCRIPTION,
-    OpenThermDataSource,
-)
+from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, GATEWAY_DEVICE_DESCRIPTION
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
 
@@ -62,11 +57,6 @@ class OpenThermButton(OpenThermEntity, ButtonEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermButtonEntityDescription
-
-    @callback
-    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
-        """Handle status updates from the component."""
-        # We don't need any information from the reports here
 
     async def async_press(self) -> None:
         """Perform button action."""

@@ -44,6 +44,12 @@
     "sensor": {
       "custom_integrations": {
         "name": "{custom_integration_domain} (custom)"
+      },
+      "total_active_installations": {
+        "name": "Total active installations"
+      },
+      "total_reports_integrations": {
+        "name": "Total reported integrations"
       }
     }
   }

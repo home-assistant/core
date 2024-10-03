@@ -23,7 +23,6 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
-from functools import cached_property
 import inspect
 import logging
 import os
@@ -45,6 +44,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from propcache import cached_property
 from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl

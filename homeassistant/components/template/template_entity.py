@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-from functools import cached_property
 import itertools
 import logging
 from typing import Any
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -244,7 +244,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):
+class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True

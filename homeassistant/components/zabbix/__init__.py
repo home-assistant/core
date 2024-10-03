@@ -34,13 +34,14 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
-DOMAIN = "zabbix"
 
 TIMEOUT = 5
 RETRY_DELAY = 20
@@ -84,7 +85,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         zapi = ZabbixAPI(url=url, user=username, password=password)
-        _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
+        _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False
