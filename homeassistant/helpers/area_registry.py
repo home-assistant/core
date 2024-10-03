@@ -26,7 +26,7 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
-    # mypy cannot workout _cache Protocol with attrs
+    # mypy cannot workout _cache Protocol with dataclasses
     from propcache import cached_property as under_cached_property
 else:
     from propcache import under_cached_property
