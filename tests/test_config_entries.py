@@ -80,7 +80,7 @@ def mock_handlers() -> Generator[None]:
                 return self.async_show_form(step_id="reauth_confirm")
             return self.async_abort(reason="test")
 
-        async def async_step_reconfigure(self, data):
+        async def async_step_reconfigure(self, user_input=None):
             """Mock Reauth."""
             return await self.async_step_reauth_confirm()
 
@@ -6410,7 +6410,7 @@ async def test_get_reauth_entry(
             """Test reauth step."""
             return await self._async_step_confirm()
 
-        async def async_step_reconfigure(self, entry_data):
+        async def async_step_reconfigure(self, user_input=None):
             """Test reauth step."""
             return await self._async_step_confirm()
 
@@ -6482,7 +6482,7 @@ async def test_get_reconfigure_entry(
             """Test reauth step."""
             return await self._async_step_confirm()
 
-        async def async_step_reconfigure(self, entry_data):
+        async def async_step_reconfigure(self, user_input=None):
             """Test reauth step."""
             return await self._async_step_confirm()
 
