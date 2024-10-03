@@ -540,9 +540,11 @@ class ZeroconfDiscovery:
                     continue
 
             matcher_domain = matcher[ATTR_DOMAIN]
-            context = config_entries.ConfigFlowContext(
-                source=config_entries.SOURCE_ZEROCONF
-            )
+            # Create a type annotated regular dict since this is a hot path and creating
+            # a regular dict is slightly cheaper than calling ConfigFlowContext
+            context: config_entries.ConfigFlowContext = {
+                "source": config_entries.SOURCE_ZEROCONF,
+            }
             if domain:
                 # Domain of integration that offers alternative API to handle
                 # this device.
