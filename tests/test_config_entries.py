@@ -4741,7 +4741,7 @@ async def test_reconfigure(
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_RECONFIGURE
-    assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
+    assert "title_placeholders" not in flows[0]["context"]
     assert flows[0]["context"]["extra_context"] == "some_extra_context"
 
     assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
