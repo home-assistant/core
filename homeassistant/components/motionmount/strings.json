@@ -1,4 +1,7 @@
 {
+  "common": {
+    "incorrect_pin": "Pin is not correct"
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -27,7 +30,7 @@
       }
     },
     "error": {
-      "pin": "Pin is not correct"
+      "pin": "[%key:component::motionmount::common::incorrect_pin%]"
     },
     "progress": {
       "progress_action": "Too many incorrect pin attempts. Please wait {timeout} s..."
@@ -78,6 +81,12 @@
   "exceptions": {
     "failed_communication": {
       "message": "Failed to communicate with MotionMount"
+    },
+    "no_pin_provided": {
+      "message": "No pin provided"
+    },
+    "incorrect_pin": {
+      "message": "[%key:component::motionmount::common::incorrect_pin%]"
     }
   }
 }

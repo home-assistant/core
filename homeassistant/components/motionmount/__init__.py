@@ -51,11 +51,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Check we're properly authenticated or be able to become so
     if not mm.is_authenticated:
         if CONF_PIN not in entry.data:
-            raise ConfigEntryAuthFailed("No pin provided")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_pin_provided",
+            )
+
         pin = entry.data[CONF_PIN]
         await mm.authenticate(pin)
         if not mm.is_authenticated:
-            raise ConfigEntryAuthFailed("Incorrect pin")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="incorrect_pin",
+            )
 
     # Store an API object for your platforms to access
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mm
