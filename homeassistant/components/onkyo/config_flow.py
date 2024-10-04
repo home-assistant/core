@@ -27,14 +27,13 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
+    CONF_SOURCES,
     CONF_VOLUME_RESOLUTION,
     CONF_VOLUME_RESOLUTION_DEFAULT,
     DOMAIN,
+    OPTION_INPUT_SOURCES,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
-    OPTION_SOURCE_PREFIX,
-    OPTION_SOURCES,
-    OPTION_SOURCES_ALLOWED,
     VOLUME_RESOLUTION_ALLOWED,
     InputSource,
 )
@@ -44,18 +43,20 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE = "device"
 
+INPUT_SOURCES_ALL_MEANINGS = [
+    input_source.value_meaning for input_source in InputSource
+]
 STEP_CONFIGURE_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_VOLUME_RESOLUTION,
             default=CONF_VOLUME_RESOLUTION_DEFAULT,
         ): vol.In(VOLUME_RESOLUTION_ALLOWED),
-        vol.Required(OPTION_SOURCES, default=[]): SelectSelector(
+        vol.Required(OPTION_INPUT_SOURCES, default=[]): SelectSelector(
             SelectSelectorConfig(
-                options=OPTION_SOURCES_ALLOWED,
+                options=INPUT_SOURCES_ALL_MEANINGS,
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key=OPTION_SOURCES,
             )
         ),
     }
@@ -164,17 +165,14 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            user_sources: list[str] = user_input[OPTION_SOURCES]
-            if not user_sources:
-                errors[OPTION_SOURCES] = "empty_source_list"
+            source_meanings: list[str] = user_input[OPTION_INPUT_SOURCES]
+            if not source_meanings:
+                errors[OPTION_INPUT_SOURCES] = "empty_input_source_list"
             else:
-                sources_str: dict[str, str] = {}
-                for value_str in user_sources:
-                    # Remove the source prefix.
-                    value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
-                    source = InputSource(value)
-                    source_name = ", ".join(source.value_meanings)
-                    sources_str.setdefault(source.value_hex, source_name)
+                sources_store: dict[str, str] = {}
+                for source_meaning in source_meanings:
+                    source = InputSource.from_meaning(source_meaning)
+                    sources_store[source.value_hex] = source_meaning
 
                 result = self.async_create_entry(
                     title=self._receiver_info.model_name,
@@ -184,7 +182,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                     options={
                         OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-                        OPTION_SOURCES: sources_str,
+                        OPTION_INPUT_SOURCES: sources_store,
                     },
                 )
                 _LOGGER.debug("Configured receiver, result: %s", result)
@@ -209,7 +207,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         name: str | None = user_input.get(CONF_NAME)
         user_max_volume: int = user_input[OPTION_MAX_VOLUME]
         user_volume_resolution: int = user_input[CONF_RECEIVER_MAX_VOLUME]
-        user_sources: dict[str, str] = user_input[OPTION_SOURCES]
+        user_sources: dict[str, str] = user_input[CONF_SOURCES]
 
         info: ReceiverInfo | None = user_input.get("info")
         if info is None:
@@ -239,12 +237,20 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             100, user_max_volume * user_volume_resolution / volume_resolution
         )
 
-        all_meanings = InputSource.all_meanings()
-        sources_str: dict[str, str] = {}
-        for meaning, source_name in user_sources.items():
-            if meaning in all_meanings:
-                source = InputSource.from_meaning(meaning)
-                sources_str[source.value_hex] = source_name
+        source_mapping: dict[str, InputSource] = {}
+        for source in InputSource:
+            source_lib = source.value_lib
+            if isinstance(source_lib, str):
+                source_mapping[source_lib] = source
+            else:
+                for source_lib_single in source_lib:
+                    source_mapping[source_lib_single] = source
+
+        sources_store: dict[str, str] = {}
+        for source_lib_single, source_name in user_sources.items():
+            user_source = source_mapping.get(source_lib_single.lower())
+            if user_source is not None:
+                sources_store[user_source.value_hex] = source_name
 
         return self.async_create_entry(
             title=name,
@@ -254,7 +260,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             options={
                 OPTION_MAX_VOLUME: max_volume,
-                OPTION_SOURCES: sources_str,
+                OPTION_INPUT_SOURCES: sources_store,
             },
         )
 
@@ -274,27 +280,25 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
         """Initialize options flow."""
         super().__init__(config_entry)
 
-        sources_str: dict[str, str] = self.options[OPTION_SOURCES]
-        sources = {InputSource(int(k, 16)): v for k, v in sources_str.items()}
-        self.options[OPTION_SOURCES] = sources
+        sources_store: dict[str, str] = self.options[OPTION_INPUT_SOURCES]
+        sources = {InputSource(int(k, 16)): v for k, v in sources_store.items()}
+        self.options[OPTION_INPUT_SOURCES] = sources
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            sources_str: dict[str, str] = {}
-            for value_str, source_name in user_input.items():
-                if value_str.startswith(OPTION_SOURCE_PREFIX):
-                    # Remove the source prefix.
-                    value = int(value_str[len(OPTION_SOURCE_PREFIX) :], 16)
-                    source = InputSource(value)
-                    sources_str[source.value_hex] = source_name
+            sources_store: dict[str, str] = {}
+            for source_meaning, source_name in user_input.items():
+                if source_meaning in INPUT_SOURCES_ALL_MEANINGS:
+                    source = InputSource.from_meaning(source_meaning)
+                    sources_store[source.value_hex] = source_name
 
             return self.async_create_entry(
                 data={
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
-                    OPTION_SOURCES: sources_str,
+                    OPTION_INPUT_SOURCES: sources_store,
                 }
             )
 
@@ -307,14 +311,11 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
             )
         )
 
-        sources: dict[InputSource, str] = self.options[OPTION_SOURCES]
+        sources: dict[InputSource, str] = self.options[OPTION_INPUT_SOURCES]
         for source in sources:
-            # Add the source prefix.
-            schema_dict[
-                vol.Required(
-                    f"{OPTION_SOURCE_PREFIX}{source.value_hex}", default=sources[source]
-                )
-            ] = TextSelector()
+            schema_dict[vol.Required(source.value_meaning, default=sources[source])] = (
+                TextSelector()
+            )
 
         schema = vol.Schema(schema_dict)
 

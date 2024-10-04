@@ -34,11 +34,12 @@ from homeassistant.util.hass_dict import HassKey
 from . import OnkyoConfigEntry
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
+    CONF_SOURCES,
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
-    OPTION_SOURCES,
     ZONES,
+    InputLibValue,
     InputSource,
     VolumeResolution,
 )
@@ -62,9 +63,9 @@ SUPPORT_ONKYO = (
 )
 
 DEFAULT_PLAYABLE_SOURCES = (
-    InputSource.from_meaning("fm"),
-    InputSource.from_meaning("am"),
-    InputSource.from_meaning("tuner"),
+    InputSource.from_meaning("FM"),
+    InputSource.from_meaning("AM"),
+    InputSource.from_meaning("TUNER"),
 )
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
@@ -146,7 +147,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
         ): cv.positive_int,
-        vol.Optional(OPTION_SOURCES, default=CONF_SOURCES_DEFAULT): {
+        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
             cv.string: cv.string
         },
     }
@@ -436,9 +437,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source = self._reverse_mapping[source].value_meanings[0]
+            source_lib = self._reverse_mapping[source].value_lib
+            if isinstance(source_lib, str):
+                source_lib_single = source_lib
+            else:
+                source_lib_single = source_lib[0]
         self._update_receiver(
-            "input-selector" if self._zone == "main" else "selector", source
+            "input-selector" if self._zone == "main" else "selector", source_lib_single
         )
 
     async def async_select_output(self, hdmi_output: str) -> None:
@@ -522,24 +527,17 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def _parse_source(self, source_raw: str | int | tuple[str, ...]) -> None:
-        # source is either a tuple of values or a single value,
-        # so we convert to a tuple, when it is a single value.
-        if isinstance(source_raw, str | int):
-            meaning = str(source_raw)
-        else:
-            meaning = source_raw[0]
-
-        source = InputSource.from_meaning(meaning)
+    def _parse_source(self, source_lib: InputLibValue) -> None:
+        source = InputSource.from_lib(source_lib)
         if source in self._source_mapping:
             self._attr_source = self._source_mapping[source]
             return
 
-        source_meanings = ", ".join(source.value_meanings)
+        source_meaning = source.value_meaning
         _LOGGER.error(
-            'Input source "%s" not in source list: %s', source_meanings, self.entity_id
+            'Input source "%s" not in source list: %s', source_meaning, self.entity_id
         )
-        self._attr_source = source_meanings
+        self._attr_source = source_meaning
 
     @callback
     def _parse_audio_information(

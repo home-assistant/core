@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, OPTION_SOURCES, InputSource
+from .const import DOMAIN, OPTION_INPUT_SOURCES, InputSource
 from .receiver import Receiver, async_interview
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -49,8 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     receiver = await Receiver.async_create(info)
 
-    sources_str: dict[str, str] = entry.options[OPTION_SOURCES]
-    sources = {InputSource(int(k, 16)): v for k, v in sources_str.items()}
+    sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
+    sources = {InputSource(int(k, 16)): v for k, v in sources_store.items()}
 
     entry.runtime_data = OnkyoData(receiver, sources)
 
