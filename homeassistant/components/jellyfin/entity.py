@@ -7,17 +7,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import JellyfinDataT, JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinDataUpdateCoordinator
 
 
-class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator[JellyfinDataT]]):
+class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator]):
     """Defines a base Jellyfin entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: JellyfinDataUpdateCoordinator[JellyfinDataT],
+        coordinator: JellyfinDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
         """Initialize the Jellyfin entity."""
