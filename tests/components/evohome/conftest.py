@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from datetime import datetime, timedelta, timezone
 from http import HTTPMethod
 from typing import Any
@@ -112,16 +112,16 @@ def config() -> dict[str, str]:
 
 async def setup_evohome(
     hass: HomeAssistant,
-    test_config: dict[str, str],
+    config: dict[str, str],
     install: str = "default",
-) -> MagicMock:
+) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
     # set the time zone as for the active evohome location
-    loc_idx: int = test_config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
 
     try:
         locn = user_locations_config_fixture(install)[loc_idx]
@@ -140,16 +140,16 @@ async def setup_evohome(
     ):
         mock_client.side_effect = EvohomeClient
 
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
         mock_client.assert_called_once()
 
-        assert mock_client.call_args.args[0] == test_config[CONF_USERNAME]
-        assert mock_client.call_args.args[1] == test_config[CONF_PASSWORD]
+        assert mock_client.call_args.args[0] == config[CONF_USERNAME]
+        assert mock_client.call_args.args[1] == config[CONF_PASSWORD]
 
         assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
         assert mock_client.account_info is not None
 
-        return mock_client
+        yield mock_client

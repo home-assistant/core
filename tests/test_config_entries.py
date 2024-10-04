@@ -513,6 +513,41 @@ async def test_remove_entry(
     assert not entity_entry_list
 
 
+async def test_remove_entry_non_unique_unique_id(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we can remove entry with colliding unique_id."""
+    entry_1 = MockConfigEntry(
+        domain="test_other", entry_id="test1", unique_id="not_unique"
+    )
+    entry_1.add_to_manager(manager)
+    entry_2 = MockConfigEntry(
+        domain="test_other", entry_id="test2", unique_id="not_unique"
+    )
+    entry_2.add_to_manager(manager)
+    entry_3 = MockConfigEntry(
+        domain="test_other", entry_id="test3", unique_id="not_unique"
+    )
+    entry_3.add_to_manager(manager)
+
+    # Check all config entries exist
+    assert manager.async_entry_ids() == [
+        "test1",
+        "test2",
+        "test3",
+    ]
+
+    # Remove entries
+    assert await manager.async_remove("test1") == {"require_restart": False}
+    await hass.async_block_till_done()
+    assert await manager.async_remove("test2") == {"require_restart": False}
+    await hass.async_block_till_done()
+    assert await manager.async_remove("test3") == {"require_restart": False}
+    await hass.async_block_till_done()
+
+
 async def test_remove_entry_cancels_reauth(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
