@@ -31,8 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
-    jellyfin_data = entry.runtime_data
-    coordinator = jellyfin_data.coordinators["sessions"]
+    coordinator = entry.runtime_data
 
     @callback
     def handle_coordinator_update() -> None:
