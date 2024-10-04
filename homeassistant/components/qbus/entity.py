@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from .qbus import QbusEntry
 
-_REFID_REGEX = r"^\d+\/(\d+(?:\/\d+)?)$"
+_REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
 
 
 def format_ref_id(ref_id: str) -> str | None:
@@ -22,9 +22,7 @@ def format_ref_id(ref_id: str) -> str | None:
     matches = re.findall(_REFID_REGEX, ref_id)
 
     if len(matches) > 0:
-        ref_id = matches[0]
-
-        if ref_id:
+        if ref_id := matches[0]:
             return ref_id.replace("/", "-")
 
     return None

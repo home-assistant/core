@@ -77,7 +77,7 @@ class QbusConfigContainer:
 
         event: asyncio.Event | None = domain_data.get(DATA_QBUS_CONFIG_EVENT)
 
-        if event is not None and event.is_set() is False:
+        if isinstance(event, asyncio.Event) and not event.is_set():
             _LOGGER.debug("Mark config event as finished")
             event.set()
 
