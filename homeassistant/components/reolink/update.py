@@ -147,7 +147,7 @@ class ReolinkUpdateEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._installing:
+        if self._installing or self._cancel_update is not None:
             return True
         return super().available
 
@@ -178,11 +178,11 @@ class ReolinkUpdateEntity(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
         finally:
-            self._installing = False
             self.async_write_ha_state()
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
+            self._installing = False
 
     async def _async_update_progress(self, now: datetime | None = None) -> None:
         """Request update."""
@@ -194,7 +194,10 @@ class ReolinkUpdateEntity(
 
     async def _async_update_future(self, now: datetime | None = None) -> None:
         """Request update."""
-        await self.async_update()
+        try:
+            await self.async_update()
+        finally:
+            self._cancel_update = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -271,7 +274,7 @@ class ReolinkHostUpdateEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._installing:
+        if self._installing or self._cancel_update is not None:
             return True
         return super().available
 
@@ -302,11 +305,11 @@ class ReolinkHostUpdateEntity(
                 f"Error trying to update Reolink firmware: {err}"
             ) from err
         finally:
-            self._installing = False
             self.async_write_ha_state()
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
+            self._installing = False
 
     async def _async_update_progress(self, now: datetime | None = None) -> None:
         """Request update."""
@@ -318,7 +321,10 @@ class ReolinkHostUpdateEntity(
 
     async def _async_update_future(self, now: datetime | None = None) -> None:
         """Request update."""
-        await self.async_update()
+        try:
+            await self.async_update()
+        finally:
+            self._cancel_update = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
