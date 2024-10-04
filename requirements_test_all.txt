@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.2
+PyChromecast==14.0.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -2028,7 +2028,7 @@ reolink-aio==0.9.11
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.6
+ring-doorbell==0.9.7
 
 # homeassistant.components.roku
 rokuecp==0.19.3
