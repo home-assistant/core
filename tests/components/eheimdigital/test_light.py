@@ -3,8 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
-from eheimdigital.types import EheimDeviceType, LightMode
+from eheimdigital.types import LightMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -25,22 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-
-@pytest.fixture
-def classic_led_ctrl_mock():
-    """Mock a classicLEDcontrol device."""
-    classic_led_ctrl_mock = MagicMock(spec=EheimDigitalClassicLEDControl)
-    classic_led_ctrl_mock.tankconfig = [["CLASSIC_DAYLIGHT"], []]
-    classic_led_ctrl_mock.mac_address = "00:00:00:00:00:01"
-    classic_led_ctrl_mock.device_type = (
-        EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
-    )
-    classic_led_ctrl_mock.name = "Mock classicLEDcontrol+e"
-    classic_led_ctrl_mock.aquarium_name = "Mock Aquarium"
-    classic_led_ctrl_mock.light_mode = LightMode.DAYCL_MODE
-    classic_led_ctrl_mock.light_level = (10, 39)
-    return classic_led_ctrl_mock
 
 
 @pytest.mark.parametrize(
