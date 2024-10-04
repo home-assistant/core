@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sky remote platform."""
     async_add_entities(
-        [SkyRemote(config.runtime_data.remote, config.entry_id)],
+        [SkyRemote(config.runtime_data, config.entry_id)],
         True,
     )
 

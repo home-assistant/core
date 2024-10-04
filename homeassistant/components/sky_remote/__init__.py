@@ -1,6 +1,5 @@
 """The Sky Remote Control integration."""
 
-from dataclasses import dataclass
 import logging
 
 from skyboxremote import RemoteControl, SkyBoxConnectionError
@@ -18,14 +17,7 @@ PLATFORMS = [Platform.REMOTE]
 _LOGGER = logging.getLogger(__name__)
 
 
-type SkyRemoteConfigEntry = ConfigEntry[SkyRemoteData]
-
-
-@dataclass
-class SkyRemoteData:
-    """SkyRemote data type."""
-
-    remote: RemoteControl
+type SkyRemoteConfigEntry = ConfigEntry[RemoteControl]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SkyRemoteConfigEntry) -> bool:
@@ -48,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkyRemoteConfigEntry) ->
         name=host,
         identifiers={(DOMAIN, entry.entry_id)},
     )
-    entry.runtime_data = SkyRemoteData(remote)
+    entry.runtime_data = remote
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

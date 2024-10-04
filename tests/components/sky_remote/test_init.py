@@ -25,7 +25,7 @@ async def test_setup_entry(hass: HomeAssistant, mock_remote_control) -> None:
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     entity = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entity.runtime_data.remote is mock_remote_control.last_created_instance
+    assert entity.runtime_data is mock_remote_control.last_created_instance
     mock_remote_control.assert_called_once_with("example.com", DEFAULT_PORT)
 
 
