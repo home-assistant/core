@@ -359,9 +359,9 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
-        self._modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowedSystemModes]
+        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowedSystemModes]
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in self._modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -431,9 +431,9 @@ class EvoController(EvoClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
         if hvac_mode == HVACMode.HEAT:
-            tcs_mode = EVO_AUTO if EVO_AUTO in self._modes else "Heat"
+            tcs_mode = EVO_AUTO if EVO_AUTO in self._evo_modes else "Heat"
         elif hvac_mode == HVACMode.OFF:
-            tcs_mode = EVO_HEATOFF if EVO_HEATOFF in self._modes else "Off"
+            tcs_mode = EVO_HEATOFF if EVO_HEATOFF in self._evo_modes else "Off"
         else:
             raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
         await self._set_tcs_mode(tcs_mode)

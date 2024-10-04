@@ -126,6 +126,7 @@ async def test_climate_ctl_svcs(
         ctl: EvoController = get_ctl_entity(hass)
 
         assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
+        assert ctl._evo_modes == snapshot
 
         # SERVICE_SET_HVAC_MODE: HVACMode.OFF
         ctl_mode = extract_off_mode_from_location(config, install)

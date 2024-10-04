@@ -1,6 +1,17 @@
 # serializer version: 1
 # name: test_climate_ctl_svcs[default]
   list([
+    'HeatingOff',
+    'Auto',
+    'AutoWithReset',
+    'AutoWithEco',
+    'Away',
+    'DayOff',
+    'Custom',
+  ])
+# ---
+# name: test_climate_ctl_svcs[default].1
+  list([
     'Reset',
     'eco',
     'away',
@@ -10,15 +21,40 @@
 # ---
 # name: test_climate_ctl_svcs[h032585]
   list([
+    'Off',
+    'Heat',
+  ])
+# ---
+# name: test_climate_ctl_svcs[h032585].1
+  list([
   ])
 # ---
 # name: test_climate_ctl_svcs[h099625]
+  list([
+    'Auto',
+    'AutoWithEco',
+    'Away',
+    'HeatingOff',
+  ])
+# ---
+# name: test_climate_ctl_svcs[h099625].1
   list([
     'eco',
     'away',
   ])
 # ---
 # name: test_climate_ctl_svcs[minimal]
+  list([
+    'HeatingOff',
+    'Auto',
+    'AutoWithReset',
+    'AutoWithEco',
+    'Away',
+    'DayOff',
+    'Custom',
+  ])
+# ---
+# name: test_climate_ctl_svcs[minimal].1
   list([
     'Reset',
     'eco',
@@ -28,6 +64,14 @@
   ])
 # ---
 # name: test_climate_ctl_svcs[sys_004]
+  list([
+    'Auto',
+    'AutoWithEco',
+    'Away',
+    'HeatingOff',
+  ])
+# ---
+# name: test_climate_ctl_svcs[sys_004].1
   list([
     'eco',
     'away',
