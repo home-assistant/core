@@ -716,11 +716,15 @@ class _FroniusSensorEntity(_FroniusEntity, SensorEntity):
             return round(new_value, 4)
         return new_value
 
+    def _set_entity_value(self) -> None:
+        """Sensor requires a value in _attr_native_value."""
+        self._attr_native_value = self._get_entity_value()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            self._attr_native_value = self._get_entity_value()
+            self._set_entity_value()
         except KeyError:
             # sets state to `None` if no default_value is defined in entity description
             # KeyError: raised when omitted in response - eg. at night when no production

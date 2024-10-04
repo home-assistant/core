@@ -66,6 +66,10 @@ class _FroniusBinarySensorEntity(_FroniusEntity, BinarySensorEntity):
             self.coordinator.data[self.solar_net_id][self.response_key]["value"]
         )
 
+    def _set_entity_value(self) -> None:
+        """binary_sensor requires a boolean value in _attr_is_on."""
+        self._attr_is_on = self._get_entity_value()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

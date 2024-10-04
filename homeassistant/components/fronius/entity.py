@@ -36,7 +36,7 @@ class _FroniusEntity(CoordinatorEntity["FroniusCoordinatorBase"], Entity):
         self.entity_description = description
         self.response_key = description.response_key or description.key
         self.solar_net_id = solar_net_id
-        self._attr_native_value = self._get_entity_value()
+        self._set_entity_value()
         self._attr_translation_key = description.key
 
     def _device_data(self) -> dict[str, Any]:
@@ -50,5 +50,10 @@ class _FroniusEntity(CoordinatorEntity["FroniusCoordinatorBase"], Entity):
 
         Raises KeyError if not included in latest update.
         """
+
+        raise NotImplementedError
+
+    def _set_entity_value(self) -> None:
+        """Set the entity value correctly based on the platform."""
 
         raise NotImplementedError

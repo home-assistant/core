@@ -360,8 +360,8 @@ async def test_gen24(
     assert_state("sensor.solarnet_meter_mode", "meter")
     assert_state("sensor.solarnet_relative_autonomy", 5.3592)
     assert_state("sensor.solarnet_total_energy", 1530193.42)
-    assert_state("binary_sensor.solarnet_backup_mode", False)
-    assert_state("binary_sensor.solarnet_battery_standby", False)
+    assert_state("binary_sensor.solarnet_backup_mode", "off")
+    assert_state("binary_sensor.solarnet_battery_standby", "off")
 
     # Gen24 devices may report 0 for total energy while doing firmware updates.
     # This should yield "unknown" state instead of 0.
@@ -473,8 +473,8 @@ async def test_gen24_storage(
     assert_state("sensor.solarnet_relative_autonomy", 7.4984)
     assert_state("sensor.solarnet_meter_mode", "bidirectional")
     assert_state("sensor.solarnet_total_energy", 7512664.4042)
-    assert_state("binary_sensor.solarnet_backup_mode", True)
-    assert_state("binary_sensor.solarnet_battery_standby", False)
+    assert_state("binary_sensor.solarnet_backup_mode", "on")
+    assert_state("binary_sensor.solarnet_battery_standby", "off")
     # storage
     assert_state("sensor.byd_battery_box_premium_hv_dc_current", 0.0)
     assert_state("sensor.byd_battery_box_premium_hv_state_of_charge", 4.6)
