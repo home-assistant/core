@@ -2436,11 +2436,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _abort_if_unique_id_mismatch(
         self,
         *,
-        error: str = "unique_id_mismatch",
+        reason: str = "unique_id_mismatch",
     ) -> None:
         """Abort if the unique ID does not match the reauth/reconfigure context.
 
-        Requires strings.json entry corresponding to the `error` parameter
+        Requires strings.json entry corresponding to the `reason` parameter
         in user visible flows.
         """
         if self.unique_id is None:
@@ -2452,7 +2452,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             self.source == SOURCE_RECONFIGURE
             and self._get_reconfigure_entry().unique_id != self.unique_id
         ):
-            raise data_entry_flow.AbortFlow(error)
+            raise data_entry_flow.AbortFlow(reason)
 
     @callback
     def _abort_if_unique_id_configured(
@@ -2752,11 +2752,16 @@ class ConfigFlow(ConfigEntryBaseFlow):
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        updates: dict[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow."""
+        if updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both updates and data")
+            data = {**entry.data, **updates}
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
