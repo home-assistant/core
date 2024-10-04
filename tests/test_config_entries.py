@@ -6870,7 +6870,7 @@ async def test_create_entry_reauth_reconfigure(
 
     assert (
         f"Detected {source} config flow creating a new entry, when it is expected "
-        "to update an existing entry. This will stop working in "
+        "to update an existing entry and abort. This will stop working in "
         "2025.11, please create a bug report at https://github.com/home"
         "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
         "label%3A%22integration%3A+test%22"
