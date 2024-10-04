@@ -1,0 +1,98 @@
+{
+    "services": {
+        "set_desk_db": {
+            "description": "Sets the \"Desk mode\" slider of the speaker in dB.",
+            "fields": {
+                "db_value": {
+                    "description": "Value of the slider.",
+                    "name": "dB value"
+                }
+            },
+            "name": "Set desk dB"
+        },
+        "set_high_hz": {
+            "description": "Sets the \"High-pass mode\" slider of the speaker in Hz.",
+            "fields": {
+                "hz_value": {
+                    "description": "Value of the slider.",
+                    "name": "Hertz value"
+                }
+            },
+            "name": "Set high hertz"
+        },
+        "set_low_hz": {
+            "description": "Sets the \"Sub out low-pass frequency\" slider of the speaker in Hz.",
+            "fields": {
+                "hz_value": {
+                    "description": "Value of the slider.",
+                    "name": "Hertz value"
+                }
+            },
+            "name": "Set low Hertz"
+        },
+        "set_mode": {
+            "description": "Sets the mode of the speaker.",
+            "fields": {
+                "bass_extension": {
+                    "description": "Bass extension.",
+                    "name": "Bass extension"
+                },
+                "desk_mode": {
+                    "description": "Desk mode.",
+                    "name": "Desk mode"
+                },
+                "high_pass": {
+                    "description": "High-pass mode.",
+                    "name": "High pass"
+                },
+                "phase_correction": {
+                    "description": "Phase correction.",
+                    "name": "Phase correction"
+                },
+                "sub_polarity": {
+                    "description": "Sub polarity.",
+                    "name": "Subwoofer polarity"
+                },
+                "wall_mode": {
+                    "description": "Wall mode.",
+                    "name": "Wall mode"
+                }
+            },
+            "name": "Set mode"
+        },
+        "set_sub_db": {
+            "description": "Sets the \"Sub gain\" slider of the speaker in dB.",
+            "fields": {
+                "db_value": {
+                    "description": "Value of the slider.",
+                    "name": "dB value"
+                }
+            },
+            "name": "Set subwoofer dB"
+        },
+        "set_treble_db": {
+            "description": "Sets desk the \"Treble trim\" slider of the speaker in dB.",
+            "fields": {
+                "db_value": {
+                    "description": "Value of the slider.",
+                    "name": "dB value"
+                }
+            },
+            "name": "Set treble dB"
+        },
+        "set_wall_db": {
+            "description": "Sets the \"Wall mode\" slider of the speaker in dB.",
+            "fields": {
+                "db_value": {
+                    "description": "Value of the slider.",
+                    "name": "dB value"
+                }
+            },
+            "name": "Set wall dB"
+        },
+        "update_dsp": {
+            "description": "Updates all DSP settings.",
+            "name": "Update DSP"
+        }
+    }
+}

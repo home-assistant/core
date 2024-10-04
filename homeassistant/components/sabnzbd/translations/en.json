@@ -1,0 +1,134 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "url": "URL"
+                },
+                "data_description": {
+                    "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security.",
+                    "url": "The full URL, including port, of the SABnzbd server. Example: `http://localhost:8080` or `http://a02368d7-sabnzbd:8080`, if you are using the add-on."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "warnings": {
+                "name": "Warnings"
+            }
+        },
+        "button": {
+            "pause": {
+                "name": "Pause"
+            },
+            "resume": {
+                "name": "Resume"
+            }
+        },
+        "number": {
+            "speedlimit": {
+                "name": "Speedlimit"
+            }
+        },
+        "sensor": {
+            "daily_total": {
+                "name": "Daily total"
+            },
+            "free_disk_space": {
+                "name": "Free disk space"
+            },
+            "left": {
+                "name": "Left to download"
+            },
+            "monthly_total": {
+                "name": "Monthly total"
+            },
+            "overall_total": {
+                "name": "Overall total"
+            },
+            "queue": {
+                "name": "Queue"
+            },
+            "queue_count": {
+                "name": "Queue count"
+            },
+            "speed": {
+                "name": "Speed"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "total_disk_space": {
+                "name": "Total disk space"
+            },
+            "weekly_total": {
+                "name": "Weekly total"
+            }
+        }
+    },
+    "exceptions": {
+        "service_call_exception": {
+            "message": "Unable to send command to SABnzbd due to a connection error, try again later"
+        }
+    },
+    "issues": {
+        "pause_action_deprecated": {
+            "description": "The 'Pause' action is deprecated and will be removed in a future version. Please use the 'Pause' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant.",
+            "title": "SABnzbd pause action deprecated"
+        },
+        "resume_action_deprecated": {
+            "description": "The 'Resume' action is deprecated and will be removed in a future version. Please use the 'Resume' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant.",
+            "title": "SABnzbd resume action deprecated"
+        },
+        "set_speed_action_deprecated": {
+            "description": "The 'Set speed' action is deprecated and will be removed in a future version. Please use the 'Speedlimit' number entity instead. To remove this issue, please adjust automations accordingly and restart Home Assistant.",
+            "title": "SABnzbd set_speed action deprecated"
+        }
+    },
+    "services": {
+        "pause": {
+            "description": "Pauses downloads.",
+            "fields": {
+                "api_key": {
+                    "description": "The SABnzbd API key to pause downloads.",
+                    "name": "SABnzbd API key"
+                }
+            },
+            "name": "Pause"
+        },
+        "resume": {
+            "description": "Resumes downloads.",
+            "fields": {
+                "api_key": {
+                    "description": "The SABnzbd API key to resume downloads.",
+                    "name": "SABnzbd API key"
+                }
+            },
+            "name": "Resume"
+        },
+        "set_speed": {
+            "description": "Sets the download speed limit.",
+            "fields": {
+                "api_key": {
+                    "description": "The SABnzbd API key to set speed limit.",
+                    "name": "SABnzbd API key"
+                },
+                "speed": {
+                    "description": "Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely.",
+                    "name": "Speed"
+                }
+            },
+            "name": "Set speed"
+        }
+    }
+}

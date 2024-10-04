@@ -1,0 +1,69 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "not_allowed": "Access to the selected file path is not allowed"
+        },
+        "step": {
+            "notify": {
+                "data": {
+                    "file_path": "File path",
+                    "timestamp": "Timestamp"
+                },
+                "data_description": {
+                    "file_path": "A local file path to write the notification to",
+                    "timestamp": "Add a timestamp to the notification"
+                },
+                "description": "Set up a service that allows to write notification to a file.",
+                "title": "Notification to file service"
+            },
+            "sensor": {
+                "data": {
+                    "file_path": "File path",
+                    "unit_of_measurement": "Unit of measurement",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "file_path": "The local file path to retrieve the sensor value from",
+                    "unit_of_measurement": "Unit of measurement for the sensor",
+                    "value_template": "A template to render the sensor's value based on the file content"
+                },
+                "description": "Set up a file based sensor",
+                "title": "File sensor"
+            },
+            "user": {
+                "description": "Make a choice",
+                "menu_options": {
+                    "notify": "Set up a notification service",
+                    "sensor": "Set up a file based sensor"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "dir_not_allowed": {
+            "message": "Access to {filename} is not allowed."
+        },
+        "write_access_failed": {
+            "message": "Write access to {filename} failed: {exc}."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestamp": "Timestamp",
+                    "unit_of_measurement": "Unit of measurement",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "timestamp": "Add a timestamp to the notification",
+                    "unit_of_measurement": "Unit of measurement for the sensor",
+                    "value_template": "A template to render the sensor's value based on the file content"
+                }
+            }
+        }
+    }
+}

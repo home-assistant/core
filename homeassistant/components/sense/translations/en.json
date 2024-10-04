@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The Sense integration needs to re-authenticate your account {email}.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password",
+                    "timeout": "Timeout"
+                },
+                "title": "Connect to your Sense Energy Monitor"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verification code"
+                },
+                "title": "Sense Multi-factor authentication"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "bill_energy": {
+                "name": "Bill energy"
+            },
+            "daily_energy": {
+                "name": "Daily energy"
+            },
+            "monthly_energy": {
+                "name": "Monthly energy"
+            },
+            "weekly_energy": {
+                "name": "Weekly energy"
+            },
+            "yearly_energy": {
+                "name": "Yearly energy"
+            }
+        }
+    }
+}

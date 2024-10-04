@@ -1,0 +1,88 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unique_id_mismatch": "You selected a different bridge than the one this config entry was configured with, this is not allowed."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "invalid_host": "Invalid hostname or IP address"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "local_access_token": "Local access token"
+                },
+                "data_description": {
+                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+                },
+                "description": "Tedee needs an updated access key because the existing one is invalid or might have expired.",
+                "title": "Update of access key required"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "local_access_token": "Local access token"
+                },
+                "data_description": {
+                    "host": "The IP address of the bridge you want to connect to.",
+                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+                },
+                "description": "Update the settings of this integration.",
+                "title": "Reconfigure tedee"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "local_access_token": "Local access token"
+                },
+                "data_description": {
+                    "host": "The IP address of the bridge you want to connect to.",
+                    "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+                },
+                "title": "Set up your tedee locks"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "pullspring_enabled": {
+                "name": "Pullspring enabled"
+            },
+            "semi_locked": {
+                "name": "Semi locked"
+            },
+            "uncalibrated": {
+                "name": "Lock uncalibrated"
+            }
+        },
+        "sensor": {
+            "pullspring_duration": {
+                "name": "Pullspring duration"
+            }
+        }
+    },
+    "exceptions": {
+        "api_error": {
+            "message": "Error while communicating with the API"
+        },
+        "authentication_failed": {
+            "message": "Authentication failed. Local access token is invalid"
+        },
+        "lock_failed": {
+            "message": "Failed to lock the door. Lock {lock_id}"
+        },
+        "open_failed": {
+            "message": "Failed to unlatch the door. Lock {lock_id}"
+        },
+        "unlock_failed": {
+            "message": "Failed to unlock the door. Lock {lock_id}"
+        },
+        "update_failed": {
+            "message": "Error while updating data"
+        }
+    }
+}

@@ -1,0 +1,98 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP address"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "currently_obstructed": {
+                "name": "Obstructed"
+            },
+            "heating": {
+                "name": "Heating"
+            },
+            "mast_near_vertical": {
+                "name": "Mast near vertical"
+            },
+            "motors_stuck": {
+                "name": "Motors stuck"
+            },
+            "power_save_idle": {
+                "name": "Sleep"
+            },
+            "roaming": {
+                "name": "Roaming mode"
+            },
+            "slow_ethernet": {
+                "name": "Ethernet speeds"
+            },
+            "thermal_throttle": {
+                "name": "Thermal throttle"
+            },
+            "unexpected_location": {
+                "name": "Unexpected location"
+            }
+        },
+        "device_tracker": {
+            "device_location": {
+                "name": "Device location"
+            }
+        },
+        "sensor": {
+            "azimuth": {
+                "name": "Azimuth"
+            },
+            "downlink_throughput": {
+                "name": "Downlink throughput"
+            },
+            "download": {
+                "name": "Download"
+            },
+            "elevation": {
+                "name": "Elevation"
+            },
+            "last_boot_time": {
+                "name": "Last boot time"
+            },
+            "ping": {
+                "name": "Ping"
+            },
+            "ping_drop_rate": {
+                "name": "Ping drop rate"
+            },
+            "uplink_throughput": {
+                "name": "Uplink throughput"
+            },
+            "upload": {
+                "name": "Upload"
+            }
+        },
+        "switch": {
+            "sleep_schedule": {
+                "name": "Sleep schedule"
+            },
+            "stowed": {
+                "name": "Stowed"
+            }
+        },
+        "time": {
+            "sleep_end": {
+                "name": "Sleep end"
+            },
+            "sleep_start": {
+                "name": "Sleep start"
+            }
+        }
+    }
+}

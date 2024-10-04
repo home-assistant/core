@@ -1,0 +1,122 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "connection_failed": "Connection failed. Please check that the host and port is correct."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "port": "Usually 7000 or 8000"
+                }
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "thermostat": {
+                "name": "Thermostat"
+            }
+        },
+        "humidifier": {
+            "dehumidifier": {
+                "name": "Dehumidifier"
+            },
+            "humidifier": {
+                "name": "Humidifier"
+            }
+        },
+        "select": {
+            "air_cleaning_event": {
+                "name": "Air cleaning event",
+                "state": {
+                    "allergies": "Allergies (24 hour)",
+                    "event_clean": "Event clean (3 hour)",
+                    "off": "Off"
+                }
+            },
+            "air_cleaning_mode": {
+                "name": "Air cleaning mode",
+                "state": {
+                    "automatic": "Automatic",
+                    "constant_clean": "Constant clean",
+                    "off": "Off"
+                }
+            },
+            "fresh_air_event": {
+                "name": "Fresh air event",
+                "state": {
+                    "24hour": "24 hour event",
+                    "3hour": "3 hour event",
+                    "off": "Off"
+                }
+            },
+            "fresh_air_mode": {
+                "name": "Fresh air mode",
+                "state": {
+                    "automatic": "Automatic",
+                    "off": "Off"
+                }
+            }
+        },
+        "sensor": {
+            "air_cleaning_status": {
+                "name": "Air cleaning status",
+                "state": {
+                    "idle": "Idle",
+                    "off": "Off",
+                    "on": "On"
+                }
+            },
+            "dehumidification_status": {
+                "name": "Dehumidification status",
+                "state": {
+                    "idle": "Idle",
+                    "off": "Off",
+                    "on": "On"
+                }
+            },
+            "fan_status": {
+                "name": "Fan status",
+                "state": {
+                    "off": "Off",
+                    "on": "On"
+                }
+            },
+            "humidification_status": {
+                "name": "Humidification status",
+                "state": {
+                    "idle": "Idle",
+                    "off": "Off",
+                    "on": "On"
+                }
+            },
+            "indoor_humidity_controlling_sensor": {
+                "name": "Indoor humidity controlling sensor"
+            },
+            "indoor_temperature_controlling_sensor": {
+                "name": "Indoor temperature controlling sensor"
+            },
+            "outdoor_humidity_controlling_sensor": {
+                "name": "Outdoor humidity controlling sensor"
+            },
+            "outdoor_temperature_controlling_sensor": {
+                "name": "Outdoor temperature controlling sensor"
+            },
+            "ventilation_status": {
+                "name": "Ventilation status",
+                "state": {
+                    "idle": "Idle",
+                    "off": "Off",
+                    "on": "On"
+                }
+            }
+        }
+    }
+}

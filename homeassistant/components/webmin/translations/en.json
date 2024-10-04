@@ -1,0 +1,87 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "description": "Please enter the connection details of your instance."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "disk_free": {
+                "name": "Disks free space"
+            },
+            "disk_fs_free": {
+                "name": "Disk free space {mountpoint}"
+            },
+            "disk_fs_ifree": {
+                "name": "Disk free inodes {mountpoint}"
+            },
+            "disk_fs_itotal": {
+                "name": "Disk total inodes {mountpoint}"
+            },
+            "disk_fs_iused": {
+                "name": "Disk used inodes {mountpoint}"
+            },
+            "disk_fs_iused_percent": {
+                "name": "Disk inode usage {mountpoint}"
+            },
+            "disk_fs_total": {
+                "name": "Disk total space {mountpoint}"
+            },
+            "disk_fs_used": {
+                "name": "Disk used space {mountpoint}"
+            },
+            "disk_fs_used_percent": {
+                "name": "Disk usage {mountpoint}"
+            },
+            "disk_total": {
+                "name": "Disks total space"
+            },
+            "disk_used": {
+                "name": "Disks used space"
+            },
+            "load_15m": {
+                "name": "Load (15m)"
+            },
+            "load_1m": {
+                "name": "Load (1m)"
+            },
+            "load_5m": {
+                "name": "Load (5m)"
+            },
+            "mem_free": {
+                "name": "Memory free"
+            },
+            "mem_total": {
+                "name": "Memory total"
+            },
+            "swap_free": {
+                "name": "Swap free"
+            },
+            "swap_total": {
+                "name": "Swap total"
+            }
+        }
+    }
+}

@@ -1,0 +1,120 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This SimpliSafe account is already in use.",
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "The user credentials provided do not match this SimpliSafe account."
+        },
+        "error": {
+            "identifier_exists": "Account already registered",
+            "invalid_auth": "Invalid authentication",
+            "invalid_auth_code_length": "SimpliSafe authorization codes are 45 characters in length",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "auth_code": "Authorization Code"
+                },
+                "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL."
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "clear_notifications": {
+                "name": "Clear notifications"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (used in Home Assistant UI)"
+                },
+                "title": "Configure SimpliSafe"
+            }
+        }
+    },
+    "services": {
+        "remove_pin": {
+            "description": "Removes a PIN by its label or value.",
+            "fields": {
+                "device_id": {
+                    "description": "The system to remove the PIN from.",
+                    "name": "System"
+                },
+                "label_or_pin": {
+                    "description": "The label/value to remove.",
+                    "name": "Label/PIN"
+                }
+            },
+            "name": "Remove PIN"
+        },
+        "set_pin": {
+            "description": "Sets/updates a PIN.",
+            "fields": {
+                "device_id": {
+                    "description": "The system to set the PIN on.",
+                    "name": "System"
+                },
+                "label": {
+                    "description": "The label of the PIN.",
+                    "name": "Label"
+                },
+                "pin": {
+                    "description": "The value of the PIN.",
+                    "name": "PIN"
+                }
+            },
+            "name": "Set PIN"
+        },
+        "set_system_properties": {
+            "description": "Sets one or more system properties.",
+            "fields": {
+                "alarm_duration": {
+                    "description": "The length of a triggered alarm.",
+                    "name": "Alarm duration"
+                },
+                "alarm_volume": {
+                    "description": "The volume level of a triggered alarm.",
+                    "name": "Alarm volume"
+                },
+                "chime_volume": {
+                    "description": "The volume level of the door chime.",
+                    "name": "Chime volume"
+                },
+                "device_id": {
+                    "description": "The system whose properties should be set.",
+                    "name": "System"
+                },
+                "entry_delay_away": {
+                    "description": "How long to delay when entering while \"away\".",
+                    "name": "Entry delay away"
+                },
+                "entry_delay_home": {
+                    "description": "How long to delay when entering while \"home\".",
+                    "name": "Entry delay home"
+                },
+                "exit_delay_away": {
+                    "description": "How long to delay when exiting while \"away\".",
+                    "name": "Exit delay away"
+                },
+                "exit_delay_home": {
+                    "description": "How long to delay when exiting while \"home\".",
+                    "name": "Exit delay home"
+                },
+                "light": {
+                    "description": "Whether the armed light should be visible.",
+                    "name": "Light"
+                },
+                "voice_prompt_volume": {
+                    "description": "The volume level of the voice prompt.",
+                    "name": "Voice prompt volume"
+                }
+            },
+            "name": "Set system properties"
+        }
+    }
+}

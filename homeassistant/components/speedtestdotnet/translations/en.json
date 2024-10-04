@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "download": {
+                "name": "Download",
+                "state_attributes": {
+                    "bytes_received": {
+                        "name": "Bytes received"
+                    },
+                    "server_country": {
+                        "name": "Server country"
+                    },
+                    "server_id": {
+                        "name": "Server ID"
+                    },
+                    "server_name": {
+                        "name": "Server name"
+                    }
+                }
+            },
+            "ping": {
+                "name": "Ping",
+                "state_attributes": {
+                    "server_country": {
+                        "name": "Server country"
+                    },
+                    "server_id": {
+                        "name": "Server ID"
+                    },
+                    "server_name": {
+                        "name": "Server name"
+                    }
+                }
+            },
+            "upload": {
+                "name": "Upload",
+                "state_attributes": {
+                    "bytes_sent": {
+                        "name": "Bytes sent"
+                    },
+                    "server_country": {
+                        "name": "Server country"
+                    },
+                    "server_id": {
+                        "name": "Server ID"
+                    },
+                    "server_name": {
+                        "name": "Server name"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "server_name": "Select test server"
+                }
+            }
+        }
+    }
+}

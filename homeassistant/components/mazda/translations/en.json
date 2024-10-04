@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "integration_removed": {
+            "description": "The Mazda integration has been removed from Home Assistant.\n\nThe library that Home Assistant uses to connect with their services, [has been taken offline by Mazda]({dmca}).\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Mazda integration entries]({entries}).",
+            "title": "The Mazda integration has been removed"
+        }
+    }
+}

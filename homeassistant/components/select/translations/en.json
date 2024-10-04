@@ -1,0 +1,80 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_first": "Change {entity_name} to first option",
+            "select_last": "Change {entity_name} to last option",
+            "select_next": "Change {entity_name} to next option",
+            "select_option": "Change {entity_name} option",
+            "select_previous": "Change {entity_name} to previous option"
+        },
+        "condition_type": {
+            "selected_option": "Current {entity_name} selected option"
+        },
+        "extra_fields": {
+            "cycle": "Cycle",
+            "for": "Duration",
+            "from": "From",
+            "option": "Option",
+            "to": "To"
+        },
+        "trigger_type": {
+            "current_option_changed": "{entity_name} option changed"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Select",
+            "state_attributes": {
+                "options": {
+                    "name": "Options"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "not_valid_option": {
+            "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
+        }
+    },
+    "services": {
+        "select_first": {
+            "description": "Selects the first option.",
+            "name": "First"
+        },
+        "select_last": {
+            "description": "Selects the last option.",
+            "name": "Last"
+        },
+        "select_next": {
+            "description": "Selects the next option.",
+            "fields": {
+                "cycle": {
+                    "description": "If the option should cycle from the last to the first.",
+                    "name": "Cycle"
+                }
+            },
+            "name": "Next"
+        },
+        "select_option": {
+            "description": "Selects an option.",
+            "fields": {
+                "option": {
+                    "description": "Option to be selected.",
+                    "name": "Option"
+                }
+            },
+            "name": "Select"
+        },
+        "select_previous": {
+            "description": "Selects the previous option.",
+            "fields": {
+                "cycle": {
+                    "description": "If the option should cycle from the first to the last.",
+                    "name": "Cycle"
+                }
+            },
+            "name": "Previous"
+        }
+    },
+    "title": "Select"
+}

@@ -1,0 +1,114 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} turned on or off",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Remote",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            }
+        }
+    },
+    "services": {
+        "delete_command": {
+            "description": "Deletes a command or a list of commands from the database.",
+            "fields": {
+                "command": {
+                    "description": "The single command or the list of commands to be deleted.",
+                    "name": "Command"
+                },
+                "device": {
+                    "description": "Device from which commands will be deleted.",
+                    "name": "Device"
+                }
+            },
+            "name": "Delete command"
+        },
+        "learn_command": {
+            "description": "Learns a command or a list of commands from a device.",
+            "fields": {
+                "alternative": {
+                    "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state.",
+                    "name": "Alternative"
+                },
+                "command": {
+                    "description": "A single command or a list of commands to learn.",
+                    "name": "Command"
+                },
+                "command_type": {
+                    "description": "The type of command to be learned.",
+                    "name": "Command type"
+                },
+                "device": {
+                    "description": "Device ID to learn command from.",
+                    "name": "Device"
+                },
+                "timeout": {
+                    "description": "Timeout for the command to be learned.",
+                    "name": "Timeout"
+                }
+            },
+            "name": "Learn command"
+        },
+        "send_command": {
+            "description": "Sends a command or a list of commands to a device.",
+            "fields": {
+                "command": {
+                    "description": "A single command or a list of commands to send.",
+                    "name": "Command"
+                },
+                "delay_secs": {
+                    "description": "The time you want to wait in between repeated commands.",
+                    "name": "Delay seconds"
+                },
+                "device": {
+                    "description": "Device ID to send command to.",
+                    "name": "Device"
+                },
+                "hold_secs": {
+                    "description": "The time you want to have it held before the release is send.",
+                    "name": "Hold seconds"
+                },
+                "num_repeats": {
+                    "description": "The number of times you want to repeat the commands.",
+                    "name": "Repeats"
+                }
+            },
+            "name": "Send command"
+        },
+        "toggle": {
+            "description": "Sends the toggle command.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Sends the turn off command.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Sends the turn on command.",
+            "fields": {
+                "activity": {
+                    "description": "Activity ID or activity name to be started.",
+                    "name": "Activity"
+                }
+            },
+            "name": "Turn on"
+        }
+    },
+    "title": "Remote"
+}

@@ -1,0 +1,19 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Client error occurred when calling resource \"{request_url}\""
+        },
+        "decoding_error": {
+            "message": "The response of \"{request_url}\" could not be decoded as {decoding_type}"
+        },
+        "timeout": {
+            "message": "Timeout when calling resource \"{request_url}\""
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads RESTful commands from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

@@ -1,0 +1,139 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to add {name} ({host}) to Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The host name or the IP address of the Palazzetti CBox"
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "silent": {
+                "name": "Silent"
+            }
+        },
+        "climate": {
+            "palazzetti": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "high": "High",
+                            "silent": "Silent"
+                        }
+                    }
+                }
+            }
+        },
+        "number": {
+            "combustion_power": {
+                "name": "Combustion power"
+            },
+            "fan_left_speed": {
+                "name": "Left fan speed"
+            },
+            "fan_right_speed": {
+                "name": "Right fan speed"
+            }
+        },
+        "sensor": {
+            "air_outlet_temperature": {
+                "name": "Air outlet temperature"
+            },
+            "pellet_level": {
+                "name": "Pellet level"
+            },
+            "pellet_quantity": {
+                "name": "Pellet quantity"
+            },
+            "return_water_temperature": {
+                "name": "Return water temperature"
+            },
+            "room_temperature": {
+                "name": "Room temperature"
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "burning": "Operating",
+                    "burning_mod": "Operating - Modulating",
+                    "chimney_alarm": "Chimney alarm",
+                    "clean_fire": "Burn pot cleaning",
+                    "cleaning_warning": "Cleaning warning",
+                    "cleanup": "Final cleaning",
+                    "cool_fluid": "Stand-by",
+                    "cooling": "Cooling in progress",
+                    "door_open": "Door open",
+                    "ecomode": "Ecomode",
+                    "exhaust_temp_high": "Too high exhaust gas temperature",
+                    "fire_stop": "Switch off",
+                    "firewood_finished": "Firewood finished",
+                    "flue_probe_failure": "Flue gas probe failure",
+                    "fuel_error": "Fuel error",
+                    "fueling": "Ignition",
+                    "general_error": "General error",
+                    "grate_error": "Grate error",
+                    "hatch_door_open": "Feed hatch or door open",
+                    "heatup": "Pellet feed",
+                    "ign_test": "Fuel check",
+                    "main_probe_failure": "Main probe failure",
+                    "off": "Off",
+                    "off_timer": "Timer-regulated switch off",
+                    "pellet_finished": "Pellets finished or ignition failed",
+                    "pellet_water_error": "Pellet probe or return water error",
+                    "pressure_error": "Safety pressure switch error",
+                    "t05_error": "T05 error disconnected or faulty probe",
+                    "temp_too_high": "Temperature too high",
+                    "test_fire": "Ignition test",
+                    "unknown": "Unknown"
+                }
+            },
+            "t1_hydro": {
+                "name": "Hydro temperature 1"
+            },
+            "t2_hydro": {
+                "name": "Hydro temperature 2"
+            },
+            "tank_water_temperature": {
+                "name": "Tank water temperature"
+            },
+            "wood_combustion_temperature": {
+                "name": "Wood combustion temperature"
+            }
+        }
+    },
+    "exceptions": {
+        "cannot_connect": {
+            "message": "Could not connect to the device."
+        },
+        "invalid_combustion_power": {
+            "message": "Combustion power {value} is invalid."
+        },
+        "invalid_fan_mode": {
+            "message": "Fan mode {value} is invalid."
+        },
+        "invalid_fan_speed": {
+            "message": "Fan {name} speed {value} is invalid."
+        },
+        "invalid_target_temperature": {
+            "message": "Target temperature {value} is invalid."
+        },
+        "on_off_not_available": {
+            "message": "The appliance cannot be turned on or off."
+        }
+    }
+}

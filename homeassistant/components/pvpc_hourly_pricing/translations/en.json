@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "api_token": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "description": "To use the extended API you must request a personal token by mailing to {mail_to_link}.",
+                "title": "ESIOS API token"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token",
+                    "description": "Re-authenticate with a valid token or disable it",
+                    "use_api_token": "Enable ESIOS Personal API token for private access"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Sensor Name",
+                    "power": "Contracted power (kW)",
+                    "power_p3": "Contracted power for valley period P3 (kW)",
+                    "tariff": "Applicable tariff by geographic zone",
+                    "use_api_token": "Enable ESIOS Personal API token for private access"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "api_token": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "description": "To use the extended API you must request a personal token by mailing to {mail_to_link}.",
+                "title": "ESIOS API token"
+            },
+            "init": {
+                "data": {
+                    "power": "Contracted power (kW)",
+                    "power_p3": "Contracted power for valley period P3 (kW)",
+                    "use_api_token": "Enable ESIOS Personal API token for private access"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,261 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "The Netatmo integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "Away",
+            "hg": "Frost guard",
+            "schedule": "Schedule"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} detected an alarm",
+            "animal": "{entity_name} detected an animal",
+            "cancel_set_point": "{entity_name} has resumed its schedule",
+            "human": "{entity_name} detected a human",
+            "movement": "{entity_name} detected movement",
+            "outdoor": "{entity_name} detected an outdoor event",
+            "person": "{entity_name} detected a person",
+            "person_away": "{entity_name} detected a person has left",
+            "set_point": "Target temperature {entity_name} set manually",
+            "therm_mode": "{entity_name} switched to \"{subtype}\"",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on",
+            "vehicle": "{entity_name} detected a vehicle"
+        }
+    },
+    "entity": {
+        "button": {
+            "preferred_position": {
+                "name": "Preferred position"
+            }
+        },
+        "climate": {
+            "thermostat": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "frost_guard": "Frost guard",
+                            "manual": "Manual",
+                            "schedule": "Schedule"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "gust_angle": {
+                "name": "Gust angle"
+            },
+            "gust_direction": {
+                "name": "Gust direction",
+                "state": {
+                    "e": "East",
+                    "n": "North",
+                    "ne": "North-east",
+                    "nw": "North-west",
+                    "s": "South",
+                    "se": "South-east",
+                    "sw": "South-west",
+                    "w": "West"
+                }
+            },
+            "gust_strength": {
+                "name": "Gust strength"
+            },
+            "health_idx": {
+                "name": "Health index",
+                "state": {
+                    "fair": "Fair",
+                    "fine": "Fine",
+                    "healthy": "Healthy",
+                    "poor": "Poor",
+                    "unhealthy": "Unhealthy"
+                }
+            },
+            "noise": {
+                "name": "Noise"
+            },
+            "pressure_trend": {
+                "name": "Pressure trend"
+            },
+            "reachable": {
+                "name": "Reachability"
+            },
+            "rf_strength": {
+                "name": "Radio"
+            },
+            "sum_rain_1": {
+                "name": "Precipitation last hour"
+            },
+            "sum_rain_24": {
+                "name": "Precipitation today"
+            },
+            "temp_trend": {
+                "name": "Temperature trend"
+            },
+            "wifi_strength": {
+                "name": "Wi-Fi"
+            },
+            "wind_angle": {
+                "name": "Wind angle"
+            },
+            "wind_direction": {
+                "name": "Wind direction",
+                "state": {
+                    "e": "East",
+                    "n": "North",
+                    "ne": "North-east",
+                    "nw": "North-west",
+                    "s": "South",
+                    "se": "South-east",
+                    "sw": "South-west",
+                    "w": "West"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Name of the area",
+                    "lat_ne": "North-East corner latitude",
+                    "lat_sw": "South-West corner latitude",
+                    "lon_ne": "North-East corner longitude",
+                    "lon_sw": "South-West corner longitude",
+                    "mode": "Calculation",
+                    "show_on_map": "Show on map"
+                },
+                "description": "Configure a public weather sensor for an area.",
+                "title": "Netatmo public weather sensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Area name",
+                    "weather_areas": "Weather areas"
+                },
+                "description": "Configure public weather sensors.",
+                "title": "Netatmo public weather sensor"
+            }
+        }
+    },
+    "services": {
+        "clear_temperature_setting": {
+            "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule.",
+            "name": "Clear temperature setting"
+        },
+        "register_webhook": {
+            "description": "Registers the webhook to the Netatmo backend.",
+            "name": "Register webhook"
+        },
+        "set_camera_light": {
+            "description": "Sets the light mode for a Netatmo Outdoor camera light.",
+            "fields": {
+                "camera_light_mode": {
+                    "description": "Outdoor camera light mode.",
+                    "name": "Camera light mode"
+                }
+            },
+            "name": "Set camera light mode"
+        },
+        "set_person_away": {
+            "description": "Sets a person as away. If no person is set the home will be marked as empty. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
+            "fields": {
+                "person": {
+                    "description": "Person's name.",
+                    "name": "Person"
+                }
+            },
+            "name": "Set person away"
+        },
+        "set_persons_home": {
+            "description": "Sets a list of persons as at home. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
+            "fields": {
+                "persons": {
+                    "description": "List of names.",
+                    "name": "Persons"
+                }
+            },
+            "name": "Set persons at home"
+        },
+        "set_preset_mode_with_end_datetime": {
+            "description": "Sets the preset mode for a Netatmo climate device. The preset mode must match a preset mode configured at Netatmo.",
+            "fields": {
+                "end_datetime": {
+                    "description": "Date & time the preset will be active until.",
+                    "name": "End date & time"
+                },
+                "preset_mode": {
+                    "description": "Climate preset mode such as Schedule, Away or Frost Guard.",
+                    "name": "Preset mode"
+                }
+            },
+            "name": "Set preset mode with end date & time"
+        },
+        "set_schedule": {
+            "description": "Sets the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.",
+            "fields": {
+                "schedule_name": {
+                    "description": "Schedule name.",
+                    "name": "Schedule"
+                }
+            },
+            "name": "Set heating schedule"
+        },
+        "set_temperature_with_end_datetime": {
+            "description": "Sets the target temperature for a Netatmo climate device with an end date & time.",
+            "fields": {
+                "end_datetime": {
+                    "description": "Date & time the target temperature will be active until.",
+                    "name": "End date & time"
+                },
+                "target_temperature": {
+                    "description": "The target temperature for the device.",
+                    "name": "Target temperature"
+                }
+            },
+            "name": "Set temperature with end date & time"
+        },
+        "set_temperature_with_time_period": {
+            "description": "Sets the target temperature for a Netatmo climate device with time period.",
+            "fields": {
+                "target_temperature": {
+                    "description": "The target temperature for the device.",
+                    "name": "Target temperature"
+                },
+                "time_period": {
+                    "description": "The time period which the temperature setting will be active for.",
+                    "name": "Time period"
+                }
+            },
+            "name": "Set temperature with time period"
+        },
+        "unregister_webhook": {
+            "description": "Unregisters the webhook from the Netatmo backend.",
+            "name": "Unregister webhook"
+        }
+    }
+}

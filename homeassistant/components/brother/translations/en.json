@@ -1,0 +1,163 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unsupported_model": "This printer model is not supported."
+        },
+        "error": {
+            "another_device": "The IP address or hostname of another Brother printer was used.",
+            "cannot_connect": "Failed to connect",
+            "snmp_error": "SNMP server turned off or printer not supported.",
+            "wrong_host": "Invalid hostname or IP address."
+        },
+        "flow_title": "{model} {serial_number}",
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Brother printer to control."
+                },
+                "description": "Update configuration for {printer_name}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "type": "Type of the printer"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Brother printer to control."
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Type of the printer"
+                },
+                "description": "Do you want to add the printer {model} with serial number `{serial_number}` to Home Assistant?",
+                "title": "Discovered Brother Printer"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "belt_unit_remaining_life": {
+                "name": "Belt unit remaining lifetime"
+            },
+            "black_drum_page_counter": {
+                "name": "Black drum page counter",
+                "unit_of_measurement": "pages"
+            },
+            "black_drum_remaining_life": {
+                "name": "Black drum remaining lifetime"
+            },
+            "black_drum_remaining_pages": {
+                "name": "Black drum remaining pages",
+                "unit_of_measurement": "pages"
+            },
+            "black_ink_remaining": {
+                "name": "Black ink remaining"
+            },
+            "black_toner_remaining": {
+                "name": "Black toner remaining"
+            },
+            "bw_pages": {
+                "name": "B/W pages",
+                "unit_of_measurement": "pages"
+            },
+            "color_pages": {
+                "name": "Color pages",
+                "unit_of_measurement": "pages"
+            },
+            "cyan_drum_page_counter": {
+                "name": "Cyan drum page counter",
+                "unit_of_measurement": "pages"
+            },
+            "cyan_drum_remaining_life": {
+                "name": "Cyan drum remaining lifetime"
+            },
+            "cyan_drum_remaining_pages": {
+                "name": "Cyan drum remaining pages",
+                "unit_of_measurement": "pages"
+            },
+            "cyan_ink_remaining": {
+                "name": "Cyan ink remaining"
+            },
+            "cyan_toner_remaining": {
+                "name": "Cyan toner remaining"
+            },
+            "drum_page_counter": {
+                "name": "Drum page counter",
+                "unit_of_measurement": "pages"
+            },
+            "drum_remaining_life": {
+                "name": "Drum remaining lifetime"
+            },
+            "drum_remaining_pages": {
+                "name": "Drum remaining pages",
+                "unit_of_measurement": "pages"
+            },
+            "duplex_unit_page_counter": {
+                "name": "Duplex unit page counter",
+                "unit_of_measurement": "pages"
+            },
+            "fuser_remaining_life": {
+                "name": "Fuser remaining lifetime"
+            },
+            "laser_remaining_life": {
+                "name": "Laser remaining lifetime"
+            },
+            "last_restart": {
+                "name": "Last restart"
+            },
+            "magenta_drum_page_counter": {
+                "name": "Magenta drum page counter",
+                "unit_of_measurement": "pages"
+            },
+            "magenta_drum_remaining_life": {
+                "name": "Magenta drum remaining lifetime"
+            },
+            "magenta_drum_remaining_pages": {
+                "name": "Magenta drum remaining pages",
+                "unit_of_measurement": "pages"
+            },
+            "magenta_ink_remaining": {
+                "name": "Magenta ink remaining"
+            },
+            "magenta_toner_remaining": {
+                "name": "Magenta toner remaining"
+            },
+            "page_counter": {
+                "name": "Page counter",
+                "unit_of_measurement": "pages"
+            },
+            "pf_kit_1_remaining_life": {
+                "name": "PF Kit 1 remaining lifetime"
+            },
+            "pf_kit_mp_remaining_life": {
+                "name": "PF Kit MP remaining lifetime"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "yellow_drum_page_counter": {
+                "name": "Yellow drum page counter",
+                "unit_of_measurement": "pages"
+            },
+            "yellow_drum_remaining_life": {
+                "name": "Yellow drum remaining lifetime"
+            },
+            "yellow_drum_remaining_pages": {
+                "name": "Yellow drum remaining pages",
+                "unit_of_measurement": "pages"
+            },
+            "yellow_ink_remaining": {
+                "name": "Yellow ink remaining"
+            },
+            "yellow_toner_remaining": {
+                "name": "Yellow toner remaining"
+            }
+        }
+    }
+}

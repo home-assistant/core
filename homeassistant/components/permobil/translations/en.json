@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "code_request_error": "Error requesting application code",
+            "invalid_code": "The code you gave is incorrect",
+            "invalid_email": "Invalid email",
+            "region_fetch_error": "Error fetching regions",
+            "unknown": "Unexpected error, more information in the logs",
+            "unsigned_eula": "Please sign the EULA in the {app_name} app"
+        },
+        "step": {
+            "email_code": {
+                "data": {
+                    "code": "Email code"
+                },
+                "description": "Enter the code that was sent to your email."
+            },
+            "region": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Select the region of your account."
+            },
+            "user": {
+                "data": {
+                    "email": "Enter your permobil email"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "is_charging": {
+                "name": "Is charging"
+            }
+        },
+        "sensor": {
+            "charge_time_left": {
+                "name": "Charge time left"
+            },
+            "distance_left": {
+                "name": "Distance left"
+            },
+            "indoor_drive_time": {
+                "name": "Indoor drive time"
+            },
+            "max_distance_left": {
+                "name": "Full charge distance"
+            },
+            "max_watt_hours": {
+                "name": "Battery max watt hours"
+            },
+            "record_adjustments": {
+                "name": "Record number of adjustments"
+            },
+            "record_distance": {
+                "name": "Record distance"
+            },
+            "state_of_charge": {
+                "name": "Battery charge"
+            },
+            "state_of_health": {
+                "name": "Battery health"
+            },
+            "usage_adjustments": {
+                "name": "Number of adjustments"
+            },
+            "usage_distance": {
+                "name": "Distance traveled"
+            },
+            "watt_hours_left": {
+                "name": "Watt hours left"
+            }
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "server": "Server",
+                    "username": "Username"
+                },
+                "description": "Enter Dexcom Share credentials",
+                "title": "Set up Dexcom integration"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "glucose_trend": {
+                "name": "Glucose trend",
+                "state": {
+                    "falling": "Falling",
+                    "falling_quickly": "Falling quickly",
+                    "falling_slightly": "Falling slightly",
+                    "rising": "Rising",
+                    "rising_quickly": "Rising quickly",
+                    "rising_slightly": "Rising slightly",
+                    "steady": "Steady"
+                }
+            },
+            "glucose_value": {
+                "name": "Glucose value"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unit of measurement"
+                }
+            }
+        }
+    }
+}

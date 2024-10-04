@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "chlorine_status": {
+                "name": "Chlorine status"
+            },
+            "ph_status": {
+                "name": "pH status"
+            }
+        },
+        "sensor": {
+            "chlorine": {
+                "name": "Chlorine"
+            },
+            "chlorine_high": {
+                "name": "Chlorine high"
+            },
+            "chlorine_low": {
+                "name": "Chlorine low"
+            },
+            "last_seen": {
+                "name": "Last seen"
+            },
+            "ph_high": {
+                "name": "pH high"
+            },
+            "ph_low": {
+                "name": "pH low"
+            }
+        }
+    }
+}

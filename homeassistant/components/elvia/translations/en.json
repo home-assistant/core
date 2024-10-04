@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "metering_point_id_already_configured": "Metering point with ID `{metering_point_id}` is already configured.",
+            "no_metering_points": "The provived API token has no metering points."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "select_meter": {
+                "data": {
+                    "metering_point_id": "Select your metering point ID"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "description": "Enter your meter value API token from Elvia"
+            }
+        }
+    }
+}

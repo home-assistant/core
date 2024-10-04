@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password of your LetPot account."
+                },
+                "description": "The LetPot integration needs to re-authenticate your account {email}."
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address of your LetPot account.",
+                    "password": "The password of your LetPot account."
+                }
+            }
+        }
+    },
+    "entity": {
+        "time": {
+            "light_schedule_end": {
+                "name": "Light off"
+            },
+            "light_schedule_start": {
+                "name": "Light on"
+            }
+        }
+    }
+}

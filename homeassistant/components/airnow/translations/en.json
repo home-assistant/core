@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_location": "No results found for that location, try changing the location or station radius.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "radius": "Station Radius (miles; optional)"
+                },
+                "description": "To generate API key go to https://docs.airnowapi.org/account/request/"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "o3": {
+                "name": "Ozone"
+            },
+            "station": {
+                "name": "Reporting station",
+                "state_attributes": {
+                    "lat": {
+                        "name": "Latitude"
+                    },
+                    "long": {
+                        "name": "Longitude"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "radius": "Station Radius (miles)"
+                }
+            }
+        }
+    }
+}

@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant import msh_utils
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import person
@@ -173,6 +174,8 @@ class UserOnboardingView(_BaseOnboardingStepView):
                 vol.Required("name"): str,
                 vol.Required("username"): str,
                 vol.Required("password"): str,
+                vol.Required("secret_key"): str,
+                vol.Required("home_name"): str,
                 vol.Required("client_id"): str,
                 vol.Required("language"): str,
             }
@@ -185,6 +188,44 @@ class UserOnboardingView(_BaseOnboardingStepView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message("User step already done", HTTPStatus.FORBIDDEN)
+
+            scheme = request.scheme
+            host = request.host
+            host_url = f"{scheme}://{host}"
+
+            # Intercept to verify secret key
+            verification_result = await msh_utils.verify_secret_key(
+                data["secret_key"],
+                data["home_name"],
+                data["name"],
+                data["username"],
+                data["password"],
+                host_url,
+            )
+
+            if not verification_result["success"]:
+                return self.json_message(
+                    verification_result["message"],
+                    HTTPStatus.BAD_REQUEST,
+                )
+
+            # Extract serverId if needed from the cloud function's response
+            server_id = verification_result["data"].get("serverId")
+            await msh_utils.write_key_value_to_config_file(
+                msh_utils.SERVER_ID, server_id
+            )
+
+            # extract external url
+            external_url = verification_result["data"].get("externalUrl")
+            await msh_utils.write_key_value_to_config_file(
+                msh_utils.EXTERNAL_URL, external_url
+            )
+
+            # save the code
+            await msh_utils.fetch_and_save_device_limit(data["username"], server_id)
+
+            # config_path = os.path.join(hass.config.config_dir, YAML_CONFIG_FILE)
+            # await msh_utils.add_external_url_into_confi_cors(external_url, config_path)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()

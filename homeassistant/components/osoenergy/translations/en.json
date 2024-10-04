@@ -1,0 +1,233 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "Enter a new 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'.",
+                "title": "OSO Energy auth"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "Enter the 'Subscription key' for your account generated at 'https://portal.osoenergy.no/'",
+                "title": "OSO Energy auth"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "extra_energy": {
+                "name": "Extra energy"
+            },
+            "heating": {
+                "name": "Heating"
+            },
+            "power_save": {
+                "name": "Power save"
+            }
+        },
+        "sensor": {
+            "capacity_mixed_water_40": {
+                "name": "Capacity mixed water 40\u00b0C"
+            },
+            "heater_mode": {
+                "name": "Heater mode",
+                "state": {
+                    "auto": "Auto",
+                    "extraenergy": "Extra energy",
+                    "ffr": "Fast frequency reserve",
+                    "legionella": "Legionella",
+                    "manual": "Manual",
+                    "off": "Off",
+                    "powersave": "Power save",
+                    "voltage": "Voltage"
+                }
+            },
+            "optimization_mode": {
+                "name": "Optimization mode",
+                "state": {
+                    "advanced": "Advanced",
+                    "gridcompany": "Grid company",
+                    "off": "Off",
+                    "oso": "OSO",
+                    "smartcompany": "Smart company"
+                }
+            },
+            "profile": {
+                "name": "Profile local"
+            },
+            "tapping_capacity": {
+                "name": "Tapping capacity"
+            },
+            "temperature_low": {
+                "name": "Temperature bottom"
+            },
+            "temperature_mid": {
+                "name": "Temperature middle"
+            },
+            "temperature_one": {
+                "name": "Temperature one"
+            },
+            "temperature_top": {
+                "name": "Temperature top"
+            },
+            "v40_level_max": {
+                "name": "Maximum level of mixed water at 40\u00b0C"
+            },
+            "v40_level_min": {
+                "name": "Minimum level of mixed water at 40\u00b0C"
+            },
+            "v40_min": {
+                "name": "Mixed water at 40\u00b0C"
+            }
+        }
+    },
+    "services": {
+        "get_profile": {
+            "description": "Gets the temperature profile for water heater",
+            "name": "Get heater profile"
+        },
+        "set_profile": {
+            "description": "Sets the temperature profile for water heater",
+            "fields": {
+                "hour_00": {
+                    "description": "00:00 hour",
+                    "name": "00:00"
+                },
+                "hour_01": {
+                    "description": "01:00 hour",
+                    "name": "01:00"
+                },
+                "hour_02": {
+                    "description": "02:00 hour",
+                    "name": "02:00"
+                },
+                "hour_03": {
+                    "description": "03:00 hour",
+                    "name": "03:00"
+                },
+                "hour_04": {
+                    "description": "04:00 hour",
+                    "name": "04:00"
+                },
+                "hour_05": {
+                    "description": "05:00 hour",
+                    "name": "05:00"
+                },
+                "hour_06": {
+                    "description": "06:00 hour",
+                    "name": "06:00"
+                },
+                "hour_07": {
+                    "description": "07:00 hour",
+                    "name": "07:00"
+                },
+                "hour_08": {
+                    "description": "08:00 hour",
+                    "name": "08:00"
+                },
+                "hour_09": {
+                    "description": "09:00 hour",
+                    "name": "09:00"
+                },
+                "hour_10": {
+                    "description": "10:00 hour",
+                    "name": "10:00"
+                },
+                "hour_11": {
+                    "description": "11:00 hour",
+                    "name": "11:00"
+                },
+                "hour_12": {
+                    "description": "12:00 hour",
+                    "name": "12:00"
+                },
+                "hour_13": {
+                    "description": "13:00 hour",
+                    "name": "13:00"
+                },
+                "hour_14": {
+                    "description": "14:00 hour",
+                    "name": "14:00"
+                },
+                "hour_15": {
+                    "description": "15:00 hour",
+                    "name": "15:00"
+                },
+                "hour_16": {
+                    "description": "16:00 hour",
+                    "name": "16:00"
+                },
+                "hour_17": {
+                    "description": "17:00 hour",
+                    "name": "17:00"
+                },
+                "hour_18": {
+                    "description": "18:00 hour",
+                    "name": "18:00"
+                },
+                "hour_19": {
+                    "description": "19:00 hour",
+                    "name": "19:00"
+                },
+                "hour_20": {
+                    "description": "20:00 hour",
+                    "name": "20:00"
+                },
+                "hour_21": {
+                    "description": "21:00 hour",
+                    "name": "21:00"
+                },
+                "hour_22": {
+                    "description": "22:00 hour",
+                    "name": "22:00"
+                },
+                "hour_23": {
+                    "description": "23:00 hour",
+                    "name": "23:00"
+                }
+            },
+            "name": "Set heater profile"
+        },
+        "set_v40_min": {
+            "description": "Sets the minimum quantity of water at 40\u00b0C for a heater",
+            "fields": {
+                "v40_min": {
+                    "description": "Minimum quantity of water at 40\u00b0C (200-350 for SAGA S200, 300-550 for SAGA S300)",
+                    "name": "V40 Min"
+                }
+            },
+            "name": "Set v40 min"
+        },
+        "turn_off": {
+            "description": "Turns off heating for one hour or until min temperature is reached",
+            "fields": {
+                "until_temp_limit": {
+                    "description": "Choose if heating should be off until min temperature (True) is reached or for one hour (False)",
+                    "name": "Until temperature limit"
+                }
+            },
+            "name": "Turn off heating"
+        },
+        "turn_on": {
+            "description": "Turns on heating for one hour or until max temperature is reached",
+            "fields": {
+                "until_temp_limit": {
+                    "description": "Choose if heating should be on until max temperature (True) is reached or for one hour (False)",
+                    "name": "Until temperature limit"
+                }
+            },
+            "name": "Turn on heating"
+        }
+    }
+}

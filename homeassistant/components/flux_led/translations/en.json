@@ -1,0 +1,161 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {model} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "If you leave the host empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "unpair_remotes": {
+                "name": "Unpair remotes"
+            }
+        },
+        "number": {
+            "effect_speed": {
+                "name": "Effect speed"
+            },
+            "music_pixels_per_segment": {
+                "name": "Music pixels per segment"
+            },
+            "music_segments": {
+                "name": "Music segments"
+            },
+            "pixels_per_segment": {
+                "name": "Pixels per segment"
+            },
+            "segments": {
+                "name": "Segments"
+            }
+        },
+        "select": {
+            "ic_type": {
+                "name": "IC type"
+            },
+            "operating_mode": {
+                "name": "Operating mode"
+            },
+            "power_restored": {
+                "name": "Power restored"
+            },
+            "remote_config": {
+                "name": "Remote config"
+            },
+            "white_channel": {
+                "name": "White channel"
+            },
+            "wiring": {
+                "name": "Wiring"
+            }
+        },
+        "sensor": {
+            "paired_remotes": {
+                "name": "Paired remotes"
+            }
+        },
+        "switch": {
+            "music": {
+                "name": "Music"
+            },
+            "remote_access": {
+                "name": "Remote access"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Custom Effect: List of 1 to 16 [R,G,B] colors. Example: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Custom Effect: Speed in percentage for the effects that switch colors.",
+                    "custom_effect_transition": "Custom Effect: Type of transition between the colors.",
+                    "mode": "The chosen brightness mode."
+                }
+            }
+        }
+    },
+    "services": {
+        "set_custom_effect": {
+            "description": "Sets a custom light effect.",
+            "fields": {
+                "colors": {
+                    "description": "List of colors for the custom effect (RGB). (Max 16 Colors).",
+                    "name": "Colors"
+                },
+                "speed_pct": {
+                    "description": "The speed of the effect in % (0-100, default 50).",
+                    "name": "Speed"
+                },
+                "transition": {
+                    "description": "Effect transition.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Set custom effect"
+        },
+        "set_music_mode": {
+            "description": "Configures music mode on Controller RGB with MIC (0x08), Addressable v2 (0xA2), and Addressable v3 (0xA3) devices that have a built-in microphone.",
+            "fields": {
+                "background_color": {
+                    "description": "The background RGB color (Addressable models only).",
+                    "name": "Background color"
+                },
+                "brightness": {
+                    "description": "Light brightness (0-100).",
+                    "name": "Brightness"
+                },
+                "effect": {
+                    "description": "Effect (1-16 on Addressable models, 0-3 on RGB with MIC models).",
+                    "name": "Effect"
+                },
+                "foreground_color": {
+                    "description": "The foreground RGB color.",
+                    "name": "Foreground color"
+                },
+                "light_screen": {
+                    "description": "Light screen mode for 2 dimensional pixels (Addressable models only).",
+                    "name": "Light screen"
+                },
+                "sensitivity": {
+                    "description": "Microphone sensitivity (0-100).",
+                    "name": "Sensitivity"
+                }
+            },
+            "name": "Set music mode"
+        },
+        "set_zones": {
+            "description": "Sets strip zones for Addressable v3 controllers (0xA3).",
+            "fields": {
+                "colors": {
+                    "description": "List of colors for each zone (RGB). The length of each zone is the number of pixels per segment divided by the number of colors. (Max 2048 Colors).",
+                    "name": "Colors"
+                },
+                "effect": {
+                    "description": "Effect.",
+                    "name": "Effect"
+                },
+                "speed_pct": {
+                    "description": "The speed of the effect in % (0-100, default 50).",
+                    "name": "Speed"
+                }
+            },
+            "name": "Set zones"
+        }
+    }
+}

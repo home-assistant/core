@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "service_unavailable_error": "The API is currently unavailable, please try again later.",
+            "unknown_auth_error": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Confirm the password for Meater Cloud account {username}."
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "username": "Meater Cloud username, typically an email address."
+                },
+                "description": "Set up your Meater Cloud account."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "ambient": {
+                "name": "Ambient temperature"
+            },
+            "cook_name": {
+                "name": "Cooking"
+            },
+            "cook_peak_temp": {
+                "name": "Peak temperature"
+            },
+            "cook_state": {
+                "name": "Cook state"
+            },
+            "cook_target_temp": {
+                "name": "Target temperature"
+            },
+            "cook_time_elapsed": {
+                "name": "Time elapsed"
+            },
+            "cook_time_remaining": {
+                "name": "Time remaining"
+            },
+            "internal": {
+                "name": "Internal temperature"
+            }
+        }
+    }
+}

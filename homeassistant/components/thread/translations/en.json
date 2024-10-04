@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    }
+}

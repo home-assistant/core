@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP address",
+                    "port": "Port"
+                },
+                "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+                "title": "Connect"
+            }
+        }
+    },
+    "services": {
+        "set_time_to": {
+            "description": "Controls timers to turn the system on or off after a set number of minutes.",
+            "fields": {
+                "minutes": {
+                    "description": "Minutes until action.",
+                    "name": "Minutes"
+                }
+            },
+            "name": "Set time to"
+        }
+    }
+}

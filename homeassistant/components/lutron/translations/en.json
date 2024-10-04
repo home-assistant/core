@@ -1,0 +1,37 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Lutron main repeater."
+                },
+                "description": "Please enter the main repeater login information",
+                "title": "Main repeater setup"
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "button": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press",
+                            "release": "Release",
+                            "single_press": "Single press"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

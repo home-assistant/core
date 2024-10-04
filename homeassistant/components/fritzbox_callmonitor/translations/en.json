@@ -1,0 +1,113 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks.",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks.",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Phonebook"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your FRITZ!Box router."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "fritzbox_callmonitor": {
+                "name": "Call monitor {phonebook_name}",
+                "state": {
+                    "dialing": "Dialing",
+                    "idle": "Idle",
+                    "ringing": "Ringing",
+                    "talking": "Talking"
+                },
+                "state_attributes": {
+                    "accepted": {
+                        "name": "Accepted"
+                    },
+                    "closed": {
+                        "name": "Closed"
+                    },
+                    "device": {
+                        "name": "Device"
+                    },
+                    "duration": {
+                        "name": "Duration"
+                    },
+                    "from": {
+                        "name": "Caller number"
+                    },
+                    "from_name": {
+                        "name": "Caller name"
+                    },
+                    "initiated": {
+                        "name": "Initiated"
+                    },
+                    "prefixes": {
+                        "name": "Prefixes"
+                    },
+                    "to": {
+                        "name": "Number called"
+                    },
+                    "to_name": {
+                        "name": "Called name"
+                    },
+                    "type": {
+                        "name": "Type",
+                        "state": {
+                            "incoming": "Incoming",
+                            "outgoing": "Outgoing"
+                        }
+                    },
+                    "vip": {
+                        "name": "Important"
+                    },
+                    "with": {
+                        "name": "With number"
+                    },
+                    "with_name": {
+                        "name": "With name"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Prefixes are malformed, please check their format."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefixes (comma separated list)"
+                },
+                "title": "Configure Prefixes"
+            }
+        }
+    }
+}

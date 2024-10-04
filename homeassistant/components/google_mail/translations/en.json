@@ -1,0 +1,84 @@
+{
+    "application_credentials": {
+        "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Mail. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_credentials": "The integration requires application credentials.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "user_rejected_authorize": "Account linking rejected: {error}",
+            "wrong_account": "Wrong account: Please authenticate with {email}."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "auth": {
+                "title": "Link Google Account"
+            },
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "The Google Mail integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "vacation_end_date": {
+                "name": "Vacation end date"
+            }
+        }
+    },
+    "services": {
+        "set_vacation": {
+            "description": "Sets vacation responder settings for Google Mail.",
+            "fields": {
+                "enabled": {
+                    "description": "Turn this off to end vacation responses.",
+                    "name": "Enabled"
+                },
+                "end": {
+                    "description": "Last day of the vacation.",
+                    "name": "End"
+                },
+                "message": {
+                    "description": "Body of the email.",
+                    "name": "Message"
+                },
+                "plain_text": {
+                    "description": "Choose to send message in plain text or HTML.",
+                    "name": "Plain text"
+                },
+                "restrict_contacts": {
+                    "description": "Restrict automatic reply to contacts.",
+                    "name": "Restrict to contacts"
+                },
+                "restrict_domain": {
+                    "description": "Restrict automatic reply to domain. This only affects Google Workspace accounts.",
+                    "name": "Restrict to domain"
+                },
+                "start": {
+                    "description": "First day of the vacation.",
+                    "name": "Start"
+                },
+                "title": {
+                    "description": "The subject for the email.",
+                    "name": "Title"
+                }
+            },
+            "name": "Set vacation"
+        }
+    }
+}

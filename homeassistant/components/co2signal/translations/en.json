@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "no_data": "No data is available for the location you have selected.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Country code"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Access token"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Access token",
+                    "location": "Location"
+                },
+                "description": "Visit https://electricitymaps.com/free-tier to request a token."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "carbon_intensity": {
+                "name": "CO2 intensity",
+                "state_attributes": {
+                    "country_code": {
+                        "name": "Country code"
+                    }
+                }
+            },
+            "fossil_fuel_percentage": {
+                "name": "Grid fossil fuel percentage",
+                "state_attributes": {
+                    "country_code": {
+                        "name": "Country code"
+                    }
+                }
+            }
+        }
+    },
+    "selector": {
+        "location": {
+            "options": {
+                "specify_coordinates": "Specify coordinates",
+                "specify_country_code": "Specify country code",
+                "use_home_location": "Use home location"
+            }
+        }
+    }
+}

@@ -1,0 +1,70 @@
+{
+    "services": {
+        "power_on": {
+            "description": "Powers on all devices which support this function.",
+            "name": "Power on"
+        },
+        "select_device": {
+            "description": "Selects an HDMI device.",
+            "fields": {
+                "device": {
+                    "description": "Address of device to select. Can be an entity ID, physical address or alias from configuration.",
+                    "name": "Device"
+                }
+            },
+            "name": "Select device"
+        },
+        "send_command": {
+            "description": "Sends CEC command into HDMI CEC capable adapter.",
+            "fields": {
+                "att": {
+                    "description": "Optional parameters.",
+                    "name": "Att"
+                },
+                "cmd": {
+                    "description": "Command itself. Could be decimal number or string with hexadecimal notation: \"0x10\".",
+                    "name": "Command"
+                },
+                "dst": {
+                    "description": "Destination for command. Could be decimal number or string with hexadecimal notation: \"0x10\".",
+                    "name": "Destination"
+                },
+                "raw": {
+                    "description": "Raw CEC command in format \"00:00:00:00\" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored.",
+                    "name": "Raw"
+                },
+                "src": {
+                    "description": "Source of command. Could be decimal number or string with hexadecimal notation: \"0x10\".",
+                    "name": "Source"
+                }
+            },
+            "name": "Send command"
+        },
+        "standby": {
+            "description": "Places in standby all devices which support this function.",
+            "name": "Standby"
+        },
+        "update": {
+            "description": "Updates devices state from network.",
+            "name": "Update"
+        },
+        "volume": {
+            "description": "Increases or decreases the system volume.",
+            "fields": {
+                "down": {
+                    "description": "Decreases the volume x levels.",
+                    "name": "Down"
+                },
+                "mute": {
+                    "description": "Mutes the audio system.",
+                    "name": "Mute"
+                },
+                "up": {
+                    "description": "Increases the volume x levels.",
+                    "name": "Up"
+                }
+            },
+            "name": "Volume"
+        }
+    }
+}

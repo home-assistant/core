@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_devices_found": "There aren't any Melnor Bluetooth devices nearby."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to add the Melnor Bluetooth valve `{name}` to Home Assistant?",
+                "title": "Discovered Melnor Bluetooth valve"
+            }
+        }
+    },
+    "entity": {
+        "number": {
+            "frequency_duration_minutes": {
+                "name": "Schedule duration"
+            },
+            "frequency_interval_hours": {
+                "name": "Schedule interval"
+            },
+            "manual_minutes": {
+                "name": "Manual duration"
+            }
+        },
+        "sensor": {
+            "manual_cycle_end": {
+                "name": "Manual cycle end"
+            },
+            "next_cycle": {
+                "name": "Next cycle"
+            },
+            "rssi": {
+                "name": "RSSI"
+            }
+        },
+        "switch": {
+            "frequency": {
+                "name": "Schedule"
+            }
+        },
+        "time": {
+            "frequency_start_time": {
+                "name": "Schedule start time"
+            }
+        }
+    }
+}

@@ -1,0 +1,136 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your WLED device."
+                },
+                "description": "Set up your WLED to integrate with Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the WLED named `{name}` to Home Assistant?",
+                "title": "Discovered WLED device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "firmware": {
+                "name": "Firmware"
+            }
+        },
+        "light": {
+            "main": {
+                "name": "Main"
+            },
+            "segment": {
+                "name": "Segment {segment}"
+            }
+        },
+        "number": {
+            "intensity": {
+                "name": "Intensity"
+            },
+            "segment_intensity": {
+                "name": "Segment {segment} intensity"
+            },
+            "segment_speed": {
+                "name": "Segment {segment} speed"
+            },
+            "speed": {
+                "name": "Speed"
+            }
+        },
+        "select": {
+            "color_palette": {
+                "name": "Color palette"
+            },
+            "live_override": {
+                "name": "Live override",
+                "state": {
+                    "0": "Off",
+                    "1": "On",
+                    "2": "Until device restarts"
+                }
+            },
+            "playlist": {
+                "name": "Playlist"
+            },
+            "preset": {
+                "name": "Preset"
+            },
+            "segment_color_palette": {
+                "name": "Segment {segment} color palette"
+            }
+        },
+        "sensor": {
+            "estimated_current": {
+                "name": "Estimated current"
+            },
+            "free_heap": {
+                "name": "Free memory"
+            },
+            "info_leds_count": {
+                "name": "LED count"
+            },
+            "info_leds_max_power": {
+                "name": "Max current"
+            },
+            "ip": {
+                "name": "IP"
+            },
+            "uptime": {
+                "name": "Uptime"
+            },
+            "wifi_bssid": {
+                "name": "Wi-Fi BSSID"
+            },
+            "wifi_channel": {
+                "name": "Wi-Fi channel"
+            },
+            "wifi_rssi": {
+                "name": "Wi-Fi RSSI"
+            },
+            "wifi_signal": {
+                "name": "Wi-Fi signal"
+            }
+        },
+        "switch": {
+            "nightlight": {
+                "name": "Nightlight"
+            },
+            "reverse": {
+                "name": "Reverse"
+            },
+            "segment_reverse": {
+                "name": "Segment {segment} reverse"
+            },
+            "sync_receive": {
+                "name": "Sync receive"
+            },
+            "sync_send": {
+                "name": "Sync send"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Keep main light, even with 1 LED segment."
+                }
+            }
+        }
+    }
+}

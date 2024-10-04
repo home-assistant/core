@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_phone_number": "Either wrong phone number or unregistered user",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "one_time_password": {
+                "data": {
+                    "one_time_password": "One Time Password"
+                }
+            },
+            "user": {
+                "data": {
+                    "phone_number": "Phone Number"
+                }
+            }
+        }
+    }
+}

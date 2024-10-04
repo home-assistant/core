@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "invalid_api_token": "Invalid API key",
+            "no_site": "No site provided",
+            "unknown_error": "Unexpected error"
+        },
+        "step": {
+            "site": {
+                "data": {
+                    "site_id": "Site NMI",
+                    "site_name": "Site Name"
+                },
+                "description": "Select the NMI of the site you would like to add"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API token",
+                    "site_id": "Site ID"
+                },
+                "description": "Go to {api_url} to generate an API key"
+            }
+        }
+    }
+}

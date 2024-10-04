@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{serial_number} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your Tesla Wall Connector."
+                },
+                "title": "Configure Tesla Wall Connector"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "contactor_closed": {
+                "name": "Contactor closed"
+            },
+            "vehicle_connected": {
+                "name": "Vehicle connected"
+            }
+        },
+        "sensor": {
+            "current_a_a": {
+                "name": "Phase A current"
+            },
+            "current_b_a": {
+                "name": "Phase B current"
+            },
+            "current_c_a": {
+                "name": "Phase C current"
+            },
+            "grid_hz": {
+                "name": "Grid frequency"
+            },
+            "grid_v": {
+                "name": "Grid voltage"
+            },
+            "handle_temp_c": {
+                "name": "Handle temperature"
+            },
+            "mcu_temp_c": {
+                "name": "MCU temperature"
+            },
+            "pcba_temp_c": {
+                "name": "PCB temperature"
+            },
+            "session_energy_wh": {
+                "name": "Session energy"
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "booting": "Booting",
+                    "charging": "Charging",
+                    "charging_finished": "Charging finished",
+                    "charging_reduced": "Charging (reduced)",
+                    "connected": "Vehicle connected",
+                    "error": "Error",
+                    "negotiating": "Negotiating connection",
+                    "not_connected": "Vehicle not connected",
+                    "ready": "Ready to charge",
+                    "waiting_car": "Waiting for car"
+                }
+            },
+            "status_code": {
+                "name": "Status code"
+            },
+            "voltage_a_v": {
+                "name": "Phase A voltage"
+            },
+            "voltage_b_v": {
+                "name": "Phase B voltage"
+            },
+            "voltage_c_v": {
+                "name": "Phase C voltage"
+            }
+        }
+    }
+}

@@ -1,0 +1,82 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "Lock {entity_name}",
+            "open": "Open {entity_name}",
+            "unlock": "Unlock {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} is locked",
+            "is_open": "{entity_name} is open",
+            "is_unlocked": "{entity_name} is unlocked"
+        },
+        "extra_fields": {
+            "for": "Duration"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} locked",
+            "open": "{entity_name} opened",
+            "unlocked": "{entity_name} unlocked"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Lock",
+            "state": {
+                "jammed": "Jammed",
+                "locked": "Locked",
+                "locking": "Locking",
+                "open": "Open",
+                "opening": "Opening",
+                "unlocked": "Unlocked",
+                "unlocking": "Unlocking"
+            },
+            "state_attributes": {
+                "changed_by": {
+                    "name": "Changed by"
+                },
+                "code_format": {
+                    "name": "Code format"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "add_default_code": {
+            "message": "The code for {entity_id} doesn't match pattern {code_format}."
+        }
+    },
+    "services": {
+        "lock": {
+            "description": "Locks a lock.",
+            "fields": {
+                "code": {
+                    "description": "Code used to lock the lock.",
+                    "name": "Code"
+                }
+            },
+            "name": "Lock"
+        },
+        "open": {
+            "description": "Opens a lock.",
+            "fields": {
+                "code": {
+                    "description": "Code used to open the lock.",
+                    "name": "Code"
+                }
+            },
+            "name": "Open"
+        },
+        "unlock": {
+            "description": "Unlocks a lock.",
+            "fields": {
+                "code": {
+                    "description": "Code used to unlock the lock.",
+                    "name": "Code"
+                }
+            },
+            "name": "Unlock"
+        }
+    },
+    "title": "Lock"
+}

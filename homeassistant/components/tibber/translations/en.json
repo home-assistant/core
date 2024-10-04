@@ -1,0 +1,129 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "timeout": "Timeout establishing connection"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Access token"
+                },
+                "description": "Enter your access token from {url}"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "accumulated_consumption": {
+                "name": "Accumulated consumption"
+            },
+            "accumulated_consumption_last_hour": {
+                "name": "Accumulated consumption current hour"
+            },
+            "accumulated_cost": {
+                "name": "Accumulated cost"
+            },
+            "accumulated_production": {
+                "name": "Accumulated production"
+            },
+            "accumulated_production_last_hour": {
+                "name": "Accumulated production current hour"
+            },
+            "accumulated_reward": {
+                "name": "Accumulated reward"
+            },
+            "average_power": {
+                "name": "Average power"
+            },
+            "current_l1": {
+                "name": "Current L1"
+            },
+            "current_l2": {
+                "name": "Current L2"
+            },
+            "current_l3": {
+                "name": "Current L3"
+            },
+            "electricity_price": {
+                "name": "Electricity price"
+            },
+            "estimated_hour_consumption": {
+                "name": "Estimated consumption current hour"
+            },
+            "last_meter_consumption": {
+                "name": "Last meter consumption"
+            },
+            "last_meter_production": {
+                "name": "Last meter production"
+            },
+            "max_power": {
+                "name": "Max power"
+            },
+            "min_power": {
+                "name": "Min power"
+            },
+            "month_cons": {
+                "name": "Monthly net consumption"
+            },
+            "month_cost": {
+                "name": "Monthly cost"
+            },
+            "peak_hour": {
+                "name": "Monthly peak hour consumption"
+            },
+            "peak_hour_time": {
+                "name": "Time of max hour consumption"
+            },
+            "power": {
+                "name": "Power"
+            },
+            "power_factor": {
+                "name": "Power factor"
+            },
+            "power_production": {
+                "name": "Power production"
+            },
+            "signal_strength": {
+                "name": "Signal strength"
+            },
+            "voltage_phase1": {
+                "name": "Voltage phase1"
+            },
+            "voltage_phase2": {
+                "name": "Voltage phase2"
+            },
+            "voltage_phase3": {
+                "name": "Voltage phase3"
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_date": {
+            "message": "Invalid datetime provided {date}"
+        },
+        "send_message_timeout": {
+            "message": "Timeout sending message with Tibber"
+        }
+    },
+    "services": {
+        "get_prices": {
+            "description": "Get hourly energy prices from Tibber",
+            "fields": {
+                "end": {
+                    "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted.",
+                    "name": "End"
+                },
+                "start": {
+                    "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
+                    "name": "Start"
+                }
+            },
+            "name": "Get energy prices"
+        }
+    }
+}

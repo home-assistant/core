@@ -1,0 +1,35 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "altitude": "Altitude",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "radius": "Radius"
+                },
+                "description": "Fill in the location to track."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "no_authentication": "You need to authenticate to be contributing",
+            "password_missing": "Password is missing",
+            "username_missing": "Username is missing"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "altitude": "Altitude",
+                    "contributing_user": "I'm contributing to OpenSky",
+                    "password": "Password",
+                    "radius": "Radius",
+                    "username": "Username"
+                },
+                "description": "You can login to your OpenSky account to increase the update frequency."
+            }
+        }
+    }
+}

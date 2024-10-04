@@ -1,0 +1,38 @@
+{
+    "services": {
+        "enable_output": {
+            "description": "Enables or disables an output port.",
+            "fields": {
+                "enabled": {
+                    "description": "Indicate if port should be enabled or not.",
+                    "name": "Enabled"
+                },
+                "port": {
+                    "description": "Name of port to enable/disable.",
+                    "name": "Port"
+                }
+            },
+            "name": "Enable output"
+        },
+        "menu_cursor": {
+            "description": "Controls the cursor in a menu.",
+            "fields": {
+                "cursor": {
+                    "description": "Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return').",
+                    "name": "Cursor"
+                }
+            },
+            "name": "Menu cursor"
+        },
+        "select_scene": {
+            "description": "Selects a scene on the receiver.",
+            "fields": {
+                "scene": {
+                    "description": "Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'.",
+                    "name": "Scene"
+                }
+            },
+            "name": "Select scene"
+        }
+    }
+}

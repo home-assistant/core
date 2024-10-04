@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "authentication_error": "Invalid authentication",
+            "cannot_connect": "Failed to connect",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "chat_model": "Model",
+                    "llm_hass_api": "Control Home Assistant",
+                    "max_tokens": "Maximum tokens to return in response",
+                    "prompt": "Instructions",
+                    "recommended": "Recommended model settings",
+                    "temperature": "Temperature"
+                },
+                "data_description": {
+                    "prompt": "Instruct how the LLM should respond. This can be a template."
+                }
+            }
+        }
+    }
+}

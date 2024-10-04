@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "away_mode": {
+                "name": "Away mode"
+            }
+        },
+        "sensor": {
+            "daily_usage": {
+                "name": "Daily usage"
+            },
+            "monthly_usage": {
+                "name": "Monthly usage"
+            },
+            "yearly_usage": {
+                "name": "Yearly usage"
+            }
+        }
+    },
+    "services": {
+        "set_away_mode": {
+            "description": "Sets the home/away mode for a Streamlabs Water Monitor.",
+            "fields": {
+                "away_mode": {
+                    "description": "Home or away.",
+                    "name": "Away mode"
+                },
+                "location_id": {
+                    "description": "The location ID of the Streamlabs Water Monitor.",
+                    "name": "Location ID"
+                }
+            },
+            "name": "Set away mode"
+        }
+    }
+}

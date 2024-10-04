@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unknown": "Unexpected error",
+            "wrong_device": "This Roku device does not match the existing device ID. Please make sure you entered the correct host information."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Roku device to control."
+                },
+                "description": "Enter your Roku information."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "headphones_connected": {
+                "name": "Headphones connected"
+            },
+            "supports_airplay": {
+                "name": "Supports AirPlay"
+            },
+            "supports_ethernet": {
+                "name": "Supports ethernet"
+            },
+            "supports_find_remote": {
+                "name": "Supports find remote"
+            }
+        },
+        "select": {
+            "application": {
+                "name": "Application"
+            },
+            "channel": {
+                "name": "Channel"
+            }
+        },
+        "sensor": {
+            "active_app": {
+                "name": "Active app"
+            },
+            "active_app_id": {
+                "name": "Active app ID"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "play_media_app_id": "Play Media Roku Application ID"
+                },
+                "data_description": {
+                    "play_media_app_id": "The application ID to use when launching media playback. Must support the PlayOnRoku API."
+                }
+            }
+        }
+    },
+    "services": {
+        "search": {
+            "description": "Emulates opening the search screen and entering the search keyword.",
+            "fields": {
+                "keyword": {
+                    "description": "The keyword to search for.",
+                    "name": "Keyword"
+                }
+            },
+            "name": "Search"
+        }
+    }
+}

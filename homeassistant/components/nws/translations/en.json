@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "station": "METAR station code"
+                },
+                "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station. For now, an API Key can be anything. It is recommended to use a valid email address.",
+                "title": "Connect to the National Weather Service"
+            }
+        }
+    },
+    "selector": {
+        "nws_forecast_type": {
+            "options": {
+                "hourly": "Hourly",
+                "twice_daily": "Twice daily"
+            }
+        }
+    },
+    "services": {
+        "get_forecasts_extra": {
+            "description": "Get extra data for weather forecasts.",
+            "fields": {
+                "type": {
+                    "description": "Forecast type: hourly or twice_daily.",
+                    "name": "Forecast type"
+                }
+            },
+            "name": "Get extra forecasts data."
+        }
+    }
+}

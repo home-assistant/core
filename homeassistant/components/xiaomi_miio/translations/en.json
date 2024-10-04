@@ -1,0 +1,593 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
+            "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
+            "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
+            "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
+            "unknown_device": "The device model is not known, not able to set up the device using config flow.",
+            "wrong_token": "Checksum error, wrong token"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Cloud server country",
+                    "cloud_password": "Cloud password",
+                    "cloud_username": "Cloud username",
+                    "manual": "Configure manually (not recommended)"
+                },
+                "description": "Log in to the Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for the cloud server to use."
+            },
+            "connect": {
+                "data": {
+                    "model": "Device model"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "IP address",
+                    "token": "API token"
+                },
+                "description": "You will need the 32 character API token, see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this API token is different from the key used by the Xiaomi Aqara integration."
+            },
+            "reauth_confirm": {
+                "description": "The Xiaomi Miio integration needs to re-authenticate your account in order to update the tokens or add missing cloud credentials.",
+                "title": "Authentication expired for {name}"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Miio device"
+                },
+                "description": "Select the Xiaomi Miio device to set up."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "is_water_box_attached": {
+                "name": "Mop attached"
+            },
+            "is_water_box_carriage_attached": {
+                "name": "Mop attached"
+            },
+            "is_water_shortage": {
+                "name": "Water shortage"
+            },
+            "no_water": {
+                "name": "Water tank empty"
+            },
+            "powersupply_attached": {
+                "name": "Power supply"
+            },
+            "ptc_status": {
+                "name": "Auxiliary heat status"
+            },
+            "water_tank_detached": {
+                "name": "Water tank"
+            }
+        },
+        "button": {
+            "reset_dust_filter": {
+                "name": "Reset dust filter"
+            },
+            "reset_upper_filter": {
+                "name": "Reset upper filter"
+            },
+            "reset_vacuum_filter": {
+                "name": "Reset filter"
+            },
+            "reset_vacuum_main_brush": {
+                "name": "Reset main brush"
+            },
+            "reset_vacuum_sensor_dirty": {
+                "name": "Reset sensor dirty"
+            },
+            "reset_vacuum_side_brush": {
+                "name": "Reset side brush"
+            }
+        },
+        "fan": {
+            "generic_fan": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "nature": "Nature",
+                            "normal": "Normal"
+                        }
+                    }
+                }
+            }
+        },
+        "number": {
+            "angle": {
+                "name": "Oscillation angle"
+            },
+            "delay_off_countdown": {
+                "name": "Delay off countdown"
+            },
+            "fan_level": {
+                "name": "Fan level"
+            },
+            "favorite_level": {
+                "name": "Favorite level"
+            },
+            "favorite_rpm": {
+                "name": "Favorite motor speed"
+            },
+            "led_brightness": {
+                "name": "LED brightness"
+            },
+            "led_brightness_level": {
+                "name": "LED brightness"
+            },
+            "motor_speed": {
+                "name": "Motor speed"
+            },
+            "volume": {
+                "name": "Volume"
+            }
+        },
+        "select": {
+            "airpurifier_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "favorite": "Favorite",
+                    "silent": "Silent"
+                }
+            },
+            "display_orientation": {
+                "state": {
+                    "forward": "Forward",
+                    "left": "Left",
+                    "right": "Right"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Bright",
+                    "dim": "Dim",
+                    "off": "Off"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
+            }
+        },
+        "sensor": {
+            "actual_speed": {
+                "name": "Actual speed"
+            },
+            "air_quality": {
+                "name": "Air quality"
+            },
+            "air_quality_index": {
+                "name": "Air quality index"
+            },
+            "area": {
+                "name": "Last clean area"
+            },
+            "clean_area": {
+                "name": "Current clean area"
+            },
+            "clean_time": {
+                "name": "Current clean duration"
+            },
+            "control_speed": {
+                "name": "Control speed"
+            },
+            "count": {
+                "name": "Total clean count"
+            },
+            "dnd_end": {
+                "name": "DnD end"
+            },
+            "dnd_start": {
+                "name": "DnD start"
+            },
+            "duration": {
+                "name": "Last clean duration"
+            },
+            "dust_collection_count": {
+                "name": "Total dust collection count"
+            },
+            "dust_filter_life_remaining": {
+                "name": "Dust filter life remaining"
+            },
+            "dust_filter_life_remaining_days": {
+                "name": "Dust filter lifetime remaining days"
+            },
+            "favorite_speed": {
+                "name": "Favorite speed"
+            },
+            "filter_hours_used": {
+                "name": "Filter use"
+            },
+            "filter_left": {
+                "name": "Filter remaining"
+            },
+            "filter_left_time": {
+                "name": "Filter lifetime remaining"
+            },
+            "filter_life_remaining": {
+                "name": "Filter life remaining"
+            },
+            "illuminance": {
+                "name": "Illuminance"
+            },
+            "last_clean_end": {
+                "name": "Last clean end"
+            },
+            "last_clean_start": {
+                "name": "Last clean start"
+            },
+            "load_power": {
+                "name": "Load power"
+            },
+            "main_brush_left": {
+                "name": "Main brush remaining"
+            },
+            "motor2_speed": {
+                "name": "Second motor speed"
+            },
+            "motor_speed": {
+                "name": "Motor speed"
+            },
+            "purify_volume": {
+                "name": "Purify volume"
+            },
+            "sensor_dirty_left": {
+                "name": "Sensor dirty remaining"
+            },
+            "side_brush_left": {
+                "name": "Side brush remaining"
+            },
+            "total_area": {
+                "name": "Total clean area"
+            },
+            "total_duration": {
+                "name": "Total duration"
+            },
+            "tvoc": {
+                "name": "TVOC"
+            },
+            "upper_filter_life_remaining": {
+                "name": "Upper filter life remaining"
+            },
+            "upper_filter_life_remaining_days": {
+                "name": "Upper filter lifetime remaining days"
+            },
+            "use_time": {
+                "name": "Use time"
+            },
+            "water_level": {
+                "name": "Water level"
+            }
+        },
+        "switch": {
+            "anion": {
+                "name": "Ionizer"
+            },
+            "auto_detect": {
+                "name": "Auto detect"
+            },
+            "buzzer": {
+                "name": "Buzzer"
+            },
+            "child_lock": {
+                "name": "Child lock"
+            },
+            "clean_mode": {
+                "name": "Clean mode"
+            },
+            "display": {
+                "name": "Display"
+            },
+            "dry": {
+                "name": "Dry mode"
+            },
+            "ionizer": {
+                "name": "Ionizer"
+            },
+            "learn_mode": {
+                "name": "Learn mode"
+            },
+            "led": {
+                "name": "LED"
+            },
+            "ptc": {
+                "name": "Auxiliary heat"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Use cloud to get connected subdevices"
+                }
+            }
+        }
+    },
+    "services": {
+        "fan_reset_filter": {
+            "description": "Resets the filter lifetime and usage.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Fan reset filter"
+        },
+        "fan_set_extra_features": {
+            "description": "Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called \"turbo mode\" is unlocked in the app on value 1.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                },
+                "features": {
+                    "description": "Integer, known values are 0 (default) and 1 (turbo mode).",
+                    "name": "Features"
+                }
+            },
+            "name": "Fan set extra features"
+        },
+        "light_eyecare_mode_off": {
+            "description": "Disables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Light eyecare mode off"
+        },
+        "light_eyecare_mode_on": {
+            "description": "Enables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Light eyecare mode on"
+        },
+        "light_night_light_mode_off": {
+            "description": "Turns the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Night light mode off"
+        },
+        "light_night_light_mode_on": {
+            "description": "Turns the eyecare mode on (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Night light mode on"
+        },
+        "light_reminder_off": {
+            "description": "Disables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Light reminder off"
+        },
+        "light_reminder_on": {
+            "description": "Enables the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the entity to act on.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Light reminder on"
+        },
+        "light_set_delayed_turn_off": {
+            "description": "Delayed turn off.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the light entity.",
+                    "name": "Entity ID"
+                },
+                "time_period": {
+                    "description": "Time period for the delayed turn off.",
+                    "name": "Time period"
+                }
+            },
+            "name": "Light set delayed turn off"
+        },
+        "light_set_scene": {
+            "description": "Sets a fixed scene.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the light entity.",
+                    "name": "Entity ID"
+                },
+                "scene": {
+                    "description": "Number of the fixed scene.",
+                    "name": "Scene"
+                }
+            },
+            "name": "Light set scene"
+        },
+        "remote_learn_command": {
+            "description": "Learns an IR command, select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+            "fields": {
+                "slot": {
+                    "description": "Define the slot used to save the IR command.",
+                    "name": "Slot"
+                },
+                "timeout": {
+                    "description": "Define the timeout, before which the command must be learned.",
+                    "name": "Timeout"
+                }
+            },
+            "name": "Remote learn command"
+        },
+        "remote_set_led_off": {
+            "description": "Turns off blue LED.",
+            "name": "Remote set LED off"
+        },
+        "remote_set_led_on": {
+            "description": "Turns on blue LED.",
+            "name": "Remote set LED on"
+        },
+        "switch_set_power_mode": {
+            "description": "Sets the power mode.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                },
+                "mode": {
+                    "description": "Power mode.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Switch set power mode"
+        },
+        "switch_set_power_price": {
+            "description": "Sets the power price.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                },
+                "mode": {
+                    "description": "Power price.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Switch set power price"
+        },
+        "switch_set_wifi_led_off": {
+            "description": "Turn the Wi-Fi led off.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Switch set Wi-Fi LED off"
+        },
+        "switch_set_wifi_led_on": {
+            "description": "Turns the wifi led on.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the xiaomi miio entity.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Switch set Wi-Fi LED on"
+        },
+        "vacuum_clean_segment": {
+            "description": "Starts cleaning of the specified segment(s).",
+            "fields": {
+                "segments": {
+                    "description": "Segments.",
+                    "name": "Segments"
+                }
+            },
+            "name": "Vacuum clean segment"
+        },
+        "vacuum_clean_zone": {
+            "description": "Starts the cleaning operation in the selected areas for the number of repeats indicated.",
+            "fields": {
+                "repeats": {
+                    "description": "Number of cleaning repeats for each zone.",
+                    "name": "Repeats"
+                },
+                "zone": {
+                    "description": "Array of zones. Each zone is an array of 4 integer values.",
+                    "name": "Zone"
+                }
+            },
+            "name": "Vacuum clean zone"
+        },
+        "vacuum_goto": {
+            "description": "Go to the specified coordinates.",
+            "fields": {
+                "x_coord": {
+                    "description": "X-coordinate.",
+                    "name": "X coordinate"
+                },
+                "y_coord": {
+                    "description": "Y-coordinate.",
+                    "name": "Y coordinate"
+                }
+            },
+            "name": "Vacuum go to"
+        },
+        "vacuum_remote_control_move": {
+            "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+            "fields": {
+                "duration": {
+                    "description": "Duration of the movement.",
+                    "name": "Duration"
+                },
+                "rotation": {
+                    "description": "Rotation, between -179 degrees and 179 degrees.",
+                    "name": "Rotation"
+                },
+                "velocity": {
+                    "description": "Speed.",
+                    "name": "Velocity"
+                }
+            },
+            "name": "Vacuum remote control move"
+        },
+        "vacuum_remote_control_move_step": {
+            "description": "Remote controls the vacuum cleaner, only makes one move and then stops.",
+            "fields": {
+                "duration": {
+                    "description": "Duration of the movement.",
+                    "name": "Duration"
+                },
+                "rotation": {
+                    "description": "Rotation.",
+                    "name": "Rotation"
+                },
+                "velocity": {
+                    "description": "Speed.",
+                    "name": "Velocity"
+                }
+            },
+            "name": "Vacuum remote control move step"
+        },
+        "vacuum_remote_control_start": {
+            "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.",
+            "name": "Vacuum remote control start"
+        },
+        "vacuum_remote_control_stop": {
+            "description": "Stops remote control mode of the vacuum cleaner.",
+            "name": "Vacuum remote control stop"
+        }
+    }
+}

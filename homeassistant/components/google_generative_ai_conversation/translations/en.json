@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "api": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "Get your API key from [here]({api_key_url})."
+            },
+            "reauth_confirm": {
+                "description": "Your current API key: {api_key} is no longer valid. Please enter a new valid API key.",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "chat_model": "Model",
+                    "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
+                    "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
+                    "hate_block_threshold": "Content that is rude, disrespectful, or profane",
+                    "llm_hass_api": "Control Home Assistant",
+                    "max_tokens": "Maximum tokens to return in response",
+                    "prompt": "Instructions",
+                    "recommended": "Recommended model settings",
+                    "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
+                    "temperature": "Temperature",
+                    "top_k": "Top K",
+                    "top_p": "Top P"
+                },
+                "data_description": {
+                    "prompt": "Instruct how the LLM should respond. This can be a template."
+                }
+            }
+        }
+    },
+    "services": {
+        "generate_content": {
+            "description": "Generate content from a prompt consisting of text and optionally images",
+            "fields": {
+                "image_filename": {
+                    "description": "Images",
+                    "example": "/config/www/image.jpg",
+                    "name": "Image filename"
+                },
+                "prompt": {
+                    "description": "The prompt",
+                    "example": "Describe what you see in these images",
+                    "name": "Prompt"
+                }
+            },
+            "name": "Generate content"
+        }
+    }
+}

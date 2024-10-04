@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "no_port": "No port for endpoint",
+            "no_services": "No services found at endpoint"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the Wyoming service provided by the add-on: {addon}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the Wyoming service {name}?",
+                "title": "Discovered Wyoming service"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "assist_in_progress": {
+                "name": "Assist in progress"
+            }
+        },
+        "number": {
+            "auto_gain": {
+                "name": "Auto gain"
+            },
+            "volume_multiplier": {
+                "name": "Mic volume"
+            }
+        },
+        "select": {
+            "noise_suppression_level": {
+                "name": "Noise suppression level",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "max": "Max",
+                    "medium": "Medium",
+                    "off": "Off"
+                }
+            },
+            "pipeline": {
+                "name": "Assistant",
+                "state": {
+                    "preferred": "Preferred"
+                }
+            },
+            "vad_sensitivity": {
+                "name": "Finished speaking detection",
+                "state": {
+                    "aggressive": "Aggressive",
+                    "default": "Default",
+                    "relaxed": "Relaxed"
+                }
+            }
+        },
+        "switch": {
+            "mute": {
+                "name": "Mute"
+            }
+        }
+    }
+}

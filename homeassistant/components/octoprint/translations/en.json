@@ -1,0 +1,68 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "auth_failed": "Failed to retrieve application api key",
+            "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "OctoPrint Printer: {host}",
+        "progress": {
+            "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "path": "Application Path",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your printer."
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "missing_client": {
+            "message": "No client for device ID: {device_id}"
+        }
+    },
+    "services": {
+        "printer_connect": {
+            "description": "Instructs the octoprint server to connect to a printer.",
+            "fields": {
+                "baudrate": {
+                    "description": "Baud rate.",
+                    "name": "Baudrate"
+                },
+                "device_id": {
+                    "description": "The server that should connect.",
+                    "name": "Server"
+                },
+                "port": {
+                    "description": "Port name to connect on.",
+                    "name": "Serial port"
+                },
+                "profile_name": {
+                    "description": "Printer profile to connect with.",
+                    "name": "Profile name"
+                }
+            },
+            "name": "Connect to a printer"
+        }
+    }
+}

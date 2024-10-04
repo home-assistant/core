@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "Password",
+                    "pin": "PIN code",
+                    "username": "Username"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "PIN code",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (recommended)",
+                    "local": "Local Risco Panel (advanced)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "ac_trouble": {
+                "name": "A/C trouble"
+            },
+            "alarmed": {
+                "name": "Alarmed"
+            },
+            "armed": {
+                "name": "Armed"
+            },
+            "box_tamper": {
+                "name": "Box tamper"
+            },
+            "clock_trouble": {
+                "name": "Clock trouble"
+            },
+            "low_battery_trouble": {
+                "name": "Low battery trouble"
+            },
+            "monitoring_station_1_trouble": {
+                "name": "Monitoring station 1 trouble"
+            },
+            "monitoring_station_2_trouble": {
+                "name": "Monitoring station 2 trouble"
+            },
+            "monitoring_station_3_trouble": {
+                "name": "Monitoring station 3 trouble"
+            },
+            "phone_line_trouble": {
+                "name": "Phone line trouble"
+            }
+        },
+        "switch": {
+            "bypassed": {
+                "name": "Bypassed"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Armed Away",
+                    "armed_custom_bypass": "Armed Custom Bypass",
+                    "armed_home": "Armed Home",
+                    "armed_night": "Armed Night"
+                },
+                "description": "Select what state to set your Risco alarm to when arming the Home Assistant alarm",
+                "title": "Map Home Assistant states to Risco states"
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Require PIN to arm",
+                    "code_disarm_required": "Require PIN to disarm",
+                    "concurrency": "Maximum concurrent requests in Risco local",
+                    "scan_interval": "How often to poll Risco Cloud (in seconds)"
+                },
+                "title": "Configure options"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Group A",
+                    "B": "Group B",
+                    "C": "Group C",
+                    "D": "Group D",
+                    "arm": "Armed (AWAY)",
+                    "partial_arm": "Partially Armed (STAY)"
+                },
+                "description": "Select what state your Home Assistant alarm will report for every state reported by Risco",
+                "title": "Map Risco states to Home Assistant states"
+            }
+        }
+    }
+}

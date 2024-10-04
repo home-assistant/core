@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unique_id_mismatch": "The serial number of the device does not match the previous serial number",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "empty_input_source_list": "Input source list cannot be empty",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "configure_receiver": {
+                "data": {
+                    "input_sources": "Input sources",
+                    "volume_resolution": "Volume resolution"
+                },
+                "data_description": {
+                    "input_sources": "List of input sources supported by the receiver.",
+                    "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume."
+                },
+                "description": "Configure {name}"
+            },
+            "eiscp_discovery": {
+                "data": {
+                    "device": "Device"
+                },
+                "data_description": {
+                    "device": "Select the receiver to configure."
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of the receiver."
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "eiscp_discovery": "Onkyo discovery",
+                    "manual": "Manual entry"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_source": {
+            "message": "Cannot select input source \"{invalid_source}\" for entity: {entity_id}."
+        }
+    },
+    "issues": {
+        "deprecated_yaml_import_issue_cannot_connect": {
+            "description": "Configuring Onkyo using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+            "title": "The Onkyo YAML configuration import failed"
+        },
+        "deprecated_yaml_import_issue_no_discover": {
+            "description": "Configuring Onkyo using YAML is being removed but no receivers were discovered when importing your YAML configuration.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+            "title": "The Onkyo YAML configuration import failed"
+        }
+    },
+    "options": {
+        "error": {
+            "empty_input_source_list": "Input source list cannot be empty"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "input_sources": "Input sources",
+                    "max_volume": "Maximum volume limit (%)"
+                },
+                "data_description": {
+                    "input_sources": "List of input sources supported by the receiver.",
+                    "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value."
+                }
+            },
+            "names": {
+                "sections": {
+                    "input_sources": {
+                        "description": "Mappings of receiver's input sources to their names.",
+                        "name": "Input source names"
+                    }
+                }
+            }
+        }
+    }
+}

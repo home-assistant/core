@@ -1,0 +1,14 @@
+{
+    "services": {
+        "set_run_state": {
+            "description": "Sets the ZoneMinder run state.",
+            "fields": {
+                "name": {
+                    "description": "The string name of the ZoneMinder run state to set as active.",
+                    "name": "Name"
+                }
+            },
+            "name": "Set run state"
+        }
+    }
+}

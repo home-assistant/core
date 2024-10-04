@@ -1,0 +1,143 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "wrong_device": "The configured device is not the same found on this Hostname or IP address."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please turn on your TV and try again.",
+            "error_pairing": "Pairing failed, make sure to accept the pairing request on the TV and try again."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "pairing": {
+                "description": "Select **Submit** and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)",
+                "title": "LG webOS TV Pairing"
+            },
+            "reauth_confirm": {
+                "description": "Select **Submit** and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)",
+                "title": "LG webOS TV Pairing"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your LG webOS TV."
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your LG webOS TV."
+                },
+                "description": "Turn on the TV, fill the host field and select **Submit**"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Device is requested to turn on"
+        }
+    },
+    "exceptions": {
+        "communication_error": {
+            "message": "Communication error while calling {func} for device {name}: {error}"
+        },
+        "device_off": {
+            "message": "Error calling {func} for device {name}: Device is off and cannot be controlled."
+        },
+        "invalid_entity_id": {
+            "message": "Entity {entity_id} is not a valid webostv entity."
+        },
+        "notify_communication_error": {
+            "message": "Communication error while sending notification to device {name}: {error}"
+        },
+        "notify_device_off": {
+            "message": "Error sending notification to device {name}: Device is off and cannot be controlled."
+        },
+        "notify_icon_not_found": {
+            "message": "Icon {icon_path} not found when sending notification for device {name}"
+        },
+        "source_not_found": {
+            "message": "Source {source} not found in the sources list for {name}."
+        },
+        "unhandled_trigger_type": {
+            "message": "Unhandled trigger type: {trigger_type}"
+        },
+        "unknown_trigger_platform": {
+            "message": "Unknown trigger platform: {platform}"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Failed to connect, please turn on your TV and try again.",
+            "error_pairing": "Pairing failed, make sure to accept the pairing request on the TV and try again."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Sources list"
+                },
+                "data_description": {
+                    "sources": "List of sources to enable"
+                },
+                "description": "Select enabled sources",
+                "title": "Options for LG webOS TV"
+            }
+        }
+    },
+    "services": {
+        "button": {
+            "description": "Sends a button press command.",
+            "fields": {
+                "button": {
+                    "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.",
+                    "name": "Button"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webostv entities where to run the API method.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Button"
+        },
+        "command": {
+            "description": "Sends a command.",
+            "fields": {
+                "command": {
+                    "description": "Endpoint of the command.",
+                    "name": "Command"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webostv entities where to run the API method.",
+                    "name": "Entity"
+                },
+                "payload": {
+                    "description": "An optional payload to provide to the endpoint in the format of key value pair(s).",
+                    "name": "Payload"
+                }
+            },
+            "name": "Command"
+        },
+        "select_sound_output": {
+            "description": "Sends the TV the command to change sound output.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the webostv entities to change sound output on.",
+                    "name": "Entity"
+                },
+                "sound_output": {
+                    "description": "Name of the sound output to switch to.",
+                    "name": "Sound output"
+                }
+            },
+            "name": "Select sound output"
+        }
+    }
+}

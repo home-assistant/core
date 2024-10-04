@@ -1,0 +1,183 @@
+{
+    "config": {
+        "abort": {
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "connection_error": "Could not connect to the controller.",
+            "credentials_needed": "The controller needs credentials.",
+            "duplicated_controller_id": "The controller name is already in use.",
+            "duplicated_host_port": "The specified host and port is already configured.",
+            "invalid_credentials": "The provided credentials are not valid.",
+            "need_username_with_password": "Credentials must be either a username and a password or only a username.",
+            "unknown_error": "Unexpected error"
+        },
+        "step": {
+            "import_controller_name": {
+                "data": {
+                    "name": "Controller name"
+                },
+                "data_description": {
+                    "name": "A unique name identifying the Lutron Homeworks controller"
+                },
+                "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI."
+            },
+            "import_finish": {
+                "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Optional password, leave blank if your system does not need credentials or only needs a single credential",
+                    "username": "Optional username, leave blank if your system does not need login credentials"
+                },
+                "description": "Modify a Lutron Homeworks controller connection settings"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Controller name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "name": "A unique name identifying the Lutron Homeworks controller",
+                    "password": "Optional password, leave blank if your system does not need credentials or only needs a single credential",
+                    "username": "Optional username, leave blank if your system does not need login credentials"
+                },
+                "description": "Add a Lutron Homeworks controller"
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_controller_id": {
+            "message": "Invalid controller_id \"{controller_id}\", expected one of \"{controller_ids}\""
+        }
+    },
+    "options": {
+        "error": {
+            "duplicated_addr": "The specified address is already in use",
+            "duplicated_number": "The specified number is already in use",
+            "invalid_addr": "Invalid address"
+        },
+        "step": {
+            "add_button": {
+                "data": {
+                    "led": "LED",
+                    "name": "Name",
+                    "number": "Number",
+                    "release_delay": "Release delay"
+                },
+                "data_description": {
+                    "led": "Enable if the button has a scene select indicator",
+                    "number": "Button number in the range 1 to 24",
+                    "release_delay": "Time between press and release, set to 0 to only press"
+                },
+                "title": "Add keypad"
+            },
+            "add_keypad": {
+                "data": {
+                    "addr": "Address",
+                    "name": "Name"
+                },
+                "data_description": {
+                    "addr": "Keypad address, must be formatted as `[##:##:##:##]`"
+                },
+                "title": "Add keypad"
+            },
+            "add_light": {
+                "data": {
+                    "addr": "Address",
+                    "name": "Name",
+                    "rate": "Fade rate"
+                },
+                "data_description": {
+                    "addr": "Keypad address, must be formatted as `[##:##:##:##]`",
+                    "rate": "Time in seconds for the light to transition to a new brightness level"
+                },
+                "title": "Add light"
+            },
+            "edit_button": {
+                "data": {
+                    "led": "LED",
+                    "release_delay": "Release delay"
+                },
+                "data_description": {
+                    "led": "Enable if the button has a scene select indicator",
+                    "release_delay": "Time between press and release, set to 0 to only press"
+                },
+                "title": "Configure button"
+            },
+            "edit_keypad": {
+                "menu_options": {
+                    "add_button": "Add button",
+                    "remove_button": "Remove button",
+                    "select_edit_button": "Configure button"
+                }
+            },
+            "edit_light": {
+                "data": {
+                    "rate": "Fade rate"
+                },
+                "data_description": {
+                    "rate": "Time in seconds for the light to transition to a new brightness level"
+                },
+                "description": "Select a light to configure",
+                "title": "Configure light"
+            },
+            "init": {
+                "menu_options": {
+                    "add_keypad": "Add keypad",
+                    "add_light": "Add light",
+                    "remove_keypad": "Remove keypad",
+                    "remove_light": "Remove light",
+                    "select_edit_keypad": "Configure keypad",
+                    "select_edit_light": "Configure light"
+                }
+            },
+            "remove_button": {
+                "description": "Select buttons to remove",
+                "title": "Remove button"
+            },
+            "remove_keypad": {
+                "description": "Select keypads to remove",
+                "title": "Remove keypad"
+            },
+            "remove_light": {
+                "description": "Select lights to remove",
+                "title": "Remove light"
+            },
+            "select_edit_button": {
+                "title": "Configure button"
+            },
+            "select_edit_keypad": {
+                "title": "Configure keypad"
+            },
+            "select_edit_light": {
+                "title": "Configure light"
+            }
+        }
+    },
+    "services": {
+        "send_command": {
+            "description": "Sends a custom command to a controller",
+            "fields": {
+                "command": {
+                    "description": "The command to send to the controller. This can either be a single command or a list of commands.",
+                    "name": "Command"
+                },
+                "controller_id": {
+                    "description": "The controller to which to send the command.",
+                    "name": "Controller ID"
+                }
+            },
+            "name": "Send command"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "entity": {
+        "button": {
+            "sync_devices": {
+                "name": "Synchronize devices"
+            }
+        }
+    },
+    "services": {
+        "request_sync": {
+            "description": "Sends a request_sync command to Google.",
+            "fields": {
+                "agent_user_id": {
+                    "description": "Only needed for automations. Specific Home Assistant user ID (not username, ID in Settings > People > Users > under username) to sync with Google Assistant. Not needed when you use this action through Home Assistant frontend or API. Used in automation, script or other place where context.user_id is missing.",
+                    "name": "Agent user ID"
+                }
+            },
+            "name": "Request sync"
+        }
+    }
+}

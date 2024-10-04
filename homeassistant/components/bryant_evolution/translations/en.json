@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "filename": "Serial port filename"
+                }
+            },
+            "user": {
+                "data": {
+                    "filename": "Serial port filename"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "failed_to_parse_hvac_action": {
+            "message": "Could not determine HVAC action: {mode_and_active}, {self.current_temperature}, {self.target_temperature_low}"
+        },
+        "failed_to_parse_hvac_mode": {
+            "message": "Cannot parse response to HVACMode: {mode}"
+        },
+        "failed_to_read_hvac_action": {
+            "message": "Failed to read current HVAC action"
+        },
+        "failed_to_read_hvac_mode": {
+            "message": "Failed to read current HVAC mode"
+        },
+        "failed_to_set_clsp": {
+            "message": "Failed to set cooling setpoint"
+        },
+        "failed_to_set_fan_mode": {
+            "message": "Failed to set fan mode"
+        },
+        "failed_to_set_htsp": {
+            "message": "Failed to set heating setpoint"
+        },
+        "failed_to_set_hvac_mode": {
+            "message": "Failed to set HVAC mode"
+        },
+        "failed_to_set_temp": {
+            "message": "Failed to set temperature"
+        }
+    }
+}

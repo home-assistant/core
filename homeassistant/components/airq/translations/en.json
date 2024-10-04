@@ -1,0 +1,149 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_input": "Invalid hostname or IP address"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP address",
+                    "password": "Password"
+                },
+                "description": "Provide the IP address or mDNS of the device and its password",
+                "title": "Identify the device"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "absolute_humidity": {
+                "name": "Absolute humidity"
+            },
+            "acetaldehyde": {
+                "name": "Acetaldehyde"
+            },
+            "ammonia": {
+                "name": "Ammonia"
+            },
+            "arsine": {
+                "name": "Arsine"
+            },
+            "bromine": {
+                "name": "Bromine"
+            },
+            "carbon_disulfide": {
+                "name": "Carbon disulfide"
+            },
+            "carbon_monoxide": {
+                "name": "Carbon monoxide"
+            },
+            "chlorine": {
+                "name": "Chlorine"
+            },
+            "chlorine_dioxide": {
+                "name": "Chlorine dioxide"
+            },
+            "dew_point": {
+                "name": "Dew point"
+            },
+            "ethanol": {
+                "name": "Ethanol"
+            },
+            "ethylene": {
+                "name": "Ethylene"
+            },
+            "fluorine": {
+                "name": "Fluorine"
+            },
+            "formaldehyde": {
+                "name": "Formaldehyde"
+            },
+            "health_index": {
+                "name": "Health Index"
+            },
+            "hydrochloric_acid": {
+                "name": "Hydrochloric acid"
+            },
+            "hydrogen": {
+                "name": "Hydrogen"
+            },
+            "hydrogen_cyanide": {
+                "name": "Hydrogen cyanide"
+            },
+            "hydrogen_fluoride": {
+                "name": "Hydrogen fluoride"
+            },
+            "hydrogen_peroxide": {
+                "name": "Hydrogen peroxide"
+            },
+            "hydrogen_phosphide": {
+                "name": "Hydrogen Phosphide"
+            },
+            "hydrogen_sulfide": {
+                "name": "Hydrogen sulfide"
+            },
+            "industrial_volatile_organic_compounds": {
+                "name": "VOCs (Industrial)"
+            },
+            "maximum_noise": {
+                "name": "Noise (Maximum)"
+            },
+            "methane": {
+                "name": "Methane"
+            },
+            "methanethiol": {
+                "name": "Methanethiol"
+            },
+            "noise": {
+                "name": "Noise"
+            },
+            "organic_acid": {
+                "name": "Organic acid"
+            },
+            "oxygen": {
+                "name": "Oxygen"
+            },
+            "performance_index": {
+                "name": "Performance Index"
+            },
+            "propane": {
+                "name": "Propane"
+            },
+            "radon": {
+                "name": "Radon"
+            },
+            "refigerant": {
+                "name": "Refrigerant"
+            },
+            "relative_pressure": {
+                "name": "Relative pressure"
+            },
+            "silicon_hydride": {
+                "name": "Silicon Hydride"
+            },
+            "virus_index": {
+                "name": "Virus Index"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "clip_negatives": "Clip negative values",
+                    "return_average": "Show values averaged by the device"
+                },
+                "data_description": {
+                    "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behaviour is to clip such values to 0",
+                    "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)"
+                },
+                "title": "Configure air-Q integration"
+            }
+        }
+    }
+}

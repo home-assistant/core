@@ -1,0 +1,84 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Personal api token"
+                },
+                "description": "Reauthenticate with WeatherFlow"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Personal api token"
+                },
+                "description": "Set up a WeatherFlow Forecast Station"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "air_density": {
+                "name": "Air density"
+            },
+            "barometric_pressure": {
+                "name": "Pressure barometric"
+            },
+            "dew_point": {
+                "name": "Dew point"
+            },
+            "feels_like": {
+                "name": "Feels like"
+            },
+            "heat_index": {
+                "name": "Heat index"
+            },
+            "lightning_strike_count": {
+                "name": "Lightning count"
+            },
+            "lightning_strike_count_last_1hr": {
+                "name": "Lightning count last 1 hr"
+            },
+            "lightning_strike_count_last_3hr": {
+                "name": "Lightning count last 3 hr"
+            },
+            "lightning_strike_last_distance": {
+                "name": "Lightning last distance"
+            },
+            "lightning_strike_last_epoch": {
+                "name": "Lightning last strike"
+            },
+            "sea_level_pressure": {
+                "name": "Pressure sea level"
+            },
+            "wet_bulb_globe_temperature": {
+                "name": "Wet bulb globe temperature"
+            },
+            "wet_bulb_temperature": {
+                "name": "Wet bulb temperature"
+            },
+            "wind_chill": {
+                "name": "Wind chill"
+            },
+            "wind_direction": {
+                "name": "Wind direction"
+            },
+            "wind_direction_cardinal": {
+                "name": "Wind direction (cardinal)"
+            },
+            "wind_gust": {
+                "name": "Wind gust"
+            },
+            "wind_lull": {
+                "name": "Wind lull"
+            }
+        }
+    }
+}

@@ -1,0 +1,93 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "tracker_battery_charging": {
+                "name": "Tracker battery charging"
+            }
+        },
+        "device_tracker": {
+            "tracker": {
+                "name": "Tracker"
+            }
+        },
+        "sensor": {
+            "activity": {
+                "name": "Activity",
+                "state": {
+                    "good": "Good",
+                    "low": "Low",
+                    "ok": "OK"
+                }
+            },
+            "activity_time": {
+                "name": "Activity time"
+            },
+            "calories": {
+                "name": "Calories burned"
+            },
+            "daily_goal": {
+                "name": "Daily goal"
+            },
+            "minutes_day_sleep": {
+                "name": "Day sleep"
+            },
+            "minutes_night_sleep": {
+                "name": "Night sleep"
+            },
+            "rest_time": {
+                "name": "Rest time"
+            },
+            "sleep": {
+                "name": "Sleep",
+                "state": {
+                    "good": "Good",
+                    "low": "Low",
+                    "ok": "OK"
+                }
+            },
+            "tracker_battery_level": {
+                "name": "Tracker battery"
+            },
+            "tracker_state": {
+                "name": "Tracker state",
+                "state": {
+                    "inaccurate_position": "Inaccurate position",
+                    "not_reporting": "Not reporting",
+                    "operational": "Operational",
+                    "system_shutdown_user": "System shutdown user",
+                    "system_startup": "System startup"
+                }
+            }
+        },
+        "switch": {
+            "live_tracking": {
+                "name": "Live tracking"
+            },
+            "tracker_buzzer": {
+                "name": "Tracker buzzer"
+            },
+            "tracker_led": {
+                "name": "Tracker LED"
+            }
+        }
+    }
+}

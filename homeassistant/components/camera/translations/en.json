@@ -1,0 +1,115 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Camera",
+            "state": {
+                "idle": "Idle",
+                "recording": "Recording",
+                "streaming": "Streaming"
+            },
+            "state_attributes": {
+                "access_token": {
+                    "name": "Access token"
+                },
+                "brand": {
+                    "name": "Brand"
+                },
+                "frontend_stream_type": {
+                    "name": "Stream type",
+                    "state": {
+                        "hls": "HLS",
+                        "webrtc": "WebRTC"
+                    }
+                },
+                "model_name": {
+                    "name": "Model"
+                },
+                "motion_detection": {
+                    "name": "Motion detection",
+                    "state": {
+                        "false": "Disabled",
+                        "true": "Enabled"
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_filename_template": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue.",
+                        "title": "Detected use of deprecated template variable"
+                    }
+                }
+            },
+            "title": "Detected use of deprecated template variable"
+        },
+        "legacy_webrtc_provider": {
+            "description": "The {legacy_integration} integration has registered a legacy WebRTC provider. Home Assistant prefers using the built-in modern WebRTC provider registered by the {builtin_integration} integration.\n\nBenefits of the built-in integration are:\n\n- The camera stream is started faster.\n- More camera devices are supported.\n\nTo fix this issue, you can either keep using the built-in modern WebRTC provider and remove the {legacy_integration} integration or remove the {builtin_integration} integration to use the legacy provider, and then restart Home Assistant.",
+            "title": "Detected use of legacy WebRTC provider registered by {legacy_integration}"
+        }
+    },
+    "services": {
+        "disable_motion_detection": {
+            "description": "Disables the motion detection.",
+            "name": "Disable motion detection"
+        },
+        "enable_motion_detection": {
+            "description": "Enables the motion detection.",
+            "name": "Enable motion detection"
+        },
+        "play_stream": {
+            "description": "Plays the camera stream on a supported media player.",
+            "fields": {
+                "format": {
+                    "description": "Stream format supported by the media player.",
+                    "name": "Format"
+                },
+                "media_player": {
+                    "description": "Media players to stream to.",
+                    "name": "Media player"
+                }
+            },
+            "name": "Play stream"
+        },
+        "record": {
+            "description": "Creates a recording of a live camera feed.",
+            "fields": {
+                "duration": {
+                    "description": "Planned duration of the recording. The actual duration may vary.",
+                    "name": "Duration"
+                },
+                "filename": {
+                    "description": "Full path to filename. Must be mp4.",
+                    "name": "Filename"
+                },
+                "lookback": {
+                    "description": "Planned lookback period to include in the recording (in addition to the duration). Only available if there is currently an active HLS stream. The actual length of the lookback period may vary.",
+                    "name": "Lookback"
+                }
+            },
+            "name": "Record"
+        },
+        "snapshot": {
+            "description": "Takes a snapshot from a camera.",
+            "fields": {
+                "filename": {
+                    "description": "Full path to filename.",
+                    "name": "Filename"
+                }
+            },
+            "name": "Take snapshot"
+        },
+        "turn_off": {
+            "description": "Turns off the camera.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns on the camera.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Camera"
+}

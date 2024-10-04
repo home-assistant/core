@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "unknown": "Unexpected error",
+            "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "auth": {
+                "description": "To link your TelldusLive account:\n1. Open the link below\n2. Log in to Telldus Live\n3. Authorize **{app_name}** (select **Yes**).\n4. Come back here and select **Submit**.\n\n [Link TelldusLive account]({auth_url})",
+                "title": "Authenticate with TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address to Tellstick Net or Tellstick ZNet for local API."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "dew_point": {
+                "name": "Dew point"
+            },
+            "uv": {
+                "name": "UV"
+            },
+            "wind_average": {
+                "name": "Wind average"
+            },
+            "wind_direction": {
+                "name": "Wind direction"
+            },
+            "wind_gust": {
+                "name": "Wind gust"
+            }
+        }
+    }
+}

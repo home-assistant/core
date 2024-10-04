@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "The chosen Time & Date sensor has already been configured"
+        },
+        "error": {
+            "timezone_not_exist": "Timezone is not set in Home Assistant configuration"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "display_options": "Sensor type"
+                },
+                "description": "Select from the sensor options below"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "beat": {
+                "name": "Internet time"
+            },
+            "date": {
+                "name": "Date"
+            },
+            "date_time": {
+                "name": "Date & Time"
+            },
+            "date_time_iso": {
+                "name": "Date & Time (ISO)"
+            },
+            "date_time_utc": {
+                "name": "Date & Time (UTC)"
+            },
+            "time": {
+                "name": "Time"
+            },
+            "time_date": {
+                "name": "Time & Date"
+            },
+            "time_utc": {
+                "name": "Time (UTC)"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "display_options": "Sensor type"
+                }
+            }
+        }
+    },
+    "selector": {
+        "display_options": {
+            "options": {
+                "beat": "Internet time",
+                "date": "Date",
+                "date_time": "Date & Time",
+                "date_time_iso": "Date & Time (ISO)",
+                "date_time_utc": "Date & Time (UTC)",
+                "time": "Time",
+                "time_date": "Time & Date",
+                "time_utc": "Time (UTC)"
+            }
+        }
+    },
+    "title": "Time & Date"
+}

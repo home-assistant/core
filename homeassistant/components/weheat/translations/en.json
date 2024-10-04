@@ -1,0 +1,116 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_devices_found": "Could not find any heat pumps on this account",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "user_rejected_authorize": "Account linking rejected: {error}",
+            "wrong_account": "You can only reauthenticate this account with the same user."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "find_devices": {
+                "title": "Select your heat pump"
+            },
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "You need to re-authenticate with WeHeat to continue",
+                "title": "Re-authenticate with WeHeat"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "indoor_unit_auxiliary_pump_state": {
+                "name": "Indoor unit auxilary water pump"
+            },
+            "indoor_unit_dhw_valve_or_pump_state": {
+                "name": "Indoor unit DHW valve or water pump"
+            },
+            "indoor_unit_electric_heater_state": {
+                "name": "Indoor unit electric heater"
+            },
+            "indoor_unit_gas_boiler_state": {
+                "name": "Indoor unit gas boiler heating allowed"
+            },
+            "indoor_unit_water_pump_state": {
+                "name": "Indoor unit water pump"
+            }
+        },
+        "sensor": {
+            "ch_inlet_temperature": {
+                "name": "Central heating inlet temperature"
+            },
+            "compressor_percentage": {
+                "name": "Compressor usage"
+            },
+            "compressor_rpm": {
+                "name": "Compressor speed"
+            },
+            "cop": {
+                "name": "COP"
+            },
+            "dhw_bottom_temperature": {
+                "name": "DHW bottom temperature"
+            },
+            "dhw_top_temperature": {
+                "name": "DHW top temperature"
+            },
+            "electricity_used": {
+                "name": "Electricity used"
+            },
+            "energy_output": {
+                "name": "Total energy output"
+            },
+            "heat_pump_state": {
+                "state": {
+                    "cooling": "Cooling",
+                    "defrosting": "Defrosting",
+                    "dhw": "Heating DHW",
+                    "heating": "Heating",
+                    "legionella_prevention": "Legionella prevention",
+                    "manual_control": "Manual control",
+                    "self_test": "Self test",
+                    "standby": "Standby",
+                    "water_check": "Checking water temperature"
+                }
+            },
+            "outside_temperature": {
+                "name": "Outside temperature"
+            },
+            "power_input": {
+                "name": "Input power"
+            },
+            "power_output": {
+                "name": "Output power"
+            },
+            "thermostat_room_temperature": {
+                "name": "Current room temperature"
+            },
+            "thermostat_room_temperature_setpoint": {
+                "name": "Room temperature setpoint"
+            },
+            "thermostat_water_setpoint": {
+                "name": "Water target temperature"
+            },
+            "water_inlet_temperature": {
+                "name": "Water inlet temperature"
+            },
+            "water_outlet_temperature": {
+                "name": "Water outlet temperature"
+            }
+        }
+    }
+}

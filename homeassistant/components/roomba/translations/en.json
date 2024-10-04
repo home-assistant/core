@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "not_irobot_device": "Discovered device is not an iRobot device",
+            "short_blid": "The BLID was truncated"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button (or both Home and Spot buttons) on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
+                "title": "Retrieve Password"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password could not be retrieved from the device automatically. Please make sure that the iRobot app is not open on any device while trying to retrieve the password. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "title": "Enter Password"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Roomba or Braava."
+                },
+                "description": "No Roomba or Braava have been discovered on your network.",
+                "title": "Manually connect to the device"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Roomba or Braava."
+                },
+                "description": "Select a Roomba or Braava.",
+                "title": "Automatically connect to the device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "bin_full": {
+                "name": "Bin full"
+            }
+        },
+        "sensor": {
+            "average_mission_time": {
+                "name": "Average mission time"
+            },
+            "battery_cycles": {
+                "name": "Battery cycles"
+            },
+            "canceled_missions": {
+                "name": "Canceled missions"
+            },
+            "failed_missions": {
+                "name": "Failed missions"
+            },
+            "last_mission": {
+                "name": "Last mission start time"
+            },
+            "scrubs_count": {
+                "name": "Scrubs"
+            },
+            "successful_missions": {
+                "name": "Successful missions"
+            },
+            "total_cleaned_area": {
+                "name": "Total cleaned area"
+            },
+            "total_cleaning_time": {
+                "name": "Total cleaning time"
+            },
+            "total_missions": {
+                "name": "Total missions"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continuous",
+                    "delay": "Delay"
+                }
+            }
+        }
+    }
+}

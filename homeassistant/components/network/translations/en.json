@@ -1,0 +1,10 @@
+{
+    "system_health": {
+        "info": {
+            "adapters": "Adapters",
+            "announce_addresses": "Announce addresses",
+            "ipv4_addresses": "IPv4 addresses",
+            "ipv6_addresses": "IPv6 addresses"
+        }
+    }
+}

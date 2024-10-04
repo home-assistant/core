@@ -1,0 +1,431 @@
+{
+    "config": {
+        "abort": {
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "already_configured": "PCHK connection using the same ip address/port is already configured.",
+            "authentication_error": "Authentication failed. Wrong username or password.",
+            "connection_refused": "Unable to connect to PCHK. Check IP and port.",
+            "license_error": "Maximum number of connections was reached. An additional licence key is required."
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "acknowledge": "Request acknowledgement from modules",
+                    "dim_mode": "Dimming mode",
+                    "ip_address": "IP address",
+                    "password": "Password",
+                    "port": "Port",
+                    "sk_num_tries": "Segment coupler scan attempts",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "acknowledge": "Retry sendig commands if no expected response is received from modules (increases bus traffic).",
+                    "dim_mode": "The number of steps used for dimming outputs of all LCN modules.",
+                    "ip_address": "IP address or hostname of the PCHK server.",
+                    "password": "Password for authorization on the PCHK server.",
+                    "port": "Port used by the PCHK server.",
+                    "sk_num_tries": "If you have a segment coupler in your LCN installation, increase this number to at least 3, so all segment couplers are identified correctly.",
+                    "username": "Username for authorization on the PCHK server."
+                },
+                "description": "Reconfigure connection to LCN host.",
+                "title": "Reconfigure LCN host"
+            },
+            "user": {
+                "data": {
+                    "acknowledge": "Request acknowledgement from modules",
+                    "dim_mode": "Dimming mode",
+                    "host": "Name",
+                    "ip_address": "IP address",
+                    "password": "Password",
+                    "port": "Port",
+                    "sk_num_tries": "Segment coupler scan attempts",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "acknowledge": "Retry sendig commands if no expected response is received from modules (increases bus traffic).",
+                    "dim_mode": "The number of steps used for dimming outputs of all LCN modules.",
+                    "host": "Name of the LCN integration entry.",
+                    "ip_address": "IP address or hostname of the PCHK server.",
+                    "password": "Password for authorization on the PCHK server.",
+                    "port": "Port used by the PCHK server.",
+                    "sk_num_tries": "If you have a segment coupler in your LCN installation, increase this number to at least 3, so all segment couplers are identified correctly.",
+                    "username": "Username for authorization on the PCHK server."
+                },
+                "description": "Set up new connection to LCN host.",
+                "title": "Set up LCN host"
+            }
+        }
+    },
+    "device_automation": {
+        "extra_fields": {
+            "action": "Action",
+            "code": "Code",
+            "key": "Key",
+            "level": "Level"
+        },
+        "trigger_type": {
+            "codelock": "Code lock code received",
+            "fingerprint": "Fingerprint code received",
+            "send_keys": "Send keys received",
+            "transmitter": "Transmitter code received",
+            "transponder": "Transponder code received"
+        }
+    },
+    "exceptions": {
+        "invalid_address": {
+            "message": "LCN device for given address has not been configured."
+        },
+        "invalid_device_id": {
+            "message": "LCN device for given device ID has not been configured."
+        },
+        "no_device_identifier": {
+            "message": "No device identifier provided. Please provide the device ID."
+        }
+    },
+    "issues": {
+        "deprecated_address_parameter": {
+            "description": "The 'address' parameter in the LCN action calls is deprecated. The 'device ID' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
+            "title": "Deprecated 'address' parameter"
+        },
+        "deprecated_keylock_sensor": {
+            "description": "Your LCN key lock binary sensor entity `{entity}` is being used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
+            "title": "Deprecated LCN key lock binary sensor"
+        },
+        "deprecated_regulatorlock_sensor": {
+            "description": "Your LCN regulator lock binary sensor entity `{entity}` is being used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
+            "title": "Deprecated LCN regulator lock binary sensor"
+        }
+    },
+    "services": {
+        "address_to_device_id": {
+            "description": "Convert LCN address to device ID.",
+            "fields": {
+                "host": {
+                    "description": "Host name as given in the integration panel.",
+                    "name": "Host name"
+                },
+                "id": {
+                    "description": "Target module or group ID.",
+                    "name": "Module or group ID"
+                },
+                "segment_id": {
+                    "description": "Target segment ID.",
+                    "name": "Segment ID"
+                },
+                "type": {
+                    "description": "Target type.",
+                    "name": "Type"
+                }
+            },
+            "name": "Address to device ID"
+        },
+        "dyn_text": {
+            "description": "Sends dynamic text to LCN-GTxD displays.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "row": {
+                    "description": "Text row.",
+                    "name": "Row"
+                },
+                "text": {
+                    "description": "Text to send (up to 60 characters encoded as UTF-8).",
+                    "name": "Text"
+                }
+            },
+            "name": "Dynamic text"
+        },
+        "led": {
+            "description": "Sets the LED state.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "led": {
+                    "description": "The LED port of the device.",
+                    "name": "LED"
+                },
+                "state": {
+                    "description": "The LED state to set.",
+                    "name": "State"
+                }
+            },
+            "name": "LED"
+        },
+        "lock_keys": {
+            "description": "Locks keys.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "state": {
+                    "description": "Key lock states as string (1=on, 2=off, T=toggle, -=nochange).",
+                    "name": "State"
+                },
+                "table": {
+                    "description": "Table with keys to lock (must be A for interval).",
+                    "name": "Table"
+                },
+                "time": {
+                    "description": "Lock interval.",
+                    "name": "Time"
+                },
+                "time_unit": {
+                    "description": "Time unit of lock interval.",
+                    "name": "Time unit"
+                }
+            },
+            "name": "Lock keys"
+        },
+        "lock_regulator": {
+            "description": "Locks a regulator setpoint.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "setpoint": {
+                    "description": "Setpoint name.",
+                    "name": "Setpoint"
+                },
+                "state": {
+                    "description": "New setpoint state.",
+                    "name": "State"
+                }
+            },
+            "name": "Lock regulator"
+        },
+        "output_abs": {
+            "description": "Sets absolute brightness of output port in percent.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "brightness": {
+                    "description": "Absolute brightness.",
+                    "name": "Brightness"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "output": {
+                    "description": "Output port.",
+                    "name": "Output"
+                },
+                "transition": {
+                    "description": "Transition time.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Output absolute brightness"
+        },
+        "output_rel": {
+            "description": "Sets relative brightness of output port in percent.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "brightness": {
+                    "description": "Relative brightness.",
+                    "name": "Brightness"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "output": {
+                    "description": "Output port.",
+                    "name": "Output"
+                }
+            },
+            "name": "Output relative brightness"
+        },
+        "output_toggle": {
+            "description": "Toggles output port.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "output": {
+                    "description": "Output port.",
+                    "name": "Output"
+                },
+                "transition": {
+                    "description": "Transition time.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Toggle output"
+        },
+        "pck": {
+            "description": "Sends arbitrary PCK command.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "pck": {
+                    "description": "PCK command (without address header).",
+                    "name": "PCK"
+                }
+            },
+            "name": "PCK"
+        },
+        "relays": {
+            "description": "Sets the relays status.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "state": {
+                    "description": "Relays states as string (1=on, 2=off, t=toggle, -=no change).",
+                    "name": "State"
+                }
+            },
+            "name": "Relays"
+        },
+        "send_keys": {
+            "description": "Sends keys (which executes bound commands).",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "keys": {
+                    "description": "Keys to send.",
+                    "name": "Keys"
+                },
+                "state": {
+                    "description": "Key state upon sending (must be hit for deferred).",
+                    "name": "State"
+                },
+                "time": {
+                    "description": "Send delay.",
+                    "name": "Time"
+                },
+                "time_unit": {
+                    "description": "Time unit of send delay.",
+                    "name": "Time unit"
+                }
+            },
+            "name": "Send keys"
+        },
+        "var_abs": {
+            "description": "Sets absolute value of a variable or setpoint.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "unit_of_measurement": {
+                    "description": "Unit of value.",
+                    "name": "Unit of measurement"
+                },
+                "value": {
+                    "description": "Value to set.",
+                    "name": "Value"
+                },
+                "variable": {
+                    "description": "Variable or setpoint name.",
+                    "name": "Variable"
+                }
+            },
+            "name": "Set absolute variable"
+        },
+        "var_rel": {
+            "description": "Shift value of a variable, setpoint or threshold.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "unit_of_measurement": {
+                    "description": "Unit of value.",
+                    "name": "Unit of measurement"
+                },
+                "value": {
+                    "description": "Shift value.",
+                    "name": "Value"
+                },
+                "value_reference": {
+                    "description": "Reference value for setpoint and threshold.",
+                    "name": "Reference value"
+                },
+                "variable": {
+                    "description": "Variable or setpoint name.",
+                    "name": "Variable"
+                }
+            },
+            "name": "Shift variable"
+        },
+        "var_reset": {
+            "description": "Resets value of variable or setpoint.",
+            "fields": {
+                "address": {
+                    "description": "Module address.",
+                    "name": "Address"
+                },
+                "device_id": {
+                    "description": "The device ID of the LCN module or group.",
+                    "name": "Device"
+                },
+                "variable": {
+                    "description": "Variable or setpoint name.",
+                    "name": "Variable"
+                }
+            },
+            "name": "Reset variable"
+        }
+    }
+}

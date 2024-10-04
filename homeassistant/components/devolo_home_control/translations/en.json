@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "reauth_failed": "Please use the same mydevolo user as before."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email / devolo ID"
+                },
+                "data_description": {
+                    "password": "Password of your mydevolo account.",
+                    "username": "Email address you used to register the central unit at mydevolo."
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email / devolo ID"
+                },
+                "data_description": {
+                    "password": "Password of your mydevolo account.",
+                    "username": "Email address you used to register the central unit at mydevolo."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "button": {
+                "name": "Button {key}"
+            },
+            "overload": {
+                "name": "Overload"
+            }
+        },
+        "sensor": {
+            "brightness": {
+                "name": "Brightness"
+            }
+        }
+    }
+}

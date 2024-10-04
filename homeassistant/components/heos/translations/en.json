@@ -1,0 +1,116 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "password_missing": "Password is missing",
+            "unknown": "Unexpected error",
+            "username_missing": "Username is missing"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password to your HEOS Account.",
+                    "username": "The username or email address of your HEOS Account."
+                },
+                "description": "Please update your HEOS Account credentials. Alternatively, you can clear the credentials if you do not want the integration to access favorites, playlists, and streaming services.",
+                "title": "Reauthenticate HEOS"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+                },
+                "description": "Change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
+                "title": "Reconfigure HEOS"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+                },
+                "description": "Please enter the host name or IP address of a HEOS-capable product to access your HEOS System.",
+                "title": "Connect to HEOS"
+            }
+        }
+    },
+    "exceptions": {
+        "action_error": {
+            "message": "Unable to {action}: {error}"
+        },
+        "entity_not_found": {
+            "message": "Entity {entity_id} was not found"
+        },
+        "integration_not_loaded": {
+            "message": "The HEOS integration is not loaded"
+        },
+        "not_heos_media_player": {
+            "message": "Entity {entity_id} is not a HEOS media player entity"
+        },
+        "unknown_source": {
+            "message": "Unknown source: {source}"
+        }
+    },
+    "issues": {
+        "sign_in_out_deprecated": {
+            "description": "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release. Enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically.",
+            "title": "HEOS Actions Deprecated"
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "password_missing": "Password is missing",
+            "unknown": "Unexpected error",
+            "username_missing": "Username is missing"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password to your HEOS Account.",
+                    "username": "The username or email address of your HEOS Account."
+                },
+                "description": "You can sign-in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign-out of your account.",
+                "title": "HEOS Options"
+            }
+        }
+    },
+    "services": {
+        "sign_in": {
+            "description": "Signs in to a HEOS account.",
+            "fields": {
+                "password": {
+                    "description": "The password of the HEOS account.",
+                    "name": "Password"
+                },
+                "username": {
+                    "description": "The username or email of the HEOS account.",
+                    "name": "Username"
+                }
+            },
+            "name": "Sign in"
+        },
+        "sign_out": {
+            "description": "Signs out of the HEOS account.",
+            "name": "Sign out"
+        }
+    }
+}

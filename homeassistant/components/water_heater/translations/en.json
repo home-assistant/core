@@ -1,0 +1,102 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Water heater",
+            "state": {
+                "eco": "Eco",
+                "electric": "Electric",
+                "gas": "Gas",
+                "heat_pump": "Heat Pump",
+                "high_demand": "High Demand",
+                "off": "Off",
+                "performance": "Performance"
+            },
+            "state_attributes": {
+                "away_mode": {
+                    "name": "Away mode",
+                    "state": {
+                        "off": "Off",
+                        "on": "On"
+                    }
+                },
+                "current_operation": {
+                    "name": "Current operation"
+                },
+                "current_temperature": {
+                    "name": "Current temperature"
+                },
+                "max_temp": {
+                    "name": "Max target temperature"
+                },
+                "min_temp": {
+                    "name": "Min target temperature"
+                },
+                "target_temp_high": {
+                    "name": "Upper target temperature"
+                },
+                "target_temp_low": {
+                    "name": "Lower target temperature"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "not_valid_operation_mode": {
+            "message": "Operation mode {operation_mode} is not valid for {entity_id}. Valid operation modes are: {operation_list}."
+        },
+        "operation_list_not_defined": {
+            "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
+        }
+    },
+    "services": {
+        "set_away_mode": {
+            "description": "Turns away mode on/off.",
+            "fields": {
+                "away_mode": {
+                    "description": "New value of away mode.",
+                    "name": "Away mode"
+                }
+            },
+            "name": "Set away mode"
+        },
+        "set_operation_mode": {
+            "description": "Sets the operation mode.",
+            "fields": {
+                "operation_mode": {
+                    "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation.",
+                    "name": "Operation mode"
+                }
+            },
+            "name": "Set operation mode"
+        },
+        "set_temperature": {
+            "description": "Sets the target temperature.",
+            "fields": {
+                "operation_mode": {
+                    "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation.",
+                    "name": "Operation mode"
+                },
+                "temperature": {
+                    "description": "New target temperature for the water heater.",
+                    "name": "Temperature"
+                }
+            },
+            "name": "Set temperature"
+        },
+        "turn_off": {
+            "description": "Turns water heater off.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns water heater on.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Water heater"
+}

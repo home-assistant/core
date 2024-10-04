@@ -1,0 +1,202 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_charset": "The specified charset is not supported",
+            "invalid_folder": "The selected folder is invalid",
+            "invalid_search": "The selected search is invalid",
+            "ssl_error": "An SSL error occurred. Change SSL cipher list and try again."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Correct the IMAP password."
+                },
+                "description": "The password for {username} is invalid.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "charset": "Character set",
+                    "event_message_data": "Message data to be included in the `imap_content` event data:",
+                    "folder": "Folder",
+                    "password": "Password",
+                    "port": "Port",
+                    "search": "IMAP search",
+                    "server": "Server",
+                    "ssl_cipher_list": "SSL cipher list (Advanced)",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "charset": "The character set used. Common values are `utf-8` or `US-ASCII`.",
+                    "event_message_data": "Note that the event size is limited, and not all message text might be sent with the event if the message is too large.",
+                    "folder": "In generally the folder is set to `INBOX`, but e.g. in case of a sub folder, named `Test`, this should be `INBOX.Test`.",
+                    "password": "The IMAP password",
+                    "port": "The IMAP port supporting SSL, usually this is 993.",
+                    "search": "The IMAP search command which is `UnSeen UnDeleted` by default.",
+                    "server": "The IMAP server.",
+                    "ssl_cipher_list": "If the IMAP service only supports legacy encryption, try to change this.",
+                    "username": "The IMAP username.",
+                    "verify_ssl": "Recommended, to ensure the server certificate is valid. Turn off, if the server certificate is not trusted (e.g. self signed)."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "imap_mail_count": {
+                "name": "Messages",
+                "unit_of_measurement": "messages"
+            }
+        }
+    },
+    "exceptions": {
+        "copy_failed": {
+            "message": "Copying the message failed with \"{error}\"."
+        },
+        "delete_failed": {
+            "message": "Marking the message for deletion failed with \"{error}\"."
+        },
+        "expunge_failed": {
+            "message": "Expunging the message failed with \"{error}\"."
+        },
+        "fetch_failed": {
+            "message": "Fetching the message text failed with \"{error}\"."
+        },
+        "imap_server_fail": {
+            "message": "The IMAP server failed to connect: {error}."
+        },
+        "invalid_auth": {
+            "message": "Invalid authentication"
+        },
+        "invalid_entry": {
+            "message": "No valid IMAP entry was found."
+        },
+        "invalid_folder": {
+            "message": "The selected folder is invalid"
+        },
+        "seen_failed": {
+            "message": "Marking message as seen failed with \"{error}\"."
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "An entry with these folder and search options already exists.",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_charset": "The specified charset is not supported",
+            "invalid_folder": "The selected folder is invalid",
+            "invalid_search": "The selected search is invalid"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "custom_event_data_template": "Template to create custom event data",
+                    "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable.",
+                    "event_message_data": "Message data to be included in the `imap_content` event data.",
+                    "folder": "Folder",
+                    "max_message_size": "Max message size (2048 < size < 30000)",
+                    "search": "IMAP search"
+                },
+                "data_description": {
+                    "custom_event_data_template": "This template is evaluated when a new message was received, and the result is added to the `custom` attribute of the event data.",
+                    "enable_push": "Using Push-IMAP is recommended. Polling will increase the time to respond.",
+                    "event_message_data": "Note that the event size is limited, and not all message text might be sent with the event if the message is too large.",
+                    "folder": "In generally the folder is set to `INBOX`, but e.g. in case of a sub folder, named `Test`, this should be `INBOX.Test`.",
+                    "max_message_size": "Limit the maximum size of the event. Instead of passing the (whole) text message, using a template is a better option.",
+                    "search": "The IMAP search command which is `UnSeen UnDeleted` by default."
+                }
+            }
+        }
+    },
+    "selector": {
+        "event_message_data": {
+            "options": {
+                "headers": "Message headers",
+                "text": "Body text"
+            }
+        },
+        "ssl_cipher_list": {
+            "options": {
+                "intermediate": "Intermediate ciphers",
+                "modern": "Modern ciphers",
+                "python_default": "Default settings"
+            }
+        }
+    },
+    "services": {
+        "delete": {
+            "description": "Delete an email.",
+            "fields": {
+                "entry": {
+                    "description": "The IMAP config entry.",
+                    "name": "Entry"
+                },
+                "uid": {
+                    "description": "The email identifier (UID).",
+                    "name": "UID"
+                }
+            },
+            "name": "Delete message"
+        },
+        "fetch": {
+            "description": "Fetch an email message from the server.",
+            "fields": {
+                "entry": {
+                    "description": "The IMAP config entry.",
+                    "name": "Entry"
+                },
+                "uid": {
+                    "description": "The email identifier (UID).",
+                    "name": "UID"
+                }
+            },
+            "name": "Fetch message"
+        },
+        "move": {
+            "description": "Move an email to a target folder.",
+            "fields": {
+                "entry": {
+                    "description": "The IMAP config entry.",
+                    "name": "Entry"
+                },
+                "seen": {
+                    "description": "Mark the email as seen.",
+                    "name": "Seen"
+                },
+                "target_folder": {
+                    "description": "The target folder the email should be moved to.",
+                    "name": "Target folder"
+                },
+                "uid": {
+                    "description": "The email identifier (UID).",
+                    "name": "UID"
+                }
+            },
+            "name": "Move message"
+        },
+        "seen": {
+            "description": "Mark an email as seen.",
+            "fields": {
+                "entry": {
+                    "description": "The IMAP config entry.",
+                    "name": "Entry"
+                },
+                "uid": {
+                    "description": "The email identifier (UID).",
+                    "name": "UID"
+                }
+            },
+            "name": "Mark message as seen"
+        }
+    }
+}

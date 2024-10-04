@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "Hydrological station"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "water_level": {
+                "name": "Water level"
+            },
+            "water_temperature": {
+                "name": "Water temperature"
+            }
+        }
+    }
+}

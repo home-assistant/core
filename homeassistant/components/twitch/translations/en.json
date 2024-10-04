@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error",
+            "wrong_account": "Wrong account: Please authenticate with {username}."
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "The Twitch integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "channel": {
+                "state": {
+                    "offline": "Offline",
+                    "streaming": "Streaming"
+                },
+                "state_attributes": {
+                    "followers": {
+                        "name": "Followers"
+                    },
+                    "following": {
+                        "name": "Following"
+                    },
+                    "following_since": {
+                        "name": "Following since"
+                    },
+                    "game": {
+                        "name": "Game"
+                    },
+                    "started_at": {
+                        "name": "Started at"
+                    },
+                    "subscribed": {
+                        "name": "Subscribed"
+                    },
+                    "subscription_is_gifted": {
+                        "name": "Subscription is gifted"
+                    },
+                    "subscription_tier": {
+                        "name": "Subscription tier"
+                    },
+                    "title": {
+                        "name": "Title"
+                    },
+                    "viewers": {
+                        "name": "Viewers"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "The selected agreement is already configured.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "connection_error": "Failed to connect",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_agreements": "This account has no Toon displays.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Agreement"
+                },
+                "description": "Select the agreement address you want to add.",
+                "title": "Select your agreement"
+            },
+            "pick_implementation": {
+                "title": "Choose your tenant to authenticate with"
+            }
+        }
+    },
+    "services": {
+        "update": {
+            "description": "Updates all entities with fresh data from Toon.",
+            "fields": {
+                "display": {
+                    "description": "Toon display to update.",
+                    "name": "Display"
+                }
+            },
+            "name": "Update"
+        }
+    }
+}

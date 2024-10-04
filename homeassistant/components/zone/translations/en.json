@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads zones from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

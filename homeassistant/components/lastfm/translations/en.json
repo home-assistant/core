@@ -1,0 +1,39 @@
+{
+    "config": {
+        "error": {
+            "invalid_account": "Invalid username",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "friends": {
+                "data": {
+                    "users": "Last.fm usernames"
+                },
+                "description": "Fill in other users you want to add."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "main_user": "Last.fm username"
+                },
+                "description": "Request an API account at {api_account_url}."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_account": "Invalid username",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "users": "Last.fm usernames"
+                },
+                "description": "Fill in other users you want to add."
+            }
+        }
+    }
+}

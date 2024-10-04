@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "bad_mfa": "Your code was invalid, please try again or use a recovery token.",
+            "invalid_auth": "Invalid authentication",
+            "mfa_required": "Multi-factor authentication required."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "mfa_code": "Enter your MFA code",
+                    "mfa_secret": "Add your MFA Secret. See docs for help.",
+                    "password": "Password"
+                },
+                "description": "Enter your Monarch Money email and password, if required you will also be prompted for your MFA code."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "age": {
+                "name": "Data age"
+            },
+            "balance": {
+                "name": "Balance"
+            },
+            "savings": {
+                "name": "Savings year to date"
+            },
+            "savings_rate": {
+                "name": "Savings rate"
+            },
+            "sum_expense": {
+                "name": "Expense year to date"
+            },
+            "sum_income": {
+                "name": "Income year to date"
+            },
+            "value": {
+                "name": "Value"
+            }
+        }
+    }
+}

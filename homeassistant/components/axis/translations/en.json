@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "link_local_address": "Link local addresses are not supported",
+            "not_axis_device": "Discovered device not an Axis device",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "protocol": "Protocol",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Axis device.",
+                    "username": "The user name you set up on your Axis device. It is recommended to create a user specifically for Home Assistant."
+                },
+                "description": "Set up an Axis device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Select stream profile to use"
+                },
+                "title": "Axis device video stream options"
+            }
+        }
+    }
+}

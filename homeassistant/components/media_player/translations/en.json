@@ -1,0 +1,339 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_buffering": "{entity_name} is buffering",
+            "is_idle": "{entity_name} is idle",
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on",
+            "is_paused": "{entity_name} is paused",
+            "is_playing": "{entity_name} is playing"
+        },
+        "extra_fields": {
+            "for": "Duration"
+        },
+        "trigger_type": {
+            "buffering": "{entity_name} starts buffering",
+            "changed_states": "{entity_name} turned on or off",
+            "idle": "{entity_name} becomes idle",
+            "paused": "{entity_name} is paused",
+            "playing": "{entity_name} starts playing",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Media player",
+            "state": {
+                "buffering": "Buffering",
+                "idle": "Idle",
+                "off": "Off",
+                "on": "On",
+                "paused": "Paused",
+                "playing": "Playing",
+                "standby": "Standby"
+            },
+            "state_attributes": {
+                "app_id": {
+                    "name": "App ID"
+                },
+                "app_name": {
+                    "name": "App"
+                },
+                "entity_picture_local": {
+                    "name": "Local accessible entity picture"
+                },
+                "groups_members": {
+                    "name": "Group members"
+                },
+                "is_volume_muted": {
+                    "name": "Muted",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "media_album_artist": {
+                    "name": "Album artist"
+                },
+                "media_album_name": {
+                    "name": "Album"
+                },
+                "media_artist": {
+                    "name": "Artist"
+                },
+                "media_channel": {
+                    "name": "Channel"
+                },
+                "media_content_id": {
+                    "name": "Content ID"
+                },
+                "media_content_type": {
+                    "name": "Content type",
+                    "state": {
+                        "album": "Album",
+                        "app": "App",
+                        "artist": "Artist",
+                        "channel": "Channel",
+                        "channels": "Channels",
+                        "composer": "Composer",
+                        "contributing_artist": "Contributing artist",
+                        "episode": "Episode",
+                        "game": "Game",
+                        "genre": "Genre",
+                        "image": "Image",
+                        "movie": "Movie",
+                        "music": "Music",
+                        "playlist": "Playlist",
+                        "podcast": "Podcast",
+                        "season": "Season",
+                        "track": "Track",
+                        "tvshow": "TV show",
+                        "url": "URL",
+                        "video": "Video"
+                    }
+                },
+                "media_duration": {
+                    "name": "Duration"
+                },
+                "media_episode": {
+                    "name": "Episode"
+                },
+                "media_playlist": {
+                    "name": "Playlist"
+                },
+                "media_position": {
+                    "name": "Position"
+                },
+                "media_position_updated_at": {
+                    "name": "Position updated"
+                },
+                "media_season": {
+                    "name": "Season"
+                },
+                "media_series_title": {
+                    "name": "Series"
+                },
+                "media_title": {
+                    "name": "Title"
+                },
+                "media_track": {
+                    "name": "Track"
+                },
+                "repeat": {
+                    "name": "Repeat",
+                    "state": {
+                        "all": "All",
+                        "off": "Off",
+                        "one": "One"
+                    }
+                },
+                "shuffle": {
+                    "name": "Shuffle",
+                    "state": {
+                        "false": "Off",
+                        "true": "On"
+                    }
+                },
+                "sound_mode": {
+                    "name": "Sound mode"
+                },
+                "sound_mode_list": {
+                    "name": "Available sound modes"
+                },
+                "source": {
+                    "name": "Source"
+                },
+                "source_list": {
+                    "name": "Available sources"
+                },
+                "volume_level": {
+                    "name": "Volume"
+                }
+            }
+        },
+        "receiver": {
+            "name": "Receiver"
+        },
+        "speaker": {
+            "name": "Speaker"
+        },
+        "tv": {
+            "name": "TV"
+        }
+    },
+    "selector": {
+        "enqueue": {
+            "options": {
+                "add": "Add to queue",
+                "next": "Play next",
+                "play": "Play",
+                "replace": "Play now and clear queue"
+            }
+        },
+        "repeat": {
+            "options": {
+                "all": "Repeat all",
+                "off": "Off",
+                "one": "Repeat one"
+            }
+        }
+    },
+    "services": {
+        "clear_playlist": {
+            "description": "Removes all items from the playlist.",
+            "name": "Clear playlist"
+        },
+        "join": {
+            "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
+            "fields": {
+                "group_members": {
+                    "description": "The players which will be synced with the playback specified in 'Targets'.",
+                    "name": "Group members"
+                }
+            },
+            "name": "Join"
+        },
+        "media_next_track": {
+            "description": "Selects the next track.",
+            "name": "Next"
+        },
+        "media_pause": {
+            "description": "Pauses.",
+            "name": "Pause"
+        },
+        "media_play": {
+            "description": "Starts playing.",
+            "name": "Play"
+        },
+        "media_play_pause": {
+            "description": "Toggles play/pause.",
+            "name": "Play/Pause"
+        },
+        "media_previous_track": {
+            "description": "Selects the previous track.",
+            "name": "Previous"
+        },
+        "media_seek": {
+            "description": "Allows you to go to a different part of the media that is currently playing.",
+            "fields": {
+                "seek_position": {
+                    "description": "Target position in the currently playing media. The format is platform dependent.",
+                    "name": "Position"
+                }
+            },
+            "name": "Seek"
+        },
+        "media_stop": {
+            "description": "Stops playing.",
+            "name": "Stop"
+        },
+        "play_media": {
+            "description": "Starts playing specified media.",
+            "fields": {
+                "announce": {
+                    "description": "If the media should be played as an announcement.",
+                    "name": "Announce"
+                },
+                "enqueue": {
+                    "description": "If the content should be played now or be added to the queue.",
+                    "name": "Enqueue"
+                },
+                "media_content_id": {
+                    "description": "The ID of the content to play. Platform dependent.",
+                    "name": "Content ID"
+                },
+                "media_content_type": {
+                    "description": "The type of the content to play. Such as image, music, tv show, video, episode, channel, or playlist.",
+                    "name": "Content type"
+                }
+            },
+            "name": "Play media"
+        },
+        "repeat_set": {
+            "description": "Playback mode that plays the media in a loop.",
+            "fields": {
+                "repeat": {
+                    "description": "Repeat mode to set.",
+                    "name": "Repeat mode"
+                }
+            },
+            "name": "Repeat"
+        },
+        "select_sound_mode": {
+            "description": "Selects a specific sound mode.",
+            "fields": {
+                "sound_mode": {
+                    "description": "Name of the sound mode to switch to.",
+                    "name": "Sound mode"
+                }
+            },
+            "name": "Select sound mode"
+        },
+        "select_source": {
+            "description": "Sends the media player the command to change input source.",
+            "fields": {
+                "source": {
+                    "description": "Name of the source to switch to. Platform dependent.",
+                    "name": "Source"
+                }
+            },
+            "name": "Select source"
+        },
+        "shuffle_set": {
+            "description": "Playback mode that selects the media in randomized order.",
+            "fields": {
+                "shuffle": {
+                    "description": "Whether or not shuffle mode is enabled.",
+                    "name": "Shuffle"
+                }
+            },
+            "name": "Shuffle"
+        },
+        "toggle": {
+            "description": "Toggles a media player on/off.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Turns off the power of the media player.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns on the power of the media player.",
+            "name": "Turn on"
+        },
+        "unjoin": {
+            "description": "Removes the player from a group. Only works on platforms which support player groups.",
+            "name": "Unjoin"
+        },
+        "volume_down": {
+            "description": "Turns down the volume.",
+            "name": "Turn down volume"
+        },
+        "volume_mute": {
+            "description": "Mutes or unmutes the media player.",
+            "fields": {
+                "is_volume_muted": {
+                    "description": "Defines whether or not it is muted.",
+                    "name": "Muted"
+                }
+            },
+            "name": "Mute/unmute volume"
+        },
+        "volume_set": {
+            "description": "Sets the volume level.",
+            "fields": {
+                "volume_level": {
+                    "description": "The volume. 0 is inaudible, 1 is the maximum volume.",
+                    "name": "Level"
+                }
+            },
+            "name": "Set volume"
+        },
+        "volume_up": {
+            "description": "Turns up the volume.",
+            "name": "Turn up volume"
+        }
+    },
+    "title": "Media player"
+}

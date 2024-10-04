@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "reauth_invalid": "Re-authentication failed; Serial Number does not match original",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "station": "Station Serial Number",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "lock": {
+            "lock": {
+                "name": "Lock"
+            }
+        },
+        "number": {
+            "energy_price": {
+                "name": "Energy price"
+            },
+            "maximum_charging_current": {
+                "name": "Maximum charging current"
+            },
+            "maximum_icp_current": {
+                "name": "Maximum ICP current"
+            }
+        },
+        "sensor": {
+            "added_discharged_energy": {
+                "name": "Discharged energy"
+            },
+            "added_energy": {
+                "name": "Added energy"
+            },
+            "added_range": {
+                "name": "Added range"
+            },
+            "charging_power": {
+                "name": "Charging power"
+            },
+            "charging_speed": {
+                "name": "Charging speed"
+            },
+            "cost": {
+                "name": "Cost"
+            },
+            "current_mode": {
+                "name": "Current mode"
+            },
+            "depot_price": {
+                "name": "Depot price"
+            },
+            "energy_price": {
+                "name": "Energy price"
+            },
+            "icp_max_current": {
+                "name": "Max ICP current"
+            },
+            "max_available_power": {
+                "name": "Max available power"
+            },
+            "max_charging_current": {
+                "name": "Max charging current"
+            },
+            "state_of_charge": {
+                "name": "State of charge"
+            },
+            "status_description": {
+                "name": "Status description"
+            }
+        },
+        "switch": {
+            "pause_resume": {
+                "name": "Pause/resume"
+            }
+        }
+    }
+}

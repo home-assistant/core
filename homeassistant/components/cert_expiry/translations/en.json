@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "import_failed": "Import from config failed"
+        },
+        "error": {
+            "connection_refused": "Connection refused when connecting to host",
+            "connection_timeout": "Timeout when connecting to this host",
+            "resolve_failed": "This host cannot be resolved"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "The name of the certificate",
+                    "port": "Port"
+                },
+                "title": "Define the certificate to test"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "certificate_expiry": {
+                "name": "Cert expiry"
+            }
+        }
+    },
+    "title": "Certificate Expiry"
+}

@@ -1,0 +1,128 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "authentication": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter username and password",
+                "title": "Configure Rest API Credentials"
+            },
+            "modbus_tcp": {
+                "data": {
+                    "address": "Modbus address",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "address": "Modbus address can be found in the device's settings menu.",
+                    "port": "Port number can be found in the device's settings menu."
+                },
+                "description": "Enter Modbus TCP port and device's Modbus address.",
+                "title": "Configure Modbus TCP"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your Iskra device."
+                },
+                "description": "Enter the IP address of your Iskra Device and select protocol.",
+                "title": "Configure Iskra Device"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "non_resettable_counter_1": {
+                "name": "Non Resettable counter 1"
+            },
+            "non_resettable_counter_2": {
+                "name": "Non Resettable counter 2"
+            },
+            "non_resettable_counter_3": {
+                "name": "Non Resettable counter 3"
+            },
+            "non_resettable_counter_4": {
+                "name": "Non Resettable counter 4"
+            },
+            "phase1_current": {
+                "name": "Phase 1 current"
+            },
+            "phase1_power": {
+                "name": "Phase 1 power"
+            },
+            "phase1_voltage": {
+                "name": "Phase 1 voltage"
+            },
+            "phase2_current": {
+                "name": "Phase 2 current"
+            },
+            "phase2_power": {
+                "name": "Phase 2 power"
+            },
+            "phase2_voltage": {
+                "name": "Phase 2 voltage"
+            },
+            "phase3_current": {
+                "name": "Phase 3 current"
+            },
+            "phase3_power": {
+                "name": "Phase 3 power"
+            },
+            "phase3_voltage": {
+                "name": "Phase 3 voltage"
+            },
+            "resettable_counter_1": {
+                "name": "Resettable counter 1"
+            },
+            "resettable_counter_2": {
+                "name": "Resettable counter 2"
+            },
+            "resettable_counter_3": {
+                "name": "Resettable counter 3"
+            },
+            "resettable_counter_4": {
+                "name": "Resettable counter 4"
+            },
+            "resettable_counter_5": {
+                "name": "Resettable counter 5"
+            },
+            "resettable_counter_6": {
+                "name": "Resettable counter 6"
+            },
+            "resettable_counter_7": {
+                "name": "Resettable counter 7"
+            },
+            "resettable_counter_8": {
+                "name": "Resettable counter 8"
+            },
+            "total_active_power": {
+                "name": "Total active power"
+            },
+            "total_apparent_power": {
+                "name": "Total apparent power"
+            },
+            "total_reactive_power": {
+                "name": "Total reactive power"
+            }
+        }
+    },
+    "selector": {
+        "protocol": {
+            "options": {
+                "modbus_tcp": "Modbus TCP",
+                "rest_api": "Rest API"
+            }
+        }
+    }
+}

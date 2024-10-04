@@ -1,0 +1,229 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Workday has already been setup with chosen configuration"
+        },
+        "error": {
+            "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
+            "add_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)",
+            "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+            "remove_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)"
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "add_holidays": "Add holidays",
+                    "category": "Additional category as holiday",
+                    "days_offset": "Offset",
+                    "excludes": "Days to exclude",
+                    "language": "Language for named holidays",
+                    "province": "Subdivision of country",
+                    "remove_holidays": "Remove Holidays",
+                    "workdays": "Days to include"
+                },
+                "data_description": {
+                    "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
+                    "category": "Select additional categories to include as holidays",
+                    "days_offset": "Days offset from current day",
+                    "excludes": "Select which weekdays to exclude as workdays.\nThe key `holidays` adds those for the configured country, customizable by all the settings below. Read the documentation on how to use them correctly.",
+                    "language": "Language to use when configuring named holiday exclusions",
+                    "province": "State, territory, province or region of country",
+                    "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
+                    "workdays": "Select which weekdays to include as possible workdays."
+                },
+                "description": "Set additional options for {name} configured for country {country}"
+            },
+            "user": {
+                "data": {
+                    "country": "Country",
+                    "name": "Name"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "workday": {
+                "state_attributes": {
+                    "days_offset": {
+                        "name": "Offset"
+                    },
+                    "excludes": {
+                        "name": "Days to exclude"
+                    },
+                    "workdays": {
+                        "name": "Days to include"
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "bad_country": {
+            "fix_flow": {
+                "step": {
+                    "country": {
+                        "data": {
+                            "country": "Country"
+                        },
+                        "description": "Select a country to use for your Workday sensor.",
+                        "title": "Select country for {title}"
+                    },
+                    "province": {
+                        "data": {
+                            "province": "Subdivision of country"
+                        },
+                        "data_description": {
+                            "province": "State, Territory, Province, Region of Country"
+                        },
+                        "description": "Select a province in country {country} to use for your Workday sensor.",
+                        "title": "Select province for {title}"
+                    }
+                }
+            },
+            "title": "Configured Country for {title} does not exist"
+        },
+        "bad_date_holiday": {
+            "fix_flow": {
+                "error": {
+                    "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
+                },
+                "step": {
+                    "fix_remove_holiday": {
+                        "data": {
+                            "remove_holidays": "Remove Holidays"
+                        },
+                        "data_description": {
+                            "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name"
+                        },
+                        "description": "Remove holiday date `{remove_holidays}` as it can't be found in country {country}.",
+                        "title": "Configured holiday date {remove_holidays} for {title} does not exist"
+                    }
+                }
+            },
+            "title": "Configured holiday date {remove_holidays} for {title} does not exist"
+        },
+        "bad_named_holiday": {
+            "fix_flow": {
+                "error": {
+                    "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
+                },
+                "step": {
+                    "fix_remove_holiday": {
+                        "data": {
+                            "remove_holidays": "Remove Holidays"
+                        },
+                        "data_description": {
+                            "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name"
+                        },
+                        "description": "Remove named holiday `{remove_holidays}` as it can't be found in country {country}.",
+                        "title": "Configured named holiday {remove_holidays} for {title} does not exist"
+                    }
+                }
+            },
+            "title": "Configured named holiday {remove_holidays} for {title} does not exist"
+        },
+        "bad_province": {
+            "fix_flow": {
+                "step": {
+                    "province": {
+                        "data": {
+                            "province": "Subdivision of country"
+                        },
+                        "data_description": {
+                            "province": "State, Territory, Province, Region of Country"
+                        },
+                        "description": "Select a province in country {country} to use for your Workday sensor.",
+                        "title": "Select province for {title}"
+                    }
+                }
+            },
+            "title": "Configured province in country {country} for {title} does not exist"
+        }
+    },
+    "options": {
+        "error": {
+            "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
+            "add_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)",
+            "already_configured": "Service with this configuration already exist",
+            "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+            "remove_holiday_range_error": "Incorrect format on date range (YYYY-MM-DD,YYYY-MM-DD)"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "add_holidays": "Add holidays",
+                    "category": "Additional category as holiday",
+                    "days_offset": "Offset",
+                    "excludes": "Days to exclude",
+                    "language": "Language for named holidays",
+                    "province": "Subdivision of country",
+                    "remove_holidays": "Remove Holidays",
+                    "workdays": "Days to include"
+                },
+                "data_description": {
+                    "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
+                    "category": "Select additional categories to include as holidays",
+                    "days_offset": "Days offset from current day",
+                    "excludes": "Select which weekdays to exclude as workdays.\nThe key `holidays` adds those for the configured country, customizable by all the settings below. Read the documentation on how to use them correctly.",
+                    "language": "Language to use when configuring named holiday exclusions",
+                    "province": "State, territory, province or region of country",
+                    "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
+                    "workdays": "Select which weekdays to include as possible workdays."
+                },
+                "description": "Change additional options for {name} configured for country {country}"
+            }
+        }
+    },
+    "selector": {
+        "category": {
+            "options": {
+                "armed_forces": "Armed forces",
+                "bank": "Bank",
+                "catholic": "Catholic",
+                "chinese": "Chinese",
+                "christian": "Christian",
+                "government": "Government",
+                "half_day": "Half day",
+                "hebrew": "Hebrew",
+                "hindu": "Hindu",
+                "islamic": "Islamic",
+                "optional": "Optional",
+                "public": "Public",
+                "school": "School",
+                "unofficial": "Unofficial",
+                "workday": "Workday"
+            }
+        },
+        "days": {
+            "options": {
+                "fri": "Friday",
+                "holiday": "Holidays",
+                "mon": "Monday",
+                "sat": "Saturday",
+                "sun": "Sunday",
+                "thu": "Thursday",
+                "tue": "Tuesday",
+                "wed": "Wednesday"
+            }
+        },
+        "province": {
+            "options": {
+                "none": "No subdivision"
+            }
+        }
+    },
+    "services": {
+        "check_date": {
+            "description": "Check if date is workday.",
+            "fields": {
+                "check_date": {
+                    "description": "Date to check if workday.",
+                    "name": "Date"
+                }
+            },
+            "name": "Check date"
+        }
+    },
+    "title": "Workday"
+}

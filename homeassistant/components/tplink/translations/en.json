@@ -1,0 +1,378 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "camera_creds": "You have to set both username and password",
+            "cannot_connect": "Connection error: {error}",
+            "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+            "invalid_auth": "Unable to authenticate: {error}",
+            "invalid_camera_auth": "Camera stream authentication failed"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "camera_auth_confirm": {
+                "data": {
+                    "live_view": "Enable camera live view",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
+                    "password": "Your camera account password configured for the device in the Tapo app.",
+                    "username": "Your camera account username configured for the device in the Tapo app."
+                },
+                "description": "Input device camera account credentials.",
+                "title": "Set camera account credentials"
+            },
+            "discovery_auth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your TP-Link cloud password which is case sensitive.",
+                    "username": "Your TP-Link cloud username which is the full email and is case sensitive."
+                },
+                "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
+                "title": "Authenticate"
+            },
+            "discovery_confirm": {
+                "description": "Do you want to set up {name} {model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Device"
+                },
+                "data_description": {
+                    "device": "Pick the TP-Link device to add."
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your TP-Link cloud password which is case sensitive.",
+                    "username": "Your TP-Link cloud username which is the full email and is case sensitive."
+                },
+                "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
+                "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your TP-Link device."
+                },
+                "description": "Update your configuration for device {mac}",
+                "title": "Reconfigure TPLink entry"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your TP-Link device."
+                },
+                "description": "If you leave the host empty, discovery will be used to find devices."
+            },
+            "user_auth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your TP-Link cloud password which is case sensitive.",
+                    "username": "Your TP-Link cloud username which is the full email and is case sensitive."
+                },
+                "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
+                "title": "Authenticate"
+            }
+        }
+    },
+    "device": {
+        "unnamed_device": {
+            "name": "Unnamed {model}"
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "cloud_connection": {
+                "name": "Cloud connection"
+            },
+            "humidity_warning": {
+                "name": "Humidity warning"
+            },
+            "overheated": {
+                "name": "Overheated"
+            },
+            "temperature_warning": {
+                "name": "Temperature warning"
+            },
+            "water_alert": {
+                "name": "Moisture",
+                "state": {
+                    "off": "Dry",
+                    "on": "Wet"
+                }
+            }
+        },
+        "button": {
+            "pan_left": {
+                "name": "Pan left"
+            },
+            "pan_right": {
+                "name": "Pan right"
+            },
+            "stop_alarm": {
+                "name": "Stop alarm"
+            },
+            "test_alarm": {
+                "name": "Test alarm"
+            },
+            "tilt_down": {
+                "name": "Tilt down"
+            },
+            "tilt_up": {
+                "name": "Tilt up"
+            }
+        },
+        "camera": {
+            "live_view": {
+                "name": "Live view"
+            }
+        },
+        "number": {
+            "auto_off_minutes": {
+                "name": "Turn off in"
+            },
+            "pan_step": {
+                "name": "Pan degrees"
+            },
+            "smooth_transition_off": {
+                "name": "Smooth off"
+            },
+            "smooth_transition_on": {
+                "name": "Smooth on"
+            },
+            "temperature_offset": {
+                "name": "Temperature offset"
+            },
+            "tilt_step": {
+                "name": "Tilt degrees"
+            }
+        },
+        "select": {
+            "alarm_sound": {
+                "name": "Alarm sound"
+            },
+            "alarm_volume": {
+                "name": "Alarm volume"
+            },
+            "light_preset": {
+                "name": "Light preset"
+            }
+        },
+        "sensor": {
+            "alarm_source": {
+                "name": "Alarm source"
+            },
+            "auto_off_at": {
+                "name": "Auto off at"
+            },
+            "consumption_this_month": {
+                "name": "This month's consumption"
+            },
+            "consumption_today": {
+                "name": "Today's consumption"
+            },
+            "consumption_total": {
+                "name": "Total consumption"
+            },
+            "current_consumption": {
+                "name": "Current consumption"
+            },
+            "device_time": {
+                "name": "Device time"
+            },
+            "on_since": {
+                "name": "On since"
+            },
+            "report_interval": {
+                "name": "Report interval"
+            },
+            "signal_level": {
+                "name": "Signal level"
+            },
+            "ssid": {
+                "name": "SSID"
+            },
+            "water_alert_timestamp": {
+                "name": "Last water leak alert"
+            }
+        },
+        "switch": {
+            "auto_off_enabled": {
+                "name": "Auto off enabled"
+            },
+            "auto_update_enabled": {
+                "name": "Auto update enabled"
+            },
+            "baby_cry_detection": {
+                "name": "Baby cry detection"
+            },
+            "child_lock": {
+                "name": "Child lock"
+            },
+            "fan_sleep_mode": {
+                "name": "Fan sleep mode"
+            },
+            "led": {
+                "name": "LED"
+            },
+            "motion_detection": {
+                "name": "Motion detection"
+            },
+            "person_detection": {
+                "name": "Person detection"
+            },
+            "pir_enabled": {
+                "name": "Motion sensor"
+            },
+            "smooth_transitions": {
+                "name": "Smooth transitions"
+            },
+            "tamper_detection": {
+                "name": "Tamper detection"
+            }
+        }
+    },
+    "exceptions": {
+        "device_authentication": {
+            "message": "Device authentication error {func}: {exc}"
+        },
+        "device_error": {
+            "message": "Unable to communicate with the device {func}: {exc}"
+        },
+        "device_timeout": {
+            "message": "Timeout communicating with the device {func}: {exc}"
+        },
+        "set_custom_effect": {
+            "message": "Error trying to set custom effect {effect}: {exc}"
+        },
+        "unexpected_device": {
+            "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+        },
+        "unsupported_mode": {
+            "message": "Tried to set unsupported mode: {mode}"
+        }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
+            "title": "Detected deprecated {platform} entity usage"
+        }
+    },
+    "services": {
+        "random_effect": {
+            "description": "Sets a random effect.",
+            "fields": {
+                "backgrounds": {
+                    "description": "List of HSV sequences (Max 16).",
+                    "name": "Backgrounds"
+                },
+                "brightness": {
+                    "description": "Initial brightness.",
+                    "name": "Brightness"
+                },
+                "brightness_range": {
+                    "description": "Range of brightness.",
+                    "name": "Brightness range"
+                },
+                "duration": {
+                    "description": "Duration.",
+                    "name": "Duration"
+                },
+                "fadeoff": {
+                    "description": "Fade off.",
+                    "name": "Fade off"
+                },
+                "hue_range": {
+                    "description": "Range of hue.",
+                    "name": "Hue range"
+                },
+                "init_states": {
+                    "description": "Initial HSV sequence.",
+                    "name": "Initial states"
+                },
+                "random_seed": {
+                    "description": "Random seed.",
+                    "name": "Random seed"
+                },
+                "saturation_range": {
+                    "description": "Range of saturation.",
+                    "name": "Saturation range"
+                },
+                "segments": {
+                    "description": "List of segments (0 for all).",
+                    "name": "Segments"
+                },
+                "transition": {
+                    "description": "Transition.",
+                    "name": "Transition"
+                },
+                "transition_range": {
+                    "description": "Range of transition.",
+                    "name": "Transition range"
+                }
+            },
+            "name": "Random effect"
+        },
+        "sequence_effect": {
+            "description": "Sets a sequence effect.",
+            "fields": {
+                "brightness": {
+                    "description": "Initial brightness.",
+                    "name": "Brightness"
+                },
+                "direction": {
+                    "description": "Direction.",
+                    "name": "Direction"
+                },
+                "duration": {
+                    "description": "Duration.",
+                    "name": "Duration"
+                },
+                "repeat_times": {
+                    "description": "Repetitions (0 for continuous).",
+                    "name": "Repetitions"
+                },
+                "segments": {
+                    "description": "List of Segments (0 for all).",
+                    "name": "Segments"
+                },
+                "sequence": {
+                    "description": "List of HSV sequences (Max 16).",
+                    "name": "Sequence"
+                },
+                "spread": {
+                    "description": "Speed of spread.",
+                    "name": "Spread"
+                },
+                "transition": {
+                    "description": "Transition.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Sequence effect"
+        }
+    }
+}

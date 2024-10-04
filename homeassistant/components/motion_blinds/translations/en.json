@@ -1,0 +1,93 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "connection_error": "Failed to connect",
+            "not_motionblinds": "Discovered device is not a Motion gateway"
+        },
+        "error": {
+            "discovery_error": "Failed to discover a Motion Gateway"
+        },
+        "flow_title": "{short_mac} ({ip_address})",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP address"
+                },
+                "description": "Run the setup again if you want to connect additional Motion Gateways",
+                "title": "Select the Motion Gateway that you wish to connect"
+            },
+            "user": {
+                "data": {
+                    "host": "IP address"
+                },
+                "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "go_favorite": {
+                "name": "Go to favorite position"
+            },
+            "set_favorite": {
+                "name": "Set current position as favorite"
+            }
+        },
+        "cover": {
+            "bottom": {
+                "name": "Bottom"
+            },
+            "combined": {
+                "name": "Combined"
+            },
+            "top": {
+                "name": "Top"
+            }
+        },
+        "sensor": {
+            "bottom_battery": {
+                "name": "Bottom battery"
+            },
+            "top_battery": {
+                "name": "Top battery"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Wait for multicast push on update"
+                }
+            }
+        }
+    },
+    "services": {
+        "set_absolute_position": {
+            "description": "Sets the absolute position of the cover.",
+            "fields": {
+                "absolute_position": {
+                    "description": "Absolute position to move to.",
+                    "name": "Absolute position"
+                },
+                "tilt_position": {
+                    "description": "Tilt position to move to.",
+                    "name": "Tilt position"
+                },
+                "width": {
+                    "description": "Specify the width that is covered, only for TDBU Combined entities.",
+                    "name": "Width"
+                }
+            },
+            "name": "Set absolute position"
+        }
+    }
+}

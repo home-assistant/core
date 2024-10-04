@@ -1,0 +1,35 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Person",
+            "state": {
+                "home": "Home",
+                "not_home": "Away"
+            },
+            "state_attributes": {
+                "device_trackers": {
+                    "name": "Device trackers"
+                },
+                "gps_accuracy": {
+                    "name": "GPS accuracy"
+                },
+                "latitude": {
+                    "name": "Latitude"
+                },
+                "longitude": {
+                    "name": "Longitude"
+                },
+                "source": {
+                    "name": "Source"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads persons from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "Person"
+}

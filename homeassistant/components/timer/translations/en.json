@@ -1,0 +1,72 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Timer",
+            "state": {
+                "active": "Active",
+                "idle": "Idle",
+                "paused": "Paused"
+            },
+            "state_attributes": {
+                "duration": {
+                    "name": "Duration"
+                },
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "finishes_at": {
+                    "name": "Finishes at"
+                },
+                "remaining": {
+                    "name": "Remaining"
+                },
+                "restore": {
+                    "name": "Restore"
+                }
+            }
+        }
+    },
+    "services": {
+        "cancel": {
+            "description": "Resets a timer's duration to the last known initial value without firing the timer finished event.",
+            "name": "Cancel"
+        },
+        "change": {
+            "description": "Changes a timer by adding or subtracting a given duration.",
+            "fields": {
+                "duration": {
+                    "description": "Duration to add to or subtract from the running timer.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Change"
+        },
+        "finish": {
+            "description": "Finishes a running timer earlier than scheduled.",
+            "name": "Finish"
+        },
+        "pause": {
+            "description": "Pauses a running timer, retaining the remaining duration for later continuation.",
+            "name": "Pause"
+        },
+        "reload": {
+            "description": "Reloads timers from the YAML-configuration.",
+            "name": "Reload"
+        },
+        "start": {
+            "description": "Starts a timer or restarts it with a provided duration.",
+            "fields": {
+                "duration": {
+                    "description": "Custom duration to restart the timer with.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Start"
+        }
+    },
+    "title": "Timer"
+}

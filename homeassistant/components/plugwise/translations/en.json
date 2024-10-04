@@ -1,0 +1,324 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna",
+            "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address.",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_setup": "Add your Adam instead of your Anna, see the documentation",
+            "response_error": "Invalid XML data, or error indication received",
+            "unknown": "Unexpected error",
+            "unsupported": "Device with unsupported firmware"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "host": "IP address",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP-address of your Smile. You can find it in your router or the Plugwise App.",
+                    "port": "By default your Smile uses port 80, normally you should not have to change this."
+                },
+                "description": "Update configuration for {title}."
+            },
+            "user": {
+                "data": {
+                    "host": "IP address",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP-address of your Smile. You can find it in your router or the Plugwise App.",
+                    "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1.",
+                    "port": "By default your Smile uses port 80, normally you should not have to change this.",
+                    "username": "Default is `smile`, or `stretch` for the legacy Stretch."
+                },
+                "description": "Please enter",
+                "title": "Connect to the Smile"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "compressor_state": {
+                "name": "Compressor state"
+            },
+            "cooling_enabled": {
+                "name": "Cooling enabled"
+            },
+            "cooling_state": {
+                "name": "Cooling"
+            },
+            "dhw_state": {
+                "name": "DHW state"
+            },
+            "flame_state": {
+                "name": "Flame state"
+            },
+            "heating_state": {
+                "name": "Heating"
+            },
+            "plugwise_notification": {
+                "name": "Plugwise notification"
+            },
+            "secondary_boiler_state": {
+                "name": "Secondary boiler state"
+            }
+        },
+        "button": {
+            "reboot": {
+                "name": "Reboot"
+            }
+        },
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "available_schemas": {
+                        "name": "Available schemas"
+                    },
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Night",
+                            "away": "Away",
+                            "home": "Home",
+                            "no_frost": "Anti-frost",
+                            "vacation": "Vacation"
+                        }
+                    },
+                    "selected_schema": {
+                        "name": "Selected schema"
+                    }
+                }
+            }
+        },
+        "number": {
+            "max_dhw_temperature": {
+                "name": "Domestic hot water setpoint"
+            },
+            "maximum_boiler_temperature": {
+                "name": "Maximum boiler temperature setpoint"
+            },
+            "temperature_offset": {
+                "name": "Temperature offset"
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "name": "DHW mode",
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Boost",
+                    "comfort": "Comfort",
+                    "off": "Off"
+                }
+            },
+            "gateway_mode": {
+                "name": "Gateway mode",
+                "state": {
+                    "away": "Pause",
+                    "full": "Normal",
+                    "vacation": "Vacation"
+                }
+            },
+            "regulation_mode": {
+                "name": "Regulation mode",
+                "state": {
+                    "bleeding_cold": "Bleeding cold",
+                    "bleeding_hot": "Bleeding hot",
+                    "cooling": "Cooling",
+                    "heating": "Heating",
+                    "off": "Off"
+                }
+            },
+            "select_schedule": {
+                "name": "Thermostat schedule",
+                "state": {
+                    "off": "Off"
+                }
+            }
+        },
+        "sensor": {
+            "cooling_setpoint": {
+                "name": "Cooling setpoint"
+            },
+            "dhw_temperature": {
+                "name": "DHW temperature"
+            },
+            "domestic_hot_water_setpoint": {
+                "name": "DHW setpoint"
+            },
+            "electricity_consumed": {
+                "name": "Electricity consumed"
+            },
+            "electricity_consumed_interval": {
+                "name": "Electricity consumed interval"
+            },
+            "electricity_consumed_off_peak_cumulative": {
+                "name": "Electricity consumed off peak cumulative"
+            },
+            "electricity_consumed_off_peak_interval": {
+                "name": "Electricity consumed off peak interval"
+            },
+            "electricity_consumed_off_peak_point": {
+                "name": "Electricity consumed off peak point"
+            },
+            "electricity_consumed_peak_cumulative": {
+                "name": "Electricity consumed peak cumulative"
+            },
+            "electricity_consumed_peak_interval": {
+                "name": "Electricity consumed peak interval"
+            },
+            "electricity_consumed_peak_point": {
+                "name": "Electricity consumed peak point"
+            },
+            "electricity_consumed_point": {
+                "name": "Electricity consumed point"
+            },
+            "electricity_phase_one_consumed": {
+                "name": "Electricity phase one consumed"
+            },
+            "electricity_phase_one_produced": {
+                "name": "Electricity phase one produced"
+            },
+            "electricity_phase_three_consumed": {
+                "name": "Electricity phase three consumed"
+            },
+            "electricity_phase_three_produced": {
+                "name": "Electricity phase three produced"
+            },
+            "electricity_phase_two_consumed": {
+                "name": "Electricity phase two consumed"
+            },
+            "electricity_phase_two_produced": {
+                "name": "Electricity phase two produced"
+            },
+            "electricity_produced": {
+                "name": "Electricity produced"
+            },
+            "electricity_produced_interval": {
+                "name": "Electricity produced interval"
+            },
+            "electricity_produced_off_peak_cumulative": {
+                "name": "Electricity produced off peak cumulative"
+            },
+            "electricity_produced_off_peak_interval": {
+                "name": "Electricity produced off peak interval"
+            },
+            "electricity_produced_off_peak_point": {
+                "name": "Electricity produced off peak point"
+            },
+            "electricity_produced_peak_cumulative": {
+                "name": "Electricity produced peak cumulative"
+            },
+            "electricity_produced_peak_interval": {
+                "name": "Electricity produced peak interval"
+            },
+            "electricity_produced_peak_point": {
+                "name": "Electricity produced peak point"
+            },
+            "electricity_produced_point": {
+                "name": "Electricity produced point"
+            },
+            "gas_consumed_cumulative": {
+                "name": "Gas consumed cumulative"
+            },
+            "gas_consumed_interval": {
+                "name": "Gas consumed interval"
+            },
+            "heating_setpoint": {
+                "name": "Heating setpoint"
+            },
+            "intended_boiler_temperature": {
+                "name": "Intended boiler temperature"
+            },
+            "maximum_boiler_temperature": {
+                "name": "Maximum boiler temperature"
+            },
+            "modulation_level": {
+                "name": "Modulation level"
+            },
+            "net_electricity_cumulative": {
+                "name": "Net electricity cumulative"
+            },
+            "net_electricity_point": {
+                "name": "Net electricity point"
+            },
+            "outdoor_air_temperature": {
+                "name": "Outdoor air temperature"
+            },
+            "outdoor_temperature": {
+                "name": "Outdoor temperature"
+            },
+            "return_temperature": {
+                "name": "Return temperature"
+            },
+            "setpoint": {
+                "name": "Setpoint"
+            },
+            "temperature_difference": {
+                "name": "Temperature difference"
+            },
+            "valve_position": {
+                "name": "Valve position"
+            },
+            "voltage_phase_one": {
+                "name": "Voltage phase one"
+            },
+            "voltage_phase_three": {
+                "name": "Voltage phase three"
+            },
+            "voltage_phase_two": {
+                "name": "Voltage phase two"
+            },
+            "water_pressure": {
+                "name": "Water pressure"
+            },
+            "water_temperature": {
+                "name": "Water temperature"
+            }
+        },
+        "switch": {
+            "cooling_ena_switch": {
+                "name": "Cooling"
+            },
+            "dhw_cm_switch": {
+                "name": "DHW comfort mode"
+            },
+            "lock": {
+                "name": "Lock"
+            },
+            "relay": {
+                "name": "Relay"
+            }
+        }
+    },
+    "exceptions": {
+        "authentication_failed": {
+            "message": "Invalid authentication"
+        },
+        "data_incomplete_or_missing": {
+            "message": "Data incomplete or missing."
+        },
+        "error_communicating_with_api": {
+            "message": "Error communicating with API: {error}."
+        },
+        "failed_to_connect": {
+            "message": "Failed to connect"
+        },
+        "invalid_xml_data": {
+            "message": "Invalid XML data, or error indication received"
+        },
+        "unsupported_firmware": {
+            "message": "Device with unsupported firmware"
+        },
+        "unsupported_hvac_mode_requested": {
+            "message": "Unsupported mode {hvac_mode} requested, valid modes are: {hvac_modes}."
+        }
+    }
+}

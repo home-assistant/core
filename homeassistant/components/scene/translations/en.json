@@ -1,0 +1,63 @@
+{
+    "exceptions": {
+        "entity_not_dynamically_created": {
+            "message": "The scene {entity_id} is not created with action `scene.create`."
+        },
+        "entity_not_scene": {
+            "message": "{entity_id} is not a valid entity ID of a scene."
+        }
+    },
+    "services": {
+        "apply": {
+            "description": "Activates a scene with configuration.",
+            "fields": {
+                "entities": {
+                    "description": "List of entities and their target state.",
+                    "name": "Entities state"
+                },
+                "transition": {
+                    "description": "Time it takes the devices to transition into the states defined in the scene.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Apply"
+        },
+        "create": {
+            "description": "Creates a new scene.",
+            "fields": {
+                "entities": {
+                    "description": "List of entities and their target state. If your entities are already in the target state right now, use 'Entities snapshot' instead.",
+                    "name": "Entity states"
+                },
+                "scene_id": {
+                    "description": "The entity ID of the new scene.",
+                    "name": "Scene entity ID"
+                },
+                "snapshot_entities": {
+                    "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine 'Entities snapshot' with 'Entity states'.",
+                    "name": "Entities snapshot"
+                }
+            },
+            "name": "Create"
+        },
+        "delete": {
+            "description": "Deletes a dynamically created scene.",
+            "name": "Delete"
+        },
+        "reload": {
+            "description": "Reloads the scenes from the YAML-configuration.",
+            "name": "Reload"
+        },
+        "turn_on": {
+            "description": "Activates a scene.",
+            "fields": {
+                "transition": {
+                    "description": "Time it takes the devices to transition into the states defined in the scene.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Activate"
+        }
+    },
+    "title": "Scene"
+}

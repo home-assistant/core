@@ -1,0 +1,78 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Bose SoundTouch device."
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "You are about to add the SoundTouch device named `{name}` to Home Assistant.",
+                "title": "Confirm adding Bose SoundTouch device"
+            }
+        }
+    },
+    "services": {
+        "add_zone_slave": {
+            "description": "Adds media players to a SoundTouch multi-room zone.",
+            "fields": {
+                "master": {
+                    "description": "The media player entity that is coordinating the multi-room zone. Platform dependent.",
+                    "name": "Leader"
+                },
+                "slaves": {
+                    "description": "The media player entities to add to the existing zone.",
+                    "name": "Follower"
+                }
+            },
+            "name": "Add zone follower"
+        },
+        "create_zone": {
+            "description": "Creates a SoundTouch multi-room zone.",
+            "fields": {
+                "master": {
+                    "description": "The media player entity that will coordinate the multi-room zone. Platform dependent.",
+                    "name": "Leader"
+                },
+                "slaves": {
+                    "description": "The media player entities to add to the new zone.",
+                    "name": "Follower"
+                }
+            },
+            "name": "Create zone"
+        },
+        "play_everywhere": {
+            "description": "Plays on all Bose SoundTouch devices.",
+            "fields": {
+                "master": {
+                    "description": "The media player entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices.",
+                    "name": "Leader"
+                }
+            },
+            "name": "Play everywhere"
+        },
+        "remove_zone_slave": {
+            "description": "Removes media players from a SoundTouch multi-room zone.",
+            "fields": {
+                "master": {
+                    "description": "The media player entity that is coordinating the multi-room zone. Platform dependent.",
+                    "name": "Leader"
+                },
+                "slaves": {
+                    "description": "The media player entities to remove from the existing zone.",
+                    "name": "Follower"
+                }
+            },
+            "name": "Remove zone follower"
+        }
+    }
+}

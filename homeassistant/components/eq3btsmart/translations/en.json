@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_mac_address": "Invalid MAC address"
+        },
+        "flow_title": "eQ-3 Device [{mac}]",
+        "step": {
+            "init": {
+                "title": "Configure new eQ-3 device"
+            },
+            "user": {
+                "data": {
+                    "mac": "MAC address"
+                },
+                "title": "Configure new eQ-3 device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "dst": {
+                "name": "Daylight saving time"
+            }
+        },
+        "number": {
+            "comfort": {
+                "name": "Comfort temperature"
+            },
+            "eco": {
+                "name": "Eco temperature"
+            },
+            "offset": {
+                "name": "Offset temperature"
+            },
+            "window_open_temperature": {
+                "name": "Window open temperature"
+            },
+            "window_open_timeout": {
+                "name": "Window open timeout"
+            }
+        },
+        "sensor": {
+            "away_until": {
+                "name": "Away until"
+            },
+            "valve": {
+                "name": "Valve"
+            }
+        },
+        "switch": {
+            "away": {
+                "name": "Away"
+            },
+            "boost": {
+                "name": "Boost"
+            },
+            "lock": {
+                "name": "Lock"
+            }
+        }
+    }
+}

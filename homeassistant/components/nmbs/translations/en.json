@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured",
+            "api_unavailable": "The API is currently unavailable.",
+            "invalid_station": "Invalid station.",
+            "same_station": "Departure and arrival station can not be the same."
+        },
+        "error": {
+            "same_station": "Departure and arrival station can not be the same."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude_vias": "Direct connections only",
+                    "show_on_map": "Display on map",
+                    "station_from": "Departure station",
+                    "station_to": "Arrival station"
+                },
+                "data_description": {
+                    "exclude_vias": "Exclude connections with transfers",
+                    "show_on_map": "Show the station on the map",
+                    "station_from": "Station where the train departs",
+                    "station_to": "Station where the train arrives"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml_import_issue_station_not_found": {
+            "description": "Configuring {integration_title} using YAML is being removed but there was an problem importing your YAML configuration.\n\nThe used station \"{station_name}\" could not be found. Fix it or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+            "title": "The {integration_title} YAML configuration import failed"
+        }
+    }
+}

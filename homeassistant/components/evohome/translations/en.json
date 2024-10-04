@@ -1,0 +1,58 @@
+{
+    "services": {
+        "clear_zone_override": {
+            "description": "Sets a zone to follow its schedule.",
+            "fields": {
+                "entity_id": {
+                    "description": "The entity ID of the Evohome zone.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Clear zone override"
+        },
+        "refresh_system": {
+            "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update.",
+            "name": "Refresh system"
+        },
+        "reset_system": {
+            "description": "Sets the system to Auto mode and reset all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode).",
+            "name": "Reset system"
+        },
+        "set_system_mode": {
+            "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
+            "fields": {
+                "duration": {
+                    "description": "The duration in hours; used only with AutoWithEco (up to 24 hours).",
+                    "name": "Duration"
+                },
+                "mode": {
+                    "description": "Mode to set the system to.",
+                    "name": "Mode"
+                },
+                "period": {
+                    "description": "A period of time in days; used only with Away, DayOff, or Custom. The system will revert to Auto at midnight (up to 99 days, today is day 1).",
+                    "name": "Period"
+                }
+            },
+            "name": "Set system mode"
+        },
+        "set_zone_override": {
+            "description": "Overrides a zone's setpoint, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+            "fields": {
+                "duration": {
+                    "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
+                    "name": "Duration"
+                },
+                "entity_id": {
+                    "description": "The entity ID of the Evohome zone.",
+                    "name": "Entity"
+                },
+                "setpoint": {
+                    "description": "The temperature to be used instead of the scheduled setpoint.",
+                    "name": "Setpoint"
+                }
+            },
+            "name": "Set zone override"
+        }
+    }
+}

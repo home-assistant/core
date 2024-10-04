@@ -1,0 +1,127 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is invalid."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the system running your Glances system monitor."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "charge": {
+                "name": "{sensor_label} charge"
+            },
+            "container_active": {
+                "name": "Containers active"
+            },
+            "container_cpu_usage": {
+                "name": "Containers CPU usage"
+            },
+            "container_memory_used": {
+                "name": "Containers memory used"
+            },
+            "cpu_usage": {
+                "name": "CPU usage"
+            },
+            "disk_free": {
+                "name": "{sensor_label} disk free"
+            },
+            "disk_usage": {
+                "name": "{sensor_label} disk usage"
+            },
+            "disk_used": {
+                "name": "{sensor_label} disk used"
+            },
+            "diskio_read": {
+                "name": "{sensor_label} disk read"
+            },
+            "diskio_write": {
+                "name": "{sensor_label} disk write"
+            },
+            "fan_speed": {
+                "name": "{sensor_label} fan speed"
+            },
+            "gpu_memory_usage": {
+                "name": "{sensor_label} memory usage"
+            },
+            "gpu_processor_usage": {
+                "name": "{sensor_label} processor usage"
+            },
+            "memory_free": {
+                "name": "Memory free"
+            },
+            "memory_usage": {
+                "name": "Memory usage"
+            },
+            "memory_use": {
+                "name": "Memory use"
+            },
+            "network_rx": {
+                "name": "{sensor_label} RX"
+            },
+            "network_tx": {
+                "name": "{sensor_label} TX"
+            },
+            "process_running": {
+                "name": "Running"
+            },
+            "process_sleeping": {
+                "name": "Sleeping"
+            },
+            "process_threads": {
+                "name": "Threads"
+            },
+            "process_total": {
+                "name": "Total"
+            },
+            "processor_load": {
+                "name": "CPU load"
+            },
+            "raid_available": {
+                "name": "{sensor_label} available"
+            },
+            "raid_used": {
+                "name": "{sensor_label} used"
+            },
+            "swap_free": {
+                "name": "Swap free"
+            },
+            "swap_usage": {
+                "name": "Swap usage"
+            },
+            "swap_use": {
+                "name": "Swap use"
+            },
+            "temperature": {
+                "name": "{sensor_label} temperature"
+            },
+            "uptime": {
+                "name": "Uptime"
+            }
+        }
+    }
+}

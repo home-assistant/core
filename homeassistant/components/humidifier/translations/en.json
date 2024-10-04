@@ -1,0 +1,124 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "Set humidity for {entity_name}",
+            "set_mode": "Change mode on {entity_name}",
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} is set to a specific mode",
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        },
+        "extra_fields": {
+            "above": "Above",
+            "below": "Below",
+            "for": "Duration",
+            "humidity": "Humidity",
+            "mode": "Mode"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} turned on or off",
+            "target_humidity_changed": "{entity_name} target humidity changed",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Humidifier",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "action": {
+                    "name": "Action",
+                    "state": {
+                        "drying": "Drying",
+                        "humidifying": "Humidifying",
+                        "idle": "Idle",
+                        "off": "Off"
+                    }
+                },
+                "available_modes": {
+                    "name": "Available modes"
+                },
+                "current_humidity": {
+                    "name": "Current humidity"
+                },
+                "humidity": {
+                    "name": "Target humidity"
+                },
+                "max_humidity": {
+                    "name": "Max target humidity"
+                },
+                "min_humidity": {
+                    "name": "Min target humidity"
+                },
+                "mode": {
+                    "name": "Mode",
+                    "state": {
+                        "auto": "Auto",
+                        "away": "Away",
+                        "baby": "Baby",
+                        "boost": "Boost",
+                        "comfort": "Comfort",
+                        "eco": "Eco",
+                        "home": "Home",
+                        "normal": "Normal",
+                        "sleep": "Sleep"
+                    }
+                }
+            }
+        },
+        "dehumidifier": {
+            "name": "Dehumidifier"
+        },
+        "humidifier": {
+            "name": "Humidifier"
+        }
+    },
+    "exceptions": {
+        "humidity_out_of_range": {
+            "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+        }
+    },
+    "services": {
+        "set_humidity": {
+            "description": "Sets the target humidity.",
+            "fields": {
+                "humidity": {
+                    "description": "Target humidity.",
+                    "name": "Humidity"
+                }
+            },
+            "name": "Set humidity"
+        },
+        "set_mode": {
+            "description": "Sets the humidifier operation mode.",
+            "fields": {
+                "mode": {
+                    "description": "Operation mode. For example, _normal_, _eco_, or _away_. For a list of possible values, refer to the integration documentation.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Set mode"
+        },
+        "toggle": {
+            "description": "Toggles the humidifier on/off.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Turns the humidifier off.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns the humidifier on.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Humidifier"
+}

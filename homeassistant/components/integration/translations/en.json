@@ -1,0 +1,63 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "max_sub_interval": "Max sub-interval",
+                    "method": "Integration method",
+                    "name": "Name",
+                    "round": "Precision",
+                    "source": "Input sensor",
+                    "unit_prefix": "Metric prefix",
+                    "unit_time": "Time unit"
+                },
+                "data_description": {
+                    "max_sub_interval": "Applies time based integration if the source did not change for this duration. Use 0 for no time based updates.",
+                    "round": "Controls the number of decimal digits in the output.",
+                    "unit_prefix": "The output will be scaled according to the selected metric prefix.",
+                    "unit_time": "The output will be scaled according to the selected time unit."
+                },
+                "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
+                "title": "Create Riemann sum integral sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_sub_interval": "Max sub-interval",
+                    "method": "Integration method",
+                    "round": "Precision",
+                    "source": "Input sensor",
+                    "unit_prefix": "Metric prefix",
+                    "unit_time": "Time unit"
+                },
+                "data_description": {
+                    "max_sub_interval": "Applies time based integration if the source did not change for this duration. Use 0 for no time based updates.",
+                    "round": "Controls the number of decimal digits in the output.",
+                    "unit_prefix": "The output will be scaled according to the selected metric prefix.",
+                    "unit_time": "The output will be scaled according to the selected time unit."
+                }
+            }
+        }
+    },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Left Riemann sum",
+                "right": "Right Riemann sum",
+                "trapezoidal": "Trapezoidal rule"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Days",
+                "h": "Hours",
+                "min": "Minutes",
+                "s": "Seconds"
+            }
+        }
+    },
+    "title": "Integral sensor"
+}

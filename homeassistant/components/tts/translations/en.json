@@ -1,0 +1,60 @@
+{
+    "services": {
+        "clear_cache": {
+            "description": "Removes all cached text-to-speech files and purges the memory.",
+            "name": "Clear TTS cache"
+        },
+        "say": {
+            "description": "Says something using text-to-speech on a media player.",
+            "fields": {
+                "cache": {
+                    "description": "Stores this message locally so that when the text is requested again, the output can be produced more quickly.",
+                    "name": "Cache"
+                },
+                "entity_id": {
+                    "description": "Media players to play the message.",
+                    "name": "Entity"
+                },
+                "language": {
+                    "description": "Language to use for speech generation.",
+                    "name": "Language"
+                },
+                "message": {
+                    "description": "The text you want to convert into speech so that you can listen to it on your device.",
+                    "name": "Message"
+                },
+                "options": {
+                    "description": "A dictionary containing integration-specific options.",
+                    "name": "Options"
+                }
+            },
+            "name": "Say a TTS message"
+        },
+        "speak": {
+            "description": "Speaks something using text-to-speech on a media player.",
+            "fields": {
+                "cache": {
+                    "description": "Stores this message locally so that when the text is requested again, the output can be produced more quickly.",
+                    "name": "Cache"
+                },
+                "language": {
+                    "description": "Language to use for speech generation.",
+                    "name": "Language"
+                },
+                "media_player_entity_id": {
+                    "description": "Media players to play the message.",
+                    "name": "Media player entity"
+                },
+                "message": {
+                    "description": "The text you want to convert into speech so that you can listen to it on your device.",
+                    "name": "Message"
+                },
+                "options": {
+                    "description": "A dictionary containing integration-specific options.",
+                    "name": "Options"
+                }
+            },
+            "name": "Speak"
+        }
+    }
+}

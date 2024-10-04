@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "invalid_config": "Invalid configuration"
+        },
+        "error": {
+            "invalid_prv_key": "Invalid private key",
+            "unknown": "Unknown error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "vapid_email": "Email",
+                    "vapid_prv_key": "VAPID private key"
+                },
+                "data_description": {
+                    "vapid_email": "This contact address will be included in the metadata of each notification.",
+                    "vapid_prv_key": "If not specified, one will be automatically generated."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml_import_issue": {
+            "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually.",
+            "title": "HTML5 YAML configuration import failed"
+        }
+    },
+    "services": {
+        "dismiss": {
+            "description": "Dismisses a html5 notification.",
+            "fields": {
+                "data": {
+                    "description": "Extended information of notification. Supports tag.",
+                    "name": "Data"
+                },
+                "target": {
+                    "description": "An array of targets.",
+                    "name": "Target"
+                }
+            },
+            "name": "Dismiss"
+        }
+    }
+}

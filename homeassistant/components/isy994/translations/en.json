@@ -1,0 +1,176 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_host": "The host entry was not in full URL format, e.g., http://192.168.10.100:80",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "The credentials for {host} are no longer valid.",
+                "title": "Reauthenticate your ISY"
+            },
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Password",
+                    "tls": "The TLS version of the ISY controller.",
+                    "username": "Username"
+                },
+                "description": "The host entry must be in full URL format, e.g., http://192.168.10.100:80",
+                "title": "Connect to your ISY"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ignore String",
+                    "restore_light_state": "Restore Light Brightness",
+                    "sensor_string": "Node Sensor String",
+                    "variable_sensor_string": "Variable Sensor String"
+                },
+                "description": "Set the options for the ISY integration: \n \u2022 Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n \u2022 Ignore String: Any device with 'Ignore String' in the name will be ignored. \n \u2022 Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n \u2022 Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+                "title": "ISY Options"
+            }
+        }
+    },
+    "services": {
+        "delete_zwave_lock_user_code": {
+            "description": "Deletes a user code for a Z-Wave lock via the ISY.",
+            "fields": {
+                "user_num": {
+                    "description": "The user slot number on the lock.",
+                    "name": "User Number"
+                }
+            },
+            "name": "Delete Z-Wave lock user code"
+        },
+        "get_zwave_parameter": {
+            "description": "Requests a Z-Wave device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+            "fields": {
+                "parameter": {
+                    "description": "The parameter number to retrieve from the device.",
+                    "name": "Parameter"
+                }
+            },
+            "name": "Get Z-Wave Parameter"
+        },
+        "rename_node": {
+            "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant entity name or entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
+            "fields": {
+                "name": {
+                    "description": "The new name to use within the ISY.",
+                    "name": "New Name"
+                }
+            },
+            "name": "Rename node on ISY"
+        },
+        "send_node_command": {
+            "description": "Sends a command to an ISY device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable, enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.",
+            "fields": {
+                "command": {
+                    "description": "The command to be sent to the device.",
+                    "name": "Command"
+                }
+            },
+            "name": "Send node command"
+        },
+        "send_program_command": {
+            "description": "Sends a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable, enable_run_at_startup, and disable_run_at_startup.",
+            "fields": {
+                "address": {
+                    "description": "The address of the program to control (use either address or name).",
+                    "name": "Address"
+                },
+                "command": {
+                    "description": "The ISY Program Command to be sent.",
+                    "name": "Command"
+                },
+                "isy": {
+                    "description": "If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.",
+                    "name": "ISY"
+                },
+                "name": {
+                    "description": "The name of the program to control (use either address or name).",
+                    "name": "Name"
+                }
+            },
+            "name": "Send program command"
+        },
+        "send_raw_node_command": {
+            "description": "Set the options for the ISY integration: \n \u2022 Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n \u2022 Ignore String: Any device with 'Ignore String' in the name will be ignored. \n \u2022 Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n \u2022 Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+            "fields": {
+                "command": {
+                    "description": "The ISY REST command to be sent to the device.",
+                    "name": "Command"
+                },
+                "parameters": {
+                    "description": "A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs).",
+                    "name": "Parameters"
+                },
+                "unit_of_measurement": {
+                    "description": "The ISY unit of measurement (UOM) to send with the command, if required.",
+                    "name": "Unit of measurement"
+                },
+                "value": {
+                    "description": "The integer value to be sent with the command.",
+                    "name": "Value"
+                }
+            },
+            "name": "Send raw node command"
+        },
+        "set_zwave_lock_user_code": {
+            "description": "Sets a user code for a Z-Wave lock via the ISY.",
+            "fields": {
+                "code": {
+                    "description": "The code to set for the user.",
+                    "name": "Code"
+                },
+                "user_num": {
+                    "description": "The user slot number on the lock.",
+                    "name": "User Number"
+                }
+            },
+            "name": "Set Z-Wave lock user code"
+        },
+        "set_zwave_parameter": {
+            "description": "Updates a Z-Wave device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+            "fields": {
+                "parameter": {
+                    "description": "The parameter number to set on the end device.",
+                    "name": "Parameter"
+                },
+                "size": {
+                    "description": "The size of the parameter, either 1, 2, or 4 bytes.",
+                    "name": "Size"
+                },
+                "value": {
+                    "description": "The value to set for the parameter. May be an integer or byte string (e.g. \"0xFFFF\").",
+                    "name": "Value"
+                }
+            },
+            "name": "Set Z-Wave parameter"
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY Connected",
+            "host_reachable": "Host Reachable",
+            "last_heartbeat": "Last Heartbeat Time",
+            "websocket_status": "Event Socket Status"
+        }
+    }
+}

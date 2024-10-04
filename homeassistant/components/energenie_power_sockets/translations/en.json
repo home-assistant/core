@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "device_not_found": "No device was found for the given id.",
+            "no_device": "Unable to discover any (new) supported device.",
+            "usb_error": "Couldn't access USB devices!"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Device"
+                },
+                "description": "Choose a discovered device.",
+                "title": "Searching for Energenie-Power-Sockets Devices."
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "socket": {
+                "name": "Socket {socket_id}"
+            }
+        }
+    },
+    "title": "Energenie Power Sockets Integration."
+}

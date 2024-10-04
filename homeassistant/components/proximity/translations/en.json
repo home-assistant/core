@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "success": "Changes saved"
+        },
+        "flow_title": "Proximity",
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_zones": "Zones to ignore",
+                    "tolerance": "Tolerance distance",
+                    "tracked_entities": "Devices or Persons to track",
+                    "zone": "Zone to track distance to"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "dir_of_travel": {
+                "name": "{tracked_entity} Direction of travel",
+                "state": {
+                    "arrived": "Arrived",
+                    "away_from": "Away from",
+                    "stationary": "Stationary",
+                    "towards": "Towards"
+                }
+            },
+            "dist_to_zone": {
+                "name": "{tracked_entity} Distance"
+            },
+            "nearest": {
+                "name": "Nearest device"
+            },
+            "nearest_dir_of_travel": {
+                "name": "Nearest direction of travel",
+                "state": {
+                    "arrived": "Arrived",
+                    "away_from": "Away from",
+                    "stationary": "Stationary",
+                    "towards": "Towards"
+                }
+            },
+            "nearest_dist_to_zone": {
+                "name": "Nearest distance"
+            }
+        }
+    },
+    "issues": {
+        "tracked_entity_removed": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entites were set to unavailable and can be removed.",
+                        "title": "Tracked entity has been removed"
+                    }
+                }
+            },
+            "title": "Tracked entity has been removed"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignored_zones": "Zones to ignore",
+                    "tolerance": "Tolerance distance",
+                    "tracked_entities": "Devices or Persons to track",
+                    "zone": "Zone to track distance to"
+                }
+            }
+        }
+    },
+    "title": "Proximity"
+}

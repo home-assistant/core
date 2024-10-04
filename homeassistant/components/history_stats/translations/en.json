@@ -1,0 +1,79 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "only_two_keys_allowed": "The sensor configuration must provide two out of 'start', 'end', 'duration'"
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "duration": "Duration",
+                    "end": "End",
+                    "start": "Start"
+                },
+                "data_description": {
+                    "duration": "Duration of the measure.",
+                    "end": "When to stop the measure (timestamp or datetime). Can be a template",
+                    "start": "When to start the measure (timestamp or datetime). Can be a template."
+                },
+                "description": "Read the documention for further details on how to configure the history stats sensor using these options."
+            },
+            "user": {
+                "data": {
+                    "entity_id": "Entity",
+                    "name": "Name",
+                    "state": "State",
+                    "type": "Type"
+                },
+                "data_description": {
+                    "entity_id": "Entity to get statistics from.",
+                    "name": "Name for the created entity.",
+                    "state": "The states you want to track from the entity.",
+                    "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
+                },
+                "description": "Create a history stats sensor"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "only_two_keys_allowed": "The sensor configuration must provide two out of 'start', 'end', 'duration'"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Duration",
+                    "end": "End",
+                    "start": "Start"
+                },
+                "data_description": {
+                    "duration": "Duration of the measure.",
+                    "end": "When to stop the measure (timestamp or datetime). Can be a template",
+                    "start": "When to start the measure (timestamp or datetime). Can be a template."
+                },
+                "description": "Read the documention for further details on how to configure the history stats sensor using these options."
+            }
+        }
+    },
+    "selector": {
+        "type": {
+            "options": {
+                "count": "Count",
+                "ratio": "Ratio",
+                "time": "Time"
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads history stats sensors from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "History Stats"
+}

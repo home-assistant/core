@@ -1,0 +1,101 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Let {entity_name} clean",
+            "dock": "Let {entity_name} return to the dock"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} is cleaning",
+            "is_docked": "{entity_name} is docked"
+        },
+        "extra_fields": {
+            "for": "Duration"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} started cleaning",
+            "docked": "{entity_name} docked"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Vacuum",
+            "state": {
+                "cleaning": "Cleaning",
+                "docked": "Docked",
+                "error": "Error",
+                "idle": "Idle",
+                "off": "Off",
+                "on": "On",
+                "paused": "Paused",
+                "returning": "Returning to dock"
+            }
+        }
+    },
+    "services": {
+        "clean_spot": {
+            "description": "Tells the vacuum cleaner to do a spot clean-up.",
+            "name": "Clean spot"
+        },
+        "locate": {
+            "description": "Locates the vacuum cleaner robot.",
+            "name": "Locate"
+        },
+        "pause": {
+            "description": "Pauses the cleaning task.",
+            "name": "Pause"
+        },
+        "return_to_base": {
+            "description": "Tells the vacuum cleaner to return to its dock.",
+            "name": "Return to dock"
+        },
+        "send_command": {
+            "description": "Sends a command to the vacuum cleaner.",
+            "fields": {
+                "command": {
+                    "description": "Command to execute. The commands are integration-specific.",
+                    "name": "Command"
+                },
+                "params": {
+                    "description": "Parameters for the command. The parameters are integration-specific.",
+                    "name": "Parameters"
+                }
+            },
+            "name": "Send command"
+        },
+        "set_fan_speed": {
+            "description": "Sets the fan speed of the vacuum cleaner.",
+            "fields": {
+                "fan_speed": {
+                    "description": "Fan speed. The value depends on the integration. Some integrations have speed steps, like 'medium'. Some use a percentage, between 0 and 100.",
+                    "name": "Fan speed"
+                }
+            },
+            "name": "Set fan speed"
+        },
+        "start": {
+            "description": "Starts or resumes the cleaning task.",
+            "name": "Start"
+        },
+        "start_pause": {
+            "description": "Starts, pauses, or resumes the cleaning task.",
+            "name": "Start/pause"
+        },
+        "stop": {
+            "description": "Stops the current cleaning task.",
+            "name": "Stop"
+        },
+        "toggle": {
+            "description": "Toggles the vacuum cleaner on/off.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Stops the current cleaning task and returns to its dock.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Starts a new cleaning task.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Vacuum"
+}

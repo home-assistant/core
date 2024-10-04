@@ -1,0 +1,108 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The IP address or hostname of your P1 Monitor installation.",
+                    "port": "The port of your P1 Monitor installation."
+                },
+                "description": "Set up P1 Monitor to integrate with Home Assistant."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "consumption_day": {
+                "name": "Consumption day"
+            },
+            "consumption_total": {
+                "name": "Consumption total"
+            },
+            "current_phase_l1": {
+                "name": "Current phase L1"
+            },
+            "current_phase_l2": {
+                "name": "Current phase L2"
+            },
+            "current_phase_l3": {
+                "name": "Current phase L3"
+            },
+            "energy_consumption_high": {
+                "name": "Energy consumption - High tariff"
+            },
+            "energy_consumption_low": {
+                "name": "Energy consumption - Low tariff"
+            },
+            "energy_consumption_price_high": {
+                "name": "Energy consumption price - High"
+            },
+            "energy_consumption_price_low": {
+                "name": "Energy consumption price - Low"
+            },
+            "energy_production_high": {
+                "name": "Energy production - High tariff"
+            },
+            "energy_production_low": {
+                "name": "Energy production - Low tariff"
+            },
+            "energy_production_price_high": {
+                "name": "Energy production price - High"
+            },
+            "energy_production_price_low": {
+                "name": "Energy production price - Low"
+            },
+            "energy_tariff_period": {
+                "name": "Energy tariff period"
+            },
+            "gas_consumption": {
+                "name": "Gas consumption"
+            },
+            "gas_consumption_price": {
+                "name": "Gas consumption price"
+            },
+            "power_consumed_phase_l1": {
+                "name": "Power consumed phase L1"
+            },
+            "power_consumed_phase_l2": {
+                "name": "Power consumed phase L2"
+            },
+            "power_consumed_phase_l3": {
+                "name": "Power consumed phase L3"
+            },
+            "power_consumption": {
+                "name": "Power consumption"
+            },
+            "power_produced_phase_l1": {
+                "name": "Power produced phase L1"
+            },
+            "power_produced_phase_l2": {
+                "name": "Power produced phase L2"
+            },
+            "power_produced_phase_l3": {
+                "name": "Power produced phase L3"
+            },
+            "power_production": {
+                "name": "Power production"
+            },
+            "pulse_count": {
+                "name": "Pulse count"
+            },
+            "voltage_phase_l1": {
+                "name": "Voltage phase L1"
+            },
+            "voltage_phase_l2": {
+                "name": "Voltage phase L2"
+            },
+            "voltage_phase_l3": {
+                "name": "Voltage phase L3"
+            }
+        }
+    }
+}

@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "pairing_failure": "Unable to pair: {error_id}",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_pin": "Invalid PIN",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN code"
+                },
+                "description": "Enter the PIN displayed on your TV",
+                "title": "Pair"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API Version",
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Device is requested to turn on"
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "recording_new": {
+                "name": "New recording available"
+            },
+            "recording_ongoing": {
+                "name": "Recording ongoing"
+            }
+        },
+        "light": {
+            "ambilight": {
+                "name": "Ambilight"
+            }
+        },
+        "remote": {
+            "remote": {
+                "name": "Remote"
+            }
+        },
+        "switch": {
+            "ambilight_hue": {
+                "name": "Ambilight + Hue"
+            },
+            "screen_state": {
+                "name": "Screen state"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Allow notification service"
+                },
+                "data_description": {
+                    "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."
+                }
+            }
+        }
+    }
+}

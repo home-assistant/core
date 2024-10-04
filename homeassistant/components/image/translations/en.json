@@ -1,0 +1,20 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Image"
+        }
+    },
+    "services": {
+        "snapshot": {
+            "description": "Takes a snapshot from an image.",
+            "fields": {
+                "filename": {
+                    "description": "Template of a filename. Variable available is `entity_id`.",
+                    "name": "Filename"
+                }
+            },
+            "name": "Take snapshot"
+        }
+    },
+    "title": "Image"
+}

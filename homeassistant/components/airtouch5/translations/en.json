@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "airtouch5": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "intelligent_auto": "Intelligent Auto",
+                            "turbo": "Turbo"
+                        }
+                    }
+                }
+            }
+        },
+        "cover": {
+            "damper": {
+                "name": "Damper"
+            }
+        }
+    }
+}

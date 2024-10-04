@@ -1,0 +1,686 @@
+{
+    "issues": {
+        "proxy_params_auth_deprecation": {
+            "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release.",
+            "title": "{telegram_bot}: Proxy authentication should be moved to the URL"
+        },
+        "proxy_params_deprecation": {
+            "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue.",
+            "title": "{telegram_bot}: Proxy params option will be removed"
+        }
+    },
+    "services": {
+        "answer_callback_query": {
+            "description": "Responds to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.",
+            "fields": {
+                "callback_query_id": {
+                    "description": "Unique ID of the callback response.",
+                    "name": "Callback query ID"
+                },
+                "message": {
+                    "description": "Unformatted text message body of the notification.",
+                    "name": "Message"
+                },
+                "show_alert": {
+                    "description": "Show a permanent notification.",
+                    "name": "Show alert"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the answer in seconds.",
+                    "name": "Read timeout"
+                }
+            },
+            "name": "Answer callback query"
+        },
+        "delete_message": {
+            "description": "Deletes a previously sent message.",
+            "fields": {
+                "chat_id": {
+                    "description": "ID of the chat where to delete the message.",
+                    "name": "Chat ID"
+                },
+                "message_id": {
+                    "description": "ID of the message to delete.",
+                    "name": "Message ID"
+                }
+            },
+            "name": "Delete message"
+        },
+        "edit_caption": {
+            "description": "Edits the caption of a previously sent message.",
+            "fields": {
+                "caption": {
+                    "description": "Message body of the notification.",
+                    "name": "Caption"
+                },
+                "chat_id": {
+                    "description": "ID of the chat where to edit the caption.",
+                    "name": "Chat ID"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "message_id": {
+                    "description": "ID of the message to edit.",
+                    "name": "Message ID"
+                }
+            },
+            "name": "Edit caption"
+        },
+        "edit_message": {
+            "description": "Edits a previously sent message.",
+            "fields": {
+                "chat_id": {
+                    "description": "ID of the chat where to edit the message.",
+                    "name": "Chat ID"
+                },
+                "disable_web_page_preview": {
+                    "description": "Disables link previews for links in the message.",
+                    "name": "Disable web page preview"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "message": {
+                    "description": "Message body of the notification.",
+                    "name": "Message"
+                },
+                "message_id": {
+                    "description": "ID of the message to edit.",
+                    "name": "Message ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse mode"
+                },
+                "title": {
+                    "description": "Optional title for your notification. Will be composed as '%title\\n%message'.",
+                    "name": "Title"
+                }
+            },
+            "name": "Edit message"
+        },
+        "edit_replymarkup": {
+            "description": "Edits the inline keyboard of a previously sent message.",
+            "fields": {
+                "chat_id": {
+                    "description": "ID of the chat where to edit the reply markup.",
+                    "name": "Chat ID"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "message_id": {
+                    "description": "ID of the message to edit.",
+                    "name": "Message ID"
+                }
+            },
+            "name": "Edit reply markup"
+        },
+        "send_animation": {
+            "description": "Sends an animation.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "caption": {
+                    "description": "The title of the animation.",
+                    "name": "Caption"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to a GIF or H.264/MPEG-4 AVC video without sound.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse Mode"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the sticker in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to a GIF or H.264/MPEG-4 AVC video without sound.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send animation"
+        },
+        "send_document": {
+            "description": "Sends a document.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "caption": {
+                    "description": "The title of the document.",
+                    "name": "Caption"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to a document.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse mode"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the document in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to a document.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send document"
+        },
+        "send_location": {
+            "description": "Sends a location.",
+            "fields": {
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "latitude": {
+                    "description": "The latitude to send.",
+                    "name": "Latitude"
+                },
+                "longitude": {
+                    "description": "The longitude to send.",
+                    "name": "Longitude"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the location to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the photo in seconds.",
+                    "name": "Read timeout"
+                }
+            },
+            "name": "Send location"
+        },
+        "send_message": {
+            "description": "Sends a notification.",
+            "fields": {
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "disable_web_page_preview": {
+                    "description": "Disables link previews for links in the message.",
+                    "name": "Disable web page preview"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.",
+                    "name": "Keyboard"
+                },
+                "message": {
+                    "description": "Message body of the notification.",
+                    "name": "Message"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse mode"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the notification to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the message in seconds. Will help with timeout errors (poor Internet connection, etc).",
+                    "name": "Read timeout"
+                },
+                "title": {
+                    "description": "Optional title for your notification. Will be composed as '%title\\n%message'.",
+                    "name": "Title"
+                }
+            },
+            "name": "Send message"
+        },
+        "send_photo": {
+            "description": "Sends a photo.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "caption": {
+                    "description": "The title of the image.",
+                    "name": "Caption"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to an image.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse mode"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the photo in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to an image.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send photo"
+        },
+        "send_poll": {
+            "description": "Sends a poll.",
+            "fields": {
+                "allows_multiple_answers": {
+                    "description": "If the poll allows multiple answers, defaults to False.",
+                    "name": "Allow multiple answers"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "is_anonymous": {
+                    "description": "If the poll needs to be anonymous, defaults to True.",
+                    "name": "Is anonymous"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "open_period": {
+                    "description": "Amount of time in seconds the poll will be active after creation, 5-600.",
+                    "name": "Open period"
+                },
+                "options": {
+                    "description": "List of answer options, 2-10 strings 1-100 characters each.",
+                    "name": "Options"
+                },
+                "question": {
+                    "description": "Poll question, 1-300 characters.",
+                    "name": "Question"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the location to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the poll in seconds.",
+                    "name": "Read timeout"
+                }
+            },
+            "name": "Send poll"
+        },
+        "send_sticker": {
+            "description": "Sends a sticker.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to a static .webp or animated .tgs sticker.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "sticker_id": {
+                    "description": "ID of a sticker that exists on telegram servers.",
+                    "name": "Sticker ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the sticker in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to a static .webp or animated .tgs sticker.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send sticker"
+        },
+        "send_video": {
+            "description": "Sends a video.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "caption": {
+                    "description": "The title of the video.",
+                    "name": "Caption"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to a video.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "parse_mode": {
+                    "description": "Parser for the message text.",
+                    "name": "Parse mode"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the video in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to a video.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send video"
+        },
+        "send_voice": {
+            "description": "Sends a voice message.",
+            "fields": {
+                "authentication": {
+                    "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.",
+                    "name": "Authentication method"
+                },
+                "caption": {
+                    "description": "The title of the voice message.",
+                    "name": "Caption"
+                },
+                "disable_notification": {
+                    "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.",
+                    "name": "Disable notification"
+                },
+                "file": {
+                    "description": "Local path to a voice message.",
+                    "name": "File"
+                },
+                "inline_keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
+                    "name": "Inline keyboard"
+                },
+                "keyboard": {
+                    "description": "List of rows of commands, comma-separated, to make a custom keyboard.",
+                    "name": "Keyboard"
+                },
+                "message_tag": {
+                    "description": "Tag for sent message.",
+                    "name": "Message tag"
+                },
+                "message_thread_id": {
+                    "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
+                    "name": "Message thread ID"
+                },
+                "password": {
+                    "description": "Password (or bearer token) for a URL which require HTTP authentication.",
+                    "name": "Password"
+                },
+                "reply_to_message_id": {
+                    "description": "Mark the message as a reply to a previous message.",
+                    "name": "Reply to message ID"
+                },
+                "target": {
+                    "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
+                    "name": "Target"
+                },
+                "timeout": {
+                    "description": "Timeout for sending the voice in seconds.",
+                    "name": "Read timeout"
+                },
+                "url": {
+                    "description": "Remote path to a voice message.",
+                    "name": "URL"
+                },
+                "username": {
+                    "description": "Username for a URL which require HTTP authentication.",
+                    "name": "Username"
+                },
+                "verify_ssl": {
+                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "name": "Verify SSL"
+                }
+            },
+            "name": "Send voice"
+        }
+    }
+}

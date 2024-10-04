@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "device_config": {
+                "data": {
+                    "pin": "PIN code"
+                },
+                "description": "The PIN can be found via 'MENU button > Main Menu > System setting > Network > NetRemote PIN setup'",
+                "title": "Device configuration"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Frontier Silicon device."
+                }
+            }
+        }
+    }
+}

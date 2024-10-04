@@ -1,0 +1,93 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "timeout_connect": "Timeout establishing connection"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password to authenticate with your Rain Bird device."
+                },
+                "description": "The Rain Bird integration needs to re-authenticate with the device.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Rain Bird device.",
+                    "password": "The password used to authenticate with the Rain Bird device."
+                },
+                "description": "Please enter the LNK WiFi module information for your Rain Bird device.",
+                "title": "Configure Rain Bird"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "rainsensor": {
+                "name": "Rainsensor"
+            }
+        },
+        "number": {
+            "rain_delay": {
+                "name": "Rain delay"
+            }
+        },
+        "sensor": {
+            "raindelay": {
+                "name": "Raindelay"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Default irrigation time in minutes"
+                },
+                "data_description": {
+                    "duration": "The default duration the sprinkler will run when turned on."
+                },
+                "title": "Configure Rain Bird"
+            }
+        }
+    },
+    "services": {
+        "set_rain_delay": {
+            "description": "Sets how long automatic irrigation is turned off.",
+            "fields": {
+                "config_entry_id": {
+                    "description": "The setting will be adjusted on the specified controller.",
+                    "name": "Rainbird Controller Configuration Entry"
+                },
+                "duration": {
+                    "description": "Duration for this system to be turned off.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Set rain delay"
+        },
+        "start_irrigation": {
+            "description": "Starts the irrigation.",
+            "fields": {
+                "duration": {
+                    "description": "Duration for this sprinkler to be turned on.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Start irrigation"
+        }
+    }
+}

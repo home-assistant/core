@@ -1,0 +1,146 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "reauth_failed": "Invalid authentication",
+            "reauth_successful": "Re-authentication was successful",
+            "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter the username and password"
+            },
+            "confirm_discovery": {
+                "description": "Do you want to set up SMLIGHT at {host}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter the correct username and password",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+                },
+                "description": "Set up SMLIGHT Zigbee Integration"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "ethernet": {
+                "name": "Ethernet"
+            },
+            "internet": {
+                "name": "Internet"
+            },
+            "vpn": {
+                "name": "VPN"
+            },
+            "wifi": {
+                "name": "Wi-Fi"
+            }
+        },
+        "button": {
+            "core_restart": {
+                "name": "Core restart"
+            },
+            "reconnect_zigbee_router": {
+                "name": "Reconnect zigbee router"
+            },
+            "zigbee_flash_mode": {
+                "name": "Zigbee flash mode"
+            },
+            "zigbee_restart": {
+                "name": "Zigbee restart"
+            }
+        },
+        "sensor": {
+            "core_temperature": {
+                "name": "Core chip temp"
+            },
+            "core_uptime": {
+                "name": "Core uptime"
+            },
+            "device_mode": {
+                "name": "Connection mode",
+                "state": {
+                    "eth": "Ethernet",
+                    "usb": "USB",
+                    "wifi": "Wi-Fi"
+                }
+            },
+            "firmware_channel": {
+                "name": "Firmware channel",
+                "state": {
+                    "dev": "Development",
+                    "release": "Stable"
+                }
+            },
+            "fs_usage": {
+                "name": "Filesystem usage"
+            },
+            "ram_usage": {
+                "name": "RAM usage"
+            },
+            "socket_uptime": {
+                "name": "Zigbee uptime"
+            },
+            "zigbee_temperature": {
+                "name": "Zigbee chip temp"
+            },
+            "zigbee_type": {
+                "name": "Zigbee type",
+                "state": {
+                    "coordinator": "Coordinator",
+                    "router": "Router",
+                    "thread": "Thread"
+                }
+            }
+        },
+        "switch": {
+            "auto_zigbee_update": {
+                "name": "Auto Zigbee update"
+            },
+            "disable_led": {
+                "name": "Disable LEDs"
+            },
+            "night_mode": {
+                "name": "LED night mode"
+            },
+            "vpn_enabled": {
+                "name": "VPN enabled"
+            }
+        },
+        "update": {
+            "core_update": {
+                "name": "Core firmware"
+            },
+            "zigbee_update": {
+                "name": "Zigbee firmware"
+            }
+        }
+    },
+    "issues": {
+        "unsupported_firmware": {
+            "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+            "title": "SLZB core firmware update required"
+        }
+    }
+}

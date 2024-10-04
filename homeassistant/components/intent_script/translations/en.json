@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads the intent script from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

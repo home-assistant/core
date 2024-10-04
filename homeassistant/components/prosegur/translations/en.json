@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "choose_contract": {
+                "data": {
+                    "contract": "Contract"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Re-authenticate with Prosegur account.",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "country": "Country",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "services": {
+        "request_image": {
+            "description": "Requests a new image from a Prosegur camera.",
+            "name": "Request camera image"
+        }
+    }
+}

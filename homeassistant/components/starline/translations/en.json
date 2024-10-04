@@ -1,0 +1,165 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Incorrect application ID or secret",
+            "error_auth_mfa": "Incorrect code",
+            "error_auth_user": "Incorrect username or password"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App ID",
+                    "app_secret": "Secret"
+                },
+                "description": "Application ID and secret code from [StarLine developer account](https://my.starline.ru/developer)",
+                "title": "Application credentials"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Code from image"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS code"
+                },
+                "description": "Enter the code sent to phone {phone_number}",
+                "title": "Two-factor authorization"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "StarLine account email and password",
+                "title": "User credentials"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "alarm": {
+                "name": "Alarm"
+            },
+            "autostart": {
+                "name": "Autostart"
+            },
+            "doors": {
+                "name": "Doors"
+            },
+            "hand_brake": {
+                "name": "Hand brake"
+            },
+            "handsfree": {
+                "name": "Handsfree"
+            },
+            "hood": {
+                "name": "Hood"
+            },
+            "ignition": {
+                "name": "Ignition"
+            },
+            "moving_ban": {
+                "name": "Moving ban"
+            },
+            "neutral": {
+                "name": "Programmable neutral"
+            },
+            "trunk": {
+                "name": "Trunk"
+            }
+        },
+        "button": {
+            "flex": {
+                "name": "Flex logic {num}"
+            },
+            "horn": {
+                "name": "Horn"
+            },
+            "panic": {
+                "name": "Panic mode"
+            }
+        },
+        "device_tracker": {
+            "location": {
+                "name": "Location"
+            }
+        },
+        "lock": {
+            "security": {
+                "name": "Security"
+            }
+        },
+        "sensor": {
+            "balance": {
+                "name": "Balance"
+            },
+            "battery": {
+                "name": "Battery"
+            },
+            "engine_temperature": {
+                "name": "Engine temperature"
+            },
+            "errors": {
+                "name": "OBD errors"
+            },
+            "fuel": {
+                "name": "Fuel volume"
+            },
+            "gps_count": {
+                "name": "GPS satellites"
+            },
+            "gsm_signal": {
+                "name": "GSM signal"
+            },
+            "interior_temperature": {
+                "name": "Interior temperature"
+            },
+            "mileage": {
+                "name": "Mileage"
+            }
+        },
+        "switch": {
+            "additional_channel": {
+                "name": "Additional channel"
+            },
+            "engine": {
+                "name": "Engine"
+            },
+            "service_mode": {
+                "name": "Service mode"
+            },
+            "webasto": {
+                "name": "Webasto"
+            }
+        }
+    },
+    "services": {
+        "set_scan_interval": {
+            "description": "Sets the update frequency for entities.",
+            "fields": {
+                "scan_interval": {
+                    "description": "Update frequency.",
+                    "name": "Scan interval"
+                }
+            },
+            "name": "Set scan interval"
+        },
+        "set_scan_obd_interval": {
+            "description": "Sets the update frequency for OBD information.",
+            "fields": {
+                "scan_interval": {
+                    "description": "Update frequency.",
+                    "name": "Scan interval"
+                }
+            },
+            "name": "Set scan OBD interval"
+        },
+        "update_state": {
+            "description": "Fetches the last state of the devices from the StarLine server.",
+            "name": "Update state"
+        }
+    }
+}

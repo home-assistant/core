@@ -1,0 +1,114 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "cannot_connect": "Failed to connect",
+            "two_factor_request_failed": "Request for 2FA code failed, please try again"
+        },
+        "error": {
+            "bad_pin_format": "PIN should be 4 digits",
+            "bad_validation_code_format": "Validation code should be 6 digits",
+            "cannot_connect": "Failed to connect",
+            "incorrect_pin": "Incorrect PIN",
+            "incorrect_validation_code": "Incorrect validation code",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN code"
+                },
+                "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
+                "title": "Subaru Starlink Configuration"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Please select a contact method:"
+                },
+                "description": "Two factor authentication required",
+                "title": "Subaru Starlink Configuration"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Validation code"
+                },
+                "description": "Please enter validation code received",
+                "title": "Subaru Starlink Configuration"
+            },
+            "user": {
+                "data": {
+                    "country": "Select country",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
+                "title": "Subaru Starlink Configuration"
+            }
+        }
+    },
+    "entity": {
+        "lock": {
+            "door_locks": {
+                "name": "Door locks"
+            }
+        },
+        "sensor": {
+            "average_fuel_consumption": {
+                "name": "Average fuel consumption"
+            },
+            "ev_battery_level": {
+                "name": "EV battery level"
+            },
+            "ev_range": {
+                "name": "EV range"
+            },
+            "ev_time_to_full_charge": {
+                "name": "EV time to full charge"
+            },
+            "fuel_level": {
+                "name": "Fuel level"
+            },
+            "odometer": {
+                "name": "Odometer"
+            },
+            "range": {
+                "name": "Range"
+            },
+            "tire_pressure_front_left": {
+                "name": "Tire pressure front left"
+            },
+            "tire_pressure_front_right": {
+                "name": "Tire pressure front right"
+            },
+            "tire_pressure_rear_left": {
+                "name": "Tire pressure rear left"
+            },
+            "tire_pressure_rear_right": {
+                "name": "Tire pressure rear right"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Enable vehicle polling"
+                },
+                "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
+                "title": "Subaru Starlink Options"
+            }
+        }
+    },
+    "services": {
+        "unlock_specific_door": {
+            "description": "Unlocks specific door(s).",
+            "fields": {
+                "door": {
+                    "description": "One of the following: 'all', 'driver', 'tailgate'.",
+                    "name": "Door"
+                }
+            },
+            "name": "Unlock specific door"
+        }
+    }
+}

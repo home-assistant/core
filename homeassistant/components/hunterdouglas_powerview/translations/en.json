@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error",
+            "unsupported_device": "Only the primary powerview hub can be added"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "Do you want to set up {name} ({host})?",
+                "title": "Connect to the PowerView Hub"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Hub Generation",
+                    "host": "IP address"
+                },
+                "data_description": {
+                    "api_version": "API version is detectable, but you can override and force a specific version"
+                },
+                "title": "Connect to the PowerView Hub"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "calibrate": {
+                "name": "Calibrate"
+            },
+            "favorite": {
+                "name": "Favorite"
+            }
+        },
+        "cover": {
+            "bottom": {
+                "name": "Bottom"
+            },
+            "combined": {
+                "name": "Combined"
+            },
+            "front": {
+                "name": "Front"
+            },
+            "rear": {
+                "name": "Rear"
+            },
+            "top": {
+                "name": "Top"
+            }
+        },
+        "select": {
+            "power_source": {
+                "name": "Power source"
+            }
+        },
+        "sensor": {
+            "signal_strength": {
+                "name": "Signal strength"
+            }
+        }
+    }
+}

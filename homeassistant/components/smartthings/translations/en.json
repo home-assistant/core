@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid:\n> {webhook_url}\n\nPlease update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
+            "no_available_locations": "There are no available SmartThings Locations to set up in Home Assistant.",
+            "reauth_successful": "Home Assistant has been successfully reauthorized with SmartThings."
+        },
+        "error": {
+            "app_setup_error": "Unable to set up the SmartApp. Please try again.",
+            "token_forbidden": "The token does not have the required OAuth scopes.",
+            "token_invalid_format": "The token must be in the UID/GUID format",
+            "token_unauthorized": "The token is invalid or no longer authorized.",
+            "webhook_error": "SmartThings could not validate the webhook URL. Please ensure the webhook URL is reachable from the internet and try again."
+        },
+        "step": {
+            "authorize": {
+                "title": "Authorize Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Access token"
+                },
+                "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}). This will be used to create the Home Assistant integration within your SmartThings account.\n\n**Please note that all Personal Access Tokens created after 30 December 2024 are only valid for 24 hours, after which the integration will stop working. We are working on a fix.**",
+                "title": "Enter Personal Access Token"
+            },
+            "reauth_confirm": {
+                "description": "You are about to reauthorize Home Assistant with SmartThings. This will require you to log in and authorize the integration again.",
+                "title": "Reauthorize Home Assistant"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Location"
+                },
+                "description": "Please select the SmartThings Location you wish to add to Home Assistant. We will then open a new window and ask you to login and authorize installation of the Home Assistant integration into the selected location.",
+                "title": "Select Location"
+            },
+            "update_confirm": {
+                "description": "You have almost successfully reauthorized Home Assistant with SmartThings. Please press the button down below to finish the process.",
+                "title": "Finish reauthentication"
+            },
+            "user": {
+                "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again.",
+                "title": "Confirm Callback URL"
+            }
+        }
+    }
+}

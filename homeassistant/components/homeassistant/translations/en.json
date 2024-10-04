@@ -1,0 +1,246 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        }
+    },
+    "exceptions": {
+        "component_import_err": {
+            "message": "Unable to import {domain}: {error}"
+        },
+        "config_platform_import_err": {
+            "message": "Error importing config platform {domain}: {error}"
+        },
+        "config_schema_unknown_err": {
+            "message": "Unknown error calling {domain} CONFIG_SCHEMA - {error}."
+        },
+        "config_validation_err": {
+            "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}."
+        },
+        "config_validator_unknown_err": {
+            "message": "Unknown error calling {domain} config validator - {error}."
+        },
+        "max_length_exceeded": {
+            "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
+        },
+        "multiple_integration_config_errors": {
+            "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
+        },
+        "platform_component_load_err": {
+            "message": "Platform error: {domain} - {error}."
+        },
+        "platform_component_load_exc": {
+            "message": "Platform error: {domain} - {error}."
+        },
+        "platform_config_validation_err": {
+            "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
+        },
+        "platform_schema_validator_err": {
+            "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
+        },
+        "service_does_not_support_response": {
+            "message": "An action which does not return responses can't be called with {return_response}."
+        },
+        "service_lacks_response_request": {
+            "message": "The action requires responses and must be called with {return_response}."
+        },
+        "service_not_found": {
+            "message": "Action {domain}.{service} not found."
+        },
+        "service_not_supported": {
+            "message": "Entity {entity_id} does not support action {domain}.{service}."
+        },
+        "service_reponse_invalid": {
+            "message": "Failed to process the returned action response data, expected a dictionary, but got {response_data_type}."
+        },
+        "service_should_be_blocking": {
+            "message": "A non blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
+        }
+    },
+    "issues": {
+        "config_entry_only": {
+            "description": "The {domain} integration does not support configuration via YAML file. You may not notice any obvious issues with the integration, but any configuration settings defined in YAML are not actually applied.\n\nTo resolve this:\n\n1. If you've not already done so, [set up the integration]({add_integration}).\n\n2. Remove `{domain}:` from your YAML configuration file.\n\n3. Restart Home Assistant.",
+            "title": "The {domain} integration does not support YAML configuration"
+        },
+        "config_entry_reauth": {
+            "description": "Reauthentication is needed",
+            "title": "Authentication expired for {name}"
+        },
+        "config_entry_unique_id_collision": {
+            "description": "There are multiple {domain} config entries with the same unique ID.\nThe config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
+            "title": "Multiple {domain} config entries with same unique ID"
+        },
+        "config_entry_unique_id_collision_many": {
+            "description": "There are multiple ({number_of_entries}) {domain} config entries with the same unique ID.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
+            "title": "Multiple {domain} config entries with same unique ID"
+        },
+        "country_not_configured": {
+            "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
+            "title": "The country has not been configured"
+        },
+        "deprecated_yaml": {
+            "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The {integration_title} YAML configuration is being removed"
+        },
+        "historic_currency": {
+            "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration.",
+            "title": "The configured currency is no longer in use"
+        },
+        "imperial_unit_system": {
+            "description": "The imperial unit system is deprecated and your system is currently using us customary. Please update your configuration to use the us customary unit system and reload the core configuration to fix this issue.",
+            "title": "The imperial unit system is deprecated"
+        },
+        "integration_not_found": {
+            "fix_flow": {
+                "abort": {
+                    "issue_ignored": "Not existing integration {domain} ignored."
+                },
+                "step": {
+                    "init": {
+                        "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
+                        "menu_options": {
+                            "confirm": "Remove previous configurations",
+                            "ignore": "Ignore"
+                        },
+                        "title": "Integration {domain} not found"
+                    }
+                }
+            },
+            "title": "Integration {domain} not found"
+        },
+        "legacy_templates_false": {
+            "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "legacy_templates config key is being removed"
+        },
+        "legacy_templates_true": {
+            "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue.",
+            "title": "The support for legacy templates is being removed"
+        },
+        "no_platform_setup": {
+            "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}",
+            "title": "Unused YAML configuration for the {platform} integration"
+        },
+        "platform_only": {
+            "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
+            "title": "The {domain} integration does not support YAML configuration under its own key"
+        },
+        "python_version": {
+            "description": "Support for running Home Assistant in the current used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking.",
+            "title": "Support for Python {current_python_version} is being removed"
+        },
+        "storage_corruption": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nSelect **Submit** below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}",
+                        "title": "Storage corruption detected for {storage_key}"
+                    }
+                }
+            },
+            "title": "Storage corruption detected for {storage_key}"
+        }
+    },
+    "services": {
+        "check_config": {
+            "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
+            "name": "Check configuration"
+        },
+        "reload_all": {
+            "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant.",
+            "name": "Reload all"
+        },
+        "reload_config_entry": {
+            "description": "Reloads the specified config entry.",
+            "fields": {
+                "entry_id": {
+                    "description": "The configuration entry ID of the entry to be reloaded.",
+                    "name": "Config entry ID"
+                }
+            },
+            "name": "Reload config entry"
+        },
+        "reload_core_config": {
+            "description": "Reloads the core configuration from the YAML-configuration.",
+            "name": "Reload core configuration"
+        },
+        "reload_custom_templates": {
+            "description": "Reloads Jinja2 templates found in the `custom_templates` folder in your config. New values will be applied on the next render of the template.",
+            "name": "Reload custom Jinja2 templates"
+        },
+        "restart": {
+            "description": "Restarts Home Assistant.",
+            "fields": {
+                "safe_mode": {
+                    "description": "Disable custom integrations and custom cards.",
+                    "name": "Safe mode"
+                }
+            },
+            "name": "Restart"
+        },
+        "save_persistent_states": {
+            "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval.",
+            "name": "Save persistent states"
+        },
+        "set_location": {
+            "description": "Updates the Home Assistant location.",
+            "fields": {
+                "elevation": {
+                    "description": "Elevation of your location above sea level.",
+                    "name": "Elevation"
+                },
+                "latitude": {
+                    "description": "Latitude of your location.",
+                    "name": "Latitude"
+                },
+                "longitude": {
+                    "description": "Longitude of your location.",
+                    "name": "Longitude"
+                }
+            },
+            "name": "Set location"
+        },
+        "stop": {
+            "description": "Stops Home Assistant.",
+            "name": "Stop"
+        },
+        "toggle": {
+            "description": "Generic action to toggle devices on/off under any domain.",
+            "name": "Generic toggle"
+        },
+        "turn_off": {
+            "description": "Generic action to turn devices off under any domain.",
+            "name": "Generic turn off"
+        },
+        "turn_on": {
+            "description": "Generic action to turn devices on under any domain.",
+            "name": "Generic turn on"
+        },
+        "update_entity": {
+            "description": "Forces one or more entities to update its data.",
+            "fields": {
+                "entity_id": {
+                    "description": "List of entities to force update.",
+                    "name": "Entities to update"
+                }
+            },
+            "name": "Update entity"
+        }
+    },
+    "system_health": {
+        "info": {
+            "arch": "CPU architecture",
+            "config_dir": "Configuration directory",
+            "dev": "Development",
+            "docker": "Docker",
+            "hassio": "Supervisor",
+            "installation_type": "Installation type",
+            "os_name": "Operating system family",
+            "os_version": "Operating system version",
+            "python_version": "Python version",
+            "timezone": "Timezone",
+            "user": "User",
+            "version": "Version",
+            "virtualenv": "Virtual environment"
+        }
+    }
+}

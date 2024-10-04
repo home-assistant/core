@@ -1,0 +1,54 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Valve",
+            "state": {
+                "closed": "Closed",
+                "closing": "Closing",
+                "open": "Open",
+                "opening": "Opening",
+                "stopped": "Stopped"
+            },
+            "state_attributes": {
+                "current_position": {
+                    "name": "Position"
+                }
+            }
+        },
+        "gas": {
+            "name": "Gas"
+        },
+        "water": {
+            "name": "Water"
+        }
+    },
+    "services": {
+        "close_valve": {
+            "description": "Closes a valve.",
+            "name": "Close"
+        },
+        "open_valve": {
+            "description": "Opens a valve.",
+            "name": "Open"
+        },
+        "set_valve_position": {
+            "description": "Moves a valve to a specific position.",
+            "fields": {
+                "position": {
+                    "description": "Target position.",
+                    "name": "Position"
+                }
+            },
+            "name": "Set position"
+        },
+        "stop_valve": {
+            "description": "Stops the valve movement.",
+            "name": "Stop"
+        },
+        "toggle": {
+            "description": "Toggles a valve open/closed.",
+            "name": "Toggle"
+        }
+    },
+    "title": "Valve"
+}

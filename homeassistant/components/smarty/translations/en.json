@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Smarty device"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "alarm": {
+                "name": "Alarm"
+            },
+            "boost_state": {
+                "name": "Boost state"
+            },
+            "warning": {
+                "name": "Warning"
+            }
+        },
+        "button": {
+            "reset_filters_timer": {
+                "name": "Reset filters timer"
+            }
+        },
+        "sensor": {
+            "extract_air_temperature": {
+                "name": "Extract air temperature"
+            },
+            "extract_fan_speed": {
+                "name": "Extract fan speed"
+            },
+            "filter_days_left": {
+                "name": "Filter days left"
+            },
+            "outdoor_air_temperature": {
+                "name": "Outdoor air temperature"
+            },
+            "supply_air_temperature": {
+                "name": "Supply air temperature"
+            },
+            "supply_fan_speed": {
+                "name": "Supply fan speed"
+            }
+        },
+        "switch": {
+            "boost": {
+                "name": "Boost"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml_import_issue_auth_error": {
+            "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually.",
+            "title": "YAML import failed due to an authentication error"
+        },
+        "deprecated_yaml_import_issue_cannot_connect": {
+            "description": "Configuring {integration_title} using YAML is being removed but there was a connect error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually.",
+            "title": "YAML import failed due to a connection error"
+        },
+        "deprecated_yaml_import_issue_unknown": {
+            "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually.",
+            "title": "YAML import failed with unknown error"
+        }
+    }
+}

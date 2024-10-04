@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Enter credentials to obtain a token"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Enter credentials to obtain a token"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "si_at_cm": {
+                "name": "SI @ {depth} cm"
+            },
+            "soil_moisture_at_cm": {
+                "name": "Soil moisture @ {depth} cm"
+            }
+        }
+    }
+}

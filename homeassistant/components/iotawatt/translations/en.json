@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "The IoTawatt device requires authentication. Please enter the username and password and select the Submit button."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your IoTaWatt device."
+                }
+            }
+        }
+    }
+}

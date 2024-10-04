@@ -1,0 +1,32 @@
+{
+    "services": {
+        "alarm_keypress": {
+            "description": "Sends custom keypresses to the alarm.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of the alarm control panel to trigger.",
+                    "name": "Entity"
+                },
+                "keypress": {
+                    "description": "String to send to the alarm panel (1-6 characters).",
+                    "name": "Keypress"
+                }
+            },
+            "name": "Alarm keypress"
+        },
+        "invoke_custom_function": {
+            "description": "Allows users with DSC panels to trigger a PGM output (1-4). Note that you need to specify the alarm panel's \"code\" parameter for this to work.",
+            "fields": {
+                "partition": {
+                    "description": "The alarm panel partition to trigger the PGM output on. Typically this is just \"1\".",
+                    "name": "Partition"
+                },
+                "pgm": {
+                    "description": "The PGM number to trigger on the alarm panel.",
+                    "name": "PGM"
+                }
+            },
+            "name": "Invoke custom function"
+        }
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "directory_does_not_exist": "The directory could not be reached. Please check your settings."
+        },
+        "step": {
+            "user": {
+                "description": "Select a location to get to store downloads. The setup will check if the directory exists."
+            }
+        }
+    },
+    "services": {
+        "download_file": {
+            "description": "Downloads a file to the download location.",
+            "fields": {
+                "filename": {
+                    "description": "Custom name for the downloaded file.",
+                    "name": "Filename"
+                },
+                "overwrite": {
+                    "description": "Overwrite file if it exists.",
+                    "name": "Overwrite"
+                },
+                "subdir": {
+                    "description": "Relative download path.",
+                    "name": "Subdirectory"
+                },
+                "url": {
+                    "description": "The URL of the file to download.",
+                    "name": "URL"
+                }
+            },
+            "name": "Download file"
+        }
+    }
+}

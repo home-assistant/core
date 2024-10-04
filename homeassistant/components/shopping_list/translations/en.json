@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to configure the shopping list?",
+                "title": "Shopping List"
+            }
+        }
+    },
+    "entity": {
+        "todo": {
+            "shopping_list": {
+                "name": "Shopping List"
+            }
+        }
+    },
+    "services": {
+        "add_item": {
+            "description": "Adds an item to the shopping list.",
+            "fields": {
+                "name": {
+                    "description": "The name of the item to add.",
+                    "name": "Name"
+                }
+            },
+            "name": "Add item"
+        },
+        "clear_completed_items": {
+            "description": "Removes completed items from the shopping list.",
+            "name": "Clear completed items"
+        },
+        "complete_all": {
+            "description": "Marks all items as completed in the shopping list (without removing them from the list).",
+            "name": "Complete all"
+        },
+        "complete_item": {
+            "description": "Marks the first item with matching name as completed in the shopping list.",
+            "fields": {
+                "name": {
+                    "description": "The name of the item to mark as completed (without removing).",
+                    "name": "Name"
+                }
+            },
+            "name": "Complete item"
+        },
+        "incomplete_all": {
+            "description": "Marks all items as incomplete in the shopping list.",
+            "name": "Incomplete all"
+        },
+        "incomplete_item": {
+            "description": "Marks the first item with matching name as incomplete in the shopping list.",
+            "fields": {
+                "name": {
+                    "description": "The name of the item to mark as incomplete.",
+                    "name": "Name"
+                }
+            },
+            "name": "Incomplete item"
+        },
+        "remove_item": {
+            "description": "Removes the first item with matching name from the shopping list.",
+            "fields": {
+                "name": {
+                    "description": "The name of the item to remove.",
+                    "name": "Name"
+                }
+            },
+            "name": "Remove item"
+        },
+        "sort": {
+            "description": "Sorts all items by name in the shopping list.",
+            "fields": {
+                "reverse": {
+                    "description": "Whether to sort in reverse (descending) order.",
+                    "name": "Sort reverse"
+                }
+            },
+            "name": "Sort all items"
+        }
+    },
+    "title": "Shopping List"
+}

@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "wait_for_pairing_mode": "To complete setup, put this device in pairing mode.\n\n### How to enter pairing mode\n1. Force quit SNOOZ mobile apps.\n2. Press and hold the power button on the device. Release when the lights start blinking (approximately 5 seconds)."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "pairing_timeout": {
+                "description": "The device did not enter pairing mode. Select Submit to try again.\n\n### Troubleshooting\n1. Check that the device isn't connected to the mobile app.\n2. Unplug the device for 5 seconds, then plug it back in."
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "services": {
+        "transition_off": {
+            "description": "Transitions volume off over time.",
+            "fields": {
+                "duration": {
+                    "description": "Time it takes to turn off.",
+                    "name": "Transition duration"
+                }
+            },
+            "name": "Transition off"
+        },
+        "transition_on": {
+            "description": "Transitions to a target volume level over time.",
+            "fields": {
+                "duration": {
+                    "description": "Time it takes to reach the target volume level.",
+                    "name": "Transition duration"
+                },
+                "volume": {
+                    "description": "If not specified, the volume level is read from the device.",
+                    "name": "Target volume"
+                }
+            },
+            "name": "Transition on"
+        }
+    }
+}

@@ -1,0 +1,179 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All Philips Hue bridges are already configured",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "discover_timeout": "Unable to discover Hue bridges",
+            "invalid_host": "Invalid hostname or IP address",
+            "no_bridges": "No Philips Hue bridges discovered",
+            "not_hue_bridge": "Not a Hue bridge",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "linking": "Unexpected error",
+            "register_failed": "Failed to register, please try again"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Hue bridge."
+                },
+                "title": "Pick Hue bridge"
+            },
+            "link": {
+                "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Hue bridge."
+                },
+                "title": "Manual configure a Hue bridge"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "1": "First button",
+            "2": "Second button",
+            "3": "Third button",
+            "4": "Fourth button",
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "clock_wise": "Rotation clockwise",
+            "counter_clock_wise": "Rotation counter-clockwise",
+            "dim_down": "Dim down",
+            "dim_up": "Dim up",
+            "double_buttons_1_3": "First and Third buttons",
+            "double_buttons_2_4": "Second and Fourth buttons",
+            "turn_off": "Turn off",
+            "turn_on": "Turn on"
+        },
+        "trigger_type": {
+            "double_short_release": "Both \"{subtype}\" released",
+            "initial_press": "\"{subtype}\" pressed initially",
+            "long_release": "\"{subtype}\" released after long press",
+            "remote_button_long_release": "\"{subtype}\" released after long press",
+            "remote_button_short_press": "\"{subtype}\" pressed",
+            "remote_button_short_release": "\"{subtype}\" released",
+            "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
+            "remote_double_button_short_press": "Both \"{subtype}\" released",
+            "repeat": "\"{subtype}\" held down",
+            "short_release": "\"{subtype}\" released after short press",
+            "start": "\"{subtype}\" pressed initially"
+        }
+    },
+    "entity": {
+        "event": {
+            "button": {
+                "name": "Button {button_id}",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "double_short_release": "Double press",
+                            "initial_press": "Initial press",
+                            "long_press": "Long press",
+                            "long_release": "Long release",
+                            "repeat": "Repeat",
+                            "short_release": "Short press"
+                        }
+                    }
+                }
+            },
+            "rotary": {
+                "name": "Rotary",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "clock_wise": "Clockwise",
+                            "counter_clock_wise": "Counter clockwise"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "zigbee_connectivity": {
+                "name": "Zigbee connectivity",
+                "state": {
+                    "connected": "Connected",
+                    "connectivity_issue": "Connectivity issue",
+                    "disconnected": "Disconnected",
+                    "unidirectional_incoming": "Unidirectional incoming"
+                }
+            }
+        },
+        "switch": {
+            "light_sensor_enabled": {
+                "name": "Light sensor enabled"
+            },
+            "motion_sensor_enabled": {
+                "name": "Motion sensor enabled"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Allow Hue groups",
+                    "allow_hue_scenes": "Allow Hue scenes",
+                    "allow_unreachable": "Allow unreachable bulbs to report their state correctly",
+                    "ignore_availability": "Ignore connectivity status for the given devices"
+                }
+            }
+        }
+    },
+    "services": {
+        "activate_scene": {
+            "description": "Activates a Hue scene with more control over the options.",
+            "fields": {
+                "brightness": {
+                    "description": "Set brightness for the scene.",
+                    "name": "Brightness"
+                },
+                "dynamic": {
+                    "description": "Enable dynamic mode of the scene.",
+                    "name": "Dynamic"
+                },
+                "speed": {
+                    "description": "Speed of dynamic palette for this scene.",
+                    "name": "Speed"
+                },
+                "transition": {
+                    "description": "Transition duration it takes to bring devices to the state defined in the scene.",
+                    "name": "Transition"
+                }
+            },
+            "name": "Activate Hue scene"
+        },
+        "hue_activate_scene": {
+            "description": "Activates a Hue scene stored in the Hue hub.",
+            "fields": {
+                "dynamic": {
+                    "description": "Enable dynamic mode of the scene (V2 bridges and supported scenes only).",
+                    "name": "Dynamic"
+                },
+                "group_name": {
+                    "description": "Name of Hue group/room from the Hue app.",
+                    "name": "Group"
+                },
+                "scene_name": {
+                    "description": "Name of Hue scene from the Hue app.",
+                    "name": "Scene"
+                }
+            },
+            "name": "Activate scene"
+        }
+    }
+}

@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_response": "Invalid response from the device",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "rtsp_port": "RTSP port",
+                    "stream": "Stream",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Foscam camera."
+                }
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "sleep_switch": {
+                "name": "Sleep"
+            }
+        }
+    },
+    "services": {
+        "ptz": {
+            "description": "Pan/Tilt action for Foscam camera.",
+            "fields": {
+                "movement": {
+                    "description": "Direction of the movement.",
+                    "name": "Movement"
+                },
+                "travel_time": {
+                    "description": "Travel time in seconds.",
+                    "name": "Travel time"
+                }
+            },
+            "name": "PTZ"
+        },
+        "ptz_preset": {
+            "description": "PTZ Preset action for Foscam camera.",
+            "fields": {
+                "preset_name": {
+                    "description": "The name of the preset to move to. Presets can be created from within the official Foscam apps.",
+                    "name": "Preset name"
+                }
+            },
+            "name": "PTZ preset"
+        }
+    }
+}

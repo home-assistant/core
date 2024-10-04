@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "pin": "PIN code"
+                },
+                "description": "Please enter the correct PIN for {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "pin": "PIN code",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Comelit device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "dehumidifier": {
+                "name": "Dehumidifier"
+            },
+            "humidifier": {
+                "name": "Humidifier"
+            },
+            "zone_status": {
+                "state": {
+                    "alarm": "Alarm",
+                    "armed": "Armed",
+                    "excluded": "Excluded",
+                    "faulty": "Faulty",
+                    "inhibited": "Inhibited",
+                    "isolated": "Isolated",
+                    "open": "Open",
+                    "rest": "Rest",
+                    "sabotated": "Sabotated"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "humidity_while_off": {
+            "message": "Cannot change humidity while off"
+        }
+    }
+}

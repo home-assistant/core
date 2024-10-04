@@ -1,0 +1,153 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} turned on or off",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Fan",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "direction": {
+                    "name": "Direction",
+                    "state": {
+                        "forward": "Forward",
+                        "reverse": "Reverse"
+                    }
+                },
+                "oscillating": {
+                    "name": "Oscillating",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "percentage": {
+                    "name": "Speed"
+                },
+                "percentage_step": {
+                    "name": "Speed step"
+                },
+                "preset_mode": {
+                    "name": "Preset mode"
+                },
+                "preset_modes": {
+                    "name": "Available preset modes"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "not_valid_preset_mode": {
+            "message": "Preset mode {preset_mode} is not valid, valid preset modes are: {preset_modes}."
+        }
+    },
+    "selector": {
+        "direction": {
+            "options": {
+                "forward": "Forward",
+                "reverse": "Reverse"
+            }
+        }
+    },
+    "services": {
+        "decrease_speed": {
+            "description": "Decreases the speed of a fan.",
+            "fields": {
+                "percentage_step": {
+                    "description": "Percentage step by which the speed should be decreased.",
+                    "name": "Decrement"
+                }
+            },
+            "name": "Decrease speed"
+        },
+        "increase_speed": {
+            "description": "Increases the speed of a fan.",
+            "fields": {
+                "percentage_step": {
+                    "description": "Percentage step by which the speed should be increased.",
+                    "name": "Increment"
+                }
+            },
+            "name": "Increase speed"
+        },
+        "oscillate": {
+            "description": "Controls the oscillation of a fan.",
+            "fields": {
+                "oscillating": {
+                    "description": "Turns oscillation on/off.",
+                    "name": "Oscillating"
+                }
+            },
+            "name": "Oscillate"
+        },
+        "set_direction": {
+            "description": "Sets a fan's rotation direction.",
+            "fields": {
+                "direction": {
+                    "description": "Direction of the fan rotation.",
+                    "name": "Direction"
+                }
+            },
+            "name": "Set direction"
+        },
+        "set_percentage": {
+            "description": "Sets the speed of a fan.",
+            "fields": {
+                "percentage": {
+                    "description": "Speed of the fan.",
+                    "name": "Percentage"
+                }
+            },
+            "name": "Set speed"
+        },
+        "set_preset_mode": {
+            "description": "Sets preset fan mode.",
+            "fields": {
+                "preset_mode": {
+                    "description": "Preset fan mode.",
+                    "name": "Preset mode"
+                }
+            },
+            "name": "Set preset mode"
+        },
+        "toggle": {
+            "description": "Toggles a fan on/off.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Turns fan off.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns fan on.",
+            "fields": {
+                "percentage": {
+                    "description": "Speed of the fan.",
+                    "name": "Percentage"
+                },
+                "preset_mode": {
+                    "description": "Preset fan mode.",
+                    "name": "Preset mode"
+                }
+            },
+            "name": "Turn on"
+        }
+    },
+    "title": "Fan"
+}

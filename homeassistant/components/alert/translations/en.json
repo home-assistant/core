@@ -1,0 +1,27 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Alert",
+            "state": {
+                "idle": "Idle",
+                "off": "Acknowledged",
+                "on": "Active"
+            }
+        }
+    },
+    "services": {
+        "toggle": {
+            "description": "Toggles alert's notifications.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Silences alert's notifications.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Resets alert's notifications.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Alert"
+}

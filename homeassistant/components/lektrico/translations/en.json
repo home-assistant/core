@@ -1,0 +1,176 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_name": "Name",
+                    "host": "Host"
+                },
+                "description": "Set required parameters to connect to your device"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Lektrico Charger with serial number `{serial_number}` to Home Assistant?",
+                "title": "Discovered Lektrico Charger device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "contactor_failure": {
+                "name": "Relay contacts welded"
+            },
+            "cp_diode_failure": {
+                "name": "Ev diode short"
+            },
+            "critical_temp": {
+                "name": "Overheating"
+            },
+            "meter_fault": {
+                "name": "Metering error"
+            },
+            "overcurrent": {
+                "name": "Overcurrent"
+            },
+            "overtemp": {
+                "name": "Thermal throttling"
+            },
+            "overvoltage": {
+                "name": "Overvoltage"
+            },
+            "rcd_error": {
+                "name": "Rcd error"
+            },
+            "state_e_activated": {
+                "name": "Ev error"
+            },
+            "undervoltage": {
+                "name": "Undervoltage"
+            }
+        },
+        "button": {
+            "charge_start": {
+                "name": "Charge start"
+            },
+            "charge_stop": {
+                "name": "Charge stop"
+            }
+        },
+        "number": {
+            "dynamic_limit": {
+                "name": "Dynamic limit"
+            },
+            "led_max_brightness": {
+                "name": "Led brightness"
+            }
+        },
+        "select": {
+            "load_balancing_mode": {
+                "name": "Load balancing mode",
+                "state": {
+                    "disabled": "Disabled",
+                    "green": "Green",
+                    "hybrid": "Hybrid",
+                    "power": "Power"
+                }
+            }
+        },
+        "sensor": {
+            "breaker_current": {
+                "name": "Breaker current"
+            },
+            "charging_time": {
+                "name": "Charging time"
+            },
+            "current_l1": {
+                "name": "Current L1"
+            },
+            "current_l2": {
+                "name": "Current L2"
+            },
+            "current_l3": {
+                "name": "Current L3"
+            },
+            "installation_current": {
+                "name": "Installation current"
+            },
+            "lifetime_energy": {
+                "name": "Lifetime energy"
+            },
+            "limit_reason": {
+                "name": "Limit reason",
+                "state": {
+                    "1p_charging_disabled": "1p charging disabled",
+                    "dynamic_limit": "Dynamic limit",
+                    "em": "EM",
+                    "em_offline": "EM offline",
+                    "installation_current": "Installation current",
+                    "no_limit": "No limit",
+                    "ocpp": "OCPP",
+                    "overtemperature": "Overtemperature",
+                    "schedule": "Schedule",
+                    "switching_phases": "Switching phases",
+                    "user_limit": "User limit"
+                }
+            },
+            "pf_l1": {
+                "name": "Power factor L1"
+            },
+            "pf_l2": {
+                "name": "Power factor L2"
+            },
+            "pf_l3": {
+                "name": "Power factor L3"
+            },
+            "power_l1": {
+                "name": "Power L1"
+            },
+            "power_l2": {
+                "name": "Power L2"
+            },
+            "power_l3": {
+                "name": "Power L3"
+            },
+            "state": {
+                "name": "State",
+                "state": {
+                    "available": "Available",
+                    "charging": "Charging",
+                    "connected": "Connected",
+                    "error": "Error",
+                    "locked": "Locked",
+                    "need_auth": "Waiting for authentication",
+                    "paused": "Paused",
+                    "paused_by_scheduler": "Paused by scheduler",
+                    "updating_firmware": "Updating firmware"
+                }
+            },
+            "voltage_l1": {
+                "name": "Voltage L1"
+            },
+            "voltage_l2": {
+                "name": "Voltage L2"
+            },
+            "voltage_l3": {
+                "name": "Voltage L3"
+            }
+        },
+        "switch": {
+            "authentication": {
+                "name": "Authentication"
+            },
+            "force_single_phase": {
+                "name": "Force single phase"
+            },
+            "lock": {
+                "name": "Lock"
+            }
+        }
+    }
+}

@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_url": "Invalid URL",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the motionEye service provided by the add-on: {addon}?",
+                "title": "motionEye via Home Assistant add-on"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Admin password",
+                    "admin_username": "Admin username",
+                    "surveillance_password": "Surveillance password",
+                    "surveillance_username": "Surveillance username",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "actions": {
+                "name": "Actions"
+            }
+        },
+        "switch": {
+            "motion_detection": {
+                "name": "Motion detection"
+            },
+            "movies": {
+                "name": "Movies"
+            },
+            "still_images": {
+                "name": "Still images"
+            },
+            "text_overlay": {
+                "name": "Text overlay"
+            },
+            "upload_enabled": {
+                "name": "Upload enabled"
+            },
+            "video_streaming": {
+                "name": "Video streaming"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Stream URL template",
+                    "webhook_set": "Configure motionEye webhooks to report events to Home Assistant",
+                    "webhook_set_overwrite": "Overwrite unrecognized webhooks"
+                }
+            }
+        }
+    },
+    "services": {
+        "action": {
+            "description": "Triggers a motionEye action.",
+            "fields": {
+                "action": {
+                    "description": "Action to trigger.",
+                    "name": "Action"
+                }
+            },
+            "name": "Action"
+        },
+        "set_text_overlay": {
+            "description": "Sets the text overlay for a camera.",
+            "fields": {
+                "custom_left_text": {
+                    "description": "Custom text to display on the left.",
+                    "name": "Left custom text"
+                },
+                "custom_right_text": {
+                    "description": "Custom text to display on the right.",
+                    "name": "Right custom text"
+                },
+                "left_text": {
+                    "description": "Text to display on the left.",
+                    "name": "Left text overlay"
+                },
+                "right_text": {
+                    "description": "Text to display on the right.",
+                    "name": "Right text overlay"
+                }
+            },
+            "name": "Set text overlay"
+        },
+        "snapshot": {
+            "description": "Triggers a motionEye still snapshot.",
+            "name": "Snapshot"
+        }
+    }
+}

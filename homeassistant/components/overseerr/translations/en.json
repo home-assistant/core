@@ -1,0 +1,132 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_host": "The provided URL is not a valid host."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "The API key of the Overseerr instance."
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "url": "URL"
+                },
+                "data_description": {
+                    "api_key": "The API key of the Overseerr instance.",
+                    "url": "The URL of the Overseerr instance."
+                }
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "last_media_event": {
+                "name": "Last media event",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "approved": "Approved",
+                            "auto_approved": "Auto-approved",
+                            "available": "Available",
+                            "declined": "Declined",
+                            "failed": "Failed",
+                            "pending": "Pending"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "available_requests": {
+                "name": "Available requests"
+            },
+            "declined_requests": {
+                "name": "Declined requests"
+            },
+            "movie_requests": {
+                "name": "Movie requests"
+            },
+            "pending_requests": {
+                "name": "Pending requests"
+            },
+            "processing_requests": {
+                "name": "Processing requests"
+            },
+            "total_requests": {
+                "name": "Total requests"
+            },
+            "tv_requests": {
+                "name": "TV requests"
+            }
+        }
+    },
+    "exceptions": {
+        "auth_error": {
+            "message": "Invalid API key."
+        },
+        "connection_error": {
+            "message": "Error connecting to the Overseerr instance: {error}"
+        },
+        "integration_not_found": {
+            "message": "Integration \"{target}\" not found in registry."
+        },
+        "not_loaded": {
+            "message": "{target} is not loaded."
+        }
+    },
+    "selector": {
+        "request_sort_order": {
+            "options": {
+                "added": "Added",
+                "modified": "Modified"
+            }
+        },
+        "request_status": {
+            "options": {
+                "approved": "Approved",
+                "available": "Available",
+                "failed": "Failed",
+                "pending": "Pending",
+                "processing": "Processing",
+                "unavailable": "Unavailable"
+            }
+        }
+    },
+    "services": {
+        "get_requests": {
+            "description": "Get media requests from Overseerr.",
+            "fields": {
+                "config_entry_id": {
+                    "description": "The Overseerr instance to get requests from.",
+                    "name": "Overseerr instance"
+                },
+                "requested_by": {
+                    "description": "Filter the requests by the user id that requested them.",
+                    "name": "Requested by"
+                },
+                "sort_order": {
+                    "description": "Sort the requests by added or modified date.",
+                    "name": "Sort order"
+                },
+                "status": {
+                    "description": "Filter the requests by status.",
+                    "name": "Request status"
+                }
+            },
+            "name": "Get requests"
+        }
+    }
+}

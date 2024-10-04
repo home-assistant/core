@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "not_allowed": "Path is not allowed",
+            "not_valid": "Path is not valid"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "file_path": "Path to file"
+                }
+            },
+            "user": {
+                "data": {
+                    "file_path": "Path to file"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "created": {
+                "name": "Created"
+            },
+            "last_updated": {
+                "name": "Last updated"
+            },
+            "size": {
+                "name": "Size"
+            },
+            "size_bytes": {
+                "name": "Size in bytes"
+            }
+        }
+    },
+    "title": "Filesize"
+}

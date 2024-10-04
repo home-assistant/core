@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "incomplete_discovery": "Incomplete discovery",
+            "no_devices_found": "No devices found on the network"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Do you want to set up this UPnP/IGD device?"
+            },
+            "user": {
+                "data": {
+                    "unique_id": "Device"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "wan_status": {
+                "name": "WAN status"
+            }
+        },
+        "sensor": {
+            "data_received": {
+                "name": "Data received"
+            },
+            "data_sent": {
+                "name": "Data sent"
+            },
+            "download_speed": {
+                "name": "Download speed"
+            },
+            "external_ip": {
+                "name": "External IP"
+            },
+            "packet_download_speed": {
+                "name": "Packet download speed"
+            },
+            "packet_upload_speed": {
+                "name": "Packet upload speed"
+            },
+            "packets_received": {
+                "name": "Packets received"
+            },
+            "packets_sent": {
+                "name": "Packets sent"
+            },
+            "port_mapping_number_of_entries_ipv4": {
+                "name": "Number of port mapping entries (IPv4)"
+            },
+            "upload_speed": {
+                "name": "Upload speed"
+            },
+            "uptime": {
+                "name": "Uptime"
+            },
+            "wan_status": {
+                "name": "WAN status"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "force_poll": "Force polling of all data",
+                    "scan_interval": "Update interval (seconds, minimal 30)"
+                }
+            }
+        }
+    }
+}

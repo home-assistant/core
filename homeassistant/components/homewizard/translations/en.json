@@ -1,0 +1,143 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "device_not_supported": "This device is not supported",
+            "invalid_discovery_parameters": "Invalid discovery parameters",
+            "reauth_successful": "Enabling API was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unknown_error": "Unexpected error",
+            "unsupported_api_version": "Detected unsupported API version",
+            "wrong_device": "The configured device is not the same found on this IP address."
+        },
+        "error": {
+            "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
+            "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?",
+                "title": "Confirm"
+            },
+            "reauth_confirm": {
+                "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+            },
+            "reconfigure": {
+                "data": {
+                    "ip_address": "IP address"
+                },
+                "data_description": {
+                    "ip_address": "The IP address of your HomeWizard Energy device."
+                },
+                "description": "Update configuration for {title}."
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP address"
+                },
+                "data_description": {
+                    "ip_address": "The IP address of your HomeWizard Energy device."
+                },
+                "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
+                "title": "Configure device"
+            }
+        }
+    },
+    "entity": {
+        "number": {
+            "status_light_brightness": {
+                "name": "Status light brightness"
+            }
+        },
+        "sensor": {
+            "active_apparent_power_phase_va": {
+                "name": "Apparent power phase {phase}"
+            },
+            "active_current_phase_a": {
+                "name": "Current phase {phase}"
+            },
+            "active_liter_lpm": {
+                "name": "Water usage"
+            },
+            "active_power_average_w": {
+                "name": "Average demand"
+            },
+            "active_power_factor_phase": {
+                "name": "Power factor phase {phase}"
+            },
+            "active_power_phase_w": {
+                "name": "Power phase {phase}"
+            },
+            "active_reactive_power_phase_var": {
+                "name": "Reactive power phase {phase}"
+            },
+            "active_tariff": {
+                "name": "Tariff"
+            },
+            "active_voltage_phase_v": {
+                "name": "Voltage phase {phase}"
+            },
+            "any_power_fail_count": {
+                "name": "Power failures detected"
+            },
+            "dsmr_version": {
+                "name": "DSMR version"
+            },
+            "long_power_fail_count": {
+                "name": "Long power failures detected"
+            },
+            "meter_model": {
+                "name": "Smart meter model"
+            },
+            "monthly_power_peak_w": {
+                "name": "Peak demand current month"
+            },
+            "total_energy_export_kwh": {
+                "name": "Energy export"
+            },
+            "total_energy_export_tariff_kwh": {
+                "name": "Energy export tariff {tariff}"
+            },
+            "total_energy_import_kwh": {
+                "name": "Energy import"
+            },
+            "total_energy_import_tariff_kwh": {
+                "name": "Energy import tariff {tariff}"
+            },
+            "total_liter_m3": {
+                "name": "Total water usage"
+            },
+            "unique_meter_id": {
+                "name": "Smart meter identifier"
+            },
+            "voltage_sag_phase_count": {
+                "name": "Voltage sags detected phase {phase}"
+            },
+            "voltage_swell_phase_count": {
+                "name": "Voltage swells detected phase {phase}"
+            },
+            "wifi_ssid": {
+                "name": "Wi-Fi SSID"
+            },
+            "wifi_strength": {
+                "name": "Wi-Fi strength"
+            }
+        },
+        "switch": {
+            "cloud_connection": {
+                "name": "Cloud connection"
+            },
+            "switch_lock": {
+                "name": "Switch lock"
+            }
+        }
+    },
+    "exceptions": {
+        "api_disabled": {
+            "message": "The local API is disabled."
+        },
+        "communication_error": {
+            "message": "An error occurred while communicating with HomeWizard device"
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "unknown": "Unexpected error",
+            "unsupported": "Unsupported device"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unsupported": "Unsupported device"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up the {model} player named {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "cinemascape_mask": {
+                "name": "Cinemascape mask"
+            },
+            "cinemascape_mode": {
+                "name": "Cinemascape mode"
+            },
+            "media_location": {
+                "name": "Media location"
+            },
+            "play_speed": {
+                "name": "Play speed"
+            },
+            "play_status": {
+                "name": "Play status"
+            },
+            "screen_mask_bottom_mask_abs": {
+                "name": "Screen mask bottom mask absolute"
+            },
+            "screen_mask_bottom_trim_rel": {
+                "name": "Screen mask bottom trim relative"
+            },
+            "screen_mask_conservative_ratio": {
+                "name": "Screen mask conservative ratio"
+            },
+            "screen_mask_ratio": {
+                "name": "Screen mask ratio"
+            },
+            "screen_mask_top_mask_abs": {
+                "name": "Screen mask top mask absolute"
+            },
+            "screen_mask_top_trim_rel": {
+                "name": "Screen mask top trim relative"
+            },
+            "video_color_depth": {
+                "name": "Video color depth"
+            },
+            "video_color_eotf": {
+                "name": "Video color EOTF"
+            },
+            "video_color_sampling": {
+                "name": "Video color sampling"
+            },
+            "video_color_space": {
+                "name": "Video color space"
+            },
+            "video_mode": {
+                "name": "Video mode"
+            }
+        }
+    }
+}

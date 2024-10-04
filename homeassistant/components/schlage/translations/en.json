@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "The user credentials provided do not match this Schlage account."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The Schlage integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "keypad_disabled": {
+                "name": "Keypad disabled"
+            }
+        },
+        "select": {
+            "auto_lock_time": {
+                "name": "Auto-Lock time",
+                "state": {
+                    "0": "Disabled",
+                    "120": "2 minutes",
+                    "15": "15 seconds",
+                    "240": "4 minutes",
+                    "30": "30 seconds",
+                    "300": "5 minutes",
+                    "60": "1 minute"
+                }
+            }
+        },
+        "switch": {
+            "beeper": {
+                "name": "Keypress Beep"
+            },
+            "lock_and_leave": {
+                "name": "1-Touch Locking"
+            }
+        }
+    },
+    "exceptions": {
+        "schlage_refresh_failed": {
+            "message": "Failed to refresh Schlage data"
+        }
+    }
+}

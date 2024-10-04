@@ -1,0 +1,143 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "password_error": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "password": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password for the general user of your Solar-Log device."
+                },
+                "title": "Define your Solar-Log connection"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "has_password": "I have the password for the Solar-Log user account.",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device.",
+                    "password": "The password for the general user of your Solar-Log device."
+                },
+                "description": "Update your credentials for Solar-Log device"
+            },
+            "reconfigure": {
+                "data": {
+                    "has_password": "I have the password for the Solar-Log user account.",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device.",
+                    "password": "The password for the general user of your Solar-Log device."
+                },
+                "title": "Configure SolarLog"
+            },
+            "user": {
+                "data": {
+                    "has_password": "I have the password for the Solar-Log user account.",
+                    "host": "Host"
+                },
+                "data_description": {
+                    "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device.",
+                    "host": "The hostname or IP address of your Solar-Log device."
+                },
+                "title": "Define your Solar-Log connection"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "alternator_loss": {
+                "name": "Alternator loss"
+            },
+            "capacity": {
+                "name": "Capacity"
+            },
+            "consumption_ac": {
+                "name": "Consumption AC"
+            },
+            "consumption_day": {
+                "name": "Consumption day"
+            },
+            "consumption_month": {
+                "name": "Consumption month"
+            },
+            "consumption_total": {
+                "name": "Consumption total"
+            },
+            "consumption_year": {
+                "name": "Consumption year"
+            },
+            "consumption_yesterday": {
+                "name": "Consumption yesterday"
+            },
+            "efficiency": {
+                "name": "Efficiency"
+            },
+            "last_update": {
+                "name": "Last update"
+            },
+            "power_ac": {
+                "name": "Power AC"
+            },
+            "power_available": {
+                "name": "Power available"
+            },
+            "power_dc": {
+                "name": "Power DC"
+            },
+            "self_consumption_year": {
+                "name": "Self-consumption year"
+            },
+            "total_power": {
+                "name": "Installed peak power"
+            },
+            "usage": {
+                "name": "Usage"
+            },
+            "voltage_ac": {
+                "name": "Voltage AC"
+            },
+            "voltage_dc": {
+                "name": "Voltage DC"
+            },
+            "yield_day": {
+                "name": "Yield day"
+            },
+            "yield_month": {
+                "name": "Yield month"
+            },
+            "yield_total": {
+                "name": "Yield total"
+            },
+            "yield_year": {
+                "name": "Yield year"
+            },
+            "yield_yesterday": {
+                "name": "Yield yesterday"
+            }
+        }
+    },
+    "exceptions": {
+        "auth_failed": {
+            "message": "Error while logging in to the API."
+        },
+        "config_entry_not_ready": {
+            "message": "Error while loading the config entry."
+        },
+        "update_error": {
+            "message": "Error while updating data from the API."
+        }
+    }
+}

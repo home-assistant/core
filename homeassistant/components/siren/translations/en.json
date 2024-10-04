@@ -1,0 +1,45 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Siren",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "available_tones": {
+                    "name": "Available tones"
+                }
+            }
+        }
+    },
+    "services": {
+        "toggle": {
+            "description": "Toggles the siren on/off.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Turns the siren off.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns the siren on.",
+            "fields": {
+                "duration": {
+                    "description": "Number of seconds the sound is played. Must be supported by the integration.",
+                    "name": "Duration"
+                },
+                "tone": {
+                    "description": "The tone to emit. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration.",
+                    "name": "Tone"
+                },
+                "volume_level": {
+                    "description": "The volume. 0 is inaudible, 1 is the maximum volume. Must be supported by the integration.",
+                    "name": "Volume"
+                }
+            },
+            "name": "Turn on"
+        }
+    },
+    "title": "Siren"
+}

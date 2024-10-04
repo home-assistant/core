@@ -1,0 +1,54 @@
+{
+    "services": {
+        "get": {
+            "description": "Downloads file from Minio.",
+            "fields": {
+                "bucket": {
+                    "description": "Bucket to use.",
+                    "name": "Bucket"
+                },
+                "file_path": {
+                    "description": "File path on local filesystem.",
+                    "name": "File path"
+                },
+                "key": {
+                    "description": "Object key of the file.",
+                    "name": "Key"
+                }
+            },
+            "name": "Get"
+        },
+        "put": {
+            "description": "Uploads file to Minio.",
+            "fields": {
+                "bucket": {
+                    "description": "Bucket to use.",
+                    "name": "Bucket"
+                },
+                "file_path": {
+                    "description": "File path on local filesystem.",
+                    "name": "File path"
+                },
+                "key": {
+                    "description": "Object key of the file.",
+                    "name": "Key"
+                }
+            },
+            "name": "Put"
+        },
+        "remove": {
+            "description": "Deletes file from Minio.",
+            "fields": {
+                "bucket": {
+                    "description": "Bucket to use.",
+                    "name": "Bucket"
+                },
+                "key": {
+                    "description": "Object key of the file.",
+                    "name": "Key"
+                }
+            },
+            "name": "Remove"
+        }
+    }
+}

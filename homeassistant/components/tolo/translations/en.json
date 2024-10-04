@@ -1,0 +1,99 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter the hostname or IP address of your TOLO Sauna device."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "water_in_valve": {
+                "name": "Water in valve"
+            },
+            "water_out_valve": {
+                "name": "Water out valve"
+            }
+        },
+        "button": {
+            "next_color": {
+                "name": "Next color"
+            }
+        },
+        "fan": {
+            "fan": {
+                "name": "Fan"
+            }
+        },
+        "light": {
+            "light": {
+                "name": "Light"
+            }
+        },
+        "number": {
+            "fan_timer": {
+                "name": "Fan timer"
+            },
+            "power_timer": {
+                "name": "Power timer"
+            },
+            "salt_bath_timer": {
+                "name": "Salt bath timer"
+            }
+        },
+        "select": {
+            "aroma_therapy_slot": {
+                "name": "Aroma therapy slot",
+                "state": {
+                    "a": "Slot A",
+                    "b": "Slot B"
+                }
+            },
+            "lamp_mode": {
+                "name": "Lamp mode",
+                "state": {
+                    "automatic": "Automatic",
+                    "manual": "Manual"
+                }
+            }
+        },
+        "sensor": {
+            "fan_timer_remaining": {
+                "name": "Fan timer"
+            },
+            "power_timer_remaining": {
+                "name": "Power timer"
+            },
+            "salt_bath_timer_remaining": {
+                "name": "Salt bath timer"
+            },
+            "tank_temperature": {
+                "name": "Tank temperature"
+            },
+            "water_level": {
+                "name": "Water level"
+            }
+        },
+        "switch": {
+            "aroma_therapy_on": {
+                "name": "Aroma therapy"
+            },
+            "salt_bath_on": {
+                "name": "Salt bath"
+            }
+        }
+    }
+}

@@ -1,0 +1,116 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_device": "None of your devices have \"Find my iPhone\" activated",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "send_verification_code": "Failed to send verification code",
+            "validate_verification_code": "Failed to verify your verification code, try again"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "App-specific password"
+                },
+                "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
+                "title": "Authentication expired for {name}"
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Trusted device"
+                },
+                "description": "Select your trusted device",
+                "title": "iCloud trusted device"
+            },
+            "user": {
+                "data": {
+                    "password": "App-specific password",
+                    "username": "Email",
+                    "with_family": "With family"
+                },
+                "description": "Enter your credentials",
+                "title": "iCloud credentials"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Verification code"
+                },
+                "description": "Please enter the verification code you just received from iCloud",
+                "title": "iCloud verification code"
+            }
+        }
+    },
+    "services": {
+        "display_message": {
+            "description": "Displays a message on an Apple device.",
+            "fields": {
+                "account": {
+                    "description": "Your iCloud account username (email) or account name.",
+                    "name": "Account"
+                },
+                "device_name": {
+                    "description": "The name of the Apple device to display the message.",
+                    "name": "Device name"
+                },
+                "message": {
+                    "description": "The content of your message.",
+                    "name": "Message"
+                },
+                "sound": {
+                    "description": "To make a sound when displaying the message.",
+                    "name": "Sound"
+                }
+            },
+            "name": "Display message"
+        },
+        "lost_device": {
+            "description": "Puts an Apple device in lost state.",
+            "fields": {
+                "account": {
+                    "description": "Your iCloud account username (email) or account name.",
+                    "name": "Account"
+                },
+                "device_name": {
+                    "description": "The name of the Apple device to set lost.",
+                    "name": "Device name"
+                },
+                "message": {
+                    "description": "The message to display in lost mode.",
+                    "name": "Message"
+                },
+                "number": {
+                    "description": "The phone number to call in lost mode (must contain country code).",
+                    "name": "Number"
+                }
+            },
+            "name": "Lost device"
+        },
+        "play_sound": {
+            "description": "Plays the Lost device sound on an Apple device.",
+            "fields": {
+                "account": {
+                    "description": "Your iCloud account username (email) or account name.",
+                    "name": "Account"
+                },
+                "device_name": {
+                    "description": "The name of the Apple device to play the sound.",
+                    "name": "Device name"
+                }
+            },
+            "name": "Play sound"
+        },
+        "update": {
+            "description": "Updates iCloud devices.",
+            "fields": {
+                "account": {
+                    "description": "Your iCloud account username (email) or account name.",
+                    "name": "Account"
+                }
+            },
+            "name": "Update"
+        }
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password of the Fibaro hub user."
+                },
+                "description": "Please update your password for {username}",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "import_plugins": "Import entities from fibaro plugins / quickapps",
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "import_plugins": "Select if entities from Fibaro plugins / quickapps should be imported.",
+                    "password": "The password of the Fibaro hub user.",
+                    "url": "The URL of the Fibaro hub in the format `http(s)://IP`.",
+                    "username": "The username of the Fibaro hub user."
+                }
+            }
+        }
+    }
+}

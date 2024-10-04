@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "not_steamist_device": "Not a steamist device"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name} ({ipaddress})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {name} ({ipaddress})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Device"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "If you leave the host empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "steam_minutes_remain": {
+                "name": "Steam minutes remain"
+            },
+            "steam_temperature": {
+                "name": "Steam temperature"
+            }
+        },
+        "switch": {
+            "steam_active": {
+                "name": "Steam active"
+            }
+        }
+    }
+}

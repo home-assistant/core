@@ -1,0 +1,254 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Renson Endura delta device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "air_quality_control": {
+                "name": "Air quality control"
+            },
+            "breeze": {
+                "name": "Breeze"
+            },
+            "breeze_conditions_met": {
+                "name": "Breeze conditions met"
+            },
+            "co2_control": {
+                "name": "CO2 control"
+            },
+            "frost_protection_active": {
+                "name": "Frost protection active"
+            },
+            "humidity_control": {
+                "name": "Humidity control"
+            },
+            "preheater": {
+                "name": "Preheater"
+            }
+        },
+        "button": {
+            "reset_filter": {
+                "name": "Reset filter counter"
+            },
+            "sync_time": {
+                "name": "Sync time with device"
+            }
+        },
+        "number": {
+            "filter_change": {
+                "name": "Filter clean/replacement"
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "name": "Air quality"
+            },
+            "air_quality_category": {
+                "name": "Air quality category",
+                "state": {
+                    "bad": "Bad",
+                    "good": "Good",
+                    "poor": "Poor"
+                }
+            },
+            "breeze_level": {
+                "name": "Breeze level",
+                "state": {
+                    "breeze": "Breeze",
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4",
+                    "off": "Off"
+                }
+            },
+            "breeze_temperature": {
+                "name": "Breeze temperature"
+            },
+            "bypass_activation_temperature": {
+                "name": "Bypass activation temperature"
+            },
+            "bypass_level": {
+                "name": "Bypass level"
+            },
+            "co2_hysteresis": {
+                "name": "CO2 hysteresis"
+            },
+            "co2_quality_category": {
+                "name": "CO2 quality category",
+                "state": {
+                    "bad": "Bad",
+                    "good": "Good",
+                    "poor": "Poor"
+                }
+            },
+            "co2_threshold": {
+                "name": "CO2 threshold"
+            },
+            "day_pollution_level": {
+                "name": "Day pollution level",
+                "state": {
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4"
+                }
+            },
+            "extract_air_temperature": {
+                "name": "Extract air temperature"
+            },
+            "filter_change": {
+                "name": "Filter change"
+            },
+            "manual_level": {
+                "name": "Manual level",
+                "state": {
+                    "breeze": "Breeze",
+                    "holiday": "Holiday",
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4",
+                    "off": "Off"
+                }
+            },
+            "night_pollution_level": {
+                "name": "Night pollution level",
+                "state": {
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4"
+                }
+            },
+            "outdoor_air_temperature": {
+                "name": "Outdoor air temperature"
+            },
+            "total_airflow_in": {
+                "name": "Total airflow in"
+            },
+            "total_airflow_out": {
+                "name": "Total airflow out"
+            },
+            "ventilation_level": {
+                "name": "Ventilation level",
+                "state": {
+                    "breeze": "Breeze",
+                    "holiday": "Holiday",
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4",
+                    "off": "Off"
+                }
+            }
+        },
+        "switch": {
+            "breeze": {
+                "name": "Breeze"
+            }
+        },
+        "time": {
+            "day_time": {
+                "name": "Start time of the day"
+            },
+            "night_time": {
+                "name": "Start time of the night"
+            }
+        }
+    },
+    "selector": {
+        "level_setting": {
+            "options": {
+                "breeze": "Breeze",
+                "holiday": "Holiday",
+                "level1": "Level 1",
+                "level2": "Level 2",
+                "level3": "Level 3",
+                "level4": "Level 4",
+                "off": "Off"
+            }
+        }
+    },
+    "services": {
+        "set_breeze": {
+            "description": "Sets the Breeze function of the ventilation system",
+            "fields": {
+                "activate": {
+                    "description": "Activate or disable the Breeze feature",
+                    "name": "Activate"
+                },
+                "breeze_level": {
+                    "description": "Ventilation level when Breeze function is activated",
+                    "name": "Level"
+                },
+                "temperature": {
+                    "description": "Temperature when the Breeze function should be activated",
+                    "name": "Temperature"
+                }
+            },
+            "name": "Set Breeze"
+        },
+        "set_pollution_settings": {
+            "description": "Sets all the pollution settings of the ventilation system",
+            "fields": {
+                "airquality_control": {
+                    "description": "Activate or disable the air quality control",
+                    "name": "Enable air quality control"
+                },
+                "co2_control": {
+                    "description": "Activate or disable the CO2 control",
+                    "name": "Enable CO2 control"
+                },
+                "co2_hysteresis": {
+                    "description": "The CO2 pollution threshold hysteresis level in ppm",
+                    "name": "CO2 hysteresis"
+                },
+                "co2_threshold": {
+                    "description": "The CO2 pollution threshold level in ppm",
+                    "name": "CO2 threshold"
+                },
+                "day_pollution_level": {
+                    "description": "Ventilation level when pollution is detected in the day",
+                    "name": "Day pollution level"
+                },
+                "humidity_control": {
+                    "description": "Activate or disable the humidity control",
+                    "name": "Enable humidity control"
+                },
+                "night_pollution_level": {
+                    "description": "Ventilation level when pollution is detected in the night",
+                    "name": "Night pollution level"
+                }
+            },
+            "name": "Set pollution settings"
+        },
+        "set_timer_level": {
+            "description": "Sets the ventilation timer",
+            "fields": {
+                "minutes": {
+                    "description": "Duration of the timer (0 will disable the timer)",
+                    "name": "Time"
+                },
+                "timer_level": {
+                    "description": "Ventilation level",
+                    "name": "Level"
+                }
+            },
+            "name": "Set timer"
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "integration_removed": {
+            "description": "The MyQ integration has been removed from Home Assistant.\n\nMyQ has blocked all third-party integrations. Read about it [here]({blog}).\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing MyQ integration entries]({entries}).",
+            "title": "The MyQ integration has been removed"
+        }
+    }
+}

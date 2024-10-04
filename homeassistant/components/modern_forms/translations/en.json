@@ -1,0 +1,93 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Modern Forms fan."
+                },
+                "description": "Set up your Modern Forms fan to integrate with Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Modern Forms fan named `{name}` to Home Assistant?",
+                "title": "Discovered Modern Forms fan device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "fan_sleep_timer_active": {
+                "name": "Fan sleep timer active"
+            },
+            "light_sleep_timer_active": {
+                "name": "Light sleep timer active"
+            }
+        },
+        "fan": {
+            "fan": {
+                "name": "Fan"
+            }
+        },
+        "light": {
+            "light": {
+                "name": "Light"
+            }
+        },
+        "sensor": {
+            "fan_timer_remaining_time": {
+                "name": "Fan sleep time"
+            },
+            "light_timer_remaining_time": {
+                "name": "Light sleep time"
+            }
+        },
+        "switch": {
+            "adaptive_learning": {
+                "name": "Adaptive learning"
+            },
+            "away_mode": {
+                "name": "Away mode"
+            }
+        }
+    },
+    "services": {
+        "clear_fan_sleep_timer": {
+            "description": "Clears the sleep timer on a Modern Forms fan.",
+            "name": "Clear fan sleep timer"
+        },
+        "clear_light_sleep_timer": {
+            "description": "Clears the sleep timer on a Modern Forms light.",
+            "name": "Clear light sleep timer"
+        },
+        "set_fan_sleep_timer": {
+            "description": "Sets a sleep timer on a Modern Forms fan.",
+            "fields": {
+                "sleep_time": {
+                    "description": "Number of minutes to set the timer.",
+                    "name": "Sleep time"
+                }
+            },
+            "name": "Set fan sleep timer"
+        },
+        "set_light_sleep_timer": {
+            "description": "Sets a sleep timer on a Modern Forms light.",
+            "fields": {
+                "sleep_time": {
+                    "description": "Number of minutes to set the timer.",
+                    "name": "Sleep time"
+                }
+            },
+            "name": "Set light sleep timer"
+        }
+    }
+}

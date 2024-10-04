@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml_import_issue_cannot_connect": {
+            "description": "Configuring {integration_title} using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+            "title": "The {integration_title} YAML configuration import failed"
+        }
+    },
+    "services": {
+        "add_tracking": {
+            "description": "Adds a new tracking number to Aftership.",
+            "fields": {
+                "slug": {
+                    "description": "Slug (carrier) of the new tracking.",
+                    "name": "Slug"
+                },
+                "title": {
+                    "description": "A custom title for the new tracking.",
+                    "name": "Title"
+                },
+                "tracking_number": {
+                    "description": "Tracking number for the new tracking.",
+                    "name": "Tracking number"
+                }
+            },
+            "name": "Add tracking"
+        },
+        "remove_tracking": {
+            "description": "Removes a tracking number from Aftership.",
+            "fields": {
+                "slug": {
+                    "description": "Slug (carrier) of the tracking to remove.",
+                    "name": "Slug"
+                },
+                "tracking_number": {
+                    "description": "Tracking number of the tracking to remove.",
+                    "name": "Tracking number"
+                }
+            },
+            "name": "Remove tracking"
+        }
+    }
+}

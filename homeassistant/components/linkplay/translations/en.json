@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the LinkPlay device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "timesync": {
+                "name": "Sync time"
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_grouping_entity": {
+            "message": "Entity with id {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay mediaplayer?"
+        }
+    },
+    "services": {
+        "play_preset": {
+            "description": "Play the preset number on the device.",
+            "fields": {
+                "preset_number": {
+                    "description": "The preset number on the device to play.",
+                    "name": "Preset number"
+                }
+            },
+            "name": "Play preset"
+        }
+    }
+}

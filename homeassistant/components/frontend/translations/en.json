@@ -1,0 +1,30 @@
+{
+    "selector": {
+        "mode": {
+            "options": {
+                "dark": "Dark",
+                "light": "Light"
+            }
+        }
+    },
+    "services": {
+        "reload_themes": {
+            "description": "Reloads themes from the YAML-configuration.",
+            "name": "Reload themes"
+        },
+        "set_theme": {
+            "description": "Sets the default theme Home Assistant uses. Can be overridden by a user.",
+            "fields": {
+                "mode": {
+                    "description": "Theme mode.",
+                    "name": "Mode"
+                },
+                "name": {
+                    "description": "Name of a theme.",
+                    "name": "Theme"
+                }
+            },
+            "name": "Set the default theme"
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "network_error": "The Mastodon instance was not found.",
+            "unauthorized_error": "The credentials are incorrect.",
+            "unknown": "Unknown error occured when connecting to the Mastodon instance."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Access token",
+                    "base_url": "URL",
+                    "client_id": "Client key",
+                    "client_secret": "Client secret"
+                },
+                "data_description": {
+                    "access_token": "The access token for the application created within your Mastodon account.",
+                    "base_url": "The URL of your Mastodon instance e.g. https://mastodon.social.",
+                    "client_id": "The client key for the application created within your Mastodon account.",
+                    "client_secret": "The client secret for the application created within your Mastodon account."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "followers": {
+                "name": "Followers",
+                "unit_of_measurement": "accounts"
+            },
+            "following": {
+                "name": "Following",
+                "unit_of_measurement": "accounts"
+            },
+            "posts": {
+                "name": "Posts",
+                "unit_of_measurement": "posts"
+            }
+        }
+    }
+}

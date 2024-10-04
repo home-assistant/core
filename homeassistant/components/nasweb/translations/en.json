@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "missing_internal_url": "Make sure Home Assistant has a valid internal URL",
+            "missing_nasweb_data": "Something isn't right with device internal configuration. Try restarting the device and Home Assistant.",
+            "missing_status": "Did not receive any status updates within the expected time window. Make sure the Home Assistant internal URL is reachable from the NASweb device.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "{nasweb_schema_img}NASweb combines the functions of a control panel and the ability to manage building automation. The device monitors the flow of information from sensors and programmable switches and stores settings, definitions and configured actions.",
+                "title": "Add NASweb device"
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "switch_output": {
+                "name": "Relay Switch {index}"
+            }
+        }
+    },
+    "exceptions": {
+        "config_entry_error_internal_error": {
+            "message": "Something isn't right with device internal configuration. Try restarting the device and Home Assistant. If the issue persists contact support at {support_email}"
+        },
+        "config_entry_error_invalid_authentication": {
+            "message": "Invalid username/password. Most likely user changed password or was removed. Delete this entry and create a new one with the correct username/password."
+        },
+        "config_entry_error_missing_internal_url": {
+            "message": "Make sure Home Assistant has a valid internal URL"
+        },
+        "config_entry_error_no_status_update": {
+            "message": "Did not received any status updates within the expected time window. Make sure the Home Assistant internal URL is reachable from the NASweb device. If the issue persists contact support at {support_email}"
+        },
+        "serial_mismatch": {
+            "message": "Connected to different NASweb device (serial number mismatch)."
+        }
+    }
+}

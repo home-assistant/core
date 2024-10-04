@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "calibration_is_zero": "Calibration factor can't be zero."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "calibration_factor": "Calibration factor",
+                    "indoor_humidity_sensor": "Indoor humidity sensor",
+                    "indoor_temp_sensor": "Indoor temperature sensor",
+                    "name": "Name",
+                    "outdoor_temp_sensor": "Outdoor temperature sensor"
+                },
+                "data_description": {
+                    "calibration_factor": "Needs to be calibrated to the critical point in the room.",
+                    "indoor_humidity_sensor": "The entity ID of the indoor humidity sensor.",
+                    "indoor_temp_sensor": "The entity ID of the indoor temperature sensor.",
+                    "name": "Name for the created entity.",
+                    "outdoor_temp_sensor": "The entity ID of the outdoor temperature sensor."
+                },
+                "description": "Create Mold indicator helper"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "calibration_is_zero": "Calibration factor can't be zero."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "calibration_factor": "Calibration factor"
+                },
+                "data_description": {
+                    "calibration_factor": "Needs to be calibrated to the critical point in the room."
+                },
+                "description": "Adjust the calibration factor as required"
+            }
+        }
+    },
+    "title": "Mold Indicator"
+}

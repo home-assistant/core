@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "services": {
+        "turn_on": {
+            "description": "Sets the light RGB to the predominant color found in the image provided by URL or file path.",
+            "fields": {
+                "color_extract_path": {
+                    "description": "The full system path to the image we want to extract RGB values from. Must be allowed in allowlist_external_dirs.",
+                    "name": "Path"
+                },
+                "color_extract_url": {
+                    "description": "The URL of the image we want to extract RGB values from. Must be allowed in allowlist_external_urls.",
+                    "name": "URL"
+                }
+            },
+            "name": "Turn on"
+        }
+    }
+}

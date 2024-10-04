@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Traccar Server",
+                    "username": "The username (email) you use to login to your Traccar Server"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "motion": {
+                "name": "Motion",
+                "state": {
+                    "off": "Stopped",
+                    "on": "Moving"
+                }
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "off": "Offline",
+                    "on": "Online"
+                }
+            }
+        },
+        "sensor": {
+            "address": {
+                "name": "Address"
+            },
+            "altitude": {
+                "name": "Altitude"
+            },
+            "geofence": {
+                "name": "Geofence"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_attributes": "Custom attributes",
+                    "events": "Events",
+                    "max_accuracy": "Max accuracy",
+                    "skip_accuracy_filter_for": "Position skip filter for attributes"
+                },
+                "data_description": {
+                    "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
+                    "events": "Selected events will be fired in Home Assistant",
+                    "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
+                    "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update"
+                }
+            }
+        }
+    }
+}

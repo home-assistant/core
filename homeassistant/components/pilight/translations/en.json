@@ -1,0 +1,14 @@
+{
+    "services": {
+        "send": {
+            "description": "Sends RF code to Pilight device.",
+            "fields": {
+                "protocol": {
+                    "description": "Protocol that Pilight recognizes. See https://manual.pilight.org/protocols/index.html for supported protocols and additional parameters that each protocol supports.",
+                    "name": "Protocol"
+                }
+            },
+            "name": "Send"
+        }
+    }
+}

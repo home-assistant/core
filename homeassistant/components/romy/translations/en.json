@@ -1,0 +1,82 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "password": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "(8 characters, see QR Code under the dustbin)."
+                },
+                "title": "Password required"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add ROMY Vacuum Cleaner {name} to Home Assistant?"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "docked": {
+                "name": "Robot docked"
+            },
+            "dustbin_present": {
+                "name": "Dustbin present"
+            },
+            "water_tank_empty": {
+                "name": "Watertank empty"
+            },
+            "water_tank_present": {
+                "name": "Watertank present"
+            }
+        },
+        "sensor": {
+            "dustbin_sensor": {
+                "name": "Dustbin dirt level"
+            },
+            "total_area_cleaned": {
+                "name": "Total cleaned area"
+            },
+            "total_cleaning_time": {
+                "name": "Total cleaning time"
+            },
+            "total_distance_driven": {
+                "name": "Total distance driven"
+            },
+            "total_number_of_cleaning_runs": {
+                "name": "Total cleaning runs"
+            }
+        },
+        "vacuum": {
+            "romy": {
+                "state_attributes": {
+                    "fan_speed": {
+                        "state": {
+                            "auto": "Auto",
+                            "default": "Default",
+                            "high": "High",
+                            "intensive": "Intensive",
+                            "normal": "Normal",
+                            "silent": "Silent",
+                            "super_silent": "Super silent"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

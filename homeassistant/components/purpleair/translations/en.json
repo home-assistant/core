@@ -1,0 +1,142 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_api_key": "Invalid API key",
+            "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "distance": "Search radius",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "data_description": {
+                    "distance": "The radius (in kilometers) of the circle to search within",
+                    "latitude": "The latitude around which to search for sensors",
+                    "longitude": "The longitude around which to search for sensors"
+                },
+                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude."
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "The sensor to track"
+                },
+                "description": "Which of the nearby sensors would you like to track?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Your PurpleAir API key (if you have both read and write keys, use the read key)"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Your PurpleAir API key (if you have both read and write keys, use the read key)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pm0_3_count_concentration": {
+                "name": "PM0.3 count concentration"
+            },
+            "pm0_5_count_concentration": {
+                "name": "PM0.5 count concentration"
+            },
+            "pm10_0_count_concentration": {
+                "name": "PM10.0 count concentration"
+            },
+            "pm1_0_count_concentration": {
+                "name": "PM1.0 count concentration"
+            },
+            "pm2_5_count_concentration": {
+                "name": "PM2.5 count concentration"
+            },
+            "pm5_0_count_concentration": {
+                "name": "PM5.0 count concentration"
+            },
+            "rssi": {
+                "name": "RSSI"
+            },
+            "uptime": {
+                "name": "Uptime"
+            },
+            "voc_aqi": {
+                "name": "Volatile organic compounds air quality index"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_api_key": "Invalid API key",
+            "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "add_sensor": {
+                "data": {
+                    "distance": "Search radius",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "data_description": {
+                    "distance": "The radius (in kilometers) of the circle to search within",
+                    "latitude": "The latitude around which to search for sensors",
+                    "longitude": "The longitude around which to search for sensors"
+                },
+                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
+                "title": "Add sensor"
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "The sensor to track"
+                },
+                "description": "Which of the nearby sensors would you like to track?",
+                "title": "Choose sensor to add"
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Add sensor",
+                    "remove_sensor": "Remove sensor",
+                    "settings": "Settings"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "Sensor name"
+                },
+                "data_description": {
+                    "sensor_device_id": "The sensor to remove"
+                },
+                "title": "Remove sensor"
+            },
+            "settings": {
+                "data": {
+                    "show_on_map": "Show configured sensor locations on the map"
+                },
+                "title": "Settings"
+            }
+        }
+    }
+}

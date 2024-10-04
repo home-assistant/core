@@ -1,0 +1,198 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "not_sonos_device": "Discovered device is not a Sonos device",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Sonos?"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "microphone": {
+                "name": "Microphone"
+            }
+        },
+        "number": {
+            "audio_delay": {
+                "name": "Audio delay"
+            },
+            "balance": {
+                "name": "Balance"
+            },
+            "bass": {
+                "name": "Bass"
+            },
+            "music_surround_level": {
+                "name": "Music surround level"
+            },
+            "sub_crossover": {
+                "name": "Sub crossover frequency"
+            },
+            "sub_gain": {
+                "name": "Sub gain"
+            },
+            "surround_level": {
+                "name": "Surround level"
+            },
+            "treble": {
+                "name": "Treble"
+            }
+        },
+        "sensor": {
+            "audio_input_format": {
+                "name": "Audio input format"
+            }
+        },
+        "switch": {
+            "buttons_enabled": {
+                "name": "Touch controls"
+            },
+            "cross_fade": {
+                "name": "Crossfade"
+            },
+            "dialog_level": {
+                "name": "Speech enhancement"
+            },
+            "loudness": {
+                "name": "Loudness"
+            },
+            "night_mode": {
+                "name": "Night sound"
+            },
+            "status_light": {
+                "name": "Status light"
+            },
+            "sub_enabled": {
+                "name": "Subwoofer enabled"
+            },
+            "surround_enabled": {
+                "name": "Surround enabled"
+            },
+            "surround_mode": {
+                "name": "Surround music full volume"
+            }
+        }
+    },
+    "exceptions": {
+        "announce_media_error": {
+            "message": "Announcing clip {media_id} failed {response}"
+        },
+        "invalid_content_type": {
+            "message": "Sonos does not support media content type: {media_type}"
+        },
+        "invalid_favorite": {
+            "message": "Could not find a Sonos favorite: {name}"
+        },
+        "invalid_media": {
+            "message": "Could not find media in library: {media_id}"
+        },
+        "invalid_sonos_playlist": {
+            "message": "Could not find Sonos playlist: {name}"
+        }
+    },
+    "issues": {
+        "subscriptions_failed": {
+            "description": "Falling back to polling, functionality may be limited.\n\nSonos device at {device_ip} cannot reach Home Assistant at {listener_address}.\n\nSee our [documentation]({sub_fail_url}) for more information on how to solve this issue.",
+            "title": "Networking error: subscriptions failed"
+        }
+    },
+    "services": {
+        "clear_sleep_timer": {
+            "description": "Clears a Sonos timer.",
+            "name": "Clear timer"
+        },
+        "get_queue": {
+            "description": "Returns the contents of the queue.",
+            "name": "Get queue"
+        },
+        "play_queue": {
+            "description": "Start playing the queue from the first item.",
+            "fields": {
+                "queue_position": {
+                    "description": "Position of the song in the queue to start playing from.",
+                    "name": "Queue position"
+                }
+            },
+            "name": "Play queue"
+        },
+        "remove_from_queue": {
+            "description": "Removes an item from the queue.",
+            "fields": {
+                "queue_position": {
+                    "description": "Position in the queue to remove.",
+                    "name": "Queue position"
+                }
+            },
+            "name": "Remove from queue"
+        },
+        "restore": {
+            "description": "Restores a snapshot of the media player.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of entity that will be restored.",
+                    "name": "Entity"
+                },
+                "with_group": {
+                    "description": "True or False. Also restore the group layout.",
+                    "name": "With group"
+                }
+            },
+            "name": "Restore"
+        },
+        "set_sleep_timer": {
+            "description": "Sets a Sonos timer.",
+            "fields": {
+                "sleep_time": {
+                    "description": "Number of seconds to set the timer.",
+                    "name": "Sleep Time"
+                }
+            },
+            "name": "Set timer"
+        },
+        "snapshot": {
+            "description": "Takes a snapshot of the media player.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of entity that will be snapshot.",
+                    "name": "Entity"
+                },
+                "with_group": {
+                    "description": "True or False. Also snapshot the group layout.",
+                    "name": "With group"
+                }
+            },
+            "name": "Snapshot"
+        },
+        "update_alarm": {
+            "description": "Updates an alarm with new time and volume settings.",
+            "fields": {
+                "alarm_id": {
+                    "description": "ID for the alarm to be updated.",
+                    "name": "Alarm ID"
+                },
+                "enabled": {
+                    "description": "Enable or disable the alarm.",
+                    "name": "Alarm enabled"
+                },
+                "include_linked_zones": {
+                    "description": "Enable or disable including grouped rooms.",
+                    "name": "Include linked zones"
+                },
+                "time": {
+                    "description": "Set time for the alarm.",
+                    "name": "Time"
+                },
+                "volume": {
+                    "description": "Set alarm volume level.",
+                    "name": "Volume"
+                }
+            },
+            "name": "Update alarm"
+        }
+    }
+}

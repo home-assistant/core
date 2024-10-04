@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "broadcast_address": "Broadcast address",
+                    "broadcast_port": "Broadcast port",
+                    "mac": "MAC address"
+                },
+                "data_description": {
+                    "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
+                    "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
+                    "mac": "MAC address of the device to wake up."
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "broadcast_address": "Broadcast address",
+                    "broadcast_port": "Broadcast port"
+                },
+                "data_description": {
+                    "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
+                    "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed."
+                }
+            }
+        }
+    },
+    "services": {
+        "send_magic_packet": {
+            "description": "Sends a 'magic packet' to wake up a device with 'Wake-On-LAN' capabilities.",
+            "fields": {
+                "broadcast_address": {
+                    "description": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
+                    "name": "Broadcast address"
+                },
+                "broadcast_port": {
+                    "description": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
+                    "name": "Broadcast port"
+                },
+                "mac": {
+                    "description": "MAC address of the device to wake up.",
+                    "name": "MAC address"
+                }
+            },
+            "name": "Send magic packet"
+        }
+    }
+}

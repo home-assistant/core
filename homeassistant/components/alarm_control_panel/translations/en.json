@@ -1,0 +1,147 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Arm {entity_name} away",
+            "arm_home": "Arm {entity_name} home",
+            "arm_night": "Arm {entity_name} night",
+            "arm_vacation": "Arm {entity_name} vacation",
+            "disarm": "Disarm {entity_name}",
+            "trigger": "Trigger {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} is armed away",
+            "is_armed_home": "{entity_name} is armed home",
+            "is_armed_night": "{entity_name} is armed night",
+            "is_armed_vacation": "{entity_name} is armed vacation",
+            "is_disarmed": "{entity_name} is disarmed",
+            "is_triggered": "{entity_name} is triggered"
+        },
+        "extra_fields": {
+            "code": "Code",
+            "for": "Duration"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} armed away",
+            "armed_home": "{entity_name} armed home",
+            "armed_night": "{entity_name} armed night",
+            "armed_vacation": "{entity_name} armed vacation",
+            "disarmed": "{entity_name} disarmed",
+            "triggered": "{entity_name} triggered"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Alarm control panel",
+            "state": {
+                "armed": "Armed",
+                "armed_away": "Armed away",
+                "armed_custom_bypass": "Armed custom bypass",
+                "armed_home": "Armed home",
+                "armed_night": "Armed night",
+                "armed_vacation": "Armed vacation",
+                "arming": "Arming",
+                "disarmed": "Disarmed",
+                "disarming": "Disarming",
+                "pending": "Pending",
+                "triggered": "Triggered"
+            },
+            "state_attributes": {
+                "changed_by": {
+                    "name": "Changed by"
+                },
+                "code_arm_required": {
+                    "name": "Code for arming",
+                    "state": {
+                        "false": "Not required",
+                        "true": "Required"
+                    }
+                },
+                "code_format": {
+                    "name": "Code format",
+                    "state": {
+                        "number": "Number",
+                        "text": "Text"
+                    }
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "code_arm_required": {
+            "message": "Arming requires a code but none was given for {entity_id}."
+        }
+    },
+    "services": {
+        "alarm_arm_away": {
+            "description": "Sets the alarm to: _armed, no one home_.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Arm away"
+        },
+        "alarm_arm_custom_bypass": {
+            "description": "Arms the alarm while allowing to bypass a custom area.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Arm with custom bypass"
+        },
+        "alarm_arm_home": {
+            "description": "Sets the alarm to: _armed, but someone is home_.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Arm home"
+        },
+        "alarm_arm_night": {
+            "description": "Sets the alarm to: _armed for the night_.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Arm night"
+        },
+        "alarm_arm_vacation": {
+            "description": "Sets the alarm to: _armed for vacation_.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Arm vacation"
+        },
+        "alarm_disarm": {
+            "description": "Disarms the alarm.",
+            "fields": {
+                "code": {
+                    "description": "Code to disarm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Disarm"
+        },
+        "alarm_trigger": {
+            "description": "Trigger the alarm manually.",
+            "fields": {
+                "code": {
+                    "description": "Code to arm the alarm.",
+                    "name": "Code"
+                }
+            },
+            "name": "Trigger"
+        }
+    },
+    "title": "Alarm control panel"
+}

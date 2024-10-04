@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 from contextlib import suppress
 import faulthandler
 import os
 import sys
 import threading
 
+from . import msh_utils
 from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
@@ -194,6 +196,21 @@ def main() -> int:
             return single_execution_lock.exit_code
 
         safe_mode = config.safe_mode_enabled(config_dir)
+
+        # MSH custom functionality
+        msh_utils.cf_path.set(config_dir + "/configuration.yaml")
+
+        def run_ring_dashboard_create() -> None:
+            asyncio.run(msh_utils.ring_dashboard_create())
+
+        threading.Thread(target=run_ring_dashboard_create, daemon=True).start()
+
+        def reverse_proxy_client() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(msh_utils.reverse_proxy_client())
+
+        threading.Thread(target=reverse_proxy_client, daemon=True).start()
 
         runtime_conf = runner.RuntimeConfig(
             config_dir=config_dir,

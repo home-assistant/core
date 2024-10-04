@@ -1,0 +1,104 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "button_0": {
+                "name": "Button 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "button_1": {
+                "name": "Button 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "button_2": {
+                "name": "Button 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "button_3": {
+                "name": "Button 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "button_4": {
+                "name": "Button 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "button_5": {
+                "name": "Button 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "motion": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "motion": "Motion"
+                        }
+                    }
+                }
+            },
+            "vibration": {
+                "name": "Vibration",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "vibration": "Vibration"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

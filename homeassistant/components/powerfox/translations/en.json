@@ -1,0 +1,82 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password of your Powerfox account."
+                },
+                "description": "The password for {email} is no longer valid.",
+                "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address of your Powerfox account.",
+                    "password": "The password of your Powerfox account."
+                },
+                "description": "Powerfox is already configured. Would you like to reconfigure it?",
+                "title": "Reconfigure your Powerfox account"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address of your Powerfox account.",
+                    "password": "The password of your Powerfox account."
+                },
+                "description": "Connect to your Powerfox account to get information about your energy, heat or water consumption."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "cold_water": {
+                "name": "Cold water"
+            },
+            "energy_return": {
+                "name": "Energy return"
+            },
+            "energy_usage": {
+                "name": "Energy usage"
+            },
+            "energy_usage_high_tariff": {
+                "name": "Energy usage high tariff"
+            },
+            "energy_usage_low_tariff": {
+                "name": "Energy usage low tariff"
+            },
+            "heat_delta_energy": {
+                "name": "Delta energy"
+            },
+            "heat_delta_volume": {
+                "name": "Delta volume"
+            },
+            "heat_total_energy": {
+                "name": "Total energy"
+            },
+            "heat_total_volume": {
+                "name": "Total volume"
+            },
+            "warm_water": {
+                "name": "Warm water"
+            }
+        }
+    }
+}

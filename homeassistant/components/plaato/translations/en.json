@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
+        },
+        "create_entry": {
+            "default": "Your Plaato {device_type} with name **{device_name}** was successfully set up!"
+        },
+        "error": {
+            "invalid_webhook_device": "You have selected a device that does not support sending data to a webhook. It is only available for the Airlock",
+            "no_api_method": "You need to add an auth token or select webhook",
+            "no_auth_token": "You need to add an auth token"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "token": "Paste Auth Token here",
+                    "use_webhook": "Use webhook"
+                },
+                "description": "To be able to query the API an `auth_token` is required which can be obtained by following [these](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructions\n\n Selected device: **{device_type}** \n\nIf you rather use the built in webhook method (Airlock only) please check the box below and leave Auth Token blank",
+                "title": "Select API method"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Name your device",
+                    "device_type": "Type of Plaato device"
+                },
+                "description": "Do you want to start setup?",
+                "title": "Set up the Plaato devices"
+            },
+            "webhook": {
+                "description": "To send events to Home Assistant, you will need to set up the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details.",
+                "title": "Webhook to use"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Update interval (minutes)"
+                },
+                "description": "Set the update interval (minutes)",
+                "title": "Options for Plaato"
+            },
+            "webhook": {
+                "description": "Webhook info:\n\n- URL: `{webhook_url}`\n- Method: POST",
+                "title": "Options for Plaato Airlock"
+            }
+        }
+    }
+}

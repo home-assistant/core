@@ -1,0 +1,8 @@
+{
+    "services": {
+        "update": {
+            "description": "Triggers manual tracker update.",
+            "name": "Update"
+        }
+    }
+}

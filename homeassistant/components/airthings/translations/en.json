@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "description": "Login at {url} to find your credentials",
+                    "id": "ID",
+                    "secret": "Secret"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "light": {
+                "name": "Light"
+            },
+            "mold": {
+                "name": "Mold"
+            },
+            "radon": {
+                "name": "Radon"
+            },
+            "virus_risk": {
+                "name": "Virus Risk"
+            }
+        }
+    }
+}

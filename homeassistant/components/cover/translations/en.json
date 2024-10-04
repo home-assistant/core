@@ -1,0 +1,140 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "Close {entity_name}",
+            "close_tilt": "Close {entity_name} tilt",
+            "open": "Open {entity_name}",
+            "open_tilt": "Open {entity_name} tilt",
+            "set_position": "Set {entity_name} position",
+            "set_tilt_position": "Set {entity_name} tilt position",
+            "stop": "Stop {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} is closed",
+            "is_closing": "{entity_name} is closing",
+            "is_open": "{entity_name} is open",
+            "is_opening": "{entity_name} is opening",
+            "is_position": "Current {entity_name} position is",
+            "is_tilt_position": "Current {entity_name} tilt position is"
+        },
+        "extra_fields": {
+            "above": "Above",
+            "below": "Below",
+            "for": "Duration",
+            "position": "Position"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} closed",
+            "closing": "{entity_name} closing",
+            "opened": "{entity_name} opened",
+            "opening": "{entity_name} opening",
+            "position": "{entity_name} position changes",
+            "tilt_position": "{entity_name} tilt position changes"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Cover",
+            "state": {
+                "closed": "Closed",
+                "closing": "Closing",
+                "open": "Open",
+                "opening": "Opening",
+                "stopped": "Stopped"
+            },
+            "state_attributes": {
+                "current_position": {
+                    "name": "Position"
+                },
+                "current_tilt_position": {
+                    "name": "Tilt position"
+                }
+            }
+        },
+        "awning": {
+            "name": "Awning"
+        },
+        "blind": {
+            "name": "Blind"
+        },
+        "curtain": {
+            "name": "Curtain"
+        },
+        "damper": {
+            "name": "Damper"
+        },
+        "door": {
+            "name": "Door"
+        },
+        "garage": {
+            "name": "Garage"
+        },
+        "gate": {
+            "name": "Gate"
+        },
+        "shade": {
+            "name": "Shade"
+        },
+        "shutter": {
+            "name": "Shutter"
+        },
+        "window": {
+            "name": "Window"
+        }
+    },
+    "services": {
+        "close_cover": {
+            "description": "Closes a cover.",
+            "name": "Close"
+        },
+        "close_cover_tilt": {
+            "description": "Tilts a cover to close.",
+            "name": "Close tilt"
+        },
+        "open_cover": {
+            "description": "Opens a cover.",
+            "name": "Open"
+        },
+        "open_cover_tilt": {
+            "description": "Tilts a cover open.",
+            "name": "Open tilt"
+        },
+        "set_cover_position": {
+            "description": "Moves a cover to a specific position.",
+            "fields": {
+                "position": {
+                    "description": "Target position.",
+                    "name": "Position"
+                }
+            },
+            "name": "Set position"
+        },
+        "set_cover_tilt_position": {
+            "description": "Moves a cover tilt to a specific position.",
+            "fields": {
+                "tilt_position": {
+                    "description": "Target tilt positition.",
+                    "name": "Tilt position"
+                }
+            },
+            "name": "Set tilt position"
+        },
+        "stop_cover": {
+            "description": "Stops the cover movement.",
+            "name": "Stop"
+        },
+        "stop_cover_tilt": {
+            "description": "Stops a tilting cover movement.",
+            "name": "Stop tilt"
+        },
+        "toggle": {
+            "description": "Toggles a cover open/closed.",
+            "name": "Toggle"
+        },
+        "toggle_cover_tilt": {
+            "description": "Toggles a cover tilt open/closed.",
+            "name": "Toggle tilt"
+        }
+    },
+    "title": "Cover"
+}

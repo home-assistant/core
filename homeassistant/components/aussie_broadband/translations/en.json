@@ -1,0 +1,87 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_services_found": "No services were found for this account",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Update password for {username}",
+                "title": "Authentication expired for {name}"
+            },
+            "service": {
+                "data": {
+                    "services": "Services"
+                },
+                "title": "Select Services"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "billing_cycle_length": {
+                "name": "Billing cycle length"
+            },
+            "billing_cycle_remaining": {
+                "name": "Billing cycle remaining"
+            },
+            "data_used": {
+                "name": "Data used"
+            },
+            "downloaded": {
+                "name": "Downloaded"
+            },
+            "international_calls": {
+                "name": "International calls"
+            },
+            "mobile_calls": {
+                "name": "Mobile calls"
+            },
+            "national_calls": {
+                "name": "National calls"
+            },
+            "other_calls": {
+                "name": "Other calls"
+            },
+            "sms_sent": {
+                "name": "SMS sent"
+            },
+            "uploaded": {
+                "name": "Uploaded"
+            },
+            "voicemail_calls": {
+                "name": "Voicemail calls"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Services"
+                },
+                "title": "Select Services"
+            }
+        }
+    }
+}

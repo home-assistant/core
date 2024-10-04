@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Location"
+                },
+                "data_description": {
+                    "location": "Use the map to set the location for Stookwijzer."
+                },
+                "description": "Select the location you want to recieve the Stookwijzer information for."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "advice": {
+                "name": "Advice code",
+                "state": {
+                    "code_orange": "Orange",
+                    "code_red": "Red",
+                    "code_yellow": "Yellow"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "no_data_received": {
+            "message": "No data received from Stookwijzer."
+        }
+    },
+    "issues": {
+        "location_migration_failed": {
+            "description": "The Stookwijzer integration was unable to automatically migrate your location to a new format the updated integrations uses.\n\nMake sure you are connected to the internet and restart Home Assistant to try again.\n\nIf this doesn't resolve the error, remove and re-add the integration.",
+            "title": "Migration of your location failed"
+        }
+    }
+}

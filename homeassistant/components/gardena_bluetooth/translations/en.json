@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect: {error}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "sensor_connected_state": {
+                "name": "Sensor connection"
+            },
+            "valve_connected_state": {
+                "name": "Valve connection"
+            }
+        },
+        "button": {
+            "factory_reset": {
+                "name": "Factory reset"
+            }
+        },
+        "number": {
+            "manual_watering_time": {
+                "name": "Manual watering time"
+            },
+            "rain_pause": {
+                "name": "Rain pause"
+            },
+            "remaining_open_set": {
+                "name": "Open for"
+            },
+            "remaining_open_time": {
+                "name": "Remaining open time"
+            },
+            "seasonal_adjust": {
+                "name": "Seasonal adjust"
+            },
+            "sensor_threshold": {
+                "name": "Sensor threshold"
+            }
+        },
+        "sensor": {
+            "activation_reason": {
+                "name": "Activation reason"
+            },
+            "remaining_open_timestamp": {
+                "name": "Valve closing"
+            },
+            "sensor_battery_level": {
+                "name": "Sensor battery"
+            },
+            "sensor_measurement_timestamp": {
+                "name": "Sensor timestamp"
+            },
+            "sensor_type": {
+                "name": "Sensor type"
+            }
+        },
+        "switch": {
+            "state": {
+                "name": "Open"
+            }
+        }
+    }
+}

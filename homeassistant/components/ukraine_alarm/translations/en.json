@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured",
+            "cannot_connect": "Failed to connect",
+            "max_regions": "Max 5 regions can be configured",
+            "rate_limit": "Too much requests",
+            "timeout": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "If you want to monitor not only state and district, choose its specific community"
+            },
+            "district": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "If you want to monitor not only state, choose its specific district"
+            },
+            "user": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Choose state to monitor"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "air": {
+                "name": "Air"
+            },
+            "artillery": {
+                "name": "Artillery"
+            },
+            "chemical": {
+                "name": "Chemical"
+            },
+            "nuclear": {
+                "name": "Nuclear"
+            },
+            "unknown": {
+                "name": "Unknown"
+            },
+            "urban_fights": {
+                "name": "Urban fights"
+            }
+        }
+    }
+}

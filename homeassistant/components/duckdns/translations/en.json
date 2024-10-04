@@ -1,0 +1,14 @@
+{
+    "services": {
+        "set_txt": {
+            "description": "Sets the TXT record of your DuckDNS subdomain.",
+            "fields": {
+                "txt": {
+                    "description": "Payload for the TXT record.",
+                    "name": "TXT"
+                }
+            },
+            "name": "Set TXT"
+        }
+    }
+}

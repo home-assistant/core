@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Wemo?"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo button was pressed for 2 seconds"
+        }
+    },
+    "options": {
+        "error": {
+            "long_press_requires_subscription": "Local push update subscriptions must be enabled to use long-press events",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "enable_long_press": "Register for device long-press events",
+                    "enable_subscription": "Subscribe to device local push updates"
+                }
+            }
+        }
+    },
+    "services": {
+        "reset_filter_life": {
+            "description": "Resets the WeMo Humidifier's filter lifetime to 100%.",
+            "name": "Reset filter lifetime"
+        },
+        "set_humidity": {
+            "description": "Sets the target humidity of WeMo humidifier devices.",
+            "fields": {
+                "target_humidity": {
+                    "description": "Target humidity.",
+                    "name": "Target humidity"
+                }
+            },
+            "name": "Set humidity"
+        }
+    }
+}

@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
+        },
+        "error": {
+            "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
+            "cannot_open_serial_port": "Cannot open serial port, please check and try again",
+            "invalid_serial_port": "Serial port is not a valid device or could not be openned"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Inverter Address",
+                    "port": "RS485 or USB-RS485 Adaptor Port"
+                },
+                "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "alarm": {
+                "name": "Alarm status"
+            },
+            "grid_current": {
+                "name": "Grid current"
+            },
+            "grid_voltage": {
+                "name": "Grid voltage"
+            },
+            "i_leak_dcdc": {
+                "name": "DC-DC leak current"
+            },
+            "i_leak_inverter": {
+                "name": "Inverter leak current"
+            },
+            "power_output": {
+                "name": "Power output"
+            },
+            "r_iso": {
+                "name": "Isolation resistance"
+            },
+            "total_energy": {
+                "name": "Total energy"
+            }
+        }
+    }
+}

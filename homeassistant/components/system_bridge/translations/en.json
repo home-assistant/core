@@ -1,0 +1,227 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unique_id_mismatch": "The identifier does not match the previous identifier",
+            "unknown": "Unexpected error",
+            "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "token": "API token"
+                },
+                "description": "Please enter the token set in your configuration for {name}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "token": "Token"
+                },
+                "description": "Please enter your connection details."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "camera_in_use": {
+                "name": "Camera in use"
+            },
+            "pending_reboot": {
+                "name": "Pending reboot"
+            }
+        },
+        "media_player": {
+            "media": {
+                "name": "Media"
+            }
+        },
+        "sensor": {
+            "amount_memory_used": {
+                "name": "Amount of memory used"
+            },
+            "battery_time_remaining": {
+                "name": "Battery time remaining"
+            },
+            "boot_time": {
+                "name": "Boot time"
+            },
+            "cpu_power_package": {
+                "name": "CPU package power"
+            },
+            "cpu_speed": {
+                "name": "CPU speed"
+            },
+            "cpu_temperature": {
+                "name": "CPU temperature"
+            },
+            "cpu_voltage": {
+                "name": "CPU voltage"
+            },
+            "displays_connected": {
+                "name": "Displays connected"
+            },
+            "kernel": {
+                "name": "Kernel"
+            },
+            "load": {
+                "name": "Load"
+            },
+            "memory_free": {
+                "name": "Memory free"
+            },
+            "memory_used": {
+                "name": "Memory used"
+            },
+            "os": {
+                "name": "Operating system"
+            },
+            "processes": {
+                "name": "Processes"
+            },
+            "version": {
+                "name": "Version"
+            },
+            "version_latest": {
+                "name": "Latest version"
+            }
+        }
+    },
+    "exceptions": {
+        "authentication_failed": {
+            "message": "Authentication failed for {title} ({host})"
+        },
+        "connection_failed": {
+            "message": "A connection error occurred for {title} ({host})"
+        },
+        "device_not_found": {
+            "message": "Could not find device {device}"
+        },
+        "no_data_received": {
+            "message": "No data received from {host}"
+        },
+        "process_not_found": {
+            "message": "Could not find process with id {id}."
+        },
+        "timeout": {
+            "message": "A timeout occurred for {title} ({host})"
+        },
+        "unsupported_version": {
+            "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
+        }
+    },
+    "issues": {
+        "unsupported_version": {
+            "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version.",
+            "title": "System Bridge Upgrade Required"
+        }
+    },
+    "services": {
+        "get_process_by_id": {
+            "description": "Gets a process by the ID.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to talk to.",
+                    "name": "Bridge"
+                },
+                "id": {
+                    "description": "ID of the process to get.",
+                    "name": "ID"
+                }
+            },
+            "name": "Get process by ID"
+        },
+        "get_processes_by_name": {
+            "description": "Gets a list of processes by the name.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to talk to.",
+                    "name": "Bridge"
+                },
+                "name": {
+                    "description": "Name of the process to get.",
+                    "name": "Name"
+                }
+            },
+            "name": "Get processes by name"
+        },
+        "open_path": {
+            "description": "Opens a file on the server using the default application.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to talk to.",
+                    "name": "Bridge"
+                },
+                "path": {
+                    "description": "Path to open.",
+                    "name": "Path"
+                }
+            },
+            "name": "Open path"
+        },
+        "open_url": {
+            "description": "Opens a URL on the server using the default application.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to talk to.",
+                    "name": "Bridge"
+                },
+                "url": {
+                    "description": "URL to open.",
+                    "name": "URL"
+                }
+            },
+            "name": "Open URL"
+        },
+        "power_command": {
+            "description": "Sends a power command to the system.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to send the command to.",
+                    "name": "Bridge"
+                },
+                "command": {
+                    "description": "Command to call.",
+                    "name": "Command"
+                }
+            },
+            "name": "Power command"
+        },
+        "send_keypress": {
+            "description": "Sends a keyboard keypress.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to send the command to.",
+                    "name": "Bridge"
+                },
+                "key": {
+                    "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys.",
+                    "name": "Key"
+                }
+            },
+            "name": "Send keyboard keypress"
+        },
+        "send_text": {
+            "description": "Sends text for the server to type.",
+            "fields": {
+                "bridge": {
+                    "description": "The server to send the command to.",
+                    "name": "Bridge"
+                },
+                "text": {
+                    "description": "Text to type.",
+                    "name": "Text"
+                }
+            },
+            "name": "Send keyboard text"
+        }
+    }
+}

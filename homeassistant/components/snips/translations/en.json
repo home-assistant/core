@@ -1,0 +1,68 @@
+{
+    "services": {
+        "feedback_off": {
+            "description": "Turns feedback sounds off.",
+            "fields": {
+                "site_id": {
+                    "description": "Site to turn sounds on, defaults to all sites.",
+                    "name": "Site ID"
+                }
+            },
+            "name": "Feedback off"
+        },
+        "feedback_on": {
+            "description": "Turns feedback sounds on.",
+            "fields": {
+                "site_id": {
+                    "description": "Site to turn sounds on, defaults to all sites.",
+                    "name": "Site ID"
+                }
+            },
+            "name": "Feedback on"
+        },
+        "say": {
+            "description": "Sends a TTS message to Snips.",
+            "fields": {
+                "custom_data": {
+                    "description": "Custom data that will be included with all messages in this session.",
+                    "name": "Custom data"
+                },
+                "site_id": {
+                    "description": "Site to use to start session, defaults to default.",
+                    "name": "Site ID"
+                },
+                "text": {
+                    "description": "Text to say.",
+                    "name": "Text"
+                }
+            },
+            "name": "Say"
+        },
+        "say_action": {
+            "description": "Sends a TTS message to Snips to listen for a response.",
+            "fields": {
+                "can_be_enqueued": {
+                    "description": "If True, session waits for an open session to end, if False session is dropped if one is running.",
+                    "name": "Can be enqueued"
+                },
+                "custom_data": {
+                    "description": "Custom data that will be included with all messages in this session.",
+                    "name": "Custom data"
+                },
+                "intent_filter": {
+                    "description": "Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.",
+                    "name": "Intent filter"
+                },
+                "site_id": {
+                    "description": "Site to use to start session, defaults to default.",
+                    "name": "Site ID"
+                },
+                "text": {
+                    "description": "Text to say.",
+                    "name": "Text"
+                }
+            },
+            "name": "Say action"
+        }
+    }
+}

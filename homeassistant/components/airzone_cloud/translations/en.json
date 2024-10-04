@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Installation",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "air_demand": {
+                "name": "Air demand"
+            },
+            "air_quality_active": {
+                "name": "Air Quality active"
+            },
+            "floor_demand": {
+                "name": "Floor demand"
+            }
+        },
+        "select": {
+            "air_quality": {
+                "name": "Air Quality mode",
+                "state": {
+                    "auto": "Auto",
+                    "off": "Off",
+                    "on": "On"
+                }
+            },
+            "modes": {
+                "name": "Mode",
+                "state": {
+                    "cool": "Cool",
+                    "dry": "Dry",
+                    "fan": "Fan only",
+                    "heat": "Heat",
+                    "heat_cool": "Heat/Cool",
+                    "stop": "Stop"
+                }
+            }
+        },
+        "sensor": {
+            "cpu_usage": {
+                "name": "CPU usage"
+            },
+            "free_memory": {
+                "name": "Free memory"
+            },
+            "indoor_exchanger_temp": {
+                "name": "Indoor exchanger temperature"
+            },
+            "indoor_return_temp": {
+                "name": "Indoor return temperature"
+            },
+            "indoor_work_temp": {
+                "name": "Indoor working temperature"
+            },
+            "outdoor_condenser_press": {
+                "name": "Outdoor condenser pressure"
+            },
+            "outdoor_discharge_temp": {
+                "name": "Outdoor discharge temperature"
+            },
+            "outdoor_electric_current": {
+                "name": "Outdoor electric current"
+            },
+            "outdoor_evaporator_press": {
+                "name": "Outdoor evaporator pressure"
+            },
+            "outdoor_exchanger_temp": {
+                "name": "Outdoor exchanger temperature"
+            },
+            "outdoor_temp": {
+                "name": "Outdoor temperature"
+            },
+            "thermostat_coverage": {
+                "name": "Signal percentage"
+            }
+        }
+    }
+}

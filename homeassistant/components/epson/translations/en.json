@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "connection_type": "Connection type",
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "data_description": {
+                    "host": "The hostname, IP address or serial port of your Epson projector."
+                }
+            }
+        }
+    },
+    "selector": {
+        "connection_type": {
+            "options": {
+                "http": "HTTP",
+                "serial": "Serial"
+            }
+        }
+    },
+    "services": {
+        "select_cmode": {
+            "description": "Selects color mode of Epson projector.",
+            "fields": {
+                "cmode": {
+                    "description": "Name of Cmode.",
+                    "name": "Color mode"
+                }
+            },
+            "name": "Select color mode"
+        }
+    }
+}

@@ -1,0 +1,187 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+            "ipv6_not_supported": "IPv6 is not supported.",
+            "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
+            "reauth_successful": "Re-authentication was successful",
+            "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "custom_port_not_supported": "Gen1 device does not support custom port.",
+            "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+            "invalid_auth": "Invalid authentication",
+            "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Shelly device to connect to.",
+                    "port": "The TCP port of the Shelly device to connect to (Gen2+)."
+                },
+                "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the Shelly device to connect to.",
+                    "port": "The TCP port of the Shelly device to connect to (Gen2+)."
+                },
+                "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Button",
+            "button1": "First button",
+            "button2": "Second button",
+            "button3": "Third button",
+            "button4": "Fourth button"
+        },
+        "trigger_type": {
+            "btn_down": "{subtype} button down",
+            "btn_up": "{subtype} button up",
+            "double": "{subtype} double clicked",
+            "double_push": "{subtype} double push",
+            "long": "{subtype} long clicked",
+            "long_push": "{subtype} long push",
+            "long_single": "{subtype} long clicked and then single clicked",
+            "single": "{subtype} single clicked",
+            "single_long": "{subtype} single clicked and then long clicked",
+            "single_push": "{subtype} single push",
+            "triple": "{subtype} triple clicked",
+            "triple_push": "{subtype} triple push"
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "gas": {
+                "state_attributes": {
+                    "detected": {
+                        "state": {
+                            "heavy": "Heavy",
+                            "mild": "Mild",
+                            "none": "None",
+                            "test": "Test",
+                            "unknown": "Unknown"
+                        }
+                    }
+                }
+            }
+        },
+        "event": {
+            "input": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "btn_down": "Button down",
+                            "btn_up": "Button up",
+                            "double": "Double push",
+                            "double_push": "Double push",
+                            "long": "Long push",
+                            "long_push": "Long push",
+                            "long_single": "Long push and then short push",
+                            "single": "Single push",
+                            "single_long": "Short push and then long push",
+                            "single_push": "Single push",
+                            "triple": "Triple push",
+                            "triple_push": "Triple push"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "operation": {
+                "state": {
+                    "fault": "Fault",
+                    "normal": "Normal",
+                    "unknown": "Unknown",
+                    "warmup": "Warm-up"
+                },
+                "state_attributes": {
+                    "self_test": {
+                        "state": {
+                            "completed": "Completed",
+                            "not_completed": "Not completed",
+                            "pending": "Pending",
+                            "running": "Running"
+                        }
+                    }
+                }
+            },
+            "valve_status": {
+                "state": {
+                    "checking": "Checking",
+                    "closed": "Closed",
+                    "closing": "Closing",
+                    "failure": "Failure",
+                    "opened": "Opened",
+                    "opening": "Opening",
+                    "unknown": "Unknown"
+                }
+            }
+        }
+    },
+    "issues": {
+        "device_not_calibrated": {
+            "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
+            "title": "Shelly device {device_name} is not calibrated"
+        },
+        "push_update_failure": {
+            "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration.",
+            "title": "Shelly device {device_name} push update failure"
+        },
+        "unsupported_firmware": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
+            "title": "Unsupported firmware for device {device_name}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth scanner mode"
+                },
+                "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices."
+            }
+        }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Active",
+                "disabled": "Disabled",
+                "passive": "Passive"
+            }
+        }
+    }
+}

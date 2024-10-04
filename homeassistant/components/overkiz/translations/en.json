@@ -1,0 +1,177 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "certificate_verify_failed": "Cannot connect to host, certificate verify failed.",
+            "developer_mode_disabled": "Developer Mode disabled. Activate the Developer Mode of your Somfy TaHoma box first.",
+            "invalid_auth": "Invalid authentication",
+            "no_such_token": "Cannot create a token for this gateway. Please confirm if the account is linked to this gateway.",
+            "server_in_maintenance": "Server is down for maintenance",
+            "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
+            "too_many_requests": "Too many requests, try again later",
+            "unknown": "Unexpected error",
+            "unsupported_hardware": "Your {unsupported_device} hardware is not supported by this integration."
+        },
+        "flow_title": "Gateway: {gateway_id}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password of your cloud account (app).",
+                    "username": "The username of your cloud account (app)."
+                },
+                "description": "Enter your application credentials."
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Overkiz hub.",
+                    "password": "The password of your cloud account (app).",
+                    "username": "The username of your cloud account (app).",
+                    "verify_ssl": "Verify the SSL certificate. Select this only if you are connecting via the hostname."
+                },
+                "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network.\n\nAfter activation, enter your application credentials and change the host to include your Gateway PIN or enter the IP address of your gateway."
+            },
+            "local_or_cloud": {
+                "data": {
+                    "api_type": "API type"
+                },
+                "data_description": {
+                    "api_type": "Local API is only supported by TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are **not** available via the local API."
+                },
+                "description": "Choose how you want to connect to your gateway."
+            },
+            "user": {
+                "data": {
+                    "hub": "Server"
+                },
+                "data_description": {
+                    "hub": "Select the mobile app that you use to control your devices."
+                },
+                "description": "Select your server. The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo) and Atlantic (Cozytouch)."
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "overkiz": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "away": "Away",
+                            "bypass_boost": "Bypass boost",
+                            "home_boost": "Home boost",
+                            "kitchen_boost": "Kitchen boost"
+                        }
+                    },
+                    "preset_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "comfort-1": "Comfort 1",
+                            "comfort-2": "Comfort 2",
+                            "drying": "Drying",
+                            "external": "External",
+                            "freeze": "Freeze",
+                            "frost_protection": "Frost protection",
+                            "manual": "Manual",
+                            "night": "Night",
+                            "prog": "Prog"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "Highest",
+                    "standard": "Standard"
+                }
+            },
+            "open_closed_partial": {
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "partial": "Partial"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "pedestrian": "Pedestrian"
+                }
+            }
+        },
+        "sensor": {
+            "battery": {
+                "state": {
+                    "full": "Full",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "normal": "Normal",
+                    "verylow": "Very low"
+                }
+            },
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "Good",
+                    "low": "Low",
+                    "normal": "Normal",
+                    "verylow": "Very low"
+                }
+            },
+            "priority_lock_originator": {
+                "state": {
+                    "external_gateway": "External gateway",
+                    "local_user": "Local user",
+                    "lsc": "LSC",
+                    "myself": "Myself",
+                    "rain": "Rain",
+                    "saac": "SAAC",
+                    "security": "Security",
+                    "sfc": "SFC",
+                    "temperature": "Temperature",
+                    "timer": "Timer",
+                    "ups": "UPS",
+                    "user": "User",
+                    "wind": "Wind"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "dead": "Dead",
+                    "low_battery": "Low battery",
+                    "maintenance_required": "Maintenance required",
+                    "no_defect": "No defect"
+                }
+            },
+            "sensor_room": {
+                "state": {
+                    "clean": "Clean",
+                    "dirty": "Dirty"
+                }
+            },
+            "three_way_handle_direction": {
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "tilt": "Tilt"
+                }
+            }
+        }
+    }
+}

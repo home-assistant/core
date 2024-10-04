@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "ssl_configured_without_configured_urls": {
+            "description": "Home Assistant detected that SSL has been set up on your instance, however, no custom external internet URL has been set.\n\nThis may result in unexpected behavior. Text-to-speech may fail, and integrations may not be able to connect back to your instance correctly.\n\nTo address this issue, go to Settings > System > Network; under the \"Home Assistant URL\" section, configure your new \"Internet\" and \"Local network\" addresses that match your new SSL configuration.",
+            "title": "SSL is configured without an external URL or internal URL"
+        }
+    }
+}
