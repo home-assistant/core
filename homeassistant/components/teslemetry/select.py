@@ -144,7 +144,7 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         level = self._attr_options.index(option)
         # AC must be on to turn on seat heater
@@ -189,7 +189,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         level = self._attr_options.index(option)
         # AC must be on to turn on steering wheel heater
@@ -226,7 +226,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.operation(option))
         self._attr_current_option = option
         self.async_write_ha_state()
@@ -256,7 +256,7 @@ class TeslemetryExportRuleSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
             self.api.grid_import_export(customer_preferred_export_rule=option)
         )

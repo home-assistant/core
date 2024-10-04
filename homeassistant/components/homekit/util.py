@@ -114,6 +114,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+INVALID_END_CHARS = "-_"
 MAX_VERSION_PART = 2**32 - 1
 
 
@@ -414,7 +415,11 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     # likely isn't a problem
     if name is None:
         return "None"  # None crashes apple watches
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
+    return (
+        name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+        .lstrip(INVALID_END_CHARS)[:MAX_NAME_LENGTH]
+        .rstrip(INVALID_END_CHARS)
+    )
 
 
 def temperature_to_homekit(temperature: float, unit: str) -> float:

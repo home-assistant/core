@@ -1,0 +1,10 @@
+{
+  "domain": "nyt_games",
+  "name": "NYT Games",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nyt_games",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["nyt_games==0.4.2"]
+}

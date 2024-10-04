@@ -152,6 +152,15 @@
       "hotwater_min_temperature": {
         "name": "DHW min temperature"
       },
+      "dhw_storage_temperature": {
+        "name": "DHW storage temperature"
+      },
+      "dhw_storage_top_temperature": {
+        "name": "DHW storage top temperature"
+      },
+      "dhw_storage_bottom_temperature": {
+        "name": "DHW storage bottom temperature"
+      },
       "hotwater_gas_consumption_today": {
         "name": "DHW gas consumption today"
       },

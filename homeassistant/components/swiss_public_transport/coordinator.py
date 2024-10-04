@@ -34,6 +34,7 @@ class DataConnection(TypedDict):
     train_number: str
     transfers: int
     delay: int
+    line: str
 
 
 def calculate_duration_in_seconds(duration_text: str) -> int | None:
@@ -104,6 +105,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 destination=self._opendata.to_name,
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),
                 delay=connections[i]["delay"],
+                line=connections[i]["line"],
             )
             for i in range(limit)
             if len(connections) > i and connections[i] is not None

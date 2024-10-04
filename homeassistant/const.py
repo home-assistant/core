@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -282,6 +282,7 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGER: Final = "trigger"
 CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
@@ -487,14 +488,38 @@ STATE_ALARM_PENDING: Final = "pending"
 STATE_ALARM_ARMING: Final = "arming"
 STATE_ALARM_DISARMING: Final = "disarming"
 STATE_ALARM_TRIGGERED: Final = "triggered"
-STATE_LOCKED: Final = "locked"
-STATE_UNLOCKED: Final = "unlocked"
-STATE_LOCKING: Final = "locking"
-STATE_UNLOCKING: Final = "unlocking"
-STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+
+# #### LOCK STATES ####
+# STATE_* below are deprecated as of 2024.10
+# use the LockState enum instead.
+_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
+    "locked",
+    "LockState.LOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
+    "unlocked",
+    "LockState.UNLOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
+    "locking",
+    "LockState.LOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
+    "unlocking",
+    "LockState.UNLOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
+    "jammed",
+    "LockState.JAMMED",
+    "2025.10",
+)
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -871,6 +896,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
+    NAUTICAL_MILES = "nmi"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(
@@ -1273,10 +1299,12 @@ class UnitOfSpeed(StrEnum):
 
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
+    INCHES_PER_SECOND = "in/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
+    MILLIMETERS_PER_SECOND = "mm/s"
 
 
 _DEPRECATED_SPEED_FEET_PER_SECOND: Final = DeprecatedConstantEnum(
