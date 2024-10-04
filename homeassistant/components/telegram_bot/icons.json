@@ -36,6 +36,9 @@
     "edit_replymarkup": {
       "service": "mdi:pencil"
     },
+    "set_message_reaction": {
+      "service": "mdi:emoticon"
+    },
     "answer_callback_query": {
       "service": "mdi:check"
     },

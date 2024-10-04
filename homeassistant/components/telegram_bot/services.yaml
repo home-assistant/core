@@ -683,6 +683,28 @@ edit_replymarkup:
       selector:
         object:
 
+set_message_reaction:
+  fields:
+    message_id:
+      required: true
+      example: 54321
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    reaction:
+      required: true
+      example: ["👍"]
+      selector:
+        object:
+    is_big:
+      required: false
+      selector:
+        boolean:
+
 answer_callback_query:
   fields:
     message:

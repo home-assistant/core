@@ -636,6 +636,28 @@
         }
       }
     },
+    "set_message_reaction": {
+      "name": "Set message reaction",
+      "description": "Sets the bot's emoji reaction to a message.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "Id of the message to react to."
+        },
+        "chat_id": {
+          "name": "Chat ID",
+          "description": "Id of the chat containing the message."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "Emoji reaction to use."
+        },
+        "is_big": {
+          "name": "Is big",
+          "description": "Whether the reaction animation should be big, defaults to False."
+        }
+      }
+    },
     "answer_callback_query": {
       "name": "Answer callback query",
       "description": "Responds to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.",
