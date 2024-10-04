@@ -39,18 +39,18 @@ _LOGGER = logging.getLogger(__name__)
 class MfaFlowManager(data_entry_flow.FlowManager):
     """Manage multi factor authentication flows."""
 
-    async def async_create_flow(  # type: ignore[override]
+    async def async_create_flow(
         self,
         handler_key: str,
         *,
-        context: dict[str, Any],
-        data: dict[str, Any],
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> data_entry_flow.FlowHandler:
         """Create a setup flow. handler is a mfa module."""
         mfa_module = self.hass.auth.get_auth_mfa_module(handler_key)
         if mfa_module is None:
             raise ValueError(f"Mfa module {handler_key} is not found")
-
+        assert data is not None
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
 

@@ -308,7 +308,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         handler: _HandlerT,
         *,
         context: dict[str, Any] | None = None,
-        data: Any = None,
+        data: dict[str, Any] | None = None,
     ) -> _FlowResultT:
         """Start a data entry flow."""
         if context is None:
