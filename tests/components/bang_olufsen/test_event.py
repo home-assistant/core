@@ -32,7 +32,6 @@ async def test_button_event_creation(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check that all device button entities are available
     # Add Button Event entity ids
     entity_ids = [
         f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
@@ -44,6 +43,31 @@ async def test_button_event_creation(
     # Check that the entities are available
     for entity_id in entity_ids:
         entity_registry.async_get(entity_id)
+
+
+async def test_button_event_creation_beoconnect_core(
+    hass: HomeAssistant,
+    mock_config_entry_core: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test button event entities are not created when using a Beoconnect Core."""
+
+    # Load entry
+    mock_config_entry_core.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
+
+    # Add Button Event entity ids
+    entity_ids = [
+        f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
+            "preset", "preset_"
+        )
+        for button_type in DEVICE_BUTTONS
+    ]
+
+    # Check that the entities are unavailable
+    for entity_id in entity_ids:
+        assert not entity_registry.async_get(entity_id)
 
 
 async def test_button(
