@@ -3,7 +3,6 @@
 from binascii import unhexlify
 from http import HTTPStatus
 import json
-from typing import Any
 from unittest.mock import patch
 
 from nacl.encoding import Base64Encoder
@@ -69,9 +68,9 @@ async def test_reregistration(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    create_registrations: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test that reregistrations overwrite the current entry."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     extra_config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="io.homeassistant.mobile_app_test-mock-device-id",
@@ -91,13 +90,34 @@ async def test_reregistration(
         },
     )
     extra_config_entry.add_to_hass(hass)
+    second_extra_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="io.homeassistant.mobile_app_test-mock-device-id",
+        data={
+            "device_id": "mock-device-id",
+            "app_data": {"foo": "bar"},
+            "app_id": "io.homeassistant.mobile_app_test",
+            "app_name": "Mobile App Tests",
+            "app_version": "1.0.0",
+            "device_name": "Test 1",
+            "manufacturer": "mobile_app",
+            "model": "Test",
+            "os_name": "Linux",
+            "os_version": "1.0",
+            "supports_encryption": False,
+            "webhook_id": "mock-webhook-id2",
+        },
+    )
+    second_extra_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(extra_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(second_extra_config_entry.entry_id)
 
     api_client = await hass_client()
 
     entries = hass.config_entries.async_entries(DOMAIN)
 
-    assert len(entries) == 3
-    config_entry = entries[1]
+    assert len(entries) == 2
+    config_entry = entries[0]
 
     assert config_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
     assert config_entry.state == ConfigEntryState.LOADED
@@ -111,13 +131,13 @@ async def test_reregistration(
     assert CONF_WEBHOOK_ID in register_json
     assert CONF_SECRET in register_json
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state == ConfigEntryState.LOADED
 
     entries = hass.config_entries.async_entries(DOMAIN)
 
-    assert len(entries) == 3
+    assert len(entries) == 2
 
-    new_entry = entries[1]
+    new_entry = entries[0]
     assert new_entry.unique_id == "io.homeassistant.mobile_app_test-mock-device-id"
     assert new_entry.entry_id != config_entry.entry_id
     assert new_entry.entry_id != extra_config_entry.entry_id
