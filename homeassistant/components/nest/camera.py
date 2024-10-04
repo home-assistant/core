@@ -21,6 +21,7 @@ from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
+from homeassistant.components.camera.webrtc import WebRTCClientConfiguration
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -210,3 +211,7 @@ class NestCamera(Camera):
         except ApiException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
         return stream.answer_sdp
+
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration adjustable per integration."""
+        return WebRTCClientConfiguration(data_channel="dataSendChannel")

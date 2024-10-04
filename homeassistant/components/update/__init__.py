@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, lru_cache
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

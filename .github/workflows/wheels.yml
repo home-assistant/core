@@ -219,7 +219,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_old-cython.txt"
@@ -234,7 +234,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
@@ -248,7 +248,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
@@ -262,7 +262,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"

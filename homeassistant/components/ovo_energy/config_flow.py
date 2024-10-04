@@ -90,7 +90,9 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_ACCOUNT):
             self.account = user_input[CONF_ACCOUNT]
 
-        self.context["title_placeholders"] = {CONF_USERNAME: self.username}
+        if self.username:
+            # If we have a username, use it as flow title
+            self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
             client = OVOEnergy(

@@ -14,12 +14,12 @@ from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (

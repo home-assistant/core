@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -40,11 +39,13 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     MockConfigEntry,
@@ -512,6 +513,41 @@ async def test_remove_entry(
     assert not entity_entry_list
 
 
+async def test_remove_entry_non_unique_unique_id(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we can remove entry with colliding unique_id."""
+    entry_1 = MockConfigEntry(
+        domain="test_other", entry_id="test1", unique_id="not_unique"
+    )
+    entry_1.add_to_manager(manager)
+    entry_2 = MockConfigEntry(
+        domain="test_other", entry_id="test2", unique_id="not_unique"
+    )
+    entry_2.add_to_manager(manager)
+    entry_3 = MockConfigEntry(
+        domain="test_other", entry_id="test3", unique_id="not_unique"
+    )
+    entry_3.add_to_manager(manager)
+
+    # Check all config entries exist
+    assert manager.async_entry_ids() == [
+        "test1",
+        "test2",
+        "test3",
+    ]
+
+    # Remove entries
+    assert await manager.async_remove("test1") == {"require_restart": False}
+    await hass.async_block_till_done()
+    assert await manager.async_remove("test2") == {"require_restart": False}
+    await hass.async_block_till_done()
+    assert await manager.async_remove("test3") == {"require_restart": False}
+    await hass.async_block_till_done()
+
+
 async def test_remove_entry_cancels_reauth(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -966,7 +1002,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         if (
             key.startswith("__")
             or callable(func)
-            or type(func) in (cached_property, property)
+            or type(func).__name__ in ("cached_property", "property")
         ):
             continue
         assert key in dict_repr or key in excluded_from_dict
@@ -6383,6 +6419,156 @@ async def test_async_has_matching_flow_not_implemented(
         manager.flow.async_has_matching_flow(flow)
 
 
+async def test_get_reauth_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test _get_context_entry behavior."""
+    entry = MockConfigEntry(
+        title="test_title",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            try:
+                entry = self._get_reauth_entry()
+            except ValueError as err:
+                reason = str(err)
+            except config_entries.UnknownEntry:
+                reason = "Entry not found"
+            else:
+                reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reauth_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"{reason}: {entry_id}"
+            return self.async_abort(reason=reason)
+
+    # A reauth flow finds the config entry from context
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass)
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
+
+    # The config entry is removed before the reauth flow is aborted
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass, context={"entry_id": "01JRemoved"})
+        assert result["reason"] == "Entry not found: 01JRemoved"
+
+    # A reconfigure flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["reason"] == "Source is reconfigure, expected reauth: -"
+
+    # A user flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["reason"] == "Source is user, expected reauth: -"
+
+
+async def test_get_reconfigure_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test _get_context_entry behavior."""
+    entry = MockConfigEntry(
+        title="test_title",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            try:
+                entry = self._get_reconfigure_entry()
+            except ValueError as err:
+                reason = str(err)
+            except config_entries.UnknownEntry:
+                reason = "Entry not found"
+            else:
+                reason = f"Found entry {entry.title}"
+            try:
+                entry_id = self._reconfigure_entry_id
+            except ValueError:
+                reason = f"{reason}: -"
+            else:
+                reason = f"{reason}: {entry_id}"
+            return self.async_abort(reason=reason)
+
+    # A reauth flow does not have access to the config entry from context
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reauth_flow(hass)
+        assert result["reason"] == "Source is reauth, expected reconfigure: -"
+
+    # A reconfigure flow finds the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["reason"] == "Found entry test_title: 01J915Q6T9F6G5V0QJX6HBC94T"
+
+    # The entry_id no longer exists
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test",
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": "01JRemoved",
+            },
+        )
+        assert result["reason"] == "Entry not found: 01JRemoved"
+
+    # A user flow does not have access to the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["reason"] == "Source is user, expected reconfigure: -"
+
+
 async def test_reauth_helper_alignment(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -6440,3 +6626,48 @@ async def test_reauth_helper_alignment(
     # Ensure context and init data are aligned
     assert helper_flow_context == reauth_flow_context
     assert helper_flow_init_data == reauth_flow_init_data
+
+
+def test_state_not_stored_in_storage() -> None:
+    """Test that state is not stored in storage.
+
+    Verify we don't start accidentally storing state in storage.
+    """
+    entry = MockConfigEntry(domain="test")
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    for key in config_entries.STATE_KEYS:
+        assert key not in loaded
+
+
+def test_storage_cache_is_cleared_on_entry_update(hass: HomeAssistant) -> None:
+    """Test that the storage cache is cleared when an entry is updated."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    hass.config_entries.async_update_entry(entry, data={"new": "data"})
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    assert "new" in loaded["data"]
+
+
+async def test_storage_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> None:
+    """Test that the storage cache is cleared when an entry is disabled."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    loaded = json_loads(json_dumps(entry.as_storage_fragment))
+    assert loaded["disabled_by"] == "user"
+
+
+async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> None:
+    """Test that the state cache is cleared when an entry is disabled."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    _ = entry.as_storage_fragment
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    loaded = json_loads(json_dumps(entry.as_json_fragment))
+    assert loaded["disabled_by"] == "user"

@@ -235,9 +235,10 @@ async def test_reauthentication(
         spotify_mock.return_value.current_user.return_value = {"id": "frenck"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["data"]["auth_implementation"] == "cred"
-    result["data"]["token"].pop("expires_at")
-    assert result["data"]["token"] == {
+    updated_data = old_entry.data.copy()
+    assert updated_data["auth_implementation"] == "cred"
+    updated_data["token"].pop("expires_at")
+    assert updated_data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
         "type": "Bearer",
@@ -292,13 +293,3 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
-
-
-async def test_abort_if_no_reauth_entry(hass: HomeAssistant) -> None:
-    """Check flow aborts when no entry is known when entring reauth confirmation."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth_confirm"}
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_account_mismatch"
