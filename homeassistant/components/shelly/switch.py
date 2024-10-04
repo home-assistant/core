@@ -32,7 +32,7 @@ from .entity import (
     async_setup_rpc_attribute_entities,
 )
 from .utils import (
-    async_remove_orphaned_virtual_entities,
+    async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
     get_rpc_key_ids,
@@ -181,13 +181,13 @@ def async_setup_rpc_entry(
     virtual_switch_ids = get_virtual_component_ids(
         coordinator.device.config, SWITCH_PLATFORM
     )
-    async_remove_orphaned_virtual_entities(
+    async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
         SWITCH_PLATFORM,
-        "boolean",
         virtual_switch_ids,
+        "boolean",
     )
 
     if not switch_ids:
