@@ -40,6 +40,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
     SUPPORTED_COMPONENTS,
+    MqttDiscoveryType,
 )
 from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
@@ -93,10 +94,7 @@ def async_log_discovery_origin_info(
     """Log information about the discovery and origin."""
     # We only log origin info once per device discovery
     if not _LOGGER.isEnabledFor(level):
-        # bail early if logging is disabled
-        return
-    if discovery_payload.device_discovery:
-        _LOGGER.log(level, message)
+        # bail out early if logging is disabled
         return
     if CONF_ORIGIN not in discovery_payload:
         _LOGGER.log(level, message)
@@ -181,7 +179,11 @@ def _replace_topic_base(discovery_payload: dict[str, Any]) -> None:
 def _generate_device_cleanup_config(
     hass: HomeAssistant, object_id: str, node_id: str | None
 ) -> dict[str, Any]:
-    """Generate a cleanup message on device cleanup."""
+    """Generate a cleanup message on device cleanup.
+
+    If an empty payload is received for a device,
+    we forward an emppty payload for all previously discovered components.
+    """
     mqtt_data = hass.data[DATA_MQTT]
     device_node_id: str = f"{node_id} {object_id}" if node_id else object_id
     config: dict[str, Any] = {CONF_DEVICE: {}, CONF_COMPONENTS: {}}
@@ -205,7 +207,13 @@ def _parse_device_payload(
     object_id: str,
     node_id: str | None,
 ) -> dict[str, Any]:
-    """Parse a device discovery payload."""
+    """Parse a device discovery payload.
+
+    The device discovery payload is translated info the config payloads for every single
+    component inside the device based configuration.
+    An empty payload is translated in a cleanup, which forwards an empty payload to all
+    removed components.
+    """
     device_payload: dict[str, Any] = {}
     if payload == "":
         if not (
@@ -257,7 +265,22 @@ def _valid_origin_info(discovery_payload: MQTTDiscoveryPayload) -> bool:
 def _merge_common_options(
     component_config: MQTTDiscoveryPayload, device_config: dict[str, Any]
 ) -> None:
-    """Merge common options with the component config options."""
+    """Merge common options with the component config options.
+
+    Common options are:
+        CONF_AVAILABILITY,
+        CONF_AVAILABILITY_MODE,
+        CONF_AVAILABILITY_TEMPLATE,
+        CONF_AVAILABILITY_TOPIC,
+        CONF_COMMAND_TOPIC,
+        CONF_MIGRATE_DISCOVERY,
+        CONF_PAYLOAD_AVAILABLE,
+        CONF_PAYLOAD_NOT_AVAILABLE,
+        CONF_STATE_TOPIC,
+    Common options in the body of the device based config are inherited into
+    the component. Unless the option is explicitly specified at component level,
+    in that case the option at component level will override the common option.
+    """
     for option in SHARED_OPTIONS:
         if option in device_config and option not in component_config:
             component_config[option] = device_config.get(option)
@@ -306,7 +329,7 @@ async def async_start(  # noqa: C901
                 _LOGGER.warning(
                     (
                         "Received message on illegal discovery topic '%s'. The topic"
-                        " contains not allowed characters. For more information see "
+                        " contains non allowed characters. For more information see "
                         "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
                     ),
                     topic,
@@ -318,7 +341,7 @@ async def async_start(  # noqa: C901
         discovered_components: list[MqttComponentConfig] = []
         if component == CONF_DEVICE:
             # Process device based discovery message
-            # and regenate cleanup config.
+            # and regenerate cleanup config.
             device_discovery_payload = _parse_device_payload(
                 hass, payload, object_id, node_id
             )
@@ -482,14 +505,22 @@ async def async_start(  # noqa: C901
             0,
             job_type=HassJobType.Callback,
         )
+        # Subscribe first to device discovery config wildcard topics,
+        # and then subscribe to all supported single component config wildcard topics.
         for topic in chain(
             (
+                f"{discovery_topic}/device/+/config",
+                f"{discovery_topic}/device/+/+/config",
+            ),
+            (
                 f"{discovery_topic}/{component}/+/config"
-                for component in SUPPORTED_COMPONENTS
+                for component, discovery_type in SUPPORTED_COMPONENTS.items()
+                if discovery_type == MqttDiscoveryType.SINGLE_COMPONENT
             ),
             (
                 f"{discovery_topic}/{component}/+/+/config"
-                for component in SUPPORTED_COMPONENTS
+                for component, discovery_type in SUPPORTED_COMPONENTS.items()
+                if discovery_type == MqttDiscoveryType.SINGLE_COMPONENT
             ),
         )
     ]
