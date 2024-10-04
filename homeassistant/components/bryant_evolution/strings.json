@@ -1,6 +1,11 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "data": {
+          "filename": "[%key:component::bryant_evolution::config::step::user::data::filename%]"
+        }
+      },
       "user": {
         "data": {
           "filename": "Serial port filename"

@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from aiohasupervisor import SupervisorError
 from matter_server.client.exceptions import (
     CannotConnect,
+    NotConnected,
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
@@ -64,6 +65,7 @@ async def test_entry_setup_unload(
     await hass.async_block_till_done()
 
     assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
@@ -104,6 +106,26 @@ async def test_connect_failed(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_set_default_fabric_label_failed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test failure during client connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    matter_client.set_default_fabric_label.side_effect = NotConnected()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

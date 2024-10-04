@@ -6,10 +6,7 @@ from typing import Any
 import uuid
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.automation.config import (
-    PLATFORM_SCHEMA,
-    async_validate_config_item,
-)
+from homeassistant.components.automation.config import async_validate_config_item
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -48,7 +45,6 @@ def async_setup(hass: HomeAssistant) -> bool:
             "config",
             AUTOMATION_CONFIG_PATH,
             cv.string,
-            PLATFORM_SCHEMA,
             post_write_hook=hook,
             data_validator=async_validate_config_item,
         )
