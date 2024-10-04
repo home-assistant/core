@@ -8,7 +8,7 @@ import itertools
 import logging
 from typing import Any
 
-from propcache import cached_property
+from propcache import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -302,7 +302,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @cached_property
+            @under_cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
