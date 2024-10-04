@@ -12,8 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
+class VeraSwitch(VeraEntity[veraApi.VeraSwitch], SwitchEntity):
     """Representation of a Vera Switch."""
 
     _attr_is_on = False
@@ -41,7 +41,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def turn_on(self, **kwargs: Any) -> None:

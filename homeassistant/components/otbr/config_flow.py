@@ -13,16 +13,12 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.hassio import (
-    HassioAPIError,
-    HassioServiceInfo,
-    async_get_addon_info,
-)
+from homeassistant.components.hassio import AddonError, AddonManager, HassioServiceInfo
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -43,6 +39,12 @@ class AlreadyConfigured(HomeAssistantError):
     """Raised when the router is already configured."""
 
 
+@callback
+def get_addon_manager(hass: HomeAssistant, slug: str) -> AddonManager:
+    """Get the add-on manager."""
+    return AddonManager(hass, _LOGGER, "OpenThread Border Router", slug)
+
+
 def _is_yellow(hass: HomeAssistant) -> bool:
     """Return True if Home Assistant is running on a Home Assistant Yellow."""
     try:
@@ -55,10 +57,11 @@ def _is_yellow(hass: HomeAssistant) -> bool:
 async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     """Return config entry title."""
     device: str | None = None
+    addon_manager = get_addon_manager(hass, discovery_info.slug)
 
-    with suppress(HassioAPIError):
-        addon_info = await async_get_addon_info(hass, discovery_info.slug)
-        device = addon_info.get("options", {}).get("device")
+    with suppress(AddonError):
+        addon_info = await addon_manager.async_get_addon_info()
+        device = addon_info.options.get("device")
 
     if _is_yellow(hass) and device == "/dev/ttyAMA1":
         return f"Home Assistant Yellow ({discovery_info.name})"

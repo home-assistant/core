@@ -8,7 +8,7 @@ from typing import Any
 
 from spotipy import Spotify
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SPOTIFY_SCOPES
@@ -21,8 +21,6 @@ class SpotifyFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -45,41 +43,39 @@ class SpotifyFlowHandler(
 
         name = data["id"] = current_user["id"]
 
-        if self.reauth_entry and self.reauth_entry.data["id"] != current_user["id"]:
-            return self.async_abort(reason="reauth_account_mismatch")
-
         if current_user.get("display_name"):
             name = current_user["display_name"]
         data["name"] = name
 
         await self.async_set_unique_id(current_user["id"])
 
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
+            if reauth_entry.data["id"] != current_user["id"]:
+                return self.async_abort(reason="reauth_account_mismatch")
+            return self.async_update_reload_and_abort(
+                reauth_entry, title=name, data=data
+            )
         return self.async_create_entry(title=name, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
-        if self.reauth_entry is None:
-            return self.async_abort(reason="reauth_account_mismatch")
-
-        if user_input is None and self.reauth_entry:
+        reauth_entry = self._get_reauth_entry()
+        if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": self.reauth_entry.data["id"]},
+                description_placeholders={"account": reauth_entry.data["id"]},
                 errors={},
             )
 
         return await self.async_step_pick_implementation(
-            user_input={"implementation": self.reauth_entry.data["auth_implementation"]}
+            user_input={"implementation": reauth_entry.data["auth_implementation"]}
         )

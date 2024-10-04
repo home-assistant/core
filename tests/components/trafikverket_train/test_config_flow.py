@@ -73,9 +73,7 @@ async def test_form(hass: HomeAssistant) -> None:
     }
     assert result["options"] == {"filter_product": None}
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["result"].unique_id == "{}-{}-{}-{}".format(
-        "stockholmc", "uppsalac", "10:00", "['mon', 'fri']"
-    )
+    assert result["result"].unique_id == "stockholmc-uppsalac-10:00-['mon', 'fri']"
 
 
 async def test_form_entry_already_exist(hass: HomeAssistant) -> None:

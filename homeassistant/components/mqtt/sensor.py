@@ -40,7 +40,7 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_OPTIONS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
@@ -260,14 +260,18 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 msg.topic,
             )
             return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_native_value = None
+            return
+
         if self._numeric_state_expected:
             if payload == "":
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-            elif payload == PAYLOAD_NONE:
-                self._attr_native_value = None
             else:
                 self._attr_native_value = payload
             return
+
         if self.options and payload not in self.options:
             _LOGGER.warning(
                 "Ignoring invalid option received on topic '%s', got '%s', allowed: %s",

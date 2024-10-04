@@ -6,12 +6,13 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import functools
-from functools import cached_property
 import linecache
 import logging
 import sys
 from types import FrameType
 from typing import Any, cast
+
+from propcache import cached_property
 
 from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
