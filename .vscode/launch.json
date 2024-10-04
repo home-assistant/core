@@ -10,7 +10,11 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config"],
+      "args": [
+        "--debug",
+        "-c",
+        "config"
+      ],
       "preLaunchTask": "Compile English translations"
     },
     {
@@ -19,7 +23,12 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config", "--skip-pip"],
+      "args": [
+        "--debug",
+        "-c",
+        "config",
+        "--skip-pip"
+      ],
       "preLaunchTask": "Compile English translations"
     },
     {
@@ -28,7 +37,10 @@
       "request": "launch",
       "module": "pytest",
       "justMyCode": false,
-      "args": ["--timeout=10", "--picked"]
+      "args": [
+        "--timeout=10",
+        "--picked"
+      ],
     },
     {
       // Debug by attaching to local Home Assistant server using Remote Python Debugger.
@@ -63,15 +75,6 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
-    },
-    {
-      "name": "Debug - Compile English translations task",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "script.translations",
-      "console": "integratedTerminal",
-      "args": ["develop", "--all"],
-      "justMyCode": false
     }
   ]
 }
