@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+from shutil import rmtree
 import sys
 
 from . import download, upload
@@ -104,7 +105,10 @@ def run_single(translations, flattened_translations, integration):
         integration_strings, flattened_translations
     )
 
-    download.DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    if download.DOWNLOAD_DIR.is_dir():
+        rmtree(str(download.DOWNLOAD_DIR))
+
+    download.DOWNLOAD_DIR.mkdir(parents=True)
 
     (download.DOWNLOAD_DIR / "en.json").write_text(
         json.dumps({"component": {integration: translations["component"][integration]}})
