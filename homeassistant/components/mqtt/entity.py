@@ -731,7 +731,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                 self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
                 _LOGGER.info(
                     "Migrating component: %s "
-                    "It is save to remove the old discovery topic %s "
+                    "It is safe to remove the old discovery topic %s "
                     "with an empty retained payload",
                     discovery_hash,
                     self._migrate_discovery,
