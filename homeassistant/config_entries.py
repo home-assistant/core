@@ -18,13 +18,14 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
-from functools import cache, cached_property
+from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
+from propcache import cached_property
 from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
@@ -1600,7 +1601,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         super().__init__()
         self._hass = hass
         self._domain_index: dict[str, list[ConfigEntry]] = {}
-        self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
+        self._domain_unique_id_index: dict[str, dict[str, list[ConfigEntry]]] = {}
 
     def values(self) -> ValuesView[ConfigEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -1643,9 +1644,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
                     report_issue,
                 )
 
-            self._domain_unique_id_index.setdefault(entry.domain, {})[
-                unique_id_hash
-            ] = entry
+            self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
+                unique_id_hash, []
+            ).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
         """Unindex an entry."""
@@ -1658,7 +1659,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             # Check type first to avoid expensive isinstance call
             if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
                 unique_id = str(entry.unique_id)  # type: ignore[unreachable]
-            del self._domain_unique_id_index[domain][unique_id]
+            self._domain_unique_id_index[domain][unique_id].remove(entry)
+            if not self._domain_unique_id_index[domain][unique_id]:
+                del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
@@ -1690,7 +1693,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         # Check type first to avoid expensive isinstance call
         if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
             unique_id = str(unique_id)  # type: ignore[unreachable]
-        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        entries = self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        if not entries:
+            return None
+        return entries[0]
 
 
 class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
