@@ -427,7 +427,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterThermostat",
-            translation_key="thermostat",
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),

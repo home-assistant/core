@@ -510,7 +510,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback", translation_key="light"
+            key="MatterColorTemperatureLightFallback"
         ),
         entity_class=MatterLight,
         required_attributes=(

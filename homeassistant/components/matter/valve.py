@@ -139,7 +139,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=ValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
-            translation_key="valve",
         ),
         entity_class=MatterValve,
         required_attributes=(
