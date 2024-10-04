@@ -54,10 +54,10 @@
       "cutting_height": {
         "name": "Cutting height"
       },
-      "my_lawn_cutting_height": {
+      "my_lawn_cutting_height_work_area": {
         "name": "My lawn cutting height"
       },
-      "work_area_cutting_height": {
+      "work_area_cutting_height_work_area": {
         "name": "{work_area} cutting height"
       }
     },
@@ -271,6 +271,9 @@
       },
       "stay_out_zones": {
         "name": "Avoid {stay_out_zone}"
+      },
+      "my_lawn_work_area": {
+        "name": "My lawn"
       }
     }
   },

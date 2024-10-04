@@ -6,12 +6,13 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import attr
+from propcache import cached_property
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
@@ -367,7 +368,7 @@ class DeviceEntry:
                     "config_entries": list(self.config_entries),
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "disabled_by": self.disabled_by,
                     "entry_type": self.entry_type,
                     "hw_version": self.hw_version,
@@ -377,7 +378,7 @@ class DeviceEntry:
                     "manufacturer": self.manufacturer,
                     "model": self.model,
                     "model_id": self.model_id,
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "name": self.name,
                     "primary_config_entry": self.primary_config_entry,
@@ -426,11 +427,11 @@ class DeletedDeviceEntry:
                 {
                     "config_entries": list(self.config_entries),
                     "connections": list(self.connections),
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "orphaned_timestamp": self.orphaned_timestamp,
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                 }
             )
         )

@@ -41,10 +41,10 @@ _LOGGER = logging.getLogger(__name__)
 class AssistSatelliteState(StrEnum):
     """Valid states of an Assist satellite entity."""
 
-    LISTENING_WAKE_WORD = "listening_wake_word"
-    """Device is streaming audio for wake word detection to Home Assistant."""
+    IDLE = "idle"
+    """Device is waiting for user input, such as a wake word or a button press."""
 
-    LISTENING_COMMAND = "listening_command"
+    LISTENING = "listening"
     """Device is streaming audio with the voice command to Home Assistant."""
 
     PROCESSING = "processing"
@@ -117,7 +117,7 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
 
-    __assist_satellite_state = AssistSatelliteState.LISTENING_WAKE_WORD
+    __assist_satellite_state = AssistSatelliteState.IDLE
 
     @final
     @property
@@ -242,7 +242,7 @@ class AssistSatelliteEntity(entity.Entity):
             )
         finally:
             self._is_announcing = False
-            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+            self._set_state(AssistSatelliteState.IDLE)
 
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
@@ -363,9 +363,9 @@ class AssistSatelliteEntity(entity.Entity):
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+            self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
-            self._set_state(AssistSatelliteState.LISTENING_COMMAND)
+            self._set_state(AssistSatelliteState.LISTENING)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
         elif event.type is PipelineEventType.INTENT_END:
@@ -379,7 +379,7 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
-                self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+                self._set_state(AssistSatelliteState.IDLE)
 
         self.on_pipeline_event(event)
 
@@ -392,7 +392,7 @@ class AssistSatelliteEntity(entity.Entity):
     @callback
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
-        self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+        self._set_state(AssistSatelliteState.IDLE)
 
     @callback
     def _resolve_pipeline(self) -> str | None:
