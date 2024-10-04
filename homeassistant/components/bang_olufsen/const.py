@@ -200,7 +200,23 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
     ]
 )
+# Map for storing compatibility of devices.
 
+MODEL_SUPPORT_DEVICE_CONTROLS: Final[str] = "device_controls"
+
+MODEL_SUPPORT_MAP = {
+    MODEL_SUPPORT_DEVICE_CONTROLS: (
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_A5,
+        BangOlufsenModel.BEOSOUND_A9,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_EMERGE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
+    )
+}
 
 # Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"

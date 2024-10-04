@@ -6,6 +6,7 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,6 +17,8 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
+    MODEL_SUPPORT_DEVICE_CONTROLS,
+    MODEL_SUPPORT_MAP,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
@@ -29,11 +32,20 @@ async def async_setup_entry(
     """Set up Sensor entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Add physical "buttons"
-    entities: list[EventEntity] = [
-        BangOlufsenButtonEvent(config_entry, data.client, button_type)
-        for button_type in DEVICE_BUTTONS
-    ]
+    entities: list[EventEntity] = []
+
+    # The Beoconnect Core does not have any physical controls
+    if (
+        config_entry.data[CONF_MODEL]
+        in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_CONTROLS]
+    ):
+        # Add physical "buttons"
+        entities.extend(
+            [
+                BangOlufsenButtonEvent(config_entry, data.client, button_type)
+                for button_type in DEVICE_BUTTONS
+            ]
+        )
 
     async_add_entities(new_entities=entities)
 
