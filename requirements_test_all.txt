@@ -966,9 +966,6 @@ huawei-lte-api==1.7.3
 # homeassistant.components.huum
 huum==0.7.10
 
-# homeassistant.components.hwam
-hwamsmartctrl==0.2.1
-
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
 
@@ -1823,6 +1820,9 @@ pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.9.3
+
+# homeassistant.components.hwam
+pystove==0.2a1
 
 # homeassistant.components.suez_water
 pysuez==0.2.0

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import ipaddress
 import logging
 from typing import Any
 
-import aiodns
 import aiohttp
-from hwamsmartctrl.airbox import Airbox
+from pystove import Stove
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,25 +32,22 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-        ip = ipaddress.ip_address(data[CONF_HOST])
+        ipaddress.ip_address(data[CONF_HOST])
     except ValueError as e:
         raise ConfigEntryError(e) from e
 
-    async with Airbox(ip) as airbox:
-        try:
-            async with asyncio.timeout(10):
-                name = await airbox.determine_hostname()
-                data = await airbox.get_stove_data()
-        except aiodns.error.DNSError:
-            name = f"Airbox ({ip})"
-        except aiohttp.ClientError as e:
-            raise CannotConnect(e) from e
+    try:
+        stove: Stove = await Stove.create(data[CONF_HOST])
+        name = stove.name
+        await stove.destroy()
+    except aiohttp.ClientError as e:
+        raise CannotConnect(e) from e
 
     # Return info that you want to store in the config entry.
     return {"title": name}
 
 
-class AirboxConfigFlow(ConfigFlow, domain=DOMAIN):
+class StoveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HWAM Smart Control."""
 
     VERSION = 1

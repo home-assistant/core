@@ -1143,9 +1143,6 @@ huawei-lte-api==1.7.3
 # homeassistant.components.huum
 huum==0.7.10
 
-# homeassistant.components.hwam
-hwamsmartctrl==0.2.1
-
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
 
@@ -2272,6 +2269,9 @@ pysqueezebox==0.9.3
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
+
+# homeassistant.components.hwam
+pystove==0.2a1
 
 # homeassistant.components.suez_water
 pysuez==0.2.0

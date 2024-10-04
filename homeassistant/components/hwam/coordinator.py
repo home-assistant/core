@@ -5,40 +5,56 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from hwamsmartctrl.airbox import Airbox
-from hwamsmartctrl.stovedata import StoveData
+from pystove import Stove
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 
 
-class StoveDataUpdateCoordinator(DataUpdateCoordinator[StoveData]):
+class StoveDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage the polling of the Airbox API."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        airbox: Airbox,
+        stove: Stove,
     ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=15),
+            update_interval=timedelta(seconds=5),
         )
-        self.airbox = airbox
+        self.stove = stove
 
     async def _async_setup(self):
-        await self.airbox.connect()
+        pass
 
     async def _async_update_data(self):
-        async with asyncio.timeout(5):
-            return await self.airbox.get_stove_data()
+        async with asyncio.timeout(1):
+            return await self.stove.get_data()
 
     @property
-    def api(self) -> Airbox:
-        """The Airbox API."""
-        return self.airbox
+    def api(self) -> Stove:
+        """The Stove API."""
+        return self.stove
+
+    @property
+    def device_id(self) -> str:
+        """The stoves unique device ID."""
+        return self.stove.stove_ip
+
+    def device_info(self):
+        """Generate common device info for entities."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            name=self.stove.name,
+            manufacturer="DanSkan",
+            model="Orbit",
+            model_id=self.stove.series,
+            sw_version=self.stove.algo_version,
+        )
