@@ -2727,10 +2727,18 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            raise ValueError(
-                f"Creating a new config entry from {self.source} can cause "
-                "unexpected behavior, please use `async_update_reload_and_abort` "
-                f'or `async_abort` with `reason="{self.source}_successful"'
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=self.handler
+            )
+            _LOGGER.warning(
+                (
+                    "Detected %s config flow using `async_create_entry`, which "
+                    "can cause unexpected behavior and will stop working in %s. "
+                    "Please %s"
+                ),
+                self.source,
+                "2025.11",
+                report_issue,
             )
         result = super().async_create_entry(
             title=title,
