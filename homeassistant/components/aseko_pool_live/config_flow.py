@@ -78,7 +78,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Store validated credentials."""
 
         if self.source == SOURCE_REAUTH:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry,
                 title=info[CONF_EMAIL],
                 data={
@@ -86,8 +86,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: info[CONF_PASSWORD],
                 },
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         self._abort_if_unique_id_configured()

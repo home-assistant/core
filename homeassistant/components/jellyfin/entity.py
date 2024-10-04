@@ -8,10 +8,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import JellyfinDataT, JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinDataUpdateCoordinator
 
 
-class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator[JellyfinDataT]]):
+class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator]):
     """Defines a base Jellyfin entity."""
 
     _attr_has_entity_name = True
@@ -20,9 +20,7 @@ class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator[JellyfinDat
 class JellyfinServerEntity(JellyfinEntity):
     """Defines a base Jellyfin server entity."""
 
-    def __init__(
-        self, coordinator: JellyfinDataUpdateCoordinator[JellyfinDataT]
-    ) -> None:
+    def __init__(self, coordinator: JellyfinDataUpdateCoordinator) -> None:
         """Initialize the Jellyfin entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
@@ -39,7 +37,7 @@ class JellyfinClientEntity(JellyfinEntity):
 
     def __init__(
         self,
-        coordinator: JellyfinDataUpdateCoordinator[JellyfinDataT],
+        coordinator: JellyfinDataUpdateCoordinator,
         session_id: str,
     ) -> None:
         """Initialize the Jellyfin entity."""

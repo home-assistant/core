@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -62,7 +61,7 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle integration reconfiguration."""
         return await self.async_step_reconfigure_confirm()

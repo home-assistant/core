@@ -7,8 +7,9 @@ from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from functools import cached_property
 from typing import Any, Literal, TypedDict
+
+from propcache import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
