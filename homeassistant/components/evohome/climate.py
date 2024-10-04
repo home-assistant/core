@@ -401,8 +401,8 @@ class EvoController(EvoClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Controller."""
-        tcs_mode = self._evo_device.system_mode
-        return HVACMode.OFF if tcs_mode in (EVO_HEATOFF, "Off") else HVACMode.HEAT
+        evo_mode = self._evo_device.system_mode
+        return HVACMode.OFF if evo_mode in (EVO_HEATOFF, "Off") else HVACMode.HEAT
 
     @property
     def current_temperature(self) -> float | None:
@@ -431,12 +431,12 @@ class EvoController(EvoClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
         if hvac_mode == HVACMode.HEAT:
-            tcs_mode = EVO_AUTO if EVO_AUTO in self._evo_modes else "Heat"
+            evo_mode = EVO_AUTO if EVO_AUTO in self._evo_modes else "Heat"
         elif hvac_mode == HVACMode.OFF:
-            tcs_mode = EVO_HEATOFF if EVO_HEATOFF in self._evo_modes else "Off"
+            evo_mode = EVO_HEATOFF if EVO_HEATOFF in self._evo_modes else "Off"
         else:
             raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self._set_tcs_mode(tcs_mode)
+        await self._set_tcs_mode(evo_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
