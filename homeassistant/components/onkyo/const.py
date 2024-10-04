@@ -67,7 +67,7 @@ class InputSource(Enum):
         if isinstance(meanings_raw, str):
             meanings = [meanings_raw]
         else:
-            meanings = meanings_raw
+            meanings = list(meanings_raw)
 
         obj.value_meanings = meanings
 
