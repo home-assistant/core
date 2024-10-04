@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from functools import cached_property
 from typing import final
+
+from propcache import cached_property
 
 from homeassistant.components import zone
 from homeassistant.config_entries import ConfigEntry

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-from functools import cached_property
 import itertools
 import logging
 from typing import Any, cast
 
+from propcache import under_cached_property
 import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -310,7 +310,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @cached_property
+            @under_cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"

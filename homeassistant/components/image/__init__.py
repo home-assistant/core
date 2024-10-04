@@ -7,13 +7,13 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 from random import SystemRandom
 from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
+from propcache import cached_property
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry

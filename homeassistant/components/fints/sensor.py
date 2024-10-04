@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
