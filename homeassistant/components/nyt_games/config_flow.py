@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN, LOGGER
 
@@ -21,7 +21,7 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            session = async_get_clientsession(self.hass)
+            session = async_create_clientsession(self.hass)
             token = user_input[CONF_TOKEN].strip()
             client = NYTGamesClient(token, session=session)
             try:
