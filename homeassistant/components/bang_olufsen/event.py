@@ -17,7 +17,7 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
-    MODEL_SUPPORT_DEVICE_CONTROLS,
+    MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     WebsocketNotification,
 )
@@ -35,10 +35,7 @@ async def async_setup_entry(
     entities: list[EventEntity] = []
 
     # The Beoconnect Core does not have any physical controls
-    if (
-        config_entry.data[CONF_MODEL]
-        in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_CONTROLS]
-    ):
+    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         # Add physical "buttons"
         entities.extend(
             [

@@ -202,10 +202,10 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 )
 # Map for storing compatibility of devices.
 
-MODEL_SUPPORT_DEVICE_CONTROLS: Final[str] = "device_controls"
+MODEL_SUPPORT_DEVICE_BUTTONS: Final[str] = "device_buttons"
 
 MODEL_SUPPORT_MAP = {
-    MODEL_SUPPORT_DEVICE_CONTROLS: (
+    MODEL_SUPPORT_DEVICE_BUTTONS: (
         BangOlufsenModel.BEOLAB_8,
         BangOlufsenModel.BEOLAB_28,
         BangOlufsenModel.BEOSOUND_2,
