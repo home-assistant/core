@@ -15,9 +15,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import DOMAIN, SIGNAL_UPDATE_SMARTY, SmartyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SmartyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Smarty Binary Sensor Platform."""
+
+    smarty = entry.runtime_data
+    sensors = [
+        SupplyAirTemperatureSensor(entry.title, smarty),
+        ExtractAirTemperatureSensor(entry.title, smarty),
+        OutdoorAirTemperatureSensor(entry.title, smarty),
+        SupplyFanSpeedSensor(entry.title, smarty),
+        ExtractFanSpeedSensor(entry.title, smarty),
+        FilterDaysLeftSensor(entry.title, smarty),
+    ]
+
+    async_add_entities(sensors, True)
 
 
 async def async_setup_platform(
