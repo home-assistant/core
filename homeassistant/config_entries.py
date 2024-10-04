@@ -2443,8 +2443,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         Requires strings.json entry corresponding to the `reason` parameter
         in user visible flows.
         """
-        if self.unique_id is None:
-            return
         if (
             self.source == SOURCE_REAUTH
             and self._get_reauth_entry().unique_id != self.unique_id
