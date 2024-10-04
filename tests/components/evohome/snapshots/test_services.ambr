@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_climate_ctl_svcs[default]
+  list([
+    'Reset',
+    'eco',
+    'away',
+    'home',
+    'Custom',
+  ])
+# ---
+# name: test_climate_ctl_svcs[h032585]
+  list([
+  ])
+# ---
+# name: test_climate_ctl_svcs[h099625]
+  list([
+    'eco',
+    'away',
+  ])
+# ---
+# name: test_climate_ctl_svcs[minimal]
+  list([
+    'Reset',
+    'eco',
+    'away',
+    'home',
+    'Custom',
+  ])
+# ---
+# name: test_climate_ctl_svcs[sys_004]
+  list([
+    'eco',
+    'away',
+  ])
+# ---
+# name: test_evohome_ctl_svcs[default]
+  list([
+    'refresh_system',
+    'reset_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_ctl_svcs[h032585]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_ctl_svcs[h099625]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_ctl_svcs[minimal]
+  list([
+    'refresh_system',
+    'reset_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_ctl_svcs[sys_004]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---

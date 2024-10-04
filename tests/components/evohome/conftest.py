@@ -14,7 +14,12 @@ from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from homeassistant.components.evohome.climate import EvoController
+from homeassistant.components.evohome.coordinator import EvoBroker
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -101,6 +106,17 @@ def mock_get_factory(install: str) -> Callable:
     return mock_get
 
 
+def extract_ctl_from_locations_config(
+    config: dict[str, str],
+    install: str,
+) -> dict[str, Any]:
+    """Return the chosen controller from the config JSON of an installation."""
+
+    idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc: dict = user_locations_config_fixture(install)[idx]  # type: ignore[assignment]
+    return loc["gateways"][0]["temperatureControlSystems"][0]
+
+
 @pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
@@ -153,3 +169,17 @@ async def setup_evohome(
         assert mock_client.account_info is not None
 
         yield mock_client
+
+
+def get_ctl_entity(hass: HomeAssistant) -> EvoController:
+    """Return the controller entity of the evohome system."""
+
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, broker.tcs._id
+    )
+
+    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
+    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
