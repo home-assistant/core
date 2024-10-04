@@ -84,9 +84,7 @@ async def test_evohome_ctl_svcs(
 
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == (ctl_mode,)
-            assert mock_fcn.await_args.kwargs == {
-                "until": None,
-            }
+            assert mock_fcn.await_args.kwargs == {"until": None}
 
         # EvoService.SET_SYSTEM_MODE: 'Auto' (or 'Heat')
         ctl_mode = extract_heat_mode_from_location(config, install)
@@ -101,9 +99,7 @@ async def test_evohome_ctl_svcs(
 
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == (ctl_mode,)
-            assert mock_fcn.await_args.kwargs == {
-                "until": None,
-            }
+            assert mock_fcn.await_args.kwargs == {"until": None}
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
