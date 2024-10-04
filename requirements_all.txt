@@ -1633,6 +1633,9 @@ pmsensor==0.4
 # homeassistant.components.poolsense
 poolsense==0.0.8
 
+# homeassistant.components.powerfox
+powerfox==0.1.1
+
 # homeassistant.components.reddit
 praw==7.5.0
 
