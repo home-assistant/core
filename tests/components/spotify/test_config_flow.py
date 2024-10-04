@@ -266,4 +266,4 @@ async def test_reauth_account_mismatch(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_account_mismatch"
+    assert result["reason"] == "unique_id_mismatch"

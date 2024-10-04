@@ -140,6 +140,7 @@
         "oauth2_failed": "Error while obtaining access token.",
         "reauth_successful": "Re-authentication was successful",
         "reconfigure_successful": "Re-configuration was successful",
+        "unique_id_mismatch": "The unique ID of the current config entry does not match the updated ID.",
         "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud."
       }
