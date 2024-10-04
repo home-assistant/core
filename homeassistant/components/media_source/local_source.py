@@ -76,7 +76,9 @@ class LocalSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        source_dir_id, location = self.async_parse_identifier(item)
+        source_dir_id, location = await self.hass.async_add_executor_job(
+            self.async_parse_identifier, item
+        )
         path = self.async_full_path(source_dir_id, location)
         mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
@@ -215,7 +217,7 @@ class LocalMediaView(http.HomeAssistantView):
     ) -> web.FileResponse:
         """Start a GET request."""
         try:
-            raise_if_invalid_path(location)
+            await self.hass.async_add_executor_job(raise_if_invalid_path, location)
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
