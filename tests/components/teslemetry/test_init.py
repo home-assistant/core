@@ -216,16 +216,15 @@ async def test_energy_history_refresh_error(
     assert entry.state is state
 
 
-# Vehicle Coordinator
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_vehicle: AsyncMock,
-    mock_vehicle_data: AsyncMock,
+    mock_listen: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
 
     entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    mock_listen.assert_called_once()
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_ON
