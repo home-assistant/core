@@ -412,7 +412,7 @@ class DeletedRegistryEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
-    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
