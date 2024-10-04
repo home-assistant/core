@@ -118,8 +118,9 @@ async def test_climate_ctl_svcs(
     async for _ in setup_evohome(hass, config, install=install):
         ctl: EvoController = get_ctl_entity(hass)
 
-        assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
         assert ctl._evo_modes == snapshot
+        assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
+        assert ctl.preset_modes == snapshot
 
         # SERVICE_SET_HVAC_MODE: HVACMode.OFF
         ctl_mode = extract_off_mode_from_location(config, install)
@@ -156,6 +157,3 @@ async def test_climate_ctl_svcs(
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == (ctl_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
-
-        assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
-        assert ctl.preset_modes == snapshot
