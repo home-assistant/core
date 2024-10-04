@@ -1,6 +1,6 @@
 """EHEIM Digital lights."""
 
-from typing import Any, cast
+from typing import Any
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.types import LightMode
@@ -15,14 +15,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import EheimDigitalConfigEntry
-from .const import DAYCL_MODE, DOMAIN, EFFECT_TO_LIGHT_MODE
+from .const import EFFECT_DAYCL_MODE, EFFECT_TO_LIGHT_MODE
 from .coordinator import EheimDigitalUpdateCoordinator
+from .entity import EheimDigitalEntity
 
 BRIGHTNESS_SCALE = (1, 100)
 
@@ -35,41 +34,74 @@ async def async_setup_entry(
     """Set up EHEIM Digital lights based on a config entry."""
     coordinator = entry.runtime_data
 
-    registry = er.async_get(hass)
-    existing_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
+    known_devices: set[str] = set()
 
-    entities = []
+    def check_devices() -> None:
+        if len(coordinator.hub.devices) == 0:
+            return
 
-    classic_led_ctrl_devices = [
-        device
-        for device in coordinator.hub.devices.values()
-        if isinstance(device, EheimDigitalClassicLEDControl)
-    ]
+        registry = er.async_get(hass)
+        existing_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
 
-    for device in classic_led_ctrl_devices:
-        for channel in range(2):
-            if len(device.tankconfig[channel]) > 0:
-                entities.append(
-                    EheimDigitalClassicLEDControlLight(coordinator, device, channel)
-                )
-            else:
-                for entity in existing_entities:
-                    if entity.unique_id == f"{device.mac_address}_{channel}":
-                        registry.async_remove(entity.entity_id)
+        entities: list[EheimDigitalClassicLEDControlLight] = []
 
-    async_add_entities(entities)
+        new_classic_led_ctrl_devices = [
+            device
+            for device in coordinator.hub.devices.values()
+            if isinstance(device, EheimDigitalClassicLEDControl)
+            and device.mac_address not in known_devices
+        ]
+
+        known_classic_led_ctrl_devices = [
+            device
+            for device in coordinator.hub.devices.values()
+            if isinstance(device, EheimDigitalClassicLEDControl)
+            and device.mac_address in known_devices
+        ]
+
+        for device in new_classic_led_ctrl_devices:
+            for channel in range(2):
+                if len(device.tankconfig[channel]) > 0:
+                    entities.append(
+                        EheimDigitalClassicLEDControlLight(coordinator, device, channel)
+                    )
+                    known_devices.add(device.mac_address)
+        for device in known_classic_led_ctrl_devices:
+            for channel in range(2):
+                if len(device.tankconfig[channel]) == 0:
+                    for entity in existing_entities:
+                        if entity.unique_id == f"{device.mac_address}_{channel}":
+                            registry.async_remove(entity.entity_id)
+                elif (
+                    len(
+                        [
+                            entity
+                            for entity in existing_entities
+                            if entity.unique_id == f"{device.mac_address}_{channel}"
+                        ]
+                    )
+                    == 0
+                ):
+                    entities.append(
+                        EheimDigitalClassicLEDControlLight(coordinator, device, channel)
+                    )
+
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(check_devices))
+    check_devices()
 
 
 class EheimDigitalClassicLEDControlLight(
-    CoordinatorEntity[EheimDigitalUpdateCoordinator], LightEntity
+    EheimDigitalEntity[EheimDigitalClassicLEDControl], LightEntity
 ):
     """Represent a EHEIM Digital classicLEDcontrol light."""
 
-    _attr_has_entity_name = True
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_effect_list = [DAYCL_MODE]
+    _attr_effect_list = [EFFECT_DAYCL_MODE]
     _attr_supported_features = LightEntityFeature.EFFECT
+    _attr_translation_key = "channel"
 
     def __init__(
         self,
@@ -78,24 +110,11 @@ class EheimDigitalClassicLEDControlLight(
         channel: int,
     ) -> None:
         """Initialize an EHEIM Digital classicLEDcontrol light entity."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            configuration_url="http://eheimdigital.local",
-            name=device.name,
-            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
-            manufacturer="EHEIM",
-            model=device.device_type.model_name,
-            identifiers={(DOMAIN, device.mac_address)},
-            suggested_area=device.aquarium_name,
-            sw_version=device.sw_version,
-            via_device=(DOMAIN, coordinator.hub.master.mac_address),
-        )
-        self._device = device
+        super().__init__(coordinator, device)
         self._channel = channel
-        self._device_address = device.mac_address
-        self._attr_translation_key = "channel"
         self._attr_translation_placeholders = {"channel_id": str(channel)}
         self._attr_unique_id = f"{self._device_address}_{channel}"
+        self._async_update_attrs()
 
     @property
     def available(self) -> bool:
@@ -121,11 +140,8 @@ class EheimDigitalClassicLEDControlLight(
             await self._device.set_light_mode(LightMode.MAN_MODE)
         await self._device.turn_off(self._channel)
 
-    def _handle_coordinator_update(self) -> None:
-        device = cast(
-            EheimDigitalClassicLEDControl, self.coordinator.data[self._device_address]
-        )
-        light_level = device.light_level[self._channel]
+    def _async_update_attrs(self) -> None:
+        light_level = self._device.light_level[self._channel]
 
         self._attr_available = light_level is not None
         self._attr_is_on = light_level > 0 if light_level is not None else None
@@ -135,6 +151,7 @@ class EheimDigitalClassicLEDControlLight(
             else None
         )
         self._attr_effect = (
-            DAYCL_MODE if device.light_mode == LightMode.DAYCL_MODE else EFFECT_OFF
+            EFFECT_DAYCL_MODE
+            if self._device.light_mode == LightMode.DAYCL_MODE
+            else EFFECT_OFF
         )
-        self.async_write_ha_state()

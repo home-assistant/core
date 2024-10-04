@@ -1,65 +1,119 @@
 """Tests the config flow of EHEIM Digital."""
 
-from unittest.mock import MagicMock
+from ipaddress import ip_address
+from unittest.mock import AsyncMock
+
+from aiohttp import ClientConnectionError
+import pytest
 
 from homeassistant.components.eheimdigital.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
+    ip_address=ip_address("192.0.2.1"),
+    ip_addresses=[ip_address("192.0.2.1")],
+    hostname="eheimdigital.local.",
+    name="eheimdigital._http._tcp.local.",
+    port=80,
+    type="_http._tcp.local.",
+    properties={},
+)
+
+USER_INPUT = {CONF_HOST: "eheimdigital"}
 
 
-async def test_config_flow_new_device(
-    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+@pytest.mark.usefixtures("eheimdigital_hub_mock")
+async def test_full_flow(hass: HomeAssistant) -> None:
+    """Test full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USER_INPUT[CONF_HOST]
+    assert result["data"] == USER_INPUT
+
+
+async def test_flow_errors(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: AsyncMock,
 ) -> None:
-    """Test config flow."""
+    """Test flow errors."""
+    eheimdigital_hub_mock.return_value.connect.side_effect = ClientConnectionError()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
-
-    # Confirmation form
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    eheimdigital_hub_mock.return_value.connect.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    eheimdigital_hub_mock.return_value.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USER_INPUT[CONF_HOST]
+    assert result["data"] == USER_INPUT
 
 
-async def test_config_flow_no_device(
-    hass: HomeAssistant, mock_async_zeroconf: MagicMock
-) -> None:
-    """Test config flow without a found device."""
-
-    mock_async_zeroconf.async_get_service_info.return_value = None
-
+@pytest.mark.usefixtures("eheimdigital_hub_mock")
+async def test_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
     )
-
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_async_zeroconf: MagicMock,
-) -> None:
-    """Test flow aborts when already configured."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_DISCOVERY.host
+    assert result["data"] == {
+        CONF_HOST: ZEROCONF_DISCOVERY.host,
+    }
