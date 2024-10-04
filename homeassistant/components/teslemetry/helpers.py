@@ -10,6 +10,19 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN, LOGGER, TeslemetryState
 
 
+def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+    """Flatten the data structure."""
+    result = {}
+    for key, value in data.items():
+        if parent:
+            key = f"{parent}_{key}"
+        if isinstance(value, dict):
+            result.update(flatten(value, key))
+        else:
+            result[key] = value
+    return result
+
+
 async def wake_up_vehicle(vehicle) -> None:
     """Wake up a vehicle."""
     async with vehicle.wakelock:
@@ -64,7 +77,10 @@ async def handle_vehicle_command(command) -> Any:
                 translation_placeholders={"error": error},
             )
         # No response without error (unexpected)
-        raise HomeAssistantError(f"Unknown response: {response}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_no_response",
+        )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
             if reason in ("already_set", "not_charging", "requested"):

@@ -598,6 +598,9 @@
     "command_no_result": {
       "message": "Command had no result"
     },
+    "command_no_response": {
+      "message": "Command had no response"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
