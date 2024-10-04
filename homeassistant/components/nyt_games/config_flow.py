@@ -22,7 +22,8 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             session = async_get_clientsession(self.hass)
-            client = NYTGamesClient(user_input[CONF_TOKEN], session=session)
+            token = user_input[CONF_TOKEN].strip()
+            client = NYTGamesClient(token, session=session)
             try:
                 user_id = await client.get_user_id()
             except NYTGamesAuthenticationError:
@@ -35,7 +36,9 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(str(user_id))
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="NYT Games", data=user_input)
+                return self.async_create_entry(
+                    title="NYT Games", data={CONF_TOKEN: token}
+                )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
