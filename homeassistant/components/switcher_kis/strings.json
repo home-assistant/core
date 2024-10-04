@@ -43,6 +43,11 @@
         "name": "Vertical swing off"
       }
     },
+    "light": {
+      "light": {
+        "name": "Light {light_id}"
+      }
+    },
     "sensor": {
       "remaining_time": {
         "name": "Remaining time"

@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
@@ -508,3 +509,45 @@ async def test_restore_state(
 
     state = hass.states.get("alarm_control_panel.test_template_panel")
     assert state.state == initial_state
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for button template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "value_template": "disarmed",
+            "template_type": "alarm_control_panel",
+            "code_arm_required": True,
+            "code_format": "number",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("alarm_control_panel.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id

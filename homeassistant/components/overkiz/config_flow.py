@@ -351,8 +351,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
+        # overkiz entries always have unique IDs
         self.context["title_placeholders"] = {
-            "gateway_id": self._reauth_entry.unique_id
+            "gateway_id": cast(str, self._reauth_entry.unique_id)
         }
 
         self._user = self._reauth_entry.data[CONF_USERNAME]
