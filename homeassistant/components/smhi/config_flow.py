@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from smhi.smhi_lib import Smhi, SmhiForecastException
@@ -40,7 +39,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
     VERSION = 2
-    config_entry: ConfigEntry | None
+    config_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,12 +82,10 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.config_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -96,7 +93,6 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
-        assert self.config_entry
 
         if user_input is not None:
             lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]

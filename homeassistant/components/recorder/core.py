@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 import queue
 import sqlite3
@@ -15,6 +14,7 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any, cast
 
+from propcache import cached_property
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
@@ -570,9 +570,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_clear_statistics(self, statistic_ids: list[str]) -> None:
+    def async_clear_statistics(
+        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+    ) -> None:
         """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(statistic_ids))
+        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
 
     @callback
     def async_update_statistics_metadata(

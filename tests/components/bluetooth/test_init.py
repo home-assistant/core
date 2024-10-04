@@ -2872,7 +2872,7 @@ async def test_default_address_config_entries_removed_linux(
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
 
 
-@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+@pytest.mark.usefixtures("one_adapter")
 async def test_can_unsetup_bluetooth_single_adapter_linux(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
@@ -2890,12 +2890,17 @@ async def test_can_unsetup_bluetooth_single_adapter_linux(
         await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
+@pytest.mark.usefixtures("two_adapters")
 async def test_can_unsetup_bluetooth_multiple_adapters(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
 ) -> None:
     """Test we can setup and unsetup bluetooth with multiple adapters."""
+    # Setup bluetooth first since otherwise loading the first
+    # config entry will load the second one as well
+    await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
     entry1 = MockConfigEntry(
         domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
     )

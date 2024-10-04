@@ -7,11 +7,11 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-from functools import cached_property
 import logging
 import os
 from typing import Any, Self, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
