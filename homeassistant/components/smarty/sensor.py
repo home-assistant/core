@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry: SmartyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Smarty Binary Sensor Platform."""
+    """Set up the Smarty Sensor Platform."""
 
     smarty = entry.runtime_data
     sensors = [
