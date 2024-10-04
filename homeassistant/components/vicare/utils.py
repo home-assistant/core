@@ -15,8 +15,15 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    HeatingType,
+)
 from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,3 +105,10 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     except AttributeError as error:
         _LOGGER.debug("No compressors found: %s", error)
     return []
+
+
+def get_token_path(hass: HomeAssistant, entry: ConfigEntry | None) -> str:
+    """Return the path to the token storage file for the given ConfigEntry."""
+    return hass.config.path(
+        STORAGE_DIR, f"{DOMAIN}.{entry.entry_id if entry else 'tmp'}"
+    )

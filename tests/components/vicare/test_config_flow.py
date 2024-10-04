@@ -89,7 +89,7 @@ async def test_user_create_entry(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ViCare"
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
     assert result["data"] == snapshot
     mock_setup_entry.assert_called_once()
 
@@ -170,39 +170,6 @@ async def test_form_dhcp(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ViCare"
+    assert result["title"] == VALID_CONFIG[CONF_USERNAME]
     assert result["data"] == snapshot
     mock_setup_entry.assert_called_once()
-
-
-async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test that configuring more than one instance is rejected."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=VALID_CONFIG,
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_INFO,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test that configuring more than one instance is rejected."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="ViCare",
-        data=VALID_CONFIG,
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"

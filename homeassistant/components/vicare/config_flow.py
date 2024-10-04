@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
+import os
 from typing import Any
 
 from PyViCare.PyViCareUtils import (
@@ -19,13 +21,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
-    DOMAIN,
-    VICARE_NAME,
-    HeatingType,
-)
+from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
+from .utils import get_token_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,26 +47,30 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Invoke when a user initiates a flow via the user interface."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            token_path = get_token_path(self.hass, None)
             try:
                 await self.hass.async_add_executor_job(
-                    vicare_login, self.hass, user_input
+                    vicare_login, user_input, token_path
                 )
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
-                return self.async_create_entry(title=VICARE_NAME, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
+            finally:
+                with suppress(FileNotFoundError):
+                    await self.hass.async_add_executor_job(os.remove, token_path)
 
         return self.async_show_form(
             step_id="user",
@@ -97,8 +98,9 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
             }
 
+            token_path = get_token_path(self.hass, None)
             try:
-                await self.hass.async_add_executor_job(vicare_login, self.hass, data)
+                await self.hass.async_add_executor_job(vicare_login, data, token_path)
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
@@ -126,8 +128,5 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(formatted_mac)
         self._abort_if_unique_id_configured()
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()

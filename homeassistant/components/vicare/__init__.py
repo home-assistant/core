@@ -31,18 +31,39 @@ from .const import (
     UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
-from .utils import get_device, get_device_serial
+from .utils import get_device, get_device_serial, get_token_path
 
 _LOGGER = logging.getLogger(__name__)
-_TOKEN_FILENAME = "vicare_token.save"
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
+            )
+            with suppress(FileNotFoundError):
+                await hass.async_add_executor_job(
+                    os.remove, hass.config.path(STORAGE_DIR, "vicare_token.save")
+                )
+            entry.minor_version = 2
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
-    _LOGGER.debug("Setting up ViCare component")
+    _LOGGER.debug("Setting up ViCare component %s", entry.title)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if entry.entry_id not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][entry.entry_id] = {}
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
@@ -59,8 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def vicare_login(
-    hass: HomeAssistant,
     entry_data: Mapping[str, Any],
+    token_file: str,
     cache_duration=DEFAULT_CACHE_DURATION,
 ) -> PyViCare:
     """Login via PyVicare API."""
@@ -70,14 +91,15 @@ def vicare_login(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
+        token_file,
     )
     return vicare_api
 
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    token_path = get_token_path(hass, entry)
+    vicare_api = vicare_login(entry.data, token_path)
 
     device_config_list = get_supported_devices(vicare_api.devices)
     if (number_of_devices := len(device_config_list)) > 1:
@@ -87,7 +109,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             number_of_devices,
             cache_duration,
         )
-        vicare_api = vicare_login(hass, entry.data, cache_duration)
+        vicare_api = vicare_login(entry.data, token_path, cache_duration)
         device_config_list = get_supported_devices(vicare_api.devices)
 
     for device in device_config_list:
@@ -108,9 +130,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
-        )
+        await hass.async_add_executor_job(os.remove, get_token_path(hass, entry))
 
     return unload_ok
 
