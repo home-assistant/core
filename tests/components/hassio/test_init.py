@@ -509,6 +509,7 @@ async def test_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
+    addon_installed,
 ) -> None:
     """Call service and check the API calls behind that."""
     with (
@@ -546,14 +547,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 24
+    assert aioclient_mock.call_count == 22
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 26
+    assert aioclient_mock.call_count == 24
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -568,7 +569,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 28
+    assert aioclient_mock.call_count == 26
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -593,7 +594,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 30
+    assert aioclient_mock.call_count == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -612,7 +613,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 31
+    assert aioclient_mock.call_count == 29
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -628,7 +629,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 32
+    assert aioclient_mock.call_count == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -647,7 +648,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 34
+    assert aioclient_mock.call_count == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
@@ -749,6 +750,7 @@ async def test_service_calls_core(
     assert aioclient_mock.call_count == 6
 
 
+@pytest.mark.usefixtures("addon_installed")
 async def test_entry_load_and_unload(hass: HomeAssistant) -> None:
     """Test loading and unloading config entry."""
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -775,6 +777,7 @@ async def test_migration_off_hassio(hass: HomeAssistant) -> None:
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
+@pytest.mark.usefixtures("addon_installed")
 async def test_device_registry_calls(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -927,6 +930,7 @@ async def test_device_registry_calls(
         assert len(device_registry.devices) == 5
 
 
+@pytest.mark.usefixtures("addon_installed")
 async def test_coordinator_updates(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1002,7 +1006,7 @@ async def test_coordinator_updates(
         assert "Error on Supervisor API: Unknown" in caplog.text
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "addon_installed")
 async def test_coordinator_updates_stats_entities_enabled(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

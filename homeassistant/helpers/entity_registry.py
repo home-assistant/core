@@ -14,12 +14,12 @@ from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -235,8 +235,11 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
-        if not self.name and self.has_entity_name:
-            display_dict["en"] = self.original_name
+        if self.has_entity_name:
+            display_dict["hn"] = True
+        name = self.name or self.original_name
+        if name is not None:
+            display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
             if (precision := sensor_options.get("display_precision")) is not None or (
                 precision := sensor_options.get("suggested_display_precision")
@@ -335,7 +338,7 @@ class RegistryEntry:
                     "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "device_class": self.device_class,
                     "device_id": self.device_id,
                     "disabled_by": self.disabled_by,
@@ -346,7 +349,7 @@ class RegistryEntry:
                     "id": self.id,
                     "has_entity_name": self.has_entity_name,
                     "labels": list(self.labels),
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                     "name": self.name,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
@@ -417,10 +420,10 @@ class DeletedRegistryEntry:
             json_bytes(
                 {
                     "config_entry_id": self.config_entry_id,
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "entity_id": self.entity_id,
                     "id": self.id,
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
                     "unique_id": self.unique_id,

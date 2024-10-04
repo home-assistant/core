@@ -8,7 +8,12 @@ import aiohttp
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -32,7 +37,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -44,14 +49,14 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the device."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reconfigure_confirm(user_input)
+        self.entry = self._get_reconfigure_entry()
+        return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self._handle_config_step(user_input, step_id="reconfigure")
+        return await self._handle_config_step(user_input, step_id="reconfigure_confirm")
 
     async def _handle_config_step(
         self, user_input: dict[str, Any] | None = None, step_id: str = "user"
@@ -75,7 +80,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.debug("MAC address found: %s", mac)
                     # abort if the detected mac differs from the one in the entry
-                    if self.entry:
+                    if self.source == SOURCE_RECONFIGURE:
                         existing_mac = self.entry.unique_id
                         if existing_mac != mac:
                             _LOGGER.debug(

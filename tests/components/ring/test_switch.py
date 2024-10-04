@@ -50,22 +50,6 @@ def create_deprecated_siren_entity(
     create_entry("internal", 345678)
 
 
-async def test_entity_registry(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_ring_client,
-    create_deprecated_siren_entity,
-) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, Platform.SWITCH)
-
-    entry = entity_registry.async_get("switch.front_siren")
-    assert entry.unique_id == "765432-siren"
-
-    entry = entity_registry.async_get("switch.internal_siren")
-    assert entry.unique_id == "345678-siren"
-
-
 async def test_states(
     hass: HomeAssistant,
     mock_ring_client: Mock,
@@ -103,35 +87,45 @@ async def test_siren_on_reports_correctly(
     assert state.attributes.get("friendly_name") == "Internal Siren"
 
 
-async def test_siren_can_be_turned_on_and_off(
-    hass: HomeAssistant, mock_ring_client, create_deprecated_siren_entity
+@pytest.mark.parametrize(
+    ("entity_id"),
+    [
+        ("switch.front_siren"),
+        ("switch.front_door_in_home_chime"),
+        ("switch.front_motion_detection"),
+    ],
+)
+async def test_switch_can_be_turned_on_and_off(
+    hass: HomeAssistant,
+    mock_ring_client,
+    create_deprecated_siren_entity,
+    entity_id,
 ) -> None:
-    """Tests the siren turns on correctly."""
+    """Tests the switch turns on and off correctly."""
     await setup_platform(hass, Platform.SWITCH)
 
-    state = hass.states.get("switch.front_siren")
-    assert state.state == STATE_OFF
+    assert hass.states.get(entity_id)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.front_siren"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.front_siren")
+    state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.front_siren"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("switch.front_siren")
+    state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
 

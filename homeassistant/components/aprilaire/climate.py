@@ -16,19 +16,17 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DOMAIN,
     FAN_CIRCULATE,
     PRESET_PERMANENT_HOLD,
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION,
 )
-from .coordinator import AprilaireCoordinator
+from .coordinator import AprilaireConfigEntry
 from .entity import BaseAprilaireEntity
 
 HVAC_MODE_MAP = {
@@ -64,14 +62,14 @@ FAN_MODE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AprilaireConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add climates for passed config_entry in HA."""
 
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
-
-    async_add_entities([AprilaireClimate(coordinator, config_entry.unique_id)])
+    async_add_entities(
+        [AprilaireClimate(config_entry.runtime_data, config_entry.unique_id)]
+    )
 
 
 class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):

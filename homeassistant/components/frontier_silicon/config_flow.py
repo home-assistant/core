@@ -101,8 +101,9 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
+        if speaker_name := discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME):
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": speaker_name}
 
         try:
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -54,12 +55,14 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: ConfigEntry
+    _reconnect_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize an envoy flow."""
         self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -76,7 +79,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
                 [self.ip_address]
             )
-        elif not self._reauth_entry:
+        elif self.source != SOURCE_REAUTH:
             schema[vol.Required(CONF_HOST)] = str
 
         default_username = ""
@@ -149,10 +152,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert self._reauth_entry is not None
+        self._reauth_entry = self._get_reauth_entry()
         if unique_id := self._reauth_entry.unique_id:
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
         return await self.async_step_user()
@@ -168,7 +168,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
-        if self._reauth_entry:
+        if self.source == SOURCE_REAUTH:
             host = self._reauth_entry.data[CONF_HOST]
         else:
             host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
@@ -193,7 +193,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 name = self._async_envoy_name()
 
-                if self._reauth_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         self._reauth_entry,
                         data=self._reauth_entry.data | user_input,
@@ -236,14 +236,17 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to manually reconfigure a config entry."""
+        self._reconnect_entry = self._get_reconfigure_entry()
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to manually reconfigure a config entry."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
-
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         suggested_values: dict[str, Any] | MappingProxyType[str, Any] = (
-            user_input or entry.data
+            user_input or self._reconnect_entry.data
         )
 
         host: Any = suggested_values.get(CONF_HOST)
@@ -284,15 +287,15 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         error="reconfigure_successful",
                     )
         if not self.unique_id:
-            await self.async_set_unique_id(entry.unique_id)
+            await self.async_set_unique_id(self._reconnect_entry.unique_id)
 
         self.context["title_placeholders"] = {
-            CONF_SERIAL: self.unique_id,
+            CONF_SERIAL: self.unique_id or "-",
             CONF_HOST: host,
         }
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(), suggested_values
             ),
@@ -311,6 +314,9 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id is not None
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
@@ -326,6 +332,6 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             ),
             description_placeholders={
                 CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data.get("host"),
+                CONF_HOST: self.config_entry.data[CONF_HOST],
             },
         )

@@ -68,6 +68,7 @@ class BangOlufsenModel(StrEnum):
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
+    ACTIVE_LISTENING_MODE = "active_listening_mode"
     PLAYBACK_ERROR = "playback_error"
     PLAYBACK_METADATA = "playback_metadata"
     PLAYBACK_PROGRESS = "playback_progress"
