@@ -2732,9 +2732,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
             )
             _LOGGER.warning(
                 (
-                    "Detected %s config flow using `async_create_entry`, which "
-                    "can cause unexpected behavior and will stop working in %s. "
-                    "Please %s"
+                    "Detected %s config flow creating a new entry, "
+                    "when it is expected to update an existing entry and abort. "
+                    "This will stop working in %s, please %s"
                 ),
                 self.source,
                 "2025.11",

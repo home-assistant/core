@@ -6869,9 +6869,9 @@ async def test_create_entry_reauth_reconfigure(
         assert len(entries) == 2
 
     assert (
-        f"Detected {source} config flow using `async_create_entry`, "
-        "which can cause unexpected behavior and will stop working in "
-        "2025.11. Please create a bug report at https://github.com/home"
+        f"Detected {source} config flow creating a new entry, when it is expected "
+        "to update an existing entry. This will stop working in "
+        "2025.11, please create a bug report at https://github.com/home"
         "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
         "label%3A%22integration%3A+test%22"
     ) in caplog.text
