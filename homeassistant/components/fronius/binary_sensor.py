@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,9 +25,6 @@ class FroniusBinarySensorEntityDescription(
     FroniusEntityDescription, BinarySensorEntityDescription
 ):
     """Describes Fronius binary_sensor entity."""
-
-    default_value: bool | None = None
-    response_key: str | None = None
 
 
 async def async_setup_entry(
@@ -50,12 +47,10 @@ POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusBinarySensorEntityDescription(
         name="Backup mode",
         key="backup_mode",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FroniusBinarySensorEntityDescription(
         name="Battery standby",
         key="battery_standby",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
@@ -67,20 +62,14 @@ class _FroniusBinarySensorEntity(_FroniusEntity, BinarySensorEntity):
 
     def _get_entity_value(self) -> bool | None:
         """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
-        new_value = self.coordinator.data[self.solar_net_id][self.response_key]["value"]
-        if new_value is None:
-            return self.entity_description.default_value
-        return bool(new_value)
+        return bool(
+            self.coordinator.data[self.solar_net_id][self.response_key]["value"]
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        try:
-            self._attr_is_on = self._get_entity_value()
-        except KeyError:
-            # sets state to `None` if no default_value is defined in entity description
-            # KeyError: raised when omitted in response - eg. at night when no production
-            self._attr_native_value = self.entity_description.default_value
+        self._attr_is_on = self._get_entity_value()
         self.async_write_ha_state()
 
 

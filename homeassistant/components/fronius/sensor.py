@@ -114,7 +114,6 @@ class FroniusSensorEntityDescription(FroniusEntityDescription, SensorEntityDescr
     # Gen24 devices may report 0 for total energy while doing firmware updates.
     # Handling such values shall mitigate spikes in delta calculations.
     invalid_when_falsy: bool = False
-    response_key: str | None = None
     value_fn: Callable[[StateType], StateType] | None = None
 
 

@@ -94,7 +94,7 @@ class FroniusCoordinatorBase(
 
         Called from a platforms `async_setup_entry`.
 
-        Only those descriptions who are a subclass of the filter_to argument will be added.
+        Only those descriptions matching the supplied platform will be added.
         """
 
         @callback
