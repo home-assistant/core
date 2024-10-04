@@ -301,6 +301,7 @@ async def test_config_flow_reauth_success(
     )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_EMAIL: MOCK_EMAIL,
         CONF_REGION: MOCK_URL,
