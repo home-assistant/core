@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "LOQED Touch Smartlock setup",
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API token",
+                    "name": "Name of your lock in the LOQED app."
+                },
+                "description": "Log in at LOQED's [personal access tokens portal]({config_url}) and: \n* Create an API key by clicking 'Create' \n* Copy the created access token."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "ble_strength": {
+                "name": "Bluetooth signal"
+            }
+        }
+    }
+}

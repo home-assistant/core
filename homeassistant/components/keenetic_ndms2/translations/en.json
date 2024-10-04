@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_udn": "SSDP discovery info has no UDN",
+            "not_keenetic_ndms2": "Discovered item is not a Keenetic router"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Keenetic router."
+                },
+                "title": "Set up Keenetic NDMS2 Router"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Consider home interval",
+                    "include_arp": "Use ARP data (ignored if hotspot data used)",
+                    "include_associated": "Use WiFi AP associations data (ignored if hotspot data used)",
+                    "interfaces": "Choose interfaces to scan",
+                    "scan_interval": "Scan interval",
+                    "try_hotspot": "Use 'ip hotspot' data (most accurate)"
+                }
+            }
+        }
+    }
+}

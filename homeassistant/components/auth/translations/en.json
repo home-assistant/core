@@ -1,0 +1,52 @@
+{
+    "exceptions": {
+        "user_not_found": {
+            "message": "User not found"
+        },
+        "username_already_exists": {
+            "message": "Username \"{username}\" already exists"
+        },
+        "username_not_normalized": {
+            "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
+        }
+    },
+    "issues": {
+        "homeassistant_provider_not_normalized_usernames": {
+            "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces.",
+            "title": "Not normalized usernames detected"
+        }
+    },
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "No notification services available."
+            },
+            "error": {
+                "invalid_code": "Invalid code, please try again."
+            },
+            "step": {
+                "init": {
+                    "description": "Please select one of the notification services:",
+                    "title": "Set up one-time password delivered by notify component"
+                },
+                "setup": {
+                    "description": "A one-time password has been sent via **notify.{notify_service}**. Please enter it below:",
+                    "title": "Verify setup"
+                }
+            },
+            "title": "Notify One-Time Password"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock of your Home Assistant system is accurate."
+            },
+            "step": {
+                "init": {
+                    "description": "To activate two factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**.",
+                    "title": "Set up two-factor authentication using TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

@@ -1,0 +1,65 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "cook_time": {
+                "name": "Cook time"
+            },
+            "cook_time_remaining": {
+                "name": "Cook time remaining"
+            },
+            "heater_temperature": {
+                "name": "Heater temperature"
+            },
+            "mode": {
+                "name": "Mode",
+                "state": {
+                    "cook": "Cooking",
+                    "device_failure": "Device failure",
+                    "high_temp": "High temperature",
+                    "idle": "Idle",
+                    "low_water": "Low water",
+                    "ota": "Ota",
+                    "provisioning": "Provisioning",
+                    "startup": "Startup"
+                }
+            },
+            "state": {
+                "name": "State",
+                "state": {
+                    "cooking": "Cooking",
+                    "maintaining": "Maintaining",
+                    "no_state": "No state",
+                    "preheating": "Preheating",
+                    "set_timer": "Set timer",
+                    "timer_expired": "Timer expired"
+                }
+            },
+            "target_temperature": {
+                "name": "Target temperature"
+            },
+            "triac_temperature": {
+                "name": "Triac temperature"
+            },
+            "water_temperature": {
+                "name": "Water temperature"
+            }
+        }
+    }
+}

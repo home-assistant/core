@@ -1,0 +1,100 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_location": "Could not find a camera location with the specified name",
+            "more_locations": "Found multiple camera locations with the specified name"
+        },
+        "step": {
+            "multiple_cameras": {
+                "data": {
+                    "id": "Choose camera"
+                },
+                "description": "Result came back with multiple cameras"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "api_key": "API key",
+                    "location": "Location"
+                },
+                "data_description": {
+                    "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "location": "Location"
+                },
+                "data_description": {
+                    "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "active": {
+                "name": "Active"
+            }
+        },
+        "camera": {
+            "tv_camera": {
+                "state_attributes": {
+                    "description": {
+                        "name": "Description"
+                    },
+                    "direction": {
+                        "name": "Direction"
+                    },
+                    "full_size_photo": {
+                        "name": "Full size photo"
+                    },
+                    "location": {
+                        "name": "Location"
+                    },
+                    "photo_url": {
+                        "name": "Photo url"
+                    },
+                    "status": {
+                        "name": "Status"
+                    },
+                    "type": {
+                        "name": "Camera type"
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "camera_type": {
+                "name": "Camera type"
+            },
+            "direction": {
+                "name": "Direction"
+            },
+            "modified": {
+                "name": "Modified"
+            },
+            "photo_time": {
+                "name": "Photo time"
+            },
+            "photo_url": {
+                "name": "Photo url"
+            },
+            "status": {
+                "name": "Status"
+            }
+        }
+    }
+}

@@ -1,0 +1,71 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_invalid_user": "Reauthenticate must use the same account.",
+            "reauth_successful": "Re-authentication was successful",
+            "user_rejected_authorize": "Account linking rejected: {error}"
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "ding": {
+                "name": "Doorbell ding"
+            },
+            "image_capture": {
+                "name": "Image capture"
+            }
+        },
+        "button": {
+            "wake": {
+                "name": "Wake"
+            }
+        },
+        "camera": {
+            "camera": {
+                "name": "Camera"
+            }
+        },
+        "event": {
+            "doorbell": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "ring": "Ring"
+                        }
+                    }
+                }
+            },
+            "motion": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "motion": "Motion"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "operator": {
+                "name": "Operator"
+            }
+        }
+    }
+}

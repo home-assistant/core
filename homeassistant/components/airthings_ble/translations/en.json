@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "illuminance": {
+                "name": "Illuminance"
+            },
+            "radon_1day_avg": {
+                "name": "Radon 1-day average"
+            },
+            "radon_1day_level": {
+                "name": "Radon 1-day level"
+            },
+            "radon_longterm_avg": {
+                "name": "Radon longterm average"
+            },
+            "radon_longterm_level": {
+                "name": "Radon longterm level"
+            }
+        }
+    }
+}

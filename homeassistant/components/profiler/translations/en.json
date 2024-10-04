@@ -1,0 +1,99 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "services": {
+        "dump_log_objects": {
+            "description": "Dumps the repr of all matching objects to the log.",
+            "fields": {
+                "type": {
+                    "description": "The type of objects to dump to the log.",
+                    "name": "Type"
+                }
+            },
+            "name": "Dump log objects"
+        },
+        "log_current_tasks": {
+            "description": "Logs all the current asyncio tasks.",
+            "name": "Log current asyncio tasks"
+        },
+        "log_event_loop_scheduled": {
+            "description": "Logs what is scheduled in the event loop.",
+            "name": "Log event loop scheduled"
+        },
+        "log_thread_frames": {
+            "description": "Logs the current frames for all threads.",
+            "name": "Log thread frames"
+        },
+        "lru_stats": {
+            "description": "Logs the stats of all lru caches.",
+            "name": "Log LRU stats"
+        },
+        "memory": {
+            "description": "Starts the Memory Profiler.",
+            "fields": {
+                "seconds": {
+                    "description": "The number of seconds to run the memory profiler.",
+                    "name": "Seconds"
+                }
+            },
+            "name": "Memory"
+        },
+        "set_asyncio_debug": {
+            "description": "Enable or disable asyncio debug.",
+            "fields": {
+                "enabled": {
+                    "description": "Whether to enable or disable asyncio debug.",
+                    "name": "Enabled"
+                }
+            },
+            "name": "Set asyncio debug"
+        },
+        "start": {
+            "description": "Starts the Profiler.",
+            "fields": {
+                "seconds": {
+                    "description": "The number of seconds to run the profiler.",
+                    "name": "Seconds"
+                }
+            },
+            "name": "Start"
+        },
+        "start_log_object_sources": {
+            "description": "Starts logging sources of new objects in memory.",
+            "fields": {
+                "max_objects": {
+                    "description": "The maximum number of objects to log.",
+                    "name": "Maximum objects"
+                },
+                "scan_interval": {
+                    "description": "The number of seconds between logging objects.",
+                    "name": "Scan interval"
+                }
+            },
+            "name": "Start logging object sources"
+        },
+        "start_log_objects": {
+            "description": "Starts logging growth of objects in memory.",
+            "fields": {
+                "scan_interval": {
+                    "description": "The number of seconds between logging objects.",
+                    "name": "Scan interval"
+                }
+            },
+            "name": "Start logging objects"
+        },
+        "stop_log_object_sources": {
+            "description": "Stops logging sources of new objects in memory.",
+            "name": "Stop logging object sources"
+        },
+        "stop_log_objects": {
+            "description": "Stops logging growth of objects in memory.",
+            "name": "Stop logging objects"
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_sensor": "Sensor not available or invalid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "sensor_id": "Sensor ID",
+                    "show_on_map": "Show on map"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pressure_at_sealevel": {
+                "name": "Pressure at sealevel"
+            }
+        }
+    }
+}

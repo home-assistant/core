@@ -1,0 +1,146 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "pin": "Two-factor code"
+                },
+                "description": "Enter the PIN sent via email or SMS",
+                "title": "Two-factor authentication"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Sign-in with Blink account"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "camera_armed": {
+                "name": "Camera armed"
+            }
+        },
+        "sensor": {
+            "wifi_strength": {
+                "name": "Wi-Fi signal strength"
+            }
+        },
+        "switch": {
+            "camera_motion": {
+                "name": "Camera motion detection"
+            }
+        }
+    },
+    "exceptions": {
+        "cant_write": {
+            "message": "Can't write to file."
+        },
+        "failed_arm": {
+            "message": "Blink failed to arm camera."
+        },
+        "failed_arm_motion": {
+            "message": "Blink failed to arm camera motion detection."
+        },
+        "failed_clip": {
+            "message": "Blink failed to record a clip."
+        },
+        "failed_disarm": {
+            "message": "Blink failed to disarm camera."
+        },
+        "failed_disarm_motion": {
+            "message": "Blink failed to disarm camera motion detection."
+        },
+        "failed_snap": {
+            "message": "Blink failed to snap a picture."
+        },
+        "integration_not_found": {
+            "message": "Integration \"{target}\" not found in registry."
+        },
+        "no_path": {
+            "message": "Can't write to directory {target}, no access to path!"
+        },
+        "not_loaded": {
+            "message": "{target} is not loaded."
+        }
+    },
+    "issues": {
+        "service_deprecation": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Blink update service is deprecated and will be removed.\nPlease update your automations and scripts to use `Home Assistant Core Integration: Update entity`.",
+                        "title": "Blink update service is being removed"
+                    }
+                }
+            },
+            "title": "Blink update service is being removed"
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Configure Blink integration",
+                "title": "Blink options"
+            }
+        }
+    },
+    "services": {
+        "record": {
+            "description": "Requests camera to record a clip.",
+            "name": "Record"
+        },
+        "save_recent_clips": {
+            "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
+            "fields": {
+                "file_path": {
+                    "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config).",
+                    "name": "Output directory"
+                }
+            },
+            "name": "Save recent clips"
+        },
+        "save_video": {
+            "description": "Saves last recorded video clip to local file.",
+            "fields": {
+                "filename": {
+                    "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config).",
+                    "name": "File name"
+                }
+            },
+            "name": "Save video"
+        },
+        "send_pin": {
+            "description": "Sends a new PIN to Blink for 2FA.",
+            "fields": {
+                "config_entry_id": {
+                    "description": "The Blink Integration ID.",
+                    "name": "Integration ID"
+                },
+                "pin": {
+                    "description": "PIN received from Blink. Leave empty if you only received a verification email.",
+                    "name": "PIN"
+                }
+            },
+            "name": "Send PIN"
+        },
+        "trigger_camera": {
+            "description": "Requests camera to take new image.",
+            "name": "Trigger camera"
+        }
+    }
+}

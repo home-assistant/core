@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Relay 1",
+                    "relay_10": "Relay 10",
+                    "relay_11": "Relay 11",
+                    "relay_12": "Relay 12",
+                    "relay_13": "Relay 13",
+                    "relay_14": "Relay 14",
+                    "relay_15": "Relay 15",
+                    "relay_16": "Relay 16",
+                    "relay_2": "Relay 2",
+                    "relay_3": "Relay 3",
+                    "relay_4": "Relay 4",
+                    "relay_5": "Relay 5",
+                    "relay_6": "Relay 6",
+                    "relay_7": "Relay 7",
+                    "relay_8": "Relay 8",
+                    "relay_9": "Relay 9"
+                },
+                "title": "Set up relays"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your ProgettiHWSW board."
+                },
+                "title": "Set up board"
+            }
+        }
+    }
+}

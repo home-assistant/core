@@ -1,0 +1,165 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "rate_limited": "Currently rate limited, please try again later.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "location": "Location",
+                    "name": "Name"
+                },
+                "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "china_mep_air_quality_index": {
+                "name": "China MEP air quality index"
+            },
+            "china_mep_health_concern": {
+                "name": "China MEP health concern",
+                "state": {
+                    "good": "Good",
+                    "hazardous": "Hazardous",
+                    "moderate": "Moderate",
+                    "unhealthy": "Unhealthy",
+                    "unhealthy_for_sensitive_groups": "Unhealthy for sensitive groups",
+                    "very_unhealthy": "Very unhealthy"
+                }
+            },
+            "china_mep_primary_pollutant": {
+                "name": "China MEP primary pollutant",
+                "state": {
+                    "co": "Carbon monoxide",
+                    "no2": "Nitrogen dioxide",
+                    "o3": "Ozone",
+                    "pm10": "PM10",
+                    "pm25": "PM2.5",
+                    "so2": "Sulphur dioxide"
+                }
+            },
+            "cloud_base": {
+                "name": "Cloud base"
+            },
+            "cloud_ceiling": {
+                "name": "Cloud ceiling"
+            },
+            "cloud_cover": {
+                "name": "Cloud cover"
+            },
+            "dew_point": {
+                "name": "Dew point"
+            },
+            "feels_like": {
+                "name": "Feels like"
+            },
+            "fire_index": {
+                "name": "Fire index"
+            },
+            "grass_pollen_index": {
+                "name": "Grass pollen index",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "none": "None",
+                    "very_high": "Very high",
+                    "very_low": "Very low"
+                }
+            },
+            "health_concern": {
+                "name": "US EPA health concern",
+                "state": {
+                    "good": "Good",
+                    "hazardous": "Hazardous",
+                    "moderate": "Moderate",
+                    "unhealthy": "Unhealthy",
+                    "unhealthy_for_sensitive_groups": "Unhealthy for sensitive groups",
+                    "very_unhealthy": "Very unhealthy"
+                }
+            },
+            "pollen_index": {
+                "name": "Tree pollen index",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "none": "None",
+                    "very_high": "Very high",
+                    "very_low": "Very low"
+                }
+            },
+            "precipitation_type": {
+                "name": "Precipitation type",
+                "state": {
+                    "freezing_rain": "Freezing rain",
+                    "ice_pellets": "Ice pellets",
+                    "none": "None",
+                    "rain": "Rain",
+                    "snow": "Snow"
+                }
+            },
+            "primary_pollutant": {
+                "name": "US EPA primary pollutant",
+                "state": {
+                    "co": "Carbon monoxide",
+                    "no2": "Nitrogen dioxide",
+                    "o3": "Ozone",
+                    "pm10": "PM10",
+                    "pm25": "PM2.5",
+                    "so2": "Sulphur dioxide"
+                }
+            },
+            "us_epa_air_quality_index": {
+                "name": "US EPA air quality index"
+            },
+            "uv_index": {
+                "name": "UV index"
+            },
+            "uv_radiation_health_concern": {
+                "name": "UV radiation health concern",
+                "state": {
+                    "extreme": "Extreme",
+                    "high": "High",
+                    "low": "Low",
+                    "moderate": "Moderate",
+                    "very_high": "Very high"
+                }
+            },
+            "weed_pollen_index": {
+                "name": "Weed pollen index",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "none": "None",
+                    "very_high": "Very high",
+                    "very_low": "Very low"
+                }
+            },
+            "wind_gust": {
+                "name": "Wind gust"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Between NowCast Forecasts"
+                },
+                "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+                "title": "Update Tomorrow.io Options"
+            }
+        }
+    }
+}

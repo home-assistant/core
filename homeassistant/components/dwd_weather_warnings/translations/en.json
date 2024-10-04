@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_identifier": "The specified region identifier / device tracker is invalid."
+        },
+        "error": {
+            "ambiguous_identifier": "The region identifier and device tracker can not be specified together.",
+            "attribute_not_found": "The required `latitude` or `longitude` attribute was not found in the specified device tracker.",
+            "entity_not_found": "The specified device tracker entity was not found.",
+            "invalid_identifier": "The specified region identifier / device tracker is invalid.",
+            "no_identifier": "Either the region identifier or device tracker is required."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "region_device_tracker": "Device tracker entity",
+                    "region_identifier": "Warncell ID or name"
+                },
+                "description": "To identify the desired region, either the warncell ID / name or device tracker is required. The provided device tracker has to contain the attributes 'latitude' and 'longitude'."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "advance_warning_level": {
+                "name": "Advance warning level",
+                "state_attributes": {
+                    "last_update": {
+                        "name": "Last update"
+                    },
+                    "region_id": {
+                        "name": "Region ID"
+                    },
+                    "region_name": {
+                        "name": "Region name"
+                    },
+                    "warning_count": {
+                        "name": "Warning count"
+                    }
+                }
+            },
+            "current_warning_level": {
+                "name": "Current warning level",
+                "state_attributes": {
+                    "last_update": {
+                        "name": "Last update"
+                    },
+                    "region_id": {
+                        "name": "Region ID"
+                    },
+                    "region_name": {
+                        "name": "Region name"
+                    },
+                    "warning_count": {
+                        "name": "Warning count"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "timeout": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Evil Genius Labs device."
+                }
+            }
+        }
+    }
+}

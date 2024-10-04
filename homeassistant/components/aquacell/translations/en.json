@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "brand": "Brand",
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Select the brand of the softener and fill in your softener mobile app credentials"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "salt_left_side_percentage": {
+                "name": "Salt left side percentage"
+            },
+            "salt_left_side_time_remaining": {
+                "name": "Salt left side time remaining"
+            },
+            "salt_right_side_percentage": {
+                "name": "Salt right side percentage"
+            },
+            "salt_right_side_time_remaining": {
+                "name": "Salt right side time remaining"
+            },
+            "wi_fi_strength": {
+                "name": "Wi-Fi strength",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
+            }
+        }
+    }
+}

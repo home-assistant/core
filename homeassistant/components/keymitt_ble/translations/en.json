@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "linking": "Failed to pair, please try again. Is the MicroBot in pairing mode?"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "init": {
+                "data": {
+                    "address": "Device address",
+                    "name": "Name"
+                },
+                "title": "Set up MicroBot device"
+            },
+            "link": {
+                "description": "Press the button on the MicroBot Push when the LED is solid pink or green to register with Home Assistant.",
+                "title": "Pairing"
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "push": {
+                "name": "Push"
+            }
+        }
+    },
+    "services": {
+        "calibrate": {
+            "description": "Calibration - Set depth, press & hold duration, and operation mode. Warning - this will send a push command to the device.",
+            "fields": {
+                "depth": {
+                    "description": "Depth in percent.",
+                    "name": "Depth"
+                },
+                "duration": {
+                    "description": "Duration in seconds.",
+                    "name": "Duration"
+                },
+                "entity_id": {
+                    "description": "Name of entity to calibrate.",
+                    "name": "Entity"
+                },
+                "mode": {
+                    "description": "Normal | invert | toggle.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Calibrate"
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "characteristic_missing": "The device is either already connected to Wi-Fi, or no longer able to connect to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
+            "no_devices_found": "No devices found on the network",
+            "provision_successful": "The device has successfully connected to the Wi-Fi network.",
+            "provision_successful_url": "The device has successfully connected to the Wi-Fi network.\n\nPlease visit {url} to finish setup.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "unable_to_connect": "The device could not connect to the Wi-Fi network. Check that the SSID and password are correct and try again."
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "authorize": "The device requires authorization, please press its authorization button or consult the device's manual for how to proceed.",
+            "provisioning": "The device is connecting to the Wi-Fi network."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "identify": {
+                "description": "The device is now identifying itself, for example by blinking or beeping."
+            },
+            "main_menu": {
+                "description": "Choose next step.",
+                "menu_options": {
+                    "identify": "Identify device",
+                    "provision": "Connect device to a Wi-Fi network"
+                }
+            },
+            "provision": {
+                "data": {
+                    "password": "Password",
+                    "ssid": "SSID"
+                },
+                "description": "Enter Wi-Fi credentials to connect the device to your network."
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    }
+}

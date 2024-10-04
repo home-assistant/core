@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Re-authenticate by entering password for {username}",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "services": {
+        "set_lock_state": {
+            "description": "Sets lock state.",
+            "fields": {
+                "flap_id": {
+                    "description": "Flap ID to lock/unlock.",
+                    "name": "Flap ID"
+                },
+                "lock_state": {
+                    "description": "New lock state.",
+                    "name": "Lock state"
+                }
+            },
+            "name": "Set lock state"
+        },
+        "set_pet_location": {
+            "description": "Sets pet location.",
+            "fields": {
+                "location": {
+                    "description": "Pet location (Inside or Outside).",
+                    "name": "Location"
+                },
+                "pet_name": {
+                    "description": "Name of pet.",
+                    "name": "Pet name"
+                }
+            },
+            "name": "Set pet location"
+        }
+    }
+}

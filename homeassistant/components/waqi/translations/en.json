@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "map": {
+                "data": {
+                    "location": "Location"
+                },
+                "description": "Select a location to get the closest measuring station."
+            },
+            "station_number": {
+                "data": {
+                    "station_number": "Measuring station number"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "method": "How do you want to select a measuring station?"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "carbon_monoxide": {
+                "name": "Carbon monoxide"
+            },
+            "dominant_pollutant": {
+                "name": "Dominant pollutant",
+                "state": {
+                    "co": "Carbon monoxide",
+                    "neph": "Nephelometry",
+                    "no2": "Nitrogen dioxide",
+                    "o3": "Ozone",
+                    "pm10": "PM10",
+                    "pm25": "PM2.5",
+                    "so2": "Sulphur dioxide"
+                }
+            },
+            "neph": {
+                "name": "Visbility using nephelometry"
+            },
+            "nitrogen_dioxide": {
+                "name": "Nitrogen dioxide"
+            },
+            "ozone": {
+                "name": "Ozone"
+            },
+            "pm10": {
+                "name": "PM10"
+            },
+            "pm25": {
+                "name": "PM2.5"
+            },
+            "sulphur_dioxide": {
+                "name": "Sulphur dioxide"
+            }
+        }
+    },
+    "selector": {
+        "method": {
+            "options": {
+                "map": "Select nearest from point on the map",
+                "station_number": "Enter a station number"
+            }
+        }
+    }
+}

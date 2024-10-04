@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+            "already_configured": "Account is already configured",
+            "no_channel": "Please create a YouTube channel to be able to use the integration. Instructions can be found at {support_url}.",
+            "no_subscriptions": "You need to be subscribed to YouTube channels in order to add them.",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error",
+            "wrong_account": "Wrong account: please authenticate with the right account."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "channels": {
+                "data": {
+                    "channels": "YouTube channels"
+                },
+                "description": "Select the channels you want to add."
+            },
+            "reauth_confirm": {
+                "description": "The YouTube integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "latest_upload": {
+                "name": "Latest upload",
+                "state_attributes": {
+                    "published_at": {
+                        "name": "Published at"
+                    },
+                    "video_id": {
+                        "name": "Video ID"
+                    }
+                }
+            },
+            "subscribers": {
+                "name": "Subscribers"
+            },
+            "views": {
+                "name": "Views"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "channels": "YouTube channels"
+                },
+                "description": "Select the channels you want to add."
+            }
+        }
+    }
+}

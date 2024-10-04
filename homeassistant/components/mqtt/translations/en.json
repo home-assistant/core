@@ -1,0 +1,316 @@
+{
+    "config": {
+        "abort": {
+            "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
+            "addon_info_failed": "Failed get info for the {addon} add-on.",
+            "addon_install_failed": "Failed to install the {addon} add-on.",
+            "addon_start_failed": "Failed to start the {addon} add-on.",
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "bad_birth": "Invalid birth topic",
+            "bad_certificate": "The CA certificate is invalid",
+            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
+            "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+            "bad_discovery_prefix": "Invalid discovery prefix",
+            "bad_will": "Invalid will topic",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_inclusion": "The client certificate and private key must be configured together"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "advanced_options": "Advanced options",
+                    "broker": "Broker",
+                    "certificate": "Upload custom CA certificate file",
+                    "client_cert": "Upload client certificate file",
+                    "client_id": "Client ID (leave empty to randomly generated one)",
+                    "client_key": "Upload private key file",
+                    "keepalive": "The time between sending keep alive messages",
+                    "password": "Password",
+                    "port": "Port",
+                    "protocol": "MQTT protocol",
+                    "set_ca_cert": "Broker certificate validation",
+                    "set_client_cert": "Use a client certificate",
+                    "tls_insecure": "Ignore broker certificate validation",
+                    "transport": "MQTT transport",
+                    "username": "Username",
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
+                },
+                "data_description": {
+                    "advanced_options": "Enable and select **Next** to set advanced options.",
+                    "broker": "The hostname or IP address of your MQTT broker.",
+                    "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+                    "client_cert": "The client certificate to authenticate against your MQTT broker.",
+                    "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
+                    "client_key": "The private key file that belongs to your client certificate.",
+                    "keepalive": "A value less than 90 seconds is advised.",
+                    "password": "The password to login to your MQTT broker.",
+                    "port": "The port your MQTT broker listens to. For example 1883.",
+                    "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
+                    "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+                    "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
+                    "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
+                    "transport": "The transport to be used for the connection to your MQTT broker.",
+                    "username": "The username to login to your MQTT broker.",
+                    "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
+                    "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
+                },
+                "description": "Please enter the connection information of your MQTT broker."
+            },
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
+            },
+            "install_addon": {
+                "title": "Installing add-on"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password to login to your MQTT broker.",
+                    "username": "The username to login to your MQTT broker."
+                },
+                "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
+                "title": "Re-authentication required with the MQTT broker"
+            },
+            "start_addon": {
+                "title": "Starting add-on"
+            },
+            "user": {
+                "description": "Please choose how you want to connect to the MQTT broker:",
+                "menu_options": {
+                    "addon": "Use the official {addon} add-on.",
+                    "broker": "Manually enter the MQTT broker connection details"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "button_5": "Fifth button",
+            "button_6": "Sixth button",
+            "turn_off": "Turn off",
+            "turn_on": "Turn on"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" double clicked",
+            "button_long_press": "\"{subtype}\" continuously pressed",
+            "button_long_release": "\"{subtype}\" released after long press",
+            "button_quadruple_press": "\"{subtype}\" quadruple clicked",
+            "button_quintuple_press": "\"{subtype}\" quintuple clicked",
+            "button_short_press": "\"{subtype}\" pressed",
+            "button_short_release": "\"{subtype}\" released",
+            "button_triple_press": "\"{subtype}\" triple clicked"
+        }
+    },
+    "exceptions": {
+        "addon_start_failed": {
+            "message": "Failed to correctly start {addon} add-on."
+        },
+        "command_template_error": {
+            "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
+        },
+        "invalid_platform_config": {
+            "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+        },
+        "invalid_publish_topic": {
+            "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
+        },
+        "mqtt_broker_error": {
+            "message": "Error talking to MQTT: {error_message}."
+        },
+        "mqtt_not_setup_cannot_publish": {
+            "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
+        },
+        "mqtt_not_setup_cannot_subscribe": {
+            "message": "Cannot subscribe to topic \"{topic}\", make sure MQTT is set up correctly."
+        },
+        "mqtt_not_setup_cannot_unsubscribe_twice": {
+            "message": "Cannot unsubscribe topic \"{topic}\" twice."
+        },
+        "mqtt_topic_not_a_string": {
+            "message": "Topic needs to be a string! Got: {topic}."
+        },
+        "mqtt_trigger_cannot_remove_twice": {
+            "message": "Can't remove trigger twice."
+        }
+    },
+    "issues": {
+        "deprecated_color_handling": {
+            "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+            "title": "Deprecated color handling used for MQTT light"
+        },
+        "deprecated_color_mode_flag": {
+            "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses a deprecated `color_mode` flag.\n\nConfiguration found:\n```yaml\n{config}\n```\n\nRemove the option from your config and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+            "title": "Deprecated color_mode option flag used for MQTT light"
+        },
+        "invalid_platform_config": {
+            "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+            "title": "Invalid config found for mqtt {domain} item"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Invalid birth topic",
+            "bad_certificate": "The CA certificate is invalid",
+            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
+            "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+            "bad_discovery_prefix": "Invalid discovery prefix",
+            "bad_will": "Invalid will topic",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+            "cannot_connect": "Failed to connect",
+            "invalid_inclusion": "The client certificate and private key must be configured together"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "advanced_options": "Advanced options",
+                    "broker": "Broker",
+                    "certificate": "Upload custom CA certificate file",
+                    "client_cert": "Upload client certificate file",
+                    "client_id": "Client ID (leave empty to randomly generated one)",
+                    "client_key": "Upload private key file",
+                    "keepalive": "The time between sending keep alive messages",
+                    "password": "Password",
+                    "port": "Port",
+                    "protocol": "MQTT protocol",
+                    "set_ca_cert": "Broker certificate validation",
+                    "set_client_cert": "Use a client certificate",
+                    "tls_insecure": "Ignore broker certificate validation",
+                    "transport": "MQTT transport",
+                    "username": "Username",
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
+                },
+                "data_description": {
+                    "advanced_options": "Enable and select **Next** to set advanced options.",
+                    "broker": "The hostname or IP address of your MQTT broker.",
+                    "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+                    "client_cert": "The client certificate to authenticate against your MQTT broker.",
+                    "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
+                    "client_key": "The private key file that belongs to your client certificate.",
+                    "keepalive": "A value less than 90 seconds is advised.",
+                    "password": "The password to login to your MQTT broker.",
+                    "port": "The port your MQTT broker listens to. For example 1883.",
+                    "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
+                    "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+                    "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
+                    "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
+                    "transport": "The transport to be used for the connection to your MQTT broker.",
+                    "username": "The username to login to your MQTT broker.",
+                    "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
+                    "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
+                },
+                "description": "Please enter the connection information of your MQTT broker.",
+                "title": "Broker options"
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Enable birth message",
+                    "birth_payload": "Birth message payload",
+                    "birth_qos": "Birth message QoS",
+                    "birth_retain": "Birth message retain",
+                    "birth_topic": "Birth message topic",
+                    "discovery": "Enable discovery",
+                    "discovery_prefix": "Discovery prefix",
+                    "will_enable": "Enable will message",
+                    "will_payload": "Will message payload",
+                    "will_qos": "Will message QoS",
+                    "will_retain": "Will message retain",
+                    "will_topic": "Will message topic"
+                },
+                "data_description": {
+                    "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
+                    "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
+                    "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
+                    "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
+                    "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
+                    "discovery": "Option to enable MQTT automatic discovery.",
+                    "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+                    "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it loses the connection to your broker.",
+                    "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
+                    "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
+                    "will_retain": "When set, your MQTT broker will retain the `will` message.",
+                    "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to."
+                },
+                "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nDiscovery prefix - The prefix a configuration topic for automatic discovery must start with.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
+                "title": "MQTT options"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Custom",
+                "off": "Off"
+            }
+        }
+    },
+    "services": {
+        "dump": {
+            "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+            "fields": {
+                "duration": {
+                    "description": "How long we should listen for messages in seconds.",
+                    "name": "Duration"
+                },
+                "topic": {
+                    "description": "Topic to listen to.",
+                    "name": "Topic"
+                }
+            },
+            "name": "Export"
+        },
+        "publish": {
+            "description": "Publishes a message to an MQTT topic.",
+            "fields": {
+                "evaluate_payload": {
+                    "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
+                    "name": "Evaluate payload"
+                },
+                "payload": {
+                    "description": "The payload to publish.",
+                    "name": "Payload"
+                },
+                "payload_template": {
+                    "description": "Template to render as a payload value. If a payload is provided, the template is ignored.",
+                    "name": "Payload template"
+                },
+                "qos": {
+                    "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once.",
+                    "name": "QoS"
+                },
+                "retain": {
+                    "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic.",
+                    "name": "Retain"
+                },
+                "topic": {
+                    "description": "Topic to publish to.",
+                    "name": "Topic"
+                }
+            },
+            "name": "Publish"
+        },
+        "reload": {
+            "description": "Reloads MQTT entities from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

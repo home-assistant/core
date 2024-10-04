@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "invalid_response": "Failed to connect due to an invalid response from the MotionMount.",
+            "not_connected": "Failed to connect.",
+            "time_out": "Failed to connect due to a time out."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Set up your MotionMount to integrate with Home Assistant.",
+                "title": "Link your MotionMount"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to set up {name}?",
+                "title": "Discovered MotionMount"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "motionmount_is_moving": {
+                "name": "Moving"
+            }
+        },
+        "number": {
+            "motionmount_extension": {
+                "name": "Extension"
+            },
+            "motionmount_turn": {
+                "name": "Turn"
+            }
+        },
+        "select": {
+            "motionmount_preset": {
+                "name": "Preset",
+                "state": {
+                    "0_wall": "0: Wall"
+                }
+            }
+        },
+        "sensor": {
+            "motionmount_error_status": {
+                "name": "Error Status",
+                "state": {
+                    "internal": "Internal",
+                    "motor": "Motor",
+                    "none": "None"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "failed_communication": {
+            "message": "Failed to communicate with MotionMount"
+        }
+    }
+}

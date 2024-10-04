@@ -1,0 +1,188 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "A connection error occurred while connecting to the Powerwall: {error}",
+            "invalid_auth": "Authentication failed with error: {error}",
+            "unknown": "An unknown error occurred: {error}",
+            "wrong_version": "Your Powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved: {error}"
+        },
+        "flow_title": "{name} ({ip_address})",
+        "step": {
+            "confirm_discovery": {
+                "description": "Do you want to set up {name} ({ip_address})?",
+                "title": "Connect to the Powerwall"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The default password is the last 5 characters of the password printed inside the Backup Gateway for newer models. For older models, the default password is the last five characters of the serial number for Backup Gateway and can be found in the Tesla app.",
+                "title": "Reauthenticate the Powerwall"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP address",
+                    "password": "Password"
+                },
+                "description": "The default password is the last 5 characters of the password printed inside the Backup Gateway for newer models. For older models, the default password is the last five characters of the serial number for Backup Gateway and can be found in the Tesla app.",
+                "title": "Connect to the Powerwall"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "connected_to_tesla": {
+                "name": "Connected to Tesla"
+            },
+            "grid_services_active": {
+                "name": "Grid services active"
+            },
+            "grid_status": {
+                "name": "Grid status"
+            },
+            "status": {
+                "name": "Status"
+            }
+        },
+        "sensor": {
+            "backup_reserve": {
+                "name": "Backup reserve"
+            },
+            "battery_capacity": {
+                "name": "Battery capacity"
+            },
+            "battery_export": {
+                "name": "Battery export"
+            },
+            "battery_import": {
+                "name": "Battery import"
+            },
+            "battery_instant_current": {
+                "name": "Battery current"
+            },
+            "battery_instant_frequency": {
+                "name": "Battery frequency"
+            },
+            "battery_instant_power": {
+                "name": "Battery power"
+            },
+            "battery_instant_voltage": {
+                "name": "Battery voltage"
+            },
+            "battery_remaining": {
+                "name": "Battery remaining"
+            },
+            "busway_export": {
+                "name": "Busway export"
+            },
+            "busway_import": {
+                "name": "Busway import"
+            },
+            "busway_instant_current": {
+                "name": "Busway current"
+            },
+            "busway_instant_frequency": {
+                "name": "Busway frequency"
+            },
+            "busway_instant_power": {
+                "name": "Busway power"
+            },
+            "busway_instant_voltage": {
+                "name": "Busway voltage"
+            },
+            "charge": {
+                "name": "Charge"
+            },
+            "generator_export": {
+                "name": "Generator export"
+            },
+            "generator_import": {
+                "name": "Generator import"
+            },
+            "generator_instant_current": {
+                "name": "Generator current"
+            },
+            "generator_instant_frequency": {
+                "name": "Generator frequency"
+            },
+            "generator_instant_power": {
+                "name": "Generator power"
+            },
+            "generator_instant_voltage": {
+                "name": "Generator voltage"
+            },
+            "grid_state": {
+                "name": "Grid state",
+                "state": {
+                    "grid_compliant": "Compliant",
+                    "grid_qualifying": "Qualifying",
+                    "grid_uncompliant": "Uncompliant"
+                }
+            },
+            "load_export": {
+                "name": "Load export"
+            },
+            "load_import": {
+                "name": "Load import"
+            },
+            "load_instant_current": {
+                "name": "Load current"
+            },
+            "load_instant_frequency": {
+                "name": "Load frequency"
+            },
+            "load_instant_power": {
+                "name": "Load power"
+            },
+            "load_instant_voltage": {
+                "name": "Load voltage"
+            },
+            "site_export": {
+                "name": "Site export"
+            },
+            "site_import": {
+                "name": "Site import"
+            },
+            "site_instant_current": {
+                "name": "Site current"
+            },
+            "site_instant_frequency": {
+                "name": "Site frequency"
+            },
+            "site_instant_power": {
+                "name": "Site power"
+            },
+            "site_instant_voltage": {
+                "name": "Site voltage"
+            },
+            "solar_export": {
+                "name": "Solar export"
+            },
+            "solar_import": {
+                "name": "Solar import"
+            },
+            "solar_instant_current": {
+                "name": "Solar current"
+            },
+            "solar_instant_frequency": {
+                "name": "Solar frequency"
+            },
+            "solar_instant_power": {
+                "name": "Solar power"
+            },
+            "solar_instant_voltage": {
+                "name": "Solar voltage"
+            }
+        },
+        "switch": {
+            "off_grid_operation": {
+                "name": "Off-grid operation"
+            }
+        }
+    }
+}

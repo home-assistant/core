@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "Version source"
+                },
+                "description": "Select the source you want to track versions from",
+                "title": "Select installation type"
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Include beta versions",
+                    "board": "Which board should be tracked",
+                    "channel": "Which channel should be tracked",
+                    "image": "Which image should be tracked"
+                },
+                "description": "Configure {version_source} version tracking",
+                "title": "Configure"
+            }
+        }
+    },
+    "title": "Version"
+}

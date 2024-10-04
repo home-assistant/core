@@ -1,0 +1,103 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API key"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "Please enter a new api key for PI-Hole at {host}/{location}",
+                "title": "Reauthenticate PI-Hole"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "location": "Location",
+                    "name": "Name",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Ads blocked today",
+                "unit_of_measurement": "ads"
+            },
+            "ads_percentage_today": {
+                "name": "Ads percentage blocked today"
+            },
+            "clients_ever_seen": {
+                "name": "Seen clients",
+                "unit_of_measurement": "clients"
+            },
+            "dns_queries_today": {
+                "name": "DNS queries today",
+                "unit_of_measurement": "queries"
+            },
+            "domains_being_blocked": {
+                "name": "Domains blocked",
+                "unit_of_measurement": "domains"
+            },
+            "queries_cached": {
+                "name": "DNS queries cached",
+                "unit_of_measurement": "queries"
+            },
+            "queries_forwarded": {
+                "name": "DNS queries forwarded",
+                "unit_of_measurement": "queries"
+            },
+            "unique_clients": {
+                "name": "DNS unique clients",
+                "unit_of_measurement": "clients"
+            },
+            "unique_domains": {
+                "name": "DNS unique domains",
+                "unit_of_measurement": "domains"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Core update available"
+            },
+            "ftl_update_available": {
+                "name": "FTL update available"
+            },
+            "web_update_available": {
+                "name": "Web update available"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "description": "Disables configured Pi-hole(s) for an amount of time.",
+            "fields": {
+                "duration": {
+                    "description": "Time that the Pi-hole should be disabled for.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Disable"
+        }
+    }
+}

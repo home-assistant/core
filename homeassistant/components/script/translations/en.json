@@ -1,0 +1,70 @@
+{
+    "common": {
+        "validation_failed_title": "Script {name} failed to set up"
+    },
+    "entity_component": {
+        "_": {
+            "name": "Script",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "current": {
+                    "name": "Running automations"
+                },
+                "last_action": {
+                    "name": "Last action"
+                },
+                "last_triggered": {
+                    "name": "Last triggered"
+                },
+                "max": {
+                    "name": "Max running scripts"
+                },
+                "mode": {
+                    "name": "Run mode",
+                    "state": {
+                        "parallel": "Parallel",
+                        "queued": "Queued",
+                        "restart": "Restart",
+                        "single": "Single"
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "validation_failed_blueprint": {
+            "description": "The blueprinted script \"{name}\" (`{entity_id}`) failed to set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the script]({edit}) to correct it, then save and reload the script configuration.",
+            "title": "Script {name} failed to set up"
+        },
+        "validation_failed_schema": {
+            "description": "The script \"{name}\" (`{entity_id}`) is not active because the configuration has errors.\n\nError:`{error}`.\n\nTo fix this error, [edit the script]({edit}) to correct it, then save and reload the script configuration.",
+            "title": "Script {name} failed to set up"
+        },
+        "validation_failed_sequence": {
+            "description": "The script \"{name}\" (`{entity_id}`) is not active because its sequence could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the script]({edit}) to correct it, then save and reload the script configuration.",
+            "title": "Script {name} failed to set up"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads all the available scripts.",
+            "name": "Reload"
+        },
+        "toggle": {
+            "description": "Starts a script if it isn't running, stops it otherwise.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Stops a running script.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Runs the sequence of actions defined in a script.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Script"
+}

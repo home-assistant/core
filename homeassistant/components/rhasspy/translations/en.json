@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Do you want to enable Rhasspy support?"
+            }
+        }
+    }
+}

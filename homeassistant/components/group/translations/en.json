@@ -1,0 +1,302 @@
+{
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
+                "title": "Create Group"
+            },
+            "button": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "cover": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "event": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "light": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "notify": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "ignore_non_numeric": "Ignore non-numeric",
+                    "name": "Name",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "title": "Create Group"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Create Group"
+            },
+            "user": {
+                "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
+                "menu_options": {
+                    "binary_sensor": "Binary sensor group",
+                    "button": "Button group",
+                    "cover": "Cover group",
+                    "event": "Event group",
+                    "fan": "Fan group",
+                    "light": "Light group",
+                    "lock": "Lock group",
+                    "media_player": "Media player group",
+                    "notify": "Notify group",
+                    "sensor": "Sensor group",
+                    "switch": "Switch group"
+                },
+                "title": "Create Group"
+            }
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Group",
+            "state": {
+                "closed": "Closed",
+                "home": "Home",
+                "locked": "Locked",
+                "not_home": "Away",
+                "off": "Off",
+                "ok": "OK",
+                "on": "On",
+                "open": "Open",
+                "problem": "Problem",
+                "unlocked": "Unlocked"
+            },
+            "state_attributes": {
+                "entity_id": {
+                    "name": "Members"
+                }
+            }
+        }
+    },
+    "issues": {
+        "device_classes_not_matching": {
+            "description": "Device classes `{device_classes}` on source entities `{source_entities}` need to be identical for sensor group `{entity_id}`.\n\nPlease correct the device classes on the source entities and reload the group sensor to fix this issue.",
+            "title": "Device classes are not correct"
+        },
+        "state_classes_not_matching": {
+            "description": "State classes `{state_classes}` on source entities `{source_entities}` need to be identical for sensor group `{entity_id}`.\n\nPlease correct the state classes on the source entities and reload the group sensor to fix this issue.",
+            "title": "State classes are not correct"
+        },
+        "uoms_not_matching_device_class": {
+            "description": "Units of measurement `{uoms}` of input sensors `{source_entities}` are not compatible and can't be converted with the device class `{device_class}` of sensor group `{entity_id}`.\n\nPlease correct the unit of measurement on the source entities and reload the group sensor to fix this issue.",
+            "title": "Units of measurement are not correct"
+        },
+        "uoms_not_matching_no_device_class": {
+            "description": "Units of measurement `{uoms}` of input sensors `{source_entities}` are not compatible when not using a device class on sensor group `{entity_id}`.\n\nPlease correct the unit of measurement on the source entities or set a proper device class on the sensor group and reload the group sensor to fix this issue.",
+            "title": "Units of measurement are not correct"
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            },
+            "button": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "light": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "notify": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "ignore_non_numeric": "Ignore non-numeric",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values."
+            },
+            "switch": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
+            }
+        }
+    },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Most recently updated",
+                "max": "Maximum",
+                "mean": "Arithmetic mean",
+                "median": "Median",
+                "min": "Minimum",
+                "product": "Product",
+                "range": "Statistical range",
+                "stdev": "Standard deviation",
+                "sum": "Sum"
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads group configuration, entities, and notify services from YAML-configuration.",
+            "name": "Reload"
+        },
+        "remove": {
+            "description": "Removes a group.",
+            "fields": {
+                "object_id": {
+                    "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id].",
+                    "name": "Object ID"
+                }
+            },
+            "name": "Remove"
+        },
+        "set": {
+            "description": "Creates/Updates a group.",
+            "fields": {
+                "add_entities": {
+                    "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`.",
+                    "name": "Add entities"
+                },
+                "all": {
+                    "description": "Enable this option if the group should only be used when all entities are in state `on`.",
+                    "name": "All"
+                },
+                "entities": {
+                    "description": "List of all members in the group. Cannot be used in combination with `Add entities` or `Remove entities`.",
+                    "name": "Entities"
+                },
+                "icon": {
+                    "description": "Name of the icon for the group.",
+                    "name": "Icon"
+                },
+                "name": {
+                    "description": "Name of the group.",
+                    "name": "Name"
+                },
+                "object_id": {
+                    "description": "Object ID of this group. This object ID is used as part of the entity ID. Entity ID format: [domain].[object_id].",
+                    "name": "Object ID"
+                },
+                "remove_entities": {
+                    "description": "List of members to be removed from a group. Cannot be used in combination with `Entities` or `Add entities`.",
+                    "name": "Remove entities"
+                }
+            },
+            "name": "Set"
+        }
+    },
+    "title": "Group"
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Invalid dongle path"
+        },
+        "error": {
+            "invalid_dongle_path": "No valid dongle found for this path"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB dongle path"
+                },
+                "title": "Select the path to your EnOcean dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB dongle path"
+                },
+                "title": "Enter the path to your EnOcean dongle"
+            }
+        }
+    }
+}

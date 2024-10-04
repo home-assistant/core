@@ -1,0 +1,135 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "existing_instance_updated": "Updated existing configuration."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the add-on: {addon}?",
+                "title": "AdGuard Home via Home Assistant add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the device running your AdGuard Home."
+                },
+                "description": "Set up your AdGuard Home instance to allow monitoring and control."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "average_processing_speed": {
+                "name": "Average processing speed"
+            },
+            "dns_queries": {
+                "name": "DNS queries"
+            },
+            "dns_queries_blocked": {
+                "name": "DNS queries blocked"
+            },
+            "dns_queries_blocked_ratio": {
+                "name": "DNS queries blocked ratio"
+            },
+            "parental_control_blocked": {
+                "name": "Parental control blocked"
+            },
+            "rules_count": {
+                "name": "Rules count"
+            },
+            "safe_browsing_blocked": {
+                "name": "Safe browsing blocked"
+            },
+            "safe_searches_enforced": {
+                "name": "Safe searches enforced"
+            }
+        },
+        "switch": {
+            "filtering": {
+                "name": "Filtering"
+            },
+            "parental": {
+                "name": "Parental control"
+            },
+            "protection": {
+                "name": "Protection"
+            },
+            "query_log": {
+                "name": "Query log"
+            },
+            "safe_browsing": {
+                "name": "Safe browsing"
+            },
+            "safe_search": {
+                "name": "Safe search"
+            }
+        }
+    },
+    "services": {
+        "add_url": {
+            "description": "Add a new filter subscription to AdGuard Home.",
+            "fields": {
+                "name": {
+                    "description": "The name of the filter subscription.",
+                    "name": "Name"
+                },
+                "url": {
+                    "description": "The filter URL to subscribe to, containing the filter rules.",
+                    "name": "URL"
+                }
+            },
+            "name": "Add URL"
+        },
+        "disable_url": {
+            "description": "Disables a filter subscription in AdGuard Home.",
+            "fields": {
+                "url": {
+                    "description": "The filter subscription URL to disable.",
+                    "name": "URL"
+                }
+            },
+            "name": "Disable URL"
+        },
+        "enable_url": {
+            "description": "Enables a filter subscription in AdGuard Home.",
+            "fields": {
+                "url": {
+                    "description": "The filter subscription URL to enable.",
+                    "name": "URL"
+                }
+            },
+            "name": "Enable URL"
+        },
+        "refresh": {
+            "description": "Refresh all filter subscriptions in AdGuard Home.",
+            "fields": {
+                "force": {
+                    "description": "Force update (bypasses AdGuard Home throttling). \"true\" to force, or \"false\" to omit for a regular refresh.",
+                    "name": "Force"
+                }
+            },
+            "name": "Refresh"
+        },
+        "remove_url": {
+            "description": "Removes a filter subscription from AdGuard Home.",
+            "fields": {
+                "url": {
+                    "description": "The filter subscription URL to remove.",
+                    "name": "URL"
+                }
+            },
+            "name": "Remove URL"
+        }
+    }
+}

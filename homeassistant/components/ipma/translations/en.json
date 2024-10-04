@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured"
+        },
+        "error": {
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Mode",
+                    "name": "Name"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Location"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "fire_risk": {
+                "name": "Fire risk"
+            },
+            "uv_index": {
+                "name": "UV index"
+            },
+            "weather_alert": {
+                "name": "Weather Alert",
+                "state": {
+                    "green": "Green",
+                    "orange": "Orange",
+                    "red": "Red",
+                    "yellow": "Yellow"
+                }
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API endpoint reachable"
+        }
+    }
+}

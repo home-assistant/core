@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Could not discover Roon server, please enter your Hostname and Port."
+            },
+            "link": {
+                "description": "You must authorize Home Assistant in Roon. After you select **Submit**, go to the Roon Core application, open **Settings** and enable Home Assistant on the **Extensions** tab.",
+                "title": "Authorize Home Assistant in Roon"
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "volume": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "mute_toggle": "Mute toggle",
+                            "volume_down": "Volume down",
+                            "volume_up": "Volume up"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "services": {
+        "transfer": {
+            "description": "Transfers playback from one player to another.",
+            "fields": {
+                "transfer_id": {
+                    "description": "ID of the destination player.",
+                    "name": "Transfer ID"
+                }
+            },
+            "name": "Transfer"
+        }
+    }
+}

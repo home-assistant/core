@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "confirm_discovery": {
+                "description": "DHCP reservation on your router is recommended. If not set up, the device may become unavailable until Home Assistant detects the new ip address. Refer to your router's user manual."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Goal Zero Yeti."
+                },
+                "description": "Please refer to the documentation to make sure all requirements are met."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "app_online": {
+                "name": "App online"
+            },
+            "backlight": {
+                "name": "Backlight"
+            },
+            "input_detected": {
+                "name": "Input detected"
+            }
+        },
+        "sensor": {
+            "amps_in": {
+                "name": "Current in"
+            },
+            "amps_out": {
+                "name": "Current out"
+            },
+            "ip_addr": {
+                "name": "IP address"
+            },
+            "soc_percent": {
+                "name": "State of charge percent"
+            },
+            "ssid": {
+                "name": "Wi-Fi SSID"
+            },
+            "time_to_empty_full": {
+                "name": "Time to empty/full"
+            },
+            "timestamp": {
+                "name": "Total run time"
+            },
+            "watts_in": {
+                "name": "Power in"
+            },
+            "watts_out": {
+                "name": "Power out"
+            },
+            "wh_out": {
+                "name": "Energy out"
+            },
+            "wh_stored": {
+                "name": "Energy stored"
+            },
+            "wifi_strength": {
+                "name": "Wi-Fi strength"
+            }
+        },
+        "switch": {
+            "ac_port_status": {
+                "name": "AC port status"
+            },
+            "usb_port_status": {
+                "name": "USB port status"
+            },
+            "v12_port_status": {
+                "name": "12V port status"
+            }
+        }
+    }
+}

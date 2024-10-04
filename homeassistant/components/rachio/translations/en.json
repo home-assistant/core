@@ -1,0 +1,116 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
+                "title": "Connect to your Rachio device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "rain": {
+                "name": "Rain"
+            }
+        },
+        "calendar": {
+            "calendar": {
+                "name": "Rachio Base Station {base}"
+            }
+        },
+        "switch": {
+            "rain_delay": {
+                "name": "Rain delay"
+            },
+            "standby": {
+                "name": "Standby"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Duration in minutes to run when activating a zone switch"
+                }
+            }
+        }
+    },
+    "services": {
+        "pause_watering": {
+            "description": "Pause any currently running zones or schedules.",
+            "fields": {
+                "devices": {
+                    "description": "Name of controllers to pause. Defaults to all controllers on the account if not provided.",
+                    "name": "Devices"
+                },
+                "duration": {
+                    "description": "The time to pause running schedules.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Pause watering"
+        },
+        "resume_watering": {
+            "description": "Resume any paused zone runs or schedules.",
+            "fields": {
+                "devices": {
+                    "description": "Name of controllers to resume. Defaults to all controllers on the account if not provided.",
+                    "name": "Devices"
+                }
+            },
+            "name": "Resume watering"
+        },
+        "set_zone_moisture_percent": {
+            "description": "Sets the moisture percentage of a zone or list of zones.",
+            "fields": {
+                "percent": {
+                    "description": "Set the desired zone moisture percentage.",
+                    "name": "Percent"
+                }
+            },
+            "name": "Set zone moisture percent"
+        },
+        "start_multiple_zone_schedule": {
+            "description": "Creates a custom schedule of zones and runtimes. Note that all zones should be on the same controller to avoid issues.",
+            "fields": {
+                "duration": {
+                    "description": "Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zones listed above.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Start multiple zones"
+        },
+        "start_watering": {
+            "description": "Start a single zone, a schedule or any number of smart hose timers.",
+            "fields": {
+                "duration": {
+                    "description": "Number of minutes to run. For sprinkler zones the maximum duration is 3 hours, or 24 hours for smart hose timers. Leave empty for schedules.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Start watering"
+        },
+        "stop_watering": {
+            "description": "Stop any currently running zones or schedules.",
+            "fields": {
+                "devices": {
+                    "description": "Name of controllers to stop. Defaults to all controllers on the account if not provided.",
+                    "name": "Devices"
+                }
+            },
+            "name": "Stop watering"
+        }
+    }
+}

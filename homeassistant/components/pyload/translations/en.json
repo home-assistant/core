@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the device running your pyLoad instance.",
+                    "port": "pyLoad uses port 8000 by default."
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the device running your pyLoad instance.",
+                    "port": "pyLoad uses port 8000 by default."
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "abort_downloads": {
+                "name": "Abort all running downloads"
+            },
+            "delete_finished": {
+                "name": "Delete finished files/packages"
+            },
+            "restart": {
+                "name": "Restart pyload core"
+            },
+            "restart_failed": {
+                "name": "Restart all failed files"
+            }
+        },
+        "sensor": {
+            "active": {
+                "name": "Active downloads"
+            },
+            "free_space": {
+                "name": "Free space"
+            },
+            "queue": {
+                "name": "Downloads in queue"
+            },
+            "speed": {
+                "name": "Speed"
+            },
+            "total": {
+                "name": "Total downloads"
+            }
+        },
+        "switch": {
+            "download": {
+                "name": "Pause/Resume queue"
+            },
+            "reconnect": {
+                "name": "Auto-Reconnect"
+            }
+        }
+    },
+    "exceptions": {
+        "service_call_auth_exception": {
+            "message": "Unable to send command to pyLoad due to an authentication error, try again later"
+        },
+        "service_call_exception": {
+            "message": "Unable to send command to pyLoad due to a connection error, try again later"
+        },
+        "setup_authentication_exception": {
+            "message": "Authentication failed for {username}, verify your login credentials"
+        },
+        "setup_parse_exception": {
+            "message": "Unable to parse data from pyLoad API, try again later"
+        },
+        "setup_request_exception": {
+            "message": "Unable to connect and retrieve data from pyLoad API, try again later"
+        }
+    }
+}

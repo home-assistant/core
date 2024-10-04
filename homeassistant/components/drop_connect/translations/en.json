@@ -1,0 +1,94 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Configuration for DROP is through MQTT discovery. Use the DROP Connect app to connect your DROP Hub to your MQTT broker."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to configure the DROP {device_type} named {device_name}?'",
+                "title": "Confirm association"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "alert_sensor": {
+                "name": "Sensor"
+            },
+            "leak": {
+                "name": "Leak detected"
+            },
+            "pending_notification": {
+                "name": "Notification unread"
+            },
+            "pump": {
+                "name": "Pump status"
+            },
+            "reserve_in_use": {
+                "name": "Reserve capacity in use"
+            },
+            "salt": {
+                "name": "Salt low"
+            }
+        },
+        "select": {
+            "protect_mode": {
+                "name": "Protect mode",
+                "state": {
+                    "away": "Away",
+                    "home": "Home",
+                    "schedule": "Schedule"
+                }
+            }
+        },
+        "sensor": {
+            "average_water_used": {
+                "name": "Average daily water usage"
+            },
+            "capacity_remaining": {
+                "name": "Capacity remaining"
+            },
+            "cart1": {
+                "name": "Cartridge 1 life remaining"
+            },
+            "cart2": {
+                "name": "Cartridge 2 life remaining"
+            },
+            "cart3": {
+                "name": "Cartridge 3 life remaining"
+            },
+            "current_flow_rate": {
+                "name": "Water flow rate"
+            },
+            "current_system_pressure": {
+                "name": "Current water pressure"
+            },
+            "high_system_pressure": {
+                "name": "High water pressure today"
+            },
+            "inlet_tds": {
+                "name": "Inlet TDS"
+            },
+            "low_system_pressure": {
+                "name": "Low water pressure today"
+            },
+            "outlet_tds": {
+                "name": "Outlet TDS"
+            },
+            "peak_flow_rate": {
+                "name": "Peak water flow rate today"
+            },
+            "water_used_today": {
+                "name": "Total water used today"
+            }
+        },
+        "switch": {
+            "bypass": {
+                "name": "Treatment bypass"
+            },
+            "water": {
+                "name": "Water supply"
+            }
+        }
+    }
+}

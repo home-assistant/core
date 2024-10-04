@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "incorrect_api_key": "Invalid API key for selected account",
+            "invalid_auth": "Invalid authentication",
+            "invalid_route": "Could not find route with provided information"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "from": "From Harbour",
+                    "time": "Time",
+                    "to": "To Harbour",
+                    "weekday": "Weekdays"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "departure_from": {
+                "name": "Departure from"
+            },
+            "departure_modified": {
+                "name": "Departure modified"
+            },
+            "departure_time": {
+                "name": "Departure time"
+            },
+            "departure_time_next": {
+                "name": "Departure time next"
+            },
+            "departure_time_next_next": {
+                "name": "Departure time next after"
+            },
+            "departure_to": {
+                "name": "Departure to"
+            }
+        }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Friday",
+                "mon": "Monday",
+                "sat": "Saturday",
+                "sun": "Sunday",
+                "thu": "Thursday",
+                "tue": "Tuesday",
+                "wed": "Wednesday"
+            }
+        }
+    }
+}

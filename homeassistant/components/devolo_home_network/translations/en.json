@@ -1,0 +1,108 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "home_control": "The devolo Home Control Central Unit does not work with this integration.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Password you protected the device with."
+                }
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP address"
+                },
+                "data_description": {
+                    "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network App on the device dashboard."
+                },
+                "description": "Do you want to start setup?"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
+                "title": "Discovered devolo home network device"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "connected_to_router": {
+                "name": "Connected to router"
+            }
+        },
+        "button": {
+            "identify": {
+                "name": "Identify device with a blinking LED"
+            },
+            "pairing": {
+                "name": "Start PLC pairing"
+            },
+            "restart": {
+                "name": "Restart device"
+            },
+            "start_wps": {
+                "name": "Start WPS"
+            }
+        },
+        "image": {
+            "image_guest_wifi": {
+                "name": "Guest Wi-Fi credentials as QR code"
+            }
+        },
+        "sensor": {
+            "connected_plc_devices": {
+                "name": "Connected PLC devices"
+            },
+            "connected_wifi_clients": {
+                "name": "Connected Wi-Fi clients"
+            },
+            "last_restart": {
+                "name": "Last restart of the device"
+            },
+            "neighboring_wifi_networks": {
+                "name": "Neighboring Wi-Fi networks"
+            },
+            "plc_rx_rate": {
+                "name": "PLC downlink PHY rate"
+            },
+            "plc_tx_rate": {
+                "name": "PLC uplink PHY rate"
+            }
+        },
+        "switch": {
+            "switch_guest_wifi": {
+                "name": "Enable guest Wi-Fi"
+            },
+            "switch_leds": {
+                "name": "Enable LEDs"
+            }
+        }
+    },
+    "exceptions": {
+        "connection_failed": {
+            "message": "Unable to connect to {ip_address}"
+        },
+        "no_response": {
+            "message": "Device {title} did not respond"
+        },
+        "password_protected": {
+            "message": "Device {title} requires re-authenticatication to set or change the password"
+        },
+        "password_wrong": {
+            "message": "The used password is wrong"
+        },
+        "update_failed": {
+            "message": "Error while updating the data: {error}"
+        }
+    }
+}

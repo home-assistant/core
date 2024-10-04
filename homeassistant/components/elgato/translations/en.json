@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Elgato device."
+                },
+                "description": "Set up your Elgato Light to integrate with Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Elgato Light with serial number `{serial_number}` to Home Assistant?",
+                "title": "Discovered Elgato Light device"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "charge_power": {
+                "name": "Charging power"
+            },
+            "input_charge_current": {
+                "name": "Charging current"
+            },
+            "input_charge_voltage": {
+                "name": "Charging voltage"
+            },
+            "voltage": {
+                "name": "Battery voltage"
+            }
+        },
+        "switch": {
+            "bypass": {
+                "name": "Studio mode"
+            },
+            "energy_saving": {
+                "name": "Energy saving"
+            }
+        }
+    },
+    "services": {
+        "identify": {
+            "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification.",
+            "name": "Identify"
+        }
+    }
+}

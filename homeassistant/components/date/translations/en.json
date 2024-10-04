@@ -1,0 +1,20 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Date"
+        }
+    },
+    "services": {
+        "set_value": {
+            "description": "Sets the date.",
+            "fields": {
+                "date": {
+                    "description": "The date to set.",
+                    "name": "Date"
+                }
+            },
+            "name": "Set date"
+        }
+    },
+    "title": "Date"
+}

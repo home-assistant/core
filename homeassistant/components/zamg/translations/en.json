@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "station_not_found": "Station ID not found at GeoSphere Austria"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "station_not_found": "Station ID not found at GeoSphere Austria"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "Station ID (Defaults to nearest station)"
+                },
+                "description": "Set up GeoSphere Austria to integrate with Home Assistant."
+            }
+        }
+    }
+}

@@ -1,0 +1,602 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
+            "addon_info_failed": "Failed to get Z-Wave add-on info.",
+            "addon_install_failed": "Failed to install the Z-Wave add-on.",
+            "addon_set_config_failed": "Failed to set Z-Wave configuration.",
+            "addon_start_failed": "Failed to start the Z-Wave add-on.",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "discovery_requires_supervisor": "Discovery requires the supervisor.",
+            "not_zwave_device": "Discovered device is not a Z-Wave device.",
+            "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on."
+        },
+        "error": {
+            "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",
+            "cannot_connect": "Failed to connect",
+            "invalid_ws_url": "Invalid websocket URL",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
+            "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "S0 Key (Legacy)",
+                    "s2_access_control_key": "S2 Access Control Key",
+                    "s2_authenticated_key": "S2 Authenticated Key",
+                    "s2_unauthenticated_key": "S2 Unauthenticated Key",
+                    "usb_path": "USB device path"
+                },
+                "description": "The add-on will generate security keys if those fields are left empty.",
+                "title": "Enter the Z-Wave add-on configuration"
+            },
+            "hassio_confirm": {
+                "title": "Set up Z-Wave integration with the Z-Wave add-on"
+            },
+            "install_addon": {
+                "title": "The Z-Wave add-on installation has started"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Use the Z-Wave Supervisor add-on"
+                },
+                "description": "Do you want to use the Z-Wave Supervisor add-on?",
+                "title": "Select connection method"
+            },
+            "start_addon": {
+                "title": "The Z-Wave add-on is starting."
+            },
+            "usb_confirm": {
+                "description": "Do you want to set up {name} with the Z-Wave add-on?"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
+                "title": "Discovered Z-Wave Server"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Clear usercode on {entity_name}",
+            "ping": "Ping device",
+            "refresh_value": "Refresh the value(s) for {entity_name}",
+            "reset_meter": "Reset meters on {subtype}",
+            "set_config_parameter": "Set value of config parameter {subtype}",
+            "set_lock_usercode": "Set a usercode on {entity_name}",
+            "set_value": "Set value of a Z-Wave Value"
+        },
+        "condition_type": {
+            "config_parameter": "Config parameter {subtype} value",
+            "node_status": "Node status",
+            "value": "Current value of a Z-Wave Value"
+        },
+        "extra_fields": {
+            "code_slot": "Code slot",
+            "command_class": "Command class",
+            "data_type": "Data type",
+            "endpoint": "Endpoint",
+            "event": "Event",
+            "event_label": "Event label",
+            "event_type": "Event type",
+            "for": "Duration",
+            "from": "From",
+            "label": "Label",
+            "property": "Property",
+            "property_key": "Property key",
+            "refresh_all_values": "Refresh all values",
+            "status": "Status",
+            "to": "To",
+            "type.": "Type",
+            "usercode": "Usercode",
+            "value": "Value",
+            "wait_for_result": "Wait for result"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Sent an Entry Control notification",
+            "event.notification.notification": "Sent a notification",
+            "event.value_notification.basic": "Basic CC event on {subtype}",
+            "event.value_notification.central_scene": "Central Scene action on {subtype}",
+            "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+            "state.node_status": "Node status changed",
+            "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+            "zwave_js.value_updated.value": "Value change on a Z-Wave Value"
+        }
+    },
+    "entity": {
+        "button": {
+            "ping": {
+                "name": "Ping"
+            }
+        },
+        "sensor": {
+            "average_background_rssi": {
+                "name": "Average background RSSI (channel {channel})"
+            },
+            "can": {
+                "name": "Collisions"
+            },
+            "commands_dropped": {
+                "name": "Commands dropped ({direction})"
+            },
+            "controller_status": {
+                "name": "Status",
+                "state": {
+                    "jammed": "Jammed",
+                    "ready": "Ready",
+                    "unresponsive": "Unresponsive"
+                }
+            },
+            "current_background_rssi": {
+                "name": "Current background RSSI (channel {channel})"
+            },
+            "last_seen": {
+                "name": "Last seen"
+            },
+            "messages_dropped": {
+                "name": "Messages dropped ({direction})"
+            },
+            "nak": {
+                "name": "Messages not accepted"
+            },
+            "node_status": {
+                "name": "Node status",
+                "state": {
+                    "alive": "Alive",
+                    "asleep": "Asleep",
+                    "awake": "Awake",
+                    "dead": "Dead",
+                    "unknown": "Unknown"
+                }
+            },
+            "rssi": {
+                "name": "RSSI"
+            },
+            "rtt": {
+                "name": "Round trip time"
+            },
+            "successful_commands": {
+                "name": "Successful commands ({direction})"
+            },
+            "successful_messages": {
+                "name": "Successful messages ({direction})"
+            },
+            "timeout_ack": {
+                "name": "Missing ACKs"
+            },
+            "timeout_callback": {
+                "name": "Timed out callbacks"
+            },
+            "timeout_response": {
+                "name": "Timed out responses"
+            }
+        }
+    },
+    "issues": {
+        "device_config_file_changed": {
+            "fix_flow": {
+                "abort": {
+                    "cannot_connect": "Cannot connect to {device_name}. Please try again later after confirming that your Z-Wave network is up and connected to Home Assistant.",
+                    "issue_ignored": "Device config file update for {device_name} ignored."
+                },
+                "step": {
+                    "init": {
+                        "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
+                        "menu_options": {
+                            "confirm": "Re-interview device",
+                            "ignore": "Ignore device config update"
+                        },
+                        "title": "Device configuration file changed: {device_name}"
+                    }
+                }
+            },
+            "title": "Device configuration file changed: {device_name}"
+        },
+        "invalid_server_version": {
+            "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
+            "title": "Newer version of Z-Wave Server needed"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
+            "addon_info_failed": "Failed to get Z-Wave add-on info.",
+            "addon_install_failed": "Failed to install the Z-Wave add-on.",
+            "addon_set_config_failed": "Failed to set Z-Wave configuration.",
+            "addon_start_failed": "Failed to start the Z-Wave add-on.",
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_ws_url": "Invalid websocket URL",
+            "unknown": "Unexpected error"
+        },
+        "progress": {
+            "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
+            "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulate Hardware",
+                    "log_level": "Log level",
+                    "s0_legacy_key": "S0 Key (Legacy)",
+                    "s2_access_control_key": "S2 Access Control Key",
+                    "s2_authenticated_key": "S2 Authenticated Key",
+                    "s2_unauthenticated_key": "S2 Unauthenticated Key",
+                    "usb_path": "USB device path"
+                },
+                "description": "The add-on will generate security keys if those fields are left empty.",
+                "title": "Enter the Z-Wave add-on configuration"
+            },
+            "install_addon": {
+                "title": "The Z-Wave add-on installation has started"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Use the Z-Wave Supervisor add-on"
+                },
+                "description": "Do you want to use the Z-Wave Supervisor add-on?",
+                "title": "Select connection method"
+            },
+            "start_addon": {
+                "title": "The Z-Wave add-on is starting."
+            }
+        }
+    },
+    "services": {
+        "bulk_set_partial_config_parameters": {
+            "description": "Allows for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "endpoint": {
+                    "description": "The configuration parameter's endpoint.",
+                    "name": "Endpoint"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "parameter": {
+                    "description": "The name (or ID) of the configuration parameter you want to configure.",
+                    "name": "Parameter"
+                },
+                "value": {
+                    "description": "The new value(s) to set for this configuration parameter. Can either be a raw integer value to represent the bulk change or a mapping where the key is the bitmask (either in hex or integer form) and the value is the new value you want to set for that partial parameter.",
+                    "name": "Value"
+                }
+            },
+            "name": "Bulk set partial configuration parameters (advanced)"
+        },
+        "clear_lock_usercode": {
+            "description": "Clears a user code from a lock.",
+            "fields": {
+                "code_slot": {
+                    "description": "Code slot to clear code from.",
+                    "name": "Code slot"
+                }
+            },
+            "name": "Clear lock user code"
+        },
+        "invoke_cc_api": {
+            "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "command_class": {
+                    "description": "The ID of the command class that you want to issue a command to.",
+                    "name": "Command class"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "endpoint": {
+                    "description": "The endpoint to call the API on. If an endpoint is specified, that endpoint will be targeted for all nodes associated with the target areas, devices, and/or entities. If an endpoint is not specified, the root endpoint (0) will be targeted for nodes associated with target areas and devices, and the endpoint for the primary value of each entity will be targeted.",
+                    "name": "Endpoint"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "method_name": {
+                    "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
+                    "name": "Method name"
+                },
+                "parameters": {
+                    "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.",
+                    "name": "Parameters"
+                }
+            },
+            "name": "Invoke a Command Class API on a node (advanced)"
+        },
+        "multicast_set_value": {
+            "description": "Changes any value that Z-Wave recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This action has minimal validation so only use this action if you know what you are doing.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "broadcast": {
+                    "description": "Whether command should be broadcast to all devices on the network.",
+                    "name": "Broadcast?"
+                },
+                "command_class": {
+                    "description": "The ID of the command class for the value.",
+                    "name": "Command class"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "endpoint": {
+                    "description": "The endpoint for the value.",
+                    "name": "Endpoint"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "options": {
+                    "description": "Set value options map. Refer to the Z-Wave documentation for more information on what options can be set.",
+                    "name": "Options"
+                },
+                "property": {
+                    "description": "The ID of the property for the value.",
+                    "name": "Property"
+                },
+                "property_key": {
+                    "description": "The ID of the property key for the value.",
+                    "name": "Property key"
+                },
+                "value": {
+                    "description": "The new value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set a value on multiple devices via multicast (advanced)"
+        },
+        "ping": {
+            "description": "Forces Z-Wave to try to reach a node. This can be used to update the status of the node in Z-Wave when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                }
+            },
+            "name": "Ping a node"
+        },
+        "refresh_notifications": {
+            "description": "Refreshes notifications on a node based on notification type and optionally notification event.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "notification_event": {
+                    "description": "The Notification Event number as defined in the Z-Wave specs.",
+                    "name": "Notification Event"
+                },
+                "notification_type": {
+                    "description": "The Notification Type number as defined in the Z-Wave specs.",
+                    "name": "Notification Type"
+                }
+            },
+            "name": "Refresh notifications on a node (advanced)"
+        },
+        "refresh_value": {
+            "description": "Force updates the values of a Z-Wave entity.",
+            "fields": {
+                "entity_id": {
+                    "description": "Entities to refresh.",
+                    "name": "Entities"
+                },
+                "refresh_all_values": {
+                    "description": "Whether to refresh all values (true) or just the primary value (false).",
+                    "name": "Refresh all values?"
+                }
+            },
+            "name": "Refresh values"
+        },
+        "reset_meter": {
+            "description": "Resets the meters on a node.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "meter_type": {
+                    "description": "The type of meter to reset. Not all meters support the ability to pick a meter type to reset.",
+                    "name": "Meter type"
+                },
+                "value": {
+                    "description": "The value that meters should be reset to. Not all meters support the ability to be reset to a specific value.",
+                    "name": "Target value"
+                }
+            },
+            "name": "Reset meters on a node"
+        },
+        "set_config_parameter": {
+            "description": "Changes the configuration parameters of your Z-Wave devices.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "bitmask": {
+                    "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with 'Value size' or 'Value format'.",
+                    "name": "Bitmask"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "endpoint": {
+                    "description": "The configuration parameter's endpoint.",
+                    "name": "Endpoint"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "parameter": {
+                    "description": "The name (or ID) of the configuration parameter you want to configure.",
+                    "name": "Parameter"
+                },
+                "value": {
+                    "description": "The new value to set for this configuration parameter.",
+                    "name": "Value"
+                },
+                "value_format": {
+                    "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with 'Value size' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
+                    "name": "Value format"
+                },
+                "value_size": {
+                    "description": "Size of the value, either 1, 2, or 4. Used in combination with 'Value format' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
+                    "name": "Value size"
+                }
+            },
+            "name": "Set device configuration parameter"
+        },
+        "set_lock_configuration": {
+            "description": "Sets the configuration for a lock.",
+            "fields": {
+                "auto_relock_time": {
+                    "description": "Duration in seconds until lock returns to secure state. Only enforced when operation type is `constant`.",
+                    "name": "Auto relock time"
+                },
+                "block_to_block": {
+                    "description": "Enable block-to-block functionality.",
+                    "name": "Block to block"
+                },
+                "hold_and_release_time": {
+                    "description": "Duration in seconds the latch stays retracted.",
+                    "name": "Hold and release time"
+                },
+                "lock_timeout": {
+                    "description": "Seconds until lock mode times out. Should only be used if operation type is `timed`.",
+                    "name": "Lock timeout"
+                },
+                "operation_type": {
+                    "description": "The operation type of the lock.",
+                    "name": "Operation Type"
+                },
+                "twist_assist": {
+                    "description": "Enable Twist Assist.",
+                    "name": "Twist assist"
+                }
+            },
+            "name": "Set lock configuration"
+        },
+        "set_lock_usercode": {
+            "description": "Sets a user code on a lock.",
+            "fields": {
+                "code_slot": {
+                    "description": "Code slot to set the code.",
+                    "name": "Code slot"
+                },
+                "usercode": {
+                    "description": "Lock code to set.",
+                    "name": "Code"
+                }
+            },
+            "name": "Set lock user code"
+        },
+        "set_value": {
+            "description": "Changes any value that Z-Wave recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
+            "fields": {
+                "area_id": {
+                    "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
+                    "name": "Area ID(s)"
+                },
+                "command_class": {
+                    "description": "The ID of the command class for the value.",
+                    "name": "Command class"
+                },
+                "device_id": {
+                    "description": "The device(s) to target for this action.",
+                    "name": "Device ID(s)"
+                },
+                "endpoint": {
+                    "description": "The endpoint for the value.",
+                    "name": "Endpoint"
+                },
+                "entity_id": {
+                    "description": "The entity ID(s) to target for this action.",
+                    "name": "Entity ID(s)"
+                },
+                "options": {
+                    "description": "Set value options map. Refer to the Z-Wave documentation for more information on what options can be set.",
+                    "name": "Options"
+                },
+                "property": {
+                    "description": "The ID of the property for the value.",
+                    "name": "Property"
+                },
+                "property_key": {
+                    "description": "The ID of the property key for the value.",
+                    "name": "Property key"
+                },
+                "value": {
+                    "description": "The new value to set.",
+                    "name": "Value"
+                },
+                "wait_for_result": {
+                    "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the action can take a while if setting a value on an asleep battery device.",
+                    "name": "Wait for result?"
+                }
+            },
+            "name": "Set a value (advanced)"
+        }
+    }
+}

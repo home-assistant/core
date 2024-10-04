@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "title": "Re-authenticate Tile"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Configure Tile"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "lost": {
+                "name": "Lost"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Show inactive Tiles"
+                },
+                "title": "Configure Tile"
+            }
+        }
+    }
+}

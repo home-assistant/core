@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Already configured. Only a single configuration for country/province/categories combination is possible.",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "categories": "Categories",
+                    "province": "Province"
+                },
+                "data_description": {
+                    "categories": "Optionally choose additional holiday categories, public holidays are already included",
+                    "province": "Optionally choose a province / subdivision of {country}"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "categories": "Categories",
+                    "province": "Province"
+                },
+                "data_description": {
+                    "categories": "Optionally choose additional holiday categories, public holidays are already included",
+                    "province": "Optionally choose a province / subdivision of {country}"
+                }
+            },
+            "user": {
+                "data": {
+                    "country": "Country"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Already configured. Only a single configuration for country/province/categories combination is possible.",
+            "no_categories": "The country has no additional categories to configure."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "categories": "Categories"
+                },
+                "data_description": {
+                    "categories": "Optionally choose additional holiday categories, public holidays are already included"
+                }
+            }
+        }
+    },
+    "selector": {
+        "device_class": {
+            "options": {
+                "armed_forces": "Armed forces",
+                "bank": "Bank",
+                "catholic": "Catholic",
+                "chinese": "Chinese",
+                "christian": "Christian",
+                "government": "Government",
+                "half_day": "Half day",
+                "hebrew": "Hebrew",
+                "hindu": "Hindu",
+                "islamic": "Islamic",
+                "optional": "Optional",
+                "school": "School",
+                "unofficial": "Unofficial",
+                "workday": "Workday"
+            }
+        }
+    },
+    "title": "Holiday"
+}

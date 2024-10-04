@@ -3,8 +3,8 @@ requires = ["setuptools==75.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name        = "homeassistant"
-version     = "2025.4.0.dev0"
+name        = "my_smart_homes"
+version     = "20241044.0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -83,7 +83,8 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.146.0"
+    "zeroconf==0.146.0",
+    "aiofiles==24.1.0",
 ]
 
 [project.urls]

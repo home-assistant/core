@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up iZone?"
+            }
+        }
+    },
+    "services": {
+        "airflow_max": {
+            "description": "Sets the airflow maximum percent for a zone.",
+            "fields": {
+                "airflow": {
+                    "description": "Airflow percent.",
+                    "name": "Percent"
+                }
+            },
+            "name": "Set maximum airflow"
+        },
+        "airflow_min": {
+            "description": "Sets the airflow minimum percent for a zone.",
+            "fields": {
+                "airflow": {
+                    "description": "Airflow percent.",
+                    "name": "Percent"
+                }
+            },
+            "name": "Set minimum airflow"
+        }
+    }
+}

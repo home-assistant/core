@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address used to log in to the Nice G.O. app",
+                    "password": "The password used to log in to the Nice G.O. app"
+                },
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address used to log in to the Nice G.O. app",
+                    "password": "The password used to log in to the Nice G.O. app"
+                }
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "barrier_obstructed": {
+                "name": "Barrier obstructed",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "barrier_obstructed": "Barrier obstructed"
+                        }
+                    }
+                }
+            }
+        },
+        "light": {
+            "light": {
+                "name": "Light"
+            }
+        },
+        "switch": {
+            "vacation_mode": {
+                "name": "Vacation mode"
+            }
+        }
+    },
+    "exceptions": {
+        "close_cover_error": {
+            "message": "Error closing the barrier: {exception}"
+        },
+        "light_off_error": {
+            "message": "Error while turning off the light: {exception}"
+        },
+        "light_on_error": {
+            "message": "Error while turning on the light: {exception}"
+        },
+        "open_cover_error": {
+            "message": "Error opening the barrier: {exception}"
+        },
+        "switch_off_error": {
+            "message": "Error while turning off the switch: {exception}"
+        },
+        "switch_on_error": {
+            "message": "Error while turning on the switch: {exception}"
+        }
+    },
+    "issues": {
+        "firmware_update_required": {
+            "description": "Your device ({device_name}) requires a firmware update on the Nice G.O. app in order to work with this integration. Please update the firmware on the Nice G.O. app and reconfigure this integration.",
+            "title": "Firmware update required"
+        }
+    }
+}

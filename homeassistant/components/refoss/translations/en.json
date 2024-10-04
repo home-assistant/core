@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current": {
+                "name": "{channel_name} current"
+            },
+            "power": {
+                "name": "{channel_name} power"
+            },
+            "power_factor": {
+                "name": "{channel_name} power factor"
+            },
+            "this_month_energy": {
+                "name": "{channel_name} this month energy"
+            },
+            "this_month_energy_returned": {
+                "name": "{channel_name} this month energy returned"
+            },
+            "voltage": {
+                "name": "{channel_name} voltage"
+            }
+        }
+    }
+}

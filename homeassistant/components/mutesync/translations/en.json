@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Enable authentication in m\u00fctesync Preferences > Authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your mutesync device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "in_meeting": {
+                "name": "In meeting"
+            },
+            "muted": {
+                "name": "Muted"
+            }
+        }
+    }
+}

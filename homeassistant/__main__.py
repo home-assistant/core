@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 from contextlib import suppress
 import faulthandler
 import os
 import sys
 import threading
 
+from . import msh_utils
 from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
@@ -206,6 +208,19 @@ def main() -> int:
         open_ui=args.open_ui,
         safe_mode=safe_mode,
     )
+    msh_utils.cf_path.set(config_dir + "/configuration.yaml")
+
+    def run_ring_dashboard_create() -> None:
+        asyncio.run(msh_utils.ring_dashboard_create())
+
+    threading.Thread(target=run_ring_dashboard_create, daemon=True).start()
+
+    def reverse_proxy_client() -> None:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(msh_utils.reverse_proxy_client())
+
+    threading.Thread(target=reverse_proxy_client, daemon=True).start()
 
     fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
     with open(fault_file_name, mode="a", encoding="utf8") as fault_file:

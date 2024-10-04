@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No compatible devices found"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "timeout_connect": "Timeout establishing connection"
+        },
+        "step": {
+            "meters": {
+                "data": {
+                    "mac": "Meter MAC Addresses"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Device"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "meter_price": {
+                "name": "Meter price",
+                "state_attributes": {
+                    "rate_label": {
+                        "name": "Rate"
+                    },
+                    "tier": {
+                        "name": "Tier"
+                    }
+                }
+            },
+            "power_demand": {
+                "name": "Meter power demand"
+            },
+            "signal_strength": {
+                "name": "Meter signal strength",
+                "state_attributes": {
+                    "channel": {
+                        "name": "Channel"
+                    }
+                }
+            },
+            "total_energy_delivered": {
+                "name": "Total meter energy delivered"
+            },
+            "total_energy_received": {
+                "name": "Total meter energy received"
+            }
+        }
+    }
+}

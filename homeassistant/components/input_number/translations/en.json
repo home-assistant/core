@@ -1,0 +1,61 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Input number",
+            "state_attributes": {
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "initial": {
+                    "name": "Initial value"
+                },
+                "max": {
+                    "name": "Maximum"
+                },
+                "min": {
+                    "name": "Minimum"
+                },
+                "mode": {
+                    "name": "Mode",
+                    "state": {
+                        "auto": "Automatic",
+                        "box": "Box",
+                        "slider": "Slider"
+                    }
+                },
+                "step": {
+                    "name": "Step"
+                }
+            }
+        }
+    },
+    "services": {
+        "decrement": {
+            "description": "Decrements the current value by 1 step.",
+            "name": "Decrement"
+        },
+        "increment": {
+            "description": "Increments the current value by 1 step.",
+            "name": "Increment"
+        },
+        "reload": {
+            "description": "Reloads helpers from the YAML-configuration.",
+            "name": "Reload"
+        },
+        "set_value": {
+            "description": "Sets the value.",
+            "fields": {
+                "value": {
+                    "description": "The target value.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set"
+        }
+    },
+    "title": "Input number"
+}

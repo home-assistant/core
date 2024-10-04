@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Arve token",
+                    "client_secret": "Arve customer token"
+                },
+                "description": "Set up your Arve device"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "tvoc": {
+                "name": "Total volatile organic compounds"
+            }
+        }
+    }
+}

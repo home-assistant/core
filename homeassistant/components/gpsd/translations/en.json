@@ -1,0 +1,68 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of GPSD."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "climb": {
+                "name": "Climb"
+            },
+            "elevation": {
+                "name": "Elevation"
+            },
+            "latitude": {
+                "name": "Latitude"
+            },
+            "longitude": {
+                "name": "Longitude"
+            },
+            "mode": {
+                "name": "Mode",
+                "state": {
+                    "2d_fix": "2D Fix",
+                    "3d_fix": "3D Fix"
+                },
+                "state_attributes": {
+                    "climb": {
+                        "name": "Climb"
+                    },
+                    "elevation": {
+                        "name": "Elevation"
+                    },
+                    "gps_time": {
+                        "name": "Time"
+                    },
+                    "latitude": {
+                        "name": "Latitude"
+                    },
+                    "longitude": {
+                        "name": "Longitude"
+                    },
+                    "mode": {
+                        "name": "Mode"
+                    },
+                    "speed": {
+                        "name": "Speed"
+                    }
+                }
+            },
+            "time": {
+                "name": "Time"
+            }
+        }
+    }
+}

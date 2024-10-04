@@ -1,0 +1,82 @@
+{
+    "config": {
+        "step": {
+            "presets": {
+                "data": {
+                    "activity_temp": "Activity",
+                    "away_temp": "Away",
+                    "comfort_temp": "Comfort",
+                    "eco_temp": "Eco",
+                    "home_temp": "Home",
+                    "sleep_temp": "Sleep"
+                },
+                "title": "Temperature presets"
+            },
+            "user": {
+                "data": {
+                    "ac_mode": "Cooling mode",
+                    "cold_tolerance": "Cold tolerance",
+                    "heater": "Actuator switch",
+                    "hot_tolerance": "Hot tolerance",
+                    "max_temp": "Maximum target temperature",
+                    "min_cycle_duration": "Minimum cycle duration",
+                    "min_temp": "Minimum target temperature",
+                    "name": "Name",
+                    "target_sensor": "Temperature sensor"
+                },
+                "data_description": {
+                    "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
+                    "cold_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched on. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
+                    "heater": "Switch entity used to cool or heat depending on A/C mode.",
+                    "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5.",
+                    "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on.",
+                    "target_sensor": "Temperature sensor that reflects the current temperature."
+                },
+                "description": "Create a climate entity that controls the temperature via a switch and sensor.",
+                "title": "Create generic thermostat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ac_mode": "Cooling mode",
+                    "cold_tolerance": "Cold tolerance",
+                    "heater": "Actuator switch",
+                    "hot_tolerance": "Hot tolerance",
+                    "max_temp": "Maximum target temperature",
+                    "min_cycle_duration": "Minimum cycle duration",
+                    "min_temp": "Minimum target temperature",
+                    "target_sensor": "Temperature sensor"
+                },
+                "data_description": {
+                    "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
+                    "cold_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched on. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
+                    "heater": "Switch entity used to cool or heat depending on A/C mode.",
+                    "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5.",
+                    "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on.",
+                    "target_sensor": "Temperature sensor that reflects the current temperature."
+                }
+            },
+            "presets": {
+                "data": {
+                    "activity_temp": "Activity",
+                    "away_temp": "Away",
+                    "comfort_temp": "Comfort",
+                    "eco_temp": "Eco",
+                    "home_temp": "Home",
+                    "sleep_temp": "Sleep"
+                },
+                "title": "Temperature presets"
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads generic thermostats from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "Generic thermostat"
+}

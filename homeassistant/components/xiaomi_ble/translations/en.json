@@ -1,0 +1,232 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "api_error": "Error while communicating with Mi API: {error_detail}",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "api_device_not_found": "The device was not found in your Mi account.",
+            "auth_failed": "Authentication failed: {error_detail}",
+            "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
+            "expected_24_characters": "Expected a 24 character hexadecimal bindkey.",
+            "expected_32_characters": "Expected a 32 character hexadecimal bindkey."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "cloud_auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please provide your Mi app username and password. This data won't be saved and only used to retrieve the device encryption key. Usernames and passwords are case sensitive."
+            },
+            "confirm_slow": {
+                "description": "There hasn't been a broadcast from this device in the last minute so we aren't sure if this device uses encryption or not. This may be because the device uses a slow broadcast interval. Confirm to add this device anyway, then the next time a broadcast is received you will be prompted to enter its bindkey if it's needed."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 32 character hexadecimal bindkey."
+            },
+            "get_encryption_key_4_5_choose_method": {
+                "description": "A Mi device can be set up in Home Assistant in two different ways.\n\nYou can enter the bindkey yourself, or Home Assistant can import them from your Mi account.",
+                "menu_options": {
+                    "cloud_auth": "Mi account (recommended)",
+                    "get_encryption_key_4_5": "Enter encryption key manually"
+                }
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 24 character hexadecimal bindkey."
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "abnormal": "Abnormal",
+            "double_press": "Double Press",
+            "insufficient_area": "Insufficient area",
+            "lock_inside_the_door": "Lock inside the door",
+            "lock_outside_the_door": "Lock outside the door",
+            "locked": "Locked",
+            "long_press": "Long Press",
+            "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
+            "match_failed": "Match failed",
+            "match_successful": "Match successful",
+            "motion_detected": "Motion Detected",
+            "press": "Press",
+            "release_the_antilock": "Release antilock",
+            "rotate_left": "Rotate Left",
+            "rotate_left_pressed": "Rotate Left (Pressed)",
+            "rotate_right": "Rotate Right",
+            "rotate_right_pressed": "Rotate Right (Pressed)",
+            "skin_is_too_dry": "Skin is too dry",
+            "skin_is_too_wet": "Skin is too wet",
+            "turn_off_child_lock": "Turn off child lock",
+            "turn_on_antilock": "Turn on antilock",
+            "turn_on_child_lock": "Turn on child lock",
+            "unlock_inside_the_door": "Unlock outside the door",
+            "unlock_outside_the_door": "Unlock outside the door"
+        },
+        "trigger_type": {
+            "button": "Button \"{subtype}\"",
+            "button_air_exchange": "Button Air Exchange \"{subtype}\"",
+            "button_brightness": "Button Brightness \"{subtype}\"",
+            "button_color_temperature": "Button Color Temperature \"{subtype}\"",
+            "button_decrease_speed": "Button Decrease Speed \"{subtype}\"",
+            "button_decrease_wind_speed": "Button Decrease Wind Speed \"{subtype}\"",
+            "button_dry": "Button Dry \"{subtype}\"",
+            "button_fan": "Button Fan \"{subtype}\"",
+            "button_heat": "Button Heat \"{subtype}\"",
+            "button_increase_speed": "Button Increase Speed \"{subtype}\"",
+            "button_increase_wind_speed": "Button Increase Wind Speed \"{subtype}\"",
+            "button_left": "Button Left \"{subtype}\"",
+            "button_light": "Button Light \"{subtype}\"",
+            "button_m": "Button M \"{subtype}\"",
+            "button_middle": "Button Middle \"{subtype}\"",
+            "button_min": "Button Min \"{subtype}\"",
+            "button_off": "Button Off \"{subtype}\"",
+            "button_on": "Button On \"{subtype}\"",
+            "button_plus": "Button Plus \"{subtype}\"",
+            "button_power": "Button Power \"{subtype}\"",
+            "button_right": "Button Right \"{subtype}\"",
+            "button_stop": "Button Stop \"{subtype}\"",
+            "button_swing": "Button Swing \"{subtype}\"",
+            "button_timer_30_minutes": "Button Timer 30 Minutes \"{subtype}\"",
+            "button_timer_60_minutes": "Button Timer 30 Minutes \"{subtype}\"",
+            "button_wind_mode": "Button Wind Mode \"{subtype}\"",
+            "button_wind_speed": "Button Wind Speed \"{subtype}\"",
+            "cube": "{subtype}",
+            "dimmer": "{subtype}",
+            "fingerprint": "{subtype}",
+            "lock": "{subtype}",
+            "motion": "{subtype}"
+        }
+    },
+    "entity": {
+        "event": {
+            "button": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "double_press": "Double press",
+                            "long_press": "Long press",
+                            "press": "Press"
+                        }
+                    }
+                }
+            },
+            "cube": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "rotate_left": "Rotate left",
+                            "rotate_right": "Rotate right"
+                        }
+                    }
+                }
+            },
+            "dimmer": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press": "Long press",
+                            "press": "Press",
+                            "rotate_left": "Rotate left",
+                            "rotate_left_pressed": "Rotate left (pressed)",
+                            "rotate_right": "Rotate right",
+                            "rotate_right_pressed": "Rotate right (pressed)"
+                        }
+                    }
+                }
+            },
+            "error": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "error_nfc_frequently_unlocks": "Error NFC frequently unlocks",
+                            "failure_to_unlock_frequently_in_multiple_ways": "Failure to unlock frequently in multiple ways",
+                            "failure_to_unlock_the_vein_frequently": "Failure to unlock the vein frequently",
+                            "foreign_body_in_the_keyhole": "Foreign body in the keyhole",
+                            "frequent_unlocking_with_incorrect_password": "Frequent unlocking with incorrect password",
+                            "frequent_unlocking_with_wrong_fingerprints": "Frequent unlocking with wrong fingerprints",
+                            "hijacking_alarm": "Hijacking alarm",
+                            "lock_picking": "Lock picking",
+                            "mechanical_failure": "Mechanical failure",
+                            "operation_timeout_password_input_timeout": "Operation timeout password input timeout",
+                            "palmprints_frequently_fail_to_unlock": "Palmprints frequently fail to unlock",
+                            "reset_button_is_pressed": "Reset button is pressed",
+                            "the_accessory_battery_is_low": "The accessory battery is low",
+                            "the_battery_level_is_less_than_10_percent": "The battery level is less than 10%",
+                            "the_battery_level_is_less_than_5_percent": "The battery level is less than 5%",
+                            "the_fingerprint_sensor_is_abnormal": "The fingerprint sensor is abnormal",
+                            "the_key_has_not_been_taken_out": "The key has not been taken out",
+                            "the_lock_sensor_is_faulty": "The lock sensor is faulty",
+                            "the_safe_was_moved": "The safe was moved",
+                            "the_wrong_key_is_frequently_unlocked": "The wrong key is frequently unlocked",
+                            "timeout_is_not_locked_as_required": "Timeout is not locked as required",
+                            "unlock_inside_the_door_after_arming": "Unlock inside the door after arming",
+                            "unlocking_the_face_frequently_fails": "Unlocking the face frequently fails"
+                        }
+                    }
+                }
+            },
+            "fingerprint": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "insufficient_area": "Insufficient area",
+                            "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
+                            "match_failed": "Match failed",
+                            "match_successful": "Match successful",
+                            "skin_is_too_dry": "Skin is too dry",
+                            "skin_is_too_wet": "Skin is too wet"
+                        }
+                    }
+                }
+            },
+            "lock": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "abnormal": "Abnormal",
+                            "lock_inside_the_door": "Lock inside the door",
+                            "lock_outside_the_door": "Lock outside the door",
+                            "locked": "Locked",
+                            "release_the_antilock": "Release antilock",
+                            "turn_off_child_lock": "Turn off child lock",
+                            "turn_on_antilock": "Turn on antilock",
+                            "turn_on_child_lock": "Turn on child lock",
+                            "unlock_inside_the_door": "Unlock outside the door",
+                            "unlock_outside_the_door": "Unlock outside the door"
+                        }
+                    }
+                }
+            },
+            "motion": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "motion_detected": "Motion Detected"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

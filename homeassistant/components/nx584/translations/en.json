@@ -1,0 +1,24 @@
+{
+    "services": {
+        "bypass_zone": {
+            "description": "Bypasses a zone.",
+            "fields": {
+                "zone": {
+                    "description": "The number of the zone to be bypassed.",
+                    "name": "Zone"
+                }
+            },
+            "name": "Bypass zone"
+        },
+        "unbypass_zone": {
+            "description": "Un-Bypasses a zone.",
+            "fields": {
+                "zone": {
+                    "description": "The number of the zone to be un-bypassed.",
+                    "name": "Zone"
+                }
+            },
+            "name": "Un-bypass zone"
+        }
+    }
+}

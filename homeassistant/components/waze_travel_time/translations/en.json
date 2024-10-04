@@ -1,0 +1,116 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destination",
+                    "name": "Name",
+                    "origin": "Origin",
+                    "region": "Region"
+                },
+                "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity ID which provides this information in its state, an entity ID with latitude and longitude attributes, or zone friendly name."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Avoid ferries?",
+                    "avoid_subscription_roads": "Avoid roads needing a vignette / subscription?",
+                    "avoid_toll_roads": "Avoid toll roads?",
+                    "excl_filter": "Exact streetname which must NOT be part of the selected route",
+                    "incl_filter": "Exact streetname which must be part of the selected route",
+                    "realtime": "Realtime travel time?",
+                    "units": "Units",
+                    "vehicle_type": "Vehicle type"
+                },
+                "description": "Some options will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation."
+            }
+        }
+    },
+    "selector": {
+        "region": {
+            "options": {
+                "au": "Australia",
+                "eu": "Europe",
+                "il": "Israel",
+                "na": "North America",
+                "us": "USA"
+            }
+        },
+        "units": {
+            "options": {
+                "imperial": "Imperial system",
+                "metric": "Metric system"
+            }
+        },
+        "vehicle_type": {
+            "options": {
+                "car": "Car",
+                "motorcycle": "Motorcycle",
+                "taxi": "Taxi"
+            }
+        }
+    },
+    "services": {
+        "get_travel_times": {
+            "description": "Retrieves route alternatives and travel times between two locations.",
+            "fields": {
+                "avoid_ferries": {
+                    "description": "Whether to avoid ferries.",
+                    "name": "Avoid ferries?"
+                },
+                "avoid_subscription_roads": {
+                    "description": "Whether to avoid subscription roads.",
+                    "name": "Avoid roads needing a vignette / subscription?"
+                },
+                "avoid_toll_roads": {
+                    "description": "Whether to avoid toll roads.",
+                    "name": "Avoid toll roads?"
+                },
+                "destination": {
+                    "description": "The destination of the route.",
+                    "name": "Destination"
+                },
+                "excl_filter": {
+                    "description": "Exact streetname which must NOT be part of the selected route.",
+                    "name": "Exact streetname which must NOT be part of the selected route"
+                },
+                "incl_filter": {
+                    "description": "Exact streetname which must be part of the selected route.",
+                    "name": "Exact streetname which must be part of the selected route"
+                },
+                "origin": {
+                    "description": "The origin of the route.",
+                    "name": "Origin"
+                },
+                "realtime": {
+                    "description": "Use real-time or statistical data.",
+                    "name": "Realtime travel time?"
+                },
+                "region": {
+                    "description": "The region. Controls which Waze server is used.",
+                    "name": "Region"
+                },
+                "units": {
+                    "description": "Which unit system to use.",
+                    "name": "Units"
+                },
+                "vehicle_type": {
+                    "description": "Which vehicle to use.",
+                    "name": "Vehicle type"
+                }
+            },
+            "name": "Get travel times"
+        }
+    },
+    "title": "Waze Travel Time"
+}

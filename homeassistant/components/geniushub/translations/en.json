@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "cloud_api": {
+                "data": {
+                    "token": "Access token"
+                },
+                "title": "Genius Hub cloud configuration"
+            },
+            "local_api": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Genius Hub local configuration"
+            },
+            "user": {
+                "menu_options": {
+                    "cloud_api": "Cloud: API token",
+                    "local_api": "Local: IP address and user credentials"
+                },
+                "title": "Genius Hub configuration"
+            }
+        }
+    },
+    "services": {
+        "set_switch_override": {
+            "description": "Overrides switch for a given duration.",
+            "fields": {
+                "duration": {
+                    "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Set switch override"
+        },
+        "set_zone_mode": {
+            "description": "Sets the zone to an operating mode.",
+            "fields": {
+                "entity_id": {
+                    "description": "The zone's entity ID.",
+                    "name": "Entity"
+                },
+                "mode": {
+                    "description": "One of: off, timer or footprint.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Set zone mode"
+        },
+        "set_zone_override": {
+            "description": "Overrides the zone's setpoint for a given duration.",
+            "fields": {
+                "duration": {
+                    "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours.",
+                    "name": "Duration"
+                },
+                "entity_id": {
+                    "description": "The zone's entity ID.",
+                    "name": "Entity"
+                },
+                "temperature": {
+                    "description": "The target temperature.",
+                    "name": "Temperature"
+                }
+            },
+            "name": "Set zone override"
+        }
+    }
+}

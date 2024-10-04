@@ -1,0 +1,95 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
+        },
+        "error": {
+            "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running Home Assistant as interface",
+            "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Invalid network interface",
+            "invalid_key": "Invalid Gateway key",
+            "invalid_mac": "Invalid MAC address"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP address"
+                },
+                "description": "Select the Xiaomi Aqara Gateway that you wish to connect"
+            },
+            "settings": {
+                "data": {
+                    "key": "The key of your Gateway",
+                    "name": "Name of the Gateway"
+                },
+                "description": "The key (password) can be retrieved using this tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. If the key is not provided only sensors will be accessible",
+                "title": "Optional settings"
+            },
+            "user": {
+                "data": {
+                    "host": "IP address (optional)",
+                    "interface": "The network interface to use",
+                    "mac": "MAC address (optional)"
+                },
+                "description": "If the IP and MAC addresses are left empty, auto-discovery is used"
+            }
+        }
+    },
+    "services": {
+        "add_device": {
+            "description": "Enables the join permission of the Xiaomi Aqara Gateway for 30 seconds. A new device can be added afterwards by pressing the pairing button once.",
+            "fields": {
+                "gw_mac": {
+                    "description": "MAC address of the Xiaomi Aqara Gateway.",
+                    "name": "Gateway MAC"
+                }
+            },
+            "name": "Add device"
+        },
+        "play_ringtone": {
+            "description": "Plays a specific ringtone. The version of the gateway firmware must be 1.4.1_145 at least.",
+            "fields": {
+                "gw_mac": {
+                    "description": "MAC address of the Xiaomi Aqara Gateway.",
+                    "name": "Gateway MAC"
+                },
+                "ringtone_id": {
+                    "description": "One of the allowed ringtone IDs.",
+                    "name": "Ringtone ID"
+                },
+                "ringtone_vol": {
+                    "description": "The volume in percent.",
+                    "name": "Ringtone volume"
+                }
+            },
+            "name": "Play ringtone"
+        },
+        "remove_device": {
+            "description": "Removes a specific device. The removal is required if a device shall be paired with another gateway.",
+            "fields": {
+                "device_id": {
+                    "description": "Hardware address of the device to remove.",
+                    "name": "Device ID"
+                },
+                "gw_mac": {
+                    "description": "MAC address of the Xiaomi Aqara Gateway.",
+                    "name": "Gateway MAC"
+                }
+            },
+            "name": "Remove device"
+        },
+        "stop_ringtone": {
+            "description": "Stops a playing ringtone immediately.",
+            "fields": {
+                "gw_mac": {
+                    "description": "MAC address of the Xiaomi Aqara Gateway.",
+                    "name": "Gateway MAC"
+                }
+            },
+            "name": "Stop ringtone"
+        }
+    }
+}

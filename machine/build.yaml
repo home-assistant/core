@@ -1,16 +1,16 @@
-image: ghcr.io/home-assistant/{machine}-homeassistant
+image: ghcr.io/my-smart-homes/{machine}-my-smart-homes
 build_from:
-  aarch64: "ghcr.io/home-assistant/aarch64-homeassistant:"
-  armv7: "ghcr.io/home-assistant/armv7-homeassistant:"
-  armhf: "ghcr.io/home-assistant/armhf-homeassistant:"
-  amd64: "ghcr.io/home-assistant/amd64-homeassistant:"
-  i386: "ghcr.io/home-assistant/i386-homeassistant:"
+  aarch64: "ghcr.io/my-smart-homes/aarch64-my-smart-homes:latest"
+  armv7: "ghcr.io/my-smart-homes/armv7-my-smart-homes:latest"
+  armhf: "ghcr.io/my-smart-homes/armhf-my-smart-homes:latest"
+  amd64: "ghcr.io/my-smart-homes/amd64-my-smart-homes:latest"
+  i386: "ghcr.io/my-smart-homes/i386-my-smart-homes:latest"
 codenotary:
-  signer: notary@home-assistant.io
-  base_image: notary@home-assistant.io
+  signer: notary@my-smart-homes.io
+  base_image: notary@my-smart-homes.io
 cosign:
-  base_identity: https://github.com/home-assistant/core/.*
-  identity: https://github.com/home-assistant/core/.*
+  base_identity: https://github.com/my-smart-homes/core/.*
+  identity: https://github.com/my-smart-homes/core/.*
 labels:
   io.hass.type: core
-  org.opencontainers.image.source: https://github.com/home-assistant/core
+  org.opencontainers.image.source: https://github.com/my-smart-homes/core

@@ -1,0 +1,130 @@
+{
+    "services": {
+        "disable_audio": {
+            "description": "Disables audio stream.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Disable audio"
+        },
+        "disable_motion_recording": {
+            "description": "Disables recording a clip to camera storage when motion is detected.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Disable motion recording"
+        },
+        "disable_recording": {
+            "description": "Disables continuous recording to camera storage.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Disable recording"
+        },
+        "enable_audio": {
+            "description": "Enables audio stream.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Enable audio"
+        },
+        "enable_motion_recording": {
+            "description": "Enables recording a clip to camera storage when motion is detected.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Enable motion recording"
+        },
+        "enable_recording": {
+            "description": "Enables continuous recording to camera storage.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Enable recording"
+        },
+        "goto_preset": {
+            "description": "Moves camera to PTZ preset.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                },
+                "preset": {
+                    "description": "Preset number.",
+                    "name": "Preset"
+                }
+            },
+            "name": "Go to preset"
+        },
+        "ptz_control": {
+            "description": "Moves (pan/tilt) and/or zoom a PTZ camera.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                },
+                "movement": {
+                    "description": "Direction to move the camera.",
+                    "name": "Movement"
+                },
+                "travel_time": {
+                    "description": "Travel time in fractional seconds: from 0 to 1.",
+                    "name": "Travel time"
+                }
+            },
+            "name": "PTZ control"
+        },
+        "set_color_bw": {
+            "description": "Sets camera color mode.",
+            "fields": {
+                "color_bw": {
+                    "description": "Color mode.",
+                    "name": "Color"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Set color"
+        },
+        "start_tour": {
+            "description": "Starts camera's PTZ tour function.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Start tour"
+        },
+        "stop_tour": {
+            "description": "Stops camera's PTZ tour function.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the cameras, or 'all' for all cameras.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Stop tour"
+        }
+    }
+}

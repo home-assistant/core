@@ -1,0 +1,80 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} update availability changed",
+            "turned_off": "{entity_name} became up-to-date",
+            "turned_on": "{entity_name} got an update available"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Update",
+            "state": {
+                "off": "Up-to-date",
+                "on": "Update available"
+            },
+            "state_attributes": {
+                "auto_update": {
+                    "name": "Auto update",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "in_progress": {
+                    "name": "In progress",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "installed_version": {
+                    "name": "Installed version"
+                },
+                "latest_version": {
+                    "name": "Latest version"
+                },
+                "release_summary": {
+                    "name": "Release summary"
+                },
+                "release_url": {
+                    "name": "Release URL"
+                },
+                "skipped_version": {
+                    "name": "Skipped version"
+                },
+                "title": {
+                    "name": "Title"
+                }
+            }
+        },
+        "firmware": {
+            "name": "Firmware"
+        }
+    },
+    "services": {
+        "clear_skipped": {
+            "description": "Removes the skipped version marker from an update.",
+            "name": "Clear skipped update"
+        },
+        "install": {
+            "description": "Installs an update for a device or service.",
+            "fields": {
+                "backup": {
+                    "description": "If supported by the integration, this creates a backup before starting the update.",
+                    "name": "Backup"
+                },
+                "version": {
+                    "description": "The version to install. If omitted, the latest version will be installed.",
+                    "name": "Version"
+                }
+            },
+            "name": "Install update"
+        },
+        "skip": {
+            "description": "Marks currently available update as skipped.",
+            "name": "Skip update"
+        }
+    },
+    "title": "Update"
+}

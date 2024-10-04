@@ -1,0 +1,154 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_credentials": "The integration requires application credentials.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "The yolink integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "button_1_long_press": "Button_1 (long press)",
+            "button_1_short_press": "Button_1 (short press)",
+            "button_2_long_press": "Button_2 (long press)",
+            "button_2_short_press": "Button_2 (short press)",
+            "button_3_long_press": "Button_3 (long press)",
+            "button_3_short_press": "Button_3 (short press)",
+            "button_4_long_press": "Button_4 (long press)",
+            "button_4_short_press": "Button_4 (short press)"
+        }
+    },
+    "entity": {
+        "number": {
+            "config_volume": {
+                "name": "Volume"
+            }
+        },
+        "sensor": {
+            "current_power": {
+                "name": "Current power"
+            },
+            "power_consumption": {
+                "name": "Power consumption"
+            },
+            "power_failure_alarm": {
+                "name": "Power failure alarm",
+                "state": {
+                    "alert": "Alert",
+                    "normal": "Normal",
+                    "off": "Off"
+                }
+            },
+            "power_failure_alarm_beep": {
+                "name": "Power failure alarm beep",
+                "state": {
+                    "disabled": "Disabled",
+                    "enabled": "Enabled"
+                }
+            },
+            "power_failure_alarm_mute": {
+                "name": "Power failure alarm mute",
+                "state": {
+                    "muted": "Muted",
+                    "unmuted": "Unmuted"
+                }
+            },
+            "power_failure_alarm_volume": {
+                "name": "Power failure alarm volume",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
+            },
+            "water_meter_reading": {
+                "name": "Water meter reading"
+            }
+        },
+        "switch": {
+            "plug_1": {
+                "name": "Plug 1"
+            },
+            "plug_2": {
+                "name": "Plug 2"
+            },
+            "plug_3": {
+                "name": "Plug 3"
+            },
+            "plug_4": {
+                "name": "Plug 4"
+            },
+            "usb_ports": {
+                "name": "USB ports"
+            }
+        },
+        "valve": {
+            "meter_valve_state": {
+                "name": "Valve state"
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_config_entry": {
+            "message": "Config entry not found or not loaded!"
+        }
+    },
+    "selector": {
+        "speaker_tone": {
+            "options": {
+                "alert": "Alert",
+                "emergency": "Emergency",
+                "tip": "Tip",
+                "warn": "Warn"
+            }
+        }
+    },
+    "services": {
+        "play_on_speaker_hub": {
+            "description": "Convert text to audio play on YoLink SpeakerHub",
+            "fields": {
+                "message": {
+                    "description": "Text message to be played.",
+                    "name": "Text message"
+                },
+                "repeat": {
+                    "description": "The amount of times the text will be repeated.",
+                    "name": "Repeat"
+                },
+                "target_device": {
+                    "description": "SpeakerHub Device",
+                    "name": "SpeakerHub Device"
+                },
+                "tone": {
+                    "description": "Tone before playing audio.",
+                    "name": "Tone"
+                },
+                "volume": {
+                    "description": "Override the speaker volume during playback of this message only.",
+                    "name": "Volume"
+                }
+            },
+            "name": "Play on SpeakerHub"
+        }
+    }
+}

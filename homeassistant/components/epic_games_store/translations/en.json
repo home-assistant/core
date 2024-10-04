@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Country",
+                    "language": "Language"
+                }
+            }
+        }
+    },
+    "entity": {
+        "calendar": {
+            "discount_games": {
+                "name": "Discount games",
+                "state_attributes": {
+                    "games": {
+                        "name": "Games"
+                    }
+                }
+            },
+            "free_games": {
+                "name": "Free games",
+                "state_attributes": {
+                    "games": {
+                        "name": "Games"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,118 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
+        },
+        "error": {
+            "already_connected": "Already connected",
+            "cannot_connect": "Failed to connect",
+            "invalid_token": "Invalid token",
+            "limit_reached": "Request limit reached",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "description": "Enter your Blue Current API token",
+                "title": "Authentication"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "activity": {
+                "name": "Activity",
+                "state": {
+                    "available": "Available",
+                    "charging": "Charging",
+                    "error": "Error",
+                    "offline": "Offline",
+                    "unavailable": "Unavailable"
+                }
+            },
+            "actual_kwh": {
+                "name": "Energy usage"
+            },
+            "actual_p1": {
+                "name": "Current phase 1"
+            },
+            "actual_p2": {
+                "name": "Current phase 2"
+            },
+            "actual_p3": {
+                "name": "Current phase 3"
+            },
+            "actual_v1": {
+                "name": "Voltage phase 1"
+            },
+            "actual_v2": {
+                "name": "Voltage phase 2"
+            },
+            "actual_v3": {
+                "name": "Voltage phase 3"
+            },
+            "avg_current": {
+                "name": "Average current"
+            },
+            "avg_voltage": {
+                "name": "Average voltage"
+            },
+            "current_left": {
+                "name": "Remaining current"
+            },
+            "grid_actual_p1": {
+                "name": "Grid current phase 1"
+            },
+            "grid_actual_p2": {
+                "name": "Grid current phase 2"
+            },
+            "grid_actual_p3": {
+                "name": "Grid current phase 3"
+            },
+            "grid_avg_current": {
+                "name": "Average grid current"
+            },
+            "grid_max_current": {
+                "name": "Max grid current"
+            },
+            "max_offline": {
+                "name": "Offline max usage"
+            },
+            "max_usage": {
+                "name": "Max usage"
+            },
+            "offline_since": {
+                "name": "Offline since"
+            },
+            "smartcharging_max_usage": {
+                "name": "Smart charging max usage"
+            },
+            "start_datetime": {
+                "name": "Started on"
+            },
+            "stop_datetime": {
+                "name": "Stopped on"
+            },
+            "total_cost": {
+                "name": "Total cost"
+            },
+            "total_kw": {
+                "name": "Total power"
+            },
+            "vehicle_status": {
+                "name": "Vehicle status",
+                "state": {
+                    "no_power": "No power",
+                    "ready": "Ready",
+                    "standby": "Standby",
+                    "vehicle_detected": "Detected",
+                    "vehicle_error": "Error"
+                }
+            }
+        }
+    }
+}

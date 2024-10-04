@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "services": {
+        "extract_media_url": {
+            "description": "Extract media URL from a service.",
+            "fields": {
+                "format_query": {
+                    "description": "Youtube-dl query to select the quality of the result.",
+                    "name": "Format query"
+                },
+                "url": {
+                    "description": "URL where the media can be found.",
+                    "name": "Media URL"
+                }
+            },
+            "name": "Get Media URL"
+        },
+        "play_media": {
+            "description": "Downloads file from given URL.",
+            "fields": {
+                "media_content_id": {
+                    "description": "The ID of the content to play. Platform dependent.",
+                    "name": "Media content ID"
+                },
+                "media_content_type": {
+                    "description": "The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC.",
+                    "name": "Media content type"
+                }
+            },
+            "name": "Play media"
+        }
+    }
+}

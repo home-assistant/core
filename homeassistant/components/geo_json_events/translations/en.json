@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Location",
+                    "url": "URL"
+                },
+                "title": "Fill in your GeoJSON feed details."
+            }
+        }
+    }
+}

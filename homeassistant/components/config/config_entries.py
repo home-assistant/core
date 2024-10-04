@@ -10,7 +10,7 @@ from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, msh_utils
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
@@ -60,6 +60,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
+    websocket_api.async_register_command(hass, config_device_limit_get)
+    websocket_api.async_register_command(hass, config_remote_external_url_get)
 
     websocket_api.async_register_command(hass, config_subentry_delete)
     websocket_api.async_register_command(hass, config_subentry_list)
@@ -694,6 +696,33 @@ async def config_subentry_list(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        "type": "config_entries/get_device_limit",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_device_limit_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get Device Limit."""
+    try:
+        dev_limit_str_enc = await msh_utils.retrieve_value_from_config_file(
+            msh_utils.SYS_DLIM
+        )
+        dev_limit_str = msh_utils.decrypt(dev_limit_str_enc)
+        dev_limit = int(dev_limit_str)
+    except (ValueError, TypeError):
+        dev_limit = 20
+
+    result = {"device_count_limit": dev_limit}
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         "type": "config_entries/subentries/delete",
         "entry_id": str,
         "subentry_id": str,
@@ -719,3 +748,28 @@ async def config_subentry_delete(
         return
 
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/get_remote_external_url",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_remote_external_url_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get Remote Server URL."""
+    try:
+        external_url = await msh_utils.retrieve_value_from_config_file(
+            msh_utils.EXTERNAL_URL
+        )
+    except (ValueError, TypeError):
+        external_url = None
+
+    result = {"external_url": external_url}
+    connection.send_result(msg["id"], result)

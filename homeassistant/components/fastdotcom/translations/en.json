@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "download": {
+                "name": "Download"
+            }
+        }
+    }
+}

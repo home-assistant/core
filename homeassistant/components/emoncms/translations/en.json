@@ -1,0 +1,99 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This server is already configured"
+        },
+        "error": {
+            "api_error": "An error occured in the pyemoncms API : {details}"
+        },
+        "step": {
+            "choose_feeds": {
+                "data": {
+                    "include_only_feed_id": "Choose feeds to include"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "url": "URL"
+                },
+                "data_description": {
+                    "api_key": "Your 32 bits API key",
+                    "url": "Server URL starting with the protocol (http or https)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "apparent_power": {
+                "name": "Apparent power {emoncms_details}"
+            },
+            "concentration": {
+                "name": "Concentration {emoncms_details}"
+            },
+            "current": {
+                "name": "Current {emoncms_details}"
+            },
+            "decibel": {
+                "name": "Decibel {emoncms_details}"
+            },
+            "energy": {
+                "name": "Energy {emoncms_details}"
+            },
+            "flow": {
+                "name": "Flow rate {emoncms_details}"
+            },
+            "frequency": {
+                "name": "Frequency {emoncms_details}"
+            },
+            "percent": {
+                "name": "Percentage {emoncms_details}"
+            },
+            "power": {
+                "name": "Power {emoncms_details}"
+            },
+            "pressure": {
+                "name": "Pressure {emoncms_details}"
+            },
+            "speed": {
+                "name": "Speed {emoncms_details}"
+            },
+            "temperature": {
+                "name": "Temperature {emoncms_details}"
+            },
+            "voltage": {
+                "name": "Voltage {emoncms_details}"
+            },
+            "volume": {
+                "name": "Volume {emoncms_details}"
+            }
+        }
+    },
+    "issues": {
+        "migrate_database": {
+            "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\nPlease upgrade to at least version 11.5.7 and migrate your emoncms database.\n\nMore info in the [emoncms documentation]({doc_url})",
+            "title": "Upgrade your emoncms version"
+        },
+        "missing_include_only_feed_id": {
+            "description": "Configuring {domain} using YAML is being removed.\n\nPlease add manually the feeds you want to synchronize with the `configure` button of the integration.",
+            "title": "No feed synchronized with the {domain} sensor"
+        },
+        "remove_value_template": {
+            "description": "Configuring {domain} using YAML is being removed and the `{parameter}` parameter cannot be imported.\n\nPlease remove `{parameter}` from your `{domain}` yaml configuration and restart Home Assistant\n\nAlternatively, you may entirely remove the `{domain}` configuration from your configuration.yaml, restart Home Assistant, and add the {domain} integration manually.",
+            "title": "The {domain} integration cannot start"
+        }
+    },
+    "options": {
+        "error": {
+            "api_error": "An error occured in the pyemoncms API : {details}"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "include_only_feed_id": "Choose feeds to include"
+                }
+            }
+        }
+    }
+}

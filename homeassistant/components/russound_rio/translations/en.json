@@ -1,0 +1,51 @@
+{
+    "common": {
+        "error_cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect.",
+            "reconfigure_successful": "Re-configuration was successful",
+            "wrong_device": "This Russound controller does not match the existing device ID. Please make sure you entered the correct IP address."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Russound device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The IP address of the Russound controller.",
+                    "port": "The port of the Russound controller."
+                },
+                "description": "Reconfigure your Russound controller."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The IP address of the Russound controller.",
+                    "port": "The port of the Russound controller."
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "command_error": {
+            "message": "Error executing {function_name} on entity {entity_id}"
+        },
+        "entry_cannot_connect": {
+            "message": "Error while connecting to {host}:{port}"
+        }
+    }
+}

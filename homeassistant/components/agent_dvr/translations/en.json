@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The IP address of the Agent DVR server."
+                },
+                "title": "Set up Agent DVR"
+            }
+        }
+    },
+    "services": {
+        "disable_alerts": {
+            "description": "Disables alerts.",
+            "name": "Disable alerts"
+        },
+        "enable_alerts": {
+            "description": "Enables alerts.",
+            "name": "Enable alerts"
+        },
+        "snapshot": {
+            "description": "Takes a photo.",
+            "name": "Snapshot"
+        },
+        "start_recording": {
+            "description": "Enables continuous recording.",
+            "name": "Start recording"
+        },
+        "stop_recording": {
+            "description": "Disables continuous recording.",
+            "name": "Stop recording"
+        }
+    }
+}

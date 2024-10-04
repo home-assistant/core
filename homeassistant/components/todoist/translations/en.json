@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API token"
+                },
+                "description": "Please enter your API token from your [Todoist Settings page]({settings_url})"
+            }
+        }
+    },
+    "exceptions": {
+        "project_invalid": {
+            "message": "Invalid project name \"{project}\""
+        },
+        "section_invalid": {
+            "message": "Project \"{project}\" has no section \"{section}\""
+        }
+    },
+    "services": {
+        "new_task": {
+            "description": "Creates a new task and add it to a project.",
+            "fields": {
+                "assignee": {
+                    "description": "A members username of a shared project to assign this task to.",
+                    "name": "Assignee"
+                },
+                "content": {
+                    "description": "The name of the task.",
+                    "name": "Content"
+                },
+                "description": {
+                    "description": "A description for the task.",
+                    "name": "Description"
+                },
+                "due_date": {
+                    "description": "The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone.",
+                    "name": "Due date"
+                },
+                "due_date_lang": {
+                    "description": "The language of due_date_string.",
+                    "name": "Due date language"
+                },
+                "due_date_string": {
+                    "description": "The day this task is due, in natural language.",
+                    "name": "Due date string"
+                },
+                "labels": {
+                    "description": "Any labels that you want to apply to this task, separated by a comma.",
+                    "name": "Labels"
+                },
+                "priority": {
+                    "description": "The priority of this task, from 1 (normal) to 4 (urgent).",
+                    "name": "Priority"
+                },
+                "project": {
+                    "description": "The name of the project this task should belong to.",
+                    "name": "Project"
+                },
+                "reminder_date": {
+                    "description": "When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone.",
+                    "name": "Reminder date"
+                },
+                "reminder_date_lang": {
+                    "description": "The language of reminder_date_string.",
+                    "name": "Reminder date language"
+                },
+                "reminder_date_string": {
+                    "description": "When should user be reminded of this task, in natural language.",
+                    "name": "Reminder date string"
+                },
+                "section": {
+                    "description": "The name of a section within the project to add the task to.",
+                    "name": "Section"
+                }
+            },
+            "name": "New task"
+        }
+    }
+}

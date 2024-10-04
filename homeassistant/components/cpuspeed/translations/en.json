@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "not_compatible": "Unable to get CPU information, this integration is not compatible with your system"
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?",
+                "title": "CPU Speed"
+            }
+        }
+    },
+    "title": "CPU Speed"
+}

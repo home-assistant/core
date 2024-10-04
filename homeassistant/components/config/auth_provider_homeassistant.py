@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 
+from homeassistant import msh_utils
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -113,6 +115,12 @@ async def websocket_change_password(
         connection.send_error(msg["id"], "user_not_found", "User not found")  # type: ignore[unreachable]
         return
 
+    if len(msg["new_password"]) < 6:
+        connection.send_error(
+            msg["id"], "invalid_password", "Password should be at least 6 characters"
+        )
+        return
+
     provider = auth_ha.async_get_provider(hass)
     username = None
     for credential in user.credentials:
@@ -131,6 +139,16 @@ async def websocket_change_password(
     except auth_ha.InvalidAuth:
         connection.send_error(
             msg["id"], "invalid_current_password", "Invalid current password"
+        )
+        return
+
+    try:
+        await msh_utils.sync_password_with_firebase(
+            username, msg["current_password"], msg["new_password"]
+        )
+    except aiohttp.ClientError as exc:
+        connection.send_error(
+            msg["id"], "firebase_sync_failed", f"Sync failed: {exc!s}"
         )
         return
 

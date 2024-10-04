@@ -1,0 +1,140 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_locations": "No locations are available for this user, check TotalConnect settings",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "usercode": "Usercode not valid for this user at this location"
+        },
+        "step": {
+            "locations": {
+                "data": {
+                    "usercodes": "Usercode"
+                },
+                "data_description": {
+                    "usercodes": "The usercode is usually a 4 digit number"
+                },
+                "description": "Enter the usercode for this user at location {location_id}",
+                "title": "Location Usercodes"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The Total Connect password"
+                },
+                "description": "Total Connect needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The Total Connect password",
+                    "username": "The Total Connect username"
+                },
+                "description": "It is highly recommended to use a 'standard' Total Connect user account with Home Assistant. The account should not have full administrative privileges.",
+                "title": "Total Connect 2.0 Account Credentials"
+            }
+        }
+    },
+    "entity": {
+        "alarm_control_panel": {
+            "partition": {
+                "name": "Partition {partition_id}"
+            }
+        },
+        "binary_sensor": {
+            "police": {
+                "name": "Police emergency",
+                "state": {
+                    "off": "No emergency",
+                    "on": "Police emergency"
+                }
+            }
+        },
+        "button": {
+            "bypass": {
+                "name": "Bypass"
+            },
+            "bypass_all": {
+                "name": "Bypass all"
+            },
+            "clear_bypass": {
+                "name": "Clear bypass"
+            }
+        }
+    },
+    "exceptions": {
+        "arm_away_failed": {
+            "message": "Failed to arm away {device}"
+        },
+        "arm_away_instant_failed": {
+            "message": "Failed to arm away instant {device}"
+        },
+        "arm_away_instant_invalid_code": {
+            "message": "Usercode is invalid, did not arm away instant"
+        },
+        "arm_away_invalid_code": {
+            "message": "Usercode is invalid, did not arm away"
+        },
+        "arm_home_failed": {
+            "message": "Failed to arm home {device}"
+        },
+        "arm_home_instant_failed": {
+            "message": "Failed to arm home instant {device}"
+        },
+        "arm_home_instant_invalid_code": {
+            "message": "Usercode is invalid, did not arm home instant"
+        },
+        "arm_home_invalid_code": {
+            "message": "Usercode is invalid, did not arm home"
+        },
+        "arm_night_failed": {
+            "message": "Failed to arm night {device}"
+        },
+        "arm_night_invalid_code": {
+            "message": "Usercode is invalid, did not arm night"
+        },
+        "disarm_failed": {
+            "message": "Failed to disarm {device}"
+        },
+        "disarm_invalid_code": {
+            "message": "Usercode is invalid, did not disarm"
+        },
+        "invalid_pin": {
+            "message": "Incorrect code entered"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass low battery",
+                    "code_required": "Require user to enter code for alarm actions"
+                },
+                "data_description": {
+                    "auto_bypass_low_battery": "If enabled, Total Connect zones will immediately be bypassed when they report low battery. This option helps because zones tend to report low battery in the middle of the night. The downside of this option is that when the alarm system is armed, the bypassed zone will not be monitored.",
+                    "code_required": "If enabled, you must enter the user code to arm or disarm the alarm"
+                },
+                "title": "TotalConnect Options"
+            }
+        }
+    },
+    "services": {
+        "arm_away_instant": {
+            "description": "Arms Away with zero entry delay.",
+            "name": "Arm away instant"
+        },
+        "arm_home_instant": {
+            "description": "Arms Home with zero entry delay.",
+            "name": "Arm home instant"
+        }
+    }
+}

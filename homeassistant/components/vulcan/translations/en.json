@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "All students have already been added.",
+            "already_configured": "That student has already been added.",
+            "no_matching_entries": "No matching entries found, please use different account or remove outdated student integration.",
+            "reauth_successful": "Reauth successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "expired_credentials": "Expired credentials - please create new on Vulcan mobile app registration page",
+            "expired_token": "Expired token - please generate a new token",
+            "invalid_pin": "Invalid PIN",
+            "invalid_symbol": "Invalid symbol",
+            "invalid_token": "Invalid access token",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "Use saved credentials"
+                },
+                "description": "Add another student."
+            },
+            "auth": {
+                "data": {
+                    "pin": "PIN code",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Log in to your Vulcan Account using mobile app registration page."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "PIN code",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Log in to your Vulcan Account using mobile app registration page."
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "Login"
+                },
+                "description": "Select saved credentials."
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "Select student"
+                },
+                "description": "Select student, you can add more students by adding integration again."
+            }
+        }
+    },
+    "entity": {
+        "calendar": {
+            "calendar": {
+                "name": "Calendar"
+            }
+        }
+    }
+}

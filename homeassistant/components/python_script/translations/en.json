@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads all available Python scripts.",
+            "name": "Reload"
+        }
+    }
+}

@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Enter Username and Password"
+            }
+        }
+    },
+    "entity": {
+        "fan": {
+            "vesync": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "pet": "Pet",
+                            "sleep": "Sleep",
+                            "turbo": "Turbo"
+                        }
+                    }
+                }
+            }
+        },
+        "number": {
+            "mist_level": {
+                "name": "Mist level"
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "name": "Air quality"
+            },
+            "current_power": {
+                "name": "Current power"
+            },
+            "current_voltage": {
+                "name": "Current voltage"
+            },
+            "energy_month": {
+                "name": "Energy use monthly"
+            },
+            "energy_today": {
+                "name": "Energy use today"
+            },
+            "energy_week": {
+                "name": "Energy use weekly"
+            },
+            "energy_year": {
+                "name": "Energy use yearly"
+            },
+            "filter_life": {
+                "name": "Filter lifetime"
+            }
+        }
+    },
+    "services": {
+        "update_devices": {
+            "description": "Adds new VeSync devices to Home Assistant.",
+            "name": "Update devices"
+        }
+    }
+}

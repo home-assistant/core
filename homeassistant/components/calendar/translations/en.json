@@ -1,0 +1,107 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Calendar",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "all_day": {
+                    "name": "All day",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "description": {
+                    "name": "Description"
+                },
+                "end_time": {
+                    "name": "End time"
+                },
+                "location": {
+                    "name": "Location"
+                },
+                "message": {
+                    "name": "Message"
+                },
+                "start_time": {
+                    "name": "Start time"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_service_calendar_list_events": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Use `calendar.get_events` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue.",
+                        "title": "Detected use of deprecated action calendar.list_events"
+                    }
+                }
+            },
+            "title": "Detected use of deprecated action calendar.list_events"
+        }
+    },
+    "services": {
+        "create_event": {
+            "description": "Adds a new calendar event.",
+            "fields": {
+                "description": {
+                    "description": "A more complete description of the event than the one provided by the summary.",
+                    "name": "Description"
+                },
+                "end_date": {
+                    "description": "The date the all-day event should end (exclusive).",
+                    "name": "End date"
+                },
+                "end_date_time": {
+                    "description": "The date and time the event should end.",
+                    "name": "End time"
+                },
+                "in": {
+                    "description": "Days or weeks that you want to create the event in.",
+                    "name": "In"
+                },
+                "location": {
+                    "description": "The location of the event.",
+                    "name": "Location"
+                },
+                "start_date": {
+                    "description": "The date the all-day event should start.",
+                    "name": "Start date"
+                },
+                "start_date_time": {
+                    "description": "The date and time the event should start.",
+                    "name": "Start time"
+                },
+                "summary": {
+                    "description": "Defines the short summary or subject for the event.",
+                    "name": "Summary"
+                }
+            },
+            "name": "Create event"
+        },
+        "get_events": {
+            "description": "Get events on a calendar within a time range.",
+            "fields": {
+                "duration": {
+                    "description": "Returns active events from Start time for the specified duration.",
+                    "name": "Duration"
+                },
+                "end_date_time": {
+                    "description": "Returns active events before this time (exclusive). Cannot be used with Duration.",
+                    "name": "End time"
+                },
+                "start_date_time": {
+                    "description": "Returns active events after this time (exclusive). When not set, defaults to now.",
+                    "name": "Start time"
+                }
+            },
+            "name": "Get events"
+        }
+    },
+    "title": "Calendar"
+}

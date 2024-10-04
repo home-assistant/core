@@ -1,0 +1,49 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Input text",
+            "state_attributes": {
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "max": {
+                    "name": "Max length"
+                },
+                "min": {
+                    "name": "Min length"
+                },
+                "mode": {
+                    "name": "Mode",
+                    "state": {
+                        "password": "Password",
+                        "text": "Text"
+                    }
+                },
+                "pattern": {
+                    "name": "Pattern"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads helpers from the YAML-configuration.",
+            "name": "Reload"
+        },
+        "set_value": {
+            "description": "Sets the value.",
+            "fields": {
+                "value": {
+                    "description": "The target value.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set"
+        }
+    },
+    "title": "Input text"
+}

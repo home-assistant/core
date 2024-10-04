@@ -1,0 +1,368 @@
+{
+    "config": {
+        "step": {
+            "alarm_control_panel": {
+                "data": {
+                    "arm_away": "Arm away action",
+                    "arm_custom_bypass": "Arm custom bypass action",
+                    "arm_home": "Arm home action",
+                    "arm_night": "Arm night action",
+                    "arm_vacation": "Arm vacation action",
+                    "code_arm_required": "Code arm required",
+                    "code_format": "Code format",
+                    "device_id": "Device",
+                    "disarm": "Disarm action",
+                    "name": "Name",
+                    "trigger": "Trigger action",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template alarm control panel"
+            },
+            "binary_sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "device_id": "Device",
+                    "name": "Name",
+                    "state": "State template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template binary sensor"
+            },
+            "button": {
+                "data": {
+                    "device_class": "Device class",
+                    "device_id": "Device",
+                    "name": "Name",
+                    "press": "Actions on press"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template button"
+            },
+            "image": {
+                "data": {
+                    "device_id": "Device",
+                    "name": "Name",
+                    "url": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template image"
+            },
+            "number": {
+                "data": {
+                    "device_id": "Device",
+                    "max": "Maximum value",
+                    "min": "Minimum value",
+                    "name": "Name",
+                    "set_value": "Actions on set value",
+                    "state": "State template",
+                    "step": "Step value",
+                    "unit_of_measurement": "Unit of measurement"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template number"
+            },
+            "select": {
+                "data": {
+                    "device_id": "Device",
+                    "name": "Name",
+                    "options": "Available options",
+                    "select_option": "Actions on select",
+                    "state": "State template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template select"
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "device_id": "Device",
+                    "name": "Name",
+                    "state": "State template",
+                    "state_class": "State class",
+                    "unit_of_measurement": "Unit of measurement"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template sensor"
+            },
+            "switch": {
+                "data": {
+                    "device_id": "Device",
+                    "name": "Name",
+                    "turn_off": "Actions on turn off",
+                    "turn_on": "Actions on turn on",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity.",
+                    "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
+                },
+                "title": "Template switch"
+            },
+            "user": {
+                "description": "This helper allows you to create helper entities that define their state using a template.",
+                "menu_options": {
+                    "alarm_control_panel": "Template an alarm control panel",
+                    "binary_sensor": "Template a binary sensor",
+                    "button": "Template a button",
+                    "image": "Template an image",
+                    "number": "Template a number",
+                    "select": "Template a select",
+                    "sensor": "Template a sensor",
+                    "switch": "Template a switch"
+                },
+                "title": "Template helper"
+            }
+        }
+    },
+    "exceptions": {
+        "code_format_template_error": {
+            "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"
+        }
+    },
+    "options": {
+        "step": {
+            "alarm_control_panel": {
+                "data": {
+                    "arm_away": "Arm away action",
+                    "arm_custom_bypass": "Arm custom bypass action",
+                    "arm_home": "Arm home action",
+                    "arm_night": "Arm night action",
+                    "arm_vacation": "Arm vacation action",
+                    "code_arm_required": "Code arm required",
+                    "code_format": "Code format",
+                    "device_id": "Device",
+                    "disarm": "Disarm action",
+                    "trigger": "Trigger action",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template alarm control panel"
+            },
+            "binary_sensor": {
+                "data": {
+                    "device_id": "Device",
+                    "state": "State template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template binary sensor"
+            },
+            "button": {
+                "data": {
+                    "device_id": "Device",
+                    "press": "Actions on press"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template button"
+            },
+            "image": {
+                "data": {
+                    "device_id": "Device",
+                    "url": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template image"
+            },
+            "number": {
+                "data": {
+                    "device_id": "Device",
+                    "max": "Maximum value",
+                    "min": "Minimum value",
+                    "name": "Name",
+                    "set_value": "Actions on set value",
+                    "state": "State template",
+                    "step": "Step value"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template number"
+            },
+            "select": {
+                "data": {
+                    "device_id": "Device",
+                    "name": "Name",
+                    "options": "Available options",
+                    "select_option": "Actions on select",
+                    "state": "State template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template select"
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "device_id": "Device",
+                    "state": "State template",
+                    "state_class": "State class",
+                    "unit_of_measurement": "Unit of measurement"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity."
+                },
+                "title": "Template sensor"
+            },
+            "switch": {
+                "data": {
+                    "device_id": "Device",
+                    "name": "Name",
+                    "turn_off": "Actions on turn off",
+                    "turn_on": "Actions on turn on",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "device_id": "Select a device to link to this entity.",
+                    "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
+                },
+                "title": "Template switch"
+            }
+        }
+    },
+    "selector": {
+        "alarm_control_panel_code_format": {
+            "options": {
+                "no_code": "No code format",
+                "number": "Number",
+                "text": "Text"
+            }
+        },
+        "binary_sensor_device_class": {
+            "options": {
+                "battery": "Battery",
+                "battery_charging": "Charging",
+                "carbon_monoxide": "Carbon monoxide",
+                "cold": "Cold",
+                "connectivity": "Connectivity",
+                "door": "Door",
+                "garage_door": "Garage door",
+                "gas": "Gas",
+                "heat": "Heat",
+                "light": "Light",
+                "lock": "Lock",
+                "moisture": "Moisture",
+                "motion": "Motion",
+                "moving": "Moving",
+                "occupancy": "Occupancy",
+                "opening": "Opening",
+                "plug": "Plug",
+                "power": "Power",
+                "presence": "Presence",
+                "problem": "Problem",
+                "running": "Running",
+                "safety": "Safety",
+                "smoke": "Smoke",
+                "sound": "Sound",
+                "tamper": "Tamper",
+                "update": "Update",
+                "vibration": "Vibration",
+                "window": "Window"
+            }
+        },
+        "button_device_class": {
+            "options": {
+                "identify": "Identify",
+                "restart": "Restart",
+                "update": "Update"
+            }
+        },
+        "sensor_device_class": {
+            "options": {
+                "apparent_power": "Apparent power",
+                "aqi": "Air quality index",
+                "atmospheric_pressure": "Atmospheric pressure",
+                "battery": "Battery",
+                "carbon_dioxide": "Carbon dioxide",
+                "carbon_monoxide": "Carbon monoxide",
+                "conductivity": "Conductivity",
+                "current": "Current",
+                "data_rate": "Data rate",
+                "data_size": "Data size",
+                "date": "Date",
+                "distance": "Distance",
+                "duration": "Duration",
+                "energy": "Energy",
+                "energy_storage": "Stored energy",
+                "frequency": "Frequency",
+                "gas": "Gas",
+                "humidity": "Humidity",
+                "illuminance": "Illuminance",
+                "irradiance": "Irradiance",
+                "moisture": "Moisture",
+                "monetary": "Balance",
+                "nitrogen_dioxide": "Nitrogen dioxide",
+                "nitrogen_monoxide": "Nitrogen monoxide",
+                "nitrous_oxide": "Nitrous oxide",
+                "ozone": "Ozone",
+                "ph": "pH",
+                "pm1": "PM1",
+                "pm10": "PM10",
+                "pm25": "PM2.5",
+                "power": "Power",
+                "power_factor": "Power factor",
+                "precipitation": "Precipitation",
+                "precipitation_intensity": "Precipitation intensity",
+                "pressure": "Pressure",
+                "reactive_power": "Reactive power",
+                "signal_strength": "Signal strength",
+                "sound_pressure": "Sound pressure",
+                "speed": "Speed",
+                "sulphur_dioxide": "Sulphur dioxide",
+                "temperature": "Temperature",
+                "timestamp": "Timestamp",
+                "volatile_organic_compounds": "VOCs",
+                "volatile_organic_compounds_parts": "VOCs",
+                "voltage": "Voltage",
+                "volume": "Volume",
+                "volume_flow_rate": "Volume flow rate",
+                "volume_storage": "Stored volume",
+                "water": "Water",
+                "weight": "Weight",
+                "wind_speed": "Wind speed"
+            }
+        },
+        "sensor_state_class": {
+            "options": {
+                "measurement": "Measurement",
+                "total": "Total",
+                "total_increasing": "Total increasing"
+            }
+        },
+        "sensor_unit_of_measurement": {
+            "options": {
+                "none": "No unit of measurement"
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads template entities from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

@@ -1,0 +1,139 @@
+{
+    "config": {
+        "abort": {
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_data": "API connected but the response was empty"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "areas": "Areas",
+                    "currency": "Currency"
+                },
+                "data_description": {
+                    "areas": "Areas to display prices for according to Nordpool market areas.",
+                    "currency": "Select currency to display prices in, EUR is the base currency."
+                }
+            },
+            "user": {
+                "data": {
+                    "areas": "Areas",
+                    "currency": "Currency"
+                },
+                "data_description": {
+                    "areas": "Areas to display prices for according to Nordpool market areas.",
+                    "currency": "Select currency to display prices in, EUR is the base currency."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "block_average": {
+                "name": "{block} average"
+            },
+            "block_end_time": {
+                "name": "{block} time until"
+            },
+            "block_max": {
+                "name": "{block} highest price"
+            },
+            "block_min": {
+                "name": "{block} lowest price"
+            },
+            "block_start_time": {
+                "name": "{block} time from"
+            },
+            "currency": {
+                "name": "Currency"
+            },
+            "current_price": {
+                "name": "Current price"
+            },
+            "daily_average": {
+                "name": "Daily average"
+            },
+            "exchange_rate": {
+                "name": "Exchange rate"
+            },
+            "highest_price": {
+                "name": "Highest price",
+                "state_attributes": {
+                    "end": {
+                        "name": "End time"
+                    },
+                    "start": {
+                        "name": "Start time"
+                    }
+                }
+            },
+            "last_price": {
+                "name": "Previous price"
+            },
+            "lowest_price": {
+                "name": "Lowest price",
+                "state_attributes": {
+                    "end": {
+                        "name": "End time"
+                    },
+                    "start": {
+                        "name": "Start time"
+                    }
+                }
+            },
+            "next_price": {
+                "name": "Next price"
+            },
+            "updated_at": {
+                "name": "Last updated"
+            }
+        }
+    },
+    "exceptions": {
+        "authentication_error": {
+            "message": "There was an authentication error as you tried to retrieve data too far in the past."
+        },
+        "connection_error": {
+            "message": "There was a connection error connecting to the API. Try again later."
+        },
+        "empty_response": {
+            "message": "Nord Pool has not posted market prices for the provided date."
+        },
+        "entry_not_found": {
+            "message": "The Nord Pool integration is not configured in Home Assistant."
+        },
+        "entry_not_loaded": {
+            "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
+        },
+        "initial_update_failed": {
+            "message": "Initial update failed on startup with error {error}"
+        }
+    },
+    "services": {
+        "get_prices_for_date": {
+            "description": "Retrieve the prices for a specific date.",
+            "fields": {
+                "areas": {
+                    "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured.",
+                    "name": "Areas"
+                },
+                "config_entry": {
+                    "description": "Choose the configuration entry.",
+                    "name": "Select Nord Pool configuration entry"
+                },
+                "currency": {
+                    "description": "Currency to get prices in. If left empty it will use the currency already configured.",
+                    "name": "Currency"
+                },
+                "date": {
+                    "description": "Only dates two months in the past and one day in the future is allowed.",
+                    "name": "Date"
+                }
+            },
+            "name": "Get prices for date"
+        }
+    }
+}

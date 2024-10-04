@@ -1,0 +1,152 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "auth_error": "Invalid credentials.",
+            "no_heaters": "No heaters found.",
+            "not_found": "No Lan2RF gateway found.",
+            "timeout_error": "Time out when connecting to Lan2RF gateway.",
+            "unknown": "Unknown error when connecting to Lan2RF gateway."
+        },
+        "step": {
+            "dhcp_auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password to log into the gateway, is printed at the bottom of the Lan2RF Gateway or is `intergas` for some older devices.",
+                    "username": "The username to log into the gateway. This is `admin` in most cases."
+                },
+                "description": "Please enter authentication details for gateway {host}",
+                "title": "Set up Intergas InComfort Lan2RF Gateway"
+            },
+            "dhcp_confirm": {
+                "description": "Do you want to set up the discovered Intergas InComfort Lan2RF Gateway ({host})?",
+                "title": "Set up Intergas InComfort Lan2RF Gateway"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Correct the gateway password."
+                },
+                "description": "Re-authenticate to the gateway."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "Hostname or IP-address of the Intergas InComfort Lan2RF Gateway.",
+                    "password": "The password to log into the gateway, is printed at the bottom of the Lan2RF Gateway or is `intergas` for some older devices.",
+                    "username": "The username to log into the gateway. This is `admin` in most cases."
+                },
+                "description": "Set up new Intergas InComfort Lan2RF Gateway, some older systems might not need credentials to be set up. For newer devices authentication is required."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "fault": {
+                "name": "Fault",
+                "state_attributes": {
+                    "fault_code": {
+                        "state": {
+                            "none": "None"
+                        }
+                    }
+                }
+            },
+            "is_burning": {
+                "name": "Burner"
+            },
+            "is_pumping": {
+                "name": "Pump"
+            },
+            "is_tapping": {
+                "name": "Hot water tap"
+            }
+        },
+        "sensor": {
+            "tap_temperature": {
+                "name": "Tap temperature"
+            }
+        },
+        "water_heater": {
+            "boiler": {
+                "state": {
+                    "boiler_ext": "Boiler external",
+                    "boiler_int": "Boiler internal",
+                    "buffer": "Buffer",
+                    "central_heating": "Central heating",
+                    "central_heating_rf": "Central heating rf",
+                    "cv_temperature_too_high_e1": "Temperature too high",
+                    "flame_detection_fault_e6": "Flame detection fault",
+                    "frost": "Frost protection",
+                    "gas_valve_relay_faulty_e29": "Gas valve relay faulty",
+                    "gas_valve_relay_faulty_e30": "Gas valve relay faulty",
+                    "incorrect_fan_speed_e8": "Incorrect fan speed",
+                    "no_flame_signal_e4": "No flame signal",
+                    "opentherm": "OpenTherm",
+                    "poor_flame_signal_e5": "Poor flame signal",
+                    "postrun_boyler": "Post run boiler",
+                    "postrun_ch": "Post run central heating",
+                    "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
+                    "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+                    "sensor_fault_s1_e10": "Sensor fault S1",
+                    "sensor_fault_s1_e11": "Sensor fault S1",
+                    "sensor_fault_s1_e12": "Sensor fault S1",
+                    "sensor_fault_s1_e13": "Sensor fault S1",
+                    "sensor_fault_s1_e14": "Sensor fault S1",
+                    "sensor_fault_s2_e20": "Sensor fault S2",
+                    "sensor_fault_s2_e21": "Sensor fault S2",
+                    "sensor_fault_s2_e22": "Sensor fault S2",
+                    "sensor_fault_s2_e23": "Sensor fault S2",
+                    "sensor_fault_s2_e24": "Sensor fault S2",
+                    "sensor_test": "Sensor test",
+                    "service": "Service",
+                    "shortcut_outside_sensor_temperature_e27": "Shortcut outside sensor temperature",
+                    "standby": "Stand-by",
+                    "tapwater": "Tap water",
+                    "tapwater_int": "Tap water internal",
+                    "unknown": "Unknown"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "no_heaters": {
+            "message": "No heaters found."
+        },
+        "not_found": {
+            "message": "No Lan2RF gateway found."
+        },
+        "timeout_error": {
+            "message": "Time out when connecting to Lan2RF gateway."
+        },
+        "unknown": {
+            "message": "Unknown error when connecting to Lan2RF gateway."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "legacy_setpoint_status": "Legacy setpoint handling"
+                },
+                "data_description": {
+                    "legacy_setpoint_status": "Some older gateway models with an older firmware versions might not update the thermostat setpoint and override settings correctly. Enable this option if you experience issues in updating the setpoint for your thermostat. It will use the actual setpoint of the thermostat instead of the override. As side effect is that it might take a few minutes before the setpoint is updated."
+                },
+                "title": "Intergas InComfort Lan2RF Gateway options"
+            }
+        }
+    }
+}

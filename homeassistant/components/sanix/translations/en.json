@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "serial_number": "Serial number",
+                    "token": "Access token"
+                },
+                "description": "To get the Serial number and the Token you just have to sign in to the [Sanix Dashboard]({dashboard_url}) and open the Help -> System version page."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "device_no": {
+                "name": "Device number"
+            },
+            "fill_perc": {
+                "name": "Filled"
+            },
+            "service_date": {
+                "name": "Service date"
+            },
+            "ssid": {
+                "name": "SSID"
+            }
+        }
+    }
+}

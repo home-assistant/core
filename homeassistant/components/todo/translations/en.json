@@ -1,0 +1,102 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "To-do list"
+        }
+    },
+    "exceptions": {
+        "item_not_found": {
+            "message": "Unable to find to-do list item: {item}"
+        },
+        "update_field_not_supported": {
+            "message": "Entity does not support setting field: {service_field}"
+        }
+    },
+    "selector": {
+        "status": {
+            "options": {
+                "completed": "Completed",
+                "needs_action": "Not completed"
+            }
+        }
+    },
+    "services": {
+        "add_item": {
+            "description": "Adds a new to-do list item.",
+            "fields": {
+                "description": {
+                    "description": "A more complete description of the to-do item than provided by the item name.",
+                    "name": "Description"
+                },
+                "due_date": {
+                    "description": "The date the to-do item is expected to be completed.",
+                    "name": "Due date"
+                },
+                "due_datetime": {
+                    "description": "The date and time the to-do item is expected to be completed.",
+                    "name": "Due date and time"
+                },
+                "item": {
+                    "description": "The name that represents the to-do item.",
+                    "name": "Item name"
+                }
+            },
+            "name": "Add item"
+        },
+        "get_items": {
+            "description": "Gets items on a to-do list.",
+            "fields": {
+                "status": {
+                    "description": "Only return to-do items with the specified statuses. Returns not completed actions by default.",
+                    "name": "Status"
+                }
+            },
+            "name": "Get items"
+        },
+        "remove_completed_items": {
+            "description": "Removes all to-do list items that have been completed.",
+            "name": "Remove completed items"
+        },
+        "remove_item": {
+            "description": "Removes an existing to-do list item by its name.",
+            "fields": {
+                "item": {
+                    "description": "The name for the to-do list item.",
+                    "name": "Item name"
+                }
+            },
+            "name": "Remove item"
+        },
+        "update_item": {
+            "description": "Updates an existing to-do list item based on its name.",
+            "fields": {
+                "description": {
+                    "description": "A more complete description of the to-do item than provided by the item name.",
+                    "name": "Description"
+                },
+                "due_date": {
+                    "description": "The date the to-do item is expected to be completed.",
+                    "name": "Due date"
+                },
+                "due_datetime": {
+                    "description": "The date and time the to-do item is expected to be completed.",
+                    "name": "Due date and time"
+                },
+                "item": {
+                    "description": "The current name of the to-do item.",
+                    "name": "Item name"
+                },
+                "rename": {
+                    "description": "The new name for the to-do item",
+                    "name": "Rename item"
+                },
+                "status": {
+                    "description": "A status or confirmation of the to-do item.",
+                    "name": "Set status"
+                }
+            },
+            "name": "Update item"
+        }
+    },
+    "title": "To-do list"
+}

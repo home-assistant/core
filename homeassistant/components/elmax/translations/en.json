@@ -1,0 +1,79 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "invalid_mode": "Invalid or unsupported mode",
+            "invalid_pin": "The provided PIN is invalid",
+            "network_error": "A network error occurred",
+            "no_panel_online": "No online Elmax control panel was found.",
+            "reauth_panel_disappeared": "The given panel is no longer associated to this user. Please log in using an account associated to this panel.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "choose_mode": {
+                "description": "Please choose the connection mode to Elmax panels.",
+                "menu_options": {
+                    "cloud": "Connect to Elmax Panel via Elmax Cloud APIs",
+                    "direct": "Connect to Elmax Panel via local/direct IP"
+                }
+            },
+            "cloud": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please login to the Elmax cloud using your credentials"
+            },
+            "direct": {
+                "data": {
+                    "panel_api_host": "Panel API Hostname or IP",
+                    "panel_api_port": "Panel API port",
+                    "panel_pin": "Panel PIN code",
+                    "use_ssl": "Use SSL"
+                },
+                "data_description": {
+                    "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to."
+                },
+                "description": "Specify the Elmax panel connection parameters below."
+            },
+            "panels": {
+                "data": {
+                    "panel_id": "Panel ID",
+                    "panel_name": "Panel Name",
+                    "panel_pin": "PIN code"
+                },
+                "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "panel_pin": "Panel PIN",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please re-authenticate with the panel."
+            },
+            "zeroconf_setup": {
+                "data": {
+                    "panel_pin": "Panel PIN code",
+                    "use_ssl": "Use SSL"
+                },
+                "data_description": {
+                    "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to."
+                },
+                "description": "Configure discovered local Elmax panel"
+            }
+        }
+    },
+    "exceptions": {
+        "alarm_operation_failed_generic": {
+            "message": "Failed to {operation} the alarm. An API error occurred."
+        },
+        "invalid_disarm_code": {
+            "message": "Invalid disarm code provided."
+        }
+    }
+}

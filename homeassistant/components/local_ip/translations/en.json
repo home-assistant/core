@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?",
+                "title": "Local IP Address"
+            }
+        }
+    },
+    "title": "Local IP Address"
+}

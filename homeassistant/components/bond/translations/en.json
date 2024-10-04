@@ -1,0 +1,101 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Access token"
+                },
+                "description": "Do you want to set up {name}?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Access token",
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address of your Bond hub."
+                }
+            }
+        }
+    },
+    "services": {
+        "set_fan_speed_tracked_state": {
+            "description": "Sets the tracked fan speed for a bond fan.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of entities to set the tracked fan speed.",
+                    "name": "Entity"
+                },
+                "speed": {
+                    "description": "Fan Speed as %.",
+                    "name": "Fan Speed"
+                }
+            },
+            "name": "Set fan speed tracked state"
+        },
+        "set_light_brightness_tracked_state": {
+            "description": "Sets the tracked brightness state of a bond light.",
+            "fields": {
+                "brightness": {
+                    "description": "Brightness.",
+                    "name": "Brightness"
+                },
+                "entity_id": {
+                    "description": "Name(s) of entities to set the tracked brightness state of.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Set light brightness tracked state"
+        },
+        "set_light_power_tracked_state": {
+            "description": "Sets the tracked power state of a bond light.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of entities to set the tracked power state of.",
+                    "name": "Entity"
+                },
+                "power_state": {
+                    "description": "Power state.",
+                    "name": "Power state"
+                }
+            },
+            "name": "Set light power tracked state"
+        },
+        "set_switch_power_tracked_state": {
+            "description": "Sets the tracked power state of a bond switch.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of entities to set the tracked power state of.",
+                    "name": "Entity"
+                },
+                "power_state": {
+                    "description": "Power state.",
+                    "name": "Power state"
+                }
+            },
+            "name": "Set switch power tracked state"
+        },
+        "start_decreasing_brightness": {
+            "description": "Start decreasing the brightness of the light. (deprecated).",
+            "name": "Start decreasing brightness"
+        },
+        "start_increasing_brightness": {
+            "description": "Start increasing the brightness of the light. (deprecated).",
+            "name": "Start increasing brightness"
+        },
+        "stop": {
+            "description": "Stop any in-progress action and empty the queue. (deprecated).",
+            "name": "Stop"
+        }
+    }
+}

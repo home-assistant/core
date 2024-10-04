@@ -1,0 +1,30 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Schedule",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "next_event": {
+                    "name": "Next event"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads schedules from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "Schedule"
+}

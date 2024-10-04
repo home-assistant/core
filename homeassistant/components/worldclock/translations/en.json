@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "time_format": "Time format",
+                    "time_zone": "Timezone"
+                },
+                "data_description": {
+                    "time_format": "Select a pre-defined format from the list or define your own format.",
+                    "time_zone": "Select timezone from list"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "time_format": "Time format"
+                },
+                "data_description": {
+                    "time_format": "Select a pre-defined format from the list or define your own format."
+                }
+            }
+        }
+    }
+}

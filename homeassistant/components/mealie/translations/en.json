@@ -1,0 +1,256 @@
+{
+    "common": {
+        "data_description_api_token": "The API token of your Mealie instance from your user profile within Mealie.",
+        "data_description_host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+        "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "wrong_account": "You have to use the same account that was used to configure the integration."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie add-on.",
+            "invalid_auth": "Invalid authentication",
+            "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "data_description": {
+                    "api_token": "The API token of your Mealie instance from your user profile within Mealie."
+                },
+                "description": "Please reauthenticate with Mealie."
+            },
+            "reconfigure": {
+                "data": {
+                    "api_token": "API token",
+                    "host": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "api_token": "The API token of your Mealie instance from your user profile within Mealie.",
+                    "host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+                    "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+                },
+                "description": "Please reconfigure with Mealie."
+            },
+            "user": {
+                "data": {
+                    "api_token": "API token",
+                    "host": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "api_token": "The API token of your Mealie instance from your user profile within Mealie.",
+                    "host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+                    "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+                }
+            }
+        }
+    },
+    "entity": {
+        "calendar": {
+            "breakfast": {
+                "name": "Breakfast"
+            },
+            "dinner": {
+                "name": "Dinner"
+            },
+            "lunch": {
+                "name": "Lunch"
+            },
+            "side": {
+                "name": "Side"
+            }
+        },
+        "sensor": {
+            "categories": {
+                "name": "Categories",
+                "unit_of_measurement": "categories"
+            },
+            "recipes": {
+                "name": "Recipes",
+                "unit_of_measurement": "recipes"
+            },
+            "tags": {
+                "name": "Tags",
+                "unit_of_measurement": "tags"
+            },
+            "tools": {
+                "name": "Tools",
+                "unit_of_measurement": "tools"
+            },
+            "users": {
+                "name": "Users",
+                "unit_of_measurement": "users"
+            }
+        }
+    },
+    "exceptions": {
+        "add_item_error": {
+            "message": "An error occurred adding an item to {shopping_list_name}."
+        },
+        "auth_failed": {
+            "message": "Authentication failed. Please reauthenticate."
+        },
+        "connection_error": {
+            "message": "Error connecting to Mealie instance."
+        },
+        "could_not_import_recipe": {
+            "message": "Mealie could not import the recipe from the URL."
+        },
+        "delete_item_error": {
+            "message": "An error occurred deleting an item in {shopping_list_name}."
+        },
+        "end_date_before_start_date": {
+            "message": "End date must be after start date."
+        },
+        "integration_not_found": {
+            "message": "Integration \"{target}\" not found in registry."
+        },
+        "item_not_found_error": {
+            "message": "Item {shopping_list_item} not found."
+        },
+        "not_loaded": {
+            "message": "{target} is not loaded."
+        },
+        "recipe_not_found": {
+            "message": "Recipe with ID or slug `{recipe_id}` not found."
+        },
+        "setup_failed": {
+            "message": "Could not connect to the Mealie instance."
+        },
+        "update_failed_mealplan": {
+            "message": "Could not fetch mealplan data."
+        },
+        "update_failed_shopping_list": {
+            "message": "Could not fetch shopping list data."
+        },
+        "update_failed_statistics": {
+            "message": "Could not fetch statistics data."
+        },
+        "update_item_error": {
+            "message": "An error occurred updating an item in {shopping_list_name}."
+        },
+        "version_error": {
+            "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+        }
+    },
+    "selector": {
+        "mealplan_entry_type": {
+            "options": {
+                "breakfast": "Breakfast",
+                "dinner": "Dinner",
+                "lunch": "Lunch",
+                "side": "Side"
+            }
+        }
+    },
+    "services": {
+        "get_mealplan": {
+            "description": "Get mealplan from Mealie",
+            "fields": {
+                "config_entry_id": {
+                    "description": "Select the Mealie instance to get mealplan from",
+                    "name": "Mealie instance"
+                },
+                "end_date": {
+                    "description": "The enddate of the data to get (default: today).",
+                    "name": "End date"
+                },
+                "start_date": {
+                    "description": "The startdate of the data to get (default: today).",
+                    "name": "Start date"
+                }
+            },
+            "name": "Get mealplan"
+        },
+        "get_recipe": {
+            "description": "Get recipe from Mealie",
+            "fields": {
+                "config_entry_id": {
+                    "description": "Select the Mealie instance to get mealplan from",
+                    "name": "Mealie instance"
+                },
+                "recipe_id": {
+                    "description": "The recipe ID or the slug of the recipe to get.",
+                    "name": "Recipe ID or slug"
+                }
+            },
+            "name": "Get recipe"
+        },
+        "import_recipe": {
+            "description": "Import recipe from an URL",
+            "fields": {
+                "config_entry_id": {
+                    "description": "Select the Mealie instance to get mealplan from",
+                    "name": "Mealie instance"
+                },
+                "include_tags": {
+                    "description": "Include tags from the website to the recipe.",
+                    "name": "Include tags"
+                },
+                "url": {
+                    "description": "The URL to the recipe to import.",
+                    "name": "URL to the recipe"
+                }
+            },
+            "name": "Import recipe"
+        },
+        "set_mealplan": {
+            "description": "Set a mealplan for a specific date",
+            "fields": {
+                "config_entry_id": {
+                    "description": "Select the Mealie instance to get mealplan from",
+                    "name": "Mealie instance"
+                },
+                "date": {
+                    "description": "The date to set the mealplan for.",
+                    "name": "Date"
+                },
+                "entry_type": {
+                    "description": "The type of dish to set the recipe to.",
+                    "name": "Entry type"
+                },
+                "note_text": {
+                    "description": "Meal note text for when planning without recipe.",
+                    "name": "Note text"
+                },
+                "note_title": {
+                    "description": "Meal note title for when planning without recipe.",
+                    "name": "Meal note title"
+                },
+                "recipe_id": {
+                    "description": "The recipe ID or the slug of the recipe to get.",
+                    "name": "Recipe ID"
+                }
+            },
+            "name": "Set a mealplan"
+        },
+        "set_random_mealplan": {
+            "description": "Set a random mealplan for a specific date",
+            "fields": {
+                "config_entry_id": {
+                    "description": "Select the Mealie instance to get mealplan from",
+                    "name": "Mealie instance"
+                },
+                "date": {
+                    "description": "The date to set the mealplan for.",
+                    "name": "Date"
+                },
+                "entry_type": {
+                    "description": "The type of dish to randomize.",
+                    "name": "Entry type"
+                }
+            },
+            "name": "Set random mealplan"
+        }
+    }
+}

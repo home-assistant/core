@@ -1,0 +1,377 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "invalid_key": "Invalid API key",
+            "no_devices": "No devices found in account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "app_key": "Application Key"
+                },
+                "title": "Fill in your information"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "battery_1": {
+                "name": "Battery 1"
+            },
+            "battery_10": {
+                "name": "Battery 10"
+            },
+            "battery_2": {
+                "name": "Battery 2"
+            },
+            "battery_3": {
+                "name": "Battery 3"
+            },
+            "battery_4": {
+                "name": "Battery 4"
+            },
+            "battery_5": {
+                "name": "Battery 5"
+            },
+            "battery_6": {
+                "name": "Battery 6"
+            },
+            "battery_7": {
+                "name": "Battery 7"
+            },
+            "battery_8": {
+                "name": "Battery 8"
+            },
+            "battery_9": {
+                "name": "Battery 9"
+            },
+            "co2_battery": {
+                "name": "Carbon dioxide battery"
+            },
+            "interior_battery": {
+                "name": "Interior battery"
+            },
+            "leak_detector_1": {
+                "name": "Leak detector 1"
+            },
+            "leak_detector_2": {
+                "name": "Leak detector 2"
+            },
+            "leak_detector_3": {
+                "name": "Leak detector 3"
+            },
+            "leak_detector_4": {
+                "name": "Leak detector 4"
+            },
+            "leak_detector_battery_1": {
+                "name": "Leak detector battery 1"
+            },
+            "leak_detector_battery_2": {
+                "name": "Leak detector battery 2"
+            },
+            "leak_detector_battery_3": {
+                "name": "Leak detector battery 3"
+            },
+            "leak_detector_battery_4": {
+                "name": "Leak detector battery 4"
+            },
+            "lightning_detector_battery": {
+                "name": "Lightning detector battery"
+            },
+            "pm25_battery": {
+                "name": "PM25 battery"
+            },
+            "pm25_indoor_battery": {
+                "name": "PM25 indoor battery"
+            },
+            "relay_1": {
+                "name": "Relay 1"
+            },
+            "relay_10": {
+                "name": "Relay 10"
+            },
+            "relay_2": {
+                "name": "Relay 2"
+            },
+            "relay_3": {
+                "name": "Relay 3"
+            },
+            "relay_4": {
+                "name": "Relay 4"
+            },
+            "relay_5": {
+                "name": "Relay 5"
+            },
+            "relay_6": {
+                "name": "Relay 6"
+            },
+            "relay_7": {
+                "name": "Relay 7"
+            },
+            "relay_8": {
+                "name": "Relay 8"
+            },
+            "relay_9": {
+                "name": "Relay 9"
+            },
+            "soil_monitor_battery_1": {
+                "name": "Soil monitor battery 1"
+            },
+            "soil_monitor_battery_10": {
+                "name": "Soil monitor battery 10"
+            },
+            "soil_monitor_battery_2": {
+                "name": "Soil monitor battery 2"
+            },
+            "soil_monitor_battery_3": {
+                "name": "Soil monitor battery 3"
+            },
+            "soil_monitor_battery_4": {
+                "name": "Soil monitor battery 4"
+            },
+            "soil_monitor_battery_5": {
+                "name": "Soil monitor battery 5"
+            },
+            "soil_monitor_battery_6": {
+                "name": "Soil monitor battery 6"
+            },
+            "soil_monitor_battery_7": {
+                "name": "Soil monitor battery 7"
+            },
+            "soil_monitor_battery_8": {
+                "name": "Soil monitor battery 8"
+            },
+            "soil_monitor_battery_9": {
+                "name": "Soil monitor battery 9"
+            }
+        },
+        "sensor": {
+            "24_hour_rain": {
+                "name": "Rain 24 hours"
+            },
+            "absolute_pressure": {
+                "name": "Absolute pressure"
+            },
+            "daily_rain": {
+                "name": "Daily rain"
+            },
+            "dew_point": {
+                "name": "Dew point"
+            },
+            "event_rain": {
+                "name": "Event rain"
+            },
+            "feels_like": {
+                "name": "Feels like"
+            },
+            "humidity_1": {
+                "name": "Humidity 1"
+            },
+            "humidity_10": {
+                "name": "Humidity 10"
+            },
+            "humidity_2": {
+                "name": "Humidity 2"
+            },
+            "humidity_3": {
+                "name": "Humidity 3"
+            },
+            "humidity_4": {
+                "name": "Humidity 4"
+            },
+            "humidity_5": {
+                "name": "Humidity 5"
+            },
+            "humidity_6": {
+                "name": "Humidity 6"
+            },
+            "humidity_7": {
+                "name": "Humidity 7"
+            },
+            "humidity_8": {
+                "name": "Humidity 8"
+            },
+            "humidity_9": {
+                "name": "Humidity 9"
+            },
+            "humidity_indoor": {
+                "name": "Humidity indoor"
+            },
+            "inside_temperature": {
+                "name": "Inside temperature"
+            },
+            "last_lightning_strike": {
+                "name": "Last Lightning strike"
+            },
+            "last_lightning_strike_distance": {
+                "name": "Last Lightning strike distance"
+            },
+            "last_rain": {
+                "name": "Last rain"
+            },
+            "lifetime_rain": {
+                "name": "Lifetime rain"
+            },
+            "lightning_strikes_per_day": {
+                "name": "Lightning strikes per day"
+            },
+            "lightning_strikes_per_hour": {
+                "name": "Lightning strikes per hour"
+            },
+            "max_gust": {
+                "name": "Max gust"
+            },
+            "monthly_rain": {
+                "name": "Monthly rain"
+            },
+            "pm25_24h_average": {
+                "name": "PM2.5 24 hour average"
+            },
+            "pm25_aqi": {
+                "name": "PM2.5 AQI"
+            },
+            "pm25_aqi_24h_average": {
+                "name": "PM2.5 AQI 24 hour average"
+            },
+            "pm25_indoor": {
+                "name": "PM2.5 indoor"
+            },
+            "pm25_indoor_24h_average": {
+                "name": "PM2.5 indoor 24 hour average"
+            },
+            "pm25_indoor_aqi": {
+                "name": "PM2.5 indoor AQI"
+            },
+            "pm25_indoor_aqi_24h_average": {
+                "name": "PM2.5 indoor AQI"
+            },
+            "relative_pressure": {
+                "name": "Relative pressure"
+            },
+            "soil_humidity_1": {
+                "name": "Soil humidity 1"
+            },
+            "soil_humidity_10": {
+                "name": "Soil humidity 10"
+            },
+            "soil_humidity_2": {
+                "name": "Soil humidity 2"
+            },
+            "soil_humidity_3": {
+                "name": "Soil humidity 3"
+            },
+            "soil_humidity_4": {
+                "name": "Soil humidity 4"
+            },
+            "soil_humidity_5": {
+                "name": "Soil humidity 5"
+            },
+            "soil_humidity_6": {
+                "name": "Soil humidity 6"
+            },
+            "soil_humidity_7": {
+                "name": "Soil humidity 7"
+            },
+            "soil_humidity_8": {
+                "name": "Soil humidity 8"
+            },
+            "soil_humidity_9": {
+                "name": "Soil humidity 9"
+            },
+            "soil_temperature_1": {
+                "name": "Soil temperature 1"
+            },
+            "soil_temperature_10": {
+                "name": "Soil temperature 10"
+            },
+            "soil_temperature_2": {
+                "name": "Soil temperature 2"
+            },
+            "soil_temperature_3": {
+                "name": "Soil temperature 3"
+            },
+            "soil_temperature_4": {
+                "name": "Soil temperature 4"
+            },
+            "soil_temperature_5": {
+                "name": "Soil temperature 5"
+            },
+            "soil_temperature_6": {
+                "name": "Soil temperature 6"
+            },
+            "soil_temperature_7": {
+                "name": "Soil temperature 7"
+            },
+            "soil_temperature_8": {
+                "name": "Soil temperature 8"
+            },
+            "soil_temperature_9": {
+                "name": "Soil temperature 9"
+            },
+            "temperature_1": {
+                "name": "Temperature 1"
+            },
+            "temperature_10": {
+                "name": "Temperature 10"
+            },
+            "temperature_2": {
+                "name": "Temperature 2"
+            },
+            "temperature_3": {
+                "name": "Temperature 3"
+            },
+            "temperature_4": {
+                "name": "Temperature 4"
+            },
+            "temperature_5": {
+                "name": "Temperature 5"
+            },
+            "temperature_6": {
+                "name": "Temperature 6"
+            },
+            "temperature_7": {
+                "name": "Temperature 7"
+            },
+            "temperature_8": {
+                "name": "Temperature 8"
+            },
+            "temperature_9": {
+                "name": "Temperature 9"
+            },
+            "uv_index": {
+                "name": "UV index"
+            },
+            "weekly_rain": {
+                "name": "Weekly rain"
+            },
+            "wind_average_10m": {
+                "name": "Wind average 10 minutes"
+            },
+            "wind_average_2m": {
+                "name": "Wind average 2 minutes"
+            },
+            "wind_direction": {
+                "name": "Wind direction"
+            },
+            "wind_direction_average_10m": {
+                "name": "Wind direction average 10 minutes"
+            },
+            "wind_direction_average_2m": {
+                "name": "Wind direction average 2 minutes"
+            },
+            "wind_gust": {
+                "name": "Wind gust"
+            },
+            "wind_gust_direction": {
+                "name": "Wind gust direction"
+            },
+            "yearly_rain": {
+                "name": "Yearly rain"
+            }
+        }
+    }
+}

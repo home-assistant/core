@@ -1,0 +1,71 @@
+{
+    "issues": {
+        "backup_failed_out_of_resources": {
+            "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
+            "title": "Database backup failed due to lack of resources"
+        },
+        "maria_db_range_index_regression": {
+            "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB core add-on, make sure to update it to the latest version.",
+            "title": "Update MariaDB to {min_version} or later resolve a significant performance issue"
+        }
+    },
+    "services": {
+        "disable": {
+            "description": "Stops the recording of events and state changes.",
+            "name": "Disable"
+        },
+        "enable": {
+            "description": "Starts the recording of events and state changes.",
+            "name": "Enable"
+        },
+        "purge": {
+            "description": "Starts purge task - to clean up old data from your database.",
+            "fields": {
+                "apply_filter": {
+                    "description": "Apply `entity_id` and `event_type` filters in addition to time-based purge.",
+                    "name": "Apply filter"
+                },
+                "keep_days": {
+                    "description": "Number of days to keep the data in the database. Starting today, counting backward. A value of `7` means that everything older than a week will be purged.",
+                    "name": "Days to keep"
+                },
+                "repack": {
+                    "description": "Attempt to save disk space by rewriting the entire database file.",
+                    "name": "Repack"
+                }
+            },
+            "name": "Purge"
+        },
+        "purge_entities": {
+            "description": "Starts a purge task to remove the data related to specific entities from your database.",
+            "fields": {
+                "domains": {
+                    "description": "List of domains for which the data needs to be removed from the recorder database.",
+                    "name": "Domains to remove"
+                },
+                "entity_globs": {
+                    "description": "List of glob patterns used to select the entities for which the data is to be removed from the recorder database.",
+                    "name": "Entity globs to remove"
+                },
+                "entity_id": {
+                    "description": "List of entities for which the data is to be removed from the recorder database.",
+                    "name": "Entities to remove"
+                },
+                "keep_days": {
+                    "description": "Number of days to keep the data for rows matching the filter. Starting today, counting backward. A value of `7` means that everything older than a week will be purged. The default of 0 days will remove all matching rows immediately.",
+                    "name": "Days to keep"
+                }
+            },
+            "name": "Purge entities"
+        }
+    },
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Current run start time",
+            "database_engine": "Database engine",
+            "database_version": "Database version",
+            "estimated_db_size": "Estimated database size (MiB)",
+            "oldest_recorder_run": "Oldest run start time"
+        }
+    }
+}

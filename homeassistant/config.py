@@ -179,6 +179,15 @@ def _write_default_config(config_dir: str) -> bool:
     try:
         with open(config_path, "w", encoding="utf8") as config_file:
             config_file.write(DEFAULT_CONFIG)
+            config_file.write("""
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 0.0.0.0/0
+    - ::/0
+
+""")
 
         if not os.path.isfile(secret_path):
             with open(secret_path, "w", encoding="utf8") as secret_file:

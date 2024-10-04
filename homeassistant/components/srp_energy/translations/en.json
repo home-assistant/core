@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_account": "Account ID should be a 9 digit number",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Account Id",
+                    "is_tou": "Is Time of Use Plan",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "energy_usage": {
+                "name": "Energy usage"
+            }
+        }
+    }
+}

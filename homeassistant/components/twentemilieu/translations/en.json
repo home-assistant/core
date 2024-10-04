@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_address": "Address not found in Twente Milieu service area."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "House letter/additional",
+                    "house_number": "House number",
+                    "post_code": "Postal code"
+                },
+                "data_description": {
+                    "house_letter": "The house letter or additional information of the address",
+                    "house_number": "The house number of the address",
+                    "post_code": "The postal code of the address, for example 7500AA"
+                },
+                "description": "Set up Twente Milieu providing waste collection information on your address."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "christmas_tree_pickup": {
+                "name": "Christmas tree pickup"
+            },
+            "non_recyclable_waste_pickup": {
+                "name": "Non-recyclable waste pickup"
+            },
+            "organic_waste_pickup": {
+                "name": "Organic waste pickup"
+            },
+            "packages_waste_pickup": {
+                "name": "Packages waste pickup"
+            },
+            "paper_waste_pickup": {
+                "name": "Paper waste pickup"
+            }
+        }
+    }
+}

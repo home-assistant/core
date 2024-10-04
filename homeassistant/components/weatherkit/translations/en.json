@@ -1,0 +1,37 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Location is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "unsupported_location": "Apple WeatherKit does not provide data for this location."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "key_id": "Key ID",
+                    "key_pem": "Private key (.p8)",
+                    "location": "Location",
+                    "name": "Name",
+                    "service_id": "Service ID",
+                    "team_id": "Apple team ID"
+                },
+                "description": "Enter your location details and WeatherKit authentication credentials below.",
+                "title": "WeatherKit setup"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pressure_trend": {
+                "name": "Pressure trend",
+                "state": {
+                    "falling": "Falling",
+                    "rising": "Rising",
+                    "steady": "Steady"
+                }
+            }
+        }
+    }
+}

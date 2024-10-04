@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sign": {
+                "state": {
+                    "aquarius": "Aquarius",
+                    "aries": "Aries",
+                    "cancer": "Cancer",
+                    "capricorn": "Capricorn",
+                    "gemini": "Gemini",
+                    "leo": "Leo",
+                    "libra": "Libra",
+                    "pisces": "Pisces",
+                    "sagittarius": "Sagittarius",
+                    "scorpio": "Scorpio",
+                    "taurus": "Taurus",
+                    "virgo": "Virgo"
+                }
+            }
+        }
+    },
+    "title": "Zodiac"
+}

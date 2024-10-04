@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?",
+                "title": "Discover Bluesound player"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your Bluesound player",
+                    "port": "Port of your Bluesound player. This is usually 11000."
+                }
+            }
+        }
+    },
+    "services": {
+        "clear_sleep_timer": {
+            "description": "Clear a Bluesound timer.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of entities that will have the timer cleared.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Clear sleep timer"
+        },
+        "join": {
+            "description": "Group player together.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of entity that will coordinate the grouping. Platform dependent.",
+                    "name": "Entity"
+                },
+                "master": {
+                    "description": "Entity ID of the player that should become the master of the group.",
+                    "name": "Master"
+                }
+            },
+            "name": "Join"
+        },
+        "set_sleep_timer": {
+            "description": "Set a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of entities that will have a timer set.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Set sleep timer"
+        },
+        "unjoin": {
+            "description": "Unjoin the player from a group.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name of entity that will be unjoined from their group. Platform dependent.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Unjoin"
+        }
+    }
+}

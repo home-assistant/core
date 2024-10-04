@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
+            "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manufacturer did not match",
+            "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
+        },
+        "error": {
+            "discovery_error": "Failed to discover a Denon AVR Network Receiver"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Please confirm adding the receiver"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Receiver IP address"
+                },
+                "description": "Run the setup again if you want to connect additional receivers",
+                "title": "Select the receiver that you wish to connect"
+            },
+            "user": {
+                "data": {
+                    "host": "IP address"
+                },
+                "data_description": {
+                    "host": "Leave blank to use auto-discovery"
+                },
+                "description": "By default, this integration uses a Telnet connection to your receiver to receive real-time updates. Only one Telnet connection to your receiver can be established at a time. The Telnet connection can be disabled after setting up the integration."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Show all sources",
+                    "update_audyssey": "Update Audyssey settings",
+                    "use_telnet": "Use Telnet connection",
+                    "zone2": "Set up Zone 2",
+                    "zone3": "Set up Zone 3"
+                },
+                "description": "Specify optional settings"
+            }
+        }
+    },
+    "services": {
+        "get_command": {
+            "description": "Sends a generic HTTP get command.",
+            "fields": {
+                "command": {
+                    "description": "Endpoint of the command, including associated parameters.",
+                    "name": "Command"
+                }
+            },
+            "name": "Get command"
+        },
+        "set_dynamic_eq": {
+            "description": "Enables or disables DynamicEQ.",
+            "fields": {
+                "dynamic_eq": {
+                    "description": "True/false for enable/disable.",
+                    "name": "Dynamic equalizer"
+                }
+            },
+            "name": "Set dynamic equalizer"
+        },
+        "update_audyssey": {
+            "description": "Updates Audyssey settings.",
+            "name": "Update Audyssey"
+        }
+    }
+}

@@ -1,0 +1,122 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown_entry": "Unable to find existing entry."
+        },
+        "error": {
+            "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
+            "invalid_password": "Failed to sign into Hive. Incorrect password, please try again.",
+            "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
+            "no_internet_available": "An internet connection is required to connect to Hive.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Two-factor code"
+                },
+                "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
+                "title": "Hive Two-factor Authentication."
+            },
+            "configuration": {
+                "data": {
+                    "device_name": "Device Name"
+                },
+                "description": "Enter your Hive configuration",
+                "title": "Hive Configuration."
+            },
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Re-enter your Hive login information.",
+                "title": "Hive Login"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "scan_interval": "Scan Interval (seconds)",
+                    "username": "Username"
+                },
+                "description": "Enter your Hive login information.",
+                "title": "Hive Login"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "heating": {
+                "state": {
+                    "manual": "Manual",
+                    "off": "Off",
+                    "schedule": "Schedule"
+                }
+            },
+            "hot_water": {
+                "state": {
+                    "off": "Off",
+                    "on": "On",
+                    "schedule": "Schedule"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Scan interval (seconds)"
+                },
+                "description": "Update the scan interval to poll for data more often.",
+                "title": "Options for Hive"
+            }
+        }
+    },
+    "services": {
+        "boost_heating_off": {
+            "description": "Sets the boost mode OFF.",
+            "fields": {
+                "entity_id": {
+                    "description": "The entity ID to turn boost off.",
+                    "name": "Entity ID"
+                }
+            },
+            "name": "Boost heating off"
+        },
+        "boost_heating_on": {
+            "description": "Sets the boost mode ON, defining the period of time and the desired target temperature for the boost.",
+            "fields": {
+                "temperature": {
+                    "description": "The target temperature for the boost period.",
+                    "name": "Temperature"
+                },
+                "time_period": {
+                    "description": "The time period for the boost.",
+                    "name": "Time period"
+                }
+            },
+            "name": "Boost heating on"
+        },
+        "boost_hot_water": {
+            "description": "Sets the boost mode ON or OFF, defining the period of time for the boost.",
+            "fields": {
+                "entity_id": {
+                    "description": "The entity ID to boost.",
+                    "name": "Entity ID"
+                },
+                "on_off": {
+                    "description": "Set the boost function on or off.",
+                    "name": "Mode"
+                },
+                "time_period": {
+                    "description": "The time period for the boost.",
+                    "name": "Time period"
+                }
+            },
+            "name": "Boost hotwater"
+        }
+    }
+}

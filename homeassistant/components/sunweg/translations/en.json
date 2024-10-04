@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_plants": "No plants have been found on this account",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "timeout_connect": "Timeout establishing connection"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Plant"
+                },
+                "title": "Select your plant"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Enter your Sun WEG information"
+            }
+        }
+    }
+}

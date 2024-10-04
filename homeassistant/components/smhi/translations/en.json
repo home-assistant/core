@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "wrong_location": "Location Sweden only"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "title": "Reconfigure your location in Sweden"
+            },
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "title": "Location in Sweden"
+            }
+        }
+    }
+}

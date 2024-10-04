@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "wrong_app": "Incorrect application reached. Please try again",
+            "zeroconf_failed": "API key not found. Please enter it manually"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "The Lidarr integration needs to be manually re-authenticated with the Lidarr API",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "url": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Lidarr Web UI."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "albums": {
+                "name": "Albums"
+            },
+            "disk_space": {
+                "name": "Disk space"
+            },
+            "queue": {
+                "name": "Queue"
+            },
+            "wanted": {
+                "name": "Wanted"
+            }
+        }
+    }
+}

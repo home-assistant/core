@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "no_bluetooth_adapter": "No bluetooth adapter found",
+            "no_devices_found": "Could not find any bluetooth devices"
+        },
+        "error": {
+            "could_not_find_motor": "Could not find a motor with that MAC code",
+            "invalid_mac_code": "Invalid MAC code"
+        },
+        "step": {
+            "confirm": {
+                "description": "What kind of blind is {display_name}?"
+            },
+            "user": {
+                "data": {
+                    "mac_code": "MAC code"
+                },
+                "description": "Fill in the 4-character MAC code of your motor, for example F3ED or E3A6"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "connect": {
+                "name": "Connect"
+            },
+            "disconnect": {
+                "name": "Disconnect"
+            },
+            "favorite": {
+                "name": "Favorite"
+            }
+        },
+        "select": {
+            "speed": {
+                "name": "Speed",
+                "state": {
+                    "1": "Low",
+                    "2": "Medium",
+                    "3": "High"
+                }
+            }
+        },
+        "sensor": {
+            "calibration": {
+                "name": "Calibration status",
+                "state": {
+                    "calibrated": "Calibrated",
+                    "calibrating": "Calibration in progress",
+                    "uncalibrated": "Uncalibrated"
+                }
+            },
+            "connection": {
+                "name": "Connection status",
+                "state": {
+                    "connected": "Connected",
+                    "connecting": "Connecting",
+                    "disconnected": "Disconnected",
+                    "disconnecting": "Disconnecting"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "disconnect_time": "Disconnect time (seconds)",
+                    "permanent_connection": "Permanent connection"
+                },
+                "description": "The default disconnect time is 15 seconds, adjustable using the slider below. You may want to adjust this if you have larger blinds or other specific needs. You can also enable a permanent connection to the motor, which disables the disconnect time and automatically reconnects when the motor is disconnected for any reason.\n**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+                "title": "Connection options"
+            }
+        }
+    },
+    "selector": {
+        "blind_type": {
+            "options": {
+                "curtain": "Curtain blind",
+                "double_roller": "Double roller blind",
+                "honeycomb": "Honeycomb blind",
+                "roller": "Roller blind",
+                "roman": "Roman blind",
+                "venetian": "Venetian blind",
+                "venetian_tilt_only": "Venetian blind (tilt-only)",
+                "vertical": "Vertical blind"
+            }
+        }
+    }
+}

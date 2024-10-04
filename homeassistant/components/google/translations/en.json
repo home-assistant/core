@@ -1,0 +1,137 @@
+{
+    "application_credentials": {
+        "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "api_disabled": "You must enable the Google Calendar API in the Google Cloud Console",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "cannot_connect": "Failed to connect",
+            "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_credentials": "The integration requires application credentials.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "timeout_connect": "Timeout establishing connection",
+            "user_rejected_authorize": "Account linking rejected: {error}"
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "progress": {
+            "exchange": "To link your Google account, visit the [{url}]({url}) and enter code:\n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Link Google Account"
+            },
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "The Google Calendar integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    },
+    "entity": {
+        "calendar": {
+            "working_location": {
+                "name": "Working location"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant access to Google Calendar"
+                }
+            }
+        }
+    },
+    "services": {
+        "add_event": {
+            "description": "Adds a new calendar event.",
+            "fields": {
+                "calendar_id": {
+                    "description": "The id of the calendar you want.",
+                    "name": "Calendar ID"
+                },
+                "description": {
+                    "description": "The description of the event. Optional.",
+                    "name": "Description"
+                },
+                "end_date": {
+                    "description": "The date the whole day event should end.",
+                    "name": "End date"
+                },
+                "end_date_time": {
+                    "description": "The date and time the event should end.",
+                    "name": "End time"
+                },
+                "in": {
+                    "description": "Days or weeks that you want to create the event in.",
+                    "name": "In"
+                },
+                "start_date": {
+                    "description": "The date the whole day event should start.",
+                    "name": "Start date"
+                },
+                "start_date_time": {
+                    "description": "The date and time the event should start.",
+                    "name": "Start time"
+                },
+                "summary": {
+                    "description": "Acts as the title of the event.",
+                    "name": "Summary"
+                }
+            },
+            "name": "Add event"
+        },
+        "create_event": {
+            "description": "Adds a new calendar event.",
+            "fields": {
+                "description": {
+                    "description": "The description of the event. Optional.",
+                    "name": "Description"
+                },
+                "end_date": {
+                    "description": "The date the whole day event should end.",
+                    "name": "End date"
+                },
+                "end_date_time": {
+                    "description": "The date and time the event should end.",
+                    "name": "End time"
+                },
+                "in": {
+                    "description": "Days or weeks that you want to create the event in.",
+                    "name": "In"
+                },
+                "location": {
+                    "description": "The location of the event. Optional.",
+                    "name": "Location"
+                },
+                "start_date": {
+                    "description": "The date the whole day event should start.",
+                    "name": "Start date"
+                },
+                "start_date_time": {
+                    "description": "The date and time the event should start.",
+                    "name": "Start time"
+                },
+                "summary": {
+                    "description": "Acts as the title of the event.",
+                    "name": "Summary"
+                }
+            },
+            "name": "Create event"
+        }
+    }
+}

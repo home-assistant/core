@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads command line configuration from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

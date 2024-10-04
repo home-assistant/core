@@ -980,9 +980,6 @@ hole==0.8.0
 # homeassistant.components.workday
 holidays==0.68
 
-# homeassistant.components.frontend
-home-assistant-frontend==20250306.0
-
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.5
 
@@ -1227,6 +1224,9 @@ mutagen==1.47.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
+
+# homeassistant.components.frontend
+my-smart-homes-frontend==20241228.0
 
 # homeassistant.components.permobil
 mypermobil==0.1.8

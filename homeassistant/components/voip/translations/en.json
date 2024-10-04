@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Receive Voice over IP calls to interact with Assist."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "call_in_progress": {
+                "name": "Call in progress"
+            }
+        },
+        "select": {
+            "pipeline": {
+                "name": "Assistant",
+                "state": {
+                    "preferred": "Preferred"
+                }
+            },
+            "vad_sensitivity": {
+                "name": "Finished speaking detection",
+                "state": {
+                    "aggressive": "Aggressive",
+                    "default": "Default",
+                    "relaxed": "Relaxed"
+                }
+            }
+        },
+        "switch": {
+            "allow_call": {
+                "name": "Allow calls"
+            }
+        }
+    },
+    "issues": {
+        "assist_in_progress_deprecated": {
+            "fix_flow": {
+                "step": {
+                    "confirm_disable_entity": {
+                        "description": "The {integration_name} in progress binary sensor `{entity_id}` is deprecated.\n\nMigrate your configuration to use the corresponding `{assist_satellite_domain}` entity and then click SUBMIT to disable the in progress binary sensor and fix this issue."
+                    }
+                }
+            },
+            "title": "{integration_name} in progress binary sensors are deprecated"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sip_port": "SIP port"
+                }
+            }
+        }
+    }
+}

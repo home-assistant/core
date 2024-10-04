@@ -1,0 +1,126 @@
+{
+    "services": {
+        "put_paramset": {
+            "description": "Calls to putParamset in the RPC XML interface.",
+            "fields": {
+                "address": {
+                    "description": "Address of Homematic device.",
+                    "name": "Address"
+                },
+                "interface": {
+                    "description": "The interfaces name from the config.",
+                    "name": "Interface"
+                },
+                "paramset": {
+                    "description": "A paramset dictionary.",
+                    "name": "Paramset"
+                },
+                "paramset_key": {
+                    "description": "The paramset_key argument to putParamset.",
+                    "name": "Paramset key"
+                },
+                "rx_mode": {
+                    "description": "The receive mode used.",
+                    "name": "RX mode"
+                }
+            },
+            "name": "Put paramset"
+        },
+        "reconnect": {
+            "description": "Reconnects to all Homematic hubs.",
+            "name": "Reconnect"
+        },
+        "set_device_value": {
+            "description": "Sets a device property on RPC XML interface.",
+            "fields": {
+                "address": {
+                    "description": "Address of Homematic device or BidCoS-RF for virtual remote.",
+                    "name": "Address"
+                },
+                "channel": {
+                    "description": "Channel for calling a keypress.",
+                    "name": "Channel"
+                },
+                "interface": {
+                    "description": "Set an interface value.",
+                    "name": "Interface"
+                },
+                "param": {
+                    "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT.",
+                    "name": "Param"
+                },
+                "value": {
+                    "description": "New value.",
+                    "name": "Value"
+                },
+                "value_type": {
+                    "description": "Type for new value.",
+                    "name": "Value type"
+                }
+            },
+            "name": "Set device value"
+        },
+        "set_install_mode": {
+            "description": "Sets a RPC XML interface into installation mode.",
+            "fields": {
+                "address": {
+                    "description": "Address of Homematic device or BidCoS-RF to learn.",
+                    "name": "Address"
+                },
+                "interface": {
+                    "description": "Select the given interface into install mode.",
+                    "name": "Interface"
+                },
+                "mode": {
+                    "description": "1= Normal mode / 2= Remove exists old links.",
+                    "name": "Mode"
+                },
+                "time": {
+                    "description": "Time to run in install mode.",
+                    "name": "Time"
+                }
+            },
+            "name": "Set install mode"
+        },
+        "set_variable_value": {
+            "description": "Sets the name of a node.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of Homematic central to set value.",
+                    "name": "Entity"
+                },
+                "name": {
+                    "description": "Name of the variable to set.",
+                    "name": "Name"
+                },
+                "value": {
+                    "description": "New value.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set variable value"
+        },
+        "virtualkey": {
+            "description": "Presses a virtual key from CCU/Homegear or simulate keypress.",
+            "fields": {
+                "address": {
+                    "description": "Address of Homematic device or BidCoS-RF for virtual remote.",
+                    "name": "Address"
+                },
+                "channel": {
+                    "description": "Channel for calling a keypress.",
+                    "name": "Channel"
+                },
+                "interface": {
+                    "description": "Set an interface value.",
+                    "name": "Interface"
+                },
+                "param": {
+                    "description": "Event to send i.e. PRESS_LONG, PRESS_SHORT.",
+                    "name": "Param"
+                }
+            },
+            "name": "Virtual key"
+        }
+    }
+}

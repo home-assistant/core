@@ -1,0 +1,66 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Input datetime",
+            "state_attributes": {
+                "day": {
+                    "name": "Day"
+                },
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                },
+                "hour": {
+                    "name": "Hour"
+                },
+                "minute": {
+                    "name": "Minute"
+                },
+                "month": {
+                    "name": "Month"
+                },
+                "second": {
+                    "name": "Second"
+                },
+                "timestamp": {
+                    "name": "Timestamp"
+                },
+                "year": {
+                    "name": "Year"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads helpers from the YAML-configuration.",
+            "name": "Reload"
+        },
+        "set_datetime": {
+            "description": "Sets the date and/or time.",
+            "fields": {
+                "date": {
+                    "description": "The target date.",
+                    "name": "Date"
+                },
+                "datetime": {
+                    "description": "The target date & time.",
+                    "name": "Date & time"
+                },
+                "time": {
+                    "description": "The target time.",
+                    "name": "Time"
+                },
+                "timestamp": {
+                    "description": "The target date & time, expressed by a UNIX timestamp.",
+                    "name": "Timestamp"
+                }
+            },
+            "name": "Set"
+        }
+    },
+    "title": "Input datetime"
+}

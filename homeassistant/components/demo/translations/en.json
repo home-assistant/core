@@ -1,0 +1,114 @@
+{
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto High",
+                            "auto_low": "Auto Low",
+                            "on_high": "On High",
+                            "on_low": "On Low"
+                        }
+                    },
+                    "swing_horizontal_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "off": "Off",
+                            "rangefull": "Full range"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "Off"
+                        }
+                    }
+                }
+            }
+        },
+        "event": {
+            "push": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "pressed": "Pressed"
+                        }
+                    }
+                }
+            }
+        },
+        "fan": {
+            "demo": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "on": "On",
+                            "sleep": "Sleep",
+                            "smart": "Smart"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Light Speed",
+                    "ludicrous_speed": "Ludicrous Speed",
+                    "ridiculous_speed": "Ridiculous Speed"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "name": "Thermostat mode",
+                "state": {
+                    "away": "Away",
+                    "comfort": "Comfort",
+                    "eco": "Eco",
+                    "sleep": "Sleep"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Cleaned Area"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Optional boolean",
+                    "constant": "Constant",
+                    "int": "Numeric input"
+                },
+                "submit": "Save!"
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Multiselect",
+                    "select": "Select an option",
+                    "string": "String value"
+                }
+            }
+        }
+    },
+    "services": {
+        "randomize_device_tracker_data": {
+            "description": "Demonstrates using a device tracker to see where devices are located.",
+            "name": "Randomize device tracker data"
+        }
+    },
+    "title": "Demo"
+}

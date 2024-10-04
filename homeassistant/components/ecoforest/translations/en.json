@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Ecoforest device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "number": {
+            "power_level": {
+                "name": "Power level"
+            }
+        },
+        "sensor": {
+            "alarm": {
+                "name": "Alarm",
+                "state": {
+                    "air_depression": "Air depression",
+                    "cpu_overheating": "CPU overheating",
+                    "none": "None",
+                    "pellets": "Pellets",
+                    "unkownn": "Unknown alarm"
+                }
+            },
+            "convecto_air_flow": {
+                "name": "Convecto air flow"
+            },
+            "cpu_temperature": {
+                "name": "CPU temperature"
+            },
+            "depression": {
+                "name": "Depression"
+            },
+            "extractor": {
+                "name": "Extractor"
+            },
+            "gas_temperature": {
+                "name": "Gas temperature"
+            },
+            "ignitions": {
+                "name": "Ignitions"
+            },
+            "live_pulse": {
+                "name": "Live pulse"
+            },
+            "ntc_temperature": {
+                "name": "NTC probe temperature"
+            },
+            "pulse_offset": {
+                "name": "Pulse offset"
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "alarm": "Alarm",
+                    "off": "Off",
+                    "on": "On",
+                    "pre_heating": "Pre-heating",
+                    "shutting_down": "Shutting down",
+                    "stand_by": "Standby",
+                    "starting": "Starting"
+                }
+            },
+            "working_hours": {
+                "name": "Working time"
+            },
+            "working_level": {
+                "name": "Working level"
+            },
+            "working_state": {
+                "name": "Working state"
+            }
+        }
+    }
+}

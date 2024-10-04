@@ -1,0 +1,68 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_config_entry": {
+            "message": "Invalid config entry provided. Got {config_entry}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "chat_model": "Model",
+                    "llm_hass_api": "Control Home Assistant",
+                    "max_tokens": "Maximum tokens to return in response",
+                    "prompt": "Instructions",
+                    "recommended": "Recommended model settings",
+                    "temperature": "Temperature",
+                    "top_p": "Top P"
+                },
+                "data_description": {
+                    "prompt": "Instruct how the LLM should respond. This can be a template."
+                }
+            }
+        }
+    },
+    "services": {
+        "generate_image": {
+            "description": "Turn a prompt into an image",
+            "fields": {
+                "config_entry": {
+                    "description": "The config entry to use for this action",
+                    "name": "Config Entry"
+                },
+                "prompt": {
+                    "description": "The text to turn into an image",
+                    "example": "A photo of a dog",
+                    "name": "Prompt"
+                },
+                "quality": {
+                    "description": "The quality of the image that will be generated",
+                    "name": "Quality"
+                },
+                "size": {
+                    "description": "The size of the image to generate",
+                    "name": "Size"
+                },
+                "style": {
+                    "description": "The style of the generated image",
+                    "name": "Style"
+                }
+            },
+            "name": "Generate image"
+        }
+    }
+}

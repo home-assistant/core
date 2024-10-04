@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "invalid_file": "Invalid service account JSON file"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "uploaded_key_file": "Upload service account JSON file"
+                },
+                "description": "Upload your Google Cloud service account JSON file that you can create at {url}."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "encoding": "Default audio encoder",
+                    "gain": "Default volume gain (in dB) of the voice",
+                    "gender": "Default gender of the voice",
+                    "language": "Default language of the voice",
+                    "pitch": "Default pitch of the voice",
+                    "profiles": "Default audio profiles",
+                    "speed": "Default rate/speed of the voice",
+                    "stt_model": "STT model",
+                    "text_type": "Default text type",
+                    "voice": "Default voice name (overrides language and gender)"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,107 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_server_found": "No LMS server found."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "no_server_found": "Could not automatically discover server.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Host",
+                    "https": "Connect over https (requires reverse proxy)",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Edit connection information"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Lyrion Music Server."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "needsrestart": {
+                "name": "Needs restart"
+            },
+            "rescan": {
+                "name": "Library rescan"
+            }
+        },
+        "sensor": {
+            "info_total_albums": {
+                "name": "Total albums",
+                "unit_of_measurement": "albums"
+            },
+            "info_total_artists": {
+                "name": "Total artists",
+                "unit_of_measurement": "artists"
+            },
+            "info_total_duration": {
+                "name": "Total duration"
+            },
+            "info_total_genres": {
+                "name": "Total genres",
+                "unit_of_measurement": "genres"
+            },
+            "info_total_songs": {
+                "name": "Total songs",
+                "unit_of_measurement": "songs"
+            },
+            "lastscan": {
+                "name": "Last scan"
+            },
+            "other_player_count": {
+                "name": "Player count off service",
+                "unit_of_measurement": "players"
+            },
+            "player_count": {
+                "name": "Player count",
+                "unit_of_measurement": "players"
+            }
+        }
+    },
+    "services": {
+        "call_method": {
+            "description": "Calls a custom Squeezebox JSONRPC API.",
+            "fields": {
+                "command": {
+                    "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation).",
+                    "name": "Command"
+                },
+                "parameters": {
+                    "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).",
+                    "name": "Parameters"
+                }
+            },
+            "name": "Call method"
+        },
+        "call_query": {
+            "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
+            "fields": {
+                "command": {
+                    "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation).",
+                    "name": "Command"
+                },
+                "parameters": {
+                    "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).",
+                    "name": "Parameters"
+                }
+            },
+            "name": "Call query"
+        }
+    }
+}

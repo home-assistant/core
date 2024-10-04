@@ -1,0 +1,22 @@
+{
+    "services": {
+        "write_data_by_name": {
+            "description": "Write a value to the connected ADS device.",
+            "fields": {
+                "adstype": {
+                    "description": "The data type of the variable to write to.",
+                    "name": "ADS type"
+                },
+                "adsvar": {
+                    "description": "The name of the variable to write to.",
+                    "name": "ADS variable"
+                },
+                "value": {
+                    "description": "The value to write to the variable.",
+                    "name": "Value"
+                }
+            },
+            "name": "Write data by name"
+        }
+    }
+}

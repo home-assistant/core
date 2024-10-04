@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your Zeversolar inverter."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "energy_today": {
+                "name": "Energy today"
+            }
+        }
+    }
+}

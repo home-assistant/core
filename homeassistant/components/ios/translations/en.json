@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "battery_state": {
+                "name": "Battery state"
+            }
+        }
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password of your Autarco account."
+                },
+                "description": "The password for {email} is no longer valid.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address of your Autarco account.",
+                    "password": "The password of your Autarco account."
+                },
+                "description": "Connect to your Autarco account, to get information about your sites."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "charged_month": {
+                "name": "Charged month"
+            },
+            "charged_today": {
+                "name": "Charged today"
+            },
+            "charged_total": {
+                "name": "Charged total"
+            },
+            "discharged_month": {
+                "name": "Discharged month"
+            },
+            "discharged_today": {
+                "name": "Discharged today"
+            },
+            "discharged_total": {
+                "name": "Discharged total"
+            },
+            "energy_production_month": {
+                "name": "Energy production month"
+            },
+            "energy_production_today": {
+                "name": "Energy production today"
+            },
+            "energy_production_total": {
+                "name": "Energy production total"
+            },
+            "flow_now": {
+                "name": "Flow now"
+            },
+            "out_ac_energy_total": {
+                "name": "Energy AC output total"
+            },
+            "out_ac_power": {
+                "name": "Power AC output"
+            },
+            "power_production": {
+                "name": "Power production"
+            },
+            "state_of_charge": {
+                "name": "State of charge"
+            }
+        }
+    }
+}

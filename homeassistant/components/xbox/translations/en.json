@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            }
+        }
+    }
+}

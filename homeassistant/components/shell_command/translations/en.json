@@ -1,0 +1,10 @@
+{
+    "exceptions": {
+        "non_utf8_output": {
+            "message": "Unable to handle non-utf8 output of command: `{command}`"
+        },
+        "timeout": {
+            "message": "Timed out running command: `{command}`, after: {timeout} seconds"
+        }
+    }
+}

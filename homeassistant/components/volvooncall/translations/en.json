@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mutable": "Allow Remote Start / Lock / etc.",
+                    "password": "Password",
+                    "region": "Region",
+                    "unit_system": "Unit System",
+                    "username": "Username"
+                }
+            }
+        }
+    }
+}

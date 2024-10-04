@@ -1,0 +1,163 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "no_stations": "Could not find any station in range."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                }
+            },
+            "select_station": {
+                "data": {
+                    "stations": "Stations"
+                },
+                "description": "Found {stations_count} stations in radius",
+                "title": "Select stations to add"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "fuel_types": "Fuel types",
+                    "location": "Location",
+                    "name": "Region name",
+                    "radius": "Search radius",
+                    "stations": "Additional fuel stations"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status",
+                "state_attributes": {
+                    "latitude": {
+                        "name": "Latitude"
+                    },
+                    "longitude": {
+                        "name": "Longitude"
+                    }
+                }
+            }
+        },
+        "sensor": {
+            "diesel": {
+                "name": "Diesel",
+                "state_attributes": {
+                    "brand": {
+                        "name": "Brand"
+                    },
+                    "city": {
+                        "name": "City"
+                    },
+                    "fuel_type": {
+                        "name": "Fuel type"
+                    },
+                    "house_number": {
+                        "name": "House number"
+                    },
+                    "latitude": {
+                        "name": "Latitude"
+                    },
+                    "longitude": {
+                        "name": "Longitude"
+                    },
+                    "postcode": {
+                        "name": "Postal code"
+                    },
+                    "station_name": {
+                        "name": "Station name"
+                    },
+                    "street": {
+                        "name": "Street"
+                    }
+                }
+            },
+            "e10": {
+                "name": "Super E10",
+                "state_attributes": {
+                    "brand": {
+                        "name": "Brand"
+                    },
+                    "city": {
+                        "name": "City"
+                    },
+                    "fuel_type": {
+                        "name": "Fuel type"
+                    },
+                    "house_number": {
+                        "name": "House number"
+                    },
+                    "latitude": {
+                        "name": "Latitude"
+                    },
+                    "longitude": {
+                        "name": "Longitude"
+                    },
+                    "postcode": {
+                        "name": "Postal code"
+                    },
+                    "station_name": {
+                        "name": "Station name"
+                    },
+                    "street": {
+                        "name": "Street"
+                    }
+                }
+            },
+            "e5": {
+                "name": "Super",
+                "state_attributes": {
+                    "brand": {
+                        "name": "Brand"
+                    },
+                    "city": {
+                        "name": "City"
+                    },
+                    "fuel_type": {
+                        "name": "Fuel type"
+                    },
+                    "house_number": {
+                        "name": "House number"
+                    },
+                    "latitude": {
+                        "name": "Latitude"
+                    },
+                    "longitude": {
+                        "name": "Longitude"
+                    },
+                    "postcode": {
+                        "name": "Postal code"
+                    },
+                    "station_name": {
+                        "name": "Station name"
+                    },
+                    "street": {
+                        "name": "Street"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show stations on map",
+                    "stations": "Stations"
+                },
+                "title": "Tankerkoenig options"
+            }
+        }
+    }
+}

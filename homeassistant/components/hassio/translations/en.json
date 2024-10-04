@@ -1,0 +1,434 @@
+{
+    "entity": {
+        "binary_sensor": {
+            "state": {
+                "name": "Running"
+            }
+        },
+        "sensor": {
+            "agent_version": {
+                "name": "OS Agent version"
+            },
+            "apparmor_version": {
+                "name": "Apparmor version"
+            },
+            "cpu_percent": {
+                "name": "CPU percent"
+            },
+            "disk_free": {
+                "name": "Disk free"
+            },
+            "disk_total": {
+                "name": "Disk total"
+            },
+            "disk_used": {
+                "name": "Disk used"
+            },
+            "memory_percent": {
+                "name": "Memory percent"
+            },
+            "version": {
+                "name": "Version"
+            },
+            "version_latest": {
+                "name": "Newest version"
+            }
+        }
+    },
+    "issues": {
+        "issue_addon_boot_fail": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "fix_menu": {
+                        "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
+                        "menu_options": {
+                            "addon_disable_boot": "Disable",
+                            "addon_execute_start": "Start"
+                        }
+                    }
+                }
+            },
+            "title": "Add-on failed to start at boot"
+        },
+        "issue_addon_detached_addon_missing": {
+            "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store.",
+            "title": "Missing repository for an installed add-on"
+        },
+        "issue_addon_detached_addon_removed": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "addon_execute_remove": {
+                        "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+                    }
+                }
+            },
+            "title": "Installed add-on has been removed from repository"
+        },
+        "issue_mount_mount_failed": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "fix_menu": {
+                        "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
+                        "menu_options": {
+                            "mount_execute_reload": "Reload",
+                            "mount_execute_remove": "Remove"
+                        }
+                    }
+                }
+            },
+            "title": "Network storage device failed"
+        },
+        "issue_system_docker_config": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "One or more of the restarts failed. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "system_execute_rebuild": {
+                        "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+                    }
+                }
+            },
+            "title": "Restart(s) required"
+        },
+        "issue_system_multiple_data_disks": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "Could not rename the filesystem. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "fix_menu": {
+                        "description": "At `{reference}`, we detected another active data disk (containing a file system `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it. Otherwise Home Assistant might choose the wrong data disk at system reboot.\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
+                        "menu_options": {
+                            "system_adopt_data_disk": "Use the detected data disk instead of the current system",
+                            "system_rename_data_disk": "Mark as inactive data disk (rename file system)"
+                        }
+                    },
+                    "system_adopt_data_disk": {
+                        "description": "Select **Submit** to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
+                    }
+                }
+            },
+            "title": "Multiple data disks detected"
+        },
+        "issue_system_reboot_required": {
+            "fix_flow": {
+                "abort": {
+                    "apply_suggestion_fail": "Could not reboot the system. Check the Supervisor logs for more details."
+                },
+                "step": {
+                    "system_execute_reboot": {
+                        "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period."
+                    }
+                }
+            },
+            "title": "Reboot required"
+        },
+        "unhealthy": {
+            "description": "System is currently unhealthy due to {reason}. Use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - {reason}"
+        },
+        "unhealthy_docker": {
+            "description": "System is currently unhealthy because Docker is configured incorrectly. Use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - Docker misconfigured"
+        },
+        "unhealthy_privileged": {
+            "description": "System is currently unhealthy because it does not have privileged access to the docker runtime. Use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - Not privileged"
+        },
+        "unhealthy_setup": {
+            "description": "System is currently unhealthy because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - Setup failed"
+        },
+        "unhealthy_supervisor": {
+            "description": "System is currently unhealthy because an attempt to update Supervisor to the latest version has failed. Use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - Supervisor update failed"
+        },
+        "unhealthy_untrusted": {
+            "description": "System is currently unhealthy because it has detected untrusted code or images in use. Use the link to learn more and how to fix this.",
+            "title": "Unhealthy system - Untrusted code"
+        },
+        "unsupported": {
+            "description": "System is unsupported due to {reason}. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - {reason}"
+        },
+        "unsupported_apparmor": {
+            "description": "System is unsupported because AppArmor is working incorrectly and add-ons are running in an unprotected and insecure way. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - AppArmor issues"
+        },
+        "unsupported_cgroup_version": {
+            "description": "System is unsupported because the wrong version of Docker CGroup is in use. Use the link to learn the correct version and how to fix this.",
+            "title": "Unsupported system - CGroup version"
+        },
+        "unsupported_connectivity_check": {
+            "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Connectivity check disabled"
+        },
+        "unsupported_content_trust": {
+            "description": "System is unsupported because Home Assistant cannot verify content being run is trusted and not modified by attackers. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Content-trust check disabled"
+        },
+        "unsupported_dbus": {
+            "description": "System is unsupported because D-Bus is working incorrectly. Many things fail without this as Supervisor cannot communicate with the host. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - D-Bus issues"
+        },
+        "unsupported_dns_server": {
+            "description": "System is unsupported because the provided DNS server does not work correctly and the fallback DNS option has been disabled. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - DNS server issues"
+        },
+        "unsupported_docker_configuration": {
+            "description": "System is unsupported because the Docker daemon is running in an unexpected way. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Docker misconfigured"
+        },
+        "unsupported_docker_version": {
+            "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this.",
+            "title": "Unsupported system - Docker version"
+        },
+        "unsupported_job_conditions": {
+            "description": "System is unsupported because one or more job conditions have been disabled which protect from unexpected failures and breakages. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Protections disabled"
+        },
+        "unsupported_lxc": {
+            "description": "System is unsupported because it is being run in an LXC virtual machine. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - LXC detected"
+        },
+        "unsupported_network_manager": {
+            "description": "System is unsupported because Network Manager is missing, inactive or misconfigured. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Network Manager issues"
+        },
+        "unsupported_os": {
+            "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this.",
+            "title": "Unsupported system - Operating System"
+        },
+        "unsupported_os_agent": {
+            "description": "System is unsupported because OS-Agent is missing, inactive or misconfigured. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - OS-Agent issues"
+        },
+        "unsupported_restart_policy": {
+            "description": "System is unsupported because a Docker container has a restart policy set which could cause issues on startup. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Container restart policy"
+        },
+        "unsupported_software": {
+            "description": "System is unsupported because additional software outside the Home Assistant ecosystem has been detected. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Unsupported software"
+        },
+        "unsupported_source_mods": {
+            "description": "System is unsupported because Supervisor source code has been modified. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Supervisor source modifications"
+        },
+        "unsupported_supervisor_version": {
+            "description": "System is unsupported because an out-of-date version of Supervisor is in use and auto-update has been disabled. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Supervisor version"
+        },
+        "unsupported_systemd": {
+            "description": "System is unsupported because Systemd is missing, inactive or misconfigured. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Systemd issues"
+        },
+        "unsupported_systemd_journal": {
+            "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Systemd Journal issues"
+        },
+        "unsupported_systemd_resolved": {
+            "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Systemd-Resolved issues"
+        },
+        "unsupported_virtualization_image": {
+            "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this.",
+            "title": "Unsupported system - Incorrect OS image for virtualization"
+        },
+        "update_service_deprecated": {
+            "description": "The update add-on action has been deprecated and will be removed in 2025.5. Please use the update entity and the respective action to update the add-on instead.",
+            "title": "Deprecated update add-on action"
+        }
+    },
+    "services": {
+        "addon_restart": {
+            "description": "Restarts an add-on.",
+            "fields": {
+                "addon": {
+                    "description": "The add-on to restart.",
+                    "name": "Add-on"
+                }
+            },
+            "name": "Restart add-on"
+        },
+        "addon_start": {
+            "description": "Starts an add-on.",
+            "fields": {
+                "addon": {
+                    "description": "The add-on to start.",
+                    "name": "Add-on"
+                }
+            },
+            "name": "Start add-on"
+        },
+        "addon_stdin": {
+            "description": "Writes data to the add-on's standard input.",
+            "fields": {
+                "addon": {
+                    "description": "The add-on to write to.",
+                    "name": "Add-on"
+                }
+            },
+            "name": "Write data to add-on stdin"
+        },
+        "addon_stop": {
+            "description": "Stops an add-on.",
+            "fields": {
+                "addon": {
+                    "description": "The add-on to stop.",
+                    "name": "Add-on"
+                }
+            },
+            "name": "Stop add-on"
+        },
+        "addon_update": {
+            "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
+            "fields": {
+                "addon": {
+                    "description": "The add-on to update.",
+                    "name": "Add-on"
+                }
+            },
+            "name": "Update add-on"
+        },
+        "backup_full": {
+            "description": "Creates a full backup.",
+            "fields": {
+                "compressed": {
+                    "description": "Compresses the backup files.",
+                    "name": "Compressed"
+                },
+                "homeassistant_exclude_database": {
+                    "description": "Exclude the Home Assistant database file from backup",
+                    "name": "Home Assistant exclude database"
+                },
+                "location": {
+                    "description": "Name of a backup network storage to host backups.",
+                    "name": "Location"
+                },
+                "name": {
+                    "description": "Optional (default = current date and time).",
+                    "name": "Name"
+                },
+                "password": {
+                    "description": "Password to protect the backup with.",
+                    "name": "Password"
+                }
+            },
+            "name": "Create a full backup"
+        },
+        "backup_partial": {
+            "description": "Creates a partial backup.",
+            "fields": {
+                "addons": {
+                    "description": "List of add-ons to include in the backup. Use the name slug of each add-on.",
+                    "name": "Add-ons"
+                },
+                "compressed": {
+                    "description": "Compresses the backup files.",
+                    "name": "Compressed"
+                },
+                "folders": {
+                    "description": "List of directories to include in the backup.",
+                    "name": "Folders"
+                },
+                "homeassistant": {
+                    "description": "Includes Home Assistant settings in the backup.",
+                    "name": "Home Assistant settings"
+                },
+                "homeassistant_exclude_database": {
+                    "description": "Exclude the Home Assistant database file from backup",
+                    "name": "Home Assistant exclude database"
+                },
+                "location": {
+                    "description": "Name of a backup network storage to host backups.",
+                    "name": "Location"
+                },
+                "name": {
+                    "description": "Optional (default = current date and time).",
+                    "name": "Name"
+                },
+                "password": {
+                    "description": "Password to protect the backup with.",
+                    "name": "Password"
+                }
+            },
+            "name": "Create a partial backup"
+        },
+        "host_reboot": {
+            "description": "Reboots the host system.",
+            "name": "Reboot the host system"
+        },
+        "host_shutdown": {
+            "description": "Powers off the host system.",
+            "name": "Power off the host system"
+        },
+        "restore_full": {
+            "description": "Restores from full backup.",
+            "fields": {
+                "password": {
+                    "description": "Optional password.",
+                    "name": "Password"
+                },
+                "slug": {
+                    "description": "Slug of backup to restore from.",
+                    "name": "Slug"
+                }
+            },
+            "name": "Restore from full backup"
+        },
+        "restore_partial": {
+            "description": "Restores from a partial backup.",
+            "fields": {
+                "addons": {
+                    "description": "List of add-ons to restore from the backup. Use the name slug of each add-on.",
+                    "name": "Add-ons"
+                },
+                "folders": {
+                    "description": "List of directories to restore from the backup.",
+                    "name": "Folders"
+                },
+                "homeassistant": {
+                    "description": "Restores Home Assistant.",
+                    "name": "Home Assistant settings"
+                },
+                "password": {
+                    "description": "Optional password.",
+                    "name": "Password"
+                },
+                "slug": {
+                    "description": "Slug of backup to restore from.",
+                    "name": "Slug"
+                }
+            },
+            "name": "Restore from partial backup"
+        }
+    },
+    "system_health": {
+        "info": {
+            "agent_version": "Agent version",
+            "board": "Board",
+            "disk_total": "Disk total",
+            "disk_used": "Disk used",
+            "docker_version": "Docker version",
+            "healthy": "Healthy",
+            "host_os": "Host operating system",
+            "installed_addons": "Installed add-ons",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor version",
+            "supported": "Supported",
+            "update_channel": "Update channel",
+            "version_api": "Version API"
+        }
+    }
+}

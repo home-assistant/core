@@ -1,0 +1,8 @@
+{
+    "services": {
+        "start": {
+            "description": "Starts the Remote Python Debugger.",
+            "name": "Start"
+        }
+    }
+}

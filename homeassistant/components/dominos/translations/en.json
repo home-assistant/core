@@ -1,0 +1,14 @@
+{
+    "services": {
+        "order": {
+            "description": "Places a set of orders with Dominos Pizza.",
+            "fields": {
+                "order_entity_id": {
+                    "description": "The ID (as specified in the configuration) of an order to place. If provided as an array, all of the identified orders will be placed.",
+                    "name": "Order entity"
+                }
+            },
+            "name": "Order"
+        }
+    }
+}

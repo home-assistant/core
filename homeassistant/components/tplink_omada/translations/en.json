@@ -1,0 +1,103 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "no_sites_found": "No sites found which the user can manage.",
+            "unknown": "Unexpected error",
+            "unsupported_controller": "Omada Controller version not supported."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "The provided credentials have stopped working. Please update them.",
+                "title": "Update TP-Link Omada Credentials"
+            },
+            "site": {
+                "data": {
+                    "site": "Site"
+                },
+                "title": "Choose which site(s) to manage"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "URL of the management interface of your TP-Link Omada controller."
+                },
+                "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "lan_status": {
+                "name": "Port {port_name} LAN Status"
+            },
+            "online_detection": {
+                "name": "Port {port_name} Online Detection"
+            },
+            "poe_delivery": {
+                "name": "Port {port_name} PoE Delivery"
+            },
+            "wan_link": {
+                "name": "Port {port_name} Internet Link"
+            }
+        },
+        "sensor": {
+            "cpu_usage": {
+                "name": "CPU usage"
+            },
+            "device_status": {
+                "name": "Device status",
+                "state": {
+                    "adopt_failed": "Adopt failed",
+                    "connected": "Connected",
+                    "disconnected": "Disconnected",
+                    "error": "Error",
+                    "heartbeat_missed": "Heartbeat missed",
+                    "isolated": "Isolated",
+                    "managed_externally": "Managed externally",
+                    "pending": "Pending"
+                }
+            },
+            "mem_usage": {
+                "name": "Memory usage"
+            }
+        },
+        "switch": {
+            "poe_control": {
+                "name": "Port {port_name} PoE"
+            },
+            "wan_connect_ipv4": {
+                "name": "Port {port_name} Internet Connected"
+            },
+            "wan_connect_ipv6": {
+                "name": "Port {port_name} Internet Connected (IPv6)"
+            }
+        }
+    },
+    "services": {
+        "reconnect_client": {
+            "description": "Tries to get wireless client to reconnect to Omada Network.",
+            "fields": {
+                "mac": {
+                    "description": "MAC address of the device.",
+                    "name": "MAC address"
+                }
+            },
+            "name": "Reconnect wireless client"
+        }
+    }
+}

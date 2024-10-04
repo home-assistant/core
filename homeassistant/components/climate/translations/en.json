@@ -1,0 +1,309 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Change HVAC mode on {entity_name}",
+            "set_preset_mode": "Change preset on {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",
+            "is_preset_mode": "{entity_name} is set to a specific preset mode"
+        },
+        "extra_fields": {
+            "above": "Above",
+            "below": "Below",
+            "for": "Duration",
+            "hvac_mode": "HVAC mode",
+            "preset_mode": "Preset mode",
+            "to": "To"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} measured humidity changed",
+            "current_temperature_changed": "{entity_name} measured temperature changed",
+            "hvac_mode_changed": "{entity_name} HVAC mode changed"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Thermostat",
+            "state": {
+                "auto": "Auto",
+                "cool": "Cool",
+                "dry": "Dry",
+                "fan_only": "Fan only",
+                "heat": "Heat",
+                "heat_cool": "Heat/Cool",
+                "off": "Off"
+            },
+            "state_attributes": {
+                "aux_heat": {
+                    "name": "Aux heat"
+                },
+                "current_humidity": {
+                    "name": "Current humidity"
+                },
+                "current_temperature": {
+                    "name": "Current temperature"
+                },
+                "fan_mode": {
+                    "name": "Fan mode",
+                    "state": {
+                        "auto": "Auto",
+                        "diffuse": "Diffuse",
+                        "focus": "Focus",
+                        "high": "High",
+                        "low": "Low",
+                        "medium": "Medium",
+                        "middle": "Middle",
+                        "off": "Off",
+                        "on": "On",
+                        "top": "Top"
+                    }
+                },
+                "fan_modes": {
+                    "name": "Fan modes"
+                },
+                "humidity": {
+                    "name": "Target humidity"
+                },
+                "hvac_action": {
+                    "name": "Current action",
+                    "state": {
+                        "cooling": "Cooling",
+                        "defrosting": "Defrosting",
+                        "drying": "Drying",
+                        "fan": "Fan",
+                        "heating": "Heating",
+                        "idle": "Idle",
+                        "off": "Off",
+                        "preheating": "Preheating"
+                    }
+                },
+                "hvac_modes": {
+                    "name": "HVAC modes"
+                },
+                "max_humidity": {
+                    "name": "Max target humidity"
+                },
+                "max_temp": {
+                    "name": "Max target temperature"
+                },
+                "min_humidity": {
+                    "name": "Min target humidity"
+                },
+                "min_temp": {
+                    "name": "Min target temperature"
+                },
+                "preset_mode": {
+                    "name": "Preset",
+                    "state": {
+                        "activity": "Activity",
+                        "away": "Away",
+                        "boost": "Boost",
+                        "comfort": "Comfort",
+                        "eco": "Eco",
+                        "home": "Home",
+                        "none": "None",
+                        "sleep": "Sleep"
+                    }
+                },
+                "preset_modes": {
+                    "name": "Presets"
+                },
+                "swing_horizontal_mode": {
+                    "name": "Horizontal swing mode",
+                    "state": {
+                        "off": "Off",
+                        "on": "On"
+                    }
+                },
+                "swing_horizontal_modes": {
+                    "name": "Horizontal swing modes"
+                },
+                "swing_mode": {
+                    "name": "Swing mode",
+                    "state": {
+                        "both": "Both",
+                        "horizontal": "Horizontal",
+                        "off": "Off",
+                        "on": "On",
+                        "vertical": "Vertical"
+                    }
+                },
+                "swing_modes": {
+                    "name": "Swing modes"
+                },
+                "target_temp_high": {
+                    "name": "Upper target temperature"
+                },
+                "target_temp_low": {
+                    "name": "Lower target temperature"
+                },
+                "target_temp_step": {
+                    "name": "Target temperature step"
+                },
+                "temperature": {
+                    "name": "Target temperature"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "humidity_out_of_range": {
+            "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+        },
+        "low_temp_higher_than_high_temp": {
+            "message": "Target temperature low can not be higher than Target temperature high."
+        },
+        "missing_target_temperature_entity_feature": {
+            "message": "Set temperature action was used with the target temperature parameter but the entity does not support it."
+        },
+        "missing_target_temperature_range_entity_feature": {
+            "message": "Set temperature action was used with the target temperature low/high parameter but the entity does not support it."
+        },
+        "not_valid_fan_mode": {
+            "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."
+        },
+        "not_valid_horizontal_swing_mode": {
+            "message": "Horizontal swing mode {mode} is not valid. Valid horizontal swing modes are: {modes}."
+        },
+        "not_valid_preset_mode": {
+            "message": "Preset mode {mode} is not valid. Valid preset modes are: {modes}."
+        },
+        "not_valid_swing_mode": {
+            "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
+        },
+        "temp_out_of_range": {
+            "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
+        }
+    },
+    "issues": {
+        "deprecated_climate_aux_no_url": {
+            "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease report it to the author of the {platform} integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue.",
+            "title": "The {platform} custom integration is using deprecated climate auxiliary heater"
+        },
+        "deprecated_climate_aux_url_custom": {
+            "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue.",
+            "title": "The {platform} custom integration is using deprecated climate auxiliary heater"
+        }
+    },
+    "selector": {
+        "hvac_mode": {
+            "options": {
+                "auto": "Auto",
+                "cool": "Cool",
+                "dry": "Dry",
+                "fan_only": "Fan only",
+                "heat": "Heat",
+                "heat_cool": "Heat/cool",
+                "off": "Off"
+            }
+        }
+    },
+    "services": {
+        "set_aux_heat": {
+            "description": "Turns auxiliary heater on/off.",
+            "fields": {
+                "aux_heat": {
+                    "description": "New value of auxiliary heater.",
+                    "name": "Auxiliary heating"
+                }
+            },
+            "name": "Turn on/off auxiliary heater"
+        },
+        "set_fan_mode": {
+            "description": "Sets fan operation mode.",
+            "fields": {
+                "fan_mode": {
+                    "description": "Fan operation mode.",
+                    "name": "Fan mode"
+                }
+            },
+            "name": "Set fan mode"
+        },
+        "set_humidity": {
+            "description": "Sets target humidity.",
+            "fields": {
+                "humidity": {
+                    "description": "Target humidity.",
+                    "name": "Humidity"
+                }
+            },
+            "name": "Set target humidity"
+        },
+        "set_hvac_mode": {
+            "description": "Sets HVAC operation mode.",
+            "fields": {
+                "hvac_mode": {
+                    "description": "HVAC operation mode.",
+                    "name": "HVAC mode"
+                }
+            },
+            "name": "Set HVAC mode"
+        },
+        "set_preset_mode": {
+            "description": "Sets preset mode.",
+            "fields": {
+                "preset_mode": {
+                    "description": "Preset mode.",
+                    "name": "Preset mode"
+                }
+            },
+            "name": "Set preset mode"
+        },
+        "set_swing_horizontal_mode": {
+            "description": "Sets horizontal swing operation mode.",
+            "fields": {
+                "swing_horizontal_mode": {
+                    "description": "Horizontal swing operation mode.",
+                    "name": "Horizontal swing mode"
+                }
+            },
+            "name": "Set horizontal swing mode"
+        },
+        "set_swing_mode": {
+            "description": "Sets swing operation mode.",
+            "fields": {
+                "swing_mode": {
+                    "description": "Swing operation mode.",
+                    "name": "Swing mode"
+                }
+            },
+            "name": "Set swing mode"
+        },
+        "set_temperature": {
+            "description": "Sets the temperature setpoint.",
+            "fields": {
+                "hvac_mode": {
+                    "description": "HVAC operation mode.",
+                    "name": "HVAC mode"
+                },
+                "target_temp_high": {
+                    "description": "The max temperature setpoint.",
+                    "name": "Upper target temperature"
+                },
+                "target_temp_low": {
+                    "description": "The min temperature setpoint.",
+                    "name": "Lower target temperature"
+                },
+                "temperature": {
+                    "description": "The temperature setpoint.",
+                    "name": "Target temperature"
+                }
+            },
+            "name": "Set target temperature"
+        },
+        "toggle": {
+            "description": "Toggles climate device, from on to off, or off to on.",
+            "name": "Toggle"
+        },
+        "turn_off": {
+            "description": "Turns climate device off.",
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Turns climate device on.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Climate"
+}

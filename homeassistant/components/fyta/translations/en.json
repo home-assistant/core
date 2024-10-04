@@ -1,0 +1,157 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "password_error": "Invalid password",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password to login to your FYTA account.",
+                    "username": "The email address to login to your FYTA account."
+                },
+                "description": "Update your credentials for FYTA API"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "data_description": {
+                    "password": "The password to login to your FYTA account.",
+                    "username": "The email address to login to your FYTA account."
+                },
+                "description": "Provide email and password to connect to the FYTA server",
+                "title": "Credentials for FYTA API"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "notification_light": {
+                "name": "Light notification"
+            },
+            "notification_nutrition": {
+                "name": "Nutrition notification"
+            },
+            "notification_temperature": {
+                "name": "Temperature notification"
+            },
+            "notification_water": {
+                "name": "Water notification"
+            },
+            "productive_plant": {
+                "name": "Productive plant"
+            },
+            "repotted": {
+                "name": "Repotted"
+            },
+            "sensor_update_available": {
+                "name": "Sensor update available"
+            }
+        },
+        "sensor": {
+            "last_fertilised": {
+                "name": "Last fertilized"
+            },
+            "light": {
+                "name": "Light"
+            },
+            "light_status": {
+                "name": "Light state",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "no_data": "No data",
+                    "perfect": "Perfect",
+                    "too_high": "Too high",
+                    "too_low": "Too low"
+                }
+            },
+            "moisture_status": {
+                "name": "Moisture state",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "no_data": "No data",
+                    "perfect": "Perfect",
+                    "too_high": "Too high",
+                    "too_low": "Too low"
+                }
+            },
+            "next_fertilisation": {
+                "name": "Next fertilization"
+            },
+            "nutrients_status": {
+                "name": "Nutrients state",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "no_data": "No data",
+                    "perfect": "Perfect",
+                    "too_high": "Too high",
+                    "too_low": "Too low"
+                }
+            },
+            "plant_status": {
+                "name": "Plant state",
+                "state": {
+                    "deleted": "Deleted",
+                    "doing_great": "Doing great",
+                    "need_attention": "Needs attention",
+                    "no_sensor": "No sensor"
+                }
+            },
+            "salinity": {
+                "name": "Salinity"
+            },
+            "salinity_status": {
+                "name": "Salinity state",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "no_data": "No data",
+                    "perfect": "Perfect",
+                    "too_high": "Too high",
+                    "too_low": "Too low"
+                }
+            },
+            "scientific_name": {
+                "name": "Scientific name"
+            },
+            "temperature_status": {
+                "name": "Temperature state",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "no_data": "No data",
+                    "perfect": "Perfect",
+                    "too_high": "Too high",
+                    "too_low": "Too low"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "auth_failed": {
+            "message": "Error while logging in to the API."
+        },
+        "config_entry_not_ready": {
+            "message": "Error while loading the config entry."
+        },
+        "update_error": {
+            "message": "Error while updating data from the API."
+        }
+    }
+}

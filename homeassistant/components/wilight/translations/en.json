@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "not_supported_device": "This WiLight is currently not supported",
+            "not_wilight_device": "This Device is not WiLight"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "The following components are supported: {components}"
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "pause": {
+                "name": "Pause"
+            },
+            "watering": {
+                "name": "Watering"
+            }
+        }
+    },
+    "services": {
+        "set_pause_time": {
+            "description": "Sets time to pause.",
+            "fields": {
+                "pause_time": {
+                    "description": "Duration for this irrigation to be paused.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Set pause time"
+        },
+        "set_trigger": {
+            "description": "Sets the trigger to use.",
+            "fields": {
+                "trigger": {
+                    "description": "Configuration of trigger.",
+                    "name": "Trigger rules"
+                },
+                "trigger_index": {
+                    "description": "Index of Trigger from 1 to 4.",
+                    "name": "Trigger index"
+                }
+            },
+            "name": "Set trigger"
+        },
+        "set_watering_time": {
+            "description": "Sets time for watering.",
+            "fields": {
+                "watering_time": {
+                    "description": "Duration for this irrigation to be turned on.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Set watering time"
+        }
+    }
+}

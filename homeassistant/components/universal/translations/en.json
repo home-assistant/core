@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads universal media players from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

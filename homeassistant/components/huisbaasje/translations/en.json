@@ -1,0 +1,78 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_gas": {
+                "name": "Current gas"
+            },
+            "current_power": {
+                "name": "Current power"
+            },
+            "current_power_off_peak": {
+                "name": "Current power in off peak"
+            },
+            "current_power_out_off_peak": {
+                "name": "Current power out off peak"
+            },
+            "current_power_out_peak": {
+                "name": "Current power out peak"
+            },
+            "current_power_peak": {
+                "name": "Current power in peak"
+            },
+            "energy_consumption_off_peak_today": {
+                "name": "Energy consumption off peak today"
+            },
+            "energy_consumption_peak_today": {
+                "name": "Energy consumption peak today"
+            },
+            "energy_month": {
+                "name": "Energy this month"
+            },
+            "energy_production_off_peak_today": {
+                "name": "Energy production off peak today"
+            },
+            "energy_production_peak_today": {
+                "name": "Energy production peak today"
+            },
+            "energy_today": {
+                "name": "Energy today"
+            },
+            "energy_week": {
+                "name": "Energy this week"
+            },
+            "energy_year": {
+                "name": "Energy this year"
+            },
+            "gas_month": {
+                "name": "Gas this month"
+            },
+            "gas_today": {
+                "name": "Gas today"
+            },
+            "gas_week": {
+                "name": "Gas this week"
+            },
+            "gas_year": {
+                "name": "Gas this year"
+            }
+        }
+    }
+}

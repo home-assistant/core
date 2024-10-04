@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "invalid_code": "Invalid activation code. An activation code consist of 8 characters, separated by a dash, e.g. GBZT-HXC0.",
+            "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
+            "wrong_code": "Wrong activation code. Note that an activation code can only be used once."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "associate": {
+                "data": {
+                    "activation_code": "Activation code"
+                },
+                "description": "Provide an unused activation code.\n\nTo create an activation code, create a new key in the dKey admin app, then choose to share the key and share an activation code.\n\nMake sure to close the dKey admin app before proceeding."
+            },
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "reauth_confirm": {
+                "description": "The activation code is no longer valid, a new unused activation code is needed."
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "deadbolt": {
+                "name": "Deadbolt"
+            }
+        }
+    }
+}

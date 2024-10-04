@@ -1,0 +1,244 @@
+{
+    "common": {
+        "climate_preset_dont_change": "Don't Change",
+        "climate_preset_heater": "Heater",
+        "climate_preset_solar": "Solar",
+        "climate_preset_solar_preferred": "Solar Preferred",
+        "service_config_entry_description": "The config entry to use for this action.",
+        "service_config_entry_name": "Config entry"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP address",
+                    "port": "Port"
+                },
+                "description": "Enter your ScreenLogic Gateway information.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "active_alert": {
+                "name": "Active alert"
+            },
+            "chem_high_alarm": {
+                "name": "{chem} high alarm"
+            },
+            "chem_limit": {
+                "name": "{chem} dose limit reached"
+            },
+            "chem_low_alarm": {
+                "name": "{chem} low alarm"
+            },
+            "chem_supply_alarm": {
+                "name": "{chem} supply alarm"
+            },
+            "cleaner_delay": {
+                "name": "Cleaner delay"
+            },
+            "corosive": {
+                "name": "SI corrosive"
+            },
+            "flow_alarm": {
+                "name": "Flow alarm"
+            },
+            "freeze_mode": {
+                "name": "Freeze mode"
+            },
+            "ph_lockout": {
+                "name": "pH lockout"
+            },
+            "pool_delay": {
+                "name": "Pool delay"
+            },
+            "probe_fault_alarm": {
+                "name": "Probe fault"
+            },
+            "scaling": {
+                "name": "SI scaling"
+            },
+            "scg_state": {
+                "name": "Chlorinator"
+            },
+            "spa_delay": {
+                "name": "Spa delay"
+            }
+        },
+        "climate": {
+            "body_0": {
+                "name": "Pool heat",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "dont_change": "Don't Change",
+                            "heater": "Heater",
+                            "solar": "Solar",
+                            "solar_preferred": "Solar Preferred"
+                        }
+                    }
+                }
+            },
+            "body_1": {
+                "name": "Spa heat",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "dont_change": "Don't Change",
+                            "heater": "Heater",
+                            "solar": "Solar",
+                            "solar_preferred": "Solar Preferred"
+                        }
+                    }
+                }
+            }
+        },
+        "number": {
+            "calcium_hardness": {
+                "name": "Calcium hardness"
+            },
+            "cya": {
+                "name": "Cyanuric acid"
+            },
+            "pool_setpoint": {
+                "name": "Pool chlorinator setpoint"
+            },
+            "salt_tds_ppm": {
+                "name": "Salt/TDS"
+            },
+            "spa_setpoint": {
+                "name": "Spa chlorinator setpoint"
+            },
+            "total_alkalinity": {
+                "name": "Total alkalinity"
+            }
+        },
+        "sensor": {
+            "air_temperature": {
+                "name": "Air temperature"
+            },
+            "calcium_hardness": {
+                "name": "Calcium hardness"
+            },
+            "chem_dose_state": {
+                "name": "{chem} dosing state",
+                "state": {
+                    "dosing": "Dosing",
+                    "mixing": "Mixing",
+                    "monitoring": "Monitoring"
+                }
+            },
+            "chem_last_dose_time": {
+                "name": "{chem} last dose time"
+            },
+            "chem_last_dose_volume": {
+                "name": "{chem} last dose volume"
+            },
+            "chem_now": {
+                "name": "{chem} now"
+            },
+            "chem_setpoint": {
+                "name": "{chem} setpoint"
+            },
+            "chem_supply_level": {
+                "name": "{chem} supply level"
+            },
+            "controller_state": {
+                "name": "Controller state",
+                "state": {
+                    "ready": "Ready",
+                    "service": "Service",
+                    "sync": "Sync"
+                }
+            },
+            "cya": {
+                "name": "Cyanuric acid"
+            },
+            "ph_probe_water_temp": {
+                "name": "pH probe water temperature"
+            },
+            "salt_ppm": {
+                "name": "Chlorinator salt"
+            },
+            "salt_tds_ppm": {
+                "name": "Salt/TDS"
+            },
+            "saturation": {
+                "name": "Saturation index"
+            },
+            "super_chlor_timer": {
+                "name": "Super chlorination timer"
+            },
+            "total_alkalinity": {
+                "name": "Total alkalinity"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Seconds between scans"
+                },
+                "description": "Specify settings for {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "services": {
+        "set_color_mode": {
+            "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
+            "fields": {
+                "color_mode": {
+                    "description": "The ScreenLogic color mode to set.",
+                    "name": "Color Mode"
+                },
+                "config_entry": {
+                    "description": "The config entry to use for this action.",
+                    "name": "Config entry"
+                }
+            },
+            "name": "Set Color Mode"
+        },
+        "start_super_chlorination": {
+            "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
+            "fields": {
+                "config_entry": {
+                    "description": "The config entry to use for this action.",
+                    "name": "Config entry"
+                },
+                "runtime": {
+                    "description": "Number of hours for super chlorination to run.",
+                    "name": "Run Time"
+                }
+            },
+            "name": "Start Super Chlorination"
+        },
+        "stop_super_chlorination": {
+            "description": "Stops super chlorination.",
+            "fields": {
+                "config_entry": {
+                    "description": "The config entry to use for this action.",
+                    "name": "Config entry"
+                }
+            },
+            "name": "Stop Super Chlorination"
+        }
+    }
+}

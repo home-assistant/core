@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "could_not_register": "Could not register integration with GitHub"
+        },
+        "progress": {
+            "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Select repositories to track."
+                },
+                "title": "Configure repositories"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "discussions_count": {
+                "name": "Discussions",
+                "unit_of_measurement": "discussions"
+            },
+            "forks_count": {
+                "name": "Forks",
+                "unit_of_measurement": "forks"
+            },
+            "issues_count": {
+                "name": "Issues",
+                "unit_of_measurement": "issues"
+            },
+            "latest_commit": {
+                "name": "Latest commit"
+            },
+            "latest_discussion": {
+                "name": "Latest discussion"
+            },
+            "latest_issue": {
+                "name": "Latest issue"
+            },
+            "latest_pull_request": {
+                "name": "Latest pull request"
+            },
+            "latest_release": {
+                "name": "Latest release"
+            },
+            "latest_tag": {
+                "name": "Latest tag"
+            },
+            "pulls_count": {
+                "name": "Pull requests",
+                "unit_of_measurement": "pull requests"
+            },
+            "stargazers_count": {
+                "name": "Stars",
+                "unit_of_measurement": "stars"
+            },
+            "subscribers_count": {
+                "name": "Watchers",
+                "unit_of_measurement": "watchers"
+            }
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "Token"
+                },
+                "data_description": {
+                    "token": "The NYT Games NYT-S cookie value."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "connections_played": {
+                "name": "Played"
+            },
+            "last_played": {
+                "name": "Last played"
+            },
+            "max_streak": {
+                "name": "Highest streak"
+            },
+            "spelling_bees_played": {
+                "name": "Played"
+            },
+            "streak": {
+                "name": "Current streak"
+            },
+            "total_pangrams": {
+                "name": "Total pangrams found"
+            },
+            "total_words": {
+                "name": "Total words found"
+            },
+            "won": {
+                "name": "Won"
+            },
+            "wordles_played": {
+                "name": "Played"
+            }
+        }
+    }
+}

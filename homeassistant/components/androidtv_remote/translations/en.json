@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN code"
+                },
+                "description": "Enter the pairing code displayed on the Android TV ({name})."
+            },
+            "reauth_confirm": {
+                "description": "You need to pair again with the Android TV ({name}). It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter the IP address of the Android TV you want to add to Home Assistant. It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Android TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen.",
+                "title": "Discovered Android TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Check to delete this application",
+                    "app_icon": "Application icon",
+                    "app_id": "Application ID",
+                    "app_name": "Application name"
+                },
+                "description": "Configure application ID {app_id}",
+                "title": "Configure Android apps"
+            },
+            "init": {
+                "data": {
+                    "apps": "Configure applications list",
+                    "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
+                }
+            }
+        }
+    }
+}

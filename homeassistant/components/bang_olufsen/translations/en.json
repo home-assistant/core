@@ -1,0 +1,283 @@
+{
+    "common": {
+        "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+        "jid_options_name": "JID options",
+        "long_press_release": "Release of long press",
+        "long_press_timeout": "Long press",
+        "short_press_release": "Release of short press",
+        "very_long_press_release": "Release of very long press",
+        "very_long_press_timeout": "Very long press"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
+            "api_exception": "Failed to connect",
+            "client_connector_error": "Failed to connect",
+            "invalid_ip": "Invalid IPv4 address",
+            "timeout_error": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP address",
+                    "model": "Model"
+                },
+                "description": "Manually configure your Bang & Olufsen device."
+            },
+            "zeroconf_confirm": {
+                "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
+                "title": "Setup Bang & Olufsen device"
+            }
+        }
+    },
+    "entity": {
+        "event": {
+            "bluetooth": {
+                "name": "Bluetooth",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "microphone": {
+                "name": "Microphone",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "next": {
+                "name": "Next",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "playpause": {
+                "name": "Play / Pause",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset1": {
+                "name": "Favourite 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset2": {
+                "name": "Favourite 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset3": {
+                "name": "Favourite 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset4": {
+                "name": "Favourite 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "previous": {
+                "name": "Previous",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "volume": {
+                "name": "Volume",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_grouping_entity": {
+            "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+        },
+        "invalid_media_type": {
+            "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+        },
+        "invalid_sound_mode": {
+            "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
+        },
+        "invalid_source": {
+            "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+        },
+        "m3u_invalid_format": {
+            "message": "Media sources with the .m3u extension are not supported."
+        },
+        "play_media_error": {
+            "message": "An error occurred while attempting to play {media_type}: {error_message}."
+        }
+    },
+    "selector": {
+        "source_ids": {
+            "options": {
+                "aux_a": "Beolink Converter NL/ML AUX_A",
+                "beoradio": "ASE Beoradio",
+                "cd": "Beolink Converter NL/ML CD",
+                "deezer": "ASE / Mozart Deezer",
+                "ph": "Beolink Converter NL/ML PH",
+                "radio": "Beolink Converter NL/ML RADIO",
+                "spotify": "ASE / Mozart Spotify",
+                "tidal": "Mozart Tidal",
+                "tp1": "Beolink Converter NL/ML TP1",
+                "tp2": "Beolink Converter NL/ML TP2"
+            }
+        }
+    },
+    "services": {
+        "beolink_allstandby": {
+            "description": "Set all Connected Beolink devices to standby.",
+            "name": "Beolink all standby"
+        },
+        "beolink_expand": {
+            "description": "Expand current Beolink experience.",
+            "fields": {
+                "all_discovered": {
+                    "description": "Expand Beolink experience to all discovered devices.",
+                    "name": "All discovered"
+                },
+                "beolink_jids": {
+                    "description": "Specify which Beolink JIDs will join current Beolink experience.",
+                    "name": "Beolink JIDs"
+                }
+            },
+            "name": "Beolink expand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        },
+        "beolink_join": {
+            "description": "Join a Beolink experience.",
+            "fields": {
+                "beolink_jid": {
+                    "description": "Manually specify Beolink JID to join.",
+                    "name": "Beolink JID"
+                },
+                "source_id": {
+                    "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while \u201dASE / Mozart Deezer\u201d can be used with ASE or Mozart devices. A defined Beolink JID is required.",
+                    "name": "Source"
+                }
+            },
+            "name": "Beolink join",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        },
+        "beolink_leave": {
+            "description": "Leave a Beolink experience.",
+            "name": "Beolink leave"
+        },
+        "beolink_unexpand": {
+            "description": "Unexpand from current Beolink experience.",
+            "fields": {
+                "beolink_jids": {
+                    "description": "Specify which Beolink JIDs will leave from current Beolink experience.",
+                    "name": "Beolink JIDs"
+                }
+            },
+            "name": "Beolink unexpand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        }
+    }
+}

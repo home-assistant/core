@@ -1,0 +1,602 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "incorrect_api_key": "The provided API key does not match for this account",
+            "invalid_auth": "Invalid authentication",
+            "no_devices": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined",
+            "no_username": "Could not retrieve username, ensure your Sensibo account has a proper username and try again"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "filter_clean": {
+                "name": "Filter clean required"
+            },
+            "is_main_sensor": {
+                "name": "Main sensor"
+            },
+            "pure_ac_integration": {
+                "name": "Pure Boost linked with AC"
+            },
+            "pure_geo_integration": {
+                "name": "Pure Boost linked with presence"
+            },
+            "pure_measure_integration": {
+                "name": "Pure Boost linked with indoor air quality"
+            },
+            "pure_prime_integration": {
+                "name": "Pure Boost linked with outdoor air quality"
+            },
+            "room_occupied": {
+                "name": "Room occupied"
+            }
+        },
+        "button": {
+            "reset_filter": {
+                "name": "Reset filter"
+            }
+        },
+        "climate": {
+            "climate_device": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto": "Auto",
+                            "high": "High",
+                            "low": "Low",
+                            "medium": "Medium",
+                            "medium_high": "Medium high",
+                            "medium_low": "Medium low",
+                            "quiet": "Quiet",
+                            "strong": "Strong"
+                        }
+                    },
+                    "swing_horizontal_mode": {
+                        "state": {
+                            "fixedcenter": "Fixed center",
+                            "fixedcenterleft": "Fixed center left",
+                            "fixedcenterright": "Fixed center right",
+                            "fixedleft": "Fixed left",
+                            "fixedleftright": "Fixed left right",
+                            "fixedright": "Fixed right",
+                            "rangecenter": "Range center",
+                            "rangefull": "Range full",
+                            "rangeleft": "Range left",
+                            "rangeright": "Range right",
+                            "stopped": "Off"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "both": "Both",
+                            "fixedbottom": "Fixed bottom",
+                            "fixedmiddle": "Fixed middle",
+                            "fixedmiddlebottom": "Fixed middle bottom",
+                            "fixedmiddletop": "Fixed middle top",
+                            "fixedtop": "Fixed top",
+                            "horizontal": "Horizontal",
+                            "rangebottom": "Range bottom",
+                            "rangefull": "Range full",
+                            "rangemiddle": "Range middle",
+                            "rangetop": "Range top",
+                            "stopped": "Off"
+                        }
+                    }
+                }
+            }
+        },
+        "number": {
+            "calibration_humidity": {
+                "name": "Humidity calibration"
+            },
+            "calibration_temperature": {
+                "name": "Temperature calibration"
+            }
+        },
+        "select": {
+            "horizontalswing": {
+                "name": "Horizontal swing",
+                "state": {
+                    "fixedcenter": "Fixed center",
+                    "fixedcenterleft": "Fixed center left",
+                    "fixedcenterright": "Fixed center right",
+                    "fixedleft": "Fixed left",
+                    "fixedleftright": "Fixed left right",
+                    "fixedright": "Fixed right",
+                    "rangecenter": "Range center",
+                    "rangefull": "Range full",
+                    "rangeleft": "Range left",
+                    "rangeright": "Range right",
+                    "stopped": "Off"
+                }
+            },
+            "light": {
+                "name": "Light",
+                "state": {
+                    "dim": "Dim",
+                    "off": "Off",
+                    "on": "On"
+                }
+            }
+        },
+        "sensor": {
+            "airq_co2": {
+                "name": "AirQ CO2"
+            },
+            "airq_tvoc": {
+                "name": "AirQ TVOC"
+            },
+            "battery_voltage": {
+                "name": "Battery voltage"
+            },
+            "climate_react_high": {
+                "name": "Climate React high temperature threshold",
+                "state_attributes": {
+                    "fanlevel": {
+                        "name": "Fan mode",
+                        "state": {
+                            "auto": "Auto",
+                            "high": "High",
+                            "low": "Low",
+                            "medium": "Medium",
+                            "medium_high": "Medium high",
+                            "medium_low": "Medium low",
+                            "quiet": "Quiet",
+                            "strong": "Strong"
+                        }
+                    },
+                    "horizontalswing": {
+                        "name": "Horizontal swing",
+                        "state": {
+                            "fixedcenter": "Fixed center",
+                            "fixedcenterleft": "Fixed center left",
+                            "fixedcenterright": "Fixed center right",
+                            "fixedleft": "Fixed left",
+                            "fixedleftright": "Fixed left right",
+                            "fixedright": "Fixed right",
+                            "rangecenter": "Range center",
+                            "rangefull": "Range full",
+                            "stopped": "Off"
+                        }
+                    },
+                    "light": {
+                        "name": "Light",
+                        "state": {
+                            "dim": "Dim",
+                            "off": "Off",
+                            "on": "On"
+                        }
+                    },
+                    "mode": {
+                        "name": "Mode",
+                        "state": {
+                            "auto": "Auto",
+                            "cool": "Cool",
+                            "dry": "Dry",
+                            "fan_only": "Fan only",
+                            "heat": "Heat",
+                            "heat_cool": "Heat/Cool",
+                            "off": "Off"
+                        }
+                    },
+                    "on": {
+                        "name": "On",
+                        "state": {
+                            "false": "Off",
+                            "true": "On"
+                        }
+                    },
+                    "swing": {
+                        "name": "Swing mode",
+                        "state": {
+                            "both": "Both",
+                            "fixedbottom": "Fixed bottom",
+                            "fixedmiddle": "Fixed middle",
+                            "fixedmiddlebottom": "Fixed middle bottom",
+                            "fixedmiddletop": "Fixed middle top",
+                            "fixedtop": "Fixed top",
+                            "horizontal": "Horizontal",
+                            "rangebottom": "Range bottom",
+                            "rangefull": "Range full",
+                            "rangemiddle": "Range middle",
+                            "rangetop": "Range top",
+                            "stopped": "Off"
+                        }
+                    },
+                    "targettemperature": {
+                        "name": "Target temperature"
+                    },
+                    "temperatureunit": {
+                        "name": "Temperature unit",
+                        "state": {
+                            "c": "Celsius",
+                            "f": "Fahrenheit"
+                        }
+                    }
+                }
+            },
+            "climate_react_low": {
+                "name": "Climate React low temperature threshold",
+                "state_attributes": {
+                    "fanlevel": {
+                        "name": "Fan mode",
+                        "state": {
+                            "auto": "Auto",
+                            "high": "High",
+                            "low": "Low",
+                            "medium": "Medium",
+                            "medium_high": "Medium high",
+                            "medium_low": "Medium low",
+                            "quiet": "Quiet",
+                            "strong": "Strong"
+                        }
+                    },
+                    "horizontalswing": {
+                        "name": "Horizontal swing",
+                        "state": {
+                            "fixedcenter": "Fixed center",
+                            "fixedcenterleft": "Fixed center left",
+                            "fixedcenterright": "Fixed center right",
+                            "fixedleft": "Fixed left",
+                            "fixedleftright": "Fixed left right",
+                            "fixedright": "Fixed right",
+                            "rangecenter": "Range center",
+                            "rangefull": "Range full",
+                            "stopped": "Off"
+                        }
+                    },
+                    "light": {
+                        "name": "Light",
+                        "state": {
+                            "dim": "Dim",
+                            "off": "Off",
+                            "on": "On"
+                        }
+                    },
+                    "mode": {
+                        "name": "Mode",
+                        "state": {
+                            "auto": "Auto",
+                            "cool": "Cool",
+                            "dry": "Dry",
+                            "fan_only": "Fan only",
+                            "heat": "Heat",
+                            "heat_cool": "Heat/Cool",
+                            "off": "Off"
+                        }
+                    },
+                    "on": {
+                        "name": "On",
+                        "state": {
+                            "false": "Off",
+                            "true": "On"
+                        }
+                    },
+                    "swing": {
+                        "name": "Swing mode",
+                        "state": {
+                            "both": "Both",
+                            "fixedbottom": "Fixed bottom",
+                            "fixedmiddle": "Fixed middle",
+                            "fixedmiddlebottom": "Fixed middle bottom",
+                            "fixedmiddletop": "Fixed middle top",
+                            "fixedtop": "Fixed top",
+                            "horizontal": "Horizontal",
+                            "rangebottom": "Range bottom",
+                            "rangefull": "Range full",
+                            "rangemiddle": "Range middle",
+                            "rangetop": "Range top",
+                            "stopped": "Off"
+                        }
+                    },
+                    "targettemperature": {
+                        "name": "Target temperature"
+                    },
+                    "temperatureunit": {
+                        "name": "Temperature unit",
+                        "state": {
+                            "c": "Celsius",
+                            "f": "Fahrenheit"
+                        }
+                    }
+                }
+            },
+            "ethanol": {
+                "name": "Ethanol"
+            },
+            "feels_like": {
+                "name": "Temperature feels like"
+            },
+            "filter_last_reset": {
+                "name": "Filter last reset"
+            },
+            "pm25_pure": {
+                "name": "Pure AQI",
+                "state": {
+                    "bad": "Bad",
+                    "good": "Good",
+                    "moderate": "Moderate"
+                }
+            },
+            "rssi": {
+                "name": "RSSI"
+            },
+            "sensitivity": {
+                "name": "Pure sensitivity",
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensitive"
+                }
+            },
+            "smart_type": {
+                "name": "Climate React type",
+                "state": {
+                    "feelslike": "Feels like",
+                    "humidity": "Humidity",
+                    "temperature": "Temperature"
+                }
+            },
+            "timer_time": {
+                "name": "Timer end time"
+            },
+            "tvoc": {
+                "name": "TVOC"
+            }
+        },
+        "switch": {
+            "climate_react_switch": {
+                "name": "Climate React",
+                "state_attributes": {
+                    "type": {
+                        "name": "Type",
+                        "state": {
+                            "feelslike": "Feels like",
+                            "humidity": "Humidity",
+                            "temperature": "Temperature"
+                        }
+                    }
+                }
+            },
+            "pure_boost_switch": {
+                "name": "Pure Boost"
+            },
+            "timer_on_switch": {
+                "name": "Timer",
+                "state_attributes": {
+                    "id": {
+                        "name": "Id"
+                    },
+                    "turn_on": {
+                        "name": "Turns on",
+                        "state": {
+                            "false": "Off",
+                            "true": "On"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "auth_error": {
+            "message": "Authentication failed, please update your API key"
+        },
+        "climate_react_not_available": {
+            "message": "Use the Sensibo 'Enable Climate React' action once to enable the switch, or use the Sensibo app"
+        },
+        "fan_mode_not_supported": {
+            "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
+        },
+        "horizontal_swing_not_supported": {
+            "message": "Climate horizontal swing mode {horizontal_swing_mode} is not supported by the integration, please open an issue"
+        },
+        "mode_not_exist": {
+            "message": "The entity does not support the chosen mode"
+        },
+        "no_data": {
+            "message": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined"
+        },
+        "service_raised": {
+            "message": "Could not perform action for {name} with error {error}"
+        },
+        "service_result_not_true": {
+            "message": "Could not perform action for {name}"
+        },
+        "swing_not_supported": {
+            "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+        },
+        "update_error": {
+            "message": "There was an error updating from the Sensibo API with the error: {error}"
+        }
+    },
+    "issues": {
+        "deprecated_entity_horizontalswing": {
+            "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue.",
+            "title": "The Sensibo {name} entity is deprecated"
+        }
+    },
+    "selector": {
+        "assume_state": {
+            "options": {
+                "off": "Off",
+                "on": "On"
+            }
+        },
+        "hvac_mode": {
+            "options": {
+                "auto": "Auto",
+                "cool": "Cool",
+                "dry": "Dry",
+                "fan": "Fan only",
+                "heat": "Heat",
+                "off": "Off"
+            }
+        },
+        "light_mode": {
+            "options": {
+                "dim": "Dim",
+                "off": "Off",
+                "on": "On"
+            }
+        },
+        "sensitivity": {
+            "options": {
+                "normal": "Normal",
+                "sensitive": "Sensitive"
+            }
+        },
+        "smart_type": {
+            "options": {
+                "feelslike": "Feels like",
+                "humidity": "Humidity",
+                "temperature": "Temperature"
+            }
+        }
+    },
+    "services": {
+        "assume_state": {
+            "description": "Sets Sensibo device to external state.",
+            "fields": {
+                "state": {
+                    "description": "State to set.",
+                    "name": "State"
+                }
+            },
+            "name": "Assume state"
+        },
+        "enable_climate_react": {
+            "description": "Enables and configures Climate React.",
+            "fields": {
+                "high_temperature_state": {
+                    "description": "What should happen at high threshold. Requires full state.",
+                    "name": "State high threshold"
+                },
+                "high_temperature_threshold": {
+                    "description": "When temp/humidity goes above.",
+                    "name": "Threshold high"
+                },
+                "low_temperature_state": {
+                    "description": "What should happen at low threshold. Requires full state.",
+                    "name": "State low threshold"
+                },
+                "low_temperature_threshold": {
+                    "description": "When temp/humidity goes below.",
+                    "name": "Threshold low"
+                },
+                "smart_type": {
+                    "description": "Choose between temperature/feels like/humidity.",
+                    "name": "Trigger type"
+                }
+            },
+            "name": "Enable Climate React"
+        },
+        "enable_pure_boost": {
+            "description": "Enables and configures Pure Boost settings.",
+            "fields": {
+                "ac_integration": {
+                    "description": "Integrate with Air Conditioner.",
+                    "name": "AC integration"
+                },
+                "geo_integration": {
+                    "description": "Integrate with Presence.",
+                    "name": "Geo integration"
+                },
+                "indoor_integration": {
+                    "description": "Integrate with checking indoor air quality.",
+                    "name": "Indoor air quality"
+                },
+                "outdoor_integration": {
+                    "description": "Integrate with checking outdoor air quality.",
+                    "name": "Outdoor air quality"
+                },
+                "sensitivity": {
+                    "description": "Set the sensitivity for Pure Boost.",
+                    "name": "Sensitivity"
+                }
+            },
+            "name": "Enable pure boost"
+        },
+        "enable_timer": {
+            "description": "Enables the timer with custom time.",
+            "fields": {
+                "minutes": {
+                    "description": "Countdown for timer (for timer state on).",
+                    "name": "Minutes"
+                }
+            },
+            "name": "Enable timer"
+        },
+        "full_state": {
+            "description": "Sets full state for Sensibo device.",
+            "fields": {
+                "fan_mode": {
+                    "description": "set fan mode.",
+                    "name": "Fan mode"
+                },
+                "horizontal_swing_mode": {
+                    "description": "Set horizontal swing mode.",
+                    "name": "Horizontal swing mode"
+                },
+                "light": {
+                    "description": "Set light on or off.",
+                    "name": "Light"
+                },
+                "mode": {
+                    "description": "HVAC mode to set.",
+                    "name": "HVAC mode"
+                },
+                "swing_mode": {
+                    "description": "Set swing mode.",
+                    "name": "Swing mode"
+                },
+                "target_temperature": {
+                    "description": "Set target temperature.",
+                    "name": "Target temperature"
+                }
+            },
+            "name": "Set full state"
+        },
+        "get_device_capabilities": {
+            "description": "Retrieves the device capabilities for a specific device according to API requirements.",
+            "fields": {
+                "hvac_mode": {
+                    "description": "HVAC operation mode.",
+                    "name": "HVAC mode"
+                }
+            },
+            "name": "Get device mode capabilities"
+        }
+    }
+}

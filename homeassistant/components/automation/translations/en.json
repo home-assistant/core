@@ -1,0 +1,105 @@
+{
+    "common": {
+        "validation_failed_title": "Automation {name} failed to set up"
+    },
+    "entity_component": {
+        "_": {
+            "name": "Automation",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            },
+            "state_attributes": {
+                "current": {
+                    "name": "Running automations"
+                },
+                "id": {
+                    "name": "ID"
+                },
+                "last_triggered": {
+                    "name": "Last triggered"
+                },
+                "max": {
+                    "name": "Max running automations"
+                },
+                "mode": {
+                    "name": "Run mode",
+                    "state": {
+                        "parallel": "Parallel",
+                        "queued": "Queued",
+                        "restart": "Restart",
+                        "single": "Single"
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "service_not_found": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The automation \"{name}\" (`{entity_id}`) has an unknown action: `{service}`.\n\nThis error prevents the automation from running correctly. Maybe this action is no longer available, or perhaps a typo caused it.\n\nTo fix this error, [edit the automation]({edit}) and remove this action.\n\nSelect **Submit** below to confirm you have fixed this automation.",
+                        "title": "{name} uses an unknown action"
+                    }
+                }
+            },
+            "title": "{name} uses an unknown action"
+        },
+        "validation_failed_actions": {
+            "description": "The automation \"{name}\" (`{entity_id}`) is not active because its actions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+            "title": "Automation {name} failed to set up"
+        },
+        "validation_failed_blueprint": {
+            "description": "The blueprinted automation \"{name}\" (`{entity_id}`) failed to set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+            "title": "Automation {name} failed to set up"
+        },
+        "validation_failed_conditions": {
+            "description": "The automation \"{name}\" (`{entity_id}`) is not active because its conditions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+            "title": "Automation {name} failed to set up"
+        },
+        "validation_failed_schema": {
+            "description": "The automation \"{name}\" (`{entity_id}`) is not active because the configuration has errors.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+            "title": "Automation {name} failed to set up"
+        },
+        "validation_failed_triggers": {
+            "description": "The automation \"{name}\" (`{entity_id}`) is not active because its triggers could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration.",
+            "title": "Automation {name} failed to set up"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads the automation configuration.",
+            "name": "Reload"
+        },
+        "toggle": {
+            "description": "Toggles (enable / disable) an automation.",
+            "name": "Toggle"
+        },
+        "trigger": {
+            "description": "Triggers the actions of an automation.",
+            "fields": {
+                "skip_condition": {
+                    "description": "Defines whether or not the conditions will be skipped.",
+                    "name": "Skip conditions"
+                }
+            },
+            "name": "Trigger"
+        },
+        "turn_off": {
+            "description": "Disables an automation.",
+            "fields": {
+                "stop_actions": {
+                    "description": "Stops currently running actions.",
+                    "name": "Stop actions"
+                }
+            },
+            "name": "Turn off"
+        },
+        "turn_on": {
+            "description": "Enables an automation.",
+            "name": "Turn on"
+        }
+    },
+    "title": "Automation"
+}

@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "api_password": "Invalid authentication, use either API Key or Password.",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "description": "Enter the IP address of your Daikin AC.\n\nNote that API key and password are only used by BRP072Cxx and SKYFi devices respectively.",
+                "title": "Configure Daikin AC"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "compressor_energy_consumption": {
+                "name": "Compressor energy consumption"
+            },
+            "compressor_estimated_power_consumption": {
+                "name": "Compressor estimated power consumption"
+            },
+            "compressor_frequency": {
+                "name": "Compressor frequency"
+            },
+            "cool_energy_consumption": {
+                "name": "Cool energy consumption"
+            },
+            "energy_consumption": {
+                "name": "Energy consumption"
+            },
+            "heat_energy_consumption": {
+                "name": "Heat energy consumption"
+            },
+            "inside_temperature": {
+                "name": "Inside temperature"
+            },
+            "outside_temperature": {
+                "name": "Outside temperature"
+            },
+            "target_humidity": {
+                "name": "Target humidity"
+            }
+        },
+        "switch": {
+            "toggle": {
+                "name": "Power"
+            }
+        }
+    }
+}

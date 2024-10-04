@@ -1,0 +1,95 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The Hydrawise integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please provide the username and password for your Hydrawise cloud account:",
+                "title": "Hydrawise Login"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "rain_sensor": {
+                "name": "Rain sensor"
+            },
+            "watering": {
+                "name": "Watering"
+            }
+        },
+        "sensor": {
+            "daily_active_water_time": {
+                "name": "Daily active watering time"
+            },
+            "daily_active_water_use": {
+                "name": "Daily active water use"
+            },
+            "daily_inactive_water_use": {
+                "name": "Daily inactive water use"
+            },
+            "daily_total_water_use": {
+                "name": "Daily total water use"
+            },
+            "next_cycle": {
+                "name": "Next cycle"
+            },
+            "watering_time": {
+                "name": "Remaining watering time"
+            }
+        },
+        "switch": {
+            "auto_watering": {
+                "name": "Automatic watering"
+            },
+            "manual_watering": {
+                "name": "Manual watering"
+            }
+        }
+    },
+    "services": {
+        "resume": {
+            "description": "Resumes an irrigation zone's automatic watering schedule.",
+            "name": "Resume automatic watering"
+        },
+        "start_watering": {
+            "description": "Starts a watering cycle in the selected irrigation zone.",
+            "fields": {
+                "duration": {
+                    "description": "Length of time to run the watering cycle. If not specified (or zero), the default watering duration set in the Hydrawise mobile or web app for the irrigation zone will be used.",
+                    "name": "Duration"
+                }
+            },
+            "name": "Start watering"
+        },
+        "suspend": {
+            "description": "Suspends an irrigation zone's automatic watering schedule until the given date and time.",
+            "fields": {
+                "until": {
+                    "description": "Date and time to resume the automated watering schedule.",
+                    "name": "Until"
+                }
+            },
+            "name": "Suspend automatic watering"
+        }
+    }
+}

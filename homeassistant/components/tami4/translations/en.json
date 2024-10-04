@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_phone": "Invalid phone number, please use the following format: +972xxxxxxxx",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "otp": {
+                "data": {
+                    "otp": "SMS Code"
+                },
+                "description": "Enter the code you received via SMS",
+                "title": "SMS Verification"
+            },
+            "user": {
+                "data": {
+                    "phone": "Phone Number"
+                },
+                "description": "Enter your phone number (same as what you used to register to the tami4 app)",
+                "title": "SMS Verification"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "boil_water": {
+                "name": "Boil water"
+            },
+            "prepare_drink": {
+                "name": "Prepare {drink_name}"
+            }
+        },
+        "sensor": {
+            "filter_installed": {
+                "name": "Filter installed"
+            },
+            "filter_litters_passed": {
+                "name": "Filter water passed"
+            },
+            "filter_upcoming_replacement": {
+                "name": "Filter upcoming replacement"
+            },
+            "uv_installed": {
+                "name": "UV installed"
+            },
+            "uv_upcoming_replacement": {
+                "name": "UV upcoming replacement"
+            }
+        }
+    }
+}

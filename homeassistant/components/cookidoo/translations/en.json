@@ -1,0 +1,102 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unique_id_mismatch": "The user identifier does not match the previous identifier"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "language": {
+                "data": {
+                    "language": "Language"
+                },
+                "data_description": {
+                    "language": "Pick your language for the {cookidoo} content."
+                },
+                "title": "Set up {cookidoo}"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "Email used to access your {cookidoo} account.",
+                    "password": "Password used to access your {cookidoo} account."
+                },
+                "description": "Please log in to {cookidoo} again to continue using this integration.",
+                "title": "Log in again to {cookidoo}"
+            },
+            "user": {
+                "data": {
+                    "country": "Country",
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "country": "Pick your country for the {cookidoo} content.",
+                    "email": "Email used to access your {cookidoo} account.",
+                    "password": "Password used to access your {cookidoo} account."
+                },
+                "title": "Set up {cookidoo}"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "todo_clear": {
+                "name": "Clear shopping list and additional purchases"
+            }
+        },
+        "sensor": {
+            "expires": {
+                "name": "Subscription expiration date"
+            },
+            "subscription": {
+                "name": "Subscription",
+                "state": {
+                    "free": "Free",
+                    "premium": "Premium",
+                    "trial": "Trial"
+                }
+            }
+        },
+        "todo": {
+            "additional_item_list": {
+                "name": "Additional purchases"
+            },
+            "ingredient_list": {
+                "name": "Shopping list"
+            }
+        }
+    },
+    "exceptions": {
+        "button_clear_todo_failed": {
+            "message": "Failed to clear all items from the Cookidoo shopping list"
+        },
+        "setup_authentication_exception": {
+            "message": "Authentication failed for {email}, check your email and password"
+        },
+        "setup_request_exception": {
+            "message": "Failed to connect to server, try again later"
+        },
+        "todo_delete_item_failed": {
+            "message": "Failed to delete {count} item(s) from Cookidoo shopping list"
+        },
+        "todo_save_item_failed": {
+            "message": "Failed to save {name} to Cookidoo shopping list"
+        },
+        "todo_update_item_failed": {
+            "message": "Failed to update {name} in Cookidoo shopping list"
+        },
+        "update_exception": {
+            "message": "Unable to connect and retrieve data from cookidoo"
+        }
+    }
+}

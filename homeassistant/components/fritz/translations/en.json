@@ -1,0 +1,188 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "ignore_ip6_link_local": "IPv6 link local address is not supported.",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown_error": "Unexpected error",
+            "upnp_not_configured": "Missing UPnP settings on device."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username"
+                },
+                "description": "Discovered FRITZ!Box: {name}\n\nSet up FRITZ!Box Tools to control your {name}",
+                "title": "Set up FRITZ!Box Tools"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
+                "title": "Updating FRITZ!Box Tools - credentials"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your FRITZ!Box router.",
+                    "port": "Leave it empty to use the default port."
+                },
+                "description": "Update FRITZ!Box Tools configuration for: {host}.",
+                "title": "Updating FRITZ!Box Tools - configuration"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your FRITZ!Box router.",
+                    "port": "Leave it empty to use the default port."
+                },
+                "description": "Set up FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
+                "title": "Set up FRITZ!Box Tools"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "is_connected": {
+                "name": "Connection"
+            },
+            "is_linked": {
+                "name": "Link"
+            }
+        },
+        "button": {
+            "cleanup": {
+                "name": "Cleanup"
+            },
+            "firmware_update": {
+                "name": "Firmware update"
+            },
+            "reconnect": {
+                "name": "Reconnect"
+            }
+        },
+        "sensor": {
+            "connection_uptime": {
+                "name": "Connection uptime"
+            },
+            "device_uptime": {
+                "name": "Last restart"
+            },
+            "external_ip": {
+                "name": "External IP"
+            },
+            "external_ipv6": {
+                "name": "External IPv6"
+            },
+            "gb_received": {
+                "name": "GB received"
+            },
+            "gb_sent": {
+                "name": "GB sent"
+            },
+            "kb_s_received": {
+                "name": "Download throughput"
+            },
+            "kb_s_sent": {
+                "name": "Upload throughput"
+            },
+            "link_attenuation_received": {
+                "name": "Link download power attenuation"
+            },
+            "link_attenuation_sent": {
+                "name": "Link upload power attenuation"
+            },
+            "link_kb_s_received": {
+                "name": "Link download throughput"
+            },
+            "link_kb_s_sent": {
+                "name": "Link upload throughput"
+            },
+            "link_noise_margin_received": {
+                "name": "Link download noise margin"
+            },
+            "link_noise_margin_sent": {
+                "name": "Link upload noise margin"
+            },
+            "max_kb_s_received": {
+                "name": "Max connection download throughput"
+            },
+            "max_kb_s_sent": {
+                "name": "Max connection upload throughput"
+            }
+        }
+    },
+    "exceptions": {
+        "config_entry_not_found": {
+            "message": "Failed to perform action \"{service}\". Config entry for target not found"
+        },
+        "error_refresh_hosts_info": {
+            "message": "Error refreshing hosts info"
+        },
+        "service_not_supported": {
+            "message": "Action not supported"
+        },
+        "service_parameter_unknown": {
+            "message": "Action or parameter unknown"
+        },
+        "unable_to_connect": {
+            "message": "Unable to establish a connection"
+        },
+        "update_failed": {
+            "message": "Error while uptaing the data: {error}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Seconds to consider a device at 'home'",
+                    "old_discovery": "Enable old discovery method"
+                }
+            }
+        }
+    },
+    "services": {
+        "set_guest_wifi_password": {
+            "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
+            "fields": {
+                "device_id": {
+                    "description": "Select the Fritz!Box to configure.",
+                    "name": "Fritz!Box Device"
+                },
+                "length": {
+                    "description": "Length of the new password. The password will be auto-generated, if no password is set.",
+                    "name": "Password length"
+                },
+                "password": {
+                    "description": "New password for the guest Wi-Fi.",
+                    "name": "Password"
+                }
+            },
+            "name": "Set guest Wi-Fi password"
+        }
+    }
+}

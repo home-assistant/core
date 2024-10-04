@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads telegram notify services.",
+            "name": "Reload"
+        }
+    }
+}

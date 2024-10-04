@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "dhcp_confirm": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Obihai device."
+                },
+                "description": "Do you want to set up {host}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Obihai device."
+                }
+            }
+        }
+    }
+}

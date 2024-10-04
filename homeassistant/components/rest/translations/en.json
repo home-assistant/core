@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Reloads REST entities from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

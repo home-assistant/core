@@ -1,0 +1,112 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_unique_id": "Impossible to determine a valid unique ID for the device"
+        },
+        "error": {
+            "adbkey_not_file": "ADB key file not found",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "key_and_server": "Only provide ADB Key or ADB Server",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "IP address of the ADB server (leave empty to not use)",
+                    "adb_server_port": "Port of the ADB server",
+                    "adbkey": "Path to your ADB key file (leave empty to auto generate)",
+                    "device_class": "The type of device",
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "failed_send": {
+            "message": "Failed to send command {cmd}"
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Invalid state detection rules"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Check to delete this application",
+                    "app_id": "Application ID",
+                    "app_name": "Application name"
+                },
+                "description": "Configure application ID {app_id}",
+                "title": "Configure Android apps"
+            },
+            "init": {
+                "data": {
+                    "apps": "Configure applications list",
+                    "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
+                    "get_sources": "Retrieve the running apps as the list of sources",
+                    "screencap_interval": "Interval in minutes between screen capture for album art (set 0 to disable)",
+                    "state_detection_rules": "Configure state detection rules",
+                    "turn_off_command": "ADB shell turn off command (leave empty for default)",
+                    "turn_on_command": "ADB shell turn on command (leave empty for default)"
+                }
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Check to delete this rule",
+                    "rule_id": "Application ID",
+                    "rule_values": "List of state detection rules (see documentation)"
+                },
+                "description": "Configure detection rule for application ID {rule_id}",
+                "title": "Configure Android state detection rules"
+            }
+        }
+    },
+    "services": {
+        "adb_command": {
+            "description": "Sends an ADB command to an Android / Fire TV device.",
+            "fields": {
+                "command": {
+                    "description": "Either a key command or an ADB shell command.",
+                    "name": "Command"
+                }
+            },
+            "name": "ADB command"
+        },
+        "download": {
+            "description": "Downloads a file from your Android / Fire TV device to your Home Assistant instance.",
+            "fields": {
+                "device_path": {
+                    "description": "The filepath on the Android / Fire TV device.",
+                    "name": "Device path"
+                },
+                "local_path": {
+                    "description": "The filepath on your Home Assistant instance.",
+                    "name": "Local path"
+                }
+            },
+            "name": "Download"
+        },
+        "learn_sendevent": {
+            "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of performing this action.",
+            "name": "Learn sendevent"
+        },
+        "upload": {
+            "description": "Uploads a file from your Home Assistant instance to an Android / Fire TV device.",
+            "fields": {
+                "device_path": {
+                    "description": "The filepath on the Android / Fire TV device.",
+                    "name": "Device path"
+                },
+                "local_path": {
+                    "description": "The filepath on your Home Assistant instance.",
+                    "name": "Local path"
+                }
+            },
+            "name": "Upload"
+        }
+    }
+}

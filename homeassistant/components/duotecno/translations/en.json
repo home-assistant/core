@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Duotecno device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "duotecno": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "half_moon": "Half moon",
+                            "half_sun": "Half sun",
+                            "moon": "Moon",
+                            "sun": "Sun"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

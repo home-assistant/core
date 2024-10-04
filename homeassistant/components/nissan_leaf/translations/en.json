@@ -1,0 +1,24 @@
+{
+    "services": {
+        "start_charge": {
+            "description": "Starts the vehicle charging. It must be plugged in first!",
+            "fields": {
+                "vin": {
+                    "description": "The vehicle identification number (VIN) of the vehicle, 17 characters.",
+                    "name": "VIN"
+                }
+            },
+            "name": "Start charge"
+        },
+        "update": {
+            "description": "Fetches the last state of the vehicle of all your accounts, requesting an update from of the state from the car if possible.",
+            "fields": {
+                "vin": {
+                    "description": "The vehicle identification number (VIN) of the vehicle, 17 characters.",
+                    "name": "VIN"
+                }
+            },
+            "name": "Update"
+        }
+    }
+}

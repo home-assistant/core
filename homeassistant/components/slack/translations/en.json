@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "default_channel": "Default Channel",
+                    "icon": "Icon",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "api_key": "The Slack API token to use for sending Slack messages.",
+                    "default_channel": "The channel to post to if no channel is specified when sending a message.",
+                    "icon": "Use one of the Slack emojis as an Icon for the supplied username.",
+                    "username": "Home Assistant will post to Slack using the username specified."
+                },
+                "description": "Refer to the documentation on getting your Slack API key."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "do_not_disturb_until": {
+                "name": "Do not disturb until"
+            }
+        }
+    }
+}

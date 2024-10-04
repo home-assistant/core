@@ -1,0 +1,87 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "Connect to NZBGet"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "article_cache": {
+                "name": "Article cache"
+            },
+            "average_speed": {
+                "name": "Average speed"
+            },
+            "disk_free": {
+                "name": "Disk free"
+            },
+            "download_paused": {
+                "name": "Download paused"
+            },
+            "post_processing_jobs": {
+                "name": "Post processing jobs"
+            },
+            "post_processing_paused": {
+                "name": "Post processing paused"
+            },
+            "queue_size": {
+                "name": "Queue size"
+            },
+            "size": {
+                "name": "Size"
+            },
+            "speed": {
+                "name": "Speed"
+            },
+            "speed_limit": {
+                "name": "Speed limit"
+            },
+            "uptime": {
+                "name": "Uptime"
+            }
+        },
+        "switch": {
+            "download": {
+                "name": "Download"
+            }
+        }
+    },
+    "services": {
+        "pause": {
+            "description": "Pauses download queue.",
+            "name": "Pause"
+        },
+        "resume": {
+            "description": "Resumes download queue.",
+            "name": "Resume"
+        },
+        "set_speed": {
+            "description": "Sets download speed limit.",
+            "fields": {
+                "speed": {
+                    "description": "Speed limit. 0 is unlimited.",
+                    "name": "Speed"
+                }
+            },
+            "name": "Set speed"
+        }
+    }
+}

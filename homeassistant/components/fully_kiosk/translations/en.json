@@ -1,0 +1,178 @@
+{
+    "common": {
+        "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+        "data_description_ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
+        "data_description_verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Cannot connect. Details: {error_detail}",
+            "unknown": "Unknown. Details: {error_detail}"
+        },
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Password",
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+                    "ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
+                    "verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+                },
+                "description": "Do you want to set up {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
+                    "password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+                    "ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
+                    "verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "device_admin": {
+                "name": "Device admin"
+            },
+            "kiosk_mode": {
+                "name": "Kiosk mode"
+            },
+            "plugged_in": {
+                "name": "Plugged in"
+            }
+        },
+        "button": {
+            "load_start_url": {
+                "name": "Load start URL"
+            },
+            "restart_browser": {
+                "name": "Restart browser"
+            },
+            "restart_device": {
+                "name": "Restart device"
+            },
+            "to_background": {
+                "name": "Send to background"
+            },
+            "to_foreground": {
+                "name": "Bring to foreground"
+            }
+        },
+        "image": {
+            "screenshot": {
+                "name": "Screenshot"
+            }
+        },
+        "notify": {
+            "overlay_message": {
+                "name": "Overlay message"
+            },
+            "tts": {
+                "name": "Text to speech"
+            }
+        },
+        "number": {
+            "screen_brightness": {
+                "name": "Screen brightness"
+            },
+            "screen_off_time": {
+                "name": "Screen off timer"
+            },
+            "screensaver_brightness": {
+                "name": "Screensaver brightness"
+            },
+            "screensaver_time": {
+                "name": "Screensaver timer"
+            }
+        },
+        "sensor": {
+            "current_page": {
+                "name": "Current page"
+            },
+            "foreground_app": {
+                "name": "Foreground app"
+            },
+            "internal_storage_free_space": {
+                "name": "Internal storage free space"
+            },
+            "internal_storage_total_space": {
+                "name": "Internal storage total space"
+            },
+            "ram_free_memory": {
+                "name": "Free memory"
+            },
+            "ram_total_memory": {
+                "name": "Total memory"
+            },
+            "screen_orientation": {
+                "name": "Screen orientation"
+            }
+        },
+        "switch": {
+            "kiosk": {
+                "name": "Kiosk lock"
+            },
+            "maintenance": {
+                "name": "Maintenance mode"
+            },
+            "motion_detection": {
+                "name": "Motion detection"
+            },
+            "screen_on": {
+                "name": "Screen"
+            },
+            "screensaver": {
+                "name": "Screensaver"
+            }
+        }
+    },
+    "services": {
+        "load_url": {
+            "description": "Loads a URL on Fully Kiosk Browser.",
+            "fields": {
+                "url": {
+                    "description": "URL to load.",
+                    "name": "URL"
+                }
+            },
+            "name": "Load URL"
+        },
+        "set_config": {
+            "description": "Sets a configuration parameter on Fully Kiosk Browser.",
+            "fields": {
+                "key": {
+                    "description": "Configuration parameter to set.",
+                    "name": "Key"
+                },
+                "value": {
+                    "description": "Value for the configuration parameter.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set Configuration"
+        },
+        "start_application": {
+            "description": "Starts an application on the device running Fully Kiosk Browser.",
+            "fields": {
+                "application": {
+                    "description": "Package name of the application to start.",
+                    "name": "Application"
+                }
+            },
+            "name": "Start Application"
+        }
+    }
+}

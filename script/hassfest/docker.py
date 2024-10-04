@@ -22,7 +22,8 @@ FROM ${{BUILD_FROM}}
 ENV \
     S6_SERVICES_GRACETIME={timeout} \
     UV_SYSTEM_PYTHON=true \
-    UV_NO_CACHE=true
+    UV_NO_CACHE=true \
+    UV_HTTP_TIMEOUT=180
 
 ARG QEMU_CPU
 

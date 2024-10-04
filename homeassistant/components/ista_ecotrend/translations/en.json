@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "Enter the email address associated with your ista EcoTrend account",
+                    "password": "Enter the password for your ista EcoTrend account"
+                },
+                "description": "Re-enter your password for `{email}` to reconnect your ista EcoTrend account to Home Assistant.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "Enter the email address associated with your ista EcoTrend account",
+                    "password": "Enter the password for your ista EcoTrend account"
+                },
+                "description": "Connect your **ista EcoTrend** account to Home Assistant to access your monthly heating and water usage data."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "heating": {
+                "name": "Heating",
+                "unit_of_measurement": "units"
+            },
+            "heating_cost": {
+                "name": "Heating cost"
+            },
+            "heating_energy": {
+                "name": "Heating energy"
+            },
+            "hot_water": {
+                "name": "Hot water"
+            },
+            "hot_water_cost": {
+                "name": "Hot water cost"
+            },
+            "hot_water_energy": {
+                "name": "Hot water energy"
+            },
+            "water": {
+                "name": "Water"
+            },
+            "water_cost": {
+                "name": "Water cost"
+            }
+        }
+    },
+    "exceptions": {
+        "authentication_exception": {
+            "message": "Authentication failed for {email}, check your login credentials"
+        },
+        "connection_exception": {
+            "message": "Unable to connect and retrieve data from ista EcoTrend, try again later"
+        }
+    }
+}

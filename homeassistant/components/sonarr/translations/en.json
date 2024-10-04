@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {url}",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "url": "URL",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "commands": {
+                "name": "Commands"
+            },
+            "diskspace": {
+                "name": "Disk space"
+            },
+            "queue": {
+                "name": "Queue"
+            },
+            "series": {
+                "name": "Shows"
+            },
+            "upcoming": {
+                "name": "Upcoming"
+            },
+            "wanted": {
+                "name": "Wanted"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Number of upcoming days to display",
+                    "wanted_max_items": "Max number of wanted items to display"
+                }
+            }
+        }
+    }
+}

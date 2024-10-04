@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "invalid_host": "Invalid hostname or IP address"
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "access_token": "Access token"
+                },
+                "description": "Enter the Pairing Key displayed on the TV",
+                "title": "Authorize LG Netcast TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the LG Netcast TV to control."
+                },
+                "description": "Ensure that your TV is turned on before trying to set it up.\nIf you leave the host empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "lg_netcast.turn_on": "Device is requested to turn on"
+        }
+    }
+}

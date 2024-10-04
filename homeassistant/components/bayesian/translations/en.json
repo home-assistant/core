@@ -1,0 +1,18 @@
+{
+    "issues": {
+        "manual_migration": {
+            "description": "The Bayesian integration now also updates the probability if the observed `to_state`, `above`, `below`, or `value_template` evaluates to `False` rather than only `True`. So it is no longer required to have duplicate, complementary entries for each binary state. Please remove the mirrored entry for `{entity}`.",
+            "title": "Manual YAML fix required for Bayesian"
+        },
+        "no_prob_given_false": {
+            "description": "In the Bayesian integration `prob_given_false` is now a required configuration variable as there was no mathematical rationale for the previous default value. Please add this to your `configuration.yml` for `bayesian/{entity}`. These observations will be ignored until you do.",
+            "title": "Manual YAML addition required for Bayesian"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads bayesian sensors from the YAML-configuration.",
+            "name": "Reload"
+        }
+    }
+}

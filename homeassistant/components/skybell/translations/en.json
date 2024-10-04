@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please update your password for {email}",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "button": {
+                "name": "Button"
+            }
+        },
+        "camera": {
+            "activity": {
+                "name": "Last activity"
+            },
+            "camera": {
+                "name": "Camera"
+            }
+        },
+        "sensor": {
+            "chime_level": {
+                "name": "Chime level"
+            },
+            "last_button_event": {
+                "name": "Last button event"
+            },
+            "last_check_in": {
+                "name": "Last check in"
+            },
+            "last_motion_event": {
+                "name": "Last motion event"
+            },
+            "motion_threshold": {
+                "name": "Motion threshold"
+            },
+            "video_profile": {
+                "name": "Video profile"
+            },
+            "wifi_ssid": {
+                "name": "Wi-Fi SSID"
+            },
+            "wifi_status": {
+                "name": "Wi-Fi status"
+            }
+        },
+        "switch": {
+            "do_not_disturb": {
+                "name": "Do not disturb"
+            },
+            "do_not_ring": {
+                "name": "Do not ring"
+            },
+            "motion_sensor": {
+                "name": "Motion sensor"
+            }
+        }
+    }
+}

@@ -1,0 +1,134 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your V2C Trydan EVSE."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "charging": {
+                "name": "Charging"
+            },
+            "connected": {
+                "name": "Connected"
+            },
+            "ready": {
+                "name": "Ready"
+            }
+        },
+        "number": {
+            "intensity": {
+                "name": "Intensity"
+            },
+            "max_intensity": {
+                "name": "Max intensity"
+            },
+            "min_intensity": {
+                "name": "Min intensity"
+            }
+        },
+        "sensor": {
+            "battery_power": {
+                "name": "Battery power"
+            },
+            "charge_energy": {
+                "name": "Charge energy"
+            },
+            "charge_power": {
+                "name": "Charge power"
+            },
+            "charge_time": {
+                "name": "Charge time"
+            },
+            "fv_power": {
+                "name": "Photovoltaic power"
+            },
+            "house_power": {
+                "name": "House power"
+            },
+            "ip_address": {
+                "name": "IP address"
+            },
+            "meter_error": {
+                "name": "Meter error",
+                "state": {
+                    "acknowledge": "Acknowledge",
+                    "clamp_not_connected": "Clamp not connected",
+                    "communication": "Communication",
+                    "crc_error": "CRC error",
+                    "empty_message": "Empty message",
+                    "fc_mismatch": "FC mismatch",
+                    "gateway_path_unavailable": "Gateway path unavailable",
+                    "gateway_target_no_resp": "Gateway target no response",
+                    "illegal_data_address": "Illegal data address",
+                    "illegal_data_value": "Illegal data value",
+                    "illegal_function": "Illegal function",
+                    "illegal_ip_or_port": "Illegal IP or port",
+                    "invalid_server": "Invalid server",
+                    "ip_connection_failed": "IP connection failed",
+                    "memory_parity_error": "Memory parity error",
+                    "meter": "Meter",
+                    "meter_not_found": "Meter not found",
+                    "negative_acknowledge": "Negative acknowledge",
+                    "no_error": "No error",
+                    "no_response": "No response",
+                    "packet_length_error": "Packet length error",
+                    "parameter_count_error": "Parameter count error",
+                    "parameter_limit_error": "Parameter limit error",
+                    "reading": "Reading",
+                    "request_queue_full": "Request queue full",
+                    "server_device_busy": "Server device busy",
+                    "server_device_failure": "Server device failure",
+                    "server_id_mismatch": "Server id mismatch",
+                    "server_rtu_inactive244_timeout": "Server RTU inactive/timeout",
+                    "tcp_head_mismatch": "TCP head mismatch",
+                    "undefined_error": "Undefined error",
+                    "waiting_communication": "Waiting communication",
+                    "waiting_wifi": "Waiting for Wi-Fi",
+                    "wrong_ip": "Wrong IP",
+                    "wrong_meter": "Wrong meter"
+                }
+            },
+            "signal_status": {
+                "name": "Signal status"
+            },
+            "ssid": {
+                "name": "SSID"
+            },
+            "voltage_installation": {
+                "name": "Installation voltage"
+            }
+        },
+        "switch": {
+            "dynamic": {
+                "name": "Dynamic intensity modulation"
+            },
+            "locked": {
+                "name": "Lock EVSE"
+            },
+            "pause_dynamic": {
+                "name": "Pause dynamic control modulation"
+            },
+            "paused": {
+                "name": "Pause session"
+            },
+            "timer": {
+                "name": "Charge point timer"
+            }
+        }
+    }
+}

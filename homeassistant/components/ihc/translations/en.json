@@ -1,0 +1,72 @@
+{
+    "services": {
+        "pulse": {
+            "description": "Pulses an input on the IHC controller.",
+            "fields": {
+                "controller_id": {
+                    "description": "If you have multiple controllers, this is the index of your controller, starting with 0.",
+                    "name": "Controller ID"
+                },
+                "ihc_id": {
+                    "description": "The integer IHC resource ID.",
+                    "name": "IHC ID"
+                }
+            },
+            "name": "Pulse"
+        },
+        "set_runtime_value_bool": {
+            "description": "Sets a boolean runtime value on the IHC controller.",
+            "fields": {
+                "controller_id": {
+                    "description": "If you have multiple controllers, this is the index of your controller, starting with 0.",
+                    "name": "Controller ID"
+                },
+                "ihc_id": {
+                    "description": "The integer IHC resource ID.",
+                    "name": "IHC ID"
+                },
+                "value": {
+                    "description": "The boolean value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set runtime value boolean"
+        },
+        "set_runtime_value_float": {
+            "description": "Sets a float runtime value on the IHC controller.",
+            "fields": {
+                "controller_id": {
+                    "description": "If you have multiple controllers, this is the index of your controller, starting with 0.",
+                    "name": "Controller ID"
+                },
+                "ihc_id": {
+                    "description": "The integer IHC resource ID.",
+                    "name": "IHC ID"
+                },
+                "value": {
+                    "description": "The float value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set runtime value float"
+        },
+        "set_runtime_value_int": {
+            "description": "Sets an integer runtime value on the IHC controller.",
+            "fields": {
+                "controller_id": {
+                    "description": "If you have multiple controllers, this is the index of your controller, starting with 0.",
+                    "name": "Controller ID"
+                },
+                "ihc_id": {
+                    "description": "The integer IHC resource ID.",
+                    "name": "IHC ID"
+                },
+                "value": {
+                    "description": "The integer value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set runtime value integer"
+        }
+    }
+}

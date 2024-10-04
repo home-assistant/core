@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "url_error": "The URL could not be opened."
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "Update your configuration information for {name}."
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "issues": {
+        "import_yaml_error_url_error": {
+            "description": "Configuring the Feedreader using YAML is being removed but there was a connection error when trying to import the YAML configuration for `{url}`.\n\nPlease verify that url is reachable and accessable for Home Assistant and restart Home Assistant to try again or remove the Feedreader YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
+            "title": "The Feedreader YAML configuration import failed"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_entries": "Maximum feed entries"
+                },
+                "data_description": {
+                    "max_entries": "The maximum number of entries to extract from each feed."
+                }
+            }
+        }
+    }
+}

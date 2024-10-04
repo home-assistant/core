@@ -366,9 +366,10 @@ class LoginFlowResourceView(LoginFlowBaseView):
 
         try:
             # do not allow change ip during login flow
-            flow = self._flow_mgr.async_get(flow_id)
-            if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
-                return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
+            # flow = self._flow_mgr.async_get(flow_id)
+            # turned of for frp, nginx connection
+            # if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
+            #     return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)

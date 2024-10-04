@@ -1,0 +1,90 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your QNAP device."
+                },
+                "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
+                "title": "Connect to the QNAP device"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "cpu_temp": {
+                "name": "CPU temperature"
+            },
+            "cpu_usage": {
+                "name": "CPU usage"
+            },
+            "drive_smart_status": {
+                "name": "Drive {monitor_device} status"
+            },
+            "drive_temp": {
+                "name": "Drive {monitor_device} temperature"
+            },
+            "memory_free": {
+                "name": "Memory available"
+            },
+            "memory_percent_used": {
+                "name": "Memory usage"
+            },
+            "memory_size": {
+                "name": "Memory size"
+            },
+            "memory_used": {
+                "name": "Memory used"
+            },
+            "network_err": {
+                "name": "{monitor_device} packet errors"
+            },
+            "network_link_status": {
+                "name": "{monitor_device} link"
+            },
+            "network_max_speed": {
+                "name": "{monitor_device} maximum speed"
+            },
+            "network_rx": {
+                "name": "{monitor_device} download"
+            },
+            "network_tx": {
+                "name": "{monitor_device} upload"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "system_temp": {
+                "name": "System temperature"
+            },
+            "uptime": {
+                "name": "Uptime"
+            },
+            "volume_percentage_used": {
+                "name": "Volume used ({monitor_device})"
+            },
+            "volume_size_free": {
+                "name": "Free space ({monitor_device})"
+            },
+            "volume_size_total": {
+                "name": "Volume size"
+            },
+            "volume_size_used": {
+                "name": "Used space ({monitor_device})"
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "services": {
+        "reload_resources": {
+            "description": "Reloads dashboard resources from the YAML-configuration.",
+            "name": "Reload resources"
+        }
+    },
+    "system_health": {
+        "info": {
+            "dashboards": "Dashboards",
+            "mode": "Mode",
+            "resources": "Resources",
+            "views": "Views"
+        }
+    }
+}

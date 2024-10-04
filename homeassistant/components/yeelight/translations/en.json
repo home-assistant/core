@@ -1,0 +1,192 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{model} {id} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to set up {model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Device"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of your Yeelight Wi-Fi bulb."
+                },
+                "description": "If you leave the host empty, discovery will be used to find devices."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "nightlight": {
+                "name": "Nightlight"
+            }
+        },
+        "light": {
+            "ambilight": {
+                "name": "Ambilight"
+            },
+            "nightlight": {
+                "name": "Nightlight"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model",
+                    "nightlight_switch": "Use Nightlight Switch",
+                    "save_on_change": "Save Status On Change",
+                    "transition": "Transition Time (ms)",
+                    "use_music_mode": "Enable Music Mode"
+                }
+            }
+        }
+    },
+    "selector": {
+        "action": {
+            "options": {
+                "off": "Off",
+                "recover": "Recover",
+                "stay": "Stay"
+            }
+        },
+        "mode": {
+            "options": {
+                "color_flow": "Color Flow",
+                "hsv": "HSV",
+                "last": "Last",
+                "moonlight": "Moonlight",
+                "normal": "Normal",
+                "rgb": "RGB"
+            }
+        }
+    },
+    "services": {
+        "set_auto_delay_off_scene": {
+            "description": "Turns the light on to the specified brightness and sets a timer to turn it back off after the given number of minutes. If the light is off, it will be turned on.",
+            "fields": {
+                "brightness": {
+                    "description": "The brightness value to set.",
+                    "name": "Brightness"
+                },
+                "minutes": {
+                    "description": "The time to wait before automatically turning the light off.",
+                    "name": "Minutes"
+                }
+            },
+            "name": "Set auto delay off scene"
+        },
+        "set_color_flow_scene": {
+            "description": "Starts a color flow. If the light is off, it will be turned on.",
+            "fields": {
+                "action": {
+                    "description": "The action to take after the flow stops.",
+                    "name": "Action"
+                },
+                "count": {
+                    "description": "The number of times to run this flow (0 to run forever).",
+                    "name": "Count"
+                },
+                "transitions": {
+                    "description": "Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html.",
+                    "name": "Transitions"
+                }
+            },
+            "name": "Set color flow scene"
+        },
+        "set_color_scene": {
+            "description": "Changes the light to the specified RGB color and brightness. If the light is off, it will be turned on.",
+            "fields": {
+                "brightness": {
+                    "description": "The brightness value to set.",
+                    "name": "Brightness"
+                },
+                "rgb_color": {
+                    "description": "Color for the light in RGB-format.",
+                    "name": "RGB color"
+                }
+            },
+            "name": "Set color scene"
+        },
+        "set_color_temp_scene": {
+            "description": "Changes the light to the specified color temperature. If the light is off, it will be turned on.",
+            "fields": {
+                "brightness": {
+                    "description": "The brightness value to set.",
+                    "name": "Brightness"
+                },
+                "kelvin": {
+                    "description": "Color temperature for the light in Kelvin.",
+                    "name": "Kelvin"
+                }
+            },
+            "name": "Set color temperature scene"
+        },
+        "set_hsv_scene": {
+            "description": "Changes the light to the specified HSV color and brightness. If the light is off, it will be turned on.",
+            "fields": {
+                "brightness": {
+                    "description": "The brightness value to set.",
+                    "name": "Brightness"
+                },
+                "hs_color": {
+                    "description": "Color for the light in hue/sat format. Hue is 0-359 and Sat is 0-100.",
+                    "name": "Hue/sat color"
+                }
+            },
+            "name": "Set HSV scene"
+        },
+        "set_mode": {
+            "description": "Sets an operation mode.",
+            "fields": {
+                "mode": {
+                    "description": "Operation mode.",
+                    "name": "Mode"
+                }
+            },
+            "name": "Set mode"
+        },
+        "set_music_mode": {
+            "description": "Enables or disables music_mode.",
+            "fields": {
+                "music_mode": {
+                    "description": "Use true or false to enable / disable music_mode.",
+                    "name": "Music mode"
+                }
+            },
+            "name": "Set music mode"
+        },
+        "start_flow": {
+            "description": "Starts a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects.",
+            "fields": {
+                "action": {
+                    "description": "The action to take after the flow stops.",
+                    "name": "Action"
+                },
+                "count": {
+                    "description": "The number of times to run this flow (0 to run forever).",
+                    "name": "Count"
+                },
+                "transitions": {
+                    "description": "Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html.",
+                    "name": "Transitions"
+                }
+            },
+            "name": "Start flow"
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please enter the password for {name} ({host})"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "services": {
+        "reboot_gateway": {
+            "description": "Reboots the KLF200 Gateway.",
+            "name": "Reboot gateway"
+        }
+    }
+}

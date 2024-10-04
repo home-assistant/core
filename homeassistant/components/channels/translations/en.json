@@ -1,0 +1,22 @@
+{
+    "services": {
+        "seek_backward": {
+            "description": "Seeks backward by a set number of seconds.",
+            "name": "Seek backward"
+        },
+        "seek_by": {
+            "description": "Seeks by an inputted number of seconds.",
+            "fields": {
+                "seconds": {
+                    "description": "Number of seconds to seek by. Negative numbers seek backwards.",
+                    "name": "Seconds"
+                }
+            },
+            "name": "Seek by"
+        },
+        "seek_forward": {
+            "description": "Seeks forward by a set number of seconds.",
+            "name": "Seek forward"
+        }
+    }
+}

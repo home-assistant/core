@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_device_id": "The discovered Tailwind device did not provide a device ID.",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error",
+            "unsupported_firmware": "The firmware of your Tailwind device is not supported. Please update your Tailwind device to the latest firmware version using the Tailwind app."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "Local control key token"
+                },
+                "data_description": {
+                    "token": "To find local control key token, browse to the [Tailwind web portal]({url}), log in with your Tailwind account, and select the [**Local Control Key**]({url}) tab. The 6-digit number shown is your local control key token."
+                },
+                "description": "Reauthenticate with your Tailwind garage door opener.\n\nTo do so, you will need to get your new local control key of your Tailwind device. For more details, see the description below the field down below."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "token": "Local control key token"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Tailwind device. You can find the IP address by going into the Tailwind app and selecting your Tailwind device's cog icon. The IP address is shown in the **Device Info** section.",
+                    "token": "To find local control key token, browse to the [Tailwind web portal]({url}), log in with your Tailwind account, and select the [**Local Control Key**]({url}) tab. The 6-digit number shown is your local control key token."
+                },
+                "description": "Set up your Tailwind garage door opener to integrate with Home Assistant.\n\nTo do so, you will need to get the local control key and IP address of your Tailwind device. For more details, see the description below the fields down below."
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "token": "Local control key token"
+                },
+                "data_description": {
+                    "token": "To find local control key token, browse to the [Tailwind web portal]({url}), log in with your Tailwind account, and select the [**Local Control Key**]({url}) tab. The 6-digit number shown is your local control key token."
+                },
+                "description": "Set up your discovered Tailwind garage door opener to integrate with Home Assistant.\n\nTo do so, you will need to get the local control key of your Tailwind device. For more details, see the description below the field down below."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "operational_problem": {
+                "name": "Operational problem",
+                "state": {
+                    "off": "Operational",
+                    "on": "Locked out"
+                }
+            }
+        },
+        "number": {
+            "brightness": {
+                "name": "Status LED brightness"
+            }
+        }
+    },
+    "exceptions": {
+        "communication_error": {
+            "message": "An error occurred while communicating with the Tailwind device."
+        },
+        "door_disabled": {
+            "message": "The door is disabled and cannot be operated."
+        },
+        "door_locked_out": {
+            "message": "The door is locked out and cannot be operated."
+        }
+    }
+}

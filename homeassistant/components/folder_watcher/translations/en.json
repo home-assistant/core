@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "not_allowed_dir": "Configured path is not in allowlist",
+            "not_dir": "Configured path is not a directory",
+            "not_readable_dir": "Configured path is not readable"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "folder": "Path to the watched folder",
+                    "patterns": "Pattern(s) to monitor"
+                },
+                "data_description": {
+                    "folder": "Path needs to be from root, as example `/config`",
+                    "patterns": "Example: `*.yaml` to only see yaml files"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "folder_watcher": {
+                "state_attributes": {
+                    "dest_file": {
+                        "name": "Destination file"
+                    },
+                    "dest_folder": {
+                        "name": "Destination folder"
+                    },
+                    "dest_path": {
+                        "name": "Destination path"
+                    },
+                    "event_type": {
+                        "name": "Event type"
+                    },
+                    "file": {
+                        "name": "File"
+                    },
+                    "folder": {
+                        "name": "Folder"
+                    },
+                    "path": {
+                        "name": "Path"
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "import_failed_not_allowed_path": {
+            "description": "Configuring Folder Watcher using YAML is being removed but your configuration could not be imported as the folder {path} is not in the configured allowlist.\n\nPlease add it to `{config_variable}` in config.yaml and restart Home Assistant to import it and fix this issue.",
+            "title": "The Folder Watcher YAML configuration could not be imported"
+        },
+        "setup_not_allowed_path": {
+            "description": "The path {path} is not accessible or not allowed to be accessed.\n\nPlease check the path is accessible and add it to `{config_variable}` in config.yaml and restart Home Assistant to fix this issue.",
+            "title": "The Folder Watcher configuration for {path} could not start"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "patterns": "Pattern(s) to monitor"
+                },
+                "data_description": {
+                    "patterns": "Example: `*.yaml` to only see yaml files"
+                }
+            }
+        }
+    }
+}

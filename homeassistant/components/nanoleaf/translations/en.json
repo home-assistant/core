@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_token": "Invalid access token",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "not_allowing_new_tokens": "Nanoleaf is not allowing new tokens, follow the instructions above.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then select **Submit** within 30 seconds.",
+                "title": "Link Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Nanoleaf device."
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Swipe down",
+            "swipe_left": "Swipe left",
+            "swipe_right": "Swipe right",
+            "swipe_up": "Swipe up"
+        }
+    },
+    "entity": {
+        "event": {
+            "touch": {
+                "name": "Touch gesture",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "swipe_down": "Swipe down",
+                            "swipe_left": "Swipe left",
+                            "swipe_right": "Swipe right",
+                            "swipe_up": "Swipe up"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_device_trigger": {
+            "description": "The Nanoleaf device trigger is deprecated and will be removed in a future release. You can now use the gesture event entity to build automations.",
+            "title": "Nanoleaf device trigger is deprecated"
+        }
+    }
+}

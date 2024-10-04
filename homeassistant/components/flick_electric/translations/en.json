@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_accounts": "No services are active on this Flick account",
+            "no_permissions": "Cannot get pricing for this account. Please check user permissions.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "select_account": {
+                "data": {
+                    "account_id": "Account"
+                },
+                "title": "Select account"
+            },
+            "user": {
+                "data": {
+                    "client_id": "Client ID (optional)",
+                    "client_secret": "Client Secret (optional)",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Flick Login Credentials"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "power_price": {
+                "name": "Flick power price"
+            }
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "data_description": {
+                    "api_key": "Your Elevenlabs API key."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "configure_voice": "Configure advanced voice settings",
+                    "model": "Model",
+                    "voice": "Voice"
+                },
+                "data_description": {
+                    "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation.",
+                    "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
+                    "voice": "Voice to use for the TTS."
+                }
+            },
+            "voice_settings": {
+                "data": {
+                    "optimize_streaming_latency": "Latency",
+                    "similarity": "Similarity",
+                    "stability": "Stability",
+                    "style": "Style",
+                    "use_speaker_boost": "Speaker boost"
+                },
+                "data_description": {
+                    "optimize_streaming_latency": "Optimize the model for streaming. This may reduce the quality of the generated audio.",
+                    "similarity": "Similarity of the generated audio to the original voice. Higher values may result in more similar audio, but may also introduce background noise.",
+                    "stability": "Stability of the generated audio. Higher values lead to less emotional audio.",
+                    "style": "Style of the generated audio. Recommended to keep at 0 for most almost all use cases.",
+                    "use_speaker_boost": "Use speaker boost to increase the similarity of the generated audio to the original voice."
+                }
+            }
+        }
+    }
+}

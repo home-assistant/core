@@ -1,0 +1,100 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to set up Islamic Prayer Times?",
+                "title": "Set up Islamic Prayer Times"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "asr": {
+                "name": "Asr prayer"
+            },
+            "dhuhr": {
+                "name": "Dhuhr prayer"
+            },
+            "fajr": {
+                "name": "Fajr prayer"
+            },
+            "isha": {
+                "name": "Isha prayer"
+            },
+            "maghrib": {
+                "name": "Maghrib prayer"
+            },
+            "midnight": {
+                "name": "Midnight time"
+            },
+            "sunrise": {
+                "name": "Sunrise time"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Prayer calculation method",
+                    "latitude_adjustment_method": "Latitude adjustment method",
+                    "midnight_mode": "Midnight mode",
+                    "school": "School"
+                }
+            }
+        }
+    },
+    "selector": {
+        "calculation_method": {
+            "options": {
+                "algeria": "Algeria",
+                "custom": "Custom",
+                "dubai": "Dubai",
+                "egypt": "Egyptian General Authority of Survey",
+                "france": "Union Organization islamic de France",
+                "gulf": "Gulf Region",
+                "isna": "Islamic Society of North America",
+                "jafari": "Shia Ithna-Ansari",
+                "jakim": "Jabatan Kemajuan Islam Malaysia (JAKIM)",
+                "jordan": "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan",
+                "karachi": "University of Islamic Sciences, Karachi",
+                "kemenag": "Kementerian Agama Republik Indonesia",
+                "kuwait": "Kuwait",
+                "makkah": "Umm Al-Qura University, Makkah",
+                "moonsighting": "Moonsighting Committee Worldwide",
+                "morocco": "Morocco",
+                "mwl": "Muslim World League",
+                "portugal": "Comunidade Islamica de Lisboa",
+                "qatar": "Qatar",
+                "russia": "Spiritual Administration of Muslims of Russia",
+                "singapore": "Majlis Ugama Islam Singapura, Singapore",
+                "tehran": "Institute of Geophysics, University of Tehran",
+                "tunisia": "Tunisia",
+                "turkey": "Diyanet \u0130\u015fleri Ba\u015fkanl\u0131\u011f\u0131, Turkey"
+            }
+        },
+        "latitude_adjustment_method": {
+            "options": {
+                "angle_based": "Angle based",
+                "middle_of_the_night": "Middle of the night",
+                "one_seventh": "One seventh"
+            }
+        },
+        "midnight_mode": {
+            "options": {
+                "jafari": "Jafari (mid sunset to fajr)",
+                "standard": "Standard (mid sunset to sunrise)"
+            }
+        },
+        "school": {
+            "options": {
+                "hanafi": "Hanafi",
+                "shafi": "Shafi"
+            }
+        }
+    },
+    "title": "Islamic Prayer Times"
+}

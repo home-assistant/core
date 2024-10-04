@@ -8,7 +8,8 @@ FROM ${BUILD_FROM}
 ENV \
     S6_SERVICES_GRACETIME=240000 \
     UV_SYSTEM_PYTHON=true \
-    UV_NO_CACHE=true
+    UV_NO_CACHE=true \
+    UV_HTTP_TIMEOUT=180
 
 ARG QEMU_CPU
 
@@ -59,5 +60,50 @@ RUN \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
+
+# Home Assistant S6-Overlay
+COPY rootfs /
+
+# Needs to be redefined inside the FROM statement to be set for RUN commands
+ARG BUILD_ARCH
+# Get go2rtc binary
+RUN \
+    case "${BUILD_ARCH}" in \
+        "aarch64") go2rtc_suffix='arm64' ;; \
+        "armhf") go2rtc_suffix='armv6' ;; \
+        "armv7") go2rtc_suffix='arm' ;; \
+        *) go2rtc_suffix=${BUILD_ARCH} ;; \
+    esac \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.8/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
+    && chmod +x /bin/go2rtc \
+    # Verify go2rtc can be executed
+    && go2rtc --version
+
+# Install bore
+RUN \
+    set -x \
+    && if [ "${BUILD_ARCH}" = "amd64" ]; then \
+        BORE_URL="https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_amd64.tar.gz"; \
+        EXTRACT_DIR="frp_0.61.1_linux_amd64"; \
+    elif [ "${BUILD_ARCH}" = "i386" ]; then \
+        BORE_URL="https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_amd64.tar.gz"; \
+        EXTRACT_DIR="frp_0.61.1_linux_amd64"; \
+    elif [ "${BUILD_ARCH}" = "aarch64" ]; then \
+        BORE_URL="https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_arm64.tar.gz"; \
+        EXTRACT_DIR="frp_0.61.1_linux_arm64"; \
+    elif [ "${BUILD_ARCH}" = "armv7" ]; then \
+        BORE_URL="https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_arm.tar.gz"; \
+        EXTRACT_DIR="frp_0.61.1_linux_arm"; \
+    elif [ "${BUILD_ARCH}" = "armhf" ]; then \
+        BORE_URL="https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_arm_hf.tar.gz"; \
+        EXTRACT_DIR="frp_0.61.1_linux_arm_hf"; \
+    else \
+        echo "Unsupported architecture: ${BUILD_ARCH}"; exit 1; \
+    fi \
+    && curl -L $BORE_URL --output /tmp/bore.tar.gz \
+    && tar -xzf /tmp/bore.tar.gz -C /tmp/ \
+    && mv /tmp/$EXTRACT_DIR/frpc /usr/local/bin/frpc \
+    && chmod +x /usr/local/bin/frpc \
+    && rm /tmp/bore.tar.gz
 
 WORKDIR /config

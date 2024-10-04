@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown_license_plate": "Unknown license plate"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "License plate"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "liability_insured": {
+                "name": "Liability insured"
+            },
+            "pending_recall": {
+                "name": "Pending recall"
+            }
+        },
+        "sensor": {
+            "apk_expiration": {
+                "name": "APK expiration"
+            },
+            "ascription_date": {
+                "name": "Ascription date"
+            }
+        }
+    }
+}

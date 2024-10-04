@@ -1,0 +1,47 @@
+{
+    "config": {
+        "step": {
+            "settings": {
+                "data": {
+                    "attribute": "Attribute of entity that this sensor tracks",
+                    "invert": "Invert the result"
+                }
+            },
+            "user": {
+                "data": {
+                    "entity_id": "Entity that this sensor tracks",
+                    "name": "Name"
+                },
+                "description": "The trend helper allows you to create a sensor which show the trend of a numeric state or a state attribute from another entity.",
+                "title": "Trend helper"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribute of entity that this sensor tracks",
+                    "invert": "Invert the result",
+                    "max_samples": "Maximum number of stored samples",
+                    "min_gradient": "Minimum rate at which the value must be changing",
+                    "min_samples": "Minimum number of stored samples",
+                    "sample_duration": "Duration in seconds to store samples for"
+                },
+                "data_description": {
+                    "max_samples": "The maximum number of samples to store. If the number of samples exceeds this value, the oldest samples will be discarded.",
+                    "min_gradient": "The minimum rate at which the observed value must be changing for this sensor to switch on. The gradient is measured in sensor units per second.",
+                    "min_samples": "The minimum number of samples that must be collected before the gradient can be calculated.",
+                    "sample_duration": "The duration in seconds to store samples for. Samples older than this value will be discarded."
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads trend sensors from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "Trend"
+}

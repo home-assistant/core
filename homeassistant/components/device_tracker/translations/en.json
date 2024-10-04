@@ -1,0 +1,84 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} is home",
+            "is_not_home": "{entity_name} is not home"
+        },
+        "extra_fields": {
+            "zone": "Zone"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} enters a zone",
+            "leaves": "{entity_name} leaves a zone"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Device tracker",
+            "state": {
+                "home": "Home",
+                "not_home": "Away"
+            },
+            "state_attributes": {
+                "battery": {
+                    "name": "Battery"
+                },
+                "gps_accuracy": {
+                    "name": "GPS accuracy"
+                },
+                "latitude": {
+                    "name": "Latitude"
+                },
+                "longitude": {
+                    "name": "Longitude"
+                },
+                "source_type": {
+                    "name": "Source",
+                    "state": {
+                        "bluetooth": "Bluetooth",
+                        "bluetooth_le": "Bluetooth LE",
+                        "gps": "GPS",
+                        "router": "Router"
+                    }
+                }
+            }
+        }
+    },
+    "services": {
+        "see": {
+            "description": "Manually update the records of a seen legacy device tracker in the known_devices.yaml file.",
+            "fields": {
+                "battery": {
+                    "description": "Battery level of the device.",
+                    "name": "Battery level"
+                },
+                "dev_id": {
+                    "description": "ID of the device (find the ID in `known_devices.yaml`).",
+                    "name": "Device ID"
+                },
+                "gps": {
+                    "description": "GPS coordinates where the device is located, specified by latitude and longitude (for example: [51.513845, -0.100539]).",
+                    "name": "GPS coordinates"
+                },
+                "gps_accuracy": {
+                    "description": "Accuracy of the GPS coordinates.",
+                    "name": "GPS accuracy"
+                },
+                "host_name": {
+                    "description": "Hostname of the device.",
+                    "name": "Hostname"
+                },
+                "location_name": {
+                    "description": "Name of the location where the device is located. The options are: `home`, `not_home`, or the name of the zone.",
+                    "name": "Location"
+                },
+                "mac": {
+                    "description": "MAC address of the device.",
+                    "name": "MAC address"
+                }
+            },
+            "name": "See"
+        }
+    },
+    "title": "Device tracker"
+}

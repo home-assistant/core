@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "no_locations": "No locations found",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "barometric_pressure": {
+                "name": "Barometric pressure"
+            },
+            "feels_like": {
+                "name": "Feels like"
+            },
+            "flex": {
+                "name": "Flex"
+            },
+            "heat_index": {
+                "name": "Heat index"
+            },
+            "wet_dry": {
+                "name": "Wet/Dry"
+            },
+            "wind_chill": {
+                "name": "Wind chill"
+            },
+            "wind_heading": {
+                "name": "Wind heading"
+            }
+        }
+    }
+}

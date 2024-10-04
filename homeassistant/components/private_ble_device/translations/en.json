@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "bluetooth_not_available": "At least one Bluetooth adapter or remote bluetooth proxy must be configured to track Private BLE Devices."
+        },
+        "error": {
+            "irk_not_found": "The provided IRK does not match any BLE devices that Home Assistant can see.",
+            "irk_not_valid": "The key does not look like a valid IRK."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "irk": "IRK"
+                },
+                "description": "What is the IRK (Identity Resolving Key) of the BLE device you want to track?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "estimated_broadcast_interval": {
+                "name": "Estimated broadcast interval"
+            },
+            "estimated_distance": {
+                "name": "Estimated distance"
+            },
+            "power": {
+                "name": "Power"
+            }
+        }
+    }
+}

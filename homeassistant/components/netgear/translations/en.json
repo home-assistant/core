@@ -1,0 +1,147 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_serial": "No serial number in SSDP discovery information",
+            "not_ipv4_address": "No IPv4 address in SSDP discovery information"
+        },
+        "error": {
+            "config": "Connection or login error: please check your configuration",
+            "info": "Failed to get info from router"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Netgear device. For example: '192.168.1.1'."
+                },
+                "description": "Default host: {host}\nDefault username: {username}"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "access_point_mac": {
+                "name": "Access point MAC"
+            },
+            "average_ping": {
+                "name": "Average ping"
+            },
+            "cpu_utilization": {
+                "name": "CPU utilization"
+            },
+            "downlink_bandwidth": {
+                "name": "Downlink bandwidth"
+            },
+            "download_last_month": {
+                "name": "Download last month"
+            },
+            "download_last_month_average": {
+                "name": "Download last month average"
+            },
+            "download_month": {
+                "name": "Download this month"
+            },
+            "download_month_average": {
+                "name": "Download this month average"
+            },
+            "download_today": {
+                "name": "Download today"
+            },
+            "download_week": {
+                "name": "Download this week"
+            },
+            "download_week_average": {
+                "name": "Download this week average"
+            },
+            "download_yesterday": {
+                "name": "Download yesterday"
+            },
+            "ethernet_link_status": {
+                "name": "Ethernet link status"
+            },
+            "link_rate": {
+                "name": "Link rate"
+            },
+            "link_type": {
+                "name": "Link type"
+            },
+            "memory_utilization": {
+                "name": "Memory utilization"
+            },
+            "signal_strength": {
+                "name": "Signal strength"
+            },
+            "ssid": {
+                "name": "SSID"
+            },
+            "uplink_bandwidth": {
+                "name": "Uplink bandwidth"
+            },
+            "upload_last_month": {
+                "name": "Upload last month"
+            },
+            "upload_last_month_average": {
+                "name": "Upload last month average"
+            },
+            "upload_month": {
+                "name": "Upload this month"
+            },
+            "upload_month_average": {
+                "name": "Upload this month average"
+            },
+            "upload_today": {
+                "name": "Upload today"
+            },
+            "upload_week": {
+                "name": "Upload this week"
+            },
+            "upload_week_average": {
+                "name": "Upload this week average"
+            },
+            "upload_yesterday": {
+                "name": "Upload yesterday"
+            }
+        },
+        "switch": {
+            "2g_guest_wifi": {
+                "name": "2.4GHz guest Wi-Fi"
+            },
+            "5g_guest_wifi": {
+                "name": "5GHz guest Wi-Fi"
+            },
+            "access_control": {
+                "name": "Access control"
+            },
+            "allowed_on_network": {
+                "name": "Allowed on network"
+            },
+            "parental_control": {
+                "name": "Parental control"
+            },
+            "quality_of_service": {
+                "name": "Quality of service"
+            },
+            "smart_connect": {
+                "name": "Smart connect"
+            },
+            "traffic_meter": {
+                "name": "Traffic meter"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Consider home time (seconds)"
+                },
+                "description": "Specify optional settings"
+            }
+        }
+    }
+}

@@ -1,0 +1,231 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "invalid_discovery_info": "Invalid discovery information received",
+            "link_local_address": "Link local addresses are not supported",
+            "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
+            "no_devices": "The authorized user has no LaMetric devices",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "description": "A LaMetric device can be set up in Home Assistant in two different ways.\n\nYou can enter all device information and API tokens yourself, or Home Asssistant can import them from your LaMetric.com account.",
+                "menu_options": {
+                    "manual_entry": "Enter manually",
+                    "pick_implementation": "Import from LaMetric.com (recommended)"
+                }
+            },
+            "cloud_select_device": {
+                "data": {
+                    "device": "Device"
+                },
+                "data_description": {
+                    "device": "Select the LaMetric device to add"
+                }
+            },
+            "manual_entry": {
+                "data": {
+                    "api_key": "API key",
+                    "host": "Host"
+                },
+                "data_description": {
+                    "api_key": "You can find this API key in [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices).",
+                    "host": "The IP address or hostname of your LaMetric TIME on your network."
+                }
+            },
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "app_next": {
+                "name": "Next app"
+            },
+            "app_previous": {
+                "name": "Previous app"
+            },
+            "dismiss_all": {
+                "name": "Dismiss all notifications"
+            },
+            "dismiss_current": {
+                "name": "Dismiss current notification"
+            }
+        },
+        "number": {
+            "brightness": {
+                "name": "Brightness"
+            },
+            "volume": {
+                "name": "Volume"
+            }
+        },
+        "select": {
+            "brightness_mode": {
+                "name": "Brightness mode",
+                "state": {
+                    "auto": "Automatic",
+                    "manual": "Manual"
+                }
+            }
+        },
+        "sensor": {
+            "rssi": {
+                "name": "Wi-Fi signal"
+            }
+        },
+        "switch": {
+            "bluetooth": {
+                "name": "Bluetooth"
+            }
+        }
+    },
+    "selector": {
+        "icon_type": {
+            "options": {
+                "alert": "Alert",
+                "info": "Info",
+                "none": "None"
+            }
+        },
+        "priority": {
+            "options": {
+                "critical": "Critical",
+                "info": "Info",
+                "warning": "Warning"
+            }
+        },
+        "sound": {
+            "options": {
+                "alarm1": "Alarm 1",
+                "alarm10": "Alarm 10",
+                "alarm11": "Alarm 11",
+                "alarm12": "Alarm 12",
+                "alarm13": "Alarm 13",
+                "alarm2": "Alarm 2",
+                "alarm3": "Alarm 3",
+                "alarm4": "Alarm 4",
+                "alarm5": "Alarm 5",
+                "alarm6": "Alarm 6",
+                "alarm7": "Alarm 7",
+                "alarm8": "Alarm 8",
+                "alarm9": "Alarm 9",
+                "bicycle": "Bicycle",
+                "car": "Car",
+                "cash": "Cash",
+                "cat": "Cat",
+                "dog": "Dog 1",
+                "dog2": "Dog 2",
+                "energy": "Energy",
+                "knock-knock": "Knock knock",
+                "letter_email": "Letter email",
+                "lose1": "Lose 1",
+                "lose2": "Lose 2",
+                "negative1": "Negative 1",
+                "negative2": "Negative 2",
+                "negative3": "Negative 3",
+                "negative4": "Negative 4",
+                "negative5": "Negative 5",
+                "notification": "Notification 1",
+                "notification2": "Notification 2",
+                "notification3": "Notification 3",
+                "notification4": "Notification 4",
+                "open_door": "Open door",
+                "positive1": "Positive 1",
+                "positive2": "Positive 2",
+                "positive3": "Positive 3",
+                "positive4": "Positive 4",
+                "positive5": "Positive 5",
+                "positive6": "Positive 6",
+                "statistic": "Statistic",
+                "thunder": "Thunder",
+                "water1": "Water 1",
+                "water2": "Water 2",
+                "win": "Win 1",
+                "win2": "Win 2",
+                "wind": "Wind",
+                "wind_short": "Wind short"
+            }
+        }
+    },
+    "services": {
+        "chart": {
+            "description": "Displays a chart on a LaMetric device.",
+            "fields": {
+                "cycles": {
+                    "description": "The number of times to display the message. When set to 0, the message will be displayed until dismissed.",
+                    "name": "Cycles"
+                },
+                "data": {
+                    "description": "The list of data points in the chart.",
+                    "name": "Data"
+                },
+                "device_id": {
+                    "description": "The LaMetric device to display the chart on.",
+                    "name": "Device"
+                },
+                "icon_type": {
+                    "description": "The type of icon to display, indicating the nature of the notification.",
+                    "name": "Icon type"
+                },
+                "priority": {
+                    "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted.",
+                    "name": "Priority"
+                },
+                "sound": {
+                    "description": "The notification sound to play.",
+                    "name": "Sound"
+                }
+            },
+            "name": "Display a chart"
+        },
+        "message": {
+            "description": "Displays a message with an optional icon on a LaMetric device.",
+            "fields": {
+                "cycles": {
+                    "description": "The number of times to display the message. When set to 0, the message will be displayed until dismissed.",
+                    "name": "Cycles"
+                },
+                "device_id": {
+                    "description": "The LaMetric device to display the message on.",
+                    "name": "Device"
+                },
+                "icon": {
+                    "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons.",
+                    "name": "Icon ID"
+                },
+                "icon_type": {
+                    "description": "The type of icon to display, indicating the nature of the notification.",
+                    "name": "Icon type"
+                },
+                "message": {
+                    "description": "The message to display.",
+                    "name": "Message"
+                },
+                "priority": {
+                    "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted.",
+                    "name": "Priority"
+                },
+                "sound": {
+                    "description": "The notification sound to play.",
+                    "name": "Sound"
+                }
+            },
+            "name": "Display a message"
+        }
+    }
+}

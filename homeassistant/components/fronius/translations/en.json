@@ -1,0 +1,395 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_host": "Invalid hostname or IP address",
+            "reconfigure_successful": "Re-configuration was successful",
+            "unique_id_mismatch": "The identifier does not match the previous identifier"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Do you want to add {device} to Home Assistant?"
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address or hostname of your Fronius device."
+                },
+                "description": "Update your configuration information for {device}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address or hostname of your Fronius device."
+                },
+                "description": "Configure your Fronius SolarAPI device."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "capacity_designed": {
+                "name": "Designed capacity"
+            },
+            "capacity_maximum": {
+                "name": "Maximum capacity"
+            },
+            "cash_factor": {
+                "name": "Grid export tariff"
+            },
+            "co2_factor": {
+                "name": "CO\u2082 factor"
+            },
+            "current_ac": {
+                "name": "AC current"
+            },
+            "current_ac_phase_1": {
+                "name": "Current phase 1"
+            },
+            "current_ac_phase_2": {
+                "name": "Current phase 2"
+            },
+            "current_ac_phase_3": {
+                "name": "Current phase 3"
+            },
+            "current_dc": {
+                "name": "DC current"
+            },
+            "current_dc_2": {
+                "name": "DC current 2"
+            },
+            "delivery_factor": {
+                "name": "Grid import tariff"
+            },
+            "energy_day": {
+                "name": "Energy day"
+            },
+            "energy_reactive_ac_consumed": {
+                "name": "Reactive energy consumed"
+            },
+            "energy_reactive_ac_produced": {
+                "name": "Reactive energy produced"
+            },
+            "energy_real_ac_consumed": {
+                "name": "Energy consumed"
+            },
+            "energy_real_ac_minus": {
+                "name": "Real energy minus"
+            },
+            "energy_real_ac_plus": {
+                "name": "Real energy plus"
+            },
+            "energy_real_consumed": {
+                "name": "Real energy consumed"
+            },
+            "energy_real_produced": {
+                "name": "Real energy produced"
+            },
+            "energy_total": {
+                "name": "Total energy"
+            },
+            "energy_year": {
+                "name": "Energy year"
+            },
+            "error_code": {
+                "name": "Error code"
+            },
+            "error_message": {
+                "name": "Error message",
+                "state": {
+                    "ac_current_sensor_error": "AC current sensor error",
+                    "ac_frequency_too_high": "AC frequency too high",
+                    "ac_frequency_too_low": "AC frequency too low",
+                    "ac_grid_outside_permissible_limits": "AC grid outside the permissible limits",
+                    "ac_module_over_temperature": "AC module over temperature",
+                    "ac_module_temperature_sensor_faulty_l1": "AC module temperature sensor faulty (L1)",
+                    "ac_module_temperature_sensor_faulty_l2": "AC module temperature sensor faulty (L2)",
+                    "ac_module_temperature_sensor_faulty_l3": "AC module temperature sensor faulty (L3)",
+                    "ac_voltage_too_high": "AC voltage too high",
+                    "ac_voltage_too_low": "AC voltage too low",
+                    "arc_detection_triggered": "Arc detection triggered",
+                    "arc_detector_switched_off": "Arc detector switched off (e.g. during external arc monitoring)",
+                    "can_bus_full": "CAN bus is full",
+                    "communication": "Communication error",
+                    "compatibility_error_invalid_power_stage_configuration": "Compatibility error (e.g. due to replacement of a PC board) - invalid power stage set configuration",
+                    "current_sensor_calibration_timeout": "Current sensor calibration timeout",
+                    "dc_component_measured_in_grid_too_high": "DC component measured in the grid too high",
+                    "dc_connection_inverter_battery_interrupted": "DC connection between inverter and battery interrupted",
+                    "dc_input_voltage_mppt_1_too_high": "DC input voltage MPPT 1 too high",
+                    "dc_input_voltage_mppt_2_too_high": "DC input voltage MPPT 2 too high",
+                    "dc_low_string_1": "DC low string 1",
+                    "dc_low_string_2": "DC low string 2",
+                    "dc_module_over_temperature": "DC module over temperature",
+                    "dc_module_temperature_sensor_faulty": "DC module temperature sensor faulty",
+                    "derating_caused_by_over_frequency": "Derating caused by over-frequency",
+                    "different_power_limitation_in_hardware_modules": "Different power limitation in the hardware modules",
+                    "eeprom_reinitialised": "EEPROM has been re-initialised",
+                    "emergency_power_derating_activated": "Emergency power derating activated",
+                    "error_during_logging_data_recording": "Error during recording of logging data",
+                    "error_during_update_process": "Error occurred during update process",
+                    "fan_1_error": "Fan 1 error",
+                    "fan_2_error": "Fan 2 error",
+                    "file_could_not_be_opened": "File could not be opened",
+                    "fixed_voltage_mode_out_of_range": "Fixed voltage mode has been selected instead of MPP voltage mode and the fixed voltage has been set to too low or too high a value",
+                    "functional_incompatibility_between_pc_boards": "Functional incompatibility (one or more PC boards in the inverter are not compatible with each other, e.g. after a PC board has been replaced)",
+                    "grid_frequency_exceeded_limit_reconnecting": "The grid frequency has exceeded a limit value when reconnecting",
+                    "grid_voltage_dependent_power_reduction_active": "Grid Voltage Dependent Power Reduction is active",
+                    "guard_cannot_be_found": "Guard cannot be found",
+                    "hardware_id_problem": "Hardware ID problem",
+                    "hid_range_error": "HID range error",
+                    "initialisation_error_file_system_error_on_usb": "Initialisation error in file system on USB flash drive",
+                    "initialisation_error_usb_flash_drive_not_supported": "Initialisation error \u2013 USB flash drive is not supported",
+                    "initialisation_error_usb_stick_over_current": "Initialisation error \u2013 Over current on USB stick",
+                    "insulation_error_on_solar_panels": "Insulation error on the solar panels",
+                    "insulation_fault": "Insulation fault",
+                    "insulation_measurement_triggered": "Insulation measurement triggered",
+                    "intermediate_circuit_voltage_too_high": "Intermediate circuit voltage too high",
+                    "intermediate_circuit_voltage_too_low_or_asymmetric": "Intermediate circuit voltage too low or asymmetric",
+                    "internal_dsp_malfunction": "Internal DSP malfunction",
+                    "internal_hardware_error": "Internal hardware error",
+                    "internal_processor_status": "Warning about the internal processor status. See status code for more information",
+                    "interrupt_check_fail": "Interrupt Check fail",
+                    "invalid_device_type": "Invalid device type",
+                    "inverter_required_setup_values_not_received": "Inverter required setup values could not be received",
+                    "inverter_settings_changed_restart_required": "Inverter settings have been changed, inverter restart required",
+                    "log_file_cannot_be_saved": "Log file cannot be saved (e.g. USB flash drive is write protected or full)",
+                    "low_pv_voltage_dc_input_voltage_too_low": "Low PV voltage - DC input voltage too low for feeding energy into the grid",
+                    "mains_voltage_dependent_power_reduction": "Mains voltage-dependent power reduction",
+                    "memory_error_detected": "Memory error detected",
+                    "neutral_conductor_not_connected": "Neutral conductor not connected",
+                    "no_communication_between_power_stage_and_control_system": "No communication possible between power stage set and control system",
+                    "no_communication_with_filter": "No communication with filter possible",
+                    "no_communication_with_hybrid_manager": "No communication possible with the Hybrid manager",
+                    "no_communication_with_power_stage_set": "No communication with the power stage set possible",
+                    "no_communication_with_storage_unit": "No communication possible with the storage unit",
+                    "no_energy_fed_by_mppt1_past_24_hours": "No energy fed into the grid by MPPT1 in the past 24 hours",
+                    "no_energy_fed_into_grid_past_24_hours": "No energy fed into the grid in the past 24 hours",
+                    "no_error": "No error",
+                    "no_power_fed_in_despite_closed_relay": "No power being fed in, despite closed relay",
+                    "no_usb_flash_drive_connected": "No USB flash drive connected",
+                    "overcurrent_ac": "Overcurrent (AC)",
+                    "overcurrent_dc": "Overcurrent (DC)",
+                    "overtemperature_in_connection_area": "Overtemperature in the connection area",
+                    "pmc_power_stage_set_not_available": "PMC power stage set not available",
+                    "polarity_of_dc_strings_reversed": "Polarity of DC strings reversed",
+                    "possible_hardware_fault": "Possible hardware fault",
+                    "power_derating_due_to_high_temperature": "Power derating caused by too high a temperature",
+                    "power_stage_set_problem": "Power stage set problem",
+                    "pv_output_too_low_for_feeding_energy_into_the_grid": "PV output too low for feeding energy into the grid",
+                    "rcmu_error": "RCMU error",
+                    "real_time_clock_communication_error": "Real Time Clock module communication error",
+                    "real_time_clock_hardware_error": "Hardware error in the Real Time Clock module",
+                    "real_time_clock_in_emergency_mode": "Internal error: Real Time Clock module is in emergency mode",
+                    "safety_cut_out_triggered": "Safety cut out via option card or RECERBO has triggered",
+                    "software_problem": "Software problem",
+                    "software_update_invalid_country_setup": "Software update group 0 (invalid country setup)",
+                    "stand_alone_operation_detected": "Stand alone operation detected",
+                    "storage_unit_not_available": "Storage unit not available",
+                    "time_lost": "Time lost",
+                    "too_little_dc_power_for_feed_in_operation": "Too little DC power for feed-in operation",
+                    "unique_id_conflict": "Unique ID conflict",
+                    "update_file_corrupt": "Update file corrupt",
+                    "update_file_does_not_match_device": "Update file does not match the device, update file too old",
+                    "update_file_not_recognised_or_missing": "Update file not recognised or not present",
+                    "wired_shut_down_triggered": "Wired shut down triggered",
+                    "write_or_read_error_occurred": "Write or read error occurred"
+                }
+            },
+            "frequency_phase_average": {
+                "name": "Frequency phase average"
+            },
+            "inverter_state": {
+                "name": "Inverter state"
+            },
+            "led_color": {
+                "name": "LED color"
+            },
+            "led_state": {
+                "name": "LED state"
+            },
+            "meter_location": {
+                "name": "Meter location"
+            },
+            "meter_location_description": {
+                "name": "Meter location description",
+                "state": {
+                    "consumption_path": "Consumption path",
+                    "external_battery": "External battery",
+                    "external_generator": "External generator",
+                    "feed_in": "Grid interconnection point",
+                    "subload": "Subload"
+                }
+            },
+            "meter_mode": {
+                "name": "Meter mode"
+            },
+            "power_ac": {
+                "name": "AC power"
+            },
+            "power_apparent_phase_1": {
+                "name": "Apparent power phase 1"
+            },
+            "power_apparent_phase_2": {
+                "name": "Apparent power phase 2"
+            },
+            "power_apparent_phase_3": {
+                "name": "Apparent power phase 3"
+            },
+            "power_battery": {
+                "name": "Power battery"
+            },
+            "power_battery_charge": {
+                "name": "Power battery charge"
+            },
+            "power_battery_discharge": {
+                "name": "Power battery discharge"
+            },
+            "power_factor_phase_1": {
+                "name": "Power factor phase 1"
+            },
+            "power_factor_phase_2": {
+                "name": "Power factor phase 2"
+            },
+            "power_factor_phase_3": {
+                "name": "Power factor phase 3"
+            },
+            "power_grid": {
+                "name": "Power grid"
+            },
+            "power_grid_export": {
+                "name": "Power grid export"
+            },
+            "power_grid_import": {
+                "name": "Power grid import"
+            },
+            "power_load": {
+                "name": "Power load"
+            },
+            "power_load_consumed": {
+                "name": "Power load consumed"
+            },
+            "power_load_generated": {
+                "name": "Power load generated"
+            },
+            "power_photovoltaics": {
+                "name": "Power photovoltaics"
+            },
+            "power_reactive": {
+                "name": "Reactive power"
+            },
+            "power_reactive_phase_1": {
+                "name": "Reactive power phase 1"
+            },
+            "power_reactive_phase_2": {
+                "name": "Reactive power phase 2"
+            },
+            "power_reactive_phase_3": {
+                "name": "Reactive power phase 3"
+            },
+            "power_real": {
+                "name": "Real power"
+            },
+            "power_real_phase_1": {
+                "name": "Real power phase 1"
+            },
+            "power_real_phase_2": {
+                "name": "Real power phase 2"
+            },
+            "power_real_phase_3": {
+                "name": "Real power phase 3"
+            },
+            "relative_autonomy": {
+                "name": "Relative autonomy"
+            },
+            "relative_self_consumption": {
+                "name": "Relative self consumption"
+            },
+            "state_code": {
+                "name": "State code"
+            },
+            "state_message": {
+                "name": "State message",
+                "state": {
+                    "boost_mode": "Boost mode",
+                    "critical_fault": "Critical fault",
+                    "fault": "Fault",
+                    "keep_minimum_temperature": "Keep minimum temperature",
+                    "legionella_protection": "Legionella protection",
+                    "up_and_running": "Up and running"
+                }
+            },
+            "state_of_charge": {
+                "name": "State of charge"
+            },
+            "status_code": {
+                "name": "Status code"
+            },
+            "status_message": {
+                "name": "Status message",
+                "state": {
+                    "bootloading": "Bootloading",
+                    "error": "Error",
+                    "idle": "Idle",
+                    "ready": "Ready",
+                    "running": "Running",
+                    "sleeping": "Sleeping",
+                    "standby": "Standby",
+                    "startup": "Startup"
+                }
+            },
+            "temperature_cell": {
+                "name": "Temperature"
+            },
+            "voltage_ac": {
+                "name": "AC voltage"
+            },
+            "voltage_ac_phase_1": {
+                "name": "Voltage phase 1"
+            },
+            "voltage_ac_phase_2": {
+                "name": "Voltage phase 2"
+            },
+            "voltage_ac_phase_3": {
+                "name": "Voltage phase 3"
+            },
+            "voltage_ac_phase_to_phase_12": {
+                "name": "Voltage phase 1-2"
+            },
+            "voltage_ac_phase_to_phase_23": {
+                "name": "Voltage phase 2-3"
+            },
+            "voltage_ac_phase_to_phase_31": {
+                "name": "Voltage phase 3-1"
+            },
+            "voltage_dc": {
+                "name": "DC voltage"
+            },
+            "voltage_dc_2": {
+                "name": "DC voltage 2"
+            },
+            "voltage_dc_maximum_cell": {
+                "name": "Maximum cell voltage"
+            },
+            "voltage_dc_minimum_cell": {
+                "name": "Minimum cell voltage"
+            }
+        }
+    },
+    "exceptions": {
+        "entry_cannot_connect": {
+            "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+        },
+        "update_failed": {
+            "message": "An error occurred while attempting to fetch data: {fronius_error}"
+        }
+    }
+}

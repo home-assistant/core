@@ -1,0 +1,90 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "could_not_connect": "Could not connect to the solaredge API",
+            "invalid_api_key": "Invalid API key",
+            "site_not_active": "The site is not active"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "name": "The name of this installation",
+                    "site_id": "The SolarEdge site-id"
+                },
+                "title": "Define the API parameters for this installation"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "batteries": {
+                "name": "Batteries"
+            },
+            "consumption_energy": {
+                "name": "Consumed energy"
+            },
+            "current_power": {
+                "name": "Current power"
+            },
+            "energy_this_month": {
+                "name": "Energy this month"
+            },
+            "energy_this_year": {
+                "name": "Energy this year"
+            },
+            "energy_today": {
+                "name": "Energy today"
+            },
+            "feedin_energy": {
+                "name": "Exported energy"
+            },
+            "gateways": {
+                "name": "Gateways"
+            },
+            "grid_power": {
+                "name": "Grid power"
+            },
+            "inverters": {
+                "name": "Inverters"
+            },
+            "lifetime_energy": {
+                "name": "Lifetime energy"
+            },
+            "meters": {
+                "name": "Meters"
+            },
+            "power_consumption": {
+                "name": "Power consumption"
+            },
+            "production_energy": {
+                "name": "Produced energy"
+            },
+            "purchased_energy": {
+                "name": "Imported energy"
+            },
+            "selfconsumption_energy": {
+                "name": "Self-consumed energy"
+            },
+            "sensors": {
+                "name": "Sensors"
+            },
+            "site_details": {
+                "name": "Site details"
+            },
+            "solar_power": {
+                "name": "Solar power"
+            },
+            "storage_level": {
+                "name": "Storage level"
+            },
+            "storage_power": {
+                "name": "Stored power"
+            }
+        }
+    }
+}

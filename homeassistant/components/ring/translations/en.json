@@ -1,0 +1,156 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Two-factor code"
+                },
+                "data_description": {
+                    "2fa": "Account verification code via the method selected in your ring account settings."
+                },
+                "title": "Two-factor authentication"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Your Ring account password."
+                },
+                "description": "The Ring integration needs to re-authenticate your account {username}",
+                "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Your Ring account password."
+                },
+                "description": "Will create a new Authorized Device for {username} at ring.com",
+                "title": "Reconfigure Ring Integration"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your Ring account password.",
+                    "username": "Your Ring account username."
+                },
+                "title": "Sign-in with Ring account"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "ding": {
+                "name": "Ding"
+            },
+            "motion": {
+                "name": "Motion"
+            }
+        },
+        "button": {
+            "open_door": {
+                "name": "Open door"
+            }
+        },
+        "camera": {
+            "last_recording": {
+                "name": "Last recording"
+            },
+            "live_view": {
+                "name": "Live view"
+            }
+        },
+        "event": {
+            "ding": {
+                "name": "Ding"
+            },
+            "intercom_unlock": {
+                "name": "Intercom unlock"
+            }
+        },
+        "light": {
+            "light": {
+                "name": "Light"
+            }
+        },
+        "number": {
+            "doorbell_volume": {
+                "name": "Doorbell volume"
+            },
+            "mic_volume": {
+                "name": "Mic volume"
+            },
+            "voice_volume": {
+                "name": "Voice volume"
+            },
+            "volume": {
+                "name": "Volume"
+            }
+        },
+        "sensor": {
+            "doorbell_volume": {
+                "name": "Doorbell volume"
+            },
+            "last_activity": {
+                "name": "Last activity"
+            },
+            "last_ding": {
+                "name": "Last ding"
+            },
+            "last_motion": {
+                "name": "Last motion"
+            },
+            "mic_volume": {
+                "name": "Mic volume"
+            },
+            "voice_volume": {
+                "name": "Voice volume"
+            },
+            "volume": {
+                "name": "Volume"
+            },
+            "wifi_signal_category": {
+                "name": "Wi-Fi signal category"
+            },
+            "wifi_signal_strength": {
+                "name": "Wi-Fi signal strength"
+            }
+        },
+        "siren": {
+            "siren": {
+                "name": "Siren"
+            }
+        },
+        "switch": {
+            "in_home_chime": {
+                "name": "In-home chime"
+            },
+            "motion_detection": {
+                "name": "Motion detection"
+            },
+            "siren": {
+                "name": "Siren"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
+            "title": "Detected deprecated {platform} entity usage"
+        }
+    }
+}

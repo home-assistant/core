@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "diaspora": "Outside of Israel?",
+                    "elevation": "Elevation",
+                    "language": "Language for Holidays and Dates",
+                    "location": "Location",
+                    "name": "Name",
+                    "time_zone": "Time Zone"
+                },
+                "data_description": {
+                    "time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "hebrew_date": {
+                "state_attributes": {
+                    "hebrew_day": {
+                        "name": "Hebrew Day"
+                    },
+                    "hebrew_month_name": {
+                        "name": "Hebrew Month Name"
+                    },
+                    "hebrew_year": {
+                        "name": "Hebrew Year"
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+                    "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+                },
+                "data_description": {
+                    "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
+                    "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5\u00b0) will be used instead"
+                },
+                "title": "Configure options for Jewish Calendar"
+            }
+        }
+    }
+}

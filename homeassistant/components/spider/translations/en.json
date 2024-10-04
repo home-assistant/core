@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "integration_removed": {
+            "description": "The Spider integration has been removed from Home Assistant.\n\nItho daalderop has [discontinued]({link}) the Spider Connect System.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Spider integration entries]({entries}).",
+            "title": "The Spider integration has been removed"
+        }
+    }
+}

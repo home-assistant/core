@@ -1,0 +1,101 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "active_torrents": {
+                "name": "Active torrents",
+                "unit_of_measurement": "torrents"
+            },
+            "all_torrents": {
+                "name": "All torrents",
+                "unit_of_measurement": "torrents"
+            },
+            "current_status": {
+                "name": "Status",
+                "state": {
+                    "downloading": "Downloading",
+                    "idle": "Idle",
+                    "seeding": "Seeding",
+                    "up_down": "Up/Down"
+                }
+            },
+            "download_speed": {
+                "name": "Download speed"
+            },
+            "inactive_torrents": {
+                "name": "Inactive torrents",
+                "unit_of_measurement": "torrents"
+            },
+            "paused_torrents": {
+                "name": "Paused torrents",
+                "unit_of_measurement": "torrents"
+            },
+            "upload_speed": {
+                "name": "Upload speed"
+            }
+        },
+        "switch": {
+            "alternative_speed": {
+                "name": "Alternative speed"
+            }
+        }
+    },
+    "exceptions": {
+        "cannot_connect": {
+            "message": "Can't connect to QBittorrent, please check your configuration."
+        },
+        "invalid_device": {
+            "message": "No device with id {device_id} was found"
+        },
+        "invalid_entry_id": {
+            "message": "No entry with id {device_id} was found"
+        },
+        "login_error": {
+            "message": "A login error occured. Please check you username and password."
+        }
+    },
+    "services": {
+        "get_all_torrents": {
+            "description": "Gets a list of current torrents from all instances of qBittorrent",
+            "fields": {
+                "torrent_filter": {
+                    "description": "What kind of torrents you want to return, such as All or Active.",
+                    "name": "Torrent filter"
+                }
+            },
+            "name": "Get all torrents"
+        },
+        "get_torrents": {
+            "description": "Gets a list of current torrents",
+            "fields": {
+                "device_id": {
+                    "description": "Which service to grab the list from",
+                    "name": "Device"
+                },
+                "torrent_filter": {
+                    "description": "What kind of torrents you want to return, such as All or Active.",
+                    "name": "Torrent filter"
+                }
+            },
+            "name": "Get torrents"
+        }
+    }
+}

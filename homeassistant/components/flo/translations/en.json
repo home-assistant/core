@@ -1,0 +1,84 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Flo device."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "pending_system_alerts": {
+                "name": "Pending system alerts"
+            },
+            "water_detected": {
+                "name": "Water detected"
+            }
+        },
+        "sensor": {
+            "current_flow_rate": {
+                "name": "Water flow rate"
+            },
+            "current_system_mode": {
+                "name": "Current system mode"
+            },
+            "daily_consumption": {
+                "name": "Today's water usage"
+            },
+            "water_pressure": {
+                "name": "Water pressure"
+            },
+            "water_temperature": {
+                "name": "Water temperature"
+            }
+        },
+        "switch": {
+            "shutoff_valve": {
+                "name": "Shutoff valve"
+            }
+        }
+    },
+    "services": {
+        "run_health_test": {
+            "description": "Have the Flo device run a health test.",
+            "name": "Run health test"
+        },
+        "set_away_mode": {
+            "description": "Sets the location into away mode.",
+            "name": "Set away mode"
+        },
+        "set_home_mode": {
+            "description": "Sets the location into home mode.",
+            "name": "Set home mode"
+        },
+        "set_sleep_mode": {
+            "description": "Sets the location into sleep mode.",
+            "fields": {
+                "revert_to_mode": {
+                    "description": "The mode to revert to after sleep_minutes has elapsed.",
+                    "name": "Revert to mode"
+                },
+                "sleep_minutes": {
+                    "description": "The time to sleep in minutes.",
+                    "name": "Sleep minutes"
+                }
+            },
+            "name": "Set sleep mode"
+        }
+    }
+}

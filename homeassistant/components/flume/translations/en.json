@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is no longer valid.",
+                "title": "Reauthenticate your Flume account"
+            },
+            "user": {
+                "data": {
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
+                "title": "Connect to your Flume account"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "flow": {
+                "name": "High flow"
+            },
+            "leak": {
+                "name": "Leak detected"
+            }
+        },
+        "sensor": {
+            "current_interval": {
+                "name": "Current"
+            },
+            "last_24_hrs": {
+                "name": "24 hours"
+            },
+            "last_30_days": {
+                "name": "30 days"
+            },
+            "last_60_min": {
+                "name": "60 minutes"
+            },
+            "month_to_date": {
+                "name": "Current month"
+            },
+            "today": {
+                "name": "Current day"
+            },
+            "week_to_date": {
+                "name": "Current week"
+            }
+        }
+    },
+    "services": {
+        "list_notifications": {
+            "description": "Returns a list of fetched user notifications.",
+            "fields": {
+                "config_entry": {
+                    "description": "The Flume config entry for which to return notifications.",
+                    "name": "Flume"
+                }
+            },
+            "name": "List notifications"
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Connect to Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
+                    "timeout": "Request Timeout (seconds)"
+                }
+            }
+        }
+    }
+}

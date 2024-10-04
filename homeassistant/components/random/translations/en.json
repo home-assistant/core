@@ -1,0 +1,138 @@
+{
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "name": "Name"
+                },
+                "title": "Random binary sensor"
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "maximum": "Maximum",
+                    "minimum": "Minimum",
+                    "name": "Name",
+                    "unit_of_measurement": "Unit of measurement"
+                },
+                "title": "Random sensor"
+            },
+            "user": {
+                "description": "This helper allows you to create an entity that emits a random value.",
+                "menu_options": {
+                    "binary_sensor": "Random binary sensor",
+                    "sensor": "Random sensor"
+                },
+                "title": "Create Random helper"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "description": "This helper does not have any options.",
+                "title": "Random binary sensor"
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "maximum": "Maximum",
+                    "minimum": "Minimum",
+                    "unit_of_measurement": "Unit of measurement"
+                },
+                "title": "Random sensor"
+            }
+        }
+    },
+    "selector": {
+        "binary_sensor_device_class": {
+            "options": {
+                "battery": "Battery",
+                "battery_charging": "Charging",
+                "carbon_monoxide": "Carbon monoxide",
+                "cold": "Cold",
+                "connectivity": "Connectivity",
+                "door": "Door",
+                "garage_door": "Garage door",
+                "gas": "Gas",
+                "heat": "Heat",
+                "light": "Light",
+                "lock": "Lock",
+                "moisture": "Moisture",
+                "motion": "Motion",
+                "moving": "Moving",
+                "occupancy": "Occupancy",
+                "opening": "Opening",
+                "plug": "Plug",
+                "power": "Power",
+                "presence": "Presence",
+                "problem": "Problem",
+                "running": "Running",
+                "safety": "Safety",
+                "smoke": "Smoke",
+                "sound": "Sound",
+                "tamper": "Tamper",
+                "update": "Update",
+                "vibration": "Vibration",
+                "window": "Window"
+            }
+        },
+        "sensor_device_class": {
+            "options": {
+                "apparent_power": "Apparent power",
+                "aqi": "Air quality index",
+                "atmospheric_pressure": "Atmospheric pressure",
+                "battery": "Battery",
+                "carbon_dioxide": "Carbon dioxide",
+                "carbon_monoxide": "Carbon monoxide",
+                "conductivity": "Conductivity",
+                "current": "Current",
+                "data_rate": "Data rate",
+                "data_size": "Data size",
+                "date": "Date",
+                "distance": "Distance",
+                "duration": "Duration",
+                "energy": "Energy",
+                "energy_storage": "Stored energy",
+                "frequency": "Frequency",
+                "gas": "Gas",
+                "humidity": "Humidity",
+                "illuminance": "Illuminance",
+                "irradiance": "Irradiance",
+                "moisture": "Moisture",
+                "monetary": "Balance",
+                "nitrogen_dioxide": "Nitrogen dioxide",
+                "nitrogen_monoxide": "Nitrogen monoxide",
+                "nitrous_oxide": "Nitrous oxide",
+                "ozone": "Ozone",
+                "ph": "pH",
+                "pm1": "PM1",
+                "pm10": "PM10",
+                "pm25": "PM2.5",
+                "power": "Power",
+                "power_factor": "Power factor",
+                "precipitation": "Precipitation",
+                "precipitation_intensity": "Precipitation intensity",
+                "pressure": "Pressure",
+                "reactive_power": "Reactive power",
+                "signal_strength": "Signal strength",
+                "sound_pressure": "Sound pressure",
+                "speed": "Speed",
+                "sulphur_dioxide": "Sulphur dioxide",
+                "temperature": "Temperature",
+                "timestamp": "Timestamp",
+                "volatile_organic_compounds": "VOCs",
+                "volatile_organic_compounds_parts": "VOCs",
+                "voltage": "Voltage",
+                "volume": "Volume",
+                "volume_flow_rate": "Volume flow rate",
+                "volume_storage": "Stored volume",
+                "water": "Water",
+                "weight": "Weight",
+                "wind_speed": "Wind speed"
+            }
+        }
+    },
+    "title": "Random"
+}

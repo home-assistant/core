@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "Add Shark IQ Account",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "region": "Region",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "region": "Region",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "region": "Shark IQ uses different services in the EU.  Select your region to connect to the correct service for your account."
+                },
+                "description": "Sign into your Shark Clean account to control your devices."
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_room": {
+            "message": "The room {room} is unavailable to your vacuum. Make sure all rooms match the Shark App, including capitalization."
+        }
+    },
+    "selector": {
+        "region": {
+            "options": {
+                "elsewhere": "Everywhere Else",
+                "europe": "Europe"
+            }
+        }
+    },
+    "services": {
+        "clean_room": {
+            "description": "Cleans a specific user-defined room or set of rooms.",
+            "fields": {
+                "rooms": {
+                    "description": "List of rooms to clean",
+                    "name": "Rooms"
+                }
+            },
+            "name": "Clean Room"
+        }
+    }
+}

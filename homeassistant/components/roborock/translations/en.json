@@ -1,0 +1,460 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_code": "The code you entered was incorrect, please check it and try again.",
+            "invalid_email": "There is no account associated with the email you entered, please try again.",
+            "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+            "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
+            "unknown": "Unexpected error",
+            "unknown_roborock": "There was an unknown roborock exception - please check your logs.",
+            "unknown_url": "There was an issue determining the correct url for your roborock account - please check your logs."
+        },
+        "step": {
+            "code": {
+                "data": {
+                    "code": "Verification code"
+                },
+                "description": "Type the verification code sent to your email"
+            },
+            "reauth_confirm": {
+                "description": "The Roborock integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "username": "Email"
+                },
+                "description": "Enter your Roborock email address."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "in_cleaning": {
+                "name": "Cleaning"
+            },
+            "mop_attached": {
+                "name": "Mop attached"
+            },
+            "mop_drying_status": {
+                "name": "Mop drying"
+            },
+            "water_box_attached": {
+                "name": "Water box attached"
+            },
+            "water_shortage": {
+                "name": "Water shortage"
+            }
+        },
+        "button": {
+            "reset_air_filter_consumable": {
+                "name": "Reset air filter consumable"
+            },
+            "reset_main_brush_consumable": {
+                "name": "Reset main brush consumable"
+            },
+            "reset_sensor_consumable": {
+                "name": "Reset sensor consumable"
+            },
+            "reset_side_brush_consumable": {
+                "name": "Reset side brush consumable"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Volume"
+            }
+        },
+        "select": {
+            "mop_intensity": {
+                "name": "Mop intensity",
+                "state": {
+                    "custom": "Custom",
+                    "custom_water_flow": "Custom water flow",
+                    "high": "High",
+                    "intense": "Intense",
+                    "low": "Low",
+                    "max": "Max",
+                    "medium": "Medium",
+                    "mild": "Mild",
+                    "moderate": "Moderate",
+                    "off": "Off",
+                    "smart_mode": "SmartPlan"
+                }
+            },
+            "mop_mode": {
+                "name": "Mop mode",
+                "state": {
+                    "custom": "Custom",
+                    "deep": "Deep",
+                    "deep_plus": "Deep+",
+                    "fast": "Fast",
+                    "smart_mode": "SmartPlan",
+                    "standard": "Standard"
+                }
+            },
+            "selected_map": {
+                "name": "Selected map"
+            }
+        },
+        "sensor": {
+            "a01_error": {
+                "name": "Error",
+                "state": {
+                    "battery_temperature_protection": "Battery temperature protection",
+                    "battery_temperature_protection_2": "Battery temperature protection",
+                    "battery_temperature_protection_e0": "Temperature protection",
+                    "battery_under_10": "Battery under 10%",
+                    "clean_head_entangled": "Cleaning head entangled",
+                    "clean_head_too_hot": "Cleaning head too hot.",
+                    "clean_tank_empty": "Clean tank empty",
+                    "cleaning_head_blocked": "Cleaning head blocked",
+                    "dirty_charging_contacts": "Clean charging contacts",
+                    "dirty_tank_full": "Dirty tank full",
+                    "fan_protection_e4": "Fan protection",
+                    "fan_protection_e5": "Fan protection",
+                    "fan_protection_e9": "Fan protection",
+                    "low_battery": "Low battery",
+                    "none": "None",
+                    "power_adapter_error": "Power adapter error",
+                    "temperature_protection": "Temperature protection",
+                    "water_level_sensor_stuck": "Water level sensor stuck."
+                }
+            },
+            "a01_status": {
+                "name": "Status",
+                "state": {
+                    "charging": "Charging",
+                    "drying": "Drying",
+                    "dusting_mode": "Dusting mode",
+                    "fetch_failed": "Fetch failed",
+                    "fetching": "Fetching",
+                    "mop_washing": "Washing mop",
+                    "mop_washing_paused": "Mop washing paused",
+                    "ready": "Ready",
+                    "reserving": "Reserving",
+                    "self_clean_cleaning": "Self clean cleaning",
+                    "self_clean_deep_cleaning": "Self clean deep cleaning",
+                    "self_clean_dehydrating": "Self clean drying",
+                    "self_clean_rinsing": "Self clean rinsing",
+                    "unknown": "Unknown",
+                    "updating": "Updating",
+                    "ventilating": "Ventilating",
+                    "washing": "Washing"
+                }
+            },
+            "brush_remaining": {
+                "name": "Roller left"
+            },
+            "clean_percent": {
+                "name": "Cleaning progress"
+            },
+            "cleaning_area": {
+                "name": "Cleaning area"
+            },
+            "cleaning_time": {
+                "name": "Cleaning time"
+            },
+            "countdown": {
+                "name": "Countdown"
+            },
+            "dock_error": {
+                "name": "Dock error",
+                "state": {
+                    "cleaning_tank_full_or_blocked": "Cleaning tank full or blocked",
+                    "dirty_tank_latch_open": "Dirty tank latch open",
+                    "duct_blockage": "Duct blockage",
+                    "no_dustbin": "No dustbin",
+                    "ok": "Ok",
+                    "waste_water_tank_full": "Waste water tank full",
+                    "water_empty": "Water empty"
+                }
+            },
+            "filter_time_left": {
+                "name": "Filter time left"
+            },
+            "last_clean_end": {
+                "name": "Last clean end"
+            },
+            "last_clean_start": {
+                "name": "Last clean begin"
+            },
+            "main_brush_time_left": {
+                "name": "Main brush time left"
+            },
+            "mop_drying_remaining_time": {
+                "name": "Mop drying remaining time"
+            },
+            "sensor_time_left": {
+                "name": "Sensor time left"
+            },
+            "side_brush_time_left": {
+                "name": "Side brush time left"
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "air_drying_stopping": "Air drying stopping",
+                    "charger_disconnected": "Charger disconnected",
+                    "charging": "Charging",
+                    "charging_complete": "Charging complete",
+                    "charging_problem": "Charging problem",
+                    "cleaning": "Cleaning",
+                    "device_offline": "Device offline",
+                    "docking": "Docking",
+                    "egg_attack": "Cupid mode",
+                    "emptying_the_bin": "Emptying the bin",
+                    "error": "Error",
+                    "going_to_target": "Going to target",
+                    "going_to_wash_the_mop": "Going to wash the mop",
+                    "idle": "Idle",
+                    "locked": "Locked",
+                    "manual_mode": "Manual mode",
+                    "mapping": "Mapping",
+                    "paused": "Paused",
+                    "remote_control_active": "Remote control active",
+                    "returning_home": "Returning home",
+                    "segment_cleaning": "Segment cleaning",
+                    "shutting_down": "Shutting down",
+                    "spot_cleaning": "Spot cleaning",
+                    "starting": "Starting",
+                    "unknown": "Unknown",
+                    "updating": "Updating",
+                    "washing_the_mop": "Washing the mop",
+                    "zoned_cleaning": "Zoned cleaning"
+                }
+            },
+            "total_cleaning_area": {
+                "name": "Total cleaning area"
+            },
+            "total_cleaning_count": {
+                "name": "Total cleaning count"
+            },
+            "total_cleaning_time": {
+                "name": "Total cleaning time"
+            },
+            "vacuum_error": {
+                "name": "Vacuum error",
+                "state": {
+                    "battery_error": "Battery error",
+                    "bumper_stuck": "Bumper stuck",
+                    "cannot_cross_carpet": "Cannot cross carpet",
+                    "charging_error": "Charging error",
+                    "clear_brush_exception": "Check that the water filter has been correctly installed",
+                    "clear_brush_exception_2": "Positioning button error",
+                    "clear_water_box_exception": "Clean water tank empty",
+                    "clear_water_box_hoare": "Check the clean water tank",
+                    "cliff_sensor_error": "Cliff sensor error",
+                    "collect_dust_error_3": "Clean auto-empty dock",
+                    "collect_dust_error_4": "Auto empty dock voltage error",
+                    "compass_error": "Strong magnetic field detected",
+                    "dirty_water_box_hoare": "Check the dirty water tank",
+                    "dock": "Dock not connected to power",
+                    "dock_locator_error": "Dock locator error",
+                    "fan_error": "Fan error",
+                    "filter_blocked": "Filter blocked",
+                    "filter_screen_exception": "Clean the dock water filter",
+                    "internal_error": "Internal error",
+                    "invisible_wall_detected": "Invisible wall detected",
+                    "lidar_blocked": "Lidar blocked",
+                    "light_touch": "Wall sensor error",
+                    "low_battery": "Low battery",
+                    "main_brush_jammed": "Main brush jammed",
+                    "mopping_roller_1": "Wash roller may be jammed",
+                    "mopping_roller_2": "Wash roller may be jammed",
+                    "mopping_roller_error_2": "Wash roller not lowered properly",
+                    "no_dustbin": "No dustbin",
+                    "nogo_zone_detected": "No-go zone detected",
+                    "none": "None",
+                    "return_to_dock_fail": "Return to dock fail",
+                    "robot_on_carpet": "Robot on carpet",
+                    "robot_tilted": "Robot tilted",
+                    "robot_trapped": "Robot trapped",
+                    "side_brush_error": "Side brush error",
+                    "side_brush_jammed": "Side brush jammed",
+                    "sink_strainer_hoare": "Reinstall the water filter",
+                    "strainer_error": "Filter is wet or blocked",
+                    "temperature_protection": "Unit temperature protection",
+                    "vertical_bumper_pressed": "Vertical bumper pressed",
+                    "vibrarise_jammed": "VibraRise jammed",
+                    "visual_sensor": "Camera error",
+                    "wall_sensor_dirty": "Wall sensor dirty",
+                    "wheels_jammed": "Wheels jammed",
+                    "wheels_suspended": "Wheels suspended"
+                }
+            },
+            "washing_left": {
+                "name": "Washing left"
+            },
+            "zeo_error": {
+                "name": "Error",
+                "state": {
+                    "communication_error": "Communication error",
+                    "door_lock_error": "Door lock error",
+                    "drain_error": "Drain error",
+                    "drying_error": "Drying error",
+                    "drying_error_e_12": "Drying error E12",
+                    "drying_error_e_13": "Drying error E13",
+                    "drying_error_e_14": "Drying error E14",
+                    "drying_error_e_15": "Drying error E15",
+                    "drying_error_e_16": "Drying error E16",
+                    "drying_error_restart": "Restart the washer",
+                    "drying_error_water_flow": "Check water flow",
+                    "heating_error": "Heating error",
+                    "inverter_error": "Inverter error",
+                    "none": "None",
+                    "refill_error": "Refill error",
+                    "spin_error": "Re-arrange clothes",
+                    "temperature_error": "Temperature error",
+                    "water_level_error": "Water level error"
+                }
+            },
+            "zeo_state": {
+                "name": "State",
+                "state": {
+                    "cooling": "Cooling",
+                    "done": "Done",
+                    "drying": "Drying",
+                    "rinsing": "Rinsing",
+                    "soaking": "Soaking",
+                    "spinning": "Spinning",
+                    "standby": "Standby",
+                    "under_delay_start": "Delayed start",
+                    "washing": "Washing",
+                    "weighing": "Weighing"
+                }
+            }
+        },
+        "switch": {
+            "child_lock": {
+                "name": "Child lock"
+            },
+            "dnd_switch": {
+                "name": "Do not disturb"
+            },
+            "off_peak_switch": {
+                "name": "Off-peak charging"
+            },
+            "status_indicator": {
+                "name": "Status indicator light"
+            }
+        },
+        "time": {
+            "dnd_end_time": {
+                "name": "Do not disturb end"
+            },
+            "dnd_start_time": {
+                "name": "Do not disturb begin"
+            },
+            "off_peak_end": {
+                "name": "Off-peak end"
+            },
+            "off_peak_start": {
+                "name": "Off-peak start"
+            }
+        },
+        "vacuum": {
+            "roborock": {
+                "state_attributes": {
+                    "fan_speed": {
+                        "state": {
+                            "auto": "Auto",
+                            "balanced": "Balanced",
+                            "custom": "Custom",
+                            "gentle": "Gentle",
+                            "max": "Max",
+                            "max_plus": "Max plus",
+                            "medium": "Medium",
+                            "off": "Off",
+                            "quiet": "Quiet",
+                            "silent": "Silent",
+                            "smart_mode": "SmartPlan",
+                            "standard": "Standard",
+                            "turbo": "Turbo"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "command_failed": {
+            "message": "Error while calling {command}"
+        },
+        "home_data_fail": {
+            "message": "Failed to get Roborock home data"
+        },
+        "invalid_credentials": {
+            "message": "Invalid credentials."
+        },
+        "invalid_user_agreement": {
+            "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+        },
+        "map_failure": {
+            "message": "Something went wrong creating the map"
+        },
+        "no_coordinators": {
+            "message": "No devices were able to successfully setup"
+        },
+        "no_user_agreement": {
+            "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
+        },
+        "update_options_failed": {
+            "message": "Failed to update Roborock options"
+        }
+    },
+    "options": {
+        "step": {
+            "drawables": {
+                "data": {
+                    "charger": "Charger",
+                    "cleaned_area": "Cleaned area",
+                    "goto_path": "Go-to path",
+                    "ignored_obstacles": "Ignored obstacles",
+                    "ignored_obstacles_with_photo": "Ignored obstacles with photo",
+                    "mop_path": "Mop path",
+                    "no_carpet_zones": "No carpet zones",
+                    "no_go_zones": "No-go zones",
+                    "no_mopping_zones": "No mopping zones",
+                    "obstacles": "Obstacles",
+                    "obstacles_with_photo": "Obstacles with photo",
+                    "path": "Path",
+                    "predicted_path": "Predicted path",
+                    "room_names": "Room names",
+                    "vacuum_position": "Vacuum position",
+                    "virtual_walls": "Virtual walls",
+                    "zones": "Zones"
+                },
+                "description": "Specify which features to draw on the map."
+            }
+        }
+    },
+    "services": {
+        "get_maps": {
+            "description": "Get the map and room information of your device.",
+            "name": "Get maps"
+        },
+        "get_vacuum_current_position": {
+            "description": "Get the current position of the vacuum.",
+            "name": "Get current position"
+        },
+        "set_vacuum_goto_position": {
+            "description": "Send the vacuum to a specific position.",
+            "fields": {
+                "x": {
+                    "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position.",
+                    "name": "X-coordinate"
+                },
+                "y": {
+                    "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position.",
+                    "name": "Y-coordinate"
+                }
+            },
+            "name": "Go to position"
+        }
+    }
+}

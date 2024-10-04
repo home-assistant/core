@@ -1,0 +1,193 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_value": "Set value for {entity_name}"
+        },
+        "extra_fields": {
+            "value": "Value"
+        }
+    },
+    "entity_component": {
+        "_": {
+            "name": "Number",
+            "state_attributes": {
+                "max": {
+                    "name": "Maximum"
+                },
+                "min": {
+                    "name": "Minimum"
+                },
+                "mode": {
+                    "name": "Mode",
+                    "state": {
+                        "auto": "Automatic",
+                        "box": "Box",
+                        "slider": "Slider"
+                    }
+                },
+                "step": {
+                    "name": "Step"
+                }
+            }
+        },
+        "apparent_power": {
+            "name": "Apparent power"
+        },
+        "aqi": {
+            "name": "Air quality index"
+        },
+        "area": {
+            "name": "Area"
+        },
+        "atmospheric_pressure": {
+            "name": "Atmospheric pressure"
+        },
+        "battery": {
+            "name": "Battery"
+        },
+        "blood_glucose_concentration": {
+            "name": "Blood glucose concentration"
+        },
+        "carbon_dioxide": {
+            "name": "Carbon dioxide"
+        },
+        "carbon_monoxide": {
+            "name": "Carbon monoxide"
+        },
+        "conductivity": {
+            "name": "Conductivity"
+        },
+        "current": {
+            "name": "Current"
+        },
+        "data_rate": {
+            "name": "Data rate"
+        },
+        "distance": {
+            "name": "Distance"
+        },
+        "energy": {
+            "name": "Energy"
+        },
+        "energy_storage": {
+            "name": "Stored energy"
+        },
+        "frequency": {
+            "name": "Frequency"
+        },
+        "gas": {
+            "name": "Gas"
+        },
+        "humidity": {
+            "name": "Humidity"
+        },
+        "illuminance": {
+            "name": "Illuminance"
+        },
+        "irradiance": {
+            "name": "Irradiance"
+        },
+        "moisture": {
+            "name": "Moisture"
+        },
+        "nitrogen_dioxide": {
+            "name": "Nitrogen dioxide"
+        },
+        "nitrogen_monoxide": {
+            "name": "Nitrogen monoxide"
+        },
+        "nitrous_oxide": {
+            "name": "Nitrous oxide"
+        },
+        "ozone": {
+            "name": "Ozone"
+        },
+        "ph": {
+            "name": "pH"
+        },
+        "pm1": {
+            "name": "PM1"
+        },
+        "pm10": {
+            "name": "PM10"
+        },
+        "pm25": {
+            "name": "PM2.5"
+        },
+        "power": {
+            "name": "Power"
+        },
+        "power_factor": {
+            "name": "Power factor"
+        },
+        "precipitation": {
+            "name": "Precipitation"
+        },
+        "precipitation_intensity": {
+            "name": "Precipitation intensity"
+        },
+        "pressure": {
+            "name": "Pressure"
+        },
+        "reactive_power": {
+            "name": "Reactive power"
+        },
+        "signal_strength": {
+            "name": "Signal strength"
+        },
+        "sound_pressure": {
+            "name": "Sound pressure"
+        },
+        "speed": {
+            "name": "Speed"
+        },
+        "sulphur_dioxide": {
+            "name": "Sulphur dioxide"
+        },
+        "temperature": {
+            "name": "Temperature"
+        },
+        "volatile_organic_compounds": {
+            "name": "VOCs"
+        },
+        "voltage": {
+            "name": "Voltage"
+        },
+        "volume": {
+            "name": "Volume"
+        },
+        "volume_flow_rate": {
+            "name": "Volume flow rate"
+        },
+        "volume_storage": {
+            "name": "Stored volume"
+        },
+        "water": {
+            "name": "Water"
+        },
+        "weight": {
+            "name": "Weight"
+        },
+        "wind_speed": {
+            "name": "Wind speed"
+        }
+    },
+    "exceptions": {
+        "out_of_range": {
+            "message": "Value {value} for {entity_id} is outside valid range {min_value} - {max_value}."
+        }
+    },
+    "services": {
+        "set_value": {
+            "description": "Sets the value of a number.",
+            "fields": {
+                "value": {
+                    "description": "The target value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Set"
+        }
+    },
+    "title": "Number"
+}

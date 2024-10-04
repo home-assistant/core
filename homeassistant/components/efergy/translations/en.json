@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "budget": {
+                "name": "Energy budget"
+            },
+            "cost_day": {
+                "name": "Daily energy cost"
+            },
+            "cost_month": {
+                "name": "Monthly energy cost"
+            },
+            "cost_week": {
+                "name": "Weekly energy cost"
+            },
+            "cost_year": {
+                "name": "Yearly energy cost"
+            },
+            "energy_day": {
+                "name": "Daily consumption"
+            },
+            "energy_month": {
+                "name": "Monthly consumption"
+            },
+            "energy_week": {
+                "name": "Weekly consumption"
+            },
+            "energy_year": {
+                "name": "Yearly consumption"
+            },
+            "instant_readings": {
+                "name": "Power usage"
+            },
+            "power_usage": {
+                "name": "Power usage {sid}"
+            }
+        }
+    }
+}

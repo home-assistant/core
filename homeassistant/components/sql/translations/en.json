@@ -1,0 +1,141 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "column_invalid": "The column `{column}` is not returned by the query",
+            "db_url_invalid": "Database URL invalid",
+            "multiple_queries": "Multiple SQL queries are not supported",
+            "query_invalid": "SQL Query invalid",
+            "query_no_read_only": "SQL query must be read-only"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Column",
+                    "db_url": "Database URL",
+                    "device_class": "Device Class",
+                    "name": "Name",
+                    "query": "Select Query",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measure",
+                    "value_template": "Value Template"
+                },
+                "data_description": {
+                    "column": "Column for returned query to present as state",
+                    "db_url": "Database URL, leave empty to use HA recorder database",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "name": "Name that will be used for Config Entry and also the Sensor",
+                    "query": "Query to run, needs to start with 'SELECT'",
+                    "state_class": "The state_class of the sensor",
+                    "unit_of_measurement": "Unit of Measure (optional)",
+                    "value_template": "Value Template (optional)"
+                }
+            }
+        }
+    },
+    "issues": {
+        "entity_id_query_does_full_table_scan": {
+            "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead.",
+            "title": "SQL query does full table scan"
+        }
+    },
+    "options": {
+        "error": {
+            "column_invalid": "The column `{column}` is not returned by the query",
+            "db_url_invalid": "Database URL invalid",
+            "multiple_queries": "Multiple SQL queries are not supported",
+            "query_invalid": "SQL Query invalid",
+            "query_no_read_only": "SQL query must be read-only"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Column",
+                    "db_url": "Database URL",
+                    "device_class": "Device Class",
+                    "name": "Name",
+                    "query": "Select Query",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measure",
+                    "value_template": "Value Template"
+                },
+                "data_description": {
+                    "column": "Column for returned query to present as state",
+                    "db_url": "Database URL, leave empty to use HA recorder database",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "name": "Name that will be used for Config Entry and also the Sensor",
+                    "query": "Query to run, needs to start with 'SELECT'",
+                    "state_class": "The state_class of the sensor",
+                    "unit_of_measurement": "Unit of Measure (optional)",
+                    "value_template": "Value Template (optional)"
+                }
+            }
+        }
+    },
+    "selector": {
+        "device_class": {
+            "options": {
+                "apparent_power": "Apparent power",
+                "aqi": "Air quality index",
+                "atmospheric_pressure": "Atmospheric pressure",
+                "battery": "Battery",
+                "carbon_dioxide": "Carbon dioxide",
+                "carbon_monoxide": "Carbon monoxide",
+                "conductivity": "Conductivity",
+                "current": "Current",
+                "data_rate": "Data rate",
+                "data_size": "Data size",
+                "date": "Date",
+                "distance": "Distance",
+                "duration": "Duration",
+                "energy": "Energy",
+                "energy_storage": "Stored energy",
+                "frequency": "Frequency",
+                "gas": "Gas",
+                "humidity": "Humidity",
+                "illuminance": "Illuminance",
+                "irradiance": "Irradiance",
+                "moisture": "Moisture",
+                "monetary": "Balance",
+                "nitrogen_dioxide": "Nitrogen dioxide",
+                "nitrogen_monoxide": "Nitrogen monoxide",
+                "nitrous_oxide": "Nitrous oxide",
+                "ozone": "Ozone",
+                "ph": "pH",
+                "pm1": "PM1",
+                "pm10": "PM10",
+                "pm25": "PM2.5",
+                "power": "Power",
+                "power_factor": "Power factor",
+                "precipitation": "Precipitation",
+                "precipitation_intensity": "Precipitation intensity",
+                "pressure": "Pressure",
+                "reactive_power": "Reactive power",
+                "signal_strength": "Signal strength",
+                "sound_pressure": "Sound pressure",
+                "speed": "Speed",
+                "sulphur_dioxide": "Sulphur dioxide",
+                "temperature": "Temperature",
+                "timestamp": "Timestamp",
+                "volatile_organic_compounds": "VOCs",
+                "volatile_organic_compounds_parts": "VOCs",
+                "voltage": "Voltage",
+                "volume": "Volume",
+                "volume_flow_rate": "Volume flow rate",
+                "volume_storage": "Stored volume",
+                "water": "Water",
+                "weight": "Weight",
+                "wind_speed": "Wind speed"
+            }
+        },
+        "state_class": {
+            "options": {
+                "measurement": "Measurement",
+                "total": "Total",
+                "total_increasing": "Total increasing"
+            }
+        }
+    }
+}

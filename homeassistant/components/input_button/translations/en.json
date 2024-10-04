@@ -1,0 +1,27 @@
+{
+    "entity_component": {
+        "_": {
+            "name": "Input button",
+            "state_attributes": {
+                "editable": {
+                    "name": "Managed via UI",
+                    "state": {
+                        "false": "No",
+                        "true": "Yes"
+                    }
+                }
+            }
+        }
+    },
+    "services": {
+        "press": {
+            "description": "Mimics the physical button press on the device.",
+            "name": "Press"
+        },
+        "reload": {
+            "description": "Reloads helpers from the YAML-configuration.",
+            "name": "Reload"
+        }
+    },
+    "title": "Input button"
+}

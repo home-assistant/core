@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "no_adapters": "No unconfigured Bluetooth adapters found. There are {ignored_adapters} ignored adapters."
+        },
+        "flow_title": "{name} {manufacturer} {model}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapter"
+                },
+                "description": "Select a Bluetooth adapter to set up"
+            },
+            "single_adapter": {
+                "description": "Do you want to set up the Bluetooth adapter {name} {manufacturer} {model}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "passive": "Passive scanning"
+                }
+            }
+        }
+    }
+}

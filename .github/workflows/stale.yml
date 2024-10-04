@@ -1,113 +1,113 @@
-name: Stale
+# name: Stale
 
-# yamllint disable-line rule:truthy
-on:
-  schedule:
-    - cron: "0 * * * *"
-  workflow_dispatch:
+# # yamllint disable-line rule:truthy
+# on:
+#   schedule:
+#     - cron: "0 * * * *"
+#   workflow_dispatch:
 
-jobs:
-  stale:
-    if: github.repository_owner == 'home-assistant'
-    runs-on: ubuntu-latest
-    steps:
-      # The 60 day stale policy for PRs
-      # Used for:
-      # - PRs
-      # - No PRs marked as no-stale
-      # - No issues (-1)
-      - name: 60 days stale PRs policy
-        uses: actions/stale@v9.1.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 60
-          days-before-close: 7
-          days-before-issue-stale: -1
-          days-before-issue-close: -1
-          operations-per-run: 150
-          remove-stale-when-updated: true
-          stale-pr-label: "stale"
-          exempt-pr-labels: "no-stale"
-          stale-pr-message: >
-            There hasn't been any activity on this pull request recently. This
-            pull request has been automatically marked as stale because of that
-            and will be closed if no further activity occurs within 7 days.
+# jobs:
+#   stale:
+#     if: github.repository_owner == 'home-assistant'
+#     runs-on: ubuntu-latest
+#     steps:
+#       # The 60 day stale policy for PRs
+#       # Used for:
+#       # - PRs
+#       # - No PRs marked as no-stale
+#       # - No issues (-1)
+#       - name: 60 days stale PRs policy
+#         uses: actions/stale@v9.0.0
+#         with:
+#           repo-token: ${{ secrets.GITHUB_TOKEN }}
+#           days-before-stale: 60
+#           days-before-close: 7
+#           days-before-issue-stale: -1
+#           days-before-issue-close: -1
+#           operations-per-run: 150
+#           remove-stale-when-updated: true
+#           stale-pr-label: "stale"
+#           exempt-pr-labels: "no-stale"
+#           stale-pr-message: >
+#             There hasn't been any activity on this pull request recently. This
+#             pull request has been automatically marked as stale because of that
+#             and will be closed if no further activity occurs within 7 days.
 
-            If you are the author of this PR, please leave a comment if you want
-            to keep it open. Also, please rebase your PR onto the latest dev
-            branch to ensure that it's up to date with the latest changes.
+#             If you are the author of this PR, please leave a comment if you want
+#             to keep it open. Also, please rebase your PR onto the latest dev
+#             branch to ensure that it's up to date with the latest changes.
 
-            Thank you for your contribution!
+#             Thank you for your contribution!
 
-      # Generate a token for the GitHub App, we use this method to avoid
-      # hitting API limits for our GitHub actions + have a higher rate limit.
-      # This is only used for issues.
-      - name: Generate app token
-        id: token
-        # Pinned to a specific version of the action for security reasons
-        # v1.7.0
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a
-        with:
-          app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }}
-          private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }}
+#       # Generate a token for the GitHub App, we use this method to avoid
+#       # hitting API limits for our GitHub actions + have a higher rate limit.
+#       # This is only used for issues.
+#       - name: Generate app token
+#         id: token
+#         # Pinned to a specific version of the action for security reasons
+#         # v1.7.0
+#         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a
+#         with:
+#           app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }}
+#           private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }}
 
-      # The 90 day stale policy for issues
-      # Used for:
-      # - Issues
-      # - No issues marked as no-stale or help-wanted
-      # - No PRs (-1)
-      - name: 90 days stale issues
-        uses: actions/stale@v9.1.0
-        with:
-          repo-token: ${{ steps.token.outputs.token }}
-          days-before-stale: 90
-          days-before-close: 7
-          days-before-pr-stale: -1
-          days-before-pr-close: -1
-          operations-per-run: 250
-          remove-stale-when-updated: true
-          stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,help-wanted,needs-more-information"
-          stale-issue-message: >
-            There hasn't been any activity on this issue recently. Due to the
-            high number of incoming GitHub notifications, we have to clean some
-            of the old issues, as many of them have already been resolved with
-            the latest updates.
+#       # The 90 day stale policy for issues
+#       # Used for:
+#       # - Issues
+#       # - No issues marked as no-stale or help-wanted
+#       # - No PRs (-1)
+#       - name: 90 days stale issues
+#         uses: actions/stale@v9.0.0
+#         with:
+#           repo-token: ${{ steps.token.outputs.token }}
+#           days-before-stale: 90
+#           days-before-close: 7
+#           days-before-pr-stale: -1
+#           days-before-pr-close: -1
+#           operations-per-run: 250
+#           remove-stale-when-updated: true
+#           stale-issue-label: "stale"
+#           exempt-issue-labels: "no-stale,help-wanted,needs-more-information"
+#           stale-issue-message: >
+#             There hasn't been any activity on this issue recently. Due to the
+#             high number of incoming GitHub notifications, we have to clean some
+#             of the old issues, as many of them have already been resolved with
+#             the latest updates.
 
-            Please make sure to update to the latest Home Assistant version and
-            check if that solves the issue. Let us know if that works for you by
-            adding a comment 👍
+#             Please make sure to update to the latest Home Assistant version and
+#             check if that solves the issue. Let us know if that works for you by
+#             adding a comment 👍
 
-            This issue has now been marked as stale and will be closed if no
-            further activity occurs. Thank you for your contributions.
+#             This issue has now been marked as stale and will be closed if no
+#             further activity occurs. Thank you for your contributions.
 
-      # The 30 day stale policy for issues
-      # Used for:
-      # - Issues that are pending more information (incomplete issues)
-      # - No Issues marked as no-stale or help-wanted
-      # - No PRs (-1)
-      - name: Needs more information stale issues policy
-        uses: actions/stale@v9.1.0
-        with:
-          repo-token: ${{ steps.token.outputs.token }}
-          only-labels: "needs-more-information"
-          days-before-stale: 14
-          days-before-close: 7
-          days-before-pr-stale: -1
-          days-before-pr-close: -1
-          operations-per-run: 250
-          remove-stale-when-updated: true
-          stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,help-wanted"
-          stale-issue-message: >
-            There hasn't been any activity on this issue recently. Due to the
-            high number of incoming GitHub notifications, we have to clean some
-            of the old issues, as many of them have already been resolved with
-            the latest updates.
+#       # The 30 day stale policy for issues
+#       # Used for:
+#       # - Issues that are pending more information (incomplete issues)
+#       # - No Issues marked as no-stale or help-wanted
+#       # - No PRs (-1)
+#       - name: Needs more information stale issues policy
+#         uses: actions/stale@v9.0.0
+#         with:
+#           repo-token: ${{ steps.token.outputs.token }}
+#           only-labels: "needs-more-information"
+#           days-before-stale: 14
+#           days-before-close: 7
+#           days-before-pr-stale: -1
+#           days-before-pr-close: -1
+#           operations-per-run: 250
+#           remove-stale-when-updated: true
+#           stale-issue-label: "stale"
+#           exempt-issue-labels: "no-stale,help-wanted"
+#           stale-issue-message: >
+#             There hasn't been any activity on this issue recently. Due to the
+#             high number of incoming GitHub notifications, we have to clean some
+#             of the old issues, as many of them have already been resolved with
+#             the latest updates.
 
-            Please make sure to update to the latest Home Assistant version and
-            check if that solves the issue. Let us know if that works for you by
-            adding a comment 👍
+#             Please make sure to update to the latest Home Assistant version and
+#             check if that solves the issue. Let us know if that works for you by
+#             adding a comment 👍
 
-            This issue has now been marked as stale and will be closed if no
-            further activity occurs. Thank you for your contributions.
+#             This issue has now been marked as stale and will be closed if no
+#             further activity occurs. Thank you for your contributions.

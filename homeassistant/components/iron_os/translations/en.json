@@ -1,0 +1,268 @@
+{
+    "common": {
+        "fast": "Fast",
+        "slow": "Slow"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network"
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?\n\n*Ensure your device is powered on and within Bluetooth range before continuing*"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "data_description": {
+                    "address": "Ensure your device is powered on and within Bluetooth range before continuing"
+                },
+                "description": "Choose a device to set up"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "tip_connected": {
+                "name": "Soldering tip"
+            }
+        },
+        "button": {
+            "settings_reset": {
+                "name": "Restore default settings"
+            },
+            "settings_save": {
+                "name": "Save settings"
+            }
+        },
+        "number": {
+            "accel_sensitivity": {
+                "name": "Motion sensitivity"
+            },
+            "boost_temp": {
+                "name": "Boost temperature"
+            },
+            "calibration_offset": {
+                "name": "Calibration offset"
+            },
+            "display_brightness": {
+                "name": "Display brightness"
+            },
+            "hall_sensitivity": {
+                "name": "Hall effect sensitivity"
+            },
+            "keep_awake_pulse_delay": {
+                "name": "Keep-awake pulse delay"
+            },
+            "keep_awake_pulse_duration": {
+                "name": "Keep-awake pulse duration"
+            },
+            "keep_awake_pulse_power": {
+                "name": "Keep-awake pulse intensity"
+            },
+            "min_voltage_per_cell": {
+                "name": "Min. voltage per cell"
+            },
+            "pd_timeout": {
+                "name": "Power Delivery timeout"
+            },
+            "power_limit": {
+                "name": "Power limit"
+            },
+            "qc_max_voltage": {
+                "name": "Quick Charge voltage"
+            },
+            "setpoint_temperature": {
+                "name": "Setpoint temperature"
+            },
+            "shutdown_timeout": {
+                "name": "Shutdown timeout"
+            },
+            "sleep_temperature": {
+                "name": "Sleep temperature"
+            },
+            "sleep_timeout": {
+                "name": "Sleep timeout"
+            },
+            "temp_increment_long": {
+                "name": "Long-press temperature step"
+            },
+            "temp_increment_short": {
+                "name": "Short-press temperature step"
+            },
+            "voltage_div": {
+                "name": "Voltage divider"
+            }
+        },
+        "select": {
+            "animation_speed": {
+                "name": "Animation speed",
+                "state": {
+                    "fast": "Fast",
+                    "medium": "Medium",
+                    "off": "Off",
+                    "slow": "Slow"
+                }
+            },
+            "autostart_mode": {
+                "name": "Start-up behavior",
+                "state": {
+                    "disabled": "Disabled",
+                    "idle": "Idle mode",
+                    "sleeping": "Sleeping mode",
+                    "soldering": "Soldering mode"
+                }
+            },
+            "desc_scroll_speed": {
+                "name": "Scrolling speed",
+                "state": {
+                    "fast": "Fast",
+                    "slow": "Slow"
+                }
+            },
+            "locking_mode": {
+                "name": "Button locking mode",
+                "state": {
+                    "boost_only": "Boost only",
+                    "full_locking": "Full locking",
+                    "off": "Off"
+                }
+            },
+            "logo_duration": {
+                "name": "Boot logo duration",
+                "state": {
+                    "loop": "Loop",
+                    "off": "Off",
+                    "seconds_1": "1 second",
+                    "seconds_2": "2 second",
+                    "seconds_3": "3 second",
+                    "seconds_4": "4 second",
+                    "seconds_5": "5 second"
+                }
+            },
+            "min_dc_voltage_cells": {
+                "name": "Power source",
+                "state": {
+                    "battery_3s": "3S (3 cells)",
+                    "battery_4s": "4S (4 cells)",
+                    "battery_5s": "5S (5 cells)",
+                    "battery_6s": "6S (6 cells)",
+                    "no_battery": "External power supply (DC)"
+                }
+            },
+            "orientation_mode": {
+                "name": "Display orientation mode",
+                "state": {
+                    "auto": "Auto",
+                    "left_handed": "Left-handed",
+                    "right_handed": "Right-handed"
+                }
+            },
+            "temp_unit": {
+                "name": "Temperature display unit",
+                "state": {
+                    "celsius": "Celsius (\u00b0C)",
+                    "fahrenheit": "Fahrenheit (\u00b0F)"
+                }
+            },
+            "usb_pd_mode": {
+                "name": "Power Delivery 3.1 EPR",
+                "state": {
+                    "off": "Off",
+                    "on": "On"
+                }
+            }
+        },
+        "sensor": {
+            "estimated_power": {
+                "name": "Estimated power"
+            },
+            "hall_sensor": {
+                "name": "Hall effect strength"
+            },
+            "handle_temperature": {
+                "name": "Handle temperature"
+            },
+            "live_temperature": {
+                "name": "Tip temperature"
+            },
+            "max_tip_temp_ability": {
+                "name": "Max tip temperature"
+            },
+            "movement_time": {
+                "name": "Last movement time"
+            },
+            "operating_mode": {
+                "name": "Operating mode",
+                "state": {
+                    "boost": "Boost",
+                    "debug": "Debug",
+                    "idle": "Idle",
+                    "settings": "Settings",
+                    "sleeping": "Sleeping",
+                    "soldering": "Soldering"
+                }
+            },
+            "power_pwm_level": {
+                "name": "Power level"
+            },
+            "power_source": {
+                "name": "Power source",
+                "state": {
+                    "dc": "DC input",
+                    "pd": "USB Power Delivery",
+                    "pd_vbus": "USB PD VBUS",
+                    "qc": "USB Quick Charge"
+                }
+            },
+            "tip_resistance": {
+                "name": "Tip resistance"
+            },
+            "tip_voltage": {
+                "name": "Raw tip voltage"
+            },
+            "uptime": {
+                "name": "Uptime"
+            },
+            "voltage": {
+                "name": "DC input voltage"
+            }
+        },
+        "switch": {
+            "animation_loop": {
+                "name": "Animation loop"
+            },
+            "calibrate_cjc": {
+                "name": "Calibrate CJC"
+            },
+            "cooling_temp_blink": {
+                "name": "Cool down screen flashing"
+            },
+            "display_invert": {
+                "name": "Invert screen"
+            },
+            "idle_screen_details": {
+                "name": "Detailed idle screen"
+            },
+            "invert_buttons": {
+                "name": "Swap +/- buttons"
+            },
+            "solder_screen_details": {
+                "name": "Detailed solder screen"
+            }
+        }
+    },
+    "exceptions": {
+        "setup_device_connection_error_exception": {
+            "message": "Connection to device {name} failed, try again later"
+        },
+        "setup_device_unavailable_exception": {
+            "message": "Device {name} is not reachable"
+        },
+        "submit_setting_failed": {
+            "message": "Failed to submit setting to device, try again later"
+        }
+    }
+}

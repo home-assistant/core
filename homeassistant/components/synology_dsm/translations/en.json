@@ -1,0 +1,206 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_mac_address": "The MAC address is missing from the zeroconf record",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "missing_data": "Missing data: please retry later or an other configuration",
+            "otp_failed": "Two-step authentication failed, retry with a new pass code",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: two-step authentication"
+            },
+            "backup_share": {
+                "data": {
+                    "backup_path": "Path",
+                    "backup_share": "Shared folder"
+                },
+                "data_description": {
+                    "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist).",
+                    "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored."
+                },
+                "title": "Synology DSM: Backup location"
+            },
+            "link": {
+                "data": {
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "description": "Do you want to set up {name} ({host})?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Reauthenticate Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Synology NAS."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "disk_below_remain_life_thr": {
+                "name": "Below min remaining life"
+            },
+            "disk_exceed_bad_sector_thr": {
+                "name": "Exceeded max bad sectors"
+            },
+            "status": {
+                "name": "Security status"
+            }
+        },
+        "sensor": {
+            "cpu_15min_load": {
+                "name": "CPU load average (15 min)"
+            },
+            "cpu_1min_load": {
+                "name": "CPU load average (1 min)"
+            },
+            "cpu_5min_load": {
+                "name": "CPU load average (5 min)"
+            },
+            "cpu_other_load": {
+                "name": "CPU utilization (other)"
+            },
+            "cpu_system_load": {
+                "name": "CPU utilization (system)"
+            },
+            "cpu_total_load": {
+                "name": "CPU utilization (total)"
+            },
+            "cpu_user_load": {
+                "name": "CPU utilization (user)"
+            },
+            "disk_smart_status": {
+                "name": "Status (smart)"
+            },
+            "disk_status": {
+                "name": "Status"
+            },
+            "disk_temp": {
+                "name": "Temperature"
+            },
+            "memory_available_real": {
+                "name": "Memory available (real)"
+            },
+            "memory_available_swap": {
+                "name": "Memory available (swap)"
+            },
+            "memory_cached": {
+                "name": "Memory cached"
+            },
+            "memory_real_usage": {
+                "name": "Memory usage (real)"
+            },
+            "memory_size": {
+                "name": "Memory size"
+            },
+            "memory_total_real": {
+                "name": "Memory total (real)"
+            },
+            "memory_total_swap": {
+                "name": "Memory total (swap)"
+            },
+            "network_down": {
+                "name": "Download throughput"
+            },
+            "network_up": {
+                "name": "Upload throughput"
+            },
+            "temperature": {
+                "name": "Temperature"
+            },
+            "uptime": {
+                "name": "Last boot"
+            },
+            "volume_disk_temp_avg": {
+                "name": "Average disk temp"
+            },
+            "volume_disk_temp_max": {
+                "name": "Maximum disk temp"
+            },
+            "volume_percentage_used": {
+                "name": "Volume used"
+            },
+            "volume_size_total": {
+                "name": "Total size"
+            },
+            "volume_size_used": {
+                "name": "Used space"
+            },
+            "volume_status": {
+                "name": "Status"
+            }
+        },
+        "switch": {
+            "home_mode": {
+                "name": "Home mode"
+            }
+        },
+        "update": {
+            "update": {
+                "name": "DSM update"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutes between scans",
+                    "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
+                    "timeout": "Timeout (seconds)"
+                }
+            }
+        }
+    },
+    "services": {
+        "reboot": {
+            "description": "Reboots the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
+            "fields": {
+                "serial": {
+                    "description": "Serial of the NAS to reboot; required when multiple NAS are configured.",
+                    "name": "Serial"
+                }
+            },
+            "name": "Reboot"
+        },
+        "shutdown": {
+            "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
+            "fields": {
+                "serial": {
+                    "description": "Serial of the NAS to shutdown; required when multiple NAS are configured.",
+                    "name": "Serial"
+                }
+            },
+            "name": "Shutdown"
+        }
+    }
+}

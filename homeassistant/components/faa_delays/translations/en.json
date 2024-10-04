@@ -1,0 +1,92 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This airport is already configured."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_airport": "Airport code is not valid",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Airport"
+                },
+                "description": "Enter a US Airport Code in IATA Format",
+                "title": "FAA Delays"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "arrive_delay": {
+                "name": "Arrival delay",
+                "state_attributes": {
+                    "maximum": {
+                        "name": "Maximum"
+                    },
+                    "minimum": {
+                        "name": "Minimum"
+                    },
+                    "reason": {
+                        "name": "Reason"
+                    },
+                    "trend": {
+                        "name": "Trend"
+                    }
+                }
+            },
+            "closure": {
+                "name": "Closure",
+                "state_attributes": {
+                    "begin": {
+                        "name": "Begin"
+                    },
+                    "end": {
+                        "name": "End"
+                    }
+                }
+            },
+            "depart_delay": {
+                "name": "Departure delay",
+                "state_attributes": {
+                    "maximum": {
+                        "name": "Maximum"
+                    },
+                    "minimum": {
+                        "name": "Minimum"
+                    },
+                    "reason": {
+                        "name": "Reason"
+                    },
+                    "trend": {
+                        "name": "Trend"
+                    }
+                }
+            },
+            "ground_delay": {
+                "name": "Ground delay",
+                "state_attributes": {
+                    "average": {
+                        "name": "Average"
+                    },
+                    "reason": {
+                        "name": "Reason"
+                    }
+                }
+            },
+            "ground_stop": {
+                "name": "Ground stop",
+                "state_attributes": {
+                    "endtime": {
+                        "name": "End time"
+                    },
+                    "reason": {
+                        "name": "Reason"
+                    }
+                }
+            }
+        }
+    }
+}

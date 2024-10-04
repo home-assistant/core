@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Invalid Place or Service ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Place ID",
+                    "service_id": "Service ID"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_pickup": {
+                "name": "Current pickup"
+            },
+            "next_pickup": {
+                "name": "Next pickup"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Use friendly names for pickup types (when possible)"
+                },
+                "title": "Configure Recollect Waste"
+            }
+        }
+    }
+}

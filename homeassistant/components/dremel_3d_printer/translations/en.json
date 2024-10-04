@@ -1,0 +1,99 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Dremel 3D printer."
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "cancel_job": {
+                "name": "Cancel job"
+            },
+            "pause_job": {
+                "name": "Pause job"
+            },
+            "resume_job": {
+                "name": "Resume job"
+            }
+        },
+        "sensor": {
+            "api_version": {
+                "name": "API version"
+            },
+            "available_storage": {
+                "name": "Available storage"
+            },
+            "chamber": {
+                "name": "Chamber"
+            },
+            "completion_time": {
+                "name": "Completion time"
+            },
+            "connection_type": {
+                "name": "Connection type"
+            },
+            "elapsed_time": {
+                "name": "Elapsed time"
+            },
+            "estimated_total_time": {
+                "name": "Estimated total time"
+            },
+            "extruder": {
+                "name": "Extruder"
+            },
+            "filament": {
+                "name": "Filament"
+            },
+            "host": {
+                "name": "Host"
+            },
+            "hours_used": {
+                "name": "Hours used"
+            },
+            "job_name": {
+                "name": "Job name"
+            },
+            "job_phase": {
+                "name": "Job phase"
+            },
+            "job_status": {
+                "name": "Job status"
+            },
+            "max_extruder_temperature": {
+                "name": "Max extruder temperature"
+            },
+            "max_platform_temperature": {
+                "name": "Max platform temperature"
+            },
+            "network_build": {
+                "name": "Network build"
+            },
+            "platform_temperature": {
+                "name": "Platform temperature"
+            },
+            "progress": {
+                "name": "Progress"
+            },
+            "target_extruder_temperature": {
+                "name": "Target extruder temperature"
+            },
+            "target_platform_temperature": {
+                "name": "Target platform temperature"
+            }
+        }
+    }
+}

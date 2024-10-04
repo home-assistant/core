@@ -1,0 +1,245 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "machine_not_found": "Discovered machine not found in given account",
+            "no_machines": "No machines found in account"
+        },
+        "step": {
+            "bluetooth_selection": {
+                "data": {
+                    "mac": "Device"
+                },
+                "data_description": {
+                    "mac": "Select the Bluetooth device that is your machine"
+                },
+                "description": "Select your device from available Bluetooth devices."
+            },
+            "machine_selection": {
+                "data": {
+                    "host": "IP address",
+                    "machine": "Machine"
+                },
+                "data_description": {
+                    "host": "Local IP address of the machine",
+                    "machine": "Select the machine you want to integrate"
+                },
+                "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Your password from the La Marzocco app"
+                },
+                "description": "Re-authentication required. Please enter your password again."
+            },
+            "reconfigure": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your password from the La Marzocco app",
+                    "username": "Your username from the La Marzocco app"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your password from the La Marzocco app",
+                    "username": "Your username from the La Marzocco app"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "backflush_enabled": {
+                "name": "Backflush active"
+            },
+            "brew_active": {
+                "name": "Brewing active"
+            },
+            "water_tank": {
+                "name": "Water tank empty"
+            }
+        },
+        "button": {
+            "start_backflush": {
+                "name": "Start backflush"
+            }
+        },
+        "calendar": {
+            "auto_on_off_schedule": {
+                "name": "Auto on/off schedule ({id})"
+            }
+        },
+        "number": {
+            "coffee_temp": {
+                "name": "Coffee target temperature"
+            },
+            "dose_key": {
+                "name": "Dose Key {key}"
+            },
+            "prebrew_off": {
+                "name": "Prebrew off time"
+            },
+            "prebrew_off_key": {
+                "name": "Prebrew off time Key {key}"
+            },
+            "prebrew_on": {
+                "name": "Prebrew on time"
+            },
+            "prebrew_on_key": {
+                "name": "Prebrew on time Key {key}"
+            },
+            "preinfusion_off": {
+                "name": "Preinfusion time"
+            },
+            "preinfusion_off_key": {
+                "name": "Preinfusion time Key {key}"
+            },
+            "scale_target_key": {
+                "name": "Brew by weight target {key}"
+            },
+            "smart_standby_time": {
+                "name": "Smart standby time"
+            },
+            "steam_temp": {
+                "name": "Steam target temperature"
+            },
+            "tea_water_duration": {
+                "name": "Tea water duration"
+            }
+        },
+        "select": {
+            "active_bbw": {
+                "name": "Active brew by weight recipe",
+                "state": {
+                    "a": "Recipe A",
+                    "b": "Recipe B"
+                }
+            },
+            "prebrew_infusion_select": {
+                "name": "Prebrew/-infusion mode",
+                "state": {
+                    "disabled": "Disabled",
+                    "prebrew": "Prebrew",
+                    "preinfusion": "Preinfusion"
+                }
+            },
+            "smart_standby_mode": {
+                "name": "Smart standby mode",
+                "state": {
+                    "last_brewing": "Last brewing",
+                    "power_on": "Power on"
+                }
+            },
+            "steam_temp_select": {
+                "name": "Steam level",
+                "state": {
+                    "1": "1",
+                    "2": "2",
+                    "3": "3"
+                }
+            }
+        },
+        "sensor": {
+            "current_temp_coffee": {
+                "name": "Current coffee temperature"
+            },
+            "current_temp_steam": {
+                "name": "Current steam temperature"
+            },
+            "drink_stats_coffee": {
+                "name": "Total coffees made"
+            },
+            "drink_stats_flushing": {
+                "name": "Total flushes made"
+            },
+            "shot_timer": {
+                "name": "Shot timer"
+            }
+        },
+        "switch": {
+            "auto_on_off": {
+                "name": "Auto on/off ({id})"
+            },
+            "smart_standby_enabled": {
+                "name": "Smart standby enabled"
+            },
+            "steam_boiler": {
+                "name": "Steam boiler"
+            }
+        },
+        "update": {
+            "gateway_firmware": {
+                "name": "Gateway firmware"
+            },
+            "machine_firmware": {
+                "name": "Machine firmware"
+            }
+        }
+    },
+    "exceptions": {
+        "api_error": {
+            "message": "Error while communicating with the API"
+        },
+        "authentication_failed": {
+            "message": "Authentication failed"
+        },
+        "auto_on_off_error": {
+            "message": "Error while setting auto on/off to {state} for {id}"
+        },
+        "button_error": {
+            "message": "Error while executing button {key}"
+        },
+        "number_exception": {
+            "message": "Error while setting value {value} for number {key}"
+        },
+        "number_exception_key": {
+            "message": "Error while setting value {value} for number {key}, key {physical_key}"
+        },
+        "select_option_error": {
+            "message": "Error while setting select option {option} for {key}"
+        },
+        "switch_off_error": {
+            "message": "Error while turning off switch {key}"
+        },
+        "switch_on_error": {
+            "message": "Error while turning on switch {key}"
+        },
+        "update_failed": {
+            "message": "Error while updating {key}"
+        }
+    },
+    "issues": {
+        "unsupported_gateway_firmware": {
+            "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update.",
+            "title": "Unsupported gateway firmware"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "use_bluetooth": "Use Bluetooth"
+                },
+                "data_description": {
+                    "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
+                }
+            }
+        }
+    }
+}

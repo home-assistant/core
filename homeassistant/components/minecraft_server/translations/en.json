@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to server. Please check the address and try again. If a port was provided, it must be within a valid range. If you are running a Minecraft Java Edition server, ensure that it is at least version 1.7."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Server address",
+                    "name": "Name"
+                },
+                "description": "Set up your Minecraft Server instance to allow monitoring.",
+                "title": "Link your Minecraft Server"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "sensor": {
+            "edition": {
+                "name": "Edition"
+            },
+            "game_mode": {
+                "name": "Game mode"
+            },
+            "latency": {
+                "name": "Latency"
+            },
+            "map_name": {
+                "name": "Map name"
+            },
+            "motd": {
+                "name": "World message"
+            },
+            "players_max": {
+                "name": "Players max"
+            },
+            "players_online": {
+                "name": "Players online"
+            },
+            "protocol_version": {
+                "name": "Protocol version"
+            },
+            "version": {
+                "name": "Version"
+            }
+        }
+    }
+}

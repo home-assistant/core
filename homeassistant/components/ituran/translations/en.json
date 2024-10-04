@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_otp": "OTP invalid",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "otp": {
+                "data": {
+                    "otp": "OTP"
+                },
+                "data_description": {
+                    "otp": "A one-time-password sent as a text message to the mobile phone number provided before."
+                }
+            },
+            "reauth_confirm": {
+                "description": "A new one-time password will be sent to {phone_number}.",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "id_or_passport": "ID or passport number",
+                    "phone_number": "Mobile phone number"
+                },
+                "data_description": {
+                    "id_or_passport": "The government ID or passport number provided when registering with Ituran.",
+                    "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "address": {
+                "name": "Address"
+            },
+            "battery_voltage": {
+                "name": "Battery voltage"
+            },
+            "heading": {
+                "name": "Heading"
+            },
+            "last_update_from_vehicle": {
+                "name": "Last update from vehicle"
+            },
+            "mileage": {
+                "name": "Mileage"
+            }
+        }
+    },
+    "exceptions": {
+        "api_error": {
+            "message": "An error occurred while communicating with the Ituran service."
+        },
+        "auth_error": {
+            "message": "Failed authenticating with the Ituran service, please reauthenticate the integration."
+        }
+    }
+}

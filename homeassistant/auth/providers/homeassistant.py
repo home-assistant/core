@@ -11,6 +11,7 @@ from typing import Any, cast
 import bcrypt
 import voluptuous as vol
 
+from homeassistant import msh_utils
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -47,6 +48,22 @@ def async_get_provider(hass: HomeAssistant) -> HassAuthProvider:
 
 class InvalidAuth(HomeAssistantError):
     """Raised when we encounter invalid authentication."""
+
+
+class SubscriptionOverError(HomeAssistantError):
+    """Raised when subscription over during auth."""
+
+
+class NoInternetError(HomeAssistantError):
+    """Raised when no internet during auth."""
+
+
+class ServerDeniedError(HomeAssistantError):
+    """Raised when something missing o wrong in req."""
+
+
+class InternalServerError(HomeAssistantError):
+    """Raised when something missing o wrong in req."""
 
 
 class InvalidUser(HomeAssistantError):
@@ -319,6 +336,10 @@ class HassAuthProvider(AuthProvider):
             self.data.validate_login, username, password
         )
 
+        await msh_utils.verify_user_subscription_for_this_server(username)
+        server_id = await msh_utils.retrieve_value_from_config_file(msh_utils.SERVER_ID)
+        await msh_utils.fetch_and_save_device_limit(username, server_id)
+
     async def async_add_auth(self, username: str, password: str) -> None:
         """Call add_auth on data."""
         if self.data is None:
@@ -416,6 +437,14 @@ class HassLoginFlow(LoginFlow[HassAuthProvider]):
                 )
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except SubscriptionOverError:
+                errors["base"] = "subscription_over"
+            except NoInternetError:
+                errors["base"] = "no_internet"
+            except ServerDeniedError:
+                errors["base"] = "server_denied"
+            except InternalServerError:
+                errors["base"] = "server_crash"
 
             if not errors:
                 user_input.pop("password")

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to start setup?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The host or IP address of your main device. Only needed to change if 'eheimdigital' doesn't work."
+                }
+            }
+        }
+    },
+    "entity": {
+        "light": {
+            "channel": {
+                "name": "Channel {channel_id}",
+                "state_attributes": {
+                    "effect": {
+                        "state": {
+                            "daycl_mode": "Daycycle mode"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

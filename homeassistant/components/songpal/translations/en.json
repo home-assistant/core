@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "not_songpal_device": "Not a Songpal device"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Do you want to set up {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpoint"
+                }
+            }
+        }
+    },
+    "services": {
+        "set_sound_setting": {
+            "description": "Change sound setting.",
+            "fields": {
+                "name": {
+                    "description": "Name of the setting.",
+                    "name": "Name"
+                },
+                "value": {
+                    "description": "Value to set.",
+                    "name": "Value"
+                }
+            },
+            "name": "Sets sound setting"
+        }
+    }
+}

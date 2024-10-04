@@ -1,0 +1,37 @@
+{
+    "services": {
+        "create": {
+            "description": "Shows a notification on the notifications panel.",
+            "fields": {
+                "message": {
+                    "description": "Message body of the notification.",
+                    "name": "Message"
+                },
+                "notification_id": {
+                    "description": "ID of the notification. This new notification will overwrite an existing notification with the same ID.",
+                    "name": "Notification ID"
+                },
+                "title": {
+                    "description": "Optional title of the notification.",
+                    "name": "Title"
+                }
+            },
+            "name": "Create"
+        },
+        "dismiss": {
+            "description": "Deletes a notification from the notifications panel.",
+            "fields": {
+                "notification_id": {
+                    "description": "ID of the notification to be deleted.",
+                    "name": "Notification ID"
+                }
+            },
+            "name": "Dismiss"
+        },
+        "dismiss_all": {
+            "description": "Deletes all notifications from the notifications panel.",
+            "name": "Dismiss all"
+        }
+    },
+    "title": "Persistent Notification"
+}

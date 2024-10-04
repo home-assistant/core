@@ -1,0 +1,60 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "no_flipr_id_found": "No flipr or hub associated to your account for now. You should verify it is working with the Flipr's mobile app first.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Connect using your Flipr account.",
+                "title": "Connect to Flipr"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "chlorine_status": {
+                "name": "Chlorine status"
+            },
+            "ph_status": {
+                "name": "pH status"
+            }
+        },
+        "select": {
+            "hub_mode": {
+                "name": "Mode",
+                "state": {
+                    "auto": "Automatic",
+                    "manual": "Manual",
+                    "planning": "Planning"
+                }
+            }
+        },
+        "sensor": {
+            "chlorine": {
+                "name": "Chlorine"
+            },
+            "last_measured": {
+                "name": "Last measured"
+            },
+            "red_ox": {
+                "name": "Red OX"
+            },
+            "water_temperature": {
+                "name": "Water temperature"
+            }
+        }
+    },
+    "issues": {
+        "duplicate_config": {
+            "description": "The Flipr integration has been updated to work account based rather than device based. This means that if you have 2 devices, you only need one configuration. For every account you have, please delete all but one configuration and restart Home Assistant for it to set up the devices linked to your account.",
+            "title": "Multiple flipr configurations with the same account"
+        }
+    }
+}

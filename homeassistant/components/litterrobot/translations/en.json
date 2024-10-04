@@ -1,0 +1,162 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "The password of your Whisker account."
+                },
+                "description": "Please update your password for {username}",
+                "title": "Authentication expired for {name}"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "The password of your Whisker account.",
+                    "username": "The email address of your Whisker account."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "power_status": {
+                "name": "Power status"
+            },
+            "sleep_mode": {
+                "name": "Sleep mode"
+            },
+            "sleeping": {
+                "name": "Sleeping"
+            }
+        },
+        "button": {
+            "give_snack": {
+                "name": "Give snack"
+            },
+            "reset": {
+                "name": "Reset"
+            },
+            "reset_waste_drawer": {
+                "name": "Reset waste drawer"
+            }
+        },
+        "select": {
+            "brightness_level": {
+                "name": "Panel brightness",
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
+            },
+            "cycle_delay": {
+                "name": "Clean cycle wait time minutes"
+            },
+            "meal_insert_size": {
+                "name": "Meal insert size"
+            }
+        },
+        "sensor": {
+            "food_level": {
+                "name": "Food level"
+            },
+            "last_seen": {
+                "name": "Last seen"
+            },
+            "litter_level": {
+                "name": "Litter level"
+            },
+            "pet_weight": {
+                "name": "Pet weight"
+            },
+            "sleep_mode_end_time": {
+                "name": "Sleep mode end time"
+            },
+            "sleep_mode_start_time": {
+                "name": "Sleep mode start time"
+            },
+            "status_code": {
+                "name": "Status code",
+                "state": {
+                    "br": "Bonnet Removed",
+                    "ccc": "Clean Cycle Complete",
+                    "ccp": "Clean Cycle In Progress",
+                    "cd": "Cat Detected",
+                    "csf": "Cat Sensor Fault",
+                    "csi": "Cat Sensor Interrupted",
+                    "cst": "Cat Sensor Timing",
+                    "df1": "Drawer Almost Full - 2 Cycles Left",
+                    "df2": "Drawer Almost Full - 1 Cycle Left",
+                    "dfs": "Drawer Full",
+                    "dhf": "Dump + Home Position Fault",
+                    "dpf": "Dump Position Fault",
+                    "ec": "Empty Cycle",
+                    "hpf": "Home Position Fault",
+                    "off": "Off",
+                    "offline": "Offline",
+                    "otf": "Over Torque Fault",
+                    "p": "Paused",
+                    "pd": "Pinch Detect",
+                    "pwrd": "Powering Down",
+                    "pwru": "Powering Up",
+                    "rdy": "Ready",
+                    "scf": "Cat Sensor Fault At Startup",
+                    "sdf": "Drawer Full At Startup",
+                    "spf": "Pinch Detect At Startup"
+                }
+            },
+            "waste_drawer": {
+                "name": "Waste drawer"
+            }
+        },
+        "switch": {
+            "night_light_mode": {
+                "name": "Night light mode"
+            },
+            "panel_lockout": {
+                "name": "Panel lockout"
+            }
+        },
+        "time": {
+            "sleep_mode_start_time": {
+                "name": "Sleep mode start time"
+            }
+        },
+        "vacuum": {
+            "litter_box": {
+                "name": "Litter box"
+            }
+        }
+    },
+    "services": {
+        "set_sleep_mode": {
+            "description": "Sets the sleep mode and start time.",
+            "fields": {
+                "enabled": {
+                    "description": "Whether sleep mode should be enabled.",
+                    "name": "Enabled"
+                },
+                "start_time": {
+                    "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours.",
+                    "name": "Start time"
+                }
+            },
+            "name": "Set sleep mode"
+        }
+    }
+}

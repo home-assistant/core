@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API key"
+                },
+                "description": "Tailscale API access tokens are valid for 90-days. You can create a fresh Tailscale API access token at {authkeys_url}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "tailnet": "Tailnet"
+                },
+                "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN. \n\nTo authenticate with Tailscale you'll need to create an API access token at {authkeys_url}.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo)."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "client": {
+                "name": "Client"
+            },
+            "client_supports_hair_pinning": {
+                "name": "Supports hairpinning"
+            },
+            "client_supports_ipv6": {
+                "name": "Supports IPv6"
+            },
+            "client_supports_pcp": {
+                "name": "Supports PCP"
+            },
+            "client_supports_pmp": {
+                "name": "Supports NAT-PMP"
+            },
+            "client_supports_udp": {
+                "name": "Supports UDP"
+            },
+            "client_supports_upnp": {
+                "name": "Supports UPnP"
+            },
+            "key_expiry_disabled": {
+                "name": "Key expiry disabled"
+            }
+        },
+        "sensor": {
+            "expires": {
+                "name": "Expires"
+            },
+            "ip": {
+                "name": "IP address"
+            },
+            "last_seen": {
+                "name": "Last seen"
+            }
+        }
+    }
+}

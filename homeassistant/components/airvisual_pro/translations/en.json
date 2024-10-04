@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password can be retrieved from the AirVisual Pro's UI."
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Host",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "ip_address": "The hostname or IP address of your AirVisual Pro device."
+                },
+                "description": "The password can be retrieved from the AirVisual Pro's UI."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "outdoor_air_quality_index": {
+                "name": "Outdoor air quality index"
+            },
+            "pm01": {
+                "name": "PM0.1"
+            }
+        }
+    }
+}

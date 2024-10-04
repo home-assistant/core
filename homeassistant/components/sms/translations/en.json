@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "baud_speed": "Baud Speed",
+                    "device": "Device"
+                },
+                "title": "Connect to the modem"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "bit_error_rate": {
+                "name": "Bit error rate"
+            },
+            "cid": {
+                "name": "Cell ID"
+            },
+            "lac": {
+                "name": "Local area code"
+            },
+            "network_code": {
+                "name": "GSM network code"
+            },
+            "network_name": {
+                "name": "Network name"
+            },
+            "signal_percent": {
+                "name": "Signal percent"
+            },
+            "state": {
+                "name": "Network status"
+            }
+        }
+    }
+}

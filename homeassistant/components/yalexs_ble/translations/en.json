@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_key_format": "The offline key must be a 32-byte hex string.",
+            "invalid_key_index": "The offline key slot must be an integer between 0 and 255.",
+            "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Do you want to set up {name} over Bluetooth with address {address}?"
+            },
+            "reauth_validate": {
+                "data": {
+                    "key": "Offline Key (32-byte hex string)",
+                    "slot": "Offline Key Slot (Integer between 0 and 255)"
+                },
+                "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range."
+            },
+            "user": {
+                "data": {
+                    "address": "Bluetooth address",
+                    "key": "Offline Key (32-byte hex string)",
+                    "slot": "Offline Key Slot (Integer between 0 and 255)"
+                },
+                "description": "Check the documentation for how to find the offline key. If you are using the August cloud integration to obtain the key, you may need to reload the August cloud integration while the lock is in Bluetooth range."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "battery_voltage": {
+                "name": "Battery voltage"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_options": {
+                "data": {
+                    "always_connected": "Always connected"
+                },
+                "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery."
+            }
+        }
+    }
+}

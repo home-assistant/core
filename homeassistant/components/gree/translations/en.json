@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "fresh_air": {
+                "name": "Fresh air"
+            },
+            "health_mode": {
+                "name": "Health mode"
+            },
+            "light": {
+                "name": "Panel light"
+            },
+            "quiet": {
+                "name": "Quiet"
+            },
+            "xfan": {
+                "name": "XFan"
+            }
+        }
+    }
+}

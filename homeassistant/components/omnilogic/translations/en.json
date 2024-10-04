@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "pH offset (positive or negative)",
+                    "polling_interval": "Polling interval (in seconds)"
+                }
+            }
+        }
+    },
+    "services": {
+        "set_pump_speed": {
+            "description": "Sets the run speed of a variable speed pump.",
+            "fields": {
+                "speed": {
+                    "description": "Speed for the VSP between min and max speed.",
+                    "name": "Speed"
+                }
+            },
+            "name": "Set pump speed"
+        }
+    }
+}

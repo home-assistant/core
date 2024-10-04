@@ -1,0 +1,98 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "no_uuid": "Kodi instance does not have a unique ID. This is most likely due to an old Kodi version (17.x or below). You can configure the integration manually or upgrade to a more recent Kodi version.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services."
+            },
+            "discovery_confirm": {
+                "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
+                "title": "Discovered Kodi"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the system hosting your Kodi server."
+                },
+                "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "The WebSocket port (sometimes called TCP port in Kodi). In order to connect over WebSocket, you need to enable \"Allow programs ... to control Kodi\" in System/Settings/Network/Services. If WebSocket is not enabled, remove the port and leave empty."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} turned off",
+            "turn_on": "{entity_name} turned on"
+        }
+    },
+    "entity": {
+        "media_player": {
+            "media_player": {
+                "state_attributes": {
+                    "dynamic_range": {
+                        "name": "Dynamic range"
+                    }
+                }
+            }
+        }
+    },
+    "services": {
+        "add_to_playlist": {
+            "description": "Adds music to the default playlist (i.e. playlistid=0).",
+            "fields": {
+                "artist_name": {
+                    "description": "Optional artist name for filtering media.",
+                    "name": "Artist name"
+                },
+                "media_id": {
+                    "description": "Unique ID of the media entry to add (`songid` or albumid`). If not defined, Media name and Artist name are needed to search the Kodi music library.",
+                    "name": "Media ID"
+                },
+                "media_name": {
+                    "description": "Optional media name for filtering media. Can be 'ALL' when Media type is 'ALBUM' and Artist name is specified, to add all songs from one artist.",
+                    "name": "Media name"
+                },
+                "media_type": {
+                    "description": "Media type identifier. It must be one of 'SONG' or 'ALBUM'.",
+                    "name": "Media type"
+                }
+            },
+            "name": "Add to playlist"
+        },
+        "call_method": {
+            "description": "Calls a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.",
+            "fields": {
+                "method": {
+                    "description": "Name of the Kodi JSONRPC API method to be called.",
+                    "name": "Method"
+                }
+            },
+            "name": "Call method"
+        }
+    }
+}
