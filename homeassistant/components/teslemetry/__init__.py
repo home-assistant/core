@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     vehicles: list[TeslemetryVehicleData] = []
     energysites: list[TeslemetryEnergyData] = []
 
-    # Create a single stream instance
+    # Create the stream
     stream = TeslemetryStream(
         session,
         access_token,
