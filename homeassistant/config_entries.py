@@ -2726,6 +2726,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         options: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
+        if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
+            raise ValueError(
+                f"Creating a new config entry from {self.source} is invalid, "
+                "please use `async_update_reload_and_abort` or `async_abort` "
+                f'with `reason="{self.source}_successful"'
+            )
         result = super().async_create_entry(
             title=title,
             data=data,
