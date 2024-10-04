@@ -613,6 +613,8 @@ async def test_new_device_discovered(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    reolink_connect.logout.reset_mock()
+
     assert reolink_connect.logout.call_count == 0
     reolink_connect.new_devices = True
 
