@@ -340,8 +340,12 @@ async def async_start(  # noqa: C901
 
         discovered_components: list[MqttComponentConfig] = []
         if component == CONF_DEVICE:
-            # Process device based discovery message
-            # and regenerate cleanup config.
+            # Process device based discovery message and regenerate
+            # cleanup config for the all the components that are being removed.
+            # This is done when a component in the device config is omitted and detected
+            # as being removed, or when the device config update payload is empty.
+            # In that case this will regenerate a cleanup message for all every already
+            # discovered components that were linked to the initial device discovery.
             device_discovery_payload = _parse_device_payload(
                 hass, payload, object_id, node_id
             )
