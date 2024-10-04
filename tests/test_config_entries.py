@@ -6734,7 +6734,6 @@ async def test_abort_if_unique_id_mismatch(
             self._abort_if_unique_id_mismatch()
             return self.async_abort(reason="success")
 
-    # A reauth flow does not have access to the config entry from context
     with mock_config_flow("test", TestFlow):
         if source == config_entries.SOURCE_REAUTH:
             result = await entry.start_reauth_flow(hass)
