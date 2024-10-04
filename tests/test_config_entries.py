@@ -6850,7 +6850,6 @@ async def test_create_entry_reauth_reconfigure(
 
     assert len(hass.config_entries.async_entries("test")) == 1
 
-    # A reauth flow does not have access to the config entry from context
     with mock_config_flow("test", TestFlow):
         if source == config_entries.SOURCE_REAUTH:
             result = await entry.start_reauth_flow(hass)
