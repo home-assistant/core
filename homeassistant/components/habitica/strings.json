@@ -200,8 +200,8 @@
           "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
         },
         "task": {
-          "name": "Task",
-          "description": "Enter the title, task ID, or alias of the task you want to target with the skill or spell."
+          "name": "Task name",
+          "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
     }
