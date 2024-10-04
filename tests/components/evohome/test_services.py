@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -64,12 +63,9 @@ async def test_evohome_ctl_svcs(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test domain-specific services of a evohome-compatible controller."""
-
-    freezer.move_to("2024-07-10T12:00:00Z")
 
     async for _ in setup_evohome(hass, config, install=install):
         services = list(hass.services.async_services_for_domain(DOMAIN))
@@ -115,12 +111,9 @@ async def test_climate_ctl_svcs(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate services of a evohome-compatible controller."""
-
-    freezer.move_to("2024-07-10T12:00:00Z")
 
     async for _ in setup_evohome(hass, config, install=install):
         ctl: EvoController = get_ctl_entity(hass)
