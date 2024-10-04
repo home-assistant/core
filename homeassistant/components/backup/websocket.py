@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_COMPONENT, LOGGER
+from .const import DATA_MANAGER, LOGGER
 
 
 @callback
@@ -32,7 +32,7 @@ async def handle_info(
     msg: dict[str, Any],
 ) -> None:
     """List all stored backups."""
-    manager = hass.data[DATA_COMPONENT]
+    manager = hass.data[DATA_MANAGER]
     backups = await manager.get_backups()
     connection.send_result(
         msg["id"],
@@ -57,7 +57,7 @@ async def handle_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
-    await hass.data[DATA_COMPONENT].remove_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].remove_backup(msg["slug"])
     connection.send_result(msg["id"])
 
 
@@ -70,7 +70,7 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_COMPONENT].generate_backup()
+    backup = await hass.data[DATA_MANAGER].generate_backup()
     connection.send_result(msg["id"], backup)
 
 
@@ -83,7 +83,7 @@ async def handle_backup_start(
     msg: dict[str, Any],
 ) -> None:
     """Backup start notification."""
-    manager = hass.data[DATA_COMPONENT]
+    manager = hass.data[DATA_MANAGER]
     manager.backing_up = True
     LOGGER.debug("Backup start notification")
 
@@ -105,7 +105,7 @@ async def handle_backup_end(
     msg: dict[str, Any],
 ) -> None:
     """Backup end notification."""
-    manager = hass.data[DATA_COMPONENT]
+    manager = hass.data[DATA_MANAGER]
     manager.backing_up = False
     LOGGER.debug("Backup end notification")
 

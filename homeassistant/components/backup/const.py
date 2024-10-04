@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .manager import BackupManager
 
 DOMAIN = "backup"
-DATA_COMPONENT: HassKey[BackupManager] = HassKey(DOMAIN)
+DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [
