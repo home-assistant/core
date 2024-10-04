@@ -310,7 +310,7 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
-    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
     def disabled(self) -> bool:
@@ -1069,7 +1069,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
             # Change modified_at/cache if we are changing something that we store
             new_values["modified_at"] = utcnow()
-            new_values["cache"] = {}
 
         self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
@@ -1254,17 +1253,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if config_entries == {config_entry_id}:
                 # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device,
-                    orphaned_timestamp=now_time,
-                    config_entries=set(),
-                    cache={},
+                    deleted_device, orphaned_timestamp=now_time, config_entries=set()
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
                 # No need to reindex here since we currently
                 # do not have a lookup by config entry
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, config_entries=config_entries, cache={}
+                    deleted_device, config_entries=config_entries
                 )
             self.async_schedule_save()
 

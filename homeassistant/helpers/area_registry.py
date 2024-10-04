@@ -78,7 +78,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     id: str
     labels: set[str] = field(default_factory=set)
     picture: str | None
-    _cache: dict[str, Any] = field(default_factory=dict, compare=False)
+    _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property
     def json_fragment(self) -> json_fragment:
@@ -357,7 +357,6 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             return old
 
         new_values["modified_at"] = utcnow()
-        new_values["_cache"] = {}
 
         self.hass.verify_event_loop_thread("area_registry.async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)
