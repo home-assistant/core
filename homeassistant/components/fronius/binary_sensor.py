@@ -13,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import FroniusEntityDescription, _FroniusEntity
+from .entity import FroniusEntity, FroniusEntityDescription
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -55,7 +55,7 @@ POWER_FLOW_BINARY_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
 ]
 
 
-class _FroniusBinarySensorEntity(_FroniusEntity, BinarySensorEntity):
+class _FroniusBinarySensorEntity(FroniusEntity, BinarySensorEntity):
     """Defines a Fronius binary_sensor entity."""
 
     entity_description: FroniusBinarySensorEntityDescription

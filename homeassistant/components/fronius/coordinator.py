@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +21,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import _FroniusEntity
+from .entity import FroniusEntity
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
@@ -42,7 +43,7 @@ class FroniusCoordinatorBase(
 
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: dict[Platform, list[FroniusEntityDescription]]
+    valid_descriptions: Mapping[Platform, list[FroniusEntityDescription]]
 
     MAX_FAILED_UPDATES = 3
 
@@ -78,17 +79,18 @@ class FroniusCoordinatorBase(
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_descriptors:
                     # id seen for the first time
-                    self.unregistered_descriptors[solar_net_id] = (
-                        self.valid_descriptions.copy()
-                    )
+                    self.unregistered_descriptors[solar_net_id] = {
+                        platform: descriptors.copy()
+                        for platform, descriptors in self.valid_descriptions.items()
+                    }
             return data
 
     @callback
-    def add_entities_for_seen_keys[_FroniusEntityT: _FroniusEntity](
+    def add_entities_for_seen_keys[FroniusEntityT: FroniusEntity](
         self,
         async_add_entities: AddEntitiesCallback,
         platform: Platform,
-        entity_constructor: type[_FroniusEntityT],
+        entity_constructor: type[FroniusEntityT],
     ) -> None:
         """Add entities for received keys and registers listener for future seen keys.
 
@@ -100,7 +102,7 @@ class FroniusCoordinatorBase(
         @callback
         def _add_entities_for_unregistered_descriptors() -> None:
             """Add entities for keys seen for the first time."""
-            new_entities: list[_FroniusEntityT] = []
+            new_entities: list[FroniusEntityT] = []
             for solar_net_id, device_data in self.data.items():
                 remaining_unregistered_descriptors = []
                 for description in self.unregistered_descriptors[solar_net_id][

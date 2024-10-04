@@ -41,7 +41,7 @@ from .const import (
     get_meter_location_description,
     get_ohmpilot_state_message,
 )
-from .entity import FroniusEntityDescription, _FroniusEntity
+from .entity import FroniusEntity, FroniusEntityDescription
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -696,7 +696,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
 ]
 
 
-class _FroniusSensorEntity(_FroniusEntity, SensorEntity):
+class _FroniusSensorEntity(FroniusEntity, SensorEntity):
     """Defines a Fronius coordinator entity."""
 
     entity_description: FroniusSensorEntityDescription

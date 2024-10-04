@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from .coordinator import FroniusCoordinatorBase
 
 
-class _FroniusEntity(CoordinatorEntity["FroniusCoordinatorBase"], Entity):
+class FroniusEntity(ABC, CoordinatorEntity["FroniusCoordinatorBase"], Entity):
     """Defines a Fronius coordinator entity."""
 
     entity_description: FroniusEntityDescription
@@ -43,17 +44,17 @@ class _FroniusEntity(CoordinatorEntity["FroniusCoordinatorBase"], Entity):
         """Extract information for SolarNet device from coordinator data."""
         return self.coordinator.data[self.solar_net_id]
 
+    @abstractmethod
     def _get_entity_value(self) -> Any:
         """Extract entity value from coordinator.
-
-        Subclasses must implement.
 
         Raises KeyError if not included in latest update.
         """
 
-        raise NotImplementedError
-
+    @abstractmethod
     def _set_entity_value(self) -> None:
         """Set the entity value correctly based on the platform."""
 
-        raise NotImplementedError
+    @abstractmethod
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
