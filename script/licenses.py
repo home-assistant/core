@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -149,7 +151,6 @@ EXCEPTIONS = {
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
-    "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
@@ -175,11 +176,24 @@ TODO = {
 }
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the main script."""
-    raw_licenses = json.loads(Path("licenses.json").read_text())
-    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     exit_code = 0
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        "path",
+        nargs="?",
+        metavar="PATH",
+        default="licenses.json",
+        help="Path to json licenses file",
+    )
+
+    argv = argv or sys.argv[1:]
+    args = parser.parse_args(argv)
+
+    raw_licenses = json.loads(Path(args.path).read_text())
+    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
         previous_unapproved_version = TODO.get(package.name)
         approved = False

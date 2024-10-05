@@ -235,6 +235,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         await self._bridge.player.resume()
 
     @exception_wrap
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._bridge.player.stop()
+
+    @exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next command."""
         await self._bridge.player.next()

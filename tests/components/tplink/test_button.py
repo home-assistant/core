@@ -123,11 +123,6 @@ async def test_button(
 ) -> None:
     """Test a sensor unique ids."""
     mocked_feature = mocked_feature_button
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
-
     plug = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -150,10 +145,6 @@ async def test_button_children(
 ) -> None:
     """Test a sensor unique ids."""
     mocked_feature = mocked_feature_button
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_device(
         alias="my_device",
         features=[mocked_feature],
@@ -187,10 +178,6 @@ async def test_button_press(
 ) -> None:
     """Test a number entity limits and setting values."""
     mocked_feature = mocked_feature_button
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})

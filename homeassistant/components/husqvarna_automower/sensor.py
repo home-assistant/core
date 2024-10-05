@@ -7,7 +7,13 @@ import logging
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
-from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons, WorkArea
+from aioautomower.model import (
+    MowerAttributes,
+    MowerModes,
+    MowerStates,
+    RestrictedReasons,
+    WorkArea,
+)
 from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
@@ -86,6 +92,9 @@ ERROR_KEY_LIST = [
     "docking_sensor_defect",
     "electronic_problem",
     "empty_battery",
+    MowerStates.ERROR.lower(),
+    MowerStates.ERROR_AT_POWER_UP.lower(),
+    MowerStates.FATAL_ERROR.lower(),
     "folding_cutting_deck_sensor_defect",
     "folding_sensor_activated",
     "geofence_problem",
@@ -180,6 +189,12 @@ ERROR_KEY_LIST = [
     "zone_generator_problem",
 ]
 
+ERROR_STATES = {
+    MowerStates.ERROR,
+    MowerStates.ERROR_AT_POWER_UP,
+    MowerStates.FATAL_ERROR,
+}
+
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED.lower(),
     RestrictedReasons.DAILY_LIMIT.lower(),
@@ -227,6 +242,16 @@ def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
         # Sensor does not get created if it is None
         assert data.work_areas is not None
     return {ATTR_WORK_AREA_ID_ASSIGNMENT: data.work_area_dict}
+
+
+@callback
+def _get_error_string(data: MowerAttributes) -> str:
+    """Return the error key, if not provided the mower state or `no error`."""
+    if data.mower.error_key is not None:
+        return data.mower.error_key
+    if data.mower.state in ERROR_STATES:
+        return data.mower.state.lower()
+    return "no_error"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -355,9 +380,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="error",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: ERROR_KEY_LIST,
-        value_fn=lambda data: (
-            "no_error" if data.mower.error_key is None else data.mower.error_key
-        ),
+        value_fn=_get_error_string,
     ),
     AutomowerSensorEntityDescription(
         key="restricted_reason",

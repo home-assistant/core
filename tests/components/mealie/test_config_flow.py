@@ -6,7 +6,7 @@ from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -242,11 +242,7 @@ async def test_reconfigure_flow(
     """Test reconfigure flow."""
     await setup_integration(hass, mock_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
@@ -275,11 +271,7 @@ async def test_reconfigure_flow_wrong_account(
     """Test reconfigure flow with wrong account."""
     await setup_integration(hass, mock_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
@@ -314,11 +306,7 @@ async def test_reconfigure_flow_exceptions(
     await setup_integration(hass, mock_config_entry)
     mock_mealie_client.get_user_info.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 

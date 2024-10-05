@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -45,9 +45,14 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+else:
+    from propcache import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +282,7 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -305,6 +310,7 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
     def disabled(self) -> bool:
@@ -341,7 +347,7 @@ class DeviceEntry:
             "via_device_id": self.via_device_id,
         }
 
-    @cached_property
+    @under_cached_property
     def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
@@ -357,7 +363,7 @@ class DeviceEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -389,7 +395,7 @@ class DeviceEntry:
         )
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
@@ -400,6 +406,7 @@ class DeletedDeviceEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
         self,
@@ -418,7 +425,7 @@ class DeletedDeviceEntry:
             is_new=True,
         )
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
