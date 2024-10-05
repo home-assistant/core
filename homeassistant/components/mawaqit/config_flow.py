@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
@@ -67,7 +67,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # if the data folder is empty, we can continue the configuration
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
-        if await is_another_instance(self.hass, self.store):
+        if await utils.is_another_instance(self.hass, self.store):
             # return self.async_abort(reason="one_instance_allowed")
             return await self._show_keep_or_reset_form()
 
@@ -159,7 +159,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LONGITUDE: longi,
             }
 
-            utils.cleare_storage_entry(self.store, MAWAQIT_ALL_MOSQUES_NN)
+            await utils.cleare_storage_entry(self.store, MAWAQIT_ALL_MOSQUES_NN)
 
             return self.async_create_entry(title=title, data=data_entry)
 
@@ -235,20 +235,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="configuration_kept")
         if choice == "reset":
             # Clear existing data and restart the configuration process
-            await self.async_clear_data()
+            await utils.async_clear_data(self.hass, self.store, DOMAIN)
             return await self.async_step_user()
         return await self._show_keep_or_reset_form()
-
-    async def async_clear_data(self):
-        """Clear all data from the store and folders."""
-
-        # Remove all config entries
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        for entry in entries:
-            if entry.domain == DOMAIN:
-                await self.hass.config_entries.async_remove(entry.entry_id)
-
-        await self.store.async_remove()  # Remove the existing data in the store
 
     @staticmethod
     @callback
@@ -351,13 +340,3 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
-    """Check if the mosque configuration file already exists."""
-    return await utils.read_my_mosque_NN_file(store) is not None
-
-
-async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:
-    """Check if another instance of the mosque configuration exists."""
-    return await is_already_configured(hass, store)

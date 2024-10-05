@@ -75,13 +75,14 @@ async def read_all_mosques_NN_file(store: Store | None):
     CALC_METHODS = []
 
     dict_mosques = await read_one_element(store, MAWAQIT_ALL_MOSQUES_NN)
-    for mosque in dict_mosques:
-        distance = mosque["proximity"]
-        distance = distance / 1000
-        distance = round(distance, 2)
-        name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
-        uuid_servers.extend([mosque["uuid"]])
-        CALC_METHODS.extend([mosque["label"]])
+    if dict_mosques is not None:
+        for mosque in dict_mosques:
+            distance = mosque["proximity"]
+            distance = distance / 1000
+            distance = round(distance, 2)
+            name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
+            uuid_servers.extend([mosque["uuid"]])
+            CALC_METHODS.extend([mosque["label"]])
 
     return name_servers, uuid_servers, CALC_METHODS
 
@@ -342,3 +343,25 @@ async def cleare_storage_entry(store, key):
     )
     _LOGGER.info("Cleared storage entry with key = %s", key)
     # await store.async_remove()
+
+
+async def async_clear_data(hass, store, domain):
+    """Clear all data from the store and folders."""
+
+    # Remove all config entries
+    entries = hass.config_entries.async_entries(domain)
+    for entry in entries:
+        if entry.domain == domain:
+            await hass.config_entries.async_remove(entry.entry_id)
+
+    await store.async_remove()  # Remove the existing data in the store
+
+
+async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
+    """Check if the mosque configuration file already exists."""
+    return await read_my_mosque_NN_file(store) is not None
+
+
+async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:
+    """Check if another instance of the mosque configuration exists."""
+    return await is_already_configured(hass, store)
