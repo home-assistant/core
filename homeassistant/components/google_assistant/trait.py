@@ -2803,12 +2803,11 @@ class SensorStateTrait(_Trait):
         ) -> dict[str, Any]:
             sensor_state: dict[str, Any] = {
                 "name": name,
+                "rawValue": raw_value,
             }
-            if raw_value is not None:
-                sensor_state["rawValue"] = raw_value
             if current_state:
                 sensor_state["currentSensorState"] = current_state
-            return {"currentSensorStates": [sensor_state]}
+            return {"currentSensorStateData": [sensor_state]}
 
         if self.state.domain == sensor.DOMAIN:
             sensor_data = self.sensor_types.get(device_class)
