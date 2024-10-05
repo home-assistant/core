@@ -9,8 +9,8 @@ from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
-    SwitcherSingleShutterDualLight,
     SwitcherDualShutterSingleLight,
+    SwitcherSingleShutterDualLight,
 )
 
 from homeassistant.components.light import ColorMode, LightEntity
