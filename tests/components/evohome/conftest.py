@@ -14,12 +14,7 @@ from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
-from homeassistant.components.evohome.climate import EvoZone
-from homeassistant.components.evohome.coordinator import EvoBroker
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -158,19 +153,3 @@ async def setup_evohome(
         assert mock_client.account_info is not None
 
         yield mock_client
-
-
-def get_zone_entity(hass: HomeAssistant) -> EvoZone:
-    """Return the entity of the first zone of the evohome system."""
-
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    unique_id = broker.tcs._zones[0]._id
-    if unique_id == broker.tcs._id:
-        unique_id += "z"  # special case of merged controller/zone
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(Platform.CLIMATE, DOMAIN, unique_id)
-
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
-    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
