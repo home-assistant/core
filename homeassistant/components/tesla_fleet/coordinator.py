@@ -1,6 +1,8 @@
 """Tesla Fleet Data Coordinator."""
 
 from datetime import datetime, timedelta
+from random import randint
+from time import time
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
@@ -27,6 +29,7 @@ VEHICLE_WAIT = timedelta(minutes=15)
 
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
+ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -192,12 +195,23 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         super().__init__(
             hass,
             LOGGER,
-            name="Tesla Fleet Energy Site History",
+            name=f"Tesla Fleet Energy History {api.energy_site_id}",
             update_interval=timedelta(seconds=300),
         )
         self.api = api
         self.data = {}
         self.updated_once = False
+
+    async def async_config_entry_first_refresh(self) -> None:
+        """Set up the data coordinator."""
+        await super().async_config_entry_first_refresh()
+
+        # Calculate seconds until next 5 minute period plus a random delay
+        delta = randint(310, 330) - (int(time()) % 300)
+        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
+        self.update_interval = timedelta(seconds=delta)
+        self._schedule_refresh()
+        self.update_interval = ENERGY_HISTORY_INTERVAL
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""

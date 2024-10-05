@@ -571,7 +571,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, RestoreSensor
         self._attr_native_value = self._value
 
 
-class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, RestoreSensor):
+class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription
@@ -584,13 +584,6 @@ class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, Restore
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(data, description.key)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if not self.coordinator.updated_once:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
