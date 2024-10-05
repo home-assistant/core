@@ -11,10 +11,33 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.evohome import DOMAIN
+from homeassistant.components.evohome.coordinator import EvoBroker
+from homeassistant.components.evohome.water_heater import EvoDHW
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 
-from .conftest import get_dhw_entity, setup_evohome
+from .conftest import setup_evohome
 from .const import TEST_INSTALLS
+
+
+def get_dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
+    """Return the DHW entity of the evohome system."""
+
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+
+    if (dhw := broker.tcs.hotwater) is None:
+        return None
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.WATER_HEATER, DOMAIN, dhw._id
+    )
+
+    component: EntityComponent = hass.data.get(Platform.WATER_HEATER)  # type: ignore[assignment]
+    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
