@@ -7,19 +7,25 @@ from uuid import UUID
 
 from habiticalib import Direction, Skill
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import (
     ATTR_CONFIG_ENTRY,
     ATTR_DIRECTION,
     ATTR_ITEM,
+    ATTR_KEYWORD,
+    ATTR_PRIORITY,
     ATTR_SKILL,
+    ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
+    ATTR_TYPE,
     DOMAIN,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
     SERVICE_SCORE_HABIT,
@@ -775,3 +781,67 @@ async def test_transformation_exceptions(
             return_response=True,
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_data"),
+    [
+        {},
+        {ATTR_TYPE: ["daily"]},
+        {ATTR_TYPE: ["habit"]},
+        {ATTR_TYPE: ["todo"]},
+        {ATTR_TYPE: ["reward"]},
+        {ATTR_TYPE: ["daily", "habit"]},
+        {ATTR_TYPE: ["todo", "reward"]},
+        {ATTR_PRIORITY: "trivial"},
+        {ATTR_PRIORITY: "easy"},
+        {ATTR_PRIORITY: "medium"},
+        {ATTR_PRIORITY: "hard"},
+        {ATTR_TASK: ["Zahnseide benutzen", "Eine kurze Pause machen"]},
+        {ATTR_TASK: ["f2c85972-1a19-4426-bc6d-ce3337b9d99f"]},
+        {ATTR_TASK: ["alias_zahnseide_benutzen"]},
+        {ATTR_TAG: ["Training", "Gesundheit + Wohlbefinden"]},
+        {ATTR_KEYWORD: "gewohnheit"},
+        {ATTR_TAG: ["Home Assistant"]},
+    ],
+    ids=[
+        "all_tasks",
+        "only dailies",
+        "only habits",
+        "only todos",
+        "only rewards",
+        "only dailies and habits",
+        "only todos and rewards",
+        "trivial tasks",
+        "easy tasks",
+        "medium tasks",
+        "hard tasks",
+        "by task name",
+        "by task ID",
+        "by alias",
+        "by tag",
+        "by keyword",
+        "empty result",
+    ],
+)
+@pytest.mark.usefixtures("habitica")
+async def test_get_tasks(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    service_data: dict[str, Any],
+) -> None:
+    """Test Habitica get_tasks action."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_TASKS,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    assert response == snapshot

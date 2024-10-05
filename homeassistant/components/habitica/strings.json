@@ -3,6 +3,7 @@
     "todos": "To-Do's",
     "dailies": "Dailies",
     "config_entry_name": "Select character",
+    "task_name": "Task name",
     "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
@@ -444,7 +445,7 @@
           "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
         },
         "task": {
-          "name": "Task name",
+          "name": "[%key:component::habitica::common::task_name%]",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
@@ -558,6 +559,42 @@
           "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
         }
       }
+    },
+    "get_tasks": {
+      "name": "Get tasks",
+      "description": "Retrieve tasks from your Habitica character.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Choose the Habitica character to retrieve tasks from."
+        },
+        "type": {
+          "name": "Task type",
+          "description": "Filter tasks by type."
+        },
+        "priority": {
+          "name": "Difficulty",
+          "description": "Filter tasks by difficulty."
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "Select tasks by matching their name (or task ID)."
+        },
+        "tag": {
+          "name": "Tag",
+          "description": "Filter tasks that have one or more of the selected tags."
+        },
+        "keyword": {
+          "name": "Keyword",
+          "description": "Filter tasks by keyword, searching across titles, notes, and checklists."
+        }
+      },
+      "sections": {
+        "filter": {
+          "name": "Filter options",
+          "description": "Use the optional filters to narrow the returned tasks."
+        }
+      }
     }
   },
   "selector": {
@@ -575,6 +612,22 @@
         "spooky_sparkles": "Spooky sparkles",
         "seafoam": "Seafoam",
         "shiny_seed": "Shiny seed"
+      }
+    },
+    "type": {
+      "options": {
+        "daily": "Daily",
+        "habit": "Habit",
+        "todo": "To-do",
+        "reward": "Reward"
+      }
+    },
+    "priority": {
+      "options": {
+        "trivial": "Trivial",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
       }
     }
   }

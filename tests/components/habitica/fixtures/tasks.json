@@ -233,13 +233,20 @@
       "startDate": "2024-07-06T22:00:00.000Z",
       "daysOfMonth": [],
       "weeksOfMonth": [],
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": false,
+          "id": "c8662c16-8cd3-4104-a3b2-b1e54f61b8ca",
+          "text": "Checklist-item1"
+        }
+      ],
       "reminders": [],
       "createdAt": "2024-07-07T17:51:53.268Z",
       "updatedAt": "2024-09-21T22:24:20.154Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": true,
-      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+      "alias": "alias_zahnseide_benutzen"
     },
     {
       "_id": "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
@@ -386,11 +393,17 @@
       "history": [],
       "completed": false,
       "collapseChecklist": false,
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": true,
+          "id": "c8662c16-8cd3-4104-a3b2-b1e54f61b8ca",
+          "text": "Checklist-item1"
+        }
+      ],
       "type": "daily",
       "text": "Fitnessstudio besuchen",
       "notes": "Ein einstündiges Workout im Fitnessstudio absolvieren.",
-      "tags": ["51076966-2970-4b40-b6ba-d58c6a756dd7"],
+      "tags": ["6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab"],
       "value": 0,
       "priority": 2,
       "attribute": "str",
@@ -416,7 +429,10 @@
       "type": "todo",
       "text": "Buch zu Ende lesen",
       "notes": "Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.",
-      "tags": [],
+      "tags": [
+        "20409521-c096-447f-9a90-23e8da615710",
+        "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd"
+      ],
       "value": 0,
       "priority": 1,
       "attribute": "str",
