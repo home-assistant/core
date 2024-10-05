@@ -29,12 +29,6 @@ MOCK_USER_INPUT = {
     CONF_VERIFY_SSL: False,
 }
 
-MOCK_USER_INPUT_REWRITE = {
-    CONF_URL: "https://192.168.1.1/test",
-    CONF_API_KEY: API_KEY,
-    CONF_VERIFY_SSL: False,
-}
-
 CONF_DATA = {
     CONF_URL: URL,
     CONF_API_KEY: API_KEY,
