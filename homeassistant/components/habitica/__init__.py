@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
+    SERVICE_CAST_SKILL,
 )
 from .coordinator import HabiticaDataUpdateCoordinator
 
@@ -196,14 +197,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await coordinator.async_request_refresh()
             return response
 
-    if not hass.services.has_service(DOMAIN, "cast_skill"):
-        hass.services.async_register(
-            DOMAIN,
-            "cast_skill",
-            cast_skill,
-            schema=SERVICE_CAST_SKILL_SCHEMA,
-            supports_response=SupportsResponse.ONLY,
-        )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CAST_SKILL,
+        cast_skill,
+        schema=SERVICE_CAST_SKILL_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     return True
 
 
@@ -292,5 +292,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         hass.services.async_remove(DOMAIN, SERVICE_API_CALL)
-        hass.services.async_remove(DOMAIN, "cast_skill")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

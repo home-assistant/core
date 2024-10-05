@@ -24,7 +24,6 @@ cast_skill:
           integration: habitica
     skill:
       required: true
-
       selector:
         select:
           options:
