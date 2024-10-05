@@ -133,6 +133,7 @@ TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
 TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
+TRAIT_REBOOT = f"{PREFIX_TRAITS}Reboot"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -177,6 +178,7 @@ COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_REBOOT = f"{PREFIX_COMMANDS}Reboot"
 
 TRAITS: list[type[_Trait]] = []
 
@@ -2784,3 +2786,47 @@ class SensorStateTrait(_Trait):
             )
 
         return {"currentSensorStateData": [sensor_data]}
+
+
+@register_trait
+class RebootTrait(_Trait):
+    """Trait to reboot device.
+
+    https://developers.google.com/actions/smarthome/traits/reboot
+    """
+
+    name = TRAIT_REBOOT
+    commands = [COMMAND_REBOOT]
+
+    @classmethod
+    def supported(cls, domain, features, device_class, _):
+        """Test if reboot is supported."""
+        return (
+            domain == button.DOMAIN and device_class == button.ButtonDeviceClass.RESTART
+        )
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
+    def sync_attributes(self) -> dict[str, Any]:
+        """Return attributes for a sync request."""
+        return {}
+
+    def query_attributes(self) -> dict[str, Any]:
+        """Return the attributes of this trait for this entity."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a reboot command."""
+        if command == COMMAND_REBOOT:
+            await self.hass.services.async_call(
+                button.DOMAIN,
+                button.SERVICE_PRESS,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
