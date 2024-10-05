@@ -137,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="sevice_entry_not_found",
+                translation_key="entry_not_found",
             )
         coordinator = entry.runtime_data
         skill = {
@@ -156,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except StopIteration as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="service_call_task_not_found",
+                translation_key="task_not_found",
                 translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
             ) from e
 
@@ -173,7 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="service_call_not_enough_mana",
+                    translation_key="not_enough_mana",
                     translation_placeholders={
                         "cost": skill[call.data[ATTR_SKILL]]["cost"],
                         "mana": f"{int(coordinator.data.user.get("stats", {}).get("mp", 0))} MP",
@@ -185,7 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 # or the skill hasn't been unlocked yet.
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="service_call_skill_not_found",
+                    translation_key="skill_not_found",
                     translation_placeholders={"skill": call.data[ATTR_SKILL]},
                 ) from e
             raise HomeAssistantError(
