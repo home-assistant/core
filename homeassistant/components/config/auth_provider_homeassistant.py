@@ -12,6 +12,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 
 
+ERROR_USER_NOT_FOUND = ("user_not_found", "User not found")
+ERROR_CREDENTIALS_NOT_FOUND = ("credentials_not_found", "Credentials not found")
+
+
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
@@ -110,7 +114,7 @@ async def websocket_change_password(
 ) -> None:
     """Change current user password."""
     if (user := connection.user) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")  # type: ignore[unreachable]
+        connection.send_error(msg["id"], *ERROR_USER_NOT_FOUND)  # type: ignore[unreachable]
         return
 
     provider = auth_ha.async_get_provider(hass)
@@ -122,7 +126,7 @@ async def websocket_change_password(
 
     if username is None:
         connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
+            msg["id"], *ERROR_CREDENTIALS_NOT_FOUND
         )
         return
 
@@ -160,7 +164,7 @@ async def websocket_admin_change_password(
         raise Unauthorized(context=connection.context(msg))
 
     if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")
+        connection.send_error(msg["id"], *ERROR_USER_NOT_FOUND)
         return
 
     provider = auth_ha.async_get_provider(hass)
@@ -173,7 +177,7 @@ async def websocket_admin_change_password(
 
     if username is None:
         connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
+            msg["id"], *ERROR_CREDENTIALS_NOT_FOUND
         )
         return
 
@@ -202,7 +206,7 @@ async def websocket_admin_change_username(
         raise Unauthorized(context=connection.context(msg))
 
     if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")
+        connection.send_error(msg["id"], *ERROR_USER_NOT_FOUND)
         return
 
     provider = auth_ha.async_get_provider(hass)
@@ -214,7 +218,7 @@ async def websocket_admin_change_username(
 
     if found_credential is None:
         connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
+            msg["id"], *ERROR_CREDENTIALS_NOT_FOUND
         )
         return
 
