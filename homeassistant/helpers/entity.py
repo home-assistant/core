@@ -9,7 +9,6 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
-from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -19,6 +18,7 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config import DATA_CUSTOMIZE

@@ -399,12 +399,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.host = entry_data[CONF_HOST]
-        self.port = entry_data.get(CONF_PORT, DEFAULT_HTTP_PORT)
         self.entry = self._get_reconfigure_entry()
+        self.host = self.entry.data[CONF_HOST]
+        self.port = self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
 
         return await self.async_step_reconfigure_confirm()
 

@@ -454,7 +454,7 @@ async def test_reconfigure_successful(
 
         result = await mock_config.start_reconfigure_flow(
             hass,
-            context={"show_advanced_options": show_advanced_options},
+            show_advanced_options=show_advanced_options,
         )
 
         assert result["type"] is FlowResultType.FORM

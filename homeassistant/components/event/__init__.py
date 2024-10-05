@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 from typing import Any, Self, final
+
+from propcache import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

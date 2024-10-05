@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import Any
@@ -583,7 +582,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return user_input
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
         self._context_entry = self._get_reconfigure_entry()

@@ -18,13 +18,14 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
-from functools import cache, cached_property
+from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
+from propcache import cached_property
 from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
@@ -57,7 +58,7 @@ from .helpers.event import (
     async_call_later,
 )
 from .helpers.frame import report
-from .helpers.json import json_bytes, json_fragment
+from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import (
@@ -247,14 +248,13 @@ type UpdateListenerType = Callable[
     [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
 ]
 
-FROZEN_CONFIG_ENTRY_ATTRS = {
-    "entry_id",
-    "domain",
+STATE_KEYS = {
     "state",
     "reason",
     "error_reason_translation_key",
     "error_reason_translation_placeholders",
 }
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", *STATE_KEYS}
 UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "unique_id",
     "title",
@@ -447,7 +447,8 @@ class ConfigEntry(Generic[_DataT]):
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
-        self.clear_cache()
+        self.clear_state_cache()
+        self.clear_storage_cache()
 
     @property
     def supports_options(self) -> bool:
@@ -473,13 +474,13 @@ class ConfigEntry(Generic[_DataT]):
             )
         return self._supports_reconfigure or False
 
-    def clear_cache(self) -> None:
-        """Clear cached properties."""
+    def clear_state_cache(self) -> None:
+        """Clear cached properties that are included in as_json_fragment."""
         self.__dict__.pop("as_json_fragment", None)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
-        """Return JSON fragment of a config entry."""
+        """Return JSON fragment of a config entry that is used for the API."""
         json_repr = {
             "created_at": self.created_at.timestamp(),
             "entry_id": self.entry_id,
@@ -500,6 +501,15 @@ class ConfigEntry(Generic[_DataT]):
             "error_reason_translation_placeholders": self.error_reason_translation_placeholders,
         }
         return json_fragment(json_bytes(json_repr))
+
+    def clear_storage_cache(self) -> None:
+        """Clear cached properties that are included in as_storage_fragment."""
+        self.__dict__.pop("as_storage_fragment", None)
+
+    @cached_property
+    def as_storage_fragment(self) -> json_fragment:
+        """Return a storage fragment for this entry."""
+        return json_fragment(json_bytes_sorted(self.as_dict()))
 
     async def async_setup(
         self,
@@ -833,7 +843,8 @@ class ConfigEntry(Generic[_DataT]):
         """Invoke remove callback on component."""
         old_modified_at = self.modified_at
         object.__setattr__(self, "modified_at", utcnow())
-        self.clear_cache()
+        self.clear_state_cache()
+        self.clear_storage_cache()
 
         if self.source == SOURCE_IGNORE:
             return
@@ -890,7 +901,10 @@ class ConfigEntry(Generic[_DataT]):
             "error_reason_translation_placeholders",
             error_reason_translation_placeholders,
         )
-        self.clear_cache()
+        self.clear_state_cache()
+        # Storage cache is not cleared here because the state is not stored
+        # in storage and we do not want to clear the cache on every state change
+        # since state changes are frequent.
         async_dispatcher_send_internal(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -1587,7 +1601,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         super().__init__()
         self._hass = hass
         self._domain_index: dict[str, list[ConfigEntry]] = {}
-        self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
+        self._domain_unique_id_index: dict[str, dict[str, list[ConfigEntry]]] = {}
 
     def values(self) -> ValuesView[ConfigEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -1630,9 +1644,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
                     report_issue,
                 )
 
-            self._domain_unique_id_index.setdefault(entry.domain, {})[
-                unique_id_hash
-            ] = entry
+            self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
+                unique_id_hash, []
+            ).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
         """Unindex an entry."""
@@ -1645,7 +1659,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             # Check type first to avoid expensive isinstance call
             if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
                 unique_id = str(entry.unique_id)  # type: ignore[unreachable]
-            del self._domain_unique_id_index[domain][unique_id]
+            self._domain_unique_id_index[domain][unique_id].remove(entry)
+            if not self._domain_unique_id_index[domain][unique_id]:
+                del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
@@ -1663,7 +1679,8 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._unindex_entry(entry_id)
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
-        entry.clear_cache()
+        entry.clear_state_cache()
+        entry.clear_storage_cache()
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
@@ -1676,7 +1693,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         # Check type first to avoid expensive isinstance call
         if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
             unique_id = str(unique_id)  # type: ignore[unreachable]
-        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        entries = self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        if not entries:
+            return None
+        return entries[0]
 
 
 class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
@@ -2138,7 +2158,8 @@ class ConfigEntries:
             )
 
         self._async_schedule_save()
-        entry.clear_cache()
+        entry.clear_state_cache()
+        entry.clear_storage_cache()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         return True
 
@@ -2321,7 +2342,10 @@ class ConfigEntries:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data to save."""
-        return {"entries": [entry.as_dict() for entry in self._entries.values()]}
+        # typing does not know that the storage fragment will serialize to a dict
+        return {
+            "entries": [entry.as_storage_fragment for entry in self._entries.values()]  # type: ignore[misc]
+        }
 
     async def async_wait_component(self, entry: ConfigEntry) -> bool:
         """Wait for an entry's component to load and return if the entry is loaded.
