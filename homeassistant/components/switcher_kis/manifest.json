@@ -7,6 +7,6 @@
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
   "quality_scale": "platinum",
-  "requirements": ["git+https://github.com/YogevBokobza/aioswitcher.git@runner-s12-support#aioswitcher==4.0.4"],
+  "requirements": ["aioswitcher==4.1.0"],
   "single_config_entry": true
 }
