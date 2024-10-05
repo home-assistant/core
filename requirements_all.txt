@@ -496,7 +496,7 @@ asmog==0.0.6
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.40.0
+async-upnp-client==0.41.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1

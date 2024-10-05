@@ -10,7 +10,7 @@ aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
-async-upnp-client==0.40.0
+async-upnp-client==0.41.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.2.0
 awesomeversion==24.6.0
