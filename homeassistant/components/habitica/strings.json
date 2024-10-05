@@ -76,6 +76,12 @@
       "gold": {
         "name": "Gold"
       },
+      "gems": {
+        "name": "Gems"
+      },
+      "trinkets": {
+        "name": "Mystic hourglasses"
+      },
       "class": {
         "name": "Class",
         "state": {
