@@ -31,6 +31,11 @@ ATTR_TASK = "task"
 ATTR_DIRECTION = "direction"
 ATTR_TARGET = "target"
 ATTR_ITEM = "item"
+ATTR_TYPE = "type"
+ATTR_PRIORITY = "priority"
+ATTR_TAG = "tag"
+ATTR_KEYWORD = "keyword"
+
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_START_QUEST = "start_quest"
 SERVICE_ACCEPT_QUEST = "accept_quest"
@@ -38,6 +43,10 @@ SERVICE_CANCEL_QUEST = "cancel_quest"
 SERVICE_ABORT_QUEST = "abort_quest"
 SERVICE_REJECT_QUEST = "reject_quest"
 SERVICE_LEAVE_QUEST = "leave_quest"
+SERVICE_GET_TASKS = "get_tasks"
+
+PRIORITIES = {"trivial": 0.1, "easy": 1, "medium": 1.5, "hard": 2}
+
 SERVICE_SCORE_HABIT = "score_habit"
 SERVICE_SCORE_REWARD = "score_reward"
 
