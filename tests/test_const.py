@@ -5,7 +5,7 @@ from enum import Enum
 import pytest
 
 from homeassistant import const
-from homeassistant.components import sensor
+from homeassistant.components import lock, sensor
 
 from .common import (
     help_test_all,
@@ -181,4 +181,34 @@ def test_deprecated_constant_name_changes(
         f"{replacement.__class__.__name__}.{replacement.name}",
         replacement,
         "2025.1",
+    )
+
+
+def _create_tuples_lock_states(
+    enum: type[Enum], constant_prefix: str, remove_in_version: str
+) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix, remove_in_version)
+        for enum_field in enum
+        if enum_field
+        not in [
+            lock.LockState.OPEN,
+            lock.LockState.OPENING,
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix", "remove_in_version"),
+    _create_tuples_lock_states(lock.LockState, "STATE_", "2025.10"),
+)
+def test_deprecated_constants_lock(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    remove_in_version: str,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, const, enum, constant_prefix, remove_in_version
     )

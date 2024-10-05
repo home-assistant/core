@@ -655,7 +655,7 @@ async def test_bad_name(hass: HomeAssistant, hk_driver) -> None:
     assert acc.category == 10  # Sensor
 
     assert acc.char_humidity.value == 20
-    assert acc.display_name == "--Humid--"
+    assert acc.display_name == "Humid"
 
 
 async def test_empty_name(hass: HomeAssistant, hk_driver) -> None:

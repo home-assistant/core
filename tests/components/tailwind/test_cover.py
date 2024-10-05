@@ -3,6 +3,7 @@
 from unittest.mock import ANY, MagicMock
 
 from gotailwind import (
+    TailwindDoorAlreadyInStateError,
     TailwindDoorDisabledError,
     TailwindDoorLockedOutError,
     TailwindDoorOperationCommand,
@@ -181,3 +182,28 @@ async def test_cover_operations(
     )
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "communication_error"
+
+    # Test door already in state
+    mock_tailwind.operate.side_effect = TailwindDoorAlreadyInStateError(
+        "Door is already in the requested state"
+    )
+
+    # This call should not raise an exception
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: "cover.door_1",
+        },
+        blocking=True,
+    )
+
+    # This call should not raise an exception
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {
+            ATTR_ENTITY_ID: "cover.door_1",
+        },
+        blocking=True,
+    )

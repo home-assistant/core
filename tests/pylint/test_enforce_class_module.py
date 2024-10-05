@@ -84,6 +84,12 @@ def test_enforce_class_platform_good(
 
     class CustomSensorEntity(SensorEntity):
         pass
+
+    class CoordinatorEntity:
+        pass
+
+    class CustomCoordinatorSensorEntity(CoordinatorEntity, SensorEntity):
+        pass
     """
     root_node = astroid.parse(code, path)
     walker = ASTWalker(linter)
@@ -115,6 +121,12 @@ def test_enforce_class_module_bad_simple(
 
     class TestCoordinator(DataUpdateCoordinator):
         pass
+
+    class CoordinatorEntity:
+        pass
+
+    class CustomCoordinatorSensorEntity(CoordinatorEntity):
+        pass
     """,
         path,
     )
@@ -132,6 +144,16 @@ def test_enforce_class_module_bad_simple(
             col_offset=0,
             end_line=5,
             end_col_offset=21,
+        ),
+        MessageTest(
+            msg_id="hass-enforce-class-module",
+            line=11,
+            node=root_node.body[3],
+            args=("CoordinatorEntity", "entity"),
+            confidence=UNDEFINED,
+            col_offset=0,
+            end_line=11,
+            end_col_offset=35,
         ),
     ):
         walker.walk(root_node)

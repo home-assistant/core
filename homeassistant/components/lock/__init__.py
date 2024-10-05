@@ -5,27 +5,27 @@ from __future__ import annotations
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
-from functools import cached_property
 import logging
 import re
 from typing import TYPE_CHECKING, Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
+    _DEPRECATED_STATE_JAMMED,
+    _DEPRECATED_STATE_LOCKED,
+    _DEPRECATED_STATE_LOCKING,
+    _DEPRECATED_STATE_UNLOCKED,
+    _DEPRECATED_STATE_UNLOCKING,
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -41,11 +41,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, LockState
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -78,7 +78,7 @@ PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for locks."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[LockEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[LockEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -102,12 +102,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -274,18 +274,18 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state(self) -> str | None:
         """Return the state."""
         if self.is_jammed:
-            return STATE_JAMMED
+            return LockState.JAMMED
         if self.is_opening:
-            return STATE_OPENING
+            return LockState.OPENING
         if self.is_locking:
-            return STATE_LOCKING
+            return LockState.LOCKING
         if self.is_open:
-            return STATE_OPEN
+            return LockState.OPEN
         if self.is_unlocking:
-            return STATE_UNLOCKING
+            return LockState.UNLOCKING
         if (locked := self.is_locked) is None:
             return None
-        return STATE_LOCKED if locked else STATE_UNLOCKED
+        return LockState.LOCKED if locked else LockState.UNLOCKED
 
     @cached_property
     def supported_features(self) -> LockEntityFeature:

@@ -1,12 +1,12 @@
 {
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) to configure the Cloud Console:\n\n1. Go to the [OAuth consent screen]({oauth_consent_url}) and configure\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web Application** for the Application Type.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
+    "description": "Follow the [instructions]({more_info_url}) to configure the Cloud Console:\n\n1. Go to the [OAuth consent screen]({oauth_consent_url}) and configure\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web Application** for the Application Type.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
   },
   "config": {
     "step": {
       "create_cloud_project": {
         "title": "Nest: Create and configure Cloud Project",
-        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nProceed when your cloud project is set up."
+        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, select **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then select **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and select **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and select **Enable**.\n\nProceed when your cloud project is set up."
       },
       "cloud_project": {
         "title": "Nest: Enter Cloud Project ID",
@@ -17,7 +17,7 @@
       },
       "device_project": {
         "title": "Nest: Create a Device Access Project",
-        "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Click on **Create project**\n1. Give your Device Access project a name and click **Next**.\n1. Enter your OAuth Client ID\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
+        "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Select on **Create project**\n1. Give your Device Access project a name and select **Next**.\n1. Enter your OAuth Client ID\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
         "data": {
           "project_id": "Device Access Project ID"
         }

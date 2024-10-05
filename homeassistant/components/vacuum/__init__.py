@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import IntFlag
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +24,12 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -34,7 +41,7 @@ from .const import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_RETU
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -84,20 +91,38 @@ class VacuumEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the VacuumEntityFeature enum instead.
-SUPPORT_TURN_ON = 1
-SUPPORT_TURN_OFF = 2
-SUPPORT_PAUSE = 4
-SUPPORT_STOP = 8
-SUPPORT_RETURN_HOME = 16
-SUPPORT_FAN_SPEED = 32
-SUPPORT_BATTERY = 64
-SUPPORT_STATUS = 128
-SUPPORT_SEND_COMMAND = 256
-SUPPORT_LOCATE = 512
-SUPPORT_CLEAN_SPOT = 1024
-SUPPORT_MAP = 2048
-SUPPORT_STATE = 4096
-SUPPORT_START = 8192
+_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
+    VacuumEntityFeature.TURN_ON, "2025.10"
+)
+_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
+    VacuumEntityFeature.TURN_OFF, "2025.10"
+)
+_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
+_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
+_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
+    VacuumEntityFeature.RETURN_HOME, "2025.10"
+)
+_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
+    VacuumEntityFeature.FAN_SPEED, "2025.10"
+)
+_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
+    VacuumEntityFeature.BATTERY, "2025.10"
+)
+_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
+    VacuumEntityFeature.STATUS, "2025.10"
+)
+_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
+    VacuumEntityFeature.SEND_COMMAND, "2025.10"
+)
+_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
+    VacuumEntityFeature.LOCATE, "2025.10"
+)
+_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
+    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
+)
+_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
+_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
+_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
 
 # mypy: disallow-any-generics
 
@@ -110,7 +135,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[StateVacuumEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[StateVacuumEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -173,12 +198,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -381,3 +406,13 @@ class StateVacuumEntity(
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
