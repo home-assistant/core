@@ -136,6 +136,7 @@ EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
     alarm_control_panel.DOMAIN: TYPE_ALARM,
+    binary_sensor.DOMAIN: TYPE_SENSOR,
     button.DOMAIN: TYPE_SCENE,
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
