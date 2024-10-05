@@ -25,7 +25,7 @@ VEHICLE_INTERVAL = timedelta(seconds=30)
 VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
-ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
+ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
