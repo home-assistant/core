@@ -155,14 +155,14 @@
     "service_call_exception": {
       "message": "Unable to connect to Habitica, try again later"
     },
+    "entry_not_found": {
+      "message": "The selected character is currently not configured or loaded in Home Assistant."
+    },
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
     },
     "skill_not_found": {
       "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
-    },
-    "entry_not_found": {
-      "message": "The selected character is currently not configured or loaded in Home Assistant."
     },
     "task_not_found": {
       "message": "Unable to cast skill, could not find the task {task}"
@@ -210,6 +210,42 @@
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
+    },
+    "get_tasks": {
+      "name": "Get tasks",
+      "description": "Retrieve tasks from your Habitica character.",
+      "fields": {
+        "config_entry": {
+          "name": "Select character",
+          "description": "Choose the Habitica character to retrieve tasks from."
+        },
+        "type": {
+          "name": "Task type",
+          "description": "Filter tasks by type."
+        },
+        "priority": {
+          "name": "Difficulty",
+          "description": "Filter tasks by difficulty."
+        },
+        "task": {
+          "name": "Task name",
+          "description": "Select tasks by matching their name (or task ID)."
+        },
+        "tag": {
+          "name": "Tag",
+          "description": "Filter tasks that have one or more of the selected tags."
+        },
+        "keyword": {
+          "name": "Keyword",
+          "description": "Filter tasks by keyword, searching across titles, notes, and checklists."
+        }
+      },
+      "sections": {
+        "filter": {
+          "name": "Filter options",
+          "description": "Use the optional filters to narrow the returned tasks."
+        }
+      }
     }
   },
   "selector": {
@@ -219,6 +255,22 @@
         "pickpocket": "Rogue: Pickpocket",
         "backstab": "Rogue: Backstab",
         "smash": "Warrior: Brutal smash"
+      }
+    },
+    "type": {
+      "options": {
+        "daily": "Daily",
+        "habit": "Habit",
+        "todo": "To-do",
+        "reward": "Reward"
+      }
+    },
+    "priority": {
+      "options": {
+        "trivial": "Trivial",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
       }
     }
   }
