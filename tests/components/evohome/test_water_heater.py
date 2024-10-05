@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .conftest import setup_evohome
-from .const import TEST_INSTALLS
+from .const import TEST_INSTALLS_WITH_DHW
 
 
 def get_dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
@@ -40,7 +40,7 @@ def get_dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
     return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -106,7 +106,7 @@ async def test_set_operation_mode(
     assert results == snapshot
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_away_mode_off(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -133,7 +133,7 @@ async def test_turn_away_mode_off(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_away_mode_on(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -160,7 +160,7 @@ async def test_turn_away_mode_on(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_off(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -187,7 +187,7 @@ async def test_turn_off(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_on(
     hass: HomeAssistant,
     config: dict[str, str],
