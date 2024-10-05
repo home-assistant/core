@@ -20,7 +20,7 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_zon_set_hvac_mode(
+async def test_zone_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
@@ -66,7 +66,7 @@ async def test_zon_set_hvac_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_zon_set_preset_mode(
+async def test_zone_set_preset_mode(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
@@ -130,7 +130,7 @@ async def test_zon_set_preset_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_zon_set_temperature(
+async def test_zone_set_temperature(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
