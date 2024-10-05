@@ -75,6 +75,18 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
+    },
+    {
+      "name": "Debug - Compile English translations task",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "script.translations",
+      "console": "integratedTerminal",
+      "args": [
+        "develop",
+        "--all"
+      ],
+      "justMyCode": false
     }
   ]
 }
