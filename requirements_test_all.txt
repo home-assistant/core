@@ -509,7 +509,7 @@ bimmer-connected[china]==0.16.3
 bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.5.0
+bleak-retry-connector==3.6.0
 
 # homeassistant.components.bluetooth
 bleak==0.22.2
