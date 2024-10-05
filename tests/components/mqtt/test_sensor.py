@@ -956,7 +956,7 @@ async def test_invalid_state_class(
                     }
                 }
             },
-            "The option `options` can only be used together with "
+            "The option `options` must be used together with "
             "device class `enum`, got `device_class` 'gas'",
         ),
         (
