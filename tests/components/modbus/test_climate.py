@@ -50,6 +50,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SWING_MODE_REGISTER,
@@ -343,6 +344,93 @@ async def test_config_swing_mode_register(hass: HomeAssistant, mock_modbus) -> N
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_HVAC_ONOFF_REGISTER: 11,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_register",
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_registers",
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                    CONF_WRITE_REGISTERS: True,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_register",
+                    CONF_WRITE_REGISTERS: True,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 23,
+                    CONF_ADDRESS: 23,
+                    CONF_SLAVE: 1,
+                    CONF_MIN_TEMP: 16,
+                    CONF_MAX_TEMP: 23,
+                    CONF_HVAC_ONOFF_REGISTER: 0,
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_registers",
+                    CONF_WRITE_REGISTERS: True,
                 }
             ],
         },
@@ -947,6 +1035,100 @@ async def test_service_climate_set_temperature(
                         },
                         CONF_HVAC_ONOFF_REGISTER: 119,
                         CONF_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: False,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE: "write_coil",
+                        CONF_WRITE_REGISTERS: False,
                     }
                 ]
             },
