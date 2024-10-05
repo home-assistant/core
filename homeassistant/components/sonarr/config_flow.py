@@ -103,7 +103,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             if CONF_URL in user_input:
                 url = yarl.URL(user_input[CONF_URL])
                 user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
-                print(user_input)
 
             if self.entry:
                 user_input = {**self.entry.data, **user_input}
