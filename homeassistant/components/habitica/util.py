@@ -23,7 +23,7 @@ from dateutil.rrule import (
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -202,7 +202,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
             translation_domain=DOMAIN,
             translation_key="entry_not_found",
         )
-    if entry not in hass.config_entries.async_loaded_entries(DOMAIN):
+    if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_loaded",
