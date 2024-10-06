@@ -5164,9 +5164,17 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "changed_entry_no_reload",
     ],
 )
+@pytest.mark.parametrize(
+    ("source", "reason"),
+    [
+        (config_entries.SOURCE_REAUTH, "reauth_successful"),
+        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+    ],
+)
 async def test_update_entry_and_reload(
     hass: HomeAssistant,
-    manager: config_entries.ConfigEntries,
+    source: str,
+    reason: str,
     title: tuple[str, str],
     unique_id: tuple[str, str],
     data_vendor: tuple[str, str],
@@ -5210,8 +5218,22 @@ async def test_update_entry_and_reload(
                 **kwargs,
             )
 
+        async def async_step_reconfigure(self, data):
+            """Mock Reauth."""
+            return self.async_update_reload_and_abort(
+                entry=entry,
+                unique_id=unique_id[1],
+                title=title[1],
+                data={"vendor": data_vendor[1]},
+                options={"vendor": options_vendor[1]},
+                **kwargs,
+            )
+
     with mock_config_flow("comp", MockFlowHandler):
-        task = await manager.flow.async_init("comp", context={"source": "reauth"})
+        if source == config_entries.SOURCE_REAUTH:
+            result = await entry.start_reauth_flow(hass)
+        elif source == config_entries.SOURCE_RECONFIGURE:
+            result = await entry.start_reconfigure_flow(hass)
         await hass.async_block_till_done()
 
         assert entry.title == title[1]
@@ -5219,8 +5241,8 @@ async def test_update_entry_and_reload(
         assert entry.data == {"vendor": data_vendor[1]}
         assert entry.options == {"vendor": options_vendor[1]}
         assert entry.state == config_entries.ConfigEntryState.LOADED
-        assert task["type"] == FlowResultType.ABORT
-        assert task["reason"] == "reauth_successful"
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == reason
         # Assert entry was reloaded
         assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
         assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]

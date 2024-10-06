@@ -2731,7 +2731,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        reason: str = "reauth_successful",
+        reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow."""
@@ -2744,6 +2744,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
         if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        if reason is UNDEFINED:
+            if (source := self.source) == SOURCE_REAUTH:
+                reason = "reauth_successful"
+            elif source == SOURCE_RECONFIGURE:
+                reason = "reconfigure_successful"
+            else:
+                raise ValueError(f"Default reason not available for {source} flows")
         return self.async_abort(reason=reason)
 
     def is_matching(self, other_flow: Self) -> bool:
