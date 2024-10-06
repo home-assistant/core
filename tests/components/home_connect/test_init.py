@@ -371,3 +371,4 @@ async def test_entity_migration(
         assert entity_registry.async_get_entity_id(
             domain, DOMAIN, f"{appliance.haId}-{expected_unique_id_suffix}"
         )
+    assert config_entry_v1_1.minor_version == 2
