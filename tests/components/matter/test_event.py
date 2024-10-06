@@ -16,8 +16,6 @@ from .common import snapshot_matter_entities, trigger_subscription_callback
 
 
 @pytest.mark.usefixtures("matter_devices")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
