@@ -60,23 +60,7 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_translation_key = "light"
-
-    def __init__(
-        self,
-        coordinator: SwitcherDataUpdateCoordinator,
-        light_id: int = 0,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
-
-        # Entity class attributes
-        self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
-        self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
-        )
+    _light_id: int
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -135,6 +119,21 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
     """Representation of a Switcher single light entity."""
 
+    _attr_translation_key = "single_light"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int = 0,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+
+        # Entity class attributes
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
@@ -147,6 +146,24 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
 
 class SwitcherDualLightEntity(SwitcherBaseLightEntity):
     """Representation of a Switcher dual light entity."""
+
+    _attr_translation_key = "light"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int = 0,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+
+        # Entity class attributes
+        self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
+        )
 
     @property
     def is_on(self) -> bool:

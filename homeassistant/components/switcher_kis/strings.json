@@ -43,7 +43,15 @@
         "name": "Vertical swing off"
       }
     },
+    "cover": {
+      "cover": {
+        "name": "Runner {cover_id}"
+      }
+    },
     "light": {
+      "single_light": {
+        "name": "Light"
+      },
       "light": {
         "name": "Light {light_id}"
       }

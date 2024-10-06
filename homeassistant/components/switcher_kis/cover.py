@@ -65,7 +65,6 @@ async def async_setup_entry(
 class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
-    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -144,6 +143,8 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
 class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
     """Representation of a Switcher single cover entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
@@ -169,6 +170,8 @@ class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
 class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
     """Representation of a Switcher dual cover entity."""
 
+    _attr_translation_key = "cover"
+
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
@@ -178,6 +181,7 @@ class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
         super().__init__(coordinator)
         self._cover_id = cover_id
 
+        self._attr_translation_placeholders = {"cover_id": str(cover_id + 1)}
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}"
         )
