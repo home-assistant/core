@@ -23,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from .common import set_node_attribute, trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["air_purifier"])
 async def test_fan_base(
     hass: HomeAssistant,

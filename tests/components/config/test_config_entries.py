@@ -2363,6 +2363,9 @@ async def test_supports_reconfigure(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
 
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1")
+    entry.add_to_hass(hass)
+
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
@@ -2376,8 +2379,10 @@ async def test_supports_reconfigure(
                 return self.async_show_form(
                     step_id="reconfigure", data_schema=vol.Schema({})
                 )
-            return self.async_create_entry(
-                title="Test Entry", data={"secret": "account_token"}
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title="Test Entry",
+                data={"secret": "account_token"},
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -2413,36 +2418,12 @@ async def test_supports_reconfigure(
     assert len(entries) == 1
 
     data = await resp.json()
-    timestamp = utcnow().timestamp()
     data.pop("flow_id")
     assert data == {
         "handler": "test",
-        "title": "Test Entry",
-        "type": "create_entry",
-        "version": 1,
-        "result": {
-            "created_at": timestamp,
-            "disabled_by": None,
-            "domain": "test",
-            "entry_id": entries[0].entry_id,
-            "error_reason_translation_key": None,
-            "error_reason_translation_placeholders": None,
-            "modified_at": timestamp,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "reason": None,
-            "source": core_ce.SOURCE_RECONFIGURE,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_options": False,
-            "supports_reconfigure": True,
-            "supports_remove_device": False,
-            "supports_unload": False,
-            "title": "Test Entry",
-        },
-        "description": None,
+        "reason": "reauth_successful",
+        "type": "abort",
         "description_placeholders": None,
-        "options": {},
-        "minor_version": 1,
     }
 
 

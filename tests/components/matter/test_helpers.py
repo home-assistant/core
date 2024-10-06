@@ -20,8 +20,6 @@ from .common import setup_integration_with_node_fixture
 from tests.common import MockConfigEntry
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_get_device_id(
     hass: HomeAssistant,
@@ -34,8 +32,6 @@ async def test_get_device_id(
     assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_node_from_device_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
