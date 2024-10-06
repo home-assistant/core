@@ -32,7 +32,7 @@ pytest-xdist==3.6.1
 pytest==8.3.3
 requests-mock==1.12.1
 respx==0.21.1
-syrupy==4.7.1
+syrupy==4.7.2
 tqdm==4.66.5
 types-aiofiles==24.1.0.20240626
 types-atomicwrites==1.4.5.1
