@@ -307,6 +307,14 @@
       },
       "workout_duration": {
         "name": "Last workout duration"
+      },
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     }
   }
