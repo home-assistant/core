@@ -11,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from .common import set_node_attribute, trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_on(
     hass: HomeAssistant,
@@ -48,8 +46,6 @@ async def test_turn_on(
     assert state.state == "on"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_off(
     hass: HomeAssistant,
@@ -78,8 +74,6 @@ async def test_turn_off(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
@@ -92,8 +86,6 @@ async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None
     assert state.attributes["friendly_name"] == "Mock SwitchUnit Switch"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
 async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
