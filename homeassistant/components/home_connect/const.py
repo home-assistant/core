@@ -14,6 +14,10 @@ BSH_REMOTE_CONTROL_ACTIVATION_STATE = "BSH.Common.Status.RemoteControlActive"
 BSH_REMOTE_START_ALLOWANCE_STATE = "BSH.Common.Status.RemoteControlStartAllowed"
 BSH_CHILD_LOCK_STATE = "BSH.Common.Setting.ChildLock"
 
+BSH_REMAINING_PROGRAM_TIME = "BSH.Common.Option.RemainingProgramTime"
+BSH_COMMON_OPTION_DURATION = "BSH.Common.Option.Duration"
+BSH_COMMON_OPTION_PROGRAM_PROGRESS = "BSH.Common.Option.ProgramProgress"
+
 BSH_EVENT_PRESENT_STATE_PRESENT = "BSH.Common.EnumType.EventPresentState.Present"
 BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confirmed"
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
@@ -92,6 +96,7 @@ SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
 ATTR_AMBIENT = "ambient"
+ATTR_BSH_KEY = "bsh_key"
 ATTR_DESC = "desc"
 ATTR_DEVICE = "device"
 ATTR_KEY = "key"
@@ -100,3 +105,30 @@ ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
+    "ChildLock": BSH_CHILD_LOCK_STATE,
+    "Operation State": BSH_OPERATION_STATE,
+    "Light": COOKING_LIGHTING,
+    "AmbientLight": BSH_AMBIENT_LIGHT_ENABLED,
+    "Power": BSH_POWER_STATE,
+    "Remaining Program Time": BSH_REMAINING_PROGRAM_TIME,
+    "Duration": BSH_COMMON_OPTION_DURATION,
+    "Program Progress": BSH_COMMON_OPTION_PROGRAM_PROGRESS,
+    "Remote Control": BSH_REMOTE_CONTROL_ACTIVATION_STATE,
+    "Remote Start": BSH_REMOTE_START_ALLOWANCE_STATE,
+    "Supermode Freezer": REFRIGERATION_SUPERMODEFREEZER,
+    "Supermode Refrigerator": REFRIGERATION_SUPERMODEREFRIGERATOR,
+    "Dispenser Enabled": REFRIGERATION_DISPENSER,
+    "Internal Light": REFRIGERATION_INTERNAL_LIGHT_POWER,
+    "External Light": REFRIGERATION_EXTERNAL_LIGHT_POWER,
+    "Chiller Door": REFRIGERATION_STATUS_DOOR_CHILLER,
+    "Freezer Door": REFRIGERATION_STATUS_DOOR_FREEZER,
+    "Refrigerator Door": REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
+    "Door Alarm Freezer": REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+    "Door Alarm Refrigerator": REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
+    "Temperature Alarm Freezer": REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
+    "Bean Container Empty": COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+    "Water Tank Empty": COFFEE_EVENT_WATER_TANK_EMPTY,
+    "Drip Tray Full": COFFEE_EVENT_DRIP_TRAY_FULL,
+}
