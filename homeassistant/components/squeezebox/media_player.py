@@ -228,7 +228,7 @@ class SqueezeBoxMediaPlayerEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available
+        return self._attr_available and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
