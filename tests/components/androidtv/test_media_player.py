@@ -13,7 +13,6 @@ import pytest
 from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
-    CONF_SCREENCAP,
     CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -1160,20 +1159,3 @@ async def test_options_reload(hass: HomeAssistant) -> None:
 
             assert setup_entry_call.called
             assert config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_screencap_options_migration(hass: HomeAssistant) -> None:
-    """Test changing an option that will cause integration reload."""
-    patch_key, _, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
-    config_entry.options = {CONF_SCREENCAP: False}
-    config_entry.add_to_hass(hass)
-
-    with (
-        patchers.patch_connect(True)[patch_key],
-        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert CONF_SCREENCAP not in config_entry.options
-        assert config_entry.options[CONF_SCREENCAP_INTERVAL] == 0

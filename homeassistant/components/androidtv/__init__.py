@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import logging
 import os
 from typing import Any
 
@@ -68,6 +69,8 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -160,28 +163,40 @@ async def async_connect_androidtv(
     return aftv, None
 
 
-def _migrate_old_screencap_option(
-    hass: HomeAssistant, entry: AndroidTVConfigEntry
-) -> None:
-    """Migrate from old screencap to new screencap_interval option."""
-    if CONF_SCREENCAP not in entry.options:
-        return
-
-    # if old option is present with value false, means that we need
-    # to set the new CONF_SCREENCAP_INTERVAL to 0 otherwise we set default
-    old_options = entry.options.copy()
-    old_value = old_options.pop(CONF_SCREENCAP)
-    new_value = DEFAULT_SCREENCAP_INTERVAL if old_value else 0
-
-    hass.config_entries.async_update_entry(
-        entry, options={**old_options, CONF_SCREENCAP_INTERVAL: new_value}
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+
+        # Migrate MinorVersion 1 -> MinorVersion 2: New option
+        if entry.minor_version < 2:
+            if (old_value := new_options.get(CONF_SCREENCAP)) is not None:
+                new_value = DEFAULT_SCREENCAP_INTERVAL if old_value else 0
+                new_options = {**new_options, CONF_SCREENCAP_INTERVAL: new_value}
+
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, minor_version=2, version=1
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
     """Set up Android Debug Bridge platform."""
-
-    _migrate_old_screencap_option(hass, entry)
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     if CONF_ADB_SERVER_IP not in entry.data:
