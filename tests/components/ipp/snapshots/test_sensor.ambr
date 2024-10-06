@@ -320,7 +320,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2019-11-11T09:10:02+00:00',
+    'state': '2019-11-11T09:05:32+00:00',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_yellow_ink-entry]
