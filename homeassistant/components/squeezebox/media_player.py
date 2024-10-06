@@ -490,7 +490,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "search_id": media_id,
                     "search_type": MediaType.PLAYLIST,
                 }
-                playlist = await generate_playlist(self._player, payload)
+                playlist = await generate_playlist(
+                    self._player, payload, self._browse_limit
+                )
             except BrowseError:
                 # a list of urls
                 content = json.loads(media_id)
@@ -501,7 +503,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 "search_id": media_id,
                 "search_type": media_type,
             }
-            playlist = await generate_playlist(self._player, payload)
+            playlist = await generate_playlist(
+                self._player, payload, self._browse_limit
+            )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
 
