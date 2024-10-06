@@ -8,9 +8,12 @@ from typing import Any
 
 from spotifyaio import (
     Device,
+    Episode,
+    ItemType,
     PlaybackState,
     ProductType,
     RepeatMode as SpotifyRepeatMode,
+    Track,
 )
 from yarl import URL
 
@@ -37,7 +40,6 @@ from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
 from .coordinator import SpotifyCoordinator
-from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,12 +151,16 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
         return self.currently_playing.item.uri
 
-    # @property
-    # def media_content_type(self) -> str | None:
-    #     """Return the media type."""
-    #     if not self.currently_playing or not self.currently_playing.item:
-    #         return None
-    #     return self.currently_playing.item
+    @property
+    def media_content_type(self) -> str | None:
+        """Return the media type."""
+        if not self.currently_playing or not self.currently_playing.item:
+            return None
+        return (
+            MediaType.PODCAST
+            if self.currently_playing.item.type == MediaType.EPISODE
+            else MediaType.MUSIC
+        )
 
     @property
     def media_duration(self) -> int | None:
@@ -184,13 +190,14 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
 
         item = self.currently_playing.item
-        if item["type"] == MediaType.EPISODE:
-            if item["images"]:
-                return fetch_image_url(item)
-            if item["show"]["images"]:
-                return fetch_image_url(item["show"])
+        if item.type == ItemType.EPISODE:
+            assert isinstance(item, Episode)
+            if item.images:
+                return item.images[0].url
+            if item.show and item.show.images:
+                return item.show.images[0].url
             return None
-
+        assert isinstance(item, Track)
         if not item.album.images:
             return None
         return item.album.images[0].url
@@ -209,9 +216,11 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
 
         item = self.currently_playing.item
-        # if item["type"] == MediaType.EPISODE:
-        #     return item["show"]["publisher"]
+        if item.type == ItemType.EPISODE:
+            assert isinstance(item, Episode)
+            return item.show.publisher
 
+        assert isinstance(item, Track)
         return ", ".join(artist.name for artist in item.artists)
 
     @property
@@ -221,16 +230,23 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
 
         item = self.currently_playing.item
-        # if item["type"] == MediaType.EPISODE:
-        #     return item["show"]["name"]
+        if item.type == ItemType.EPISODE:
+            assert isinstance(item, Episode)
+            return item.show.name
 
+        assert isinstance(item, Track)
         return item.album.name
 
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        if not self.currently_playing or not self.currently_playing.item:
+        if (
+            not self.currently_playing
+            or not self.currently_playing.item
+            or self.currently_playing.item.type == ItemType.EPISODE
+        ):
             return None
+        assert isinstance(self.currently_playing.item, Track)
         return self.currently_playing.item.track_number
 
     @property
@@ -362,7 +378,6 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return await async_browse_media_internal(
             self.hass,
             self.coordinator.client,
-            self.coordinator.session,
             self.coordinator.current_user,
             media_content_type,
             media_content_id,

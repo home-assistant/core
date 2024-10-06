@@ -18,7 +18,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
 from .util import fetch_image_url
@@ -192,7 +191,6 @@ async def async_browse_media(
     result = await async_browse_media_internal(
         hass,
         info.coordinator.client,
-        info.session,
         info.coordinator.current_user,
         media_content_type,
         media_content_id,
@@ -210,7 +208,6 @@ async def async_browse_media(
 async def async_browse_media_internal(
     hass: HomeAssistant,
     spotify: Spotify,
-    session: OAuth2Session,
     current_user: dict[str, Any],
     media_content_type: str | None,
     media_content_id: str | None,
@@ -221,12 +218,6 @@ async def async_browse_media_internal(
     if media_content_type in (None, f"{MEDIA_PLAYER_PREFIX}library"):
         return await hass.async_add_executor_job(
             partial(library_payload, can_play_artist=can_play_artist)
-        )
-
-    if not session.valid_token:
-        await session.async_ensure_token_valid()
-        await hass.async_add_executor_job(
-            spotify.set_auth, session.token["access_token"]
         )
 
     # Strip prefix
