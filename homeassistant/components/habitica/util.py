@@ -23,8 +23,12 @@ from dateutil.rrule import (
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
@@ -189,3 +193,16 @@ def get_attributes_total(
     return floor(
         sum(value for value in get_attribute_points(user, content, attribute).values())
     )
+
+
+def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
+    """Return config entry or raise if not found or not loaded."""
+    entry: ConfigEntry | None
+    if not (
+        entry := hass.config_entries.async_get_entry(entry_id)
+    ) or entry not in hass.config_entries.async_loaded_entries(DOMAIN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+    return entry

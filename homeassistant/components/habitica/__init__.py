@@ -45,6 +45,7 @@ from .const import (
 from .coordinator import HabiticaDataUpdateCoordinator
 from .services import async_setup_services
 from .types import HabiticaConfigEntry
+from .util import get_config_entry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -80,19 +81,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     async def get_tasks(call: ServiceCall) -> ServiceResponse:
-        """Skill action."""
-        entry: HabiticaConfigEntry | None
+        """Get tasks action."""
 
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
-
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
-
         response = coordinator.data.tasks
 
         if types := call.data.get(ATTR_TYPE):
