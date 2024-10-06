@@ -57,7 +57,7 @@ async def test_sensors(
     state = hass.states.get("sensor.test_ha_1000_series_uptime")
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2019-11-11T09:05:32+00:00"
+    assert state.state == "2019-11-11T09:10:02+00:00"
 
     entry = entity_registry.async_get("sensor.test_ha_1000_series_uptime")
 
