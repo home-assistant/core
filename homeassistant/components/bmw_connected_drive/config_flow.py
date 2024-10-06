@@ -12,7 +12,6 @@ from httpx import RequestError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -72,7 +71,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry
+    _existing_config_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,7 +82,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
 
-            if self.source != SOURCE_REAUTH:
+            if self._existing_config_entry:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
@@ -101,16 +100,16 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             if info:
-                if self.source == SOURCE_REAUTH:
+                if self._existing_config_entry:
                     self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=entry_data
+                        self._existing_config_entry, data=entry_data
                     )
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
+                            self._existing_config_entry.entry_id
                         )
                     )
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_abort(reason=f"{self.source}_successful")
 
                 return self.async_create_entry(
                     title=info["title"],
@@ -118,7 +117,8 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA, self._reauth_entry.data if self.source == SOURCE_REAUTH else {}
+            DATA_SCHEMA,
+            self._existing_config_entry.data if self._existing_config_entry else None,
         )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -127,7 +127,14 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self._get_reauth_entry()
+        self._existing_config_entry = self._get_reauth_entry()
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        self._existing_config_entry = self._get_reconfigure_entry()
         return await self.async_step_user()
 
     @staticmethod
