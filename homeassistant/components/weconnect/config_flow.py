@@ -24,8 +24,6 @@ DATA_SCHEMA = vol.Schema(
 class WeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """WeConnect config flow."""
 
-    VERSION = 1
-
     _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
