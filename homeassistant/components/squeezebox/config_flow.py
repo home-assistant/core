@@ -248,7 +248,6 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Options Flow Steps."""
         _LOGGER.debug("1 user_input %s", user_input)
-        """Manage the options."""
 
         async def _validate_input(self, data: dict[str, Any]) -> str | None:
             """Validate the user input allows us to connect."""
