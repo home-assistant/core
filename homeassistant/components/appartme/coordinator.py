@@ -2,9 +2,9 @@
 
 import logging
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from appartme_paas import DeviceOfflineError
 
-from .cloud_api import DeviceOfflineError
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 

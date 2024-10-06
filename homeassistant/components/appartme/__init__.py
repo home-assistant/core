@@ -5,13 +5,24 @@ import json
 import logging
 import os
 
-from homeassistant.exceptions import ConfigEntryNotReady
+from appartme_paas import AppartmePaasClient
 
-from .cloud_api import AppartmeCloudAPI
-from .const import DOMAIN, UPDATE_INTERVAL_DEFAULT
+from homeassistant.const import Platform
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import API_URL, DOMAIN, UPDATE_INTERVAL_DEFAULT
 from .coordinator import AppartmeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 def read_translation_file(translation_file: str) -> dict:
@@ -66,7 +77,9 @@ async def async_setup_entry(hass, config_entry):
         )
         translations = {}
 
-    api = AppartmeCloudAPI(hass, config_entry.data["token"])
+    session = async_get_clientsession(hass)
+    access_token = config_entry.data["token"]["access_token"]
+    api = AppartmePaasClient(access_token, session=session, api_url=API_URL)
 
     devices = await api.fetch_devices()
     devices_info = []
@@ -123,9 +136,7 @@ async def async_setup_entry(hass, config_entry):
     }
 
     # Forward the setup to the individual platforms
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, ["light", "switch", "valve", "climate", "sensor"]
-    )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -133,7 +144,7 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload Appartme integration from a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, ["light", "switch", "valve", "climate", "sensor"]
+        config_entry, PLATFORMS
     )
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
