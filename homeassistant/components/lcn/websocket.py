@@ -54,7 +54,6 @@ from .schemas import (
     DOMAIN_DATA_SCENE,
     DOMAIN_DATA_SENSOR,
     DOMAIN_DATA_SWITCH,
-    DOMAIN_DATA_SWITCH_KEYLOCK_TIME,
 )
 
 if TYPE_CHECKING:
@@ -304,7 +303,6 @@ async def websocket_delete_device(
             DOMAIN_DATA_BINARY_SENSOR,
             DOMAIN_DATA_SENSOR,
             DOMAIN_DATA_SWITCH,
-            DOMAIN_DATA_SWITCH_KEYLOCK_TIME,
             DOMAIN_DATA_LIGHT,
             DOMAIN_DATA_CLIMATE,
             DOMAIN_DATA_COVER,

@@ -29,7 +29,6 @@ from .const import (
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DIMMABLE,
-    CONF_LOCK_TIME,
     CONF_LOCKABLE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -41,7 +40,6 @@ from .const import (
     CONF_SCENES,
     CONF_SETPOINT,
     CONF_SK_NUM_TRIES,
-    CONF_TIME_UNIT,
     CONF_TRANSITION,
     DIM_MODES,
     DOMAIN,
@@ -55,7 +53,6 @@ from .const import (
     S0_INPUTS,
     SETPOINTS,
     THRESHOLDS,
-    TIME_UNITS,
     VAR_UNITS,
     VARIABLES,
 )
@@ -132,14 +129,6 @@ DOMAIN_DATA_SWITCH: VolDictType = {
         vol.Upper,
         vol.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
     ),
-}
-
-DOMAIN_DATA_SWITCH_KEYLOCK_TIME: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(
-        vol.Upper, vol.In([key for key in KEYS if key[0] == "A"])
-    ),
-    vol.Optional(CONF_LOCK_TIME): cv.positive_int,
-    vol.Optional(CONF_TIME_UNIT): vol.All(vol.Upper, vol.In(TIME_UNITS)),
 }
 
 
