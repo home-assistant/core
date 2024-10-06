@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity Description class for binary sensors."""
 
-    state_key: str | None
+    desc: str
     device_class: BinarySensorDeviceClass | None = BinarySensorDeviceClass.DOOR
     boolean_map: dict[str, bool] = field(
         default_factory=lambda: {
@@ -51,16 +51,16 @@ class HomeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: tuple[HomeConnectBinarySensorEntityDescription, ...] = (
     HomeConnectBinarySensorEntityDescription(
-        key="Chiller Door",
-        state_key=REFRIGERATION_STATUS_DOOR_CHILLER,
+        key=REFRIGERATION_STATUS_DOOR_CHILLER,
+        desc="Chiller Door",
     ),
     HomeConnectBinarySensorEntityDescription(
-        key="Freezer Door",
-        state_key=REFRIGERATION_STATUS_DOOR_FREEZER,
+        key=REFRIGERATION_STATUS_DOOR_FREEZER,
+        desc="Freezer Door",
     ),
     HomeConnectBinarySensorEntityDescription(
-        key="Refrigerator Door",
-        state_key=REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
+        key=REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
+        desc="Refrigerator Door",
     ),
 )
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
                     device=device, entity_description=description
                 )
                 for description in BINARY_SENSORS
-                if description.state_key in device.appliance.status
+                if description.key in device.appliance.status
             )
         return entities
 
@@ -98,12 +98,13 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     def __init__(
         self,
         device: HomeConnectDevice,
+        bsh_key: str,
         desc: str,
         sensor_type: str,
         device_class: BinarySensorDeviceClass | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, desc)
+        super().__init__(device, bsh_key, desc)
         self._attr_device_class = device_class
         self._type = sensor_type
         self._false_value_list = None
@@ -162,7 +163,7 @@ class HomeConnectFridgeDoorBinarySensor(HomeConnectEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = entity_description
-        super().__init__(device, entity_description.key)
+        super().__init__(device, entity_description.key, entity_description.desc)
 
     async def async_update(self) -> None:
         """Update the binary sensor's status."""
@@ -172,9 +173,7 @@ class HomeConnectFridgeDoorBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self.state,
         )
         self._attr_is_on = self.entity_description.boolean_map.get(
-            self.device.appliance.status.get(self.entity_description.state_key, {}).get(
-                ATTR_VALUE
-            )
+            self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE)
         )
         self._attr_available = self._attr_is_on is not None
         _LOGGER.debug(

@@ -31,8 +31,6 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_level_control_config_entities(
     hass: HomeAssistant,

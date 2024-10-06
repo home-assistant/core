@@ -32,8 +32,6 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_thermostat_base(
     hass: HomeAssistant,
@@ -148,8 +146,6 @@ async def test_thermostat_base(
     assert state.attributes["temperature"] == 20
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_thermostat_service_calls(
     hass: HomeAssistant,
@@ -303,8 +299,6 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
 async def test_room_airconditioner(
     hass: HomeAssistant,

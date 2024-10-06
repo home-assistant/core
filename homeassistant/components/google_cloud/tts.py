@@ -172,10 +172,12 @@ class BaseGoogleCloudProvider:
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
-        encoding = texttospeech.AudioEncoding(options[CONF_ENCODING])
-        gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender(
+        encoding: texttospeech.AudioEncoding = texttospeech.AudioEncoding[
+            options[CONF_ENCODING]
+        ]  # type: ignore[misc]
+        gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender[
             options[CONF_GENDER]
-        )
+        ]  # type: ignore[misc]
         voice = options[CONF_VOICE]
         if voice:
             gender = None

@@ -32,8 +32,6 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock(
     hass: HomeAssistant,
@@ -117,8 +115,6 @@ async def test_lock(
     assert state.attributes["supported_features"] & LockEntityFeature.OPEN
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock_requires_pin(
     hass: HomeAssistant,
@@ -182,8 +178,6 @@ async def test_lock_requires_pin(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock_with_unbolt"])
 async def test_lock_with_unbolt(
     hass: HomeAssistant,
