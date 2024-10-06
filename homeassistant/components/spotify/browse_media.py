@@ -260,8 +260,8 @@ async def build_item_response(  # noqa: C901
     if media_content_type is None or media_content_id is None:
         return None
 
-    title = None
-    image = None
+    title: str | None = None
+    image: str | None = None
     media: Any | None = None
     items: list[ItemPayload] = []
 
@@ -517,8 +517,8 @@ async def build_item_response(  # noqa: C901
                     media_class=MediaClass.PLAYLIST,
                     media_content_id=item_id,
                     media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
-                    thumbnail=fetch_image_url(item, key="icons"),
-                    title=item.get("name"),
+                    thumbnail=item["thumbnail"],
+                    title=item["name"],
                 )
             )
         return media_item
@@ -532,6 +532,7 @@ async def build_item_response(  # noqa: C901
         media_content_type != MediaType.ARTIST or can_play_artist
     )
 
+    assert title
     browse_media = BrowseMedia(
         can_expand=True,
         can_play=can_play,
