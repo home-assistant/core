@@ -802,7 +802,8 @@ async def async_setup_entry(
 
     if not entities:
         LOGGER.warning(
-            "No data found for Withings entry %s, sensors will be added when new data is available"
+            "No data found for Withings entry %s, sensors will be added when new data is available",
+            entry.title,
         )
 
     async_add_entities(entities)
