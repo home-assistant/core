@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     spotify.refresh_token_function = _refresh_token
 
-    coordinator = SpotifyCoordinator(hass, spotify, session)
+    coordinator = SpotifyCoordinator(hass, spotify)
 
     await coordinator.async_config_entry_first_refresh()
 
