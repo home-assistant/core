@@ -260,7 +260,8 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
         states[self.key_id] = pypck.lcn_defs.KeyLockStateModifier.ON
 
-        await self.device_connection.lock_keys(self.table_id, states)
+        if not await self.device_connection.lock_keys(self.table_id, states):
+            return
 
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -270,7 +271,8 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
         states[self.key_id] = pypck.lcn_defs.KeyLockStateModifier.OFF
 
-        await self.device_connection.lock_keys(self.table_id, states)
+        if not await self.device_connection.lock_keys(self.table_id, states):
+            return
 
         self._attr_is_on = False
         self.async_write_ha_state()
