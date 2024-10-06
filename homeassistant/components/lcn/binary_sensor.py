@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -156,6 +157,23 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_lock_key_sensor",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_lock_key_sensor",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LCN",
+            },
+        )
+
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.source)
 
