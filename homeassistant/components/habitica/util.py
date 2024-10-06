@@ -197,12 +197,14 @@ def get_attributes_total(
 
 def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     """Return config entry or raise if not found or not loaded."""
-    entry: ConfigEntry | None
-    if not (
-        entry := hass.config_entries.async_get_entry(entry_id)
-    ) or entry not in hass.config_entries.async_loaded_entries(DOMAIN):
+    if not (entry := hass.config_entries.async_get_entry(entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_found",
+        )
+    if entry not in hass.config_entries.async_loaded_entries(DOMAIN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
         )
     return entry
