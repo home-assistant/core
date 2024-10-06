@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from .common import set_node_attribute, trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id", "supported_color_modes"),
     [
@@ -99,8 +97,6 @@ async def test_light_turn_on_off(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -169,8 +165,6 @@ async def test_dimmable_light(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -260,8 +254,6 @@ async def test_color_temperature_light(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [

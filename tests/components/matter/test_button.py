@@ -9,8 +9,6 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_energy_plug"])
 async def test_identify_button(
     hass: HomeAssistant,
