@@ -904,6 +904,14 @@ MOCK_HOST_ATTRIBUTES_DATA = [
     },
 ]
 
+MOCK_CALL_DEFLECTION_DATA = {
+    "X_AVM-DE_OnTel1": {
+        "GetDeflections": {
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>0</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+        }
+    }
+}
+
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
 MOCK_USER_INPUT_SIMPLE = {

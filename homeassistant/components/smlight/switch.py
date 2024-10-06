@@ -52,6 +52,7 @@ SWITCHES: list[SmSwitchEntityDescription] = [
         translation_key="auto_zigbee_update",
         entity_category=EntityCategory.CONFIG,
         setting=Settings.ZB_AUTOUPDATE,
+        entity_registry_enabled_default=False,
         state_fn=lambda x: x.auto_zigbee,
     ),
     SmSwitchEntityDescription(
