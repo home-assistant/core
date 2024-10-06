@@ -28,6 +28,7 @@ ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
+ATTR_VIEWER = "viewer"
 ATTR_STARTED_AT = "started_at"
 
 STATE_OFFLINE = "offline"
@@ -106,6 +107,7 @@ class TwitchSensor(SensorEntity):
             self._attr_extra_state_attributes[ATTR_GAME] = stream.game_name
             self._attr_extra_state_attributes[ATTR_TITLE] = stream.title
             self._attr_extra_state_attributes[ATTR_STARTED_AT] = stream.started_at
+            self._attr_extra_state_attributes[ATTR_VIEWER] = stream.viewer_count
             self._attr_entity_picture = stream.thumbnail_url
             if self._attr_entity_picture is not None:
                 self._attr_entity_picture = self._attr_entity_picture.format(
@@ -117,6 +119,7 @@ class TwitchSensor(SensorEntity):
             self._attr_extra_state_attributes[ATTR_GAME] = None
             self._attr_extra_state_attributes[ATTR_TITLE] = None
             self._attr_extra_state_attributes[ATTR_STARTED_AT] = None
+            self._attr_extra_state_attributes[ATTR_VIEWER] = None
             self._attr_entity_picture = self._channel.profile_image_url
 
     async def _async_add_user_attributes(self) -> None:

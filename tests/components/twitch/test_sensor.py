@@ -42,6 +42,7 @@ async def test_streaming(
     assert sensor_state.attributes["entity_picture"] == "stream-medium.png"
     assert sensor_state.attributes["game"] == "Good game"
     assert sensor_state.attributes["title"] == "Title"
+    assert sensor_state.attributes["viewer"] == 42
     assert sensor_state.attributes["started_at"] == datetime(
         year=2021, month=3, day=10, hour=3, minute=18, second=11, tzinfo=tzutc()
     )
