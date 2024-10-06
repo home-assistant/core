@@ -52,5 +52,5 @@ def eheimdigital_hub_mock(classic_led_ctrl_mock: MagicMock) -> Generator[AsyncMo
         eheimdigital_hub_mock.return_value.devices = {
             "00:00:00:00:00:01": classic_led_ctrl_mock
         }
-        eheimdigital_hub_mock.return_value.master = classic_led_ctrl_mock
+        eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
         yield eheimdigital_hub_mock

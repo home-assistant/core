@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import EheimDigitalUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS = [Platform.LIGHT]
 
 type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
 
@@ -18,7 +18,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up EHEIM Digital from a config entry."""
 
-    coordinator = EheimDigitalUpdateCoordinator(hass, entry)
+    coordinator = EheimDigitalUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

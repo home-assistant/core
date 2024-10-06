@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
+from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
 import voluptuous as vol
 
@@ -12,19 +14,23 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST, default="eheimdigital"): selector.TextSelector()}
+    {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}
 )
 
 
-class EheimDigitalConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
     """The EHEIM Digital config flow."""
 
-    data: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.data: dict[str, Any] = {}
+        self.main_device_added_event = asyncio.Event()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -35,13 +41,29 @@ class EheimDigitalConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(self.data)
 
         hub = EheimDigitalHub(
-            session=async_create_clientsession(self.hass, base_url=f"http://{host}"),
+            host=host,
+            session=async_get_clientsession(self.hass),
             loop=self.hass.loop,
+            main_device_added_event=self.main_device_added_event,
         )
-        await hub.connect()
-        await hub.update()
-        await hub.close()
-        await self.async_set_unique_id(hub.master.mac_address)
+        try:
+            await hub.connect()
+
+            async with asyncio.timeout(2):
+                # This event gets triggered when the first message is received from
+                # the device, it contains the data necessary to create the main device.
+                # This removes the race condition where the main device is accessed
+                # before the response from the device is parsed.
+                await self.main_device_added_event.wait()
+                if TYPE_CHECKING:
+                    # At this point the main device is always set
+                    assert isinstance(hub.main, EheimDigitalDevice)
+                await self.async_set_unique_id(hub.main.mac_address)
+                await hub.close()
+        except (ClientError, TimeoutError):
+            return self.async_abort(reason="cannot_connect")
+        except Exception:  # noqa: BLE001
+            return self.async_abort(reason="unknown")
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         return await self.async_step_discovery_confirm()
 
@@ -68,22 +90,31 @@ class EheimDigitalConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(user_input)
         errors: dict[str, str] = {}
         hub = EheimDigitalHub(
-            session=async_create_clientsession(
-                self.hass, base_url=f"http://{user_input[CONF_HOST]}"
-            ),
+            host=user_input[CONF_HOST],
+            session=async_get_clientsession(self.hass),
             loop=self.hass.loop,
+            main_device_added_event=self.main_device_added_event,
         )
 
         try:
             await hub.connect()
-            await hub.update()
-            await hub.close()
-        except ClientError:
+
+            async with asyncio.timeout(2):
+                # This event gets triggered when the first message is received from
+                # the device, it contains the data necessary to create the main device.
+                # This removes the race condition where the main device is accessed
+                # before the response from the device is parsed.
+                await self.main_device_added_event.wait()
+                if TYPE_CHECKING:
+                    # At this point the main device is always set
+                    assert isinstance(hub.main, EheimDigitalDevice)
+                await self.async_set_unique_id(hub.main.mac_address)
+                await hub.close()
+        except (ClientError, TimeoutError):
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(hub.master.mac_address)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
         return self.async_show_form(

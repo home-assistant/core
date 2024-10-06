@@ -1,9 +1,11 @@
 """Base entity for EHEIM Digital."""
 
 from abc import abstractmethod
+from typing import TYPE_CHECKING
 
 from eheimdigital.device import EheimDigitalDevice
 
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -26,8 +28,11 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
     ) -> None:
         """Initialize a EHEIM Digital entity."""
         super().__init__(coordinator)
+        if TYPE_CHECKING:
+            # At this point at least one device is found and so there is always a main device set
+            assert isinstance(coordinator.hub.main, EheimDigitalDevice)
         self._attr_device_info = DeviceInfo(
-            configuration_url="http://eheimdigital.local",
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
             name=device.name,
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="EHEIM",
@@ -35,13 +40,13 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             identifiers={(DOMAIN, device.mac_address)},
             suggested_area=device.aquarium_name,
             sw_version=device.sw_version,
-            via_device=(DOMAIN, coordinator.hub.master.mac_address),
+            via_device=(DOMAIN, coordinator.hub.main.mac_address),
         )
         self._device = device
         self._device_address = device.mac_address
 
     @abstractmethod
-    def _async_update_attrs(self) -> None: ...  # pragma: no cover
+    def _async_update_attrs(self) -> None: ...
 
     @callback
     def _handle_coordinator_update(self) -> None:

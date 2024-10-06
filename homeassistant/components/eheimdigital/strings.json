@@ -7,6 +7,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The host or IP address of your main device. Only needed to change if 'eheimdigital' doesn't work."
         }
       }
     },
@@ -26,7 +29,7 @@
         "state_attributes": {
           "effect": {
             "state": {
-              "daycl_mode": "Daycycle Mode"
+              "daycl_mode": "Daycycle mode"
             }
           }
         }

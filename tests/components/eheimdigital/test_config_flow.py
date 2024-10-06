@@ -1,7 +1,7 @@
 """Tests the config flow of EHEIM Digital."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -27,6 +27,7 @@ USER_INPUT = {CONF_HOST: "eheimdigital"}
 
 
 @pytest.mark.usefixtures("eheimdigital_hub_mock")
+@patch("homeassistant.components.eheimdigital.config_flow.asyncio.Event", new=AsyncMock)
 async def test_full_flow(hass: HomeAssistant) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -47,6 +48,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
+@patch("homeassistant.components.eheimdigital.config_flow.asyncio.Event", new=AsyncMock)
 async def test_flow_errors(
     hass: HomeAssistant,
     eheimdigital_hub_mock: AsyncMock,
@@ -96,6 +98,7 @@ async def test_flow_errors(
 
 
 @pytest.mark.usefixtures("eheimdigital_hub_mock")
+@patch("homeassistant.components.eheimdigital.config_flow.asyncio.Event", new=AsyncMock)
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -117,3 +120,32 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: ZEROCONF_DISCOVERY.host,
     }
+
+
+@pytest.mark.usefixtures("eheimdigital_hub_mock")
+@patch("homeassistant.components.eheimdigital.config_flow.asyncio.Event", new=AsyncMock)
+async def test_zeroconf_flow_errors(
+    hass: HomeAssistant, eheimdigital_hub_mock: MagicMock
+) -> None:
+    """Test zeroconf flow errors."""
+    eheimdigital_hub_mock.return_value.connect.side_effect = ClientConnectionError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+    eheimdigital_hub_mock.return_value.connect.side_effect = Exception()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"

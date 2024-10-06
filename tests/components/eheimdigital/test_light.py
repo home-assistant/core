@@ -1,10 +1,8 @@
 """Tests for the light module."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from eheimdigital.types import LightMode
-from freezegun.api import FrozenDateTimeFactory
+from eheimdigital.types import EheimDeviceType, LightMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -23,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -51,10 +49,13 @@ async def test_setup_classic_led_ctrl(
     eheimdigital_hub_mock.return_value.devices = {
         "00:00:00:00:00:01": classic_led_ctrl_mock
     }
-    eheimdigital_hub_mock.return_value.master = classic_led_ctrl_mock
+    eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data._async_device_found(
+        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
+    )
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -84,45 +85,6 @@ async def test_setup_no_devices(
     )
 
 
-async def test_setup_remove_channel(
-    hass: HomeAssistant,
-    eheimdigital_hub_mock: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    classic_led_ctrl_mock: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test light platform setup with different channels."""
-    mock_config_entry.add_to_hass(hass)
-
-    eheimdigital_hub_mock.return_value.devices = {
-        "00:00:00:00:00:01": classic_led_ctrl_mock
-    }
-    eheimdigital_hub_mock.return_value.master = classic_led_ctrl_mock
-
-    classic_led_ctrl_mock.tankconfig = [["CLASSIC_DAYLIGHT"], ["CLASSIC_DAYLIGHT"]]
-
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert len(hass.states.async_all()) == 2
-
-    classic_led_ctrl_mock.tankconfig = [["CLASSIC_DAYLIGHT"], []]
-
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-    classic_led_ctrl_mock.tankconfig = [["CLASSIC_DAYLIGHT"], ["CLASSIC_DAYLIGHT"]]
-
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-
-
 async def test_turn_off(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
@@ -139,6 +101,9 @@ async def test_turn_off(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data._async_device_found(
+        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
+    )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -178,6 +143,9 @@ async def test_turn_on_brightness(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data._async_device_found(
+        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
+    )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -212,6 +180,9 @@ async def test_turn_on_effect(
 
     with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data._async_device_found(
+        "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
+    )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
