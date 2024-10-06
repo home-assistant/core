@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urljoin
 
 from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
@@ -40,6 +41,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
+
+
+def base_url_from_url(url: str) -> str:
+    """Return the base url from a url."""
+    return urljoin(url, "/")
 
 
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -105,6 +111,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] | None = None
         if user_input:
+            user_input[CONF_BASE_URL] = base_url_from_url(user_input[CONF_BASE_URL])
+
             instance, account, errors = await self.hass.async_add_executor_job(
                 self.check_connection,
                 user_input[CONF_BASE_URL],
@@ -130,7 +138,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Importing Mastodon from configuration.yaml")
 
-        base_url = str(import_data.get(CONF_BASE_URL, DEFAULT_URL))
+        base_url = base_url_from_url(str(import_data.get(CONF_BASE_URL, DEFAULT_URL)))
         client_id = str(import_data.get(CONF_CLIENT_ID))
         client_secret = str(import_data.get(CONF_CLIENT_SECRET))
         access_token = str(import_data.get(CONF_ACCESS_TOKEN))
