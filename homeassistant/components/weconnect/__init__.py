@@ -1,37 +1,31 @@
 """The WeConnect integration."""
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import WeConnectCoordinator
 
-PLATFORMS = [
-    Platform.SENSOR,
-]
+PLATFORMS = [Platform.SENSOR]
 
 
-@dataclass
-class WeConnectData:
-    """Class to store WeConnect runtime data."""
-
-    coordinator: WeConnectCoordinator
-
-
-type WeConnectConfigEntry = ConfigEntry[WeConnectData]
+type WeConnectConfigEntry = ConfigEntry[WeConnectCoordinator]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeConnectConfigEntry,
 ) -> bool:
     """Set up the WeConnect integration."""
     coordinator = WeConnectCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
 
-    config_entry.runtime_data = WeConnectData(coordinator)
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: WeConnectConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
