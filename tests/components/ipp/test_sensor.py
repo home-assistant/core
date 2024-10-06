@@ -20,8 +20,6 @@ async def test_sensors(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the creation and values of the IPP sensors."""
-    states = hass.states.async_all()
-    assert len(states) == 7
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
