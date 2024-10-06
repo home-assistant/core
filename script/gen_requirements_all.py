@@ -202,6 +202,11 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# A custom integration https://github.com/UI-Lovelace-Minimalist/UI
+# pinned the version of aiofiles to 0.8.0
+# which has no support for python 3.12
+aiofiles>=23.2.0
 """
 
 GENERATED_MESSAGE = (
