@@ -46,11 +46,8 @@ async def test_zone_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
-
-    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         zone = get_zone_entity(hass)
@@ -62,7 +59,7 @@ async def test_zone_set_hvac_mode(
             await zone.async_set_hvac_mode(HVACMode.HEAT)
 
             assert mock_fcn.await_count == 1
-            assert install != "default" or mock_fcn.await_args.args == (
+            assert mock_fcn.await_args.args == (
                 {
                     "setpointMode": "FollowSchedule",
                 },
@@ -74,17 +71,13 @@ async def test_zone_set_hvac_mode(
             await zone.async_set_hvac_mode(HVACMode.OFF)
 
             assert mock_fcn.await_count == 1
-            assert install != "default" or mock_fcn.await_args.args == (
+            assert mock_fcn.await_args.args == (
                 {
                     "setpointMode": "PermanentOverride",
-                    "HeatSetpointValue": 5.0,  # varies by install
+                    "HeatSetpointValue": zone.min_temp,
                 },
             )
             assert mock_fcn.await_args.kwargs == {}
-
-            results.append(mock_fcn.await_args.args)
-
-    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
