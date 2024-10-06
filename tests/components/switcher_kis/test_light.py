@@ -29,7 +29,7 @@ from .consts import (
 
 ENTITY_ID = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_1"
 ENTITY_ID2 = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_2"
-ENTITY_ID3 = f"{LIGHT_DOMAIN}.{slugify(DEVICE2.name)}_light_1"
+ENTITY_ID3 = f"{LIGHT_DOMAIN}.{slugify(DEVICE2.name)}_light"
 
 
 @pytest.mark.parametrize(
