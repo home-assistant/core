@@ -16,12 +16,12 @@ from .common import snapshot_matter_entities, trigger_subscription_callback
 
 
 @pytest.mark.usefixtures("matter_devices")
-async def test_binary_sensors(
+async def test_events(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test binary sensors."""
+    """Test events."""
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
