@@ -154,7 +154,7 @@ async def test_reconfigure(
         )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT, result
-    assert result["reason"] == "reconfigured"
+    assert result["reason"] == "reconfigure_successful"
     config_entry = hass.config_entries.async_entries()[0]
     assert config_entry.data[CONF_SYSTEM_ZONE] == [
         (1, 1),

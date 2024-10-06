@@ -64,11 +64,8 @@ jobs:
       - name: Write env-file
         run: |
           (
-            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
-            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
-            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc"
 
             # Fix out of memory issues with rust
             echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
