@@ -89,12 +89,6 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
         self.control_result = None
         self.async_write_ha_state()
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        if self.control_result is not None:
-            return self.control_result
-
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
@@ -140,7 +134,9 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        super().is_on()
+        if self.control_result is not None:
+            return self.control_result
+
         data = cast(SwitcherDualShutterSingleLight, self.coordinator.data)
         return bool(data.lights == DeviceState.ON)
 
@@ -151,6 +147,8 @@ class SwitcherDualLightEntity(SwitcherBaseLightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        super().is_on()
+        if self.control_result is not None:
+            return self.control_result
+
         data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
         return bool(data.lights[self._light_id] == DeviceState.ON)
