@@ -85,7 +85,7 @@ class EheimDigitalClassicLEDControlLight(
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return super().available and self._attr_available
+        return super().available and self._device.light_level[self._channel] is not None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -109,7 +109,6 @@ class EheimDigitalClassicLEDControlLight(
     def _async_update_attrs(self) -> None:
         light_level = self._device.light_level[self._channel]
 
-        self._attr_available = light_level is not None
         self._attr_is_on = light_level > 0 if light_level is not None else None
         self._attr_brightness = (
             value_to_brightness(BRIGHTNESS_SCALE, light_level)
