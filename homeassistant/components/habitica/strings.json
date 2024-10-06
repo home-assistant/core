@@ -6,7 +6,36 @@
     "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
-    "unit_experience_points": "XP"
+    "unit_experience_points": "XP",
+    "config_entry_description": "Select the Habitica account to update a task.",
+    "task_name": "Task name",
+    "task_description": "The name (or task ID) of the task you want to update.",
+    "rename_name": "Rename",
+    "rename_description": "The new title for the Habitica task.",
+    "description_name": "Update description",
+    "description_description": "The new description for the Habitica task.",
+    "tag_name": "Add tags",
+    "tag_description": "Add tags to the Habitica task. If a tag does not already exist, a new one will be created.",
+    "remove_tag_name": "Remove tags",
+    "remove_tag_description": "Remove tags from the Habitica task.",
+    "alias_name": "Task alias",
+    "alias_description": "A task alias can be used instead of the name or task ID. Only dashes, underscores, and alphanumeric characters are supported. The task alias must be unique among all your tasks.",
+    "priority_name": "Difficulty",
+    "priority_description": "Update the difficulty of a task.",
+    "add_checklist_item_name": "Add items",
+    "add_checklist_item_description": "Add new checklist items to a task's checklist.",
+    "remove_checklist_item_name": "Delete items",
+    "remove_checklist_item_description": "Remove checklist items from a task's checklist.",
+    "score_checklist_item_name": "Complete items",
+    "score_checklist_item_description": "Mark checklist items from a task's checklist as completed.",
+    "unscore_checklist_item_name": "Uncomplete items",
+    "unscore_checklist_item_description": "Undo completion of checklist items from a task's checklist.",
+    "developer_options_name": "Advanced settings",
+    "developer_options_description": "Additional features available in developer mode.",
+    "tag_options_name": "Tags",
+    "tag_options_description": "Add or remove tags from a task.",
+    "checklist_options_name": "Checklist",
+    "checklist_options_description": "Add, remove, or update status of an item on a task's checklist."
   },
   "config": {
     "abort": {
@@ -523,6 +552,282 @@
           "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
         }
       }
+    },
+    "update_todo": {
+      "name": "Update a to-do",
+      "description": "Update a specific to-do for a selected Habitica character",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::common::config_entry_description%]"
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "The name (or task ID) of the to-do you want to update."
+        },
+        "rename": {
+          "name": "[%key:component::habitica::common::rename_name%]",
+          "description": "[%key:component::habitica::common::rename_description%]"
+        },
+        "description": {
+          "name": "[%key:component::habitica::common::description_name%]",
+          "description": "[%key:component::habitica::common::description_description%]"
+        },
+        "tag": {
+          "name": "[%key:component::habitica::common::tag_name%]",
+          "description": "[%key:component::habitica::common::tag_description%]"
+        },
+        "remove_tag": {
+          "name": "[%key:component::habitica::common::remove_tag_name%]",
+          "description": "[%key:component::habitica::common::remove_tag_description%]"
+        },
+        "alias": {
+          "name": "[%key:component::habitica::common::alias_name%]",
+          "description": "[%key:component::habitica::common::alias_description%]"
+        },
+        "priority": {
+          "name": "[%key:component::habitica::common::priority_name%]",
+          "description": "[%key:component::habitica::common::priority_description%]"
+        },
+        "date": {
+          "name": "Due date",
+          "description": "Update or set the to-do's due date."
+        },
+        "clear_date": {
+          "name": "Clear due date",
+          "description": "Remove the due date from the to-do."
+        },
+        "reminder": {
+          "name": "Add reminders",
+          "description": "Add reminders to a to-do."
+        },
+        "remove_reminder": {
+          "name": "Remove reminders",
+          "description": "Remove specific reminders from a to-do."
+        },
+        "clear_reminder": {
+          "name": "Clear all reminders",
+          "description": "Remove all reminders from a to-do."
+        },
+        "add_checklist_item": {
+          "name": "[%key:component::habitica::common::add_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::add_checklist_item_description%]"
+        },
+        "remove_checklist_item": {
+          "name": "[%key:component::habitica::common::remove_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::remove_checklist_item_description%]"
+        },
+        "score_checklist_item": {
+          "name": "[%key:component::habitica::common::score_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::score_checklist_item_description%]"
+        },
+        "unscore_checklist_item": {
+          "name": "[%key:component::habitica::common::unscore_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::unscore_checklist_item_description%]"
+        }
+      },
+      "sections": {
+        "checklist_options": {
+          "name": "[%key:component::habitica::common::checklist_options_name%]",
+          "description": "[%key:component::habitica::common::checklist_options_description%]"
+        },
+        "duedate_options": {
+          "name": "Due date",
+          "description": "Set, update or remove due dates of a to-do."
+        },
+        "reminder_options": {
+          "name": "Reminders",
+          "description": "Add, remove or clear reminders of a to-do."
+        },
+        "tag_options": {
+          "name": "[%key:component::habitica::common::tag_options_name%]",
+          "description": "[%key:component::habitica::common::tag_options_description%]"
+        },
+        "developer_options": {
+          "name": "[%key:component::habitica::common::developer_options_name%]",
+          "description": "[%key:component::habitica::common::developer_options_description%]"
+        }
+      }
+    },
+    "update_habit": {
+      "name": "Update a habit",
+      "description": "Update a specific habit for a selected Habitica character",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::common::config_entry_description%]"
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "The name (or task ID) of the habit you want to update."
+        },
+        "rename": {
+          "name": "[%key:component::habitica::common::rename_name%]",
+          "description": "[%key:component::habitica::common::rename_description%]"
+        },
+        "description": {
+          "name": "[%key:component::habitica::common::description_name%]",
+          "description": "[%key:component::habitica::common::description_description%]"
+        },
+        "tag": {
+          "name": "[%key:component::habitica::common::tag_name%]",
+          "description": "[%key:component::habitica::common::tag_description%]"
+        },
+        "remove_tag": {
+          "name": "[%key:component::habitica::common::remove_tag_name%]",
+          "description": "[%key:component::habitica::common::remove_tag_description%]"
+        },
+        "alias": {
+          "name": "[%key:component::habitica::common::alias_name%]",
+          "description": "[%key:component::habitica::common::alias_description%]"
+        },
+        "priority": {
+          "name": "[%key:component::habitica::common::priority_name%]",
+          "description": "[%key:component::habitica::common::priority_description%]"
+        },
+        "frequency": {
+          "name": "Reset counter frequency",
+          "description": "Update the reset frequency of a habit's counter: daily at the start of a new day, weekly after Sunday night, and monthly at the end of the month."
+        },
+        "up_down": {
+          "name": "Rewards or losses",
+          "description": "Update if the habit is good and rewarding (positive), bad and penalizing (negative), or both."
+        },
+        "counter_up": {
+          "name": "Adjust positive counter",
+          "description": "Update the up counter of a positive habit."
+        },
+        "counter_down": {
+          "name": "Adjust negative counter",
+          "description": "Update the down counter of a negative habit."
+        }
+      },
+      "sections": {
+        "tag_options": {
+          "name": "[%key:component::habitica::common::tag_options_name%]",
+          "description": "[%key:component::habitica::common::tag_options_description%]"
+        },
+        "developer_options": {
+          "name": "[%key:component::habitica::common::developer_options_name%]",
+          "description": "[%key:component::habitica::common::developer_options_description%]"
+        }
+      }
+    },
+    "update_reward": {
+      "name": "Update a reward",
+      "description": "Update a specific reward for a selected Habitica character",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Select the Habitica account to update a reward."
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "The name (or task ID) of the reward you want to update."
+        },
+        "rename": {
+          "name": "[%key:component::habitica::common::rename_name%]",
+          "description": "The new title for the Habitica reward."
+        },
+        "description": {
+          "name": "[%key:component::habitica::common::description_name%]",
+          "description": "[%key:component::habitica::common::description_description%]"
+        },
+        "tag": {
+          "name": "[%key:component::habitica::common::tag_name%]",
+          "description": "[%key:component::habitica::common::tag_description%]"
+        },
+        "remove_tag": {
+          "name": "[%key:component::habitica::common::remove_tag_name%]",
+          "description": "[%key:component::habitica::common::remove_tag_description%]"
+        },
+        "alias": {
+          "name": "[%key:component::habitica::common::alias_name%]",
+          "description": "[%key:component::habitica::common::alias_description%]"
+        },
+        "cost": {
+          "name": "Cost",
+          "description": "Update the cost of a reward."
+        }
+      },
+      "sections": {
+        "tag_options": {
+          "name": "[%key:component::habitica::common::tag_options_name%]",
+          "description": "[%key:component::habitica::common::tag_options_description%]"
+        },
+        "developer_options": {
+          "name": "[%key:component::habitica::common::developer_options_name%]",
+          "description": "[%key:component::habitica::common::developer_options_description%]"
+        }
+      }
+    },
+    "update_daily": {
+      "name": "Update a daily",
+      "description": "Update a specific daily for a selected Habitica character",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::common::config_entry_description%]"
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "The name (or task ID) of the daily you want to update."
+        },
+        "rename": {
+          "name": "[%key:component::habitica::common::rename_name%]",
+          "description": "[%key:component::habitica::common::rename_description%]"
+        },
+        "description": {
+          "name": "[%key:component::habitica::common::description_name%]",
+          "description": "[%key:component::habitica::common::description_description%]"
+        },
+        "tag": {
+          "name": "[%key:component::habitica::common::tag_name%]",
+          "description": "[%key:component::habitica::common::tag_description%]"
+        },
+        "remove_tag": {
+          "name": "[%key:component::habitica::common::remove_tag_name%]",
+          "description": "[%key:component::habitica::common::remove_tag_description%]"
+        },
+        "alias": {
+          "name": "[%key:component::habitica::common::alias_name%]",
+          "description": "[%key:component::habitica::common::alias_description%]"
+        },
+        "priority": {
+          "name": "[%key:component::habitica::common::priority_name%]",
+          "description": "[%key:component::habitica::common::priority_description%]"
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "Update the start date of a daily to define when it becomes active. Also determines the specific weekday or day of the month on which the habit repeats."
+        },
+        "frequency": {
+          "name": "Repeat interval",
+          "description": "Update the repetition interval of a daily."
+        },
+        "every_x": {
+          "name": "Repeat every X",
+          "description": "Set the number of days, weeks, months, or years after which the daily repeats. A value of 0 means the daily will never be due (grey daily)."
+        },
+        "repeat": {
+          "name": "Weekly repeat days",
+          "description": "Update the days of the week the daily repeats. Applies if the repetition interval is set to weekly."
+        }
+      },
+      "sections": {
+        "checklist_options": {
+          "name": "[%key:component::habitica::common::checklist_options_name%]",
+          "description": "[%key:component::habitica::common::checklist_options_description%]"
+        },
+        "tag_options": {
+          "name": "[%key:component::habitica::common::tag_options_name%]",
+          "description": "[%key:component::habitica::common::tag_options_description%]"
+        },
+        "developer_options": {
+          "name": "[%key:component::habitica::common::developer_options_name%]",
+          "description": "[%key:component::habitica::common::developer_options_description%]"
+        }
+      }
     }
   },
   "selector": {
@@ -540,6 +845,39 @@
         "spooky_sparkles": "Spooky sparkles",
         "seafoam": "Seafoam",
         "shiny_seed": "Shiny seed"
+      }
+    },
+    "priority": {
+      "options": {
+        "trivial": "Trivial",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      }
+    },
+    "up_down": {
+      "options": {
+        "positive": "➕ Positive",
+        "negative": "➖ Negative"
+      }
+    },
+    "frequency": {
+      "options": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      }
+    },
+    "repeat": {
+      "options": {
+        "su": "Sunday",
+        "m": "Monday",
+        "t": "Tuesday",
+        "w": "Wednesday",
+        "th": "Thursday",
+        "f": "Friday",
+        "s": "Saturday"
       }
     }
   }
