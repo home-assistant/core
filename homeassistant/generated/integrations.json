@@ -6101,6 +6101,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "swidget": {
+      "name": "Swidget",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "swiss_hydrological_data": {
       "name": "Swiss Hydrological Data",
       "integration_type": "hub",

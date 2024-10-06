@@ -463,6 +463,7 @@ homeassistant.components.stt.*
 homeassistant.components.suez_water.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
+homeassistant.components.swidget.*
 homeassistant.components.switch.*
 homeassistant.components.switch_as_x.*
 homeassistant.components.switchbee.*
