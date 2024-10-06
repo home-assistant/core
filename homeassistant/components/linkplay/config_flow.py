@@ -1,16 +1,22 @@
 """Config flow to configure LinkPlay component."""
 
+import logging
 from typing import Any
 
-from linkplay.discovery import linkplay_factory_bridge
+from aiohttp import ClientSession
+from linkplay.bridge import LinkPlayBridge
+from linkplay.discovery import linkplay_factory_httpapi_bridge
+from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .utils import async_get_client_session
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -25,10 +31,15 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
 
-        session = async_get_clientsession(self.hass)
-        bridge = await linkplay_factory_bridge(discovery_info.host, session)
+        session: ClientSession = await async_get_client_session(self.hass)
+        bridge: LinkPlayBridge | None = None
 
-        if bridge is None:
+        try:
+            bridge = await linkplay_factory_httpapi_bridge(discovery_info.host, session)
+        except LinkPlayRequestException:
+            _LOGGER.exception(
+                "Failed to connect to LinkPlay device at %s", discovery_info.host
+            )
             return self.async_abort(reason="cannot_connect")
 
         self.data[CONF_HOST] = discovery_info.host
@@ -66,14 +77,26 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            session = async_get_clientsession(self.hass)
-            bridge = await linkplay_factory_bridge(user_input[CONF_HOST], session)
+            session: ClientSession = await async_get_client_session(self.hass)
+            bridge: LinkPlayBridge | None = None
+
+            try:
+                bridge = await linkplay_factory_httpapi_bridge(
+                    user_input[CONF_HOST], session
+                )
+            except LinkPlayRequestException:
+                _LOGGER.exception(
+                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
+                )
+                errors["base"] = "cannot_connect"
 
             if bridge is not None:
                 self.data[CONF_HOST] = user_input[CONF_HOST]
                 self.data[CONF_MODEL] = bridge.device.name
 
-                await self.async_set_unique_id(bridge.device.uuid)
+                await self.async_set_unique_id(
+                    bridge.device.uuid, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: self.data[CONF_HOST]}
                 )
@@ -83,7 +106,6 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_HOST: self.data[CONF_HOST]},
                 )
 
-            errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),

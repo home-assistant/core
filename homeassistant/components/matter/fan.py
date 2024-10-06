@@ -59,6 +59,7 @@ class MatterFan(MatterEntity, FanEntity):
     _last_known_preset_mode: str | None = None
     _last_known_percentage: int = 0
     _enable_turn_on_off_backwards_compatibility = False
+    _feature_map: int | None = None
 
     async def async_turn_on(
         self,
@@ -183,8 +184,7 @@ class MatterFan(MatterEntity, FanEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        if not hasattr(self, "_attr_preset_modes"):
-            self._calculate_features()
+        self._calculate_features()
 
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
@@ -257,11 +257,17 @@ class MatterFan(MatterEntity, FanEntity):
     def _calculate_features(
         self,
     ) -> None:
-        """Calculate features and preset modes for HA Fan platform from Matter attributes.."""
-        # work out supported features and presets from matter featuremap
+        """Calculate features for HA Fan platform from Matter FeatureMap."""
         feature_map = int(
             self.get_matter_attribute_value(clusters.FanControl.Attributes.FeatureMap)
         )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        # work out supported features and presets from matter featuremap
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        self._attr_supported_features = FanEntityFeature(0)
         if feature_map & FanControlFeature.kMultiSpeed:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._attr_speed_count = int(

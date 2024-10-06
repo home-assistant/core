@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any, TypedDict, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +22,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     _DEPRECATED_SUPPORT_DURATION,
@@ -38,6 +40,7 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[SirenEntity]] = HassKey(DOMAIN)
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -104,7 +107,7 @@ def process_turn_on_params(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up siren devices."""
-    component = hass.data[DOMAIN] = EntityComponent[SirenEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[SirenEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -129,11 +132,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [SirenEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [SirenEntityFeature.TURN_OFF]
+        SERVICE_TURN_OFF, None, "async_turn_off", [SirenEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
@@ -143,14 +146,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[SirenEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[SirenEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class SirenEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):

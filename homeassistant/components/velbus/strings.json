@@ -17,6 +17,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "invalid_hvac_mode": {
+      "message": "Climate mode {hvac_mode} is not supported."
+    }
+  },
   "services": {
     "sync_clock": {
       "name": "Sync clock",

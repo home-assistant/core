@@ -1,5 +1,6 @@
 """Test the Energy sensors."""
 
+from collections.abc import Callable, Coroutine
 import copy
 from datetime import timedelta
 from typing import Any
@@ -37,10 +38,12 @@ TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
 
 @pytest.fixture
-async def setup_integration(recorder_mock: Recorder):
+async def setup_integration(
+    recorder_mock: Recorder,
+) -> Callable[[HomeAssistant], Coroutine[Any, Any, None]]:
     """Set up the integration."""
 
-    async def setup_integration(hass):
+    async def setup_integration(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "energy", {})
         await hass.async_block_till_done()
 

@@ -133,8 +133,6 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         )
         self._previous_data = None
         self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
 
     @property
     def available(self) -> bool:

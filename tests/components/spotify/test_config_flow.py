@@ -13,7 +13,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -201,15 +201,7 @@ async def test_reauthentication(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -243,9 +235,10 @@ async def test_reauthentication(
         spotify_mock.return_value.current_user.return_value = {"id": "frenck"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["data"]["auth_implementation"] == "cred"
-    result["data"]["token"].pop("expires_at")
-    assert result["data"]["token"] == {
+    updated_data = old_entry.data.copy()
+    assert updated_data["auth_implementation"] == "cred"
+    updated_data["token"].pop("expires_at")
+    assert updated_data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
         "type": "Bearer",
@@ -269,15 +262,7 @@ async def test_reauth_account_mismatch(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
@@ -308,13 +293,3 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
-
-
-async def test_abort_if_no_reauth_entry(hass: HomeAssistant) -> None:
-    """Check flow aborts when no entry is known when entring reauth confirmation."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth_confirm"}
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_account_mismatch"

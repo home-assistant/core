@@ -83,7 +83,7 @@ class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
 
 
 class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):
-    """VAD sensitivity selector for VoIP devices."""
+    """VAD sensitivity selector for ESPHome devices."""
 
     def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
         """Initialize a VAD sensitivity selector."""

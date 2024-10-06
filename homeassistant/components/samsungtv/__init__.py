@@ -23,11 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import (
@@ -53,7 +49,6 @@ from .coordinator import SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 
@@ -213,7 +208,7 @@ async def _async_create_bridge_with_updated_data(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
-        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
+        LOGGER.debug("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
@@ -240,21 +235,21 @@ async def _async_create_bridge_with_updated_data(
         if mac and mac != "none":
             # Samsung sometimes returns a value of "none" for the mac address
             # this should be ignored
-            LOGGER.info("Updated mac to %s for %s", mac, host)
+            LOGGER.debug("Updated mac to %s for %s", mac, host)
             updated_data[CONF_MAC] = dr.format_mac(mac)
         else:
-            LOGGER.info("Failed to get mac for %s", host)
+            LOGGER.warning("Failed to get mac for %s", host)
 
     if not model:
         LOGGER.debug("Attempting to get model for %s", host)
         if info:
             model = info.get("device", {}).get("modelName")
             if model:
-                LOGGER.info("Updated model to %s for %s", model, host)
+                LOGGER.debug("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
-        LOGGER.info(
+        LOGGER.debug(
             (
                 "Detected model %s for %s. Some televisions from H and J series use "
                 "an encrypted protocol but you are using %s which may not be supported"

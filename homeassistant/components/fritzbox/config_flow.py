@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import ipaddress
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -43,9 +43,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._entry: ConfigEntry | None = None
         self._host: str | None = None
         self._name: str | None = None
         self._password: str | None = None
@@ -62,7 +63,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _update_entry(self) -> None:
-        assert self._entry is not None
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
@@ -122,7 +122,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
-        self.context[CONF_HOST] = host
 
         if (
             ipaddress.ip_address(host).version == 6
@@ -136,9 +135,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self._host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
@@ -147,11 +146,14 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
-        self._host = host
         self._name = str(discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -182,9 +184,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._entry = entry
+        self._entry = self._get_reauth_entry()
         self._host = entry_data[CONF_HOST]
         self._name = str(entry_data[CONF_HOST])
         self._username = entry_data[CONF_USERNAME]
@@ -223,12 +223,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._entry = entry
+        self._entry = self._get_reconfigure_entry()
         self._name = self._entry.data[CONF_HOST]
         self._host = self._entry.data[CONF_HOST]
         self._username = self._entry.data[CONF_USERNAME]

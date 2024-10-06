@@ -1,1 +1,1 @@
-"""Tests for the Spider component."""
+"""Tests for the Spider integration."""

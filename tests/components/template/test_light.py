@@ -1,5 +1,7 @@
 """The tests for the  Template light platform."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components import light
@@ -152,7 +154,9 @@ OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG = {
 }
 
 
-async def async_setup_light(hass, count, light_config):
+async def async_setup_light(
+    hass: HomeAssistant, count: int, light_config: dict[str, Any]
+) -> None:
     """Do setup of light integration."""
     config = {"light": {"platform": "template", "lights": light_config}}
 
@@ -169,7 +173,9 @@ async def async_setup_light(hass, count, light_config):
 
 
 @pytest.fixture
-async def setup_light(hass, count, light_config):
+async def setup_light(
+    hass: HomeAssistant, count: int, light_config: dict[str, Any]
+) -> None:
     """Do setup of light integration."""
     await async_setup_light(hass, count, light_config)
 

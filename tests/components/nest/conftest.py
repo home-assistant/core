@@ -53,7 +53,7 @@ class FakeAuth(AbstractAuth):
     from the API.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize FakeAuth."""
         super().__init__(None, None)
         # Tests can set fake responses here.

@@ -1,5 +1,7 @@
 {
   "services": {
-    "update_records": "mdi:database-refresh"
+    "update_records": {
+      "service": "mdi:database-refresh"
+    }
   }
 }

@@ -108,7 +108,7 @@ class CurrencylayerData:
         try:
             result = requests.get(self._resource, params=self._parameters, timeout=10)
             if "error" in result.json():
-                raise ValueError(result.json()["error"]["info"])
+                raise ValueError(result.json()["error"]["info"])  # noqa: TRY301
             self.data = result.json()["quotes"]
             _LOGGER.debug("Currencylayer data updated: %s", result.json()["timestamp"])
         except ValueError as err:

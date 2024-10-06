@@ -4,13 +4,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import MikrotikDataUpdateCoordinator, get_api
 from .errors import CannotConnect, LoginError
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 

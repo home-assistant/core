@@ -1,8 +1,16 @@
 {
   "services": {
-    "feedback_off": "mdi:message-alert",
-    "feedback_on": "mdi:message-alert",
-    "say": "mdi:chat",
-    "say_action": "mdi:account-voice"
+    "feedback_off": {
+      "service": "mdi:message-alert"
+    },
+    "feedback_on": {
+      "service": "mdi:message-alert"
+    },
+    "say": {
+      "service": "mdi:chat"
+    },
+    "say_action": {
+      "service": "mdi:account-voice"
+    }
   }
 }

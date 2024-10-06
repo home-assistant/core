@@ -51,8 +51,6 @@ def setup_platform(
     device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    if value_template is not None:
-        value_template.hass = hass
 
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]["content"])
@@ -60,7 +58,7 @@ def setup_platform(
         _LOGGER.error("Device/thing %s could not be found", device)
         return
 
-    if value_template.render_with_possible_json_value(content) == "":
+    if value_template and value_template.render_with_possible_json_value(content) == "":
         _LOGGER.error("%s was not found", value_template)
         return
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.telegram import IndividualAddress
 
@@ -10,7 +11,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -19,7 +19,10 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(
-    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic entities."""
     await knx.setup_integration({})
@@ -50,7 +53,8 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
 
     events = async_capture_events(hass, "state_changed")
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(events) == 3  # 5 polled sensors - 2 disabled
@@ -66,24 +70,18 @@ async def test_diagnostic_entities(
     ):
         assert hass.states.get(entity_id).state == test_state
 
-    await knx.xknx.connection_manager.connection_state_changed(
+    knx.xknx.connection_manager.connection_state_changed(
         state=XknxConnectionState.DISCONNECTED
     )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(events) == 4  # 3 not always_available + 3 force_update - 2 disabled
     events.clear()
 
     knx.xknx.current_address = IndividualAddress("1.1.1")
-    await knx.xknx.connection_manager.connection_state_changed(
+    knx.xknx.connection_manager.connection_state_changed(
         state=XknxConnectionState.CONNECTED,
         connection_type=XknxConnectionType.TUNNEL_UDP,
     )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(events) == 6  # all diagnostic sensors - counters are reset on connect
 
@@ -111,7 +109,6 @@ async def test_removed_entity(
             "sensor.knx_interface_connection_established",
             disabled_by=er.RegistryEntryDisabler.USER,
         )
-        await hass.async_block_till_done()
         unregister_mock.assert_called_once()
 
 

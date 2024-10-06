@@ -11,7 +11,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.unifi.const import CONF_SITE_ID
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     CONF_HOST,
     CONTENT_TYPE_JSON,
@@ -23,7 +23,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 RANDOM_TOKEN = "random_token"
@@ -134,7 +140,7 @@ WLAN_REGENERATE_PASSWORD = [
 async def test_entity_and_device_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
+    config_entry_factory: ConfigEntryFactoryType,
     site_payload: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -150,8 +156,8 @@ async def test_entity_and_device_data(
 async def _test_button_entity(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_websocket_state,
-    config_entry: ConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    config_entry: MockConfigEntry,
     entity_id: str,
     request_method: str,
     request_path: str,
@@ -221,8 +227,8 @@ async def _test_button_entity(
 async def test_device_button_entities(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_state,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
     entity_id: str,
     request_method: str,
     request_path: str,
@@ -269,8 +275,8 @@ async def test_wlan_button_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_state,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
     entity_id: str,
     request_method: str,
     request_path: str,
@@ -308,7 +314,7 @@ async def test_wlan_button_entities(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_power_cycle_availability(
     hass: HomeAssistant,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: dict[str, Any],
 ) -> None:
     """Verify that disabling PoE marks entity as unavailable."""

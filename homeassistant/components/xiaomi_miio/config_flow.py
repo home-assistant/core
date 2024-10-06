@@ -237,7 +237,9 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
                     step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
 
-            miio_cloud = MiCloud(cloud_username, cloud_password)
+            miio_cloud = await self.hass.async_add_executor_job(
+                MiCloud, cloud_username, cloud_password
+            )
             try:
                 if not await self.hass.async_add_executor_job(miio_cloud.login):
                     errors["base"] = "cloud_login_error"

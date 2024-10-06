@@ -14,16 +14,16 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation.trace import (
+from homeassistant.components.climate import INTENT_GET_TEMPERATURE
+from homeassistant.components.conversation import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
-from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
+from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.weather.intent import INTENT_GET_WEATHER
+from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -167,7 +167,7 @@ class APIInstance:
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL,
+            ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
@@ -176,6 +176,11 @@ class APIInstance:
                 break
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
+
+        tool_input = ToolInput(
+            tool_name=tool_input.tool_name,
+            tool_args=tool.parameters(tool_input.tool_args),
+        )
 
         return await tool.async_call(self.api.hass, tool_input, self.llm_context)
 
@@ -521,7 +526,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return convert(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return {"enum": [schema.config["value"]]}
+        return convert(vol.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -573,7 +578,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object"}
+        return {"type": "object", "additionalProperties": True}
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -597,7 +602,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "time"}
 
     if isinstance(schema, selector.TriggerSelector):
-        return convert(cv.TRIGGER_SCHEMA)
+        return {"type": "array", "items": {"type": "string"}}
 
     if schema.config.get("multiple"):
         return {"type": "array", "items": {"type": "string"}}
@@ -676,6 +681,19 @@ class ScriptTool(Tool):
                         schema[key] = cv.string
 
                 self.parameters = vol.Schema(schema)
+
+                aliases: list[str] = []
+                if entity_entry.name:
+                    aliases.append(entity_entry.name)
+                if entity_entry.aliases:
+                    aliases.extend(entity_entry.aliases)
+                if aliases:
+                    if self.description:
+                        self.description = (
+                            self.description + ". Aliases: " + str(list(aliases))
+                        )
+                    else:
+                        self.description = "Aliases: " + str(list(aliases))
 
                 parameters_cache[entity_entry.unique_id] = (
                     self.description,

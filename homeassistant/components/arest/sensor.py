@@ -87,8 +87,6 @@ def setup_platform(
         if value_template is None:
             return lambda value: value
 
-        value_template.hass = hass
-
         def _render(value):
             try:
                 return value_template.async_render({"value": value}, parse_result=False)

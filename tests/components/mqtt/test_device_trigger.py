@@ -18,7 +18,7 @@ from homeassistant.setup import async_setup_component
 from .test_common import help_test_unload_config_entry
 
 from tests.common import async_fire_mqtt_message, async_get_device_automations
-from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -1672,11 +1672,11 @@ async def test_trigger_debug_info(
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
 
 
+@pytest.mark.usefixtures("mqtt_mock")
 async def test_unload_entry(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
-    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test unloading the MQTT entry."""
 
@@ -1738,3 +1738,4 @@ async def test_unload_entry(
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(service_calls) == 2
+    await hass.async_block_till_done(wait_background_tasks=True)

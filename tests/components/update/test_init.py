@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 import pytest
 
 from homeassistant.components.update import (
@@ -956,3 +957,43 @@ async def test_deprecated_supported_features_ints_with_service_call(
             },
             blocking=True,
         )
+
+
+async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
+    """Test UpdateEntity with overridden version_is_newer method."""
+
+    class MockUpdateEntity(UpdateEntity):
+        def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+            """Return True if latest_version is newer than installed_version."""
+            return AwesomeVersion(
+                latest_version,
+                find_first_match=True,
+                ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+            ) > AwesomeVersion(
+                installed_version,
+                find_first_match=True,
+                ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+            )
+
+    update = MockUpdateEntity()
+    update.hass = hass
+    update.platform = MockEntityPlatform(hass)
+
+    STABLE = "20230913-111730/v1.14.0-gcb84623"
+    BETA = "20231107-162609/v1.14.1-rc1-g0617c15"
+
+    # Set current installed version to STABLE
+    update._attr_installed_version = STABLE
+    update._attr_latest_version = BETA
+
+    assert update.installed_version == STABLE
+    assert update.latest_version == BETA
+    assert update.state == STATE_ON
+
+    # Set current installed version to BETA
+    update._attr_installed_version = BETA
+    update._attr_latest_version = STABLE
+
+    assert update.installed_version == BETA
+    assert update.latest_version == STABLE
+    assert update.state == STATE_OFF

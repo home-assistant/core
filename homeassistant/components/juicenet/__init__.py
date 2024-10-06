@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not juicenet.devices:
         _LOGGER.error("No JuiceNet devices found for this account")
         return False
-    _LOGGER.info("%d JuiceNet device(s) found", len(juicenet.devices))
+    _LOGGER.debug("%d JuiceNet device(s) found", len(juicenet.devices))
 
     async def async_update_data():
         """Update all device states from the JuiceNet API."""

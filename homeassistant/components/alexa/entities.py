@@ -661,9 +661,12 @@ class RemoteCapabilities(AlexaEntity):
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
-        yield AlexaModeController(
-            self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
-        )
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
+        if activities and supported & remote.RemoteEntityFeature.ACTIVITY:
+            yield AlexaModeController(
+                self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
+            )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

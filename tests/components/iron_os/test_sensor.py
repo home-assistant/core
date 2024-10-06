@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.fixture(autouse=True)
-async def sensor_only() -> AsyncGenerator[None, None]:
+async def sensor_only() -> AsyncGenerator[None]:
     """Enable only the sensor platform."""
     with patch(
         "homeassistant.components.iron_os.PLATFORMS",

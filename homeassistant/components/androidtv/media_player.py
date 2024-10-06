@@ -87,7 +87,7 @@ async def async_setup_entry(
         "adb_command",
     )
     platform.async_register_entity_service(
-        SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent"
+        SERVICE_LEARN_SENDEVENT, None, "learn_sendevent"
     )
     platform.async_register_entity_service(
         SERVICE_DOWNLOAD,
@@ -306,7 +306,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
                 msg,
                 title="Android Debug Bridge",
             )
-            _LOGGER.info("%s", msg)
+            _LOGGER.debug("%s", msg)
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:

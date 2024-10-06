@@ -19,7 +19,7 @@
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
     "legacy_templates_false": {
-      "title": "`legacy_templates` config key is being removed",
+      "title": "legacy_templates config key is being removed",
       "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "legacy_templates_true": {
@@ -40,15 +40,15 @@
     },
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
-      "title": "Storage corruption detected for `{storage_key}`",
+      "title": "Storage corruption detected for {storage_key}",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
-            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nSelect **Submit** below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
           }
         }
       }
@@ -60,8 +60,11 @@
     "integration_not_found": {
       "title": "Integration {domain} not found",
       "fix_flow": {
+        "abort": {
+          "issue_ignored": "Not existing integration {domain} ignored."
+        },
         "step": {
-          "remove_entries": {
+          "init": {
             "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
             "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
             "menu_options": {

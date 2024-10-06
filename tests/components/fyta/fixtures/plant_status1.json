@@ -1,0 +1,23 @@
+{
+  "battery_level": 80,
+  "battery_status": true,
+  "last_updated": "2023-01-10 10:10:00",
+  "light": 2,
+  "light_status": 3,
+  "nickname": "Gummibaum",
+  "moisture": 61,
+  "moisture_status": 3,
+  "sensor_available": true,
+  "sw_version": "1.0",
+  "status": 3,
+  "online": true,
+  "ph": null,
+  "plant_id": 0,
+  "plant_origin_path": "",
+  "plant_thumb_path": "",
+  "salinity": 1,
+  "salinity_status": 4,
+  "scientific_name": "Ficus elastica",
+  "temperature": 25.2,
+  "temperature_status": 3
+}

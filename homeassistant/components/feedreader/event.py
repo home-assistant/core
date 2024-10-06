@@ -19,6 +19,7 @@ from .coordinator import FeedReaderCoordinator
 LOGGER = logging.getLogger(__name__)
 
 ATTR_CONTENT = "content"
+ATTR_DESCRIPTION = "description"
 ATTR_LINK = "link"
 ATTR_TITLE = "title"
 
@@ -40,7 +41,9 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
     _attr_event_types = [EVENT_FEEDREADER]
     _attr_name = None
     _attr_has_entity_name = True
-    _unrecorded_attributes = frozenset({ATTR_CONTENT, ATTR_TITLE, ATTR_LINK})
+    _unrecorded_attributes = frozenset(
+        {ATTR_CONTENT, ATTR_DESCRIPTION, ATTR_TITLE, ATTR_LINK}
+    )
     coordinator: FeedReaderCoordinator
 
     def __init__(self, coordinator: FeedReaderCoordinator) -> None:
@@ -80,6 +83,7 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         self._trigger_event(
             EVENT_FEEDREADER,
             {
+                ATTR_DESCRIPTION: feed_data.get("description"),
                 ATTR_TITLE: feed_data.get("title"),
                 ATTR_LINK: feed_data.get("link"),
                 ATTR_CONTENT: content,

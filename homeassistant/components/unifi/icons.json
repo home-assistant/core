@@ -1,6 +1,86 @@
 {
+  "entity": {
+    "button": {
+      "wlan_regenerate_password": {
+        "default": "mdi:form-textbox-password"
+      }
+    },
+    "image": {
+      "wlan_qr_code": {
+        "default": "mdi:qrcode"
+      }
+    },
+    "sensor": {
+      "client_bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "client_bandwidth_tx": {
+        "default": "mdi:upload"
+      },
+      "port_bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "port_bandwidth_tx": {
+        "default": "mdi:upload"
+      },
+      "wlan_clients": {
+        "default": "mdi:account-multiple"
+      },
+      "device_clients": {
+        "default": "mdi:account-multiple"
+      },
+      "device_uplink_mac": {
+        "default": "mdi:ethernet"
+      },
+      "device_state": {
+        "default": "mdi:lan-connect"
+      },
+      "device_cpu_utilization": {
+        "default": "mdi:chip"
+      },
+      "device_memory_utilization": {
+        "default": "mdi:memory"
+      }
+    },
+    "switch": {
+      "block_client": {
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
+      },
+      "dpi_restriction": {
+        "default": "mdi:network",
+        "state": {
+          "off": "mdi:network-off"
+        }
+      },
+      "port_forward_control": {
+        "default": "mdi:upload-network"
+      },
+      "traffic_rule_control": {
+        "default": "mdi:security-network"
+      },
+      "poe_port_control": {
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
+      },
+      "wlan_control": {
+        "default": "mdi:wifi-check",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      }
+    }
+  },
   "services": {
-    "reconnect_client": "mdi:sync",
-    "remove_clients": "mdi:delete"
+    "reconnect_client": {
+      "service": "mdi:sync"
+    },
+    "remove_clients": {
+      "service": "mdi:delete"
+    }
   }
 }

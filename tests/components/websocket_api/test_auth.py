@@ -26,7 +26,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def track_connected(hass):
+def track_connected(hass: HomeAssistant) -> dict[str, list[int]]:
     """Track connected and disconnected events."""
     connected_evt = []
 

@@ -13,7 +13,7 @@
           "region": "Shark IQ uses different services in the EU.  Select your region to connect to the correct service for your account."
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",

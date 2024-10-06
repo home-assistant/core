@@ -67,11 +67,6 @@ def setup_platform(
     switches = []
 
     for object_id, device_config in devices.items():
-        value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
-
-        if value_template is not None:
-            value_template.hass = hass
-
         switches.append(
             TelnetSwitch(
                 object_id,
@@ -81,7 +76,7 @@ def setup_platform(
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
-                value_template,
+                device_config.get(CONF_VALUE_TEMPLATE),
                 device_config[CONF_TIMEOUT],
             )
         )
@@ -144,7 +139,7 @@ class TelnetSwitch(SwitchEntity):
             rendered = self._value_template.render_with_possible_json_value(response)
         else:
             _LOGGER.warning("Empty response for command: %s", self._command_state)
-            return None
+            return
         self._attr_is_on = rendered == "True"
 
     def turn_on(self, **kwargs: Any) -> None:

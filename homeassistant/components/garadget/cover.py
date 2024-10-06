@@ -213,23 +213,20 @@ class GaradgetCover(CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
-            ret = self._put_command("setState", "close")
+            self._put_command("setState", "close")
             self._start_watcher("close")
-            return ret.get("return_value") == 1
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
-            ret = self._put_command("setState", "open")
+            self._put_command("setState", "open")
             self._start_watcher("open")
-            return ret.get("return_value") == 1
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
         if self._state not in ["stopped"]:
-            ret = self._put_command("setState", "stop")
+            self._put_command("setState", "stop")
             self._start_watcher("stop")
-            return ret["return_value"] == 1
 
     def update(self) -> None:
         """Get updated status from API."""

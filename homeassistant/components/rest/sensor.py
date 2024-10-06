@@ -139,8 +139,6 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
             config[CONF_FORCE_UPDATE],
         )
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
         self._json_attrs = config.get(CONF_JSON_ATTRS)
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
         self._attr_extra_state_attributes = {}

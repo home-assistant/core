@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
-import aiohttp
 from pyblu import Player, SyncStatus
+from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -43,7 +43,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as player:
                 try:
                     sync_status = await player.sync_status(timeout=1)
-                except (TimeoutError, aiohttp.ClientError):
+                except PlayerUnreachableError:
                     errors["base"] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(
@@ -79,7 +79,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         ) as player:
             try:
                 sync_status = await player.sync_status(timeout=1)
-            except (TimeoutError, aiohttp.ClientError):
+            except PlayerUnreachableError:
                 return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(
@@ -105,7 +105,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.host, self._port, session=session
             ) as player:
                 sync_status = await player.sync_status(timeout=1)
-        except (TimeoutError, aiohttp.ClientError):
+        except PlayerUnreachableError:
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(format_unique_id(sync_status.mac, self._port))
@@ -127,7 +127,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm the zeroconf setup."""
         assert self._sync_status is not None
         assert self._host is not None
