@@ -42,7 +42,7 @@ async def test_light_entity(hass, mock_appartme_api):
     )
 
     with patch(
-        "homeassistant.components.appartme.AppartmeCloudAPI",
+        "homeassistant.components.appartme.AppartmePaasClient",
         return_value=mock_appartme_api,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
