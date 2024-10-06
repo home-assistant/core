@@ -17,11 +17,7 @@ from .coordinator import AppartmeDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
-    Platform.CLIMATE,
     Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.VALVE,
 ]
 
 

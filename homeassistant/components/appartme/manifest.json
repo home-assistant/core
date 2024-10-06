@@ -4,7 +4,7 @@
   "after_dependencies": [],
   "codeowners": ["@MiloszSlabs"],
   "config_flow": true,
-  "dependencies": ["application_credentials", "logbook"],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/appartme/",
   "iot_class": "cloud_polling",
   "requirements": ["appartme_paas==0.1.2"]

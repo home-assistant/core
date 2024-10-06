@@ -15,65 +15,9 @@
     }
   },
   "entity": {
-    "switch": {
-      "fifth_channel": {
-        "name": "Additional Channel"
-      },
-      "sockets": {
-        "name": "Sockets"
-      }
-    },
     "light": {
       "lighting": {
         "name": "Lighting"
-      }
-    },
-    "valve": {
-      "water": {
-        "name": "Water"
-      }
-    },
-    "climate": {
-      "thermostat_mode": {
-        "name": "Heating"
-      }
-    },
-    "sensor": {
-      "total_current": {
-        "name": "Total Current"
-      },
-      "phase_1_current": {
-        "name": "Current (phase 1)"
-      },
-      "phase_2_current": {
-        "name": "Current (phase 2)"
-      },
-      "phase_3_current": {
-        "name": "Current (phase 3)"
-      },
-      "total_voltage": {
-        "name": "Total Voltage"
-      },
-      "phase_1_voltage": {
-        "name": "Voltage (phase 1)"
-      },
-      "phase_2_voltage": {
-        "name": "Voltage (phase 2)"
-      },
-      "phase_3_voltage": {
-        "name": "Voltage (phase 3)"
-      },
-      "total_power": {
-        "name": "Total Power"
-      },
-      "phase_1_power": {
-        "name": "Power (phase 1)"
-      },
-      "phase_2_power": {
-        "name": "Power (phase 2)"
-      },
-      "phase_3_power": {
-        "name": "Power (phase 3)"
       }
     }
   },
