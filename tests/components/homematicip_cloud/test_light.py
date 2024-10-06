@@ -3,7 +3,6 @@
 from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
