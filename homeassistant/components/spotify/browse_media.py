@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
-from .util import fetch_image_url
 
 BROWSE_LIMIT = 48
 
@@ -262,7 +261,6 @@ async def build_item_response(  # noqa: C901
 
     title: str | None = None
     image: str | None = None
-    media: Any | None = None
     items: list[ItemPayload] = []
 
     if media_content_type == BrowsableMedia.CURRENT_USER_PLAYLISTS:
@@ -484,9 +482,6 @@ async def build_item_response(  # noqa: C901
                 for episode in media
             ]
 
-    if media is None:
-        return None
-
     try:
         media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
     except KeyError:
@@ -525,8 +520,6 @@ async def build_item_response(  # noqa: C901
 
     if title is None:
         title = LIBRARY_MAP.get(media_content_id, "Unknown")
-        if "name" in media:
-            title = media["name"]
 
     can_play = media_content_type in PLAYABLE_MEDIA_TYPES and (
         media_content_type != MediaType.ARTIST or can_play_artist
@@ -552,9 +545,6 @@ async def build_item_response(  # noqa: C901
             )
         except (MissingMediaInformation, UnknownMediaType):
             continue
-
-    if "images" in media:
-        browse_media.thumbnail = fetch_image_url(media)
 
     return browse_media
 

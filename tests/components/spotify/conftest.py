@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from spotifyaio.models import PlaylistResponse
+from spotifyaio.models import PlaybackState, PlaylistResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -77,6 +77,9 @@ def spotify_mock() -> Generator[MagicMock]:
             PlaylistResponse.from_json(
                 load_fixture("current_user_playlists.json", DOMAIN)
             ).items
+        )
+        spotify_mock.return_value.get_playback.return_value = PlaybackState.from_json(
+            load_fixture("playback.json", DOMAIN)
         )
         yield spotify_mock
 

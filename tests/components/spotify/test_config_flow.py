@@ -178,8 +178,8 @@ async def test_abort_if_spotify_error(
     )
 
     with patch(
-        "homeassistant.components.spotify.config_flow.Spotify.current_user",
-        side_effect=SpotifyConnectionError(400, -1, "message"),
+        "homeassistant.components.spotify.config_flow.SpotifyClient.get_current_user",
+        side_effect=SpotifyConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
