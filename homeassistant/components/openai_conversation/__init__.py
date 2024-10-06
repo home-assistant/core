@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 import base64
-import json
-from functools import partial
-import logging
-from typing import Literal
 
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion_content_part_image_param import (
+    ChatCompletionContentPartImageParam,
+    ImageURL,
+)
+from openai.types.chat.chat_completion_content_part_param import (
+    ChatCompletionContentPartParam,
+)
+from openai.types.chat.chat_completion_content_part_text_param import (
+    ChatCompletionContentPartTextParam,
+)
+from openai.types.chat.chat_completion_user_message_param import (
+    ChatCompletionUserMessageParam,
+)
 from openai.types.images_response import ImagesResponse
 import voluptuous as vol
 
@@ -30,12 +39,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    CONF_CHAT_MODEL,
-    RECOMMENDED_CHAT_MODEL,
-)
+from .const import CONF_CHAT_MODEL, DOMAIN, LOGGER, RECOMMENDED_CHAT_MODEL
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
@@ -100,27 +104,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": call.data["prompt"]},
-                    ],
-                },
+            content: list[ChatCompletionContentPartParam] = [
+                ChatCompletionContentPartTextParam(
+                    type="text",
+                    text=call.data["prompt"],
+                )
             ]
 
             if "image_filename" in call.data:
                 for file_path in call.data["image_filename"]:
                     base64_image: str = encode_image(file_path)
-                    messages[0]["content"].append(
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}",
-                            },
-                        },
+                    image_content = ChatCompletionContentPartImageParam(
+                        type="image_url",
+                        image_url=ImageURL(
+                            url=f"data:image/jpeg;base64,{base64_image}"
+                        ),
                     )
+                    content.append(image_content)
+
+            messages: list[ChatCompletionUserMessageParam] = [
+                ChatCompletionUserMessageParam(
+                    role="user",
+                    content=content,
+                )
+            ]
 
             response: ChatCompletion = await client.chat.completions.create(
                 model=model,
@@ -134,7 +141,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except FileNotFoundError as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
-        return {"text": response.choices[0].message.content.strip()}
+        response_text: str = ""
+        if response.choices[0].message.content is not None:
+            response_text = response.choices[0].message.content.strip()
+
+        return {"text": response_text}
 
     hass.services.async_register(
         DOMAIN,

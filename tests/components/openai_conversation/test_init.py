@@ -1,18 +1,18 @@
 """Tests for the OpenAI integration."""
 
 from unittest.mock import AsyncMock, mock_open, patch
-import json
-from httpx import Response
+
+from httpx import Request, Response
 from openai import (
     APIConnectionError,
     AuthenticationError,
     BadRequestError,
     RateLimitError,
 )
-from openai.types.image import Image
-from openai.types.images_response import ImagesResponse
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from openai.types.image import Image
+from openai.types.images_response import ImagesResponse
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -116,7 +116,9 @@ async def test_generate_image_service_error(
         patch(
             "openai.resources.images.AsyncImages.generate",
             side_effect=RateLimitError(
-                response=Response(status_code=None, request=""),
+                response=Response(
+                    status_code=500, request=Request(method="GET", url="")
+                ),
                 body=None,
                 message="Reason",
             ),
@@ -167,18 +169,26 @@ async def test_invalid_config_entry(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "Connection error"),
+        (APIConnectionError(request=Request(method="GET", url="")), "Connection error"),
         (
             AuthenticationError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=Response(
+                    status_code=500, request=Request(method="GET", url="")
+                ),
+                body=None,
+                message="",
             ),
             "Invalid API key",
         ),
         (
             BadRequestError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=Response(
+                    status_code=500, request=Request(method="GET", url="")
+                ),
+                body=None,
+                message="",
             ),
-            "openai_conversation integration not ready yet: None",
+            "openai_conversation integration not ready yet; Retrying in 5 seconds",
         ),
     ],
 )
@@ -322,7 +332,6 @@ async def test_generate_content_service(
             blocking=True,
             return_response=True,
         )
-        print(response)
         assert response == {"text": "This is the response"}
         assert len(mock_create.mock_calls) == 1
         assert mock_create.mock_calls[0][2] == expected_args
@@ -342,7 +351,9 @@ async def test_generate_content_service_error(
         patch(
             "openai.resources.chat.completions.AsyncCompletions.create",
             side_effect=RateLimitError(
-                response=Response(status_code=None, request=""),
+                response=Response(
+                    status_code=417, request=Request(method="GET", url="")
+                ),
                 body=None,
                 message="Reason",
             ),
