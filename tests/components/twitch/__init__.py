@@ -37,6 +37,9 @@ class TwitchIterObject(Generic[TwitchType]):
         async for item in get_generator_from_data(self.raw_data, self.target_type):
             yield item
 
+    def current_cursor(self):
+        """Return pagination cursor."""
+
 
 async def get_generator(
     fixture: str, target_type: type[TwitchType]
