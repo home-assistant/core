@@ -68,23 +68,23 @@
     },
     "sensor": {
       "device_status": {
-        "name": "Device Status",
+        "name": "Device status",
         "state": {
-          "unknown": "Unknown",
+          "error": "Error",
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "pending": "Pending",
-          "heartbeat_missed": "Heartbeat Missed",
+          "heartbeat_missed": "Heartbeat missed",
           "isolated": "Isolated",
-          "adopt_failed": "Adopt Failed",
-          "managed_externally": "Managed Externally"
+          "adopt_failed": "Adopt failed",
+          "managed_externally": "Managed externally"
         }
       },
       "cpu_usage": {
-        "name": "CPU Usage"
+        "name": "CPU usage"
       },
       "mem_usage": {
-        "name": "Memory Usage"
+        "name": "Memory usage"
       }
     }
   }

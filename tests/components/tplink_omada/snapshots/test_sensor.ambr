@@ -3,9 +3,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Test PoE Switch Device Status',
+      'friendly_name': 'Test PoE Switch Device status',
       'options': list([
-        'unknown',
+        'error',
         'disconnected',
         'connected',
         'pending',
@@ -26,7 +26,7 @@
 # name: test_device_cpu_usage
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router CPU Usage',
+      'friendly_name': 'Test Router CPU usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -41,7 +41,7 @@
 # name: test_device_mem_usage
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test PoE Switch Memory Usage',
+      'friendly_name': 'Test PoE Switch Memory usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
