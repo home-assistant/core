@@ -53,6 +53,7 @@ from .const import (
     SERVICE_GET_TASKS,
 )
 from .coordinator import HabiticaDataUpdateCoordinator
+from .util import get_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -98,14 +99,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
-        entry: HabiticaConfigEntry | None
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
+
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         skill = {
             "pickpocket": {"spellId": "pickPocket", "cost": "10 MP"},
@@ -164,19 +159,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return response
 
     async def get_tasks(call: ServiceCall) -> ServiceResponse:
-        """Skill action."""
-        entry: HabiticaConfigEntry | None
+        """Get tasks action."""
 
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
-
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
-
         response = coordinator.data.tasks
 
         if types := call.data.get(ATTR_TYPE):

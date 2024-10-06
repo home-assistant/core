@@ -7,8 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
@@ -62,3 +66,16 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
     used_in = automations_with_entity(hass, entity_id)
     used_in += scripts_with_entity(hass, entity_id)
     return used_in
+
+
+def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
+    """Return config entry or raise if not found or not loaded."""
+    entry: ConfigEntry | None
+    if not (
+        entry := hass.config_entries.async_get_entry(entry_id)
+    ) or entry not in hass.config_entries.async_loaded_entries(DOMAIN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+    return entry
