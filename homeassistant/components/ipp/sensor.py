@@ -80,7 +80,9 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda printer: (utcnow() - timedelta(seconds=printer.info.uptime)),
+        value_fn=lambda printer: (
+            utcnow() - timedelta(minutes=int(printer.info.uptime / 60))
+        ),
     ),
 )
 
