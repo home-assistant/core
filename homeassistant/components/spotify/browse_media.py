@@ -197,7 +197,7 @@ async def async_browse_media(
         can_play_artist=can_play_artist,
     )
 
-    # Build new URLs with config entry specifyers
+    # Build new URLs with config entry specifiers
     result.media_content_id = str(parsed_url.with_name(result.media_content_id))
     if result.children:
         for child in result.children:
