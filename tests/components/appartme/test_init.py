@@ -26,16 +26,12 @@ async def test_async_setup_entry(hass, mock_appartme_api):
         "type": "mm",
         "name": "Main Module",
         "properties": [
-            {"propertyId": "thermostat_mode", "mode": "readwrite"},
             {"propertyId": "lighting", "mode": "readwrite"},
-            {"propertyId": "water", "mode": "readwrite"},
         ],
     }
     mock_appartme_api.get_device_properties.return_value = {
         "values": [
-            {"propertyId": "thermostat_mode", "value": "eco", "mode": "readwrite"},
             {"propertyId": "lighting", "value": False, "mode": "readwrite"},
-            {"propertyId": "water", "value": True, "mode": "readwrite"},
         ]
     }
 
