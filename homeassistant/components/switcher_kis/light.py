@@ -60,6 +60,7 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    control_result: bool | None = None
     _light_id: int
 
     @callback
