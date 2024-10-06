@@ -80,7 +80,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for Squeezebox players."""
 
-    def __init__(self, hass: HomeAssistant, player: Player) -> None:
+    def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -92,6 +92,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
         self.player = player
         self.available = True
         self._remove_dispatcher: Callable | None = None
+        self.server_uuid = server_uuid
 
     async def _async_update_data(self) -> dict:
         """Update the Player() object."""

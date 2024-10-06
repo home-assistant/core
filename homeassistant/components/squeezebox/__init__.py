@@ -136,8 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
 
     # set up player discovery
-    hass.data.setdefault(DOMAIN, {})
-    known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
+    known_players = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_PLAYERS, [])
 
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
@@ -145,13 +144,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
             if player.player_id in [p.player.player_id for p in known_players]:
-                await player.async_update()
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
                 )
             else:
                 _LOGGER.debug("Adding new entity: %s", player)
-                player_coordinator = SqueezeBoxPlayerUpdateCoordinator(hass, player)
+                player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
+                    hass, player, lms.uuid
+                )
                 known_players.append(player_coordinator)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
