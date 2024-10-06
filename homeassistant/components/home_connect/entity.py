@@ -1,11 +1,12 @@
 """Home Connect entity base class."""
 
+from dataclasses import dataclass
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .api import HomeConnectDevice
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
@@ -13,17 +14,27 @@ from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectEntityDescription(EntityDescription):
+    """Describes Home Connect entity."""
+
+    desc: str
+
+
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
+    entity_description: HomeConnectEntityDescription
     _attr_should_poll = False
 
-    def __init__(self, device: HomeConnectDevice, bsh_key: str, desc: str) -> None:
+    def __init__(
+        self, device: HomeConnectDevice, desc: HomeConnectEntityDescription
+    ) -> None:
         """Initialize the entity."""
         self.device = device
-        self.bsh_key = bsh_key
-        self._attr_name = f"{device.appliance.name} {desc}"
-        self._attr_unique_id = f"{device.appliance.haId}-{bsh_key}"
+        self.entity_description = desc
+        self._attr_name = f"{device.appliance.name} {self.entity_description.desc}"
+        self._attr_unique_id = f"{device.appliance.haId}-{self.bsh_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.appliance.haId)},
             manufacturer=device.appliance.brand,
@@ -50,3 +61,8 @@ class HomeConnectEntity(Entity):
         """Update the entity."""
         _LOGGER.debug("Entity update triggered on %s", self)
         self.async_schedule_update_ha_state(True)
+
+    @property
+    def bsh_key(self) -> str:
+        """Return the BSH key."""
+        return self.entity_description.key

@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
@@ -27,6 +26,8 @@ from .const import (
     BSH_AMBIENT_LIGHT_COLOR,
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
     BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
+    BSH_AMBIENT_LIGHT_ENABLED,
+    COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
     DOMAIN,
     REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
@@ -34,28 +35,29 @@ from .const import (
     REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
     REFRIGERATION_INTERNAL_LIGHT_POWER,
 )
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, HomeConnectEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectLightEntityDescription(LightEntityDescription):
+class HomeConnectLightEntityDescription(
+    LightEntityDescription, HomeConnectEntityDescription
+):
     """Light entity description."""
 
-    desc: str
     brightness_key: str | None
 
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
     HomeConnectLightEntityDescription(
         key=REFRIGERATION_INTERNAL_LIGHT_POWER,
-        desc="Internal Light",
+        desc="Internal light",
         brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
     ),
     HomeConnectLightEntityDescription(
         key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
-        desc="External Light",
+        desc="External light",
         brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
     ),
 )
@@ -72,11 +74,29 @@ async def async_setup_entry(
         """Get a list of entities."""
         entities: list[LightEntity] = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("light", [])
-            entity_list = [HomeConnectLight(**d) for d in entity_dicts]
-            device: HomeConnectDevice = device_dict[CONF_DEVICE]
-            # Auto-discover entities
+        for device in hc_api.devices:
+            if COOKING_LIGHTING in device.appliance.status:
+                entities.append(
+                    HomeConnectLight(
+                        device,
+                        HomeConnectEntityDescription(
+                            key=COOKING_LIGHTING,
+                            desc="Light",
+                        ),
+                        False,
+                    )
+                )
+            if BSH_AMBIENT_LIGHT_ENABLED in device.appliance.status:
+                entities.append(
+                    HomeConnectLight(
+                        device,
+                        HomeConnectEntityDescription(
+                            key=BSH_AMBIENT_LIGHT_ENABLED,
+                            desc="Ambient light",
+                        ),
+                        True,
+                    )
+                )
             entities.extend(
                 HomeConnectCoolingLight(
                     device=device,
@@ -86,7 +106,6 @@ async def async_setup_entry(
                 for description in LIGHTS
                 if description.key in device.appliance.status
             )
-            entities.extend(entity_list)
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
@@ -96,10 +115,13 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
     """Light for Home Connect."""
 
     def __init__(
-        self, device: HomeConnectDevice, bsh_key: str, desc: str, ambient: bool
+        self,
+        device: HomeConnectDevice,
+        desc: HomeConnectEntityDescription,
+        ambient: bool,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, bsh_key, desc)
+        super().__init__(device, desc)
         self._ambient = ambient
         self._percentage_scale = (10, 100)
         self._brightness_key: str | None
@@ -255,9 +277,7 @@ class HomeConnectCoolingLight(HomeConnectLight):
         entity_description: HomeConnectLightEntityDescription,
     ) -> None:
         """Initialize Cooling Light Entity."""
-        super().__init__(
-            device, entity_description.key, entity_description.desc, ambient
-        )
+        super().__init__(device, entity_description, ambient)
         self.entity_description = entity_description
         self._brightness_key = entity_description.brightness_key
         self._percentage_scale = (1, 100)
