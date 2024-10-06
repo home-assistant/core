@@ -77,10 +77,10 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         return data
 
 
-class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for Squeezebox players."""
 
-    def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
+    def __init__(self, hass: HomeAssistant, player: Player) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -92,10 +92,9 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.player = player
         self.available = True
         self._remove_dispatcher: Callable | None = None
-        self.server_uuid = server_uuid
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update Player if available, or listen for rediscovery if not."""
+    async def _async_update_data(self) -> dict:
+        """Update the Player() object."""
         if self.available:
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()

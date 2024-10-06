@@ -190,10 +190,12 @@ class SqueezeBoxMediaPlayerEntity(
     ) -> None:
         """Initialize the SqueezeBox device."""
         super().__init__(coordinator)
+        self._coordinator = coordinator
         player = coordinator.player
         self._player = player
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
+        self._previous_media_position = 0
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
         _manufacturer = None
@@ -210,7 +212,6 @@ class SqueezeBoxMediaPlayerEntity(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            via_device=(DOMAIN, coordinator.server_uuid),
             model=player.model,
             manufacturer=_manufacturer,
         )
@@ -221,12 +222,13 @@ class SqueezeBoxMediaPlayerEntity(
         if self._previous_media_position != self.media_position:
             self._previous_media_position = self.media_position
             self._last_update = utcnow()
+        self._attr_available = self._coordinator.available
         self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.available and super().available
+        return self._attr_available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -251,9 +253,7 @@ class SqueezeBoxMediaPlayerEntity(
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
-        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
-        known_players.remove(self.coordinator.player.player_id)
+        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self._coordinator)
 
     @property
     def volume_level(self) -> float | None:
@@ -364,68 +364,68 @@ class SqueezeBoxMediaPlayerEntity(
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._player.async_set_power(False)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._player.async_set_volume("+5")
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._player.async_set_volume("-5")
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume_percent = str(int(volume * 100))
         await self._player.async_set_volume(volume_percent)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._player.async_set_muting(mute)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_stop(self) -> None:
         """Send stop command to media player."""
         await self._player.async_stop()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_play_pause(self) -> None:
         """Send pause command to media player."""
         await self._player.async_toggle_pause()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_play(self) -> None:
         """Send play command to media player."""
         await self._player.async_play()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_pause(self) -> None:
         """Send pause command to media player."""
         await self._player.async_pause()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._player.async_index("+1")
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_previous_track(self) -> None:
         """Send next track command."""
         await self._player.async_index("-1")
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self._player.async_time(position)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._player.async_set_power(True)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -484,7 +484,7 @@ class SqueezeBoxMediaPlayerEntity(
         await self._player.async_load_playlist(playlist, cmd)
         if index is not None:
             await self._player.async_index(index)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
@@ -496,18 +496,18 @@ class SqueezeBoxMediaPlayerEntity(
             repeat_mode = "none"
 
         await self._player.async_set_repeat(repeat_mode)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         shuffle_mode = "song" if shuffle else "none"
         await self._player.async_set_shuffle(shuffle_mode)
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_clear_playlist(self) -> None:
         """Send the media player the command for clear playlist."""
         await self._player.async_clear_playlist()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_call_method(
         self, command: str, parameters: list[str] | None = None
@@ -560,7 +560,7 @@ class SqueezeBoxMediaPlayerEntity(
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
     async def async_browse_media(
         self,
