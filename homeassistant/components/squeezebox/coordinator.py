@@ -8,15 +8,20 @@ import re
 from typing import Any
 
 from pysqueezebox import Player, Server
+from pysqueezebox.player import Alarm
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
+    SIGNAL_ALARM_DISCOVERED,
     SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
     STATUS_SENSOR_LASTSCAN,
@@ -91,6 +96,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
         )
         self.player = player
         self.available = True
+        self.known_alarms: list[str] = []
         self._remove_dispatcher: Callable | None = None
         self.server_uuid = server_uuid
 
@@ -108,6 +114,18 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
                 self._remove_dispatcher = async_dispatcher_connect(
                     self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
+
+            if self.player.alarms:
+                for alarm in self.player.alarms:
+                    if alarm["id"] not in self.known_alarms:
+                        self.known_alarms.append(alarm["id"])
+                        async_dispatcher_send(
+                            self.hass, SIGNAL_ALARM_DISCOVERED, alarm, self
+                        )
+                alarm_dict: dict[str, Alarm] = {
+                    alarm["id"]: alarm for alarm in self.player.alarms
+                }
+                return {"alarms": alarm_dict}
         return {}
 
     @callback

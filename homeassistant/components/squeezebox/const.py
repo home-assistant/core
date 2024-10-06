@@ -28,6 +28,7 @@ STATUS_QUERY_MAC = "mac"
 STATUS_QUERY_UUID = "uuid"
 STATUS_QUERY_VERSION = "version"
 SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
+SIGNAL_ALARM_DISCOVERED = "squeezebox_alarm_discovered"
 SIGNAL_PLAYER_DISCOVERED = "squeezebox_player_discovered"
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 DISCOVERY_INTERVAL = 60
