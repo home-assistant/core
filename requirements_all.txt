@@ -933,7 +933,7 @@ freesms==0.2.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.6.6
+fyta_cli==0.6.7
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -2869,7 +2869,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.2.0
+uiprotect==6.3.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
