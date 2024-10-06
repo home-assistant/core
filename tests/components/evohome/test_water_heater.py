@@ -23,13 +23,13 @@ from .conftest import setup_evohome
 from .const import TEST_INSTALLS_WITH_DHW
 
 
-def get_dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
+def get_dhw_entity(hass: HomeAssistant) -> EvoDHW:
     """Return the DHW entity of the evohome system."""
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     if (dhw := broker.tcs.hotwater) is None:
-        return None
+        pytest.fail("DHW expected, but not found")
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
