@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import datetime as dt
-from datetime import timedelta
 import logging
-from typing import Any, Concatenate
+from typing import Any
 
-import requests
-from spotipy import SpotifyException
+from spotifyaio import (
+    Device,
+    PlaybackState,
+    ProductType,
+    RepeatMode as SpotifyRepeatMode,
+)
 from yarl import URL
 
 from homeassistant.components.media_player import (
@@ -24,7 +26,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -39,8 +40,6 @@ from .coordinator import SpotifyCoordinator
 from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_SPOTIFY = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -57,9 +56,9 @@ SUPPORT_SPOTIFY = (
 )
 
 REPEAT_MODE_MAPPING_TO_HA = {
-    "context": RepeatMode.ALL,
-    "off": RepeatMode.OFF,
-    "track": RepeatMode.ONE,
+    SpotifyRepeatMode.CONTEXT: RepeatMode.ALL,
+    SpotifyRepeatMode.OFF: RepeatMode.OFF,
+    SpotifyRepeatMode.TRACK: RepeatMode.ONE,
 }
 
 REPEAT_MODE_MAPPING_TO_SPOTIFY = {
@@ -83,34 +82,6 @@ async def async_setup_entry(
     async_add_entities([spotify])
 
 
-def spotify_exception_handler[_SpotifyMediaPlayerT: SpotifyMediaPlayer, **_P, _R](
-    func: Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R],
-) -> Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R | None]:
-    """Decorate Spotify calls to handle Spotify exception.
-
-    A decorator that wraps the passed in function, catches Spotify errors,
-    aiohttp exceptions and handles the availability of the media player.
-    """
-
-    def wrapper(
-        self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
-    ) -> _R | None:
-        try:
-            result = func(self, *args, **kwargs)
-        except requests.RequestException:
-            self._attr_available = False
-            return None
-        except SpotifyException as exc:
-            self._attr_available = False
-            if exc.reason == "NO_ACTIVE_DEVICE":
-                raise HomeAssistantError("No active playback device found") from None
-            raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
-        self._attr_available = True
-        return result
-
-    return wrapper
-
-
 class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
@@ -122,7 +93,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     def __init__(
         self,
         coordinator: SpotifyCoordinator,
-        device_coordinator: DataUpdateCoordinator[list[dict[str, Any]]],
+        device_coordinator: DataUpdateCoordinator[list[Device]],
         user_id: str,
         name: str,
     ) -> None:
@@ -142,18 +113,16 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         )
 
     @property
-    def currently_playing(self) -> dict[str, Any]:
+    def currently_playing(self) -> PlaybackState | None:
         """Return the current playback."""
         return self.coordinator.data.current_playback
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self.coordinator.current_user["product"] != "premium":
+        if self.coordinator.current_user.product != ProductType.PREMIUM:
             return MediaPlayerEntityFeature(0)
-        if not self.currently_playing or self.currently_playing.get("device", {}).get(
-            "is_restricted"
-        ):
+        if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
         return SUPPORT_SPOTIFY
 
@@ -162,7 +131,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         """Return the playback state."""
         if not self.currently_playing:
             return MediaPlayerState.IDLE
-        if self.currently_playing["is_playing"]:
+        if self.currently_playing.is_playing:
             return MediaPlayerState.PLAYING
         return MediaPlayerState.PAUSED
 
@@ -171,41 +140,35 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         """Return the device volume."""
         if not self.currently_playing:
             return None
-        return self.currently_playing.get("device", {}).get("volume_percent", 0) / 100
+        return self.currently_playing.device.volume_percent / 100
 
     @property
     def media_content_id(self) -> str | None:
         """Return the media URL."""
-        if not self.currently_playing:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
-        item = self.currently_playing.get("item") or {}
-        return item.get("uri")
+        return self.currently_playing.item.uri
 
-    @property
-    def media_content_type(self) -> str | None:
-        """Return the media type."""
-        if not self.currently_playing:
-            return None
-        item = self.currently_playing.get("item") or {}
-        is_episode = item.get("type") == MediaType.EPISODE
-        return MediaType.PODCAST if is_episode else MediaType.MUSIC
+    # @property
+    # def media_content_type(self) -> str | None:
+    #     """Return the media type."""
+    #     if not self.currently_playing or not self.currently_playing.item:
+    #         return None
+    #     return self.currently_playing.item
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self.currently_playing is None or self.currently_playing.get("item") is None:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
-        return self.currently_playing["item"]["duration_ms"] / 1000
+        return round(self.currently_playing.item.duration_ms / 1000)
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if (
-            not self.currently_playing
-            or self.currently_playing.get("progress_ms") is None
-        ):
+        if not self.currently_playing or self.currently_playing.progress_ms is None:
             return None
-        return self.currently_playing["progress_ms"] / 1000
+        return round(self.currently_playing.progress_ms / 1000)
 
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
@@ -217,10 +180,10 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     @property
     def media_image_url(self) -> str | None:
         """Return the media image URL."""
-        if not self.currently_playing or self.currently_playing.get("item") is None:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
 
-        item = self.currently_playing["item"]
+        item = self.currently_playing.item
         if item["type"] == MediaType.EPISODE:
             if item["images"]:
                 return fetch_image_url(item)
@@ -228,63 +191,61 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
                 return fetch_image_url(item["show"])
             return None
 
-        if not item["album"]["images"]:
+        if not item.album.images:
             return None
-        return fetch_image_url(item["album"])
+        return item.album.images[0].url
 
     @property
     def media_title(self) -> str | None:
         """Return the media title."""
-        if not self.currently_playing:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
-        item = self.currently_playing.get("item") or {}
-        return item.get("name")
+        return self.currently_playing.item.name
 
     @property
     def media_artist(self) -> str | None:
         """Return the media artist."""
-        if not self.currently_playing or self.currently_playing.get("item") is None:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
 
-        item = self.currently_playing["item"]
-        if item["type"] == MediaType.EPISODE:
-            return item["show"]["publisher"]
+        item = self.currently_playing.item
+        # if item["type"] == MediaType.EPISODE:
+        #     return item["show"]["publisher"]
 
-        return ", ".join(artist["name"] for artist in item["artists"])
+        return ", ".join(artist.name for artist in item.artists)
 
     @property
     def media_album_name(self) -> str | None:
         """Return the media album."""
-        if not self.currently_playing or self.currently_playing.get("item") is None:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
 
-        item = self.currently_playing["item"]
-        if item["type"] == MediaType.EPISODE:
-            return item["show"]["name"]
+        item = self.currently_playing.item
+        # if item["type"] == MediaType.EPISODE:
+        #     return item["show"]["name"]
 
-        return item["album"]["name"]
+        return item.album.name
 
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        if not self.currently_playing:
+        if not self.currently_playing or not self.currently_playing.item:
             return None
-        item = self.currently_playing.get("item") or {}
-        return item.get("track_number")
+        return self.currently_playing.item.track_number
 
     @property
     def media_playlist(self):
         """Title of Playlist currently playing."""
         if self.coordinator.data.playlist is None:
             return None
-        return self.coordinator.data.playlist["name"]
+        return self.coordinator.data.playlist.name
 
     @property
     def source(self) -> str | None:
         """Return the current playback device."""
         if not self.currently_playing:
             return None
-        return self.currently_playing.get("device", {}).get("name")
+        return self.currently_playing.device.name
 
     @property
     def source_list(self) -> list[str] | None:
@@ -296,49 +257,39 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         """Shuffling state."""
         if not self.currently_playing:
             return None
-        return self.currently_playing.get("shuffle_state")
+        return self.currently_playing.shuffle
 
     @property
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        if (
-            not self.currently_playing
-            or (repeat_state := self.currently_playing.get("repeat_state")) is None
-        ):
+        if not self.currently_playing:
             return None
-        return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
+        return REPEAT_MODE_MAPPING_TO_HA.get(self.currently_playing.repeat_mode)
 
-    @spotify_exception_handler
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         self.coordinator.client.volume(int(volume * 100))
 
-    @spotify_exception_handler
     def media_play(self) -> None:
         """Start or resume playback."""
         self.coordinator.client.start_playback()
 
-    @spotify_exception_handler
     def media_pause(self) -> None:
         """Pause playback."""
         self.coordinator.client.pause_playback()
 
-    @spotify_exception_handler
     def media_previous_track(self) -> None:
         """Skip to previous track."""
         self.coordinator.client.previous_track()
 
-    @spotify_exception_handler
     def media_next_track(self) -> None:
         """Skip to next track."""
         self.coordinator.client.next_track()
 
-    @spotify_exception_handler
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.client.seek_track(int(position * 1000))
 
-    @spotify_exception_handler
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -363,11 +314,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             _LOGGER.error("Media type %s is not supported", media_type)
             return
 
-        if (
-            self.currently_playing
-            and not self.currently_playing.get("device")
-            and self.devices.data
-        ):
+        if self.currently_playing and self.devices.data:
             kwargs["device_id"] = self.devices.data[0].get("id")
 
         if enqueue == MediaPlayerEnqueue.ADD:
@@ -384,22 +331,19 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
 
         self.coordinator.client.start_playback(**kwargs)
 
-    @spotify_exception_handler
     def select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self.devices.data:
-            if device["name"] == source:
+            if device.name == source:
                 self.coordinator.client.transfer_playback(
-                    device["id"], self.state == MediaPlayerState.PLAYING
+                    device.device_id, self.state == MediaPlayerState.PLAYING
                 )
                 return
 
-    @spotify_exception_handler
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         self.coordinator.client.shuffle(shuffle)
 
-    @spotify_exception_handler
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
