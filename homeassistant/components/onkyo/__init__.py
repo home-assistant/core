@@ -20,7 +20,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 @dataclass
 class OnkyoData:
-    "Config Entry data."
+    """Config Entry data."""
 
     receiver: Receiver
     sources: dict[InputSource, str]
