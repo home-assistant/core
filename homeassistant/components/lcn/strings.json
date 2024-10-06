@@ -75,7 +75,11 @@
       "title": "Unable to connect to PCHK.",
       "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the connection (IP and port) to the LCN bus coupler is correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     },
-    "deprecated_lock_key_sensor": {
+    "deprecated_regulatorlock_sensor": {
+      "title": "The binary sensor for regulator locks is deprecated.",
+      "description": "The binary sensor entity for regulator locks has been deprecated and replaced with a regulator lock switch. Please change your configuration accordingly."
+    },
+    "deprecated_keylock_sensor": {
       "title": "The binary sensor for key locks is deprecated.",
       "description": "The binary sensor entity for key locks has been deprecated and replaced with a key lock switch. Please change your configuration accordingly."
     }

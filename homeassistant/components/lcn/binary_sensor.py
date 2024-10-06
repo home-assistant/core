@@ -84,6 +84,23 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_regulatorlock_sensor",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_regulatorlock_sensor",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LCN",
+            },
+        )
+
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(
                 self.setpoint_variable
@@ -161,13 +178,13 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
         async_create_issue(
             self.hass,
             DOMAIN,
-            "deprecated_lock_key_sensor",
+            "deprecated_keylock_sensor",
             breaks_in_ha_version="2025.2.0",
             is_fixable=False,
             is_persistent=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_lock_key_sensor",
+            translation_key="deprecated_keylock_sensor",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "LCN",
