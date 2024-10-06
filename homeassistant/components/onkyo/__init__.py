@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, OPTION_INPUT_SOURCES, InputSource
 from .receiver import Receiver, async_interview
+from .services import DATA_MP_ENTITIES, async_register_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -30,9 +31,6 @@ type OnkyoConfigEntry = ConfigEntry[OnkyoData]
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up Onkyo component."""
-    # pylint: disable-next=import-outside-toplevel
-    from .media_player import async_register_services
-
     await async_register_services(hass)
     return True
 
@@ -63,9 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Unload Onkyo config entry."""
-    # pylint: disable-next=import-outside-toplevel
-    from .media_player import DATA_MP_ENTITIES
-
     del hass.data[DATA_MP_ENTITIES][entry.entry_id]
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

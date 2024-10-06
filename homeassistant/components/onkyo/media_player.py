@@ -9,7 +9,6 @@ from typing import Any, Literal
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -17,19 +16,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.hass_dict import HassKey
 
 from . import OnkyoConfigEntry
 from .const import (
@@ -44,10 +37,9 @@ from .const import (
     VolumeResolution,
 )
 from .receiver import Receiver, async_discover
+from .services import DATA_MP_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_MP_ENTITIES: HassKey[dict[str, dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -68,7 +60,6 @@ DEFAULT_PLAYABLE_SOURCES = (
     InputSource.from_meaning("TUNER"),
 )
 
-ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
 ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_VIDEO_INFORMATION = "video_information"
@@ -100,25 +91,6 @@ VIDEO_INFORMATION_MAPPING = [
     "output_color_depth",
     "picture_mode",
 ]
-
-ACCEPTED_VALUES = [
-    "no",
-    "analog",
-    "yes",
-    "out",
-    "out-sub",
-    "sub",
-    "hdbaset",
-    "both",
-    "up",
-]
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
-    }
-)
-SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 CONF_MAX_VOLUME_DEFAULT = 100
 CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
@@ -153,35 +125,6 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     }
 )
 ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
-
-
-async def async_register_services(hass: HomeAssistant) -> None:
-    """Register Onkyo services."""
-
-    hass.data.setdefault(DATA_MP_ENTITIES, {})
-
-    async def async_service_handle(service: ServiceCall) -> None:
-        """Handle for services."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-
-        targets: list[OnkyoMediaPlayer] = []
-        for receiver_entities in hass.data[DATA_MP_ENTITIES].values():
-            targets.extend(
-                entity
-                for entity in receiver_entities.values()
-                if entity.entity_id in entity_ids
-            )
-
-        for target in targets:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
-
-    hass.services.async_register(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_HDMI_OUTPUT,
-        async_service_handle,
-        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
-    )
 
 
 async def async_setup_platform(
