@@ -22,6 +22,7 @@ from .const import (  # noqa: F401
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
     CONF_REPORT_STATE,
+    CONF_ASYNC_FULFILLMENT,
     CONF_ROOM_HINT,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
@@ -81,6 +82,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
+            vol.Optional(CONF_ASYNC_FULFILLMENT): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options
             vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,

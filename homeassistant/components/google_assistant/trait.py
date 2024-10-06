@@ -362,7 +362,7 @@ class BrightnessTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params["brightness"],
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -521,7 +521,7 @@ class OnOffTrait(_Trait):
             service_domain,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -626,7 +626,7 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_COLOR_TEMP: temp},
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -641,7 +641,7 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_HS_COLOR: color},
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -658,7 +658,7 @@ class ColorSettingTrait(_Trait):
                     light.ATTR_HS_COLOR: [color["hue"], saturation],
                     light.ATTR_BRIGHTNESS: brightness,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -741,7 +741,7 @@ class DockTrait(_Trait):
             self.state.domain,
             vacuum.SERVICE_RETURN_TO_BASE,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -781,7 +781,7 @@ class LocatorTrait(_Trait):
             self.state.domain,
             vacuum.SERVICE_LOCATE,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -919,7 +919,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_START,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
             else:
@@ -927,7 +927,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_STOP,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
         elif command == COMMAND_PAUSEUNPAUSE:
@@ -936,7 +936,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_PAUSE,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
             else:
@@ -944,7 +944,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_START,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
 
@@ -961,7 +961,7 @@ class StartStopTrait(_Trait):
                         domain,
                         SERVICE_STOP_COVER_VALVE[domain],
                         {ATTR_ENTITY_ID: self.state.entity_id},
-                        blocking=not self.config.should_report_state,
+                        blocking=not self.config.should_fulfill_async,
                         context=data.context,
                     )
                 else:
@@ -974,7 +974,7 @@ class StartStopTrait(_Trait):
                     domain,
                     SERVICE_TOGGLE_COVER_VALVE[domain],
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
         else:
@@ -1113,7 +1113,7 @@ class TemperatureControlTrait(_Trait):
                 water_heater.DOMAIN,
                 water_heater.SERVICE_SET_TEMPERATURE,
                 {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -1305,7 +1305,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN,
                 climate.SERVICE_SET_TEMPERATURE,
                 {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1357,7 +1357,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN,
                 climate.SERVICE_SET_TEMPERATURE,
                 svc_data,
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1370,7 +1370,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.DOMAIN,
                     SERVICE_TURN_ON,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
                 return
@@ -1380,7 +1380,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.DOMAIN,
                     SERVICE_TURN_OFF,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
                 return
@@ -1393,7 +1393,7 @@ class TemperatureSettingTrait(_Trait):
                         climate.ATTR_PRESET_MODE: self.google_to_preset[target_mode],
                         ATTR_ENTITY_ID: self.state.entity_id,
                     },
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
                 return
@@ -1405,7 +1405,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_HVAC_MODE: self.google_to_hvac[target_mode],
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1492,7 +1492,7 @@ class HumiditySettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     humidifier.ATTR_HUMIDITY: params["humidity"],
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1541,7 +1541,7 @@ class LockUnlockTrait(_Trait):
             lock.DOMAIN,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -1668,7 +1668,7 @@ class ArmDisArmTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 ATTR_CODE: data.config.secure_devices_pin,
             },
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -1799,7 +1799,7 @@ class FanSpeedTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_FAN_MODE: params["fanSpeed"],
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1818,7 +1818,7 @@ class FanSpeedTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     fan.ATTR_PERCENTAGE: fan_speed_percent,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1834,7 +1834,7 @@ class FanSpeedTrait(_Trait):
                 fan.DOMAIN,
                 fan.SERVICE_SET_DIRECTION,
                 {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -1985,7 +1985,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     fan.ATTR_PRESET_MODE: preset_mode,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -1999,7 +1999,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     input_select.ATTR_OPTION: option,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -2013,7 +2013,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     select.ATTR_OPTION: option,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -2027,7 +2027,7 @@ class ModesTrait(_Trait):
                     ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -2041,7 +2041,7 @@ class ModesTrait(_Trait):
                     water_heater.ATTR_OPERATION_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -2055,7 +2055,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_EFFECT: requested_effect,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
             return
@@ -2070,7 +2070,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_SOUND_MODE: sound_mode,
                 },
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -2143,7 +2143,7 @@ class InputSelectorTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_INPUT_SOURCE: requested_source,
             },
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -2303,7 +2303,7 @@ class OpenCloseTrait(_Trait):
                 domain,
                 service,
                 svc_params,
-                blocking=not self.config.should_report_state,
+                blocking=not self.config.should_fulfill_async,
                 context=data.context,
             )
 
@@ -2369,7 +2369,7 @@ class VolumeTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: level,
             },
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -2405,7 +2405,7 @@ class VolumeTrait(_Trait):
                     media_player.DOMAIN,
                     svc,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
+                    blocking=not self.config.should_fulfill_async,
                     context=data.context,
                 )
         else:
@@ -2427,7 +2427,7 @@ class VolumeTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
             },
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -2581,7 +2581,7 @@ class TransportControlTrait(_Trait):
             media_player.DOMAIN,
             service,
             service_attrs,
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
@@ -2686,7 +2686,7 @@ class ChannelTrait(_Trait):
                 media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
                 media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
             },
-            blocking=not self.config.should_report_state,
+            blocking=not self.config.should_fulfill_async,
             context=data.context,
         )
 
