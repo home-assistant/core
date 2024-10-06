@@ -32,7 +32,7 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_entity_registry[media_player.test_player-entry]
