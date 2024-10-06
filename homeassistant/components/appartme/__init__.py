@@ -27,16 +27,6 @@ def read_translation_file(translation_file: str) -> dict:
         return json.load(file)
 
 
-def get_logbook_translation(
-    translations: dict, translation_key: str, default_name=None, **kwargs
-) -> str:
-    """Fetch the translated logbook entry with formatting."""
-    translation_template = translations.get("logbook", {}).get(
-        translation_key, default_name or translation_key
-    )
-    return translation_template.format(**kwargs)
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Appartme integration from a config entry.
 
