@@ -27,12 +27,12 @@ from .common import (
 
 
 @pytest.mark.usefixtures("matter_devices")
-async def test_binary_sensors(
+async def test_covers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test binary sensors."""
+    """Test covers."""
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
