@@ -406,7 +406,7 @@ class WorkAreaSensorEntityDescription(SensorEntityDescription):
     """Describes the work area sensor entities."""
 
     exists_fn: Callable[[WorkArea], bool] = lambda _: True
-    value_fn: Callable[[WorkArea], int | datetime | None]
+    value_fn: Callable[[WorkArea], StateType | datetime]
     translation_key_fn: Callable[[int, str], str]
 
 
