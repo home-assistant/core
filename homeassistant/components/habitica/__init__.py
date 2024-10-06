@@ -100,7 +100,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
 
-        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        entry: HabiticaConfigEntry = get_config_entry(
+            hass, call.data[ATTR_CONFIG_ENTRY]
+        )
         coordinator = entry.runtime_data
         skill = {
             "pickpocket": {"spellId": "pickPocket", "cost": "10 MP"},
@@ -161,7 +163,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def get_tasks(call: ServiceCall) -> ServiceResponse:
         """Get tasks action."""
 
-        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        entry: HabiticaConfigEntry = get_config_entry(
+            hass, call.data[ATTR_CONFIG_ENTRY]
+        )
         coordinator = entry.runtime_data
         response = coordinator.data.tasks
 
