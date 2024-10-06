@@ -1,10 +1,10 @@
 """Common test fixtures."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from spotifyaio.models import PlaylistResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -14,7 +14,7 @@ from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 SCOPES = " ".join(SPOTIFY_SCOPES)
 
@@ -68,35 +68,16 @@ def mock_config_entry_2() -> MockConfigEntry:
 
 
 @pytest.fixture
-def spotify_playlists() -> dict[str, Any]:
-    """Mock the return from getting a list of playlists."""
-    return {
-        "href": "https://api.spotify.com/v1/users/31oesphrnacjcf7vw5bf6odx3oiu/playlists?offset=0&limit=48",
-        "limit": 48,
-        "next": None,
-        "offset": 0,
-        "previous": None,
-        "total": 1,
-        "items": [
-            {
-                "collaborative": False,
-                "description": "",
-                "id": "unique_identifier_00",
-                "name": "Playlist1",
-                "type": "playlist",
-                "uri": "spotify:playlist:unique_identifier_00",
-            }
-        ],
-    }
-
-
-@pytest.fixture
-def spotify_mock(spotify_playlists: dict[str, Any]) -> Generator[MagicMock]:
+def spotify_mock() -> Generator[MagicMock]:
     """Mock the Spotify API."""
-    with patch("homeassistant.components.spotify.Spotify") as spotify_mock:
-        mock = MagicMock()
-        mock.current_user_playlists.return_value = spotify_playlists
-        spotify_mock.return_value = mock
+    with patch(
+        "homeassistant.components.spotify.SpotifyClient", autospec=True
+    ) as spotify_mock:
+        spotify_mock.return_value.get_playlists_for_current_user.return_value = (
+            PlaylistResponse.from_json(
+                load_fixture("current_user_playlists.json", DOMAIN)
+            ).items
+        )
         yield spotify_mock
 
 

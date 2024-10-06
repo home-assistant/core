@@ -1,0 +1,33 @@
+{
+  "display_name": "Henk",
+  "external_urls": {
+    "spotify": "https://open.spotify.com/user/1112261111"
+  },
+  "href": "https://api.spotify.com/v1/users/1112261111",
+  "id": "1112261111",
+  "images": [
+    {
+      "url": "https://i.scdn.co/image/ab67757000003b8246569a64d252247acb1491bd",
+      "height": 64,
+      "width": 64
+    },
+    {
+      "url": "https://i.scdn.co/image/ab6775700000ee8546569a64d252247acb1491bd",
+      "height": 300,
+      "width": 300
+    }
+  ],
+  "type": "user",
+  "uri": "spotify:user:1112261111",
+  "followers": {
+    "href": null,
+    "total": 21
+  },
+  "country": "NL",
+  "product": "premium",
+  "explicit_content": {
+    "filter_enabled": false,
+    "filter_locked": false
+  },
+  "email": "henk@outlook.com"
+}
