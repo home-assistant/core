@@ -286,7 +286,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform reconfiguration of the config entry."""
         self.reconfigure_entry = self._get_reconfigure_entry()

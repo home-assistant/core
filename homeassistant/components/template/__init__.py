@@ -29,6 +29,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
@@ -36,6 +37,17 @@ DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""
+
+    # Register template as valid domain for Blueprint
+    blueprints = async_get_blueprints(hass)
+
+    # Add some default blueprints to blueprints/template, does nothing
+    # if blueprints/template already exists but still has to create
+    # an executor job to check if the folder exists so we run it in a
+    # separate task to avoid waiting for it to finish setting up
+    # since a tracked task will be waited at the end of startup
+    hass.async_create_task(blueprints.async_populate(), eager_start=True)
+
     if DOMAIN in config:
         await _process_config(hass, config)
 
@@ -136,7 +148,14 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                         DOMAIN,
                         {
                             "unique_id": conf_section.get(CONF_UNIQUE_ID),
-                            "entities": conf_section[platform_domain],
+                            "entities": [
+                                {
+                                    **entity_conf,
+                                    "raw_blueprint_inputs": conf_section.raw_blueprint_inputs,
+                                    "raw_configs": conf_section.raw_config,
+                                }
+                                for entity_conf in conf_section[platform_domain]
+                            ],
                         },
                         hass_config,
                     ),

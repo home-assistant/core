@@ -14,7 +14,6 @@ from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
@@ -65,7 +64,12 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
+else:
+    from propcache import under_cached_property
 
 DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
@@ -162,7 +166,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -201,6 +205,7 @@ class RegistryEntry:
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
@@ -247,7 +252,7 @@ class RegistryEntry:
                 display_dict["dp"] = precision
         return display_dict
 
-    @cached_property
+    @under_cached_property
     def display_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry.
 
@@ -267,7 +272,7 @@ class RegistryEntry:
             return None
         return json_repr
 
-    @cached_property
+    @under_cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -296,7 +301,7 @@ class RegistryEntry:
             "unique_id": self.unique_id,
         }
 
-    @cached_property
+    @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
         """Return a extended dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -311,7 +316,7 @@ class RegistryEntry:
             "original_icon": self.original_icon,
         }
 
-    @cached_property
+    @under_cached_property
     def partial_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry."""
         try:
@@ -327,7 +332,7 @@ class RegistryEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -394,7 +399,7 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
 
@@ -407,13 +412,14 @@ class DeletedRegistryEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
         """Compute domain value."""
         return split_entity_id(self.entity_id)[0]
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(

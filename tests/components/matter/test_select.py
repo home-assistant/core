@@ -11,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from .common import set_node_attribute, trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_mode_select_entities(
     hass: HomeAssistant,
@@ -63,8 +61,6 @@ async def test_mode_select_entities(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_attribute_select_entities(
     hass: HomeAssistant,
