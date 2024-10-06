@@ -5,7 +5,6 @@ Evohome implements some domain-specific service.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -17,15 +16,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.evohome import DOMAIN, EvoService
+from homeassistant.components.evohome.climate import EvoController
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import extract_ctl_from_locations_config, get_ctl_entity, setup_evohome
 from .const import TEST_INSTALLS
-
-if TYPE_CHECKING:
-    from homeassistant.components.evohome.climate import EvoController
-
 
 CTL_MODE_LOOKUP = {
     "Reset": "AutoWithReset",
