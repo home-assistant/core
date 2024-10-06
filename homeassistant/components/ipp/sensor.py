@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from pyipp import Marker, Printer
@@ -19,7 +19,6 @@ from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utcnow
 
 from . import IPPConfigEntry
 from .const import (
@@ -33,6 +32,7 @@ from .const import (
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
 )
+from .coordinator import IPPDataUpdateCoordinatorType
 from .entity import IPPEntity
 
 
@@ -40,7 +40,7 @@ from .entity import IPPEntity
 class IPPSensorEntityDescription(SensorEntityDescription):
     """Describes IPP sensor entity."""
 
-    value_fn: Callable[[Printer], StateType | datetime]
+    value_fn: Callable[[IPPDataUpdateCoordinatorType], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
 
 
@@ -52,8 +52,8 @@ def _get_marker_attributes_fn(
 
 def _get_marker_value_fn(
     marker_index: int, value_fn: Callable[[Marker], StateType | datetime]
-) -> Callable[[Printer], StateType | datetime]:
-    return lambda printer: value_fn(printer.markers[marker_index])
+) -> Callable[[IPPDataUpdateCoordinatorType], StateType | datetime]:
+    return lambda data: value_fn(data["printer"].markers[marker_index])
 
 
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
@@ -72,7 +72,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_COMMAND_SET: printer.info.command_set,
             ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
         },
-        value_fn=lambda printer: printer.state.printer_state,
+        value_fn=lambda data: data["printer"].state.printer_state,
     ),
     IPPSensorEntityDescription(
         key="uptime",
@@ -80,9 +80,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda printer: (
-            utcnow() - timedelta(minutes=int(printer.info.uptime / 60))
-        ),
+        value_fn=lambda data: data["uptime"],
     ),
 )
 
@@ -102,7 +100,7 @@ async def async_setup_entry(
         for description in PRINTER_SENSORS
     ]
 
-    for index, marker in enumerate(coordinator.data.markers):
+    for index, marker in enumerate(coordinator.data["printer"].markers):
         sensors.append(
             IPPSensor(
                 coordinator,
@@ -139,7 +137,7 @@ class IPPSensor(IPPEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(self.coordinator.data)
+        return self.entity_description.attributes_fn(self.coordinator.data["printer"])
 
     @property
     def native_value(self) -> StateType | datetime:
