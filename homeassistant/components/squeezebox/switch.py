@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SIGNAL_ALARM_DISCOVERED
+from .const import SIGNAL_ALARM_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ID = "alarm_id"
 ATTR_TIME = "time"
 ATTR_REPEAT = "repeat"
+ATTR_DAYS_OF_WEEK = "dow"
 ATTR_SCHEDULED_TODAY = "scheduled_today"
 ATTR_VOLUME = "volume"
 ATTR_URL = "url"
@@ -35,22 +36,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Squeezebox alarm switch."""
 
-    entity_registry = er.async_get(hass)
-
     # create a new alarm entity if it doesn't already exist
     async def _alarm_discovered(
         alarm: Alarm,
         coordinator: SqueezeBoxPlayerUpdateCoordinator,
     ) -> None:
-        if not entity_registry.async_get_entity_id(
-            "switch", DOMAIN, f"{coordinator.player.unique_id}-alarm-{alarm.id}"
-        ):
-            _LOGGER.debug(
-                "Setting up alarm entity for alarm %s on player %s",
-                alarm.id,
-                coordinator.player,
-            )
-            async_add_entities([SqueezeBoxAlarmEntity(alarm, coordinator)])
+        _LOGGER.debug(
+            "Setting up alarm entity for alarm %s on player %s",
+            alarm["id"],
+            coordinator.player,
+        )
+        async_add_entities([SqueezeBoxAlarmEntity(alarm, coordinator)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
@@ -70,9 +66,9 @@ class SqueezeBoxAlarmEntity(
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
         self._alarm: Alarm | None = alarm
-        self._attr_unique_id: str = f"{coordinator.player.unique_id}-alarm-{alarm.id}"
+        self._attr_unique_id: str = f"{coordinator.player_uuid}-alarm-{alarm["id"]}"
         self.entity_id: str = ENTITY_ID_FORMAT.format(
-            f"squeezebox_alarm_{self.alarm.id}"
+            f"squeezebox_alarm_{self.alarm["id"]}"
         )
 
     @callback
@@ -81,7 +77,7 @@ class SqueezeBoxAlarmEntity(
         if "alarms" not in self.coordinator.data:
             self._alarm = None
             return
-        self._alarm = self.coordinator.data["alarms"].get(self.alarm.id)
+        self._alarm = self.coordinator.data["alarms"].get(self.alarm["id"])
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -121,7 +117,7 @@ class SqueezeBoxAlarmEntity(
         entity_registry = er.async_get(self.hass)
         if entity_registry.async_get(self.entity_id):
             entity_registry.async_remove(self.entity_id)
-            self.coordinator.known_alarms.remove(self.alarm.id)
+            self.coordinator.known_alarms.remove(self.alarm["id"])
 
         return False
 
@@ -133,40 +129,45 @@ class SqueezeBoxAlarmEntity(
     @property
     def available(self) -> bool:
         """Return whether the alarm is available."""
-        return self.available and super().available
+        return self._attr_available and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
         return {
-            ATTR_ID: str(self.alarm.id),
-            ATTR_TIME: str(self.alarm.start_time),
-            ATTR_REPEAT: str(self.alarm.repeat),
-            ATTR_VOLUME: self.alarm.volume / 100,
-            ATTR_URL: self.alarm.url,
+            ATTR_ID: str(self.alarm["id"]),
+            ATTR_TIME: str(self.alarm["time"]),
+            ATTR_REPEAT: str(self.alarm["repeat"]),
+            ATTR_DAYS_OF_WEEK: str(self.alarm["dow"]),
+            ATTR_VOLUME: self.alarm["volume"] / 100,
+            ATTR_URL: self.alarm["url"],
             ATTR_SCHEDULED_TODAY: self._is_today,
         }
 
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.alarm is not None and self.alarm.enabled
+        return self.alarm is not None and self.alarm["enabled"]
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self.coordinator.player.name} Alarm {self.alarm.id}"
+        return f"{self.coordinator.player.name} Alarm {self.alarm["id"]}"
 
     @property
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
         daynum = int(datetime.datetime.today().strftime("%w"))
-        return daynum in self.alarm.repeat
+        return daynum in self.alarm["dow"]
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.coordinator.player.async_update_alarm(self.alarm.id, enabled=False)
+        await self.coordinator.player.async_update_alarm(
+            self.alarm["id"], enabled=False
+        )
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.coordinator.player.async_update_alarm(self.alarm.id, enabled=True)
+        await self.coordinator.player.async_update_alarm(self.alarm["id"], enabled=True)
+        await self.coordinator.async_request_refresh()

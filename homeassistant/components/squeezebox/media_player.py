@@ -34,11 +34,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -196,7 +192,7 @@ class SqueezeBoxMediaPlayerEntity(
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._previous_media_position = 0
-        self._attr_unique_id = format_mac(player.player_id)
+        self._attr_unique_id = coordinator.player_uuid
         _manufacturer = None
         if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
