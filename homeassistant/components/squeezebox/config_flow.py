@@ -247,9 +247,10 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Options Flow Steps."""
-        _LOGGER.debug("1 user_input %s", user_input)
 
-        async def _validate_input(self, data: dict[str, Any]) -> str | None:
+        errors: dict[str, str] = {}
+
+        async def _validate_input(data: dict[str, Any]) -> str | None:
             """Validate the user input allows us to connect."""
 
             if (
@@ -265,11 +266,9 @@ class OptionsFlowHandler(OptionsFlow):
 
             return None
 
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             try:
-                await _validate_input(self.hass, user_input)
+                await _validate_input(user_input)
             except ValueError:
                 errors["base"] = "value"
             if not errors:
