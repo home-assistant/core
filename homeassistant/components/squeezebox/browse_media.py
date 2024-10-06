@@ -74,7 +74,10 @@ BROWSE_LIMIT = 1000
 
 
 async def build_item_response(
-    entity: MediaPlayerEntity, player: Player, payload: dict[str, str | None]
+    entity: MediaPlayerEntity,
+    player: Player,
+    payload: dict[str, str | None],
+    browse_limit: int,
 ) -> BrowseMedia:
     """Create response payload for search described by payload."""
 
@@ -96,7 +99,7 @@ async def build_item_response(
 
     result = await player.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
-        limit=BROWSE_LIMIT,
+        limit=browse_limit,
         browse_id=browse_id,
     )
 

@@ -27,3 +27,5 @@ STATUS_QUERY_MAC = "mac"
 STATUS_QUERY_UUID = "uuid"
 STATUS_QUERY_VERSION = "version"
 SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
+CONF_BROWSE_LIMIT = "browse_limit"
+CONF_VOLUME_STEP = "volume_step"

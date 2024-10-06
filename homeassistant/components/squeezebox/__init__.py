@@ -25,7 +25,9 @@ from homeassistant.helpers.device_registry import (
 )
 
 from .const import (
+    CONF_BROWSE_LIMIT,
     CONF_HTTPS,
+    CONF_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
     MANUFACTURER,
@@ -48,11 +50,20 @@ PLATFORMS = [
 
 
 @dataclass
+class SqueezeboxOptions:
+    """Squeezebox Options data class."""
+
+    browse_limit: int
+    volume_step: int
+
+
+@dataclass
 class SqueezeboxData:
     """SqueezeboxData data class."""
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
+    options: SqueezeboxOptions
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -119,14 +130,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
 
+    entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
     entry.runtime_data = SqueezeboxData(
         coordinator=coordinator,
         server=lms,
+        options=SqueezeboxOptions(
+            browse_limit=entry.options.get(CONF_BROWSE_LIMIT, 1000),
+            volume_step=entry.options.get(CONF_VOLUME_STEP, 5),
+        ),
     )
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def options_update_listener(
+    hass: HomeAssistant, entry: SqueezeboxConfigEntry
+) -> None:
+    """Handle options update."""
+
+    entry.runtime_data.options.browse_limit = entry.options.get(CONF_BROWSE_LIMIT, 1000)
+    entry.runtime_data.options.volume_step = entry.options.get(CONF_VOLUME_STEP, 1000)
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:

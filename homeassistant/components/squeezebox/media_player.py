@@ -47,7 +47,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
-from . import SqueezeboxConfigEntry
+from . import SqueezeboxConfigEntry, SqueezeboxOptions
 from .browse_media import (
     build_item_response,
     generate_playlist,
@@ -138,7 +138,7 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player, lms)
+                entity = SqueezeBoxEntity(player, lms, entry.runtime_data.options)
                 known_players.append(entity)
                 async_add_entities([entity], True)
 
@@ -214,7 +214,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player: Player, server: Server) -> None:
+    def __init__(
+        self, player: Player, server: Server, options: SqueezeboxOptions
+    ) -> None:
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result: bool | dict = {}
@@ -238,6 +240,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             model=player.model,
             manufacturer=_manufacturer,
         )
+        self._browse_limit = options.browse_limit
+        self._volume_step = options.volume_step
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -400,11 +404,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
-        await self._player.async_set_volume("+5")
+        await self._player.async_set_volume("+" + str(self._volume_step))
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._player.async_set_volume("-5")
+        await self._player.async_set_volume("-" + str(self._volume_step))
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -599,7 +603,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self, self._player, payload)
+        return await build_item_response(
+            self, self._player, payload, self._browse_limit
+        )
 
     async def async_get_browse_image(
         self,
