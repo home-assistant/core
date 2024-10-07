@@ -1,6 +1,5 @@
 """Websocket commands for the Backup integration."""
 
-import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -136,7 +135,7 @@ async def backup_agents_info(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Backup agents info."""
+    """Return backup agents info."""
     manager: BackupManager = hass.data[DOMAIN]
     await manager.load_platforms()
     connection.send_result(
@@ -158,11 +157,12 @@ async def backup_agents_list_synced_backups(
 ) -> None:
     """Return a list of synced backups."""
     manager: BackupManager = hass.data[DOMAIN]
+    backups: list[dict[str, Any]] = []
     await manager.load_platforms()
-    backups = await asyncio.gather(
-        *[agent.async_list_backups() for agent in manager.sync_agents.values()]
-    )
-    connection.send_result(msg["id"], [b.as_dict() for bl in backups for b in bl])
+    for agent_id, agent in manager.sync_agents.items():
+        _listed_backups = await agent.async_list_backups()
+        backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
+    connection.send_result(msg["id"], backups)
 
 
 @websocket_api.require_admin

@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from homeassistant.components.backup import BackupSyncAgent, SyncedBackup
+from homeassistant.components.backup import (
+    BackupSyncAgent,
+    BackupSyncMetadata,
+    SyncedBackup,
+)
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
@@ -50,7 +54,7 @@ class KitchenSinkBackupSyncAgent(BackupSyncAgent):
         self,
         *,
         path: Path,
-        metadata: dict[str, Any],
+        metadata: BackupSyncMetadata,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""

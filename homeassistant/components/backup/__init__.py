@@ -7,13 +7,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
-from .manager import Backup, BackupManager
+from .manager import BackupManager
+from .models import BackupSyncMetadata
 from .sync_agent import BackupSyncAgent, SyncedBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
-    "Backup",
     "BackupSyncAgent",
+    "BackupSyncMetadata",
     "SyncedBackup",
 ]
 

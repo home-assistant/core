@@ -9,7 +9,7 @@ from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 
-from .base import BaseBackup
+from .models import BackupSyncMetadata, BaseBackup
 
 
 @dataclass(slots=True)
@@ -34,17 +34,27 @@ class BackupSyncAgent(abc.ABC):
         path: Path,
         **kwargs: Any,
     ) -> None:
-        """Download a backup file."""
+        """Download a backup file.
+
+        The `id` parameter is the ID of the syced backup that was returned in async_list_backups.
+
+        The `path` parameter is the full file path to download the synced backup to.
+        """
 
     @abc.abstractmethod
     async def async_upload_backup(
         self,
         *,
         path: Path,
-        metadata: dict[str, Any],
+        metadata: BackupSyncMetadata,
         **kwargs: Any,
     ) -> None:
-        """Upload a backup."""
+        """Upload a backup.
+
+        The `path` parameter is the full file path to the backup that should be synced.
+
+        The `metadata` parameter contains metadata about the backup that should be synced.
+        """
 
     @abc.abstractmethod
     async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:

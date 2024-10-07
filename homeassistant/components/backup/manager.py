@@ -23,8 +23,8 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
-from .base import BaseBackup
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
+from .models import BaseBackup
 from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
@@ -138,7 +138,16 @@ class BackupManager:
         self.syncing = True
         sync_backup_results = await asyncio.gather(
             *(
-                agent.async_upload_backup(path=backup.path, metadata=backup.as_dict())
+                agent.async_upload_backup(
+                    path=backup.path,
+                    metadata={
+                        "homeassistant": HAVERSION,
+                        "size": backup.size,
+                        "date": backup.date,
+                        "slug": backup.slug,
+                        "name": backup.name,
+                    },
+                )
                 for agent in self.sync_agents.values()
             ),
             return_exceptions=True,
