@@ -6,6 +6,7 @@ from enum import StrEnum
 import logging
 from typing import Any, TypedDict
 
+from spotifyaio import SpotifyClient
 import yarl
 
 from homeassistant.components.media_player import (
@@ -18,7 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
-from .spotifyaio import SpotifyClient
 
 BROWSE_LIMIT = 48
 

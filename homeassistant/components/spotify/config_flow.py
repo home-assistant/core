@@ -6,13 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from spotifyaio import SpotifyClient
+
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, SPOTIFY_SCOPES
-from .spotifyaio import SpotifyClient
 
 
 class SpotifyFlowHandler(

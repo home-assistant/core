@@ -4,19 +4,20 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.media_player import MediaType
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
-
-from .const import DOMAIN
-from .spotifyaio import (
+from spotifyaio import (
     PlaybackState,
     Playlist,
     SpotifyClient,
     SpotifyConnectionError,
     UserProfile,
 )
+
+from homeassistant.components.media_player import MediaType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
