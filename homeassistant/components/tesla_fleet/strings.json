@@ -422,9 +422,6 @@
           "off_grid_intentional": "Disconnected intentionally"
         }
       },
-      "storm_mode_active": {
-        "name": "Storm Watch active"
-      },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
       },

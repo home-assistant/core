@@ -223,9 +223,6 @@
       "wall_connector_state": {
         "default": "mdi:ev-station"
       },
-      "storm_mode_active": {
-        "default": "mdi:weather-lightning"
-      },
       "island_status": {
         "default": "mdi:help-circle",
         "state": {
