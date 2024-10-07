@@ -8,13 +8,7 @@ from mawaqit.consts import NoMosqueAround
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
@@ -33,7 +27,6 @@ from .utils import (
     read_all_mosques_NN_file,
     read_my_mosque_NN_file,
     write_all_mosques_NN_file,
-    write_my_mosque_NN_file,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -332,42 +325,15 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
-
-            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-                self.store
-            )
-
-            mosque = user_input[CONF_CALC_METHOD]
-            index = name_servers.index(mosque)
-            mosque_id = uuid_servers[index]
-
             mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
-
-            try:
-                nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    lat, longi, token=mawaqit_token
-                )
-            except NoMosqueAround as err:
-                raise NoMosqueAround("No mosque around.") from err
-
-            await write_my_mosque_NN_file(nearest_mosques[index], self.store)
-
-            await utils.update_my_mosque_data_files(
+            title_entry, data_entry = await utils.async_save_mosque(
                 self.hass,
-                CURRENT_DIR,
                 self.store,
-                mosque_id=mosque_id,
-                token=mawaqit_token,
+                user_input[CONF_CALC_METHOD],
+                mawaqit_token,
+                lat,
+                longi,
             )
-
-            title_entry = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
-
-            data_entry = {
-                CONF_API_KEY: mawaqit_token,
-                CONF_UUID: mosque_id,
-                CONF_LATITUDE: lat,
-                CONF_LONGITUDE: longi,
-            }
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, title=title_entry, data=data_entry

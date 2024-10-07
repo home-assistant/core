@@ -651,8 +651,12 @@ async def test_options_flow_valid_input(
     with (
         patch.object(flow, "store", new=setup_test_environment),
         patch(
-            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            "homeassistant.components.mawaqit.utils.read_all_mosques_NN_file",
             return_value=mocked_mosques_data,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_raw_all_mosques_NN_file",
+            return_value=mock_mosques,
         ),
         patch(
             "homeassistant.components.mawaqit.utils.read_mawaqit_token",
@@ -678,42 +682,6 @@ async def test_options_flow_valid_input(
             result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         )  # Assert that an entry is created/updated
         # assert result["data"][CONF_UUID] == mosque_uuid
-
-
-@pytest.mark.asyncio
-async def test_options_flow_error_no_mosques_around(
-    hass: HomeAssistant,
-    config_entry_setup,
-    mock_mosques_test_data,
-    setup_test_environment,
-) -> None:
-    """Test the options flow when no mosques are found around."""
-
-    _, mocked_mosques_data = mock_mosques_test_data
-
-    # Initialize the options flow
-    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-    flow.hass = hass  # Assign HomeAssistant instance
-    with (
-        patch.object(flow, "store", new=setup_test_environment),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
-            return_value="TOKEN",
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            side_effect=NoMosqueAround,
-        ),
-    ):
-        # Simulate user input in the options flow , Assuming the user selects the first mosque
-        mosque_uuid_label = mocked_mosques_data[0][1]
-
-        with pytest.raises(NoMosqueAround):
-            await flow.async_step_init(user_input={CONF_CALC_METHOD: mosque_uuid_label})
 
 
 @pytest.mark.asyncio
