@@ -5179,19 +5179,19 @@ def test_raise_trying_to_add_same_config_entry_twice(
             (1, 0),
         ),
         (
-            {"data": {"buyer": "me"}, "options": {}},
-            "Test",
-            "1234",
-            {"buyer": "me"},
-            {},
-            (2, 1),
-        ),
-        (
             {},
             "Test",
             "1234",
             {"vendor": "data"},
             {"vendor": "options"},
+            (2, 1),
+        ),
+        (
+            {"data": {"buyer": "me"}, "options": {}},
+            "Test",
+            "1234",
+            {"buyer": "me"},
+            {},
             (2, 1),
         ),
     ],
@@ -5200,8 +5200,8 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "unchanged_entry_default",
         "changed_entry_explicit_reload",
         "unchanged_entry_no_reload",
-        "data_options_replace",
         "no_kwargs",
+        "replace_data",
     ],
 )
 @pytest.mark.parametrize(
