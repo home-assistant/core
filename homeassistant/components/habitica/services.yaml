@@ -96,11 +96,7 @@ transformation:
         text:
 get_tasks:
   fields:
-    config_entry:
-      required: true
-      selector:
-        config_entry:
-          integration: habitica
+    config_entry: *config_entry
     filter:
       collapsed: true
       fields:
