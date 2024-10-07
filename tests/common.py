@@ -1066,6 +1066,22 @@ class MockConfigEntry(config_entries.ConfigEntry):
         """Start a reauthentication flow."""
         return await start_reauth_flow(hass, self, context, data)
 
+    async def start_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a reconfiguration flow."""
+        return await hass.config_entries.flow.async_init(
+            self.domain,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": self.entry_id,
+                "show_advanced_options": show_advanced_options,
+            },
+        )
+
 
 async def start_reauth_flow(
     hass: HomeAssistant,

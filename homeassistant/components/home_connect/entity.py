@@ -18,11 +18,12 @@ class HomeConnectEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device: HomeConnectDevice, desc: str) -> None:
+    def __init__(self, device: HomeConnectDevice, bsh_key: str, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
+        self.bsh_key = bsh_key
         self._attr_name = f"{device.appliance.name} {desc}"
-        self._attr_unique_id = f"{device.appliance.haId}-{desc}"
+        self._attr_unique_id = f"{device.appliance.haId}-{bsh_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.appliance.haId)},
             manufacturer=device.appliance.brand,
