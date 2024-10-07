@@ -29,6 +29,8 @@ from .const import (
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -326,6 +328,13 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         default=self.config_entry.options.get(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                    vol.Required(
+                        OPTION_DISABLE_KEEP_ALIVE,
+                        default=self.config_entry.options.get(
+                            OPTION_DISABLE_KEEP_ALIVE,
+                            OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
                         ),
                     ): bool,
                 }

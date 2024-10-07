@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from .common import trigger_subscription_callback
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["generic_switch"])
 async def test_generic_switch_node(
     hass: HomeAssistant,
@@ -53,8 +51,6 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["generic_switch_multi"])
 async def test_generic_switch_multi_node(
     hass: HomeAssistant,
