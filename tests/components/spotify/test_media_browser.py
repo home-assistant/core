@@ -29,9 +29,9 @@ async def test_browse_media_root(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Spotify",
-        unique_id="fake_id",
+        unique_id="second_fake_id",
         data={
-            CONF_ID: "fake_id",
+            CONF_ID: "second_fake_id",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
