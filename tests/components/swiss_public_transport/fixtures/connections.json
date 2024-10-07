@@ -5,7 +5,8 @@
     "platform": 0,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:04:00+0100",
@@ -13,7 +14,8 @@
     "platform": 1,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": null
   },
   {
     "departure": "2024-01-06T18:05:00+0100",
@@ -21,7 +23,8 @@
     "platform": 2,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:06:00+0100",
@@ -29,7 +32,8 @@
     "platform": 3,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:07:00+0100",
@@ -37,7 +41,8 @@
     "platform": 4,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:08:00+0100",
@@ -45,7 +50,8 @@
     "platform": 5,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:09:00+0100",
@@ -53,7 +59,8 @@
     "platform": 6,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:10:00+0100",
@@ -61,7 +68,8 @@
     "platform": 7,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:11:00+0100",
@@ -69,7 +77,8 @@
     "platform": 8,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:12:00+0100",
@@ -77,7 +86,8 @@
     "platform": 9,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:13:00+0100",
@@ -85,7 +95,8 @@
     "platform": 10,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:14:00+0100",
@@ -93,7 +104,8 @@
     "platform": 11,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:15:00+0100",
@@ -101,7 +113,8 @@
     "platform": 12,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:16:00+0100",
@@ -109,7 +122,8 @@
     "platform": 13,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:17:00+0100",
@@ -117,7 +131,8 @@
     "platform": 14,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   },
   {
     "departure": "2024-01-06T18:18:00+0100",
@@ -125,6 +140,7 @@
     "platform": 15,
     "transfers": 0,
     "duration": "10",
-    "delay": 0
+    "delay": 0,
+    "line": "T10"
   }
 ]

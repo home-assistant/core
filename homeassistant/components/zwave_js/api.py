@@ -1713,6 +1713,7 @@ async def websocket_get_config_parameters(
                 "unit": metadata.unit,
                 "writeable": metadata.writeable,
                 "readable": metadata.readable,
+                "default": metadata.default,
             },
             "value": zwave_value.value,
         }

@@ -16,9 +16,9 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValloxEntity
 from .const import DOMAIN
 from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ValloxNumberEntity(ValloxEntity, NumberEntity):

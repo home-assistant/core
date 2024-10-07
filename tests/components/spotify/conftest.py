@@ -10,11 +10,13 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.spotify import DOMAIN
+from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+SCOPES = " ".join(SPOTIFY_SCOPES)
 
 
 @pytest.fixture
@@ -30,7 +32,7 @@ def mock_config_entry_1() -> MockConfigEntry:
                 "token_type": "Bearer",
                 "expires_in": 3600,
                 "refresh_token": "RefreshToken",
-                "scope": "playlist-read-private ...",
+                "scope": SCOPES,
                 "expires_at": 1724198975.8829377,
             },
             "id": "32oesphrnacjcf7vw5bf6odx3oiu",
@@ -54,7 +56,7 @@ def mock_config_entry_2() -> MockConfigEntry:
                 "token_type": "Bearer",
                 "expires_in": 3600,
                 "refresh_token": "RefreshToken",
-                "scope": "playlist-read-private ...",
+                "scope": SCOPES,
                 "expires_at": 1724198975.8829377,
             },
             "id": "55oesphrnacjcf7vw5bf6odx3oiu",
@@ -122,7 +124,5 @@ async def spotify_setup(
         await hass.config_entries.async_setup(mock_config_entry_1.entry_id)
         mock_config_entry_2.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done(wait_background_tasks=True)
         yield

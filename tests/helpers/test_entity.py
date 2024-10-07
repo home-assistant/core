@@ -5,13 +5,13 @@ from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag
-from functools import cached_property
 import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from propcache import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol

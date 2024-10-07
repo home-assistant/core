@@ -18,11 +18,12 @@ class HomeConnectEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device: HomeConnectDevice, desc: str) -> None:
+    def __init__(self, device: HomeConnectDevice, bsh_key: str, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
+        self.bsh_key = bsh_key
         self._attr_name = f"{device.appliance.name} {desc}"
-        self._attr_unique_id = f"{device.appliance.haId}-{desc}"
+        self._attr_unique_id = f"{device.appliance.haId}-{bsh_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.appliance.haId)},
             manufacturer=device.appliance.brand,
@@ -30,7 +31,7 @@ class HomeConnectEntity(Entity):
             name=device.appliance.name,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -39,13 +40,13 @@ class HomeConnectEntity(Entity):
         )
 
     @callback
-    def _update_callback(self, ha_id):
+    def _update_callback(self, ha_id: str) -> None:
         """Update data."""
         if ha_id == self.device.appliance.haId:
             self.async_entity_update()
 
     @callback
-    def async_entity_update(self):
+    def async_entity_update(self) -> None:
         """Update the entity."""
         _LOGGER.debug("Entity update triggered on %s", self)
         self.async_schedule_update_ha_state(True)
