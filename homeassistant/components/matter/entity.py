@@ -148,11 +148,8 @@ class MatterEntity(Entity):
             # an explicit entity name was defined, we use that
             return self._attr_name
         name = super().name
-        if self._name_postfix:
-            if name:
-                name = f"{name} ({self._name_postfix})"
-            else:
-                name = self._name_postfix
+        if name and self._name_postfix:
+            name = f"{name} ({self._name_postfix})"
         return name
 
     @callback
