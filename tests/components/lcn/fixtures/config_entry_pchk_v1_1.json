@@ -156,7 +156,7 @@
         "register": 0,
         "scene": 1,
         "outputs": ["OUTPUT1", "OUTPUT2", "RELAY1"],
-        "transition": 10
+        "transition": 10000
       }
     },
     {

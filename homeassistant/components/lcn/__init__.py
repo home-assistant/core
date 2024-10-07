@@ -163,6 +163,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_entities_data = [*new_data[CONF_ENTITIES]]
         for entity in new_entities_data:
             if entity[CONF_DOMAIN] in [Platform.LIGHT, Platform.SCENE]:
+                if entity[CONF_DOMAIN_DATA][CONF_TRANSITION] is None:
+                    entity[CONF_DOMAIN_DATA][CONF_TRANSITION] = 0
                 entity[CONF_DOMAIN_DATA][CONF_TRANSITION] /= 1000.0
         new_data[CONF_ENTITIES] = new_entities_data
 
