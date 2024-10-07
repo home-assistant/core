@@ -2421,7 +2421,7 @@ async def test_supports_reconfigure(
     data.pop("flow_id")
     assert data == {
         "handler": "test",
-        "reason": "reauth_successful",
+        "reason": "reconfigure_successful",
         "type": "abort",
         "description_placeholders": None,
     }

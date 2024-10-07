@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.1
+PyChromecast==14.0.4
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -176,7 +176,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.5
+aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
 aioairzone==0.9.3
@@ -837,7 +837,7 @@ enturclient==0.2.4
 env-canada==0.7.2
 
 # homeassistant.components.season
-ephem==4.1.5
+ephem==4.1.6
 
 # homeassistant.components.epic_games_store
 epicstore-api==0.1.7
@@ -930,7 +930,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.13.2
+fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
 fyta_cli==0.6.7
@@ -1815,6 +1815,9 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.2
 
+# homeassistant.components.radio_browser
+pycountry==23.12.11
+
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2247,7 +2250,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.2
+pysmlight==0.1.3
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2679,7 +2682,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.0
+solarlog_cli==0.3.1
 
 # homeassistant.components.solax
 solax==3.1.1

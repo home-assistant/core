@@ -5116,71 +5116,119 @@ def test_raise_trying_to_add_same_config_entry_twice(
 
 @pytest.mark.parametrize(
     (
-        "title",
-        "unique_id",
-        "data_vendor",
-        "options_vendor",
         "kwargs",
+        "expected_title",
+        "expected_unique_id",
+        "expected_data",
+        "expected_options",
         "calls_entry_load_unload",
     ),
     [
         (
-            ("Test", "Updated title"),
-            ("1234", "5678"),
-            ("data", "data2"),
-            ("options", "options2"),
-            {},
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "options": {"vendor": "options2"},
+            },
+            "Updated title",
+            "5678",
+            {"vendor": "data2"},
+            {"vendor": "options2"},
             (2, 1),
         ),
         (
-            ("Test", "Test"),
-            ("1234", "1234"),
-            ("data", "data"),
-            ("options", "options"),
-            {},
+            {
+                "unique_id": "1234",
+                "title": "Test",
+                "data": {"vendor": "data"},
+                "options": {"vendor": "options"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            {"vendor": "options"},
             (2, 1),
         ),
         (
-            ("Test", "Updated title"),
-            ("1234", "5678"),
-            ("data", "data2"),
-            ("options", "options2"),
-            {"reload_even_if_entry_is_unchanged": True},
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "options": {"vendor": "options2"},
+                "reload_even_if_entry_is_unchanged": True,
+            },
+            "Updated title",
+            "5678",
+            {"vendor": "data2"},
+            {"vendor": "options2"},
             (2, 1),
         ),
         (
-            ("Test", "Test"),
-            ("1234", "1234"),
-            ("data", "data"),
-            ("options", "options"),
-            {"reload_even_if_entry_is_unchanged": False},
+            {
+                "unique_id": "1234",
+                "title": "Test",
+                "data": {"vendor": "data"},
+                "options": {"vendor": "options"},
+                "reload_even_if_entry_is_unchanged": False,
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            {"vendor": "options"},
             (1, 0),
+        ),
+        (
+            {},
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            {"vendor": "options"},
+            (2, 1),
+        ),
+        (
+            {"data": {"buyer": "me"}, "options": {}},
+            "Test",
+            "1234",
+            {"buyer": "me"},
+            {},
+            (2, 1),
         ),
     ],
     ids=[
         "changed_entry_default",
         "unchanged_entry_default",
         "changed_entry_explicit_reload",
-        "changed_entry_no_reload",
+        "unchanged_entry_no_reload",
+        "no_kwargs",
+        "replace_data",
+    ],
+)
+@pytest.mark.parametrize(
+    ("source", "reason"),
+    [
+        (config_entries.SOURCE_REAUTH, "reauth_successful"),
+        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
     ],
 )
 async def test_update_entry_and_reload(
     hass: HomeAssistant,
-    manager: config_entries.ConfigEntries,
-    title: tuple[str, str],
-    unique_id: tuple[str, str],
-    data_vendor: tuple[str, str],
-    options_vendor: tuple[str, str],
+    source: str,
+    reason: str,
+    expected_title: str,
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+    expected_options: dict[str, Any],
     kwargs: dict[str, Any],
     calls_entry_load_unload: tuple[int, int],
 ) -> None:
     """Test updating an entry and reloading."""
     entry = MockConfigEntry(
         domain="comp",
-        unique_id=unique_id[0],
-        title=title[0],
-        data={"vendor": data_vendor[0]},
-        options={"vendor": options_vendor[0]},
+        unique_id="1234",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
     )
     entry.add_to_hass(hass)
 
@@ -5201,29 +5249,30 @@ async def test_update_entry_and_reload(
 
         async def async_step_reauth(self, data):
             """Mock Reauth."""
-            return self.async_update_reload_and_abort(
-                entry=entry,
-                unique_id=unique_id[1],
-                title=title[1],
-                data={"vendor": data_vendor[1]},
-                options={"vendor": options_vendor[1]},
-                **kwargs,
-            )
+            return self.async_update_reload_and_abort(entry, **kwargs)
+
+        async def async_step_reconfigure(self, data):
+            """Mock Reconfigure."""
+            return self.async_update_reload_and_abort(entry, **kwargs)
 
     with mock_config_flow("comp", MockFlowHandler):
-        task = await manager.flow.async_init("comp", context={"source": "reauth"})
-        await hass.async_block_till_done()
+        if source == config_entries.SOURCE_REAUTH:
+            result = await entry.start_reauth_flow(hass)
+        elif source == config_entries.SOURCE_RECONFIGURE:
+            result = await entry.start_reconfigure_flow(hass)
 
-        assert entry.title == title[1]
-        assert entry.unique_id == unique_id[1]
-        assert entry.data == {"vendor": data_vendor[1]}
-        assert entry.options == {"vendor": options_vendor[1]}
-        assert entry.state == config_entries.ConfigEntryState.LOADED
-        assert task["type"] == FlowResultType.ABORT
-        assert task["reason"] == "reauth_successful"
-        # Assert entry was reloaded
-        assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
-        assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
+    await hass.async_block_till_done()
+
+    assert entry.title == expected_title
+    assert entry.unique_id == expected_unique_id
+    assert entry.data == expected_data
+    assert entry.options == expected_options
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+    # Assert entry was reloaded
+    assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
+    assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
