@@ -5,28 +5,39 @@ import logging
 from typing import Any
 
 from pysqueezebox.player import Alarm
+import voluptuous as vol
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import SIGNAL_ALARM_DISCOVERED
+from .const import (
+    ATTR_ALARM_ID,
+    ATTR_DAYS_OF_WEEK,
+    ATTR_ENABLED,
+    ATTR_REPEAT,
+    ATTR_SCHEDULED_TODAY,
+    ATTR_TIME,
+    ATTR_URL,
+    ATTR_VOLUME,
+    SIGNAL_ALARM_DISCOVERED,
+)
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ID = "alarm_id"
-ATTR_TIME = "time"
-ATTR_REPEAT = "repeat"
-ATTR_DAYS_OF_WEEK = "dow"
-ATTR_SCHEDULED_TODAY = "scheduled_today"
-ATTR_VOLUME = "volume"
-ATTR_URL = "url"
+SERVICE_DELETE_ALARM = "delete_alarm"
+SERVICE_UPDATE_ALARM = "update_alarm"
 
 
 async def async_setup_entry(
@@ -50,6 +61,26 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
+    )
+
+    # register services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_DELETE_ALARM,
+        {},
+        "async_delete_alarm",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_ALARM,
+        {
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_DAYS_OF_WEEK): cv.string,
+            vol.Optional(ATTR_ENABLED): cv.boolean,
+            vol.Optional(ATTR_REPEAT): cv.string,
+            vol.Optional(ATTR_VOLUME): cv.positive_int,
+            vol.Optional(ATTR_URL): cv.url,
+        },
+        "async_update_alarm",
     )
 
 
@@ -135,7 +166,7 @@ class SqueezeBoxAlarmEntity(
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
         return {
-            ATTR_ID: str(self.alarm["id"]),
+            ATTR_ALARM_ID: str(self.alarm["id"]),
             ATTR_TIME: str(self.alarm["time"]),
             ATTR_REPEAT: str(self.alarm["repeat"]),
             ATTR_DAYS_OF_WEEK: str(self.alarm["dow"]),
@@ -170,4 +201,19 @@ class SqueezeBoxAlarmEntity(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.player.async_update_alarm(self.alarm["id"], enabled=True)
+        await self.coordinator.async_request_refresh()
+
+    async def async_update_alarm(self, **kwargs: Any) -> None:
+        """Update the alarm."""
+        try:
+            alarm = self.alarm.copy()
+            alarm.update(kwargs)
+        except (TypeError, ValueError) as err:
+            raise ServiceValidationError from err
+        await self.coordinator.player.async_update_alarm(alarm.pop("id"), **alarm)
+        await self.coordinator.async_request_refresh()
+
+    async def async_delete_alarm(self) -> None:
+        """Delete the alarm."""
+        await self.coordinator.player.async_delete_alarm(self.alarm["id"])
         await self.coordinator.async_request_refresh()
