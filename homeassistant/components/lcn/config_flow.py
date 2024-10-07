@@ -110,8 +110,8 @@ async def validate_connection(data: ConfigType) -> str | None:
 class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 0
 
     _context_entry: ConfigEntry
 
