@@ -28,7 +28,7 @@ async def test_browse_media_root(
     await setup_integration(hass, mock_config_entry)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Spotify",
+        title="spotify_2",
         unique_id="second_fake_id",
         data={
             CONF_ID: "second_fake_id",

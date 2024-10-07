@@ -197,7 +197,7 @@
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3',
         'media_content_type': 'spotify://library',
         'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
-        'title': 'Spotify',
+        'title': 'spotify_2',
       }),
     ]),
     'children_media_class': <MediaClass.APP: 'app'>,
