@@ -11,8 +11,11 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from aiohasupervisor.models import StoreInfo
 import pytest
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -438,3 +441,31 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
     ):
         yield supervisor_client
+
+
+@pytest.fixture(autouse=True)
+def check_config_translations(hass: HomeAssistant) -> Generator[None]:
+    """Ensure config_flow translations are available."""
+    _original_call = hass.config_entries.flow._async_handle_step
+
+    async def _async_handle_step(
+        self: FlowManager, flow: FlowHandler, *args
+    ) -> ConfigFlowResult:
+        result = await _original_call(flow, *args)
+        if result["type"] is FlowResultType.ABORT:
+            if not (reason := result.get("reason")):
+                raise ValueError("Abort string not found")
+            translations = await async_get_translations(
+                self.hass, "en", "config", [flow.handler]
+            )
+            if f"component.{flow.handler}.config.abort.{reason}" not in translations:
+                raise ValueError(
+                    f"Abort reason `{reason}` not found in `strings.json`: {translations}"
+                )
+        return result
+
+    with patch(
+        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+        _async_handle_step,
+    ):
+        yield
