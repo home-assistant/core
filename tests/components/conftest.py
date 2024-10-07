@@ -476,20 +476,29 @@ def check_config_translations() -> Generator[None]:
             return result
 
         if result["type"] is FlowResultType.FORM:
+            if data_schema := result.get("data_schema"):
+                for key in data_schema.schema:
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        category,
+                        component,
+                        f"step.{result['step_id']}.data.{key}",
+                    )
             if errors := result.get("errors"):
                 for error in errors.values():
                     await _ensure_translation_exists(
-                        self.hass,
+                        flow.hass,
                         category,
                         component,
                         f"error.{error}",
                     )
+
         if (
             result["type"] is FlowResultType.ABORT
             and flow.source not in DISCOVERY_SOURCES
         ):
             await _ensure_translation_exists(
-                self.hass,
+                flow.hass,
                 category,
                 component,
                 f"abort.{result["reason"]}",
