@@ -19,7 +19,12 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.data_entry_flow import (
+    FlowHandler,
+    FlowManager,
+    FlowResultType,
+    section,
+)
 from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
@@ -492,13 +497,22 @@ def check_config_translations() -> Generator[None]:
 
         if result["type"] is FlowResultType.FORM:
             if data_schema := result.get("data_schema"):
-                for key in data_schema.schema:
-                    await _ensure_translation_exists(
-                        flow.hass,
-                        category,
-                        component,
-                        f"step.{result['step_id']}.data.{key}",
-                    )
+                for key, value in data_schema.schema.items():
+                    if isinstance(value, section):
+                        for sub_key in value.schema.schema:
+                            await _ensure_translation_exists(
+                                flow.hass,
+                                category,
+                                component,
+                                f"step.{result['step_id']}.sections.{key}.data.{sub_key}",
+                            )
+                    else:
+                        await _ensure_translation_exists(
+                            flow.hass,
+                            category,
+                            component,
+                            f"step.{result['step_id']}.data.{key}",
+                        )
             if errors := result.get("errors"):
                 for error in errors.values():
                     await _ensure_translation_exists(
