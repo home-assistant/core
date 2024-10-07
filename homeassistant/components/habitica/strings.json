@@ -1,4 +1,8 @@
 {
+  "common": {
+    "config_entry_name": "Select character",
+    "task_name": "Task name"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -201,7 +205,7 @@
       "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
       "fields": {
         "config_entry": {
-          "name": "Select character",
+          "name": "[%key:component::habitica::common::config_entry_name%]",
           "description": "Choose the Habitica character to cast the skill."
         },
         "skill": {
@@ -209,7 +213,7 @@
           "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
         },
         "task": {
-          "name": "Task name",
+          "name": "[%key:component::habitica::common::task_name%]",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
@@ -219,7 +223,7 @@
       "description": "Retrieve tasks from your Habitica character.",
       "fields": {
         "config_entry": {
-          "name": "Select character",
+          "name": "[%key:component::habitica::common::config_entry_name%]",
           "description": "Choose the Habitica character to retrieve tasks from."
         },
         "type": {
@@ -231,7 +235,7 @@
           "description": "Filter tasks by difficulty."
         },
         "task": {
-          "name": "Task name",
+          "name": "[%key:component::habitica::common::task_name%]",
           "description": "Select tasks by matching their name (or task ID)."
         },
         "tag": {
