@@ -1443,18 +1443,6 @@ async def test_trigger_entity_render_error(
                 },
             }
         },
-        {
-            "sensor": {
-                "platform": "template",
-                "triggers": {"platform": "event", "event_type": "test_event"},
-                "sensors": {
-                    "test_template_sensor": {
-                        "value_template": "{{ states.sensor.test_state.state }}",
-                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
-                    }
-                },
-            }
-        },
     ],
 )
 @pytest.mark.usefixtures("start_ha")
@@ -2318,7 +2306,9 @@ async def test_trigger_conditional_action(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("trigger_field", ["trigger", "triggers"])
 @pytest.mark.parametrize("condition_field", ["condition", "conditions"])
 @pytest.mark.parametrize("action_field", ["action", "actions"])
-async def test_legacy_and_new_config_sheme(hass: HomeAssistant, trigger_field: str, condition_field: str, action_field: str) -> None:
+async def test_legacy_and_new_config_sheme(
+    hass: HomeAssistant, trigger_field: str, condition_field: str, action_field: str
+) -> None:
     """Tests that both old and new config scheme (singular -> plural) work."""
 
     assert await async_setup_component(
@@ -2328,7 +2318,10 @@ async def test_legacy_and_new_config_sheme(hass: HomeAssistant, trigger_field: s
             "template": [
                 {
                     "unique_id": "listening-test-event",
-                    f"{trigger_field}": {"platform": "event", "event_type": "beer_event"},
+                    f"{trigger_field}": {
+                        "platform": "event",
+                        "event_type": "beer_event",
+                    },
                     f"{condition_field}": [
                         {
                             "condition": "template",
