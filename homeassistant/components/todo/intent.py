@@ -17,6 +17,7 @@ INTENT_LIST_COMPLETE_ITEM = "HassListCompleteItem"
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the todo intents."""
     intent.async_register(hass, ListAddItemIntent())
+    intent.async_register(hass, ListCompleteItemIntent())
 
 
 class ListAddItemIntent(intent.IntentHandler):
