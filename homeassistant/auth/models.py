@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from functools import cached_property
 import secrets
 from typing import Any, NamedTuple
 import uuid
@@ -11,6 +10,7 @@ import uuid
 import attr
 from attr import Attribute
 from attr.setters import validate
+from propcache import cached_property
 
 from homeassistant.const import __version__
 from homeassistant.data_entry_flow import FlowResult

@@ -18,6 +18,7 @@ from homeassistant.util import yaml
 from . import importer, models
 from .const import DOMAIN
 from .errors import BlueprintException, FailedToLoad, FileAlreadyExists
+from .schemas import BLUEPRINT_SCHEMA
 
 
 @callback
@@ -174,7 +175,9 @@ async def ws_save_blueprint(
 
     try:
         yaml_data = cast(dict[str, Any], yaml.parse_yaml(msg["yaml"]))
-        blueprint = models.Blueprint(yaml_data, expected_domain=domain)
+        blueprint = models.Blueprint(
+            yaml_data, expected_domain=domain, schema=BLUEPRINT_SCHEMA
+        )
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
     except HomeAssistantError as err:

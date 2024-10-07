@@ -7,6 +7,10 @@ from mozart_api.models import (
     Action,
     BeolinkPeer,
     ContentItem,
+    ListeningMode,
+    ListeningModeFeatures,
+    ListeningModeRef,
+    ListeningModeTrigger,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
@@ -38,6 +42,9 @@ from .const import (
     TEST_NAME_2,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
+    TEST_SOUND_MODE,
+    TEST_SOUND_MODE_2,
+    TEST_SOUND_MODE_NAME,
 )
 
 from tests.common import MockConfigEntry
@@ -263,6 +270,32 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
         ]
 
+        client.get_listening_mode_set = AsyncMock()
+        client.get_listening_mode_set.return_value = [
+            ListeningMode(
+                id=TEST_SOUND_MODE,
+                name=TEST_SOUND_MODE_NAME,
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+            ListeningMode(
+                id=TEST_SOUND_MODE_2,
+                name=TEST_SOUND_MODE_NAME,
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+            ListeningMode(
+                id=345,
+                name=f"{TEST_SOUND_MODE_NAME} 2",
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+        ]
+        client.get_active_listening_mode = AsyncMock()
+        client.get_active_listening_mode.return_value = ListeningModeRef(
+            href="",
+            id=123,
+        )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
@@ -283,6 +316,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.post_beolink_leave = AsyncMock()
         client.post_beolink_allstandby = AsyncMock()
         client.join_latest_beolink_experience = AsyncMock()
+        client.activate_listening_mode = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()

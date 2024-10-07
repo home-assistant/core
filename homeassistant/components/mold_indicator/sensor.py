@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import logging
 import math
 from typing import TYPE_CHECKING, Any
@@ -19,12 +20,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
+    CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -63,6 +65,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
         vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -79,6 +82,7 @@ async def async_setup_platform(
     outdoor_temp_sensor: str = config[CONF_OUTDOOR_TEMP]
     indoor_humidity_sensor: str = config[CONF_INDOOR_HUMIDITY]
     calib_factor: float = config[CONF_CALIBRATION_FACTOR]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -90,6 +94,7 @@ async def async_setup_platform(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                unique_id,
             )
         ],
         False,
@@ -118,6 +123,7 @@ async def async_setup_entry(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                entry.entry_id,
             )
         ],
         False,
@@ -141,10 +147,12 @@ class MoldIndicator(SensorEntity):
         outdoor_temp_sensor: str,
         indoor_humidity_sensor: str,
         calib_factor: float,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self._state: str | None = None
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
@@ -156,19 +164,48 @@ class MoldIndicator(SensorEntity):
             indoor_humidity_sensor,
             outdoor_temp_sensor,
         }
-
         self._dewpoint: float | None = None
         self._indoor_temp: float | None = None
         self._outdoor_temp: float | None = None
         self._indoor_hum: float | None = None
         self._crit_temp: float | None = None
-        self._attr_device_info = async_device_info_to_link_from_entity(
-            hass,
-            indoor_humidity_sensor,
-        )
+        if indoor_humidity_sensor:
+            self._attr_device_info = async_device_info_to_link_from_entity(
+                hass,
+                indoor_humidity_sensor,
+            )
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # Abort early if there is no source entity_id's or calibration factor
+        if (
+            not self._outdoor_temp_sensor
+            or not self._indoor_temp_sensor
+            or not self._indoor_humidity_sensor
+            or not self._calib_factor
+        ):
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        self._async_setup_sensor()
+        return self._call_on_remove_callbacks
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+        """Run when entity about to be added to hass."""
+        self._async_setup_sensor()
+
+    @callback
+    def _async_setup_sensor(self) -> None:
+        """Set up the sensor and start tracking state changes."""
 
         @callback
         def mold_indicator_sensors_state_listener(
@@ -186,10 +223,17 @@ class MoldIndicator(SensorEntity):
             )
 
             if self._update_sensor(entity, old_state, new_state):
-                self.async_schedule_update_ha_state(True)
+                if self._preview_callback:
+                    calculated_state = self._async_calculate_state()
+                    self._preview_callback(
+                        calculated_state.state, calculated_state.attributes
+                    )
+                # only write state to the state machine if we are not in preview mode
+                else:
+                    self.async_schedule_update_ha_state(True)
 
         @callback
-        def mold_indicator_startup(event: Event) -> None:
+        def mold_indicator_startup() -> None:
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
@@ -222,12 +266,22 @@ class MoldIndicator(SensorEntity):
                 else schedule_update
             )
 
-            if schedule_update:
+            if schedule_update and not self._preview_callback:
                 self.async_schedule_update_ha_state(True)
+            if self._preview_callback:
+                # re-calculate dewpoint and mold indicator
+                self._calc_dewpoint()
+                self._calc_moldindicator()
+                if self._state is None:
+                    self._attr_available = False
+                else:
+                    self._attr_available = True
+                calculated_state = self._async_calculate_state()
+                self._preview_callback(
+                    calculated_state.state, calculated_state.attributes
+                )
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, mold_indicator_startup
-        )
+        mold_indicator_startup()
 
     def _update_sensor(
         self, entity: str, old_state: State | None, new_state: State | None
