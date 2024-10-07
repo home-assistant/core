@@ -444,14 +444,14 @@ def supervisor_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def check_config_translations(hass: HomeAssistant) -> Generator[None]:
+def check_config_translations() -> Generator[None]:
     """Ensure config_flow translations are available."""
-    _original_call = hass.config_entries.flow._async_handle_step
+    _original = FlowManager._async_handle_step
 
     async def _async_handle_step(
         self: FlowManager, flow: FlowHandler, *args
     ) -> ConfigFlowResult:
-        result = await _original_call(flow, *args)
+        result = await _original(self, flow, *args)
         if result["type"] is FlowResultType.ABORT and (reason := result.get("reason")):
             translations = await async_get_translations(
                 self.hass, "en", "config", [flow.handler]
