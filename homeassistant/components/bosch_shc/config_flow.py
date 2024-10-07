@@ -49,21 +49,26 @@ def write_tls_asset(hass: HomeAssistant, filename: str, asset: bytes) -> None:
 def create_credentials_and_validate(
     hass: HomeAssistant,
     host: str,
+    unique_id: str,
     user_input: dict[str, Any],
     zeroconf_instance: zeroconf.HaZeroconf,
 ) -> dict[str, Any] | None:
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register(host, "HomeAssistant")
+    # Save key/certificate pair for each registered host separately
+    # otherwise only the last registered host is accessible.
+    conf_shc_cert = f"{unique_id}/{CONF_SHC_CERT}"
+    conf_shc_key = f"{unique_id}/{CONF_SHC_KEY}"
 
     if result is not None:
-        write_tls_asset(hass, CONF_SHC_CERT, result["cert"])
-        write_tls_asset(hass, CONF_SHC_KEY, result["key"])
+        write_tls_asset(hass, conf_shc_cert, result["cert"])
+        write_tls_asset(hass, conf_shc_key, result["key"])
 
         session = SHCSession(
             host,
-            hass.config.path(DOMAIN, CONF_SHC_CERT),
-            hass.config.path(DOMAIN, CONF_SHC_KEY),
+            hass.config.path(DOMAIN, conf_shc_cert),
+            hass.config.path(DOMAIN, conf_shc_key),
             True,
             zeroconf_instance,
         )
@@ -143,11 +148,15 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+            # unique_id uniquely identifies the registered controller and is used
+            # to save the key/certificate pair for each controller separately
+            unique_id = self.info.get("unique_id") or ""
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
                     self.hass,
                     self.host,
+                    unique_id,
                     user_input,
                     zeroconf_instance,
                 )
@@ -167,13 +176,18 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 assert result
                 entry_data = {
-                    CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
-                    CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                    # Each host has its own key/certificate pair
+                    CONF_SSL_CERTIFICATE: self.hass.config.path(
+                        DOMAIN, unique_id, CONF_SHC_CERT
+                    ),
+                    CONF_SSL_KEY: self.hass.config.path(
+                        DOMAIN, unique_id, CONF_SHC_KEY
+                    ),
                     CONF_HOST: self.host,
                     CONF_TOKEN: result["token"],
                     CONF_HOSTNAME: result["token"].split(":", 1)[1],
                 }
-                existing_entry = await self.async_set_unique_id(self.info["unique_id"])
+                existing_entry = await self.async_set_unique_id(unique_id)
                 if existing_entry:
                     return self.async_update_reload_and_abort(
                         existing_entry,
