@@ -39,7 +39,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "@trwnh@mastodon.social"
     assert result["data"] == {
-        CONF_BASE_URL: "https://mastodon.social/",
+        CONF_BASE_URL: "https://mastodon.social",
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
         CONF_ACCESS_TOKEN: "access_token",

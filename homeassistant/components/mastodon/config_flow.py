@@ -45,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 def base_url_from_url(url: str) -> str:
     """Return the base url from a url."""
-    return urljoin(url, "/")
+    return urljoin(url, "/").rstrip("/")
 
 
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
