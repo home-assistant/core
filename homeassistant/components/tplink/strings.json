@@ -95,6 +95,13 @@
           "off": "[%key:component::binary_sensor::entity_component::moisture::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::moisture::state::on%]"
         }
+      },
+      "motion_detected": {
+        "name": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       }
     },
     "button": {
