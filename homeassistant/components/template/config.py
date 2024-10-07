@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
-    is_blueprint_instance_config,
     BLUEPRINT_INSTANCE_FIELDS,
+    is_blueprint_instance_config,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -22,21 +22,23 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_VARIABLES,
+    CONF_ACTIONS,
     CONF_BINARY_SENSORS,
     CONF_CONDITIONS,
+    CONF_NAME,
     CONF_SENSORS,
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
-    CONF_ACTIONS,
+    CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import backward_compatibility_schema
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
+
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
@@ -49,14 +51,8 @@ from . import (
     switch as switch_platform,
     weather as weather_platform,
 )
-
-from .const import (
-    DOMAIN,
-    PLATFORMS,
-    TemplateConfig,
-)
+from .const import DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints
-from homeassistant.helpers.automation import backward_compatibility_schema
 
 PACKAGE_MERGE_HINT = "list"
 
