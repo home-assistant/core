@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from functools import cached_property
 import logging
 
+from propcache import cached_property
 from roborock import HomeDataRoom
 from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo

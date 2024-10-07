@@ -544,6 +544,8 @@ build.json @home-assistant/supervisor
 /tests/components/github/ @timmo001 @ludeeus
 /homeassistant/components/glances/ @engrbm87
 /tests/components/glances/ @engrbm87
+/homeassistant/components/go2rtc/ @home-assistant/core
+/tests/components/go2rtc/ @home-assistant/core
 /homeassistant/components/goalzero/ @tkdrob
 /tests/components/goalzero/ @tkdrob
 /homeassistant/components/gogogate2/ @vangorra
@@ -1382,15 +1384,13 @@ build.json @home-assistant/supervisor
 /tests/components/spaceapi/ @fabaff
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
-/homeassistant/components/spider/ @peternijssen
-/tests/components/spider/ @peternijssen
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck @joostlek
 /tests/components/spotify/ @frenck @joostlek
 /homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
 /tests/components/sql/ @gjohansson-ST @dougiteixeira
-/homeassistant/components/squeezebox/ @rajlaud
-/tests/components/squeezebox/ @rajlaud
+/homeassistant/components/squeezebox/ @rajlaud @pssc @peteS-UK
+/tests/components/squeezebox/ @rajlaud @pssc @peteS-UK
 /homeassistant/components/srp_energy/ @briglx
 /tests/components/srp_energy/ @briglx
 /homeassistant/components/starline/ @anonym-tsk

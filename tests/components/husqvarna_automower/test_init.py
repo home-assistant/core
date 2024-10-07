@@ -221,7 +221,7 @@ async def test_coordinator_automatic_registry_cleanup(
 
     assert (
         len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-        == current_entites - 33
+        == current_entites - 37
     )
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))

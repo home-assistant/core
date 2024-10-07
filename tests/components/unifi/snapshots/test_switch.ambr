@@ -1970,12 +1970,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'block_client',
     'unique_id': 'block-00:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -1985,7 +1985,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Block Client 1',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.block_client_1',
@@ -2018,12 +2017,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:network',
+    'original_icon': None,
     'original_name': 'Block Media Streaming',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'dpi_restriction',
     'unique_id': '5f976f4ae3c58f018ec7dff6',
     'unit_of_measurement': None,
   })
@@ -2032,7 +2031,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Block Media Streaming',
-      'icon': 'mdi:network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.block_media_streaming',
@@ -2159,12 +2157,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 1 PoE',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_port_control',
     'unique_id': 'poe-10:00:00:00:01:01_1',
     'unit_of_measurement': None,
   })
@@ -2174,7 +2172,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
       'friendly_name': 'mock-name Port 1 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_name_port_1_poe',
@@ -2207,12 +2204,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 2 PoE',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_port_control',
     'unique_id': 'poe-10:00:00:00:01:01_2',
     'unit_of_measurement': None,
   })
@@ -2222,7 +2219,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
       'friendly_name': 'mock-name Port 2 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_name_port_2_poe',
@@ -2255,12 +2251,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': 'mdi:ethernet',
+    'original_icon': None,
     'original_name': 'Port 4 PoE',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'poe_port_control',
     'unique_id': 'poe-10:00:00:00:01:01_4',
     'unit_of_measurement': None,
   })
@@ -2270,7 +2266,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
       'friendly_name': 'mock-name Port 4 PoE',
-      'icon': 'mdi:ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_name_port_4_poe',
@@ -2350,12 +2345,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:wifi-check',
+    'original_icon': None,
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wlan_control',
     'unique_id': 'wlan-012345678910111213141516',
     'unit_of_measurement': None,
   })
@@ -2365,7 +2360,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'SSID 1',
-      'icon': 'mdi:wifi-check',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ssid_1',
@@ -2398,12 +2392,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:upload-network',
+    'original_icon': None,
     'original_name': 'plex',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'port_forward_control',
     'unique_id': 'port_forward-5a32aa4ee4b0412345678911',
     'unit_of_measurement': None,
   })
@@ -2413,7 +2407,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'UniFi Network plex',
-      'icon': 'mdi:upload-network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.unifi_network_plex',
@@ -2446,12 +2439,12 @@
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:security-network',
+    'original_icon': None,
     'original_name': 'Test Traffic Rule',
     'platform': 'unifi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'traffic_rule_control',
     'unique_id': 'traffic_rule-6452cd9b859d5b11aa002ea1',
     'unit_of_measurement': None,
   })
@@ -2461,7 +2454,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'UniFi Network Test Traffic Rule',
-      'icon': 'mdi:security-network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.unifi_network_test_traffic_rule',

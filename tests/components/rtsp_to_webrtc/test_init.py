@@ -10,7 +10,7 @@ import aiohttp
 import pytest
 import rtsp_to_webrtc
 
-from homeassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
+from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -162,69 +161,3 @@ async def test_offer_failure(
     assert response["error"].get("code") == "web_rtc_offer_failed"
     assert "message" in response["error"]
     assert "RTSPtoWebRTC server communication failure" in response["error"]["message"]
-
-
-async def test_no_stun_server(
-    hass: HomeAssistant,
-    rtsp_to_webrtc_client: Any,
-    setup_integration: ComponentSetup,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test successful setup and unload."""
-    await setup_integration()
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "rtsp_to_webrtc/get_settings",
-        }
-    )
-    response = await client.receive_json()
-    assert response.get("id") == 2
-    assert response.get("type") == TYPE_RESULT
-    assert "result" in response
-    assert response["result"].get("stun_server") == ""
-
-
-@pytest.mark.parametrize(
-    "config_entry_options", [{CONF_STUN_SERVER: "example.com:1234"}]
-)
-async def test_stun_server(
-    hass: HomeAssistant,
-    rtsp_to_webrtc_client: Any,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test successful setup and unload."""
-    await setup_integration()
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 3,
-            "type": "rtsp_to_webrtc/get_settings",
-        }
-    )
-    response = await client.receive_json()
-    assert response.get("id") == 3
-    assert response.get("type") == TYPE_RESULT
-    assert "result" in response
-    assert response["result"].get("stun_server") == "example.com:1234"
-
-    # Simulate an options flow change, clearing the stun server and verify the change is reflected
-    hass.config_entries.async_update_entry(config_entry, options={})
-    await hass.async_block_till_done()
-
-    await client.send_json(
-        {
-            "id": 4,
-            "type": "rtsp_to_webrtc/get_settings",
-        }
-    )
-    response = await client.receive_json()
-    assert response.get("id") == 4
-    assert response.get("type") == TYPE_RESULT
-    assert "result" in response
-    assert response["result"].get("stun_server") == ""

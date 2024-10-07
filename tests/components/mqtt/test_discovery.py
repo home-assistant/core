@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import json
+import logging
 from pathlib import Path
 import re
 from typing import Any
@@ -51,10 +52,12 @@ from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
 
 from tests.common import (
     MockConfigEntry,
+    MockModule,
     async_capture_events,
     async_fire_mqtt_message,
     async_get_device_automations,
     mock_config_flow,
+    mock_integration,
     mock_platform,
 )
 from tests.typing import (
@@ -2178,17 +2181,22 @@ async def test_complex_discovery_topic_prefix(
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
-async def test_mqtt_integration_discovery_subscribe_unsubscribe(
-    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
+@pytest.mark.parametrize(
+    "reason", ["single_instance_allowed", "already_configured", "some_abort_error"]
+)
+async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient, reason: str
 ) -> None:
-    """Check MQTT integration discovery subscribe and unsubscribe."""
+    """Check MQTT integration discovery starts a flow once."""
+    flow_calls: list[MqttServiceInfo] = []
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
             """Test mqtt step."""
-            return self.async_abort(reason="already_configured")
+            flow_calls.append(discovery_info)
+            return self.async_abort(reason=reason)
 
     mock_platform(hass, "comp.config_flow", None)
 
@@ -2199,13 +2207,6 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         """Handle birth message."""
         birth.set()
 
-    wait_unsub = asyncio.Event()
-
-    @callback
-    def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
-        wait_unsub.set()
-        return (0, 0)
-
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
     entry.add_to_hass(hass)
     with (
@@ -2214,7 +2215,6 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             return_value={"comp": ["comp/discovery/#"]},
         ),
         mock_config_flow("comp", TestFlow),
-        patch.object(mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
@@ -2224,22 +2224,38 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
         assert not mqtt_client_mock.unsubscribe.called
         mqtt_client_mock.reset_mock()
+        assert len(flow_calls) == 0
 
         await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await wait_unsub.wait()
-        mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(flow_calls) == 1
+
+        # A redundant message gets does not start a new flow
+        await hass.async_block_till_done(wait_background_tasks=True)
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "initial message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(flow_calls) == 1
+
+        # An updated message gets starts a new flow
+        await hass.async_block_till_done(wait_background_tasks=True)
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "update message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(flow_calls) == 2
 
 
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
-async def test_mqtt_discovery_unsubscribe_once(
-    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
+async def test_mqtt_discovery_flow_starts_once(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Check MQTT integration discovery unsubscribe once."""
+    """Check MQTT integration discovery starts a flow once."""
+
+    flow_calls: list[MqttServiceInfo] = []
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -2247,8 +2263,12 @@ async def test_mqtt_discovery_unsubscribe_once(
         async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
             """Test mqtt step."""
             await asyncio.sleep(0)
-            return self.async_abort(reason="already_configured")
+            flow_calls.append(discovery_info)
+            return self.async_create_entry(title="Test", data={})
 
+    mock_integration(
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_platform(hass, "comp.config_flow", None)
 
     birth = asyncio.Event()
@@ -2257,13 +2277,6 @@ async def test_mqtt_discovery_unsubscribe_once(
     def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
-
-    wait_unsub = asyncio.Event()
-
-    @callback
-    def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
-        wait_unsub.set()
-        return (0, 0)
 
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
     entry.add_to_hass(hass)
@@ -2274,7 +2287,6 @@ async def test_mqtt_discovery_unsubscribe_once(
             return_value={"comp": ["comp/discovery/#"]},
         ),
         mock_config_flow("comp", TestFlow),
-        patch.object(mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
@@ -2282,16 +2294,44 @@ async def test_mqtt_discovery_unsubscribe_once(
         await birth.wait()
 
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
-        assert not mqtt_client_mock.unsubscribe.called
 
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await wait_unsub.wait()
-        await asyncio.sleep(0)
+        assert len(flow_calls) == 1
+        assert flow_calls[0].topic == "comp/discovery/bla/config1"
+        assert flow_calls[0].payload == "initial message"
+
+        with caplog.at_level(logging.DEBUG):
+            async_fire_mqtt_message(
+                hass, "comp/discovery/bla/config1", "initial message"
+            )
+            await hass.async_block_till_done(wait_background_tasks=True)
+            assert "Ignoring already processed discovery message" in caplog.text
+            assert len(flow_calls) == 1
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
-        mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
+
+        assert len(flow_calls) == 2
+        assert flow_calls[1].topic == "comp/discovery/bla/config2"
+        assert flow_calls[1].payload == "initial message"
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "update message")
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(flow_calls) == 3
+        assert flow_calls[2].topic == "comp/discovery/bla/config2"
+        assert flow_calls[2].payload == "update message"
+
+        # An empty message triggers a flow to allow cleanup
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "")
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(flow_calls) == 4
+        assert flow_calls[3].topic == "comp/discovery/bla/config2"
+        assert flow_calls[3].payload == ""
+
+        assert not mqtt_client_mock.unsubscribe.called
 
 
 async def test_clear_config_topic_disabled_entity(

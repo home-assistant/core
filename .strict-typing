@@ -369,6 +369,7 @@ homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
+homeassistant.components.radio_browser.*
 homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
 homeassistant.components.raspberry_pi.*
@@ -502,6 +503,7 @@ homeassistant.components.whois.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
+homeassistant.components.workday.*
 homeassistant.components.worldclock.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
