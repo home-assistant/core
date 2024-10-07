@@ -369,6 +369,7 @@ homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
+homeassistant.components.radio_browser.*
 homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
 homeassistant.components.raspberry_pi.*
