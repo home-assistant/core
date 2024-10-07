@@ -459,9 +459,7 @@ def check_config_translations(hass: HomeAssistant) -> Generator[None]:
                 self.hass, "en", "config", [flow.handler]
             )
             if f"component.{flow.handler}.config.abort.{reason}" not in translations:
-                raise ValueError(
-                    f"Abort reason `{reason}` not found in `strings.json`"
-                )
+                raise ValueError(f"Abort reason `{reason}` not found in `strings.json`")
         return result
 
     with patch(
