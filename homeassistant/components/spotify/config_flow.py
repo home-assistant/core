@@ -39,6 +39,7 @@ class SpotifyFlowHandler(
         try:
             current_user = await self.hass.async_add_executor_job(spotify.current_user)
         except Exception:  # noqa: BLE001
+            self.logger.exception("Failed to fetch user info")
             return self.async_abort(reason="connection_error")
 
         name = data["id"] = current_user["id"]
@@ -51,7 +52,7 @@ class SpotifyFlowHandler(
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
-            if reauth_entry.data["id"] != current_user["id"]:
+            if reauth_entry.unique_id != current_user["id"]:
                 return self.async_abort(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
                 reauth_entry, title=name, data=data
@@ -72,7 +73,7 @@ class SpotifyFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.data["id"]},
+                description_placeholders={"account": reauth_entry.title},
                 errors={},
             )
 
