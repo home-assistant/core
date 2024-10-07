@@ -7,6 +7,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.spotify import DOMAIN
 from homeassistant.components.spotify.browse_media import async_browse_media
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -21,9 +22,27 @@ async def test_browse_media_root(
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    expires_at: int,
 ) -> None:
     """Test browsing the root."""
     await setup_integration(hass, mock_config_entry)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Spotify",
+        unique_id="fake_id",
+        data={
+            CONF_ID: "fake_id",
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": SCOPES,
+            },
+        },
+        entry_id="32oesphrnacjcf7vw5bf6odx3",
+    )
+    await setup_integration(hass, config_entry)
     response = await async_browse_media(hass, None, None)
     assert response.as_dict() == snapshot
 
