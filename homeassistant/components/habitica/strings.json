@@ -48,40 +48,40 @@
         "name": "Revive from death"
       },
       "mpheal": {
-        "name": "Cast ethereal surge"
+        "name": "Ethereal surge"
       },
       "earth": {
-        "name": "Cast earthquake"
+        "name": "Earthquake"
       },
       "frost": {
-        "name": "Cast chilling frost"
+        "name": "Chilling frost"
       },
       "defensive_stance": {
-        "name": "Cast defensive stance"
+        "name": "Defensive stance"
       },
       "valorous_presence": {
-        "name": "Cast valorous presence"
+        "name": "Valorous presence"
       },
       "intimidate": {
-        "name": "Cast intimidating gaze"
+        "name": "Intimidating gaze"
       },
       "tools_of_trade": {
-        "name": "Cast tools of the trade"
+        "name": "Tools of the trade"
       },
       "stealth": {
-        "name": "Cast stealth"
+        "name": "Stealth"
       },
       "heal": {
-        "name": "Cast healing light"
+        "name": "Healing light"
       },
       "brightness": {
-        "name": "Cast searing brightness"
+        "name": "Searing brightness"
       },
       "protect_aura": {
-        "name": "Cast protective aura"
+        "name": "Protective aura"
       },
       "heal_all": {
-        "name": "Cast blessing"
+        "name": "Blessing"
       }
     },
     "sensor": {
