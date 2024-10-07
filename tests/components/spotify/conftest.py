@@ -31,7 +31,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="spotify_1",
-        unique_id="fake_id",
+        unique_id="1112264111",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -40,7 +40,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "scope": SCOPES,
             },
-            "id": "fake_id",
+            "id": "1112264111",
             "name": "spotify_account_1",
         },
         entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
