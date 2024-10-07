@@ -452,7 +452,7 @@ def check_config_translations(hass: HomeAssistant) -> Generator[None]:
         self: FlowManager, flow: FlowHandler, *args
     ) -> ConfigFlowResult:
         result = await _original_call(flow, *args)
-        if result["type"] is FlowResultType.ABORT:
+        if result["type"] is FlowResultType.ABORT and (reason := result.get("reason")):
             translations = await async_get_translations(
                 self.hass, "en", "config", [flow.handler]
             )
