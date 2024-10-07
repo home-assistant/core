@@ -256,8 +256,38 @@ class TuyaEntity(Entity):
             order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return DPType(getattr(self.device, key)[dpcode].type)
+                try:
+                    return DPType(getattr(self.device, key)[dpcode].type)
+                except ValueError:
+                    fixed_type = TuyaEntity.determine_dptype(
+                        getattr(self.device, key)[dpcode].type
+                    )
+                    LOGGER.warning(
+                        f'Device {self.device.name} (id: {self.device.id}) has returned a bad model dpId type for code {dpcode} : "{getattr(self.device, key)[dpcode].type}", it should have been "{fixed_type}". Please contact the Tuya Support about this'
+                    )
+                    return fixed_type
 
+        return None
+
+    @staticmethod
+    def determine_dptype(type) -> DPType | None:
+        """Determine the DPType.
+
+        Sometimes, we get ill formed DPTypes from the cloud,
+        this fixes them and maps them to the correct DPType
+        """
+        if type == "value":
+            return DPType(DPType.INTEGER)
+        if type in ("bitmap", "raw"):
+            return DPType(DPType.RAW)
+        if type == "enum":
+            return DPType(DPType.ENUM)
+        if type == "bool":
+            return DPType(DPType.BOOLEAN)
+        if type == "json":
+            return DPType(DPType.JSON)
+        if type == "string":
+            return DPType(DPType.STRING)
         return None
 
     async def async_added_to_hass(self) -> None:
