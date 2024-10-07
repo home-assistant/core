@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
     FlowResult,
+    OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -447,6 +448,15 @@ def supervisor_client() -> Generator[AsyncMock]:
         yield supervisor_client
 
 
+async def _ensure_translation_exists(
+    hass: HomeAssistant, category: str, component: str, key: str
+) -> None:
+    """Raise if translation doesn't exist."""
+    translations = await async_get_translations(hass, "en", category, [component])
+    if f"component.{component}.{category}.{key}" not in translations:
+        raise ValueError(f"Translation not found for {component}: `{category}.{key}`")
+
+
 @pytest.fixture(autouse=True)
 def check_config_translations() -> Generator[None]:
     """Ensure config_flow translations are available."""
@@ -456,19 +466,35 @@ def check_config_translations() -> Generator[None]:
         self: FlowManager, flow: FlowHandler, *args
     ) -> FlowResult:
         result = await _original(self, flow, *args)
+        if isinstance(self, ConfigEntriesFlowManager):
+            category = "config"
+            component = flow.handler
+        elif isinstance(self, OptionsFlowManager):
+            category = "options"
+            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
+        else:
+            return result
+
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        self.hass,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
         if (
             result["type"] is FlowResultType.ABORT
-            and isinstance(self, ConfigEntriesFlowManager)
             and flow.source not in DISCOVERY_SOURCES
         ):
-            reason = result.get("reason")
-            translations = await async_get_translations(
-                self.hass, "en", "config", [flow.handler]
+            await _ensure_translation_exists(
+                self.hass,
+                category,
+                component,
+                f"abort.{result["reason"]}",
             )
-            if f"component.{flow.handler}.config.abort.{reason}" not in translations:
-                raise ValueError(
-                    f"Translation not found for {flow.source} abort reason `{reason}`"
-                )
+
         return result
 
     with patch(
