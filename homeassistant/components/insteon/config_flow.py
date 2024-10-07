@@ -44,15 +44,15 @@ async def _async_connect(**kwargs):
         _LOGGER.error("Could not connect to Insteon modem")
         return False
 
-    _LOGGER.info("Connected to Insteon modem")
+    _LOGGER.debug("Connected to Insteon modem")
     return True
 
 
 class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
-    _device_path: str | None = None
-    _device_name: str | None = None
+    _device_path: str
+    _device_name: str
     discovered_conf: dict[str, str] = {}
 
     async def async_step_user(

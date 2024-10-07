@@ -1,10 +1,10 @@
 """Config flow for Wolf SmartSet Service integration."""
 
 import logging
-from typing import Any
 
 from httpcore import ConnectError
 import voluptuous as vol
+from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import WolfClient
 
@@ -26,14 +26,15 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    fetched_systems: list[Device]
+
     def __init__(self) -> None:
         """Initialize with empty username and password."""
-        self.username = None
-        self.password = None
-        self.fetched_systems = None
+        self.username: str | None = None
+        self.password: str | None = None
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step to get connection parameters."""
         errors = {}
@@ -58,9 +59,11 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_device(self, user_input=None):
+    async def async_step_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Allow user to select device from devices connected to specified account."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             device_name = user_input[DEVICE_NAME]
             system = [

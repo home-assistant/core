@@ -673,7 +673,7 @@ class Thermostat(ClimateEntity):
             holdHours=self.hold_hours(),
         )
 
-        _LOGGER.info("Setting fan mode to: %s", fan_mode)
+        _LOGGER.debug("Setting fan mode to: %s", fan_mode)
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.

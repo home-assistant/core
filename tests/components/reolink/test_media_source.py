@@ -10,10 +10,10 @@ from reolink_aio.exceptions import ReolinkError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
@@ -32,6 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     TEST_HOST2,
+    TEST_HOST_MODEL,
     TEST_MAC2,
     TEST_NVR_NAME,
     TEST_NVR_NAME2,
@@ -225,6 +226,8 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
 
+    reolink_connect.model = TEST_HOST_MODEL
+
 
 async def test_browsing_unsupported_encoding(
     hass: HomeAssistant,
@@ -345,3 +348,5 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+    reolink_connect.get_host_data.side_effect = None

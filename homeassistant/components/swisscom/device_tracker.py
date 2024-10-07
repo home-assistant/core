@@ -70,7 +70,7 @@ class SwisscomDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Loading data from Swisscom Internet Box")
+        _LOGGER.debug("Loading data from Swisscom Internet Box")
         if not (data := self.get_swisscom_data()):
             return False
 
@@ -95,11 +95,11 @@ class SwisscomDeviceScanner(DeviceScanner):
             requests.exceptions.Timeout,
             requests.exceptions.ConnectTimeout,
         ):
-            _LOGGER.info("No response from Swisscom Internet Box")
+            _LOGGER.debug("No response from Swisscom Internet Box")
             return devices
 
         if "status" not in request.json():
-            _LOGGER.info("No status in response from Swisscom Internet Box")
+            _LOGGER.debug("No status in response from Swisscom Internet Box")
             return devices
 
         for device in request.json()["status"]:

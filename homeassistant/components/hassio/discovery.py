@@ -12,7 +12,7 @@ from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
+from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
@@ -99,20 +99,21 @@ class HassIODiscovery(HomeAssistantView):
 
         # Read additional Add-on info
         try:
-            addon_info = await self.hassio.get_addon_info(slug)
+            addon_info = await self.hassio.client.addons.addon_info(slug)
         except HassioAPIError as err:
             _LOGGER.error("Can't read add-on info: %s", err)
             return
 
-        name: str = addon_info[ATTR_NAME]
-        config_data[ATTR_ADDON] = name
+        config_data[ATTR_ADDON] = addon_info.name
 
         # Use config flow
         discovery_flow.async_create_flow(
             self.hass,
             service,
             context={"source": config_entries.SOURCE_HASSIO},
-            data=HassioServiceInfo(config=config_data, name=name, slug=slug, uuid=uuid),
+            data=HassioServiceInfo(
+                config=config_data, name=addon_info.name, slug=slug, uuid=uuid
+            ),
         )
 
     async def async_process_del(self, data: dict[str, Any]) -> None:

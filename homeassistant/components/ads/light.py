@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
 from .entity import AdsEntity
+from .hub import AdsHub
 
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
 STATE_KEY_BRIGHTNESS = "brightness"
@@ -54,7 +55,13 @@ def setup_platform(
 class AdsLight(AdsEntity, LightEntity):
     """Representation of ADS light."""
 
-    def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
+    def __init__(
+        self,
+        ads_hub: AdsHub,
+        ads_var_enable: str,
+        ads_var_brightness: str | None,
+        name: str,
+    ) -> None:
         """Initialize AdsLight entity."""
         super().__init__(ads_hub, name, ads_var_enable)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None

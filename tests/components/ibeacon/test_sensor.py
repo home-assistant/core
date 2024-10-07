@@ -4,9 +4,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.bluetooth.const import (  # pylint: disable=hass-component-root-import
-    UNAVAILABLE_TRACK_SECONDS,
-)
+from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.ibeacon.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
