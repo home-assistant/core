@@ -1338,7 +1338,7 @@ async def test_ignore_flow(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     flow_context: dict,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
 ) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
