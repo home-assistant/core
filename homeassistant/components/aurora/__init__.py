@@ -31,6 +31,8 @@ async def update_listener(hass: HomeAssistant, entry: AuroraConfigEntry) -> None
     entry.runtime_data.threshold = int(
         entry.options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
     )
+    # refresh the state of the visibility alert binary sensor
+    await entry.runtime_data.async_request_refresh()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AuroraConfigEntry) -> bool:
