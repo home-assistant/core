@@ -61,6 +61,25 @@
         }
       }
     },
+    "search": {
+      "name": "Search music library & players",
+      "description": "Search for items in the music library & players.\n.",
+      "fields": {
+        "command": {
+          "name": "Items",
+          "description": "The items to search for on LMS"
+        },
+        "return_items": {
+          "name": "Number of Items",
+          "description": "The number of items to return.\n."
+        }
+      },
+        "search_string": {
+          "name": "Search String",
+          "description": "Limit the search to items matching the search string.\n."
+        }
+  
+    },
     "sync": {
       "name": "Sync",
       "description": "Adds another player to this player's sync group. If the other player is already in a sync group, it will leave it.\n.",
@@ -111,24 +130,5 @@
         "name": "Player count off service"
       }
     }
-  },
-  "search": {
-    "name": "Search music library & players",
-    "description": "Search for items in the music library & players.\n.",
-    "fields": {
-      "command": {
-        "name": "Items",
-        "description": "The items to search for on LMS"
-      },
-      "return_items": {
-        "name": "Number of Items",
-        "description": "The number of items to return.\n."
-      }
-    },
-      "search_string": {
-        "name": "Search String",
-        "description": "Limit the search to items matching the search string.\n."
-      }
-
   }
 }
