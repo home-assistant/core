@@ -124,7 +124,7 @@ SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In({"positive", "negative"})]
         ),
         vol.Optional(ATTR_FREQUENCY): vol.All(
-            cv.string, vol.In({"daily", "weekly", "monthly"})
+            cv.string, vol.In({"daily", "weekly", "monthly", "yearly"})
         ),
         vol.Optional(ATTR_COUNTER_UP): int,
         vol.Optional(ATTR_COUNTER_DOWN): int,
