@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from aiohasupervisor.models import StoreInfo
 import pytest
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntriesFlowManager, FlowResult
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
@@ -450,14 +450,21 @@ def check_config_translations() -> Generator[None]:
 
     async def _async_handle_step(
         self: FlowManager, flow: FlowHandler, *args
-    ) -> ConfigFlowResult:
+    ) -> FlowResult:
         result = await _original(self, flow, *args)
-        if result["type"] is FlowResultType.ABORT and (reason := result.get("reason")):
+        if (
+            result["type"] is FlowResultType.ABORT
+            and isinstance(self, ConfigEntriesFlowManager)
+            and flow.source not in {"bluetooth", "hardware", "usb", "zeroconf"}
+        ):
+            reason = result.get("reason")
             translations = await async_get_translations(
                 self.hass, "en", "config", [flow.handler]
             )
             if f"component.{flow.handler}.config.abort.{reason}" not in translations:
-                raise ValueError(f"Abort reason `{reason}` not found in `strings.json`")
+                raise ValueError(
+                    f"Translation not found for {flow.source} abort reason `{reason}`"
+                )
         return result
 
     with patch(
