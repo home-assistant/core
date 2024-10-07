@@ -35,7 +35,7 @@
       "service": "mdi:sync-off"
     },
     "search": {
-      "service":"mdi:folder-search-outline"
+      "service": "mdi:folder-search-outline"
     }
   }
 }

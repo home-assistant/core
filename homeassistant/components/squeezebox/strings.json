@@ -72,7 +72,7 @@
         "return_items": {
           "name": "Number of Items",
           "description": "The number of items to return.\n."
-        },         
+        },
         "search_string": {
           "name": "Search String",
           "description": "Limit the search to items matching the search string.\n."
