@@ -46,3 +46,49 @@ unsync:
     entity:
       integration: squeezebox
       domain: media_player
+search:
+  name: Search music library & players
+  description: Search for items in the music library & players
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      name: Items
+      description: "The items to search for on LMS"
+      required: true
+      selector:
+        select:
+          multiple: false
+          options:
+            - label: Albums
+              value: albums
+            - label: Artists
+              value: artists
+            - label: Tracks
+              value: tracks
+            - label: Playlists
+              value: playlists
+            - label: Genres
+              value: genres
+            - label: Favorites
+              value: favorites
+            - label: Players
+              value: players
+    return_items:
+      name: Number of Items
+      description: "The number of items to return"
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 10000
+          mode: box
+    search_string:
+      name: Search String
+      description: "Limit the search to items matching the search string"
+      required: false
+      example: Revolver
+      selector:
+        text:
