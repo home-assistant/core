@@ -674,7 +674,7 @@ async def test_options_flow_valid_input(
         # Simulate user input in the options flow , Assuming the user selects the first mosque
         mosque_uuid_label = mocked_mosques_data[0][1]
 
-        result = await flow.async_step_init(
+        result = await flow.async_step_mosque_coordinates(
             user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
         # print(result)
@@ -715,11 +715,11 @@ async def test_options_flow_no_input_reopens_form(
         ),
     ):
         # Simulate the init step
-        result = await flow.async_step_init(user_input=None)
+        result = await flow.async_step_mosque_coordinates(user_input=None)
         assert (
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result.get("step_id") == "init"
+        assert result.get("step_id") == "mosque_coordinates"
 
 
 @pytest.mark.asyncio
@@ -749,12 +749,12 @@ async def test_options_flow_no_input_error_reopens_form(
         flow.hass = hass  # Assign HomeAssistant instance
 
         # Simulate the init step
-        result = await flow.async_step_init(user_input=None)
+        result = await flow.async_step_mosque_coordinates(user_input=None)
         # Same tests as test_options_flow_no_input_reopens_form :
         assert (
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result.get("step_id") == "init"
+        assert result.get("step_id") == "mosque_coordinates"
 
 
 # ----- KEEP OR RESET FORM ----- #

@@ -317,15 +317,18 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         self.store: Store | None = None
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
+    async def async_step_mosque_coordinates(
+        self, user_input=None
+    ) -> config_entries.ConfigFlowResult:
         """Manage options."""
 
         self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
+        lat = self.hass.config.latitude
+        longi = self.hass.config.longitude
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
+
         if user_input is not None:
-            lat = self.hass.config.latitude
-            longi = self.hass.config.longitude
-            mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
             title_entry, data_entry = await utils.async_save_mosque(
                 self.hass,
                 self.store,
@@ -340,11 +343,6 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
             # return self.config_entry
             return self.async_create_entry(title=None, data={})
-
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
-
-        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
@@ -372,4 +370,6 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             ): vol.In(name_servers)
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="mosque_coordinates", data_schema=vol.Schema(options)
+        )
