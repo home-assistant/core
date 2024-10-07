@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -28,7 +28,11 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed, store_info) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
     _install_test_addon_stats_mock(aioclient_mock)
