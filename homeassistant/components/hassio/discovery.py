@@ -64,10 +64,10 @@ def async_setup_discovery_view(hass: HomeAssistant, hassio: HassIO) -> None:
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        for discovery_key in entry.discovery_keys[DOMAIN]:
-            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+        for disc_key in entry.discovery_keys[DOMAIN]:
+            if disc_key.version != 1 or not isinstance(key := disc_key.key, str):
                 continue
-            uuid = discovery_key.key
+            uuid = key
             _LOGGER.debug("Rediscover addon %s", uuid)
             await hassio_discovery.async_rediscover(uuid)
 
@@ -134,11 +134,6 @@ class HassIODiscovery(HomeAssistantView):
         config_data[ATTR_ADDON] = addon_info.name
 
         # Use config flow
-        discovery_key = discovery_flow.DiscoveryKey(
-            domain=DOMAIN,
-            key=data[ATTR_UUID],
-            version=1,
-        )
         discovery_flow.async_create_flow(
             self.hass,
             service,
@@ -146,7 +141,11 @@ class HassIODiscovery(HomeAssistantView):
             data=HassioServiceInfo(
                 config=config_data, name=addon_info.name, slug=slug, uuid=uuid
             ),
-            discovery_key=discovery_key,
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain=DOMAIN,
+                key=data[ATTR_UUID],
+                version=1,
+            ),
         )
 
     async def async_process_del(self, data: dict[str, Any]) -> None:

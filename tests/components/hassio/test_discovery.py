@@ -269,7 +269,7 @@ async def test_hassio_rediscover(
     hassio_client: TestClient,
     addon_installed: AsyncMock,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
@@ -351,7 +351,7 @@ async def test_hassio_rediscover_no_match(
     hass: HomeAssistant,
     hassio_client: TestClient,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
     entry_unique_id: str,
 ) -> None:
