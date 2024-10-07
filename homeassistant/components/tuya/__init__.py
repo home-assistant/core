@@ -115,8 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> boo
         tuya = entry.runtime_data
         if tuya.manager.mq is not None:
             tuya.manager.mq.stop()
-        if tuya.listener in tuya.manager.device_listeners:
-            tuya.manager.remove_device_listener(tuya.listener)
+        tuya.manager.remove_device_listener(tuya.listener)
     return unload_ok
 
 
