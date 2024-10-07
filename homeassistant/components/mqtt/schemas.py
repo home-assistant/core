@@ -200,6 +200,6 @@ DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_QOS): valid_qos_schema,
         vol.Optional(CONF_ENCODING): cv.string,
-        vol.Optional(CONF_MIGRATE_DISCOVERY): True,
+        vol.Optional(CONF_MIGRATE_DISCOVERY): cv.boolean,
     }
 )

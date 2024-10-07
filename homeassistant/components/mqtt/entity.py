@@ -725,7 +725,9 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         if discovery_payload and (
             new_discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]
         ):
-            if discovery_payload.get(CONF_MIGRATE_DISCOVERY):
+            if discovery_payload.get(
+                CONF_MIGRATE_DISCOVERY, discovery_payload.device_discovery
+            ):
                 # Migrate the discovery topic
                 self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
                 self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
@@ -944,7 +946,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         elif self._discovery_update:
             new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
             if new_discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
-                if payload.get(CONF_MIGRATE_DISCOVERY):
+                if payload.get(CONF_MIGRATE_DISCOVERY, payload.device_discovery):
                     # Make sure the migrated discovery topic is removed.
                     self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
                     self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic

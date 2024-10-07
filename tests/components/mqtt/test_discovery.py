@@ -451,7 +451,7 @@ async def test_discovery_migration_to_device_base(
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Migrate to device based discovery
-    payload = json.dumps(device_config | {"migrate_discovery": True})
+    payload = json.dumps(device_config)
     async_fire_mqtt_message(
         hass,
         device_discovery_topic,
@@ -533,6 +533,7 @@ async def test_discovery_migration_to_single_base(
     await mqtt_mock_entry()
 
     # Start device based discovery
+    # any single component discovery will be migrated
     payload = json.dumps(device_config)
     async_fire_mqtt_message(
         hass,
@@ -545,6 +546,19 @@ async def test_discovery_migration_to_single_base(
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Migrate to single component discovery
+    # 1) Set the migrate_discovery flag in the device payload to False
+    #    to allow rollback
+    payload = json.dumps(device_config | {"migrate_discovery": False})
+    async_fire_mqtt_message(
+        hass,
+        device_discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # 2) Republish the component based payload with the `migrate_discovery' flag
+    #    in the device payload to False to rollback to the component based discovery
     for discovery_topic, config in single_configs:
         payload = json.dumps(config | {"migrate_discovery": True})
         async_fire_mqtt_message(
@@ -574,7 +588,7 @@ async def test_discovery_migration_to_single_base(
         await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Check we cannot accidentally migrate back and remove the items
-    payload = json.dumps(device_config)
+    payload = json.dumps(device_config | {"migrate_discovery": False})
     async_fire_mqtt_message(
         hass,
         device_discovery_topic,
