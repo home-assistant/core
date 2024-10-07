@@ -40,6 +40,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
+    _postfix_translation_key: str | None = "valve"
 
     async def send_device_command(
         self,

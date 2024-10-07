@@ -45,6 +45,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _postfix_translation_key: str | None = None
 
     def __init__(
         self,
@@ -83,6 +84,8 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
+            if self._postfix_translation_key:
+                self._name_translation_key = self._postfix_translation_key
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
@@ -145,8 +148,11 @@ class MatterEntity(Entity):
             # an explicit entity name was defined, we use that
             return self._attr_name
         name = super().name
-        if name and self._name_postfix:
-            name = f"{name} ({self._name_postfix})"
+        if self._name_postfix:
+            if name:
+                name = f"{name} ({self._name_postfix})"
+            else:
+                name = self._name_postfix
         return name
 
     @callback

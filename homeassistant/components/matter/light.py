@@ -89,6 +89,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
+    _postfix_translation_key = "light"
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -442,9 +443,7 @@ class MatterLight(MatterEntity, LightEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
-            key="MatterLight", translation_key="light"
-        ),
+        entity_description=LightEntityDescription(key="MatterLight"),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         optional_attributes=(
@@ -469,9 +468,7 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (HS Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
-            key="MatterHSColorLightFallback", translation_key="light"
-        ),
+        entity_description=LightEntityDescription(key="MatterHSColorLightFallback"),
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
@@ -489,9 +486,7 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (XY Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
-            key="MatterXYColorLightFallback", translation_key="light"
-        ),
+        entity_description=LightEntityDescription(key="MatterXYColorLightFallback"),
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,

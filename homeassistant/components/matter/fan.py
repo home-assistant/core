@@ -60,6 +60,7 @@ class MatterFan(MatterEntity, FanEntity):
     _last_known_percentage: int = 0
     _enable_turn_on_off_backwards_compatibility = False
     _feature_map: int | None = None
+    _postfix_translation_key: str | None = None
 
     async def async_turn_on(
         self,
