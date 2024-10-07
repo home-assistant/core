@@ -5192,7 +5192,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             "1234",
             {"vendor": "data"},
             {"vendor": "options"},
-            (1, 0),
+            (2, 1),
         ),
     ],
     ids=[
