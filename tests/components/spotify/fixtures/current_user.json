@@ -1,33 +1,4 @@
 {
-  "display_name": "Joost Lekkerkerker",
-  "external_urls": {
-    "spotify": "https://open.spotify.com/user/1112264649"
-  },
-  "href": "https://api.spotify.com/v1/users/1112264649",
-  "id": "1112264649",
-  "images": [
-    {
-      "url": "https://i.scdn.co/image/ab67757000003b8246569a64d252247acb1491bc",
-      "height": 64,
-      "width": 64
-    },
-    {
-      "url": "https://i.scdn.co/image/ab6775700000ee8546569a64d252247acb1491bc",
-      "height": 300,
-      "width": 300
-    }
-  ],
-  "type": "user",
-  "uri": "spotify:user:1112264649",
-  "followers": {
-    "href": null,
-    "total": 21
-  },
-  "country": "NL",
-  "product": "premium",
-  "explicit_content": {
-    "filter_enabled": false,
-    "filter_locked": false
-  },
-  "email": "joostlek@outlook.com"
+  "id": "fake_id",
+  "display_name": "frenck"
 }

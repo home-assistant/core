@@ -52,7 +52,7 @@ class SpotifyFlowHandler(
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
-            if reauth_entry.unique_id != current_user["id"]:
+            if reauth_entry.data["id"] != current_user["id"]:
                 return self.async_abort(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
                 reauth_entry, title=name, data=data
@@ -73,7 +73,7 @@ class SpotifyFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.title},
+                description_placeholders={"account": reauth_entry.data["id"]},
                 errors={},
             )
 

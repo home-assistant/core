@@ -29,6 +29,35 @@ BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
+    """Check flow aborts when no configuration is present."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+
+
+async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
+    """Check zeroconf flow aborts when an entry already exist."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("setup_credentials")
 async def test_full_flow(
@@ -86,7 +115,7 @@ async def test_full_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     result["data"]["token"].pop("expires_at")
-    assert result["data"]["name"] == "Joost Lekkerkerker"
+    assert result["data"]["name"] == "frenck"
     assert result["data"]["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -136,35 +165,6 @@ async def test_abort_if_spotify_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_error"
-
-
-async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
-    """Check flow aborts when no configuration is present."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_credentials"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_credentials"
-
-
-async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
-    """Check zeroconf flow aborts when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

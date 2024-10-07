@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -31,8 +32,9 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Spotify",
-        unique_id="1112264649",
+        unique_id="fake_id",
         data={
+            CONF_ID: "fake_id",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
@@ -41,7 +43,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "scope": SCOPES,
             },
         },
-        entry_id="01J9KH1ZDX64131YHYT4H6B69D",
+        entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
     )
 
 
