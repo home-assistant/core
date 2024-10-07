@@ -29,7 +29,7 @@ from .const import (
     COFFEE_EVENT_DRIP_TRAY_FULL,
     COFFEE_EVENT_WATER_TANK_EMPTY,
     DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
-    DISHWASHER_EVENT_SALT_NEALY_EMPTY,
+    DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
     DOMAIN,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
@@ -84,15 +84,13 @@ SENSORS: tuple[HomeConnectSensorEntityDescription, ...] = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key="Salt Nearly Empty",
-        translation_key="alarm_sensor_salt_nearly_empty",
-        state_key=DISHWASHER_EVENT_SALT_NEALY_EMPTY,
+        key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        desc="Salt Nearly Empty",
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
-        key="Rinse Aid Nearly Empty",
-        translation_key="alarm_sensor_rinse_aid_nearly_empty",
-        state_key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        desc="Rinse Aid Nearly Empty",
         appliance_types=("Dishwasher",),
     ),
 )
