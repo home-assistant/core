@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from functools import cached_property
 from typing import final
+
+from propcache import cached_property
 
 from homeassistant.components import zone
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +42,7 @@ from .const import (
     SourceType,
 )
 
-DOMAIN_DATA: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
 DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
 
 # mypy: disallow-any-generics
@@ -54,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN_DATA] = EntityComponent[BaseTrackerEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @callback

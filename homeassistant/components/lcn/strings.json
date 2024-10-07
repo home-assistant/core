@@ -34,7 +34,7 @@
           "acknowledge": "Retry sendig commands if no response is received (increases bus traffic)."
         }
       },
-      "reconfigure": {
+      "reconfigure_confirm": {
         "title": "Reconfigure LCN host",
         "description": "Reconfigure connection to LCN host.",
         "data": {

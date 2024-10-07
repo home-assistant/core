@@ -26,7 +26,7 @@ ATTR_CONVERSATION_ID = "conversation_id"
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
 
-DOMAIN_DATA: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
 DATA_DEFAULT_ENTITY: HassKey[DefaultAgent] = HassKey(f"{DOMAIN}_default_entity")
 
 

@@ -20,8 +20,9 @@ from .models import TeslaFleetVehicleData
 PARALLEL_UPDATES = 0
 
 
-async def do_nothing() -> None:
-    """Do nothing."""
+async def do_nothing() -> dict[str, dict[str, bool]]:
+    """Do nothing with a positive result."""
+    return {"response": {"result": True}}
 
 
 @dataclass(frozen=True, kw_only=True)

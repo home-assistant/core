@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -12,6 +11,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
+from propcache import cached_property
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo

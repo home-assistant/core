@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -146,7 +146,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     port: int = DEFAULT_HTTP_PORT
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
-    entry: ConfigEntry | None = None
+    entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -356,7 +356,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -364,7 +364,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
         host = self.entry.data[CONF_HOST]
         port = get_http_port(self.entry.data)
 
@@ -400,17 +399,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.host = entry.data[CONF_HOST]
-        self.port = entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
-        self.entry = entry
+        self.entry = self._get_reconfigure_entry()
+        self.host = self.entry.data[CONF_HOST]
+        self.port = self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
 
         return await self.async_step_reconfigure_confirm()
 
@@ -419,9 +413,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors = {}
-
-        if TYPE_CHECKING:
-            assert self.entry is not None
 
         if user_input is not None:
             host = user_input[CONF_HOST]
