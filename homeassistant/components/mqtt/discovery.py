@@ -40,7 +40,6 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
     SUPPORTED_COMPONENTS,
-    MqttDiscoveryType,
 )
 from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
@@ -518,13 +517,11 @@ async def async_start(  # noqa: C901
             ),
             (
                 f"{discovery_topic}/{component}/+/config"
-                for component, discovery_type in SUPPORTED_COMPONENTS.items()
-                if discovery_type == MqttDiscoveryType.SINGLE_COMPONENT
+                for component in SUPPORTED_COMPONENTS
             ),
             (
                 f"{discovery_topic}/{component}/+/+/config"
-                for component, discovery_type in SUPPORTED_COMPONENTS.items()
-                if discovery_type == MqttDiscoveryType.SINGLE_COMPONENT
+                for component in SUPPORTED_COMPONENTS
             ),
         )
     ]

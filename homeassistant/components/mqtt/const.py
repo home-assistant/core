@@ -1,6 +1,5 @@
 """Constants used by multiple MQTT modules."""
 
-from enum import IntFlag
 import logging
 
 import jinja2
@@ -194,41 +193,33 @@ RELOADABLE_PLATFORMS = [
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
 
 
-class MqttDiscoveryType(IntFlag):
-    """Flag to indicate the discovery type supported."""
-
-    SINGLE_COMPONENT = 1
-    DEVICE = 2
-
-
-SUPPORTED_COMPONENTS = {
-    "alarm_control_panel": MqttDiscoveryType.SINGLE_COMPONENT,
-    "binary_sensor": MqttDiscoveryType.SINGLE_COMPONENT,
-    "button": MqttDiscoveryType.SINGLE_COMPONENT,
-    "camera": MqttDiscoveryType.SINGLE_COMPONENT,
-    "climate": MqttDiscoveryType.SINGLE_COMPONENT,
-    "cover": MqttDiscoveryType.SINGLE_COMPONENT,
-    "device": MqttDiscoveryType.DEVICE,
-    "device_automation": MqttDiscoveryType.SINGLE_COMPONENT,
-    "device_tracker": MqttDiscoveryType.SINGLE_COMPONENT,
-    "event": MqttDiscoveryType.SINGLE_COMPONENT,
-    "fan": MqttDiscoveryType.SINGLE_COMPONENT,
-    "humidifier": MqttDiscoveryType.SINGLE_COMPONENT,
-    "image": MqttDiscoveryType.SINGLE_COMPONENT,
-    "lawn_mower": MqttDiscoveryType.SINGLE_COMPONENT,
-    "light": MqttDiscoveryType.SINGLE_COMPONENT,
-    "lock": MqttDiscoveryType.SINGLE_COMPONENT,
-    "notify": MqttDiscoveryType.SINGLE_COMPONENT,
-    "number": MqttDiscoveryType.SINGLE_COMPONENT,
-    "scene": MqttDiscoveryType.SINGLE_COMPONENT,
-    "siren": MqttDiscoveryType.SINGLE_COMPONENT,
-    "select": MqttDiscoveryType.SINGLE_COMPONENT,
-    "sensor": MqttDiscoveryType.SINGLE_COMPONENT,
-    "switch": MqttDiscoveryType.SINGLE_COMPONENT,
-    "tag": MqttDiscoveryType.SINGLE_COMPONENT,
-    "text": MqttDiscoveryType.SINGLE_COMPONENT,
-    "update": MqttDiscoveryType.SINGLE_COMPONENT,
-    "vacuum": MqttDiscoveryType.SINGLE_COMPONENT,
-    "valve": MqttDiscoveryType.SINGLE_COMPONENT,
-    "water_heater": MqttDiscoveryType.SINGLE_COMPONENT,
-}
+SUPPORTED_COMPONENTS = (
+    "alarm_control_panel",
+    "binary_sensor",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "device_automation",
+    "device_tracker",
+    "event",
+    "fan",
+    "humidifier",
+    "image",
+    "lawn_mower",
+    "light",
+    "lock",
+    "notify",
+    "number",
+    "scene",
+    "siren",
+    "select",
+    "sensor",
+    "switch",
+    "tag",
+    "text",
+    "update",
+    "vacuum",
+    "valve",
+    "water_heater",
+)
