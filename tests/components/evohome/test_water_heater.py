@@ -12,14 +12,12 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.evohome.water_heater import EvoDHW
-from homeassistant.core import HomeAssistant
 
 from .const import TEST_INSTALLS_WITH_DHW
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
-    hass: HomeAssistant,
     install: str,
     dhw: EvoDHW,
     freezer: FrozenDateTimeFactory,
@@ -80,11 +78,7 @@ async def test_set_operation_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_away_mode_off(
-    hass: HomeAssistant,
-    install: str,
-    dhw: EvoDHW,
-) -> None:
+async def test_turn_away_mode_off(dhw: EvoDHW) -> None:
     """Test water_heater services of a evohome-compatible DHW zone."""
 
     # turn_away_mode_off(): FollowSchedule
@@ -103,11 +97,7 @@ async def test_turn_away_mode_off(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_away_mode_on(
-    hass: HomeAssistant,
-    install: str,
-    dhw: EvoDHW,
-) -> None:
+async def test_turn_away_mode_on(dhw: EvoDHW) -> None:
     """Test water_heater services of a evohome-compatible DHW zone."""
 
     # turn_away_mode_on(): PermanentOverride, Off
@@ -126,11 +116,7 @@ async def test_turn_away_mode_on(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(
-    hass: HomeAssistant,
-    install: str,
-    dhw: EvoDHW,
-) -> None:
+async def test_turn_off(dhw: EvoDHW) -> None:
     """Test water_heater services of a evohome-compatible DHW zone."""
 
     # turn_off(): PermanentOverride, Off
@@ -149,11 +135,7 @@ async def test_turn_off(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(
-    hass: HomeAssistant,
-    install: str,
-    dhw: EvoDHW,
-) -> None:
+async def test_turn_on(dhw: EvoDHW) -> None:
     """Test water_heater services of a evohome-compatible DHW zone."""
 
     # turn_on(): PermanentOverride, On
