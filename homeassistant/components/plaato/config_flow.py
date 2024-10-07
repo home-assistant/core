@@ -71,7 +71,9 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_api_method(self, user_input=None):
+    async def async_step_api_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle device type step."""
 
         device_type = self._init_info[CONF_DEVICE_TYPE]
@@ -90,7 +92,9 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._show_api_method_form(device_type)
 
-    async def async_step_webhook(self, user_input=None):
+    async def async_step_webhook(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Validate config step."""
 
         use_webhook = self._init_info[CONF_USE_WEBHOOK]
@@ -136,8 +140,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _show_api_method_form(
-        self, device_type: PlaatoDeviceType, errors: dict | None = None
-    ):
+        self, device_type: PlaatoDeviceType, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
 
         if device_type == PlaatoDeviceType.Airlock:
@@ -186,7 +190,7 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
 
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the options."""
         use_webhook = self._config_entry.data.get(CONF_USE_WEBHOOK, False)
         if use_webhook:
@@ -215,7 +219,9 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             ),
         )
 
-    async def async_step_webhook(self, user_input=None):
+    async def async_step_webhook(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options for webhook device."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -6,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 @callback
-def configured_servers(hass):
+def configured_servers(hass: HomeAssistant) -> set[str]:
     """Return a set of the configured servers."""
     return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)

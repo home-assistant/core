@@ -678,7 +678,7 @@ async def test_rpc_polling_auth_error(
 
     monkeypatch.setattr(
         mock_rpc_device,
-        "update_status",
+        "poll",
         AsyncMock(
             side_effect=InvalidAuthError,
         ),
@@ -768,7 +768,7 @@ async def test_rpc_polling_connection_error(
 
     monkeypatch.setattr(
         mock_rpc_device,
-        "update_status",
+        "poll",
         AsyncMock(
             side_effect=DeviceConnectionError,
         ),

@@ -68,10 +68,6 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
-    "LIFX B10": {
-        "always_discover": True,
-        "domain": "lifx",
-    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -161,10 +157,6 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX String": {
-        "always_discover": True,
-        "domain": "lifx",
-    },
-    "LIFX T10": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -528,6 +520,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "lektrico",
+            "name": "lektrico*",
+        },
+        {
             "domain": "loqed",
             "name": "loqed*",
         },
@@ -768,6 +764,11 @@ ZEROCONF = {
             "name": "slzb-06*",
         },
     ],
+    "_smoip._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
+        },
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos",
@@ -795,6 +796,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee50*",
+        },
+    ],
+    "_stream-magic._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_system-bridge._tcp.local.": [

@@ -407,11 +407,23 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "aps": {
+      "name": "Arizona Public Service (APS)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "apsystems": {
       "name": "APsystems",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "aqara": {
+      "name": "Aqara",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "aquacell": {
       "name": "AquaCell",
@@ -848,6 +860,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "cambridge_audio": {
+      "name": "Cambridge Audio",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "canary": {
       "name": "Canary",
@@ -1369,6 +1387,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "duke_energy": {
+      "name": "Duke Energy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dunehd": {
       "name": "Dune HD",
       "integration_type": "hub",
@@ -1569,7 +1593,7 @@
       "integrations": {
         "emoncms": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Emoncms"
         },
@@ -2223,6 +2247,13 @@
         }
       }
     },
+    "go2rtc": {
+      "name": "go2rtc",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "single_config_entry": true
+    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2251,16 +2282,10 @@
           "name": "Google Assistant SDK"
         },
         "google_cloud": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "service",
+          "config_flow": true,
           "iot_class": "cloud_push",
-          "name": "Google Cloud Platform"
-        },
-        "google_domains": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Google Domains"
+          "name": "Google Cloud"
         },
         "google_generative_ai_conversation": {
           "integration_type": "service",
@@ -2279,6 +2304,12 @@
           "config_flow": false,
           "iot_class": "cloud_polling",
           "name": "Google Maps"
+        },
+        "google_photos": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Photos"
         },
         "google_pubsub": {
           "integration_type": "hub",
@@ -2627,8 +2658,9 @@
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
+      "config_flow": true,
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "huawei_lte": {
       "name": "Huawei LTE",
@@ -2901,6 +2933,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iskra": {
+      "name": "iskra",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "islamic_prayer_times": {
       "integration_type": "hub",
       "config_flow": true,
@@ -3076,7 +3114,7 @@
     },
     "knocki": {
       "name": "Knocki",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -3210,6 +3248,12 @@
       "name": "Legrand",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "lektrico": {
+      "name": "Lektrico Charging Station",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "leviton": {
       "name": "Leviton",
@@ -3487,7 +3531,7 @@
       "name": "Mastodon",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "matrix": {
       "name": "Matrix",
@@ -3765,11 +3809,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "mold_indicator": {
-      "name": "Mold Indicator",
+    "monarch_money": {
+      "name": "Monarch Money",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "monessen": {
       "name": "Monessen",
@@ -4185,6 +4229,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "nyt_games": {
+      "name": "NYT Games",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nzbget": {
       "name": "NZBGet",
       "integration_type": "hub",
@@ -4487,11 +4537,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "panel_custom": {
-      "name": "Custom Panel",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "panel_iframe": {
       "name": "iframe Panel",
@@ -5183,7 +5228,7 @@
       "iot_class": "local_push"
     },
     "ruckus_unleashed": {
-      "name": "Ruckus Unleashed",
+      "name": "Ruckus",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5365,6 +5410,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sensoterra": {
+      "name": "Sensoterra",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sentry": {
       "name": "Sentry",
@@ -5616,7 +5667,7 @@
       "name": "SMLIGHT SLZB",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "sms": {
       "name": "SMS notifications via GSM-modem",
@@ -5766,12 +5817,6 @@
     },
     "speedtestdotnet": {
       "name": "Speedtest.net",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "spider": {
-      "name": "Itho Daalderop Spider",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6423,6 +6468,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "triggercmd": {
+      "name": "TRIGGERcmd",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -6823,6 +6874,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "weheat": {
+      "name": "Weheat",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "wemo": {
       "name": "Belkin WeMo",
       "integration_type": "hub",
@@ -6881,6 +6938,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "wmspro": {
+      "name": "WMS WebControl pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "wolflink": {
       "name": "Wolf SmartSet Service",
@@ -7266,6 +7329,12 @@
       "iot_class": "calculated"
     },
     "min_max": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "mold_indicator": {
+      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"

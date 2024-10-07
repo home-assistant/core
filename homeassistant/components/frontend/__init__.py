@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import os
 import pathlib
@@ -11,12 +11,13 @@ from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+from propcache import cached_property
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,

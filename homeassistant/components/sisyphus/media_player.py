@@ -1,11 +1,10 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
 
-# mypy: ignore-errors
 from __future__ import annotations
 
 import aiohttp
+from sisyphus_control import Track
 
-# from sisyphus_control import Track
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,

@@ -1,0 +1,10 @@
+{
+  "entity": {
+    "sensor": {
+      "sum_income": { "default": "mdi:cash-plus" },
+      "sum_expense": { "default": "mdi:cash-minus" },
+      "savings": { "default": "mdi:piggy-bank-outline" },
+      "savings_rate": { "default": "mdi:cash-sync" }
+    }
+  }
+}

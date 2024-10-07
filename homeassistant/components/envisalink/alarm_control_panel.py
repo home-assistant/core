@@ -37,8 +37,8 @@ from . import (
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
-    EnvisalinkDevice,
 )
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ async def async_setup_platform(
     )
 
 
-class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
+class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
 
     _attr_supported_features = (
@@ -119,7 +119,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         self._partition_number = partition_number
         self._panic_type = panic_type
         self._alarm_control_panel_option_default_code = code
-        self._attr_code_format = CodeFormat.NUMBER
+        self._attr_code_format = CodeFormat.NUMBER if not code else None
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)

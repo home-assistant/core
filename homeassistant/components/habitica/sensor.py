@@ -63,6 +63,8 @@ class HabitipySensorEntity(StrEnum):
     DAILIES = "dailys"
     TODOS = "todos"
     REWARDS = "rewards"
+    GEMS = "gems"
+    TRINKETS = "trinkets"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
@@ -129,6 +131,25 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["warrior", "healer", "wizard", "rogue"],
     ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.GEMS,
+        translation_key=HabitipySensorEntity.GEMS,
+        value_fn=lambda user: user.get("balance", 0) * 4,
+        suggested_display_precision=0,
+        native_unit_of_measurement="gems",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.TRINKETS,
+        translation_key=HabitipySensorEntity.TRINKETS,
+        value_fn=(
+            lambda user: user.get("purchased", {})
+            .get("plan", {})
+            .get("consecutive", {})
+            .get("trinkets", 0)
+        ),
+        suggested_display_precision=0,
+        native_unit_of_measurement="⧖",
+    ),
 )
 
 
@@ -140,6 +161,8 @@ TASKS_MAP = {
     "frequency": "frequency",
     "every_x": "everyX",
     "streak": "streak",
+    "up": "up",
+    "down": "down",
     "counter_up": "counterUp",
     "counter_down": "counterDown",
     "next_due": "nextDue",

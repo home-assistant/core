@@ -6,7 +6,6 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -14,6 +13,7 @@ from typing import Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
+from propcache import cached_property
 import requests
 from typing_extensions import TypeVar
 
