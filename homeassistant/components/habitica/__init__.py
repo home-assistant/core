@@ -202,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             await coordinator.async_request_refresh()
             return response
 
-    async def update_task(call: ServiceCall) -> ServiceResponse:
+    async def update_task(call: ServiceCall) -> ServiceResponse:  # noqa: C901
         """Update task action."""
         entry: HabiticaConfigEntry = get_config_entry(
             hass, call.data[ATTR_CONFIG_ENTRY]
@@ -284,13 +284,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
             if tags:
                 # Creates new tag if it doesn't exist
-                update_tags.update(
-                    {
-                        user_tags.get(tag_name.lower())
-                        or (await coordinator.api.tags.post(name=tag_name)).get("id")
-                        for tag_name in tags
-                    }
-                )
+                try:
+                    update_tags.update(
+                        {
+                            user_tags.get(tag_name.lower())
+                            or (await coordinator.api.tags.post(name=tag_name)).get(
+                                "id"
+                            )
+                            for tag_name in tags
+                        }
+                    )
+                except ClientResponseError as e:
+                    if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                        raise ServiceValidationError(
+                            translation_domain=DOMAIN,
+                            translation_key="setup_rate_limit_exception",
+                        ) from e
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_exception",
+                    ) from e
+
             if remove_tags:
                 update_tags.difference_update(
                     {
@@ -364,8 +378,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             data.update({"counterUp": counter_up})
         if counter_down := call.data.get(ATTR_COUNTER_DOWN):
             data.update({"counterDown": counter_down})
-
-        return await coordinator.api.tasks[task_id].put(**data)
+        try:
+            return await coordinator.api.tasks[task_id].put(**data)
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
 
     hass.services.async_register(
         DOMAIN,
