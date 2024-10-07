@@ -28,7 +28,7 @@ ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
-ATTR_VIEWER = "viewer"
+ATTR_VIEWER = "viewers"
 ATTR_STARTED_AT = "started_at"
 
 STATE_OFFLINE = "offline"
