@@ -183,7 +183,7 @@ class SqueezeBoxAlarmEntity(
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self.coordinator.player.name} Alarm {self.alarm["id"]}"
+        return f"{self.coordinator.player.name} Alarm {self.alarm["time"]}"
 
     @property
     def _is_today(self) -> bool:
