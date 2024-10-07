@@ -450,6 +450,8 @@ def supervisor_client() -> Generator[AsyncMock]:
 
 _IGNORE_TRANSLATION_VIOLATIONS = {
     "component.airvisual.config.step.user.data.type",  # Uses description
+    "component.ambient_network.config.step.user.data.location",  # Uses description
+    "component.axis.options.step.configure_stream.data.video_source",  # Uses description
 }
 
 
@@ -464,8 +466,9 @@ async def _ensure_translation_exists(
     translations = await async_get_translations(hass, "en", category, [component])
     if full_key not in translations:
         raise ValueError(
-            f"Translation not found for {component}: `{category}.{key}` "
-            f"(see homeassistant/components/{component}/config_flow.py)"
+            f"Translation not found for {component}: `{category}.{key}`. "
+            f"Please add to homeassistant/components/{component}/strings.json "
+            "or add to _IGNORE_TRANSLATION_VIOLATIONS."
         )
 
 
