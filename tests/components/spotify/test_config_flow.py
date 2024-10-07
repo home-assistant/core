@@ -115,7 +115,7 @@ async def test_full_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     result["data"]["token"].pop("expires_at")
-    assert result["data"]["name"] == "frenck"
+    assert result["data"]["name"] == "Henk"
     assert result["data"]["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
