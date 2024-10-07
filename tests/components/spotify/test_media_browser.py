@@ -26,12 +26,14 @@ async def test_browse_media_root(
 ) -> None:
     """Test browsing the root."""
     await setup_integration(hass, mock_config_entry)
+    # We add a second config entry to test that lowercase entry_ids also work
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="spotify_2",
         unique_id="second_fake_id",
         data={
             CONF_ID: "second_fake_id",
+            "name": "spotify_account_2",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",

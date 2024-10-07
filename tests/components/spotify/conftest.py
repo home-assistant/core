@@ -31,10 +31,11 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     """Create Spotify entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Spotify",
+        title="spotify_1",
         unique_id="fake_id",
         data={
             CONF_ID: "fake_id",
+            "name": "spotify_account_1",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
