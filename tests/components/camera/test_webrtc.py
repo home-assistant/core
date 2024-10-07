@@ -214,6 +214,28 @@ async def test_ws_get_client_config(
     }
 
 
+@pytest.mark.usefixtures("mock_camera_web_rtc_two_way_audio")
+async def test_ws_get_client_config_two_way_audio(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC client config for two way audio."""
+    await async_setup_component(hass, "camera", {})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.demo_camera"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "configuration": {"iceServers": [{"urls": "stun:stun.l.google.com:19302"}]},
+        "audioDirection": "sendrecv",
+    }
+
+
 @pytest.mark.usefixtures("mock_camera_hls")
 async def test_ws_get_client_config_no_rtc_camera(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator

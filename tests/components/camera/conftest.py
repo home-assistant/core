@@ -77,6 +77,35 @@ async def mock_camera_web_rtc_fixture(hass: HomeAssistant) -> AsyncGenerator[Non
         yield
 
 
+@pytest.fixture(name="mock_camera_web_rtc_two_way_audio")
+async def mock_camera_web_rtc_two_way_audio_fixture(
+    hass: HomeAssistant,
+) -> AsyncGenerator[None]:
+    """Initialize a demo camera platform with WebRTC."""
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.frontend_stream_type",
+            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+            return_value=WEBRTC_ANSWER,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera._async_get_webrtc_client_configuration",
+            return_value=camera.WebRTCClientConfiguration(
+                audio_direction=camera.WebRTCClientConfiguration.TransportDirection.SENDRECV
+            ),
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(name="mock_camera_with_device")
 def mock_camera_with_device_fixture() -> Generator[None]:
     """Initialize a demo camera platform with a device."""
