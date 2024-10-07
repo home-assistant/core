@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,6 +34,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
         title="Spotify",
         unique_id="1112264649",
         data={
+            CONF_ID: "1112264649",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
@@ -74,7 +76,11 @@ def mock_spotify() -> Generator[MagicMock]:
         client.current_user_playlists.return_value = load_json_value_fixture(
             "current_user_playlist.json", DOMAIN
         )
-        client.current_user.return_value = load_json_value_fixture(
-            "current_user.json", DOMAIN
+        current_user = load_json_value_fixture("current_user.json", DOMAIN)
+        client.current_user.return_value = current_user
+        client.me.return_value = current_user
+        client.current_playback.return_value = load_json_value_fixture(
+            "playback.json", DOMAIN
         )
+        client.playlist.return_value = load_json_value_fixture("playlist.json", DOMAIN)
         yield spotify_mock
