@@ -502,6 +502,7 @@ homeassistant.components.whois.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
+homeassistant.components.workday.*
 homeassistant.components.worldclock.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
