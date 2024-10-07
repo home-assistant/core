@@ -38,16 +38,24 @@ class SensorData:
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
         return {
-            "disk_usage": {k: str(v) for k, v in self.disk_usage.items()},
+            "disk_usage": {k: str(v) for k, v in self.disk_usage.items()}
+            if self.disk_usage
+            else None,
             "swap": str(self.swap),
             "memory": str(self.memory),
-            "io_counters": {k: str(v) for k, v in self.io_counters.items()},
-            "addresses": {k: str(v) for k, v in self.addresses.items()},
+            "io_counters": {k: str(v) for k, v in self.io_counters.items()}
+            if self.io_counters
+            else None,
+            "addresses": {k: str(v) for k, v in self.addresses.items()}
+            if self.addresses
+            else None,
             "load": str(self.load),
             "cpu_percent": str(self.cpu_percent),
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
-            "temperatures": {k: str(v) for k, v in self.temperatures.items()},
+            "temperatures": {k: str(v) for k, v in self.temperatures.items()}
+            if self.temperatures
+            else None,
         }
 
 
