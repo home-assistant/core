@@ -35,15 +35,13 @@ from .const import (
     REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
     REFRIGERATION_INTERNAL_LIGHT_POWER,
 )
-from .entity import HomeConnectEntity, HomeConnectEntityDescription
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectLightEntityDescription(
-    LightEntityDescription, HomeConnectEntityDescription
-):
+class HomeConnectLightEntityDescription(LightEntityDescription):
     """Light entity description."""
 
     brightness_key: str | None
@@ -52,13 +50,13 @@ class HomeConnectLightEntityDescription(
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
     HomeConnectLightEntityDescription(
         key=REFRIGERATION_INTERNAL_LIGHT_POWER,
-        desc="Internal light",
         brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+        translation_key="internal_light",
     ),
     HomeConnectLightEntityDescription(
         key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
-        desc="External light",
         brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+        translation_key="external_light",
     ),
 )
 
@@ -79,9 +77,9 @@ async def async_setup_entry(
                 entities.append(
                     HomeConnectLight(
                         device,
-                        HomeConnectEntityDescription(
+                        LightEntityDescription(
                             key=COOKING_LIGHTING,
-                            desc="Light",
+                            translation_key="cooking_lighting",
                         ),
                         False,
                     )
@@ -90,9 +88,9 @@ async def async_setup_entry(
                 entities.append(
                     HomeConnectLight(
                         device,
-                        HomeConnectEntityDescription(
+                        LightEntityDescription(
                             key=BSH_AMBIENT_LIGHT_ENABLED,
-                            desc="Ambient light",
+                            translation_key="ambient_light",
                         ),
                         True,
                     )
@@ -114,10 +112,12 @@ async def async_setup_entry(
 class HomeConnectLight(HomeConnectEntity, LightEntity):
     """Light for Home Connect."""
 
+    entity_description: LightEntityDescription
+
     def __init__(
         self,
         device: HomeConnectDevice,
-        desc: HomeConnectEntityDescription,
+        desc: LightEntityDescription,
         ambient: bool,
     ) -> None:
         """Initialize the entity."""

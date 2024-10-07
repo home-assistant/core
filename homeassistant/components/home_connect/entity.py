@@ -1,6 +1,5 @@
 """Home Connect entity base class."""
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.core import callback
@@ -14,26 +13,16 @@ from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectEntityDescription(EntityDescription):
-    """Describes Home Connect entity."""
-
-    desc: str
-
-
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
-    entity_description: HomeConnectEntityDescription
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(
-        self, device: HomeConnectDevice, desc: HomeConnectEntityDescription
-    ) -> None:
+    def __init__(self, device: HomeConnectDevice, desc: EntityDescription) -> None:
         """Initialize the entity."""
         self.device = device
         self.entity_description = desc
-        self._attr_name = f"{device.appliance.name} {self.entity_description.desc}"
         self._attr_unique_id = f"{device.appliance.haId}-{self.bsh_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.appliance.haId)},

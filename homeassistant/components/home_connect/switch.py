@@ -1,7 +1,6 @@
 """Provides a switch for Home Connect."""
 
 import contextlib
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -27,7 +26,7 @@ from .const import (
     REFRIGERATION_SUPERMODEFREEZER,
     REFRIGERATION_SUPERMODEREFRIGERATOR,
 )
-from .entity import HomeConnectDevice, HomeConnectEntity, HomeConnectEntityDescription
+from .entity import HomeConnectDevice, HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,69 +43,58 @@ APPLIANCES_WITH_PROGRAMS = (
 )
 
 
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectSwitchEntityDescription(
-    SwitchEntityDescription, HomeConnectEntityDescription
-):
-    """Switch entity description."""
-
-
 SWITCHES = (
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key=BSH_CHILD_LOCK_STATE,
-        desc="Child lock",
+        translation_key="child_lock",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Setting.CupWarmer",
-        desc="Cup warmer",
+        translation_key="cup_warmer",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key=REFRIGERATION_SUPERMODEREFRIGERATOR,
-        desc="Supermode refrigerator",
+        translation_key="cup_warmer",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key=REFRIGERATION_SUPERMODEFREEZER,
-        desc="Supermode freezer",
+        translation_key="freezer_super_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key=REFRIGERATION_SUPERMODEREFRIGERATOR,
-        desc="Supermode refrigerator",
+        translation_key="refrigerator_super_mode",
     ),
-    HomeConnectSwitchEntityDescription(
-        key="Refrigeration.Common.Setting.FreshMode",
-        desc="Fresh mode",
-    ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.EcoMode",
-        desc="Eco mode",
+        translation_key="eco_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Cooking.Oven.Setting.SabbathMode",
-        desc="Sabbath mode",
+        translation_key="sabbath_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.SabbathMode",
-        desc="Sabbath mode",
+        translation_key="sabbath_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.VacationMode",
-        desc="Vacation mode",
+        translation_key="vacation_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.FreshMode",
-        desc="Fresh mode",
+        translation_key="fresh_mode",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key=REFRIGERATION_DISPENSER,
-        desc="Dispenser enabled",
+        translation_key="dispenser_enabled",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.Door.AssistantFridge",
-        desc="Fridge door assistant fridge",
+        translation_key="door_assistant_fridge",
     ),
-    HomeConnectSwitchEntityDescription(
+    SwitchEntityDescription(
         key="Refrigeration.Common.Setting.Door.AssistantFreezer",
-        desc="Freezer door assistant freezer",
+        translation_key="door_assistant_freezer",
     ),
 )
 
@@ -145,8 +133,6 @@ async def async_setup_entry(
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     """Generic switch class for Home Connect Binary Settings."""
-
-    entity_description: HomeConnectSwitchEntityDescription
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
@@ -197,8 +183,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
-    entity_description: HomeConnectSwitchEntityDescription
-
     def __init__(self, device: HomeConnectDevice, program_name: str) -> None:
         """Initialize the entity."""
         desc = " ".join(["Program", program_name.split(".")[-1]])
@@ -206,9 +190,9 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             desc = " ".join(
                 ["Program", program_name.split(".")[-3], program_name.split(".")[-1]]
             )
-        super().__init__(
-            device, HomeConnectSwitchEntityDescription(key=program_name, desc=desc)
-        )
+        super().__init__(device, SwitchEntityDescription(key=program_name))
+        self._attr_name = f"{device.appliance.name} {desc}"
+        self._attr_has_entity_name = False
         self.program_name = program_name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -250,10 +234,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         """Initialize the entity."""
         super().__init__(
             device,
-            HomeConnectSwitchEntityDescription(
-                key=BSH_POWER_STATE,
-                desc="Power",
-            ),
+            SwitchEntityDescription(key=BSH_POWER_STATE, translation_key="power"),
         )
         match device.appliance.type:
             case "Dishwasher" | "Cooktop" | "Hood":

@@ -28,7 +28,7 @@ from .const import (
     REFRIGERATION_STATUS_DOOR_OPEN,
     REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
 )
-from .entity import HomeConnectEntity, HomeConnectEntityDescription
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 REFRIGERATION_DOOR_BOOLEAN_MAP = {
@@ -38,26 +38,25 @@ REFRIGERATION_DOOR_BOOLEAN_MAP = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectBinarySensorEntityDescription(
-    BinarySensorEntityDescription, HomeConnectEntityDescription
-):
+class HomeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity Description class for binary sensors."""
 
+    device_class: BinarySensorDeviceClass | None = BinarySensorDeviceClass.DOOR
     boolean_map: dict[str, bool] | None = None
 
 
 BINARY_SENSORS = (
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=BSH_REMOTE_CONTROL_ACTIVATION_STATE,
-        desc="Remote control",
+        translation_key="remote_control",
     ),
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=BSH_REMOTE_START_ALLOWANCE_STATE,
-        desc="Remote start",
+        translation_key="remote_start",
     ),
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="BSH.Common.Status.LocalControlActive",
-        desc="Local control",
+        translation_key="local_control",
     ),
     HomeConnectBinarySensorEntityDescription(
         key="BSH.Common.Status.BatteryChargingState",
@@ -66,7 +65,7 @@ BINARY_SENSORS = (
             "BSH.Common.EnumType.BatteryChargingState.Charging": True,
             "BSH.Common.EnumType.BatteryChargingState.Discharging": False,
         },
-        desc="Battery charging",
+        translation_key="battery_charging_state",
     ),
     HomeConnectBinarySensorEntityDescription(
         key="BSH.Common.Status.ChargingConnection",
@@ -75,37 +74,37 @@ BINARY_SENSORS = (
             "BSH.Common.EnumType.ChargingConnection.Connected": True,
             "BSH.Common.EnumType.ChargingConnection.Disconnected": False,
         },
-        desc="Charging connection",
+        translation_key="charging_connection",
     ),
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="ConsumerProducts.CleaningRobot.Status.DustBoxInserted",
-        desc="Dust box inserted",
+        translation_key="dust_box_inserted",
     ),
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="ConsumerProducts.CleaningRobot.Status.Lifted",
-        desc="Lifted",
+        translation_key="lifted",
     ),
-    HomeConnectBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="ConsumerProducts.CleaningRobot.Status.Lost",
-        desc="Lost",
+        translation_key="lost",
     ),
     HomeConnectBinarySensorEntityDescription(
         key=REFRIGERATION_STATUS_DOOR_CHILLER,
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
-        desc="Chiller door",
+        translation_key="chiller_door",
     ),
     HomeConnectBinarySensorEntityDescription(
         key=REFRIGERATION_STATUS_DOOR_FREEZER,
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
-        desc="Freezer door",
+        translation_key="freezer_door",
     ),
     HomeConnectBinarySensorEntityDescription(
         key=REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
-        desc="Refrigerator door",
+        translation_key="refrigerator_door",
     ),
 )
 
@@ -179,7 +178,7 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
                     BSH_DOOR_STATE_LOCKED: False,
                     BSH_DOOR_STATE_OPEN: True,
                 },
-                desc="Door",
             ),
         )
         self._attr_unique_id = f"{device.appliance.haId}-Door"
+        self._attr_name = f"{device.appliance.name} Door"
