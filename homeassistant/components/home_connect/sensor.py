@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .api import ConfigEntryAuth
@@ -35,18 +36,16 @@ from .const import (
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
     REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
 )
-from .entity import HomeConnectEntity, HomeConnectEntityDescription
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-EVENT_OPTIONS = ["Confirmed", "Off", "Present"]
+EVENT_OPTIONS = ["confirmed", "off", "present"]
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectSensorEntityDescription(
-    SensorEntityDescription, HomeConnectEntityDescription
-):
+class HomeConnectSensorEntityDescription(SensorEntityDescription):
     """Entity Description class for sensors."""
 
     default_value: str | None = None
@@ -59,20 +58,20 @@ BSH_PROGRAM_SENSORS = (
         key="BSH.Common.Option.RemainingProgramTime",
         device_class=SensorDeviceClass.TIMESTAMP,
         sign=1,
-        desc="Remaining Program Time",
+        translation_key="remaining_program_time",
     ),
     HomeConnectSensorEntityDescription(
         key="BSH.Common.Option.Duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         sign=1,
-        desc="Duration",
+        translation_key="duration",
     ),
     HomeConnectSensorEntityDescription(
         key="BSH.Common.Option.ProgramProgress",
         native_unit_of_measurement=PERCENTAGE,
         sign=1,
-        desc="Program Progress",
+        translation_key="program_progress",
     ),
 )
 
@@ -81,94 +80,94 @@ SENSORS = (
         key=BSH_OPERATION_STATE,
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "Inactive",
-            "Ready",
-            "DelayedStart",
-            "Run",
-            "Pause",
-            "ActionRequired",
-            "Finished",
-            "Error",
-            "Aborting",
+            "inactive",
+            "ready",
+            "delayedstart",
+            "run",
+            "pause",
+            "actionrequired",
+            "finished",
+            "error",
+            "aborting",
         ],
-        desc="Operation State",
+        translation_key="operation_state",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Coffee Counter",
+        translation_key="coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterPowderCoffee",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Powder Coffee Counter",
+        translation_key="powder_coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWater",
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Hot Water Counter",
+        translation_key="hot_water_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWaterCups",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Hot Water Cups Counter",
+        translation_key="hot_water_cups_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotMilk",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Hot Milk Counter",
+        translation_key="hot_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterFrothyMilk",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Frothy Milk Counter",
+        translation_key="frothy_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterMilk",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Milk Counter",
+        translation_key="milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffeeAndMilk",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Coffee and Milk Counter",
+        translation_key="coffee_and_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterRistrettoEspresso",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        desc="Ristretto Espresso Counter",
+        translation_key="ristretto_espresso_counter",
     ),
     HomeConnectSensorEntityDescription(
         key="BSH.Common.Status.BatteryLevel",
         device_class=SensorDeviceClass.BATTERY,
-        desc="Battery Level",
+        translation_key="battery_level",
     ),
     HomeConnectSensorEntityDescription(
         key="BSH.Common.Status.Video.CameraState",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "Disabled",
-            "Sleeping",
-            "Ready",
-            "Streaming_local",
-            "Streaming_cloud",
-            "Streaming_local_and_cloud",
-            "Error",
+            "disabled",
+            "sleeping",
+            "ready",
+            "streaminglocal",
+            "streamingcloud",
+            "streaminglocalancloud",
+            "error",
         ],
-        desc="Camera State",
+        translation_key="camera_state",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CleaningRobot.Status.LastSelectedMap",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "TempMap",
-            "Map1",
-            "Map2",
-            "Map3",
+            "tempmap",
+            "map1",
+            "map2",
+            "map3",
         ],
-        desc="Last Selected Map",
+        translation_key="last_selected_map",
     ),
 )
 
@@ -177,48 +176,48 @@ EVENT_SENSORS = (
         key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Freezer Door Alarm",
+        default_value="off",
+        translation_key="freezer_door_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
         key=REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Refrigerator Door Alarm",
+        default_value="off",
+        translation_key="refrigerator_door_alarm",
         appliance_types=("FridgeFreezer", "Refrigerator"),
     ),
     HomeConnectSensorEntityDescription(
         key=REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Freezer Temperature Alarm",
+        default_value="off",
+        translation_key="freezer_temperature_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
         key=COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Bean Container Empty",
+        default_value="off",
+        translation_key="bean_container_empty",
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
         key=COFFEE_EVENT_WATER_TANK_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Water Tank Empty",
+        default_value="off",
+        translation_key="water_tank_empty",
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
         key=COFFEE_EVENT_DRIP_TRAY_FULL,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="Off",
-        desc="Bean Container Empty",
+        default_value="off",
+        translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
     ),
 )
@@ -315,9 +314,9 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off
                 # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = cast(str, status.get(ATTR_VALUE)).split(".")[
-                    -1
-                ]
+                self._attr_native_value = slugify(
+                    cast(str, status.get(ATTR_VALUE)).split(".")[-1]
+                )
             case _:
                 self._attr_native_value = status.get(ATTR_VALUE)
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
