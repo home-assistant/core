@@ -1,0 +1,236 @@
+{
+  "collaborative": false,
+  "external_urls": {
+    "spotify": "https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n"
+  },
+  "followers": {
+    "href": null,
+    "total": 562
+  },
+  "href": "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n?locale=en-US%2Cen%3Bq%3D0.5",
+  "id": "3cEYpjA9oz9GiPac4AsH4n",
+  "images": [
+    {
+      "url": "https://i.scdn.co/image/ab67706c0000da848d0ce13d55f634e290f744ba",
+      "height": null,
+      "width": null
+    }
+  ],
+  "primary_color": null,
+  "name": "Spotify Web API Testing playlist",
+  "description": "A playlist for testing pourposes",
+  "type": "playlist",
+  "uri": "spotify:playlist:3cEYpjA9oz9GiPac4AsH4n",
+  "owner": {
+    "href": "https://api.spotify.com/v1/users/jmperezperez",
+    "id": "jmperezperez",
+    "type": "user",
+    "uri": "spotify:user:jmperezperez",
+    "display_name": "JMPerez²",
+    "external_urls": {
+      "spotify": "https://open.spotify.com/user/jmperezperez"
+    }
+  },
+  "public": true,
+  "snapshot_id": "MTgsZWFmNmZiNTIzYTg4ODM0OGQzZWQzOGI4NTdkNTJlMjU0OWFkYTUxMA==",
+  "tracks": {
+    "limit": 100,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "href": "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks?offset=0&limit=100&locale=en-US%2Cen%3Bq%3D0.5",
+    "total": 5,
+    "items": [
+      {
+        "added_at": "2015-01-15T12:39:22Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/04599a1fe12ffac01d2bcb08340f84c0dd2cc335?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "type": "album",
+            "album_type": "compilation",
+            "href": "https://api.spotify.com/v1/albums/2pANdqPvxInB0YvcDiw4ko",
+            "id": "2pANdqPvxInB0YvcDiw4ko",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b273ce6d0eef0c1ce77e5f95bbbc",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e02ce6d0eef0c1ce77e5f95bbbc",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00004851ce6d0eef0c1ce77e5f95bbbc",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "Progressive Psy Trance Picks Vol.8",
+            "release_date": "2012-04-02",
+            "release_date_precision": "day",
+            "uri": "spotify:album:2pANdqPvxInB0YvcDiw4ko",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                },
+                "href": "https://api.spotify.com/v1/artists/0LyfQWJT6nXafLPZqxe9Of",
+                "id": "0LyfQWJT6nXafLPZqxe9Of",
+                "name": "Various Artists",
+                "type": "artist",
+                "uri": "spotify:artist:0LyfQWJT6nXafLPZqxe9Of"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/2pANdqPvxInB0YvcDiw4ko"
+            },
+            "total_tracks": 20
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/6eSdhw46riw2OUHgMwR8B5"
+              },
+              "href": "https://api.spotify.com/v1/artists/6eSdhw46riw2OUHgMwR8B5",
+              "id": "6eSdhw46riw2OUHgMwR8B5",
+              "name": "Odiseo",
+              "type": "artist",
+              "uri": "spotify:artist:6eSdhw46riw2OUHgMwR8B5"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 10,
+          "duration_ms": 376000,
+          "external_ids": {
+            "isrc": "DEKC41200989"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/4rzfv0JLZfVhOhbSQ8o5jZ"
+          },
+          "href": "https://api.spotify.com/v1/tracks/4rzfv0JLZfVhOhbSQ8o5jZ",
+          "id": "4rzfv0JLZfVhOhbSQ8o5jZ",
+          "name": "Api",
+          "popularity": 2,
+          "uri": "spotify:track:4rzfv0JLZfVhOhbSQ8o5jZ",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2015-01-15T12:40:03Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/d61fbb7016904624373008ea056d45e6df891071?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "available_markets": [],
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "available_markets": [],
+            "type": "album",
+            "album_type": "compilation",
+            "href": "https://api.spotify.com/v1/albums/6nlfkk5GoXRL1nktlATNsy",
+            "id": "6nlfkk5GoXRL1nktlATNsy",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b273aa2ff29970d9a63a49dfaeb2",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e02aa2ff29970d9a63a49dfaeb2",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00004851aa2ff29970d9a63a49dfaeb2",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "Wellness & Dreaming Source",
+            "release_date": "2015-01-09",
+            "release_date_precision": "day",
+            "uri": "spotify:album:6nlfkk5GoXRL1nktlATNsy",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                },
+                "href": "https://api.spotify.com/v1/artists/0LyfQWJT6nXafLPZqxe9Of",
+                "id": "0LyfQWJT6nXafLPZqxe9Of",
+                "name": "Various Artists",
+                "type": "artist",
+                "uri": "spotify:artist:0LyfQWJT6nXafLPZqxe9Of"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/6nlfkk5GoXRL1nktlATNsy"
+            },
+            "total_tracks": 25
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/5VQE4WOzPu9h3HnGLuBoA6"
+              },
+              "href": "https://api.spotify.com/v1/artists/5VQE4WOzPu9h3HnGLuBoA6",
+              "id": "5VQE4WOzPu9h3HnGLuBoA6",
+              "name": "Vlasta Marek",
+              "type": "artist",
+              "uri": "spotify:artist:5VQE4WOzPu9h3HnGLuBoA6"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 21,
+          "duration_ms": 730066,
+          "external_ids": {
+            "isrc": "FR2X41475057"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/5o3jMYOSbaVz3tkgwhELSV"
+          },
+          "href": "https://api.spotify.com/v1/tracks/5o3jMYOSbaVz3tkgwhELSV",
+          "id": "5o3jMYOSbaVz3tkgwhELSV",
+          "name": "Is",
+          "popularity": 0,
+          "uri": "spotify:track:5o3jMYOSbaVz3tkgwhELSV",
+          "is_local": false
+        }
+      }
+    ]
+  }
+}

@@ -79,4 +79,48 @@ def mock_spotify() -> Generator[MagicMock]:
         client.current_user.return_value = load_json_value_fixture(
             "current_user.json", DOMAIN
         )
+        client.current_user_followed_artists.return_value = load_json_value_fixture(
+            "followed_artists.json", DOMAIN
+        )
+        client.current_user_saved_albums.return_value = load_json_value_fixture(
+            "saved_albums.json", DOMAIN
+        )
+        client.current_user_saved_tracks.return_value = load_json_value_fixture(
+            "saved_tracks.json", DOMAIN
+        )
+        client.current_user_saved_shows.return_value = load_json_value_fixture(
+            "saved_shows.json", DOMAIN
+        )
+        client.current_user_recently_played.return_value = load_json_value_fixture(
+            "recently_played_tracks.json", DOMAIN
+        )
+        client.current_user_top_artists.return_value = load_json_value_fixture(
+            "top_artists.json", DOMAIN
+        )
+        client.current_user_top_tracks.return_value = load_json_value_fixture(
+            "top_tracks.json", DOMAIN
+        )
+        client.featured_playlists.return_value = load_json_value_fixture(
+            "featured_playlists.json", DOMAIN
+        )
+        client.categories.return_value = load_json_value_fixture(
+            "categories.json", DOMAIN
+        )
+        client.category_playlists.return_value = load_json_value_fixture(
+            "category_playlists.json", DOMAIN
+        )
+        client.category.return_value = load_json_value_fixture("category.json", DOMAIN)
+        client.new_releases.return_value = load_json_value_fixture(
+            "new_releases.json", DOMAIN
+        )
+        client.playlist.return_value = load_json_value_fixture("playlist.json", DOMAIN)
+        client.album.return_value = load_json_value_fixture("album.json", DOMAIN)
+        client.artist.return_value = load_json_value_fixture("artist.json", DOMAIN)
+        client.artist_albums.return_value = load_json_value_fixture(
+            "artist_albums.json", DOMAIN
+        )
+        client.show_episodes.return_value = load_json_value_fixture(
+            "show_episodes.json", DOMAIN
+        )
+        client.show.return_value = load_json_value_fixture("show.json", DOMAIN)
         yield spotify_mock
