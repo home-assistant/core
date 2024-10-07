@@ -11,7 +11,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -31,10 +30,9 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     """Create Spotify entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Spotify",
-        unique_id="1112264649",
+        title="spotify_1",
+        unique_id="1112264111",
         data={
-            CONF_ID: "1112264649",
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
@@ -42,8 +40,10 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "scope": SCOPES,
             },
+            "id": "1112264111",
+            "name": "spotify_account_1",
         },
-        entry_id="01J9KH1ZDX64131YHYT4H6B69D",
+        entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
     )
 
 

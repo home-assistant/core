@@ -1,10 +1,10 @@
 {
-  "display_name": "Joost Lekkerkerker",
+  "display_name": "Henk",
   "external_urls": {
-    "spotify": "https://open.spotify.com/user/1112264649"
+    "spotify": "https://open.spotify.com/user/1112264111"
   },
-  "href": "https://api.spotify.com/v1/users/1112264649",
-  "id": "1112264649",
+  "href": "https://api.spotify.com/v1/users/1112264111",
+  "id": "1112264111",
   "images": [
     {
       "url": "https://i.scdn.co/image/ab67757000003b8246569a64d252247acb1491bc",
@@ -18,7 +18,7 @@
     }
   ],
   "type": "user",
-  "uri": "spotify:user:1112264649",
+  "uri": "spotify:user:1112264111",
   "followers": {
     "href": null,
     "total": 21
@@ -29,5 +29,5 @@
     "filter_enabled": false,
     "filter_locked": false
   },
-  "email": "joostlek@outlook.com"
+  "email": "henk@outlook.com"
 }
