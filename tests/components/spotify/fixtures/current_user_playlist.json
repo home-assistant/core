@@ -1,0 +1,18 @@
+{
+  "href": "https://api.spotify.com/v1/users/31oesphrnacjcf7vw5bf6odx3oiu/playlists?offset=0&limit=48",
+  "limit": 48,
+  "next": null,
+  "offset": 0,
+  "previous": null,
+  "total": 1,
+  "items": [
+    {
+      "collaborative": null,
+      "description": "",
+      "id": "unique_identifier_00",
+      "name": "Playlist1",
+      "type": "playlist",
+      "uri": "spotify:playlist:unique_identifier_00"
+    }
+  ]
+}
