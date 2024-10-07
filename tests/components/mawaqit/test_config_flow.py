@@ -11,6 +11,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.mawaqit import DOMAIN, config_flow
 from homeassistant.components.mawaqit.const import (
     CONF_CALC_METHOD,
+    CONF_TYPE_SEARCH,
     MAWAQIT_STORAGE_VERSION,
     MAWAQIT_TEST_STORAGE_KEY,
 )
@@ -285,11 +286,14 @@ async def test_async_step_user_valid_credentials(
 
         # Validate that the next form is displayed (mosques form)
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
-        assert result.get("step_id") == "mosques"
+        assert result.get("step_id") == "search_method"
+
+
+# ----- SEARCH METHOD FORM ----- #
 
 
 @pytest.mark.asyncio
-async def test_async_step_user_no_neighborhood(
+async def test_async_step_search_method_coordinate_no_neighborhood(
     hass: HomeAssistant, setup_test_environment
 ) -> None:
     """Test the user step when no mosque is found in the neighborhood."""
@@ -317,20 +321,18 @@ async def test_async_step_user_no_neighborhood(
         ),
     ):
         # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "testuser", CONF_PASSWORD: "testpass"}
-        )
+        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "coordinates"})
 
         # Check that the flow is aborted due to the lack of mosques nearby
         assert result.get("type") == data_entry_flow.FlowResultType.ABORT
         assert result.get("reason") == "no_mosque"
 
 
-# ----- MOSQUES FORM ----- #
+# ----- MOSQUES COORDINATES FORM ----- #
 
 
 @pytest.mark.asyncio
-async def test_async_step_mosques(
+async def test_async_step_mosques_coordinates(
     hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
 ) -> None:
     """Test the mosques step in the config flow."""
@@ -361,7 +363,7 @@ async def test_async_step_mosques(
         ),
     ):
         # Call the mosques step
-        result = await flow.async_step_mosques()
+        result = await flow.async_step_mosques_coordinates()
 
         # Verify the form is displayed with correct mosques options
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
@@ -379,7 +381,9 @@ async def test_async_step_mosques(
         ]  # Assuming the user selects the first mosque
         mosque_uuid = mocked_mosques_data[1][0]  # uuid of the first mosque
 
-        result = await flow.async_step_mosques({CONF_UUID: mosque_uuid_label})
+        result = await flow.async_step_mosques_coordinates(
+            {CONF_UUID: mosque_uuid_label}
+        )
 
         # Verify the flow processes the selection correctly
         assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY

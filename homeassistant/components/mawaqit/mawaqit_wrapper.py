@@ -62,6 +62,31 @@ async def all_mosques_neighborhood(
     return nearest_mosques
 
 
+async def all_mosques_by_keyword(
+    search_keyword, username=None, password=None, token=None
+):
+    """Return mosques in the neighborhood if any. Returns a list of dicts."""
+    try:
+        client = AsyncMawaqitClient(
+            username=username, password=password, token=token, session=None
+        )
+        await client.get_api_token()
+
+        search_mosques = []
+
+        if search_keyword is not None:
+            search_mosques = await client.fetch_mosques_by_keyword(search_keyword)
+
+    except BadCredentialsException as e:
+        _LOGGER.error("Error on retrieving mosques: %s", e)
+    except (ConnectionError, TimeoutError) as e:
+        _LOGGER.error("Network-related error: %s", e)
+    finally:
+        await client.close()
+
+    return search_mosques
+
+
 async def fetch_prayer_times(
     latitude=None, longitude=None, mosque=None, username=None, password=None, token=None
 ):

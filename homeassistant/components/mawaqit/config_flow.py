@@ -21,9 +21,10 @@ from homeassistant.helpers.storage import Store
 from . import mawaqit_wrapper, utils
 from .const import (
     CONF_CALC_METHOD,
+    CONF_SEARCH,
+    CONF_TYPE_SEARCH,
     CONF_UUID,
     DOMAIN,
-    MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
 )
@@ -50,6 +51,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors: dict[str, str] = {}
         self.store: Store | None = None
+        self.previous_keyword_search: str = ""
 
     async def async_step_user(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -59,8 +61,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.store is None:
             self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
+        # lat = self.hass.config.latitude
+        # longi = self.hass.config.longitude
 
         # create data folder if does not exist
         create_data_folder()
@@ -69,7 +71,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
         if await utils.is_another_instance(self.hass, self.store):
             # return self.async_abort(reason="one_instance_allowed")
-            return await self._show_keep_or_reset_form()
+            return await self.async_step_keep_or_reset()
 
         if user_input is None:
             return await self._show_config_form(user_input=None)
@@ -92,6 +94,64 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await utils.write_mawaqit_token(self.hass, self.store, mawaqit_token)
 
+            return await self.async_step_search_method()
+
+        self._errors["base"] = "wrong_credential"
+
+        return await self._show_config_form(user_input)
+
+    async def async_step_mosques_coordinates(
+        self, user_input=None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle mosques step."""
+
+        self._errors = {}
+
+        lat = self.hass.config.latitude
+        longi = self.hass.config.longitude
+
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
+
+        if user_input is not None:
+            title, data_entry = await utils.async_save_mosque(
+                self.hass, self.store, user_input[CONF_UUID], mawaqit_token, lat, longi
+            )
+            return self.async_create_entry(title=title, data=data_entry)
+
+        return await self._show_config_form2()
+
+    async def async_step_keep_or_reset(
+        self, user_input=None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle the user's choice to keep current data or reset."""
+        if user_input is None:
+            return await self._show_keep_or_reset_form()
+
+        choice = user_input["choice"]
+
+        if choice == "keep":
+            return self.async_abort(reason="configuration_kept")
+        if choice == "reset":
+            # Clear existing data and restart the configuration process
+            await utils.async_clear_data(self.hass, self.store, DOMAIN)
+            return await self.async_step_user()
+        return await self._show_keep_or_reset_form()
+
+    async def async_step_search_method(
+        self, user_input=None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle the user's choice of search method."""
+        if user_input is None:
+            return await self._show_search_method_form()
+
+        search_method = user_input[CONF_TYPE_SEARCH]
+
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
+
+        if search_method == "coordinates":
+            lat = self.hass.config.latitude
+            longi = self.hass.config.longitude
+
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                     lat, longi, token=mawaqit_token
@@ -110,60 +170,83 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass, CURRENT_DIR, "mosq_list_data", {"CALC_METHODS": CALC_METHODS}
             )  # TODO deprecate this line and put instead  "await utils.write_mosq_list_data({"CALC_METHODS": CALC_METHODS}, self.store)" # pylint: disable=fixme
 
-            return await self.async_step_mosques()
+            return await self.async_step_mosques_coordinates()
 
-        self._errors["base"] = "wrong_credential"
+            # return await self._show_config_form2()
+        if search_method == "keyword":
+            return await self.async_step_keyword_search()
 
-        return await self._show_config_form(user_input)
+        return await self._show_search_method_form()
 
-    async def async_step_mosques(
+    async def async_step_keyword_search(
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
-        """Handle mosques step."""
-
-        self._errors = {}
-
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
-
-        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
-
+        """Handle the keyword search."""
         if user_input is not None:
-            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-                self.store
+            if CONF_SEARCH in user_input:
+                keyword = user_input[CONF_SEARCH]
+
+                if keyword == self.previous_keyword_search:
+                    if CONF_UUID in user_input:
+                        title, data_entry = await utils.async_save_mosque(
+                            self.hass,
+                            self.store,
+                            user_input[CONF_UUID],
+                            mawaqit_token=None,
+                        )
+                        return self.async_create_entry(title=title, data=data_entry)
+                else:
+                    self.previous_keyword_search = keyword
+
+                mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
+
+                result_mosques = await mawaqit_wrapper.all_mosques_by_keyword(
+                    search_keyword=keyword, token=mawaqit_token
+                )
+                await write_all_mosques_NN_file(result_mosques, self.store)
+
+                (
+                    name_servers,
+                    uuid_servers,
+                    CALC_METHODS,
+                ) = await read_all_mosques_NN_file(self.store)
+
+                return await self._show_search_keyword_form(user_input, name_servers)
+
+        return await self._show_search_keyword_form(None, None)
+
+    async def _show_search_keyword_form(self, user_input, name_data):
+        """Show form to ask the user to choose search method."""
+        if user_input is None:
+            user_input = {}
+            user_input[CONF_SEARCH] = ""
+
+        options = {
+            vol.Required(CONF_SEARCH, default=user_input[CONF_SEARCH]): str,
+        }
+
+        if name_data is not None:
+            options[vol.Required(CONF_UUID)] = vol.In(name_data)
+
+        return self.async_show_form(
+            step_id="keyword_search",
+            data_schema=vol.Schema(options),
+            errors=self._errors,
+        )
+
+    async def _show_search_method_form(self):
+        """Show form to ask the user to choose search method."""
+        options = {
+            vol.Required(CONF_TYPE_SEARCH, default="coordinates"): vol.In(
+                ["coordinates", "keyword"]
             )
+        }
 
-            mosque = user_input[CONF_UUID]
-            index = name_servers.index(mosque)
-            mosque_id = uuid_servers[index]
-
-            nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                lat, longi, token=mawaqit_token
-            )
-
-            await write_my_mosque_NN_file(nearest_mosques[index], self.store)
-
-            await utils.update_my_mosque_data_files(
-                self.hass,
-                CURRENT_DIR,
-                self.store,
-                mosque_id=mosque_id,
-                token=mawaqit_token,
-            )
-
-            title = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
-            data_entry = {
-                CONF_API_KEY: mawaqit_token,
-                CONF_UUID: mosque_id,
-                CONF_LATITUDE: lat,
-                CONF_LONGITUDE: longi,
-            }
-
-            await utils.cleare_storage_entry(self.store, MAWAQIT_ALL_MOSQUES_NN)
-
-            return self.async_create_entry(title=title, data=data_entry)
-
-        return await self._show_config_form2()
+        return self.async_show_form(
+            step_id="search_method",
+            data_schema=vol.Schema(options),
+            errors=self._errors,
+        )
 
     async def _show_config_form(self, user_input):
         if user_input is None:
@@ -203,7 +286,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="mosques",
+            step_id="mosques_coordinates",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_UUID): vol.In(name_servers),
@@ -221,23 +304,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(options),
             errors=self._errors,
         )
-
-    async def async_step_keep_or_reset(
-        self, user_input=None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle the user's choice to keep current data or reset."""
-        if user_input is None:
-            return await self._show_keep_or_reset_form()
-
-        choice = user_input["choice"]
-
-        if choice == "keep":
-            return self.async_abort(reason="configuration_kept")
-        if choice == "reset":
-            # Clear existing data and restart the configuration process
-            await utils.async_clear_data(self.hass, self.store, DOMAIN)
-            return await self.async_step_user()
-        return await self._show_keep_or_reset_form()
 
     @staticmethod
     @callback

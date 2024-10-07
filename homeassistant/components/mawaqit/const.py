@@ -46,6 +46,8 @@ PASSWORD = "password"
 
 API = "api"
 CONF_UUID: str = "uuid"
+CONF_SEARCH: str = "Keyword"
+CONF_TYPE_SEARCH: str = "search_method"
 
 
 MAWAQIT_STORAGE_VERSION = 1

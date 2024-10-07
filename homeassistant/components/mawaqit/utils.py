@@ -7,11 +7,13 @@ import json
 import logging
 import os
 
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper
 from .const import (
+    CONF_UUID,
     MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_API_KEY_TOKEN,
     MAWAQIT_MOSQ_LIST_DATA,
@@ -59,28 +61,35 @@ async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
     await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
 
 
-async def read_all_mosques_NN_file(store: Store | None):
+async def read_all_mosques_NN_file(store: Store | None, raw=False):
     """Read all mosques from the store and return their names, UUIDs, and calculation methods.
 
     Args:
         store (Store | None): The storage object to read from.
+        raw (bool): If True, return the raw data from the store.
 
     Returns:
         tuple: A tuple containing three lists: names of mosques, UUIDs of mosques, and calculation methods.
 
     """
+    dict_mosques = await read_one_element(store, MAWAQIT_ALL_MOSQUES_NN)
+
+    if raw:
+        return dict_mosques
 
     name_servers = []
     uuid_servers = []
     CALC_METHODS = []
 
-    dict_mosques = await read_one_element(store, MAWAQIT_ALL_MOSQUES_NN)
     if dict_mosques is not None:
         for mosque in dict_mosques:
-            distance = mosque["proximity"]
-            distance = distance / 1000
-            distance = round(distance, 2)
-            name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
+            proximity_str = ""
+            if "proximity" in mosque:
+                distance = mosque["proximity"]
+                distance = distance / 1000
+                distance = round(distance, 2)
+                proximity_str = " (" + str(distance) + "km)"
+            name_servers.extend([mosque["label"] + proximity_str])
             uuid_servers.extend([mosque["uuid"]])
             CALC_METHODS.extend([mosque["label"]])
 
@@ -365,3 +374,66 @@ async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
 async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:
     """Check if another instance of the mosque configuration exists."""
     return await is_already_configured(hass, store)
+
+
+async def async_save_mosque(
+    hass: HomeAssistant,
+    store: Store | None,
+    UUID,
+    mawaqit_token=None,
+    lat=None,
+    longi=None,
+) -> tuple[str, dict]:
+    """Save mosque data  in store and prepare entry data.
+
+    This function saves mosque data by reading from the store, updating necessary files,
+    and clearing storage entries. It also handles optional latitude and longitude data,
+    and prepares the entry data.
+
+    Args:
+        hass (HomeAssistant): The HomeAssistant instance.
+        store (Store): The storage instance to read/write data.
+        UUID (str): The unique identifier for the mosque.
+        mawaqit_token (str, optional): The token for Mawaqit API. Defaults to None.
+        lat (float, optional): The latitude of the mosque. Defaults to None.
+        longi (float, optional): The longitude of the mosque. Defaults to None.
+
+    Returns:
+        tuple: A tuple containing the title and data entry dictionary.
+
+    """
+    if store is None:
+        _LOGGER.error("Store should not be None !")
+        raise ValueError("Store should not be None !")
+
+    if mawaqit_token is None:
+        mawaqit_token = await read_mawaqit_token(hass, store)
+
+    name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(store)
+    raw_all_mosques_data = await read_all_mosques_NN_file(store, raw=True)
+
+    mosque = UUID
+    index = name_servers.index(mosque)
+    mosque_id = uuid_servers[index]
+
+    await write_my_mosque_NN_file(raw_all_mosques_data[index], store)
+
+    await update_my_mosque_data_files(
+        hass,
+        CURRENT_DIR,
+        store,
+        mosque_id=mosque_id,
+        token=mawaqit_token,
+    )
+
+    title = "MAWAQIT" + " - " + raw_all_mosques_data[index]["name"]
+    data_entry = {
+        CONF_API_KEY: mawaqit_token,
+        CONF_UUID: mosque_id,
+    }
+    if lat is not None and longi is not None:
+        data_entry[CONF_LATITUDE] = lat
+        data_entry[CONF_LONGITUDE] = longi
+    await cleare_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
+
+    return title, data_entry
