@@ -448,13 +448,25 @@ def supervisor_client() -> Generator[AsyncMock]:
         yield supervisor_client
 
 
+_IGNORE_TRANSLATION_VIOLATIONS = {
+    "component.airvisual.config.step.user.data.type",  # Uses description
+}
+
+
 async def _ensure_translation_exists(
     hass: HomeAssistant, category: str, component: str, key: str
 ) -> None:
     """Raise if translation doesn't exist."""
+    full_key = f"component.{component}.{category}.{key}"
+    if full_key in _IGNORE_TRANSLATION_VIOLATIONS:
+        return
+
     translations = await async_get_translations(hass, "en", category, [component])
-    if f"component.{component}.{category}.{key}" not in translations:
-        raise ValueError(f"Translation not found for {component}: `{category}.{key}`")
+    if full_key not in translations:
+        raise ValueError(
+            f"Translation not found for {component}: `{category}.{key}` "
+            f"(see homeassistant/components/{component}/config_flow.py)"
+        )
 
 
 @pytest.fixture(autouse=True)
