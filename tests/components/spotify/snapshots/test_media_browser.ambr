@@ -187,7 +187,7 @@
         'media_content_id': 'spotify://01J5TX5A0FF6G5V0QJX6HBC94T',
         'media_content_type': 'spotify://library',
         'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
-        'title': 'Spotify',
+        'title': 'spotify_1',
       }),
       dict({
         'can_expand': True,
