@@ -65,7 +65,7 @@
       "list_access": {
         "name": "List access",
         "state": {
-          "registered": "Personal",
+          "registered": "Private",
           "shared": "Shared"
         }
       }
