@@ -27,7 +27,6 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,10 +74,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Spotify based on a config entry."""
     data = entry.runtime_data
+    assert entry.unique_id is not None
     spotify = SpotifyMediaPlayer(
         data.coordinator,
         data.devices,
-        entry.data[CONF_ID],
+        entry.unique_id,
         entry.title,
     )
     async_add_entities([spotify])
@@ -108,7 +108,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, user_id)},
             manufacturer="Spotify AB",
-            model=f"Spotify {coordinator.current_user['product']}",
+            model=f"Spotify {coordinator.current_user.product}",
             name=f"Spotify {name}",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://open.spotify.com",
@@ -268,7 +268,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
-        return [device["name"] for device in self.devices.data]
+        return [device.name for device in self.devices.data]
 
     @property
     def shuffle(self) -> bool | None:
@@ -284,31 +284,31 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
         return REPEAT_MODE_MAPPING_TO_HA.get(self.currently_playing.repeat_mode)
 
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        self.coordinator.client.volume(int(volume * 100))
+        await self.coordinator.client.set_volume(int(volume * 100))
 
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Start or resume playback."""
-        self.coordinator.client.start_playback()
+        await self.coordinator.client.start_playback()
 
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Pause playback."""
-        self.coordinator.client.pause_playback()
+        await self.coordinator.client.pause_playback()
 
-    def media_previous_track(self) -> None:
+    async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
-        self.coordinator.client.previous_track()
+        await self.coordinator.client.previous_track()
 
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Skip to next track."""
-        self.coordinator.client.next_track()
+        await self.coordinator.client.next_track()
 
-    def media_seek(self, position: float) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        self.coordinator.client.seek_track(int(position * 1000))
+        await self.coordinator.client.seek_track(int(position * 1000))
 
-    def play_media(
+    async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
@@ -333,7 +333,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return
 
         if self.currently_playing and self.devices.data:
-            kwargs["device_id"] = self.devices.data[0].get("id")
+            kwargs["device_id"] = self.devices.data[0].device_id
 
         if enqueue == MediaPlayerEnqueue.ADD:
             if media_type not in {
@@ -344,29 +344,29 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
                 raise ValueError(
                     f"Media type {media_type} is not supported when enqueue is ADD"
                 )
-            self.coordinator.client.add_to_queue(media_id, kwargs.get("device_id"))
+            await self.coordinator.client.add_to_queue(
+                media_id, kwargs.get("device_id")
+            )
             return
 
-        self.coordinator.client.start_playback(**kwargs)
+        await self.coordinator.client.start_playback(**kwargs)
 
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self.devices.data:
             if device.name == source:
-                self.coordinator.client.transfer_playback(
-                    device.device_id, self.state == MediaPlayerState.PLAYING
-                )
+                await self.coordinator.client.transfer_playback(device.device_id)
                 return
 
-    def set_shuffle(self, shuffle: bool) -> None:
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
-        self.coordinator.client.shuffle(shuffle)
+        await self.coordinator.client.set_shuffle(state=shuffle)
 
-    def set_repeat(self, repeat: RepeatMode) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
             raise ValueError(f"Unsupported repeat mode: {repeat}")
-        self.coordinator.client.repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
+        await self.coordinator.client.set_repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
 
     async def async_browse_media(
         self,

@@ -6,14 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from spotifyaio import SpotifyClient
-
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, SPOTIFY_SCOPES
+from .spotifyaio import SpotifyClient
 
 
 class SpotifyFlowHandler(
@@ -42,6 +41,7 @@ class SpotifyFlowHandler(
         try:
             current_user = await spotify.get_current_user()
         except Exception:  # noqa: BLE001
+            self.logger.exception("Failed to fetch user details")
             return self.async_abort(reason="connection_error")
 
         await self.async_set_unique_id(current_user.user_id)

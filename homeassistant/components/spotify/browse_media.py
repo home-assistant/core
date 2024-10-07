@@ -6,7 +6,6 @@ from enum import StrEnum
 import logging
 from typing import Any, TypedDict
 
-from spotifyaio import SpotifyClient
 import yarl
 
 from homeassistant.components.media_player import (
@@ -19,6 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
+from .spotifyaio import SpotifyClient
 
 BROWSE_LIMIT = 48
 
@@ -382,13 +382,13 @@ async def build_item_response(  # noqa: C901
                 for playlist in media
             ]
     elif media_content_type == BrowsableMedia.CATEGORIES:
-        if media := await spotify.get_category(user["country"]):
+        if media := await spotify.get_categories():
             items = [
                 {
-                    "id": category.id,
+                    "id": category.category_id,
                     "name": category.name,
                     "type": "category_playlists",
-                    "uri": category.id,
+                    "uri": category.category_id,
                     "thumbnail": category.icons[0].url if category.icons else None,
                 }
                 for category in media
@@ -423,29 +423,33 @@ async def build_item_response(  # noqa: C901
             ]
     elif media_content_type == MediaType.PLAYLIST:
         if media := await spotify.get_playlist(media_content_id):
+            title = media.name
+            image = media.images[0].url if media.images else None
             items = [
                 {
-                    "id": track.track_id,
-                    "name": track.name,
+                    "id": playlist_track.track.track_id,
+                    "name": playlist_track.track.name,
                     "type": MediaType.TRACK,
-                    "uri": track.uri,
-                    "thumbnail": track.album.images[0].url
-                    if track.album.images
-                    else None,
+                    "uri": playlist_track.track.uri,
+                    "thumbnail": (
+                        playlist_track.track.album.images[0].url
+                        if playlist_track.track.album.images
+                        else None
+                    ),
                 }
-                for track in media.tracks
+                for playlist_track in media.tracks.items
             ]
     elif media_content_type == MediaType.ALBUM:
         if media := await spotify.get_album(media_content_id):
+            title = media.name
+            image = media.images[0].url if media.images else None
             items = [
                 {
                     "id": track.track_id,
                     "name": track.name,
                     "type": MediaType.TRACK,
                     "uri": track.uri,
-                    "thumbnail": track.album.images[0].url
-                    if track.album.images
-                    else None,
+                    "thumbnail": (media.images[0].url if media.images else None),
                 }
                 for track in media.tracks
             ]
