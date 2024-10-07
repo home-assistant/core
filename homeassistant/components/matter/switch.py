@@ -78,7 +78,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SWITCH,
         entity_description=SwitchEntityDescription(
             key="MatterPowerToggle",
-            device_class=SwitchDeviceClass.OUTLET,
+            device_class=SwitchDeviceClass.SWITCH,
             translation_key="power",
         ),
         entity_class=MatterSwitch,
@@ -107,7 +107,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SWITCH,
         entity_description=SwitchEntityDescription(
             key="MatterSwitch",
-            device_class=SwitchDeviceClass.SWITCH,
+            device_class=SwitchDeviceClass.OUTLET,
             name=None,
         ),
         entity_class=MatterSwitch,
