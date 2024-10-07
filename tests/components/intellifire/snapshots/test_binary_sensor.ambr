@@ -47,7 +47,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-entry]
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.intellifire_cloud_connectivity',
+    'entity_id': 'binary_sensor.intellifire_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,7 +71,55 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Cloud connectivity',
+    'original_name': 'Connectivity',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_connectivity',
+    'unique_id': 'local_connectivity_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'connectivity',
+      'friendly_name': 'IntelliFire Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_connectivity_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_connectivity_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
     'platform': 'intellifire',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -80,15 +128,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-state]
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_connectivity_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
       'device_class': 'connectivity',
-      'friendly_name': 'IntelliFire Cloud connectivity',
+      'friendly_name': 'IntelliFire Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.intellifire_cloud_connectivity',
+    'entity_id': 'binary_sensor.intellifire_connectivity_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -428,54 +476,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
-  })
-# ---
-# name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.intellifire_local_connectivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-    'original_icon': None,
-    'original_name': 'Local connectivity',
-    'platform': 'intellifire',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'local_connectivity',
-    'unique_id': 'local_connectivity_mock_serial',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished Intellifire API',
-      'device_class': 'connectivity',
-      'friendly_name': 'IntelliFire Local connectivity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.intellifire_local_connectivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
