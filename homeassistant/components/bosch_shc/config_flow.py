@@ -39,10 +39,10 @@ HOST_SCHEMA = vol.Schema(
 )
 
 
-def write_tls_asset(hass: HomeAssistant, filename: str, asset: bytes) -> None:
+def write_tls_asset(hass: HomeAssistant, folder: str, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
-    makedirs(hass.config.path(DOMAIN), exist_ok=True)
-    with open(hass.config.path(DOMAIN, filename), "w", encoding="utf8") as file_handle:
+    makedirs(hass.config.path(DOMAIN, folder), exist_ok=True)
+    with open(hass.config.path(DOMAIN, folder, filename), "w", encoding="utf8") as file_handle:
         file_handle.write(asset.decode("utf-8"))
 
 
@@ -56,19 +56,17 @@ def create_credentials_and_validate(
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register(host, "HomeAssistant")
-    # Save key/certificate pair for each registered host separately
-    # otherwise only the last registered host is accessible.
-    conf_shc_cert = f"{unique_id}/{CONF_SHC_CERT}"
-    conf_shc_key = f"{unique_id}/{CONF_SHC_KEY}"
 
     if result is not None:
-        write_tls_asset(hass, conf_shc_cert, result["cert"])
-        write_tls_asset(hass, conf_shc_key, result["key"])
+        # Save key/certificate pair for each registered host separately
+        # otherwise only the last registered host is accessible.
+        write_tls_asset(hass, unique_id, CONF_SHC_CERT, result["cert"])
+        write_tls_asset(hass, unique_id, CONF_SHC_KEY, result["key"])
 
         session = SHCSession(
             host,
-            hass.config.path(DOMAIN, conf_shc_cert),
-            hass.config.path(DOMAIN, conf_shc_key),
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_CERT),
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_KEY),
             True,
             zeroconf_instance,
         )

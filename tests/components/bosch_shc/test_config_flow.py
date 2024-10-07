@@ -708,6 +708,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 async def test_tls_assets_writer(hass: HomeAssistant) -> None:
     """Test we write tls assets to correct location."""
+    unique_id = "test-mac"
     assets = {
         "token": "abc:123",
         "cert": b"content_cert",
@@ -719,15 +720,15 @@ async def test_tls_assets_writer(hass: HomeAssistant) -> None:
             "homeassistant.components.bosch_shc.config_flow.open", mock_open()
         ) as mocked_file,
     ):
-        write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
+        write_tls_asset(hass, unique_id, CONF_SHC_CERT, assets["cert"])
         mocked_file.assert_called_with(
-            hass.config.path(DOMAIN, CONF_SHC_CERT), "w", encoding="utf8"
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_CERT), "w", encoding="utf8"
         )
         mocked_file().write.assert_called_with("content_cert")
 
-        write_tls_asset(hass, CONF_SHC_KEY, assets["key"])
+        write_tls_asset(hass, unique_id, CONF_SHC_KEY, assets["key"])
         mocked_file.assert_called_with(
-            hass.config.path(DOMAIN, CONF_SHC_KEY), "w", encoding="utf8"
+            hass.config.path(DOMAIN, unique_id, CONF_SHC_KEY), "w", encoding="utf8"
         )
         mocked_file().write.assert_called_with("content_key")
 
