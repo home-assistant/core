@@ -111,7 +111,14 @@ class AddonManager:
         self._restart_task: asyncio.Task | None = None
         self._start_task: asyncio.Task | None = None
         self._update_task: asyncio.Task | None = None
-        self._supervisor_client: SupervisorClient = get_supervisor_client(hass)
+        self._supervisor_client: SupervisorClient | None = None
+
+    @property
+    def supervisor_client(self) -> SupervisorClient:
+        """Get supervisor client."""
+        if not self._supervisor_client:
+            self._supervisor_client = get_supervisor_client(self._hass)
+        return self._supervisor_client
 
     def task_in_progress(self) -> bool:
         """Return True if any of the add-on tasks are in progress."""
@@ -141,7 +148,7 @@ class AddonManager:
     @api_error("Failed to get the {addon_name} add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
-        addon_store_info = await self._supervisor_client.store.addon_info(
+        addon_store_info = await self.supervisor_client.store.addon_info(
             self.addon_slug
         )
         self._logger.debug("Add-on store info: %s", addon_store_info.to_dict())
@@ -155,7 +162,7 @@ class AddonManager:
                 version=None,
             )
 
-        addon_info = await self._supervisor_client.addons.addon_info(self.addon_slug)
+        addon_info = await self.supervisor_client.addons.addon_info(self.addon_slug)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
             available=addon_info.available,
@@ -199,12 +206,12 @@ class AddonManager:
 
         self._check_addon_available(addon_info)
 
-        await self._supervisor_client.store.install_addon(self.addon_slug)
+        await self.supervisor_client.store.install_addon(self.addon_slug)
 
     @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the managed add-on."""
-        await self._supervisor_client.addons.uninstall_addon(self.addon_slug)
+        await self.supervisor_client.addons.uninstall_addon(self.addon_slug)
 
     @api_error("Failed to update the {addon_name} add-on")
     async def async_update_addon(self) -> None:
@@ -225,17 +232,17 @@ class AddonManager:
     @api_error("Failed to start the {addon_name} add-on")
     async def async_start_addon(self) -> None:
         """Start the managed add-on."""
-        await self._supervisor_client.addons.start_addon(self.addon_slug)
+        await self.supervisor_client.addons.start_addon(self.addon_slug)
 
     @api_error("Failed to restart the {addon_name} add-on")
     async def async_restart_addon(self) -> None:
         """Restart the managed add-on."""
-        await self._supervisor_client.addons.restart_addon(self.addon_slug)
+        await self.supervisor_client.addons.restart_addon(self.addon_slug)
 
     @api_error("Failed to stop the {addon_name} add-on")
     async def async_stop_addon(self) -> None:
         """Stop the managed add-on."""
-        await self._supervisor_client.addons.stop_addon(self.addon_slug)
+        await self.supervisor_client.addons.stop_addon(self.addon_slug)
 
     @api_error("Failed to create a backup of the {addon_name} add-on")
     async def async_create_backup(self) -> None:
