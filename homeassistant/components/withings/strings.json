@@ -20,7 +20,8 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."
