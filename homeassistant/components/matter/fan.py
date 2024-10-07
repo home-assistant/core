@@ -329,7 +329,10 @@ class MatterFan(MatterEntity, FanEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.FAN,
-        entity_description=FanEntityDescription(key="MatterFan"),
+        entity_description=FanEntityDescription(
+            key="MatterFan",
+            name=None,
+        ),
         entity_class=MatterFan,
         # FanEntityFeature
         required_attributes=(

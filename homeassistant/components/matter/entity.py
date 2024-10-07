@@ -84,8 +84,8 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
-            if self._postfix_translation_key:
-                self._name_translation_key = self._postfix_translation_key
+            if self._postfix_translation_key and not self.translation_key:
+                self._attr_translation_key = self._postfix_translation_key
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint

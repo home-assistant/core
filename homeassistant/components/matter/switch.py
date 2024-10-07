@@ -68,6 +68,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=SwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
+            name=None,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -107,6 +108,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=SwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.SWITCH,
+            name=None,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
