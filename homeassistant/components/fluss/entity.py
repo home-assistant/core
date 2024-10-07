@@ -7,8 +7,8 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 
+from .button import FlussButton
 from .const import DOMAIN
-from .device import FlussButton
 
 _LOGGER = logging.getLogger(__name__)
 
