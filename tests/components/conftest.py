@@ -11,7 +11,11 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from aiohasupervisor.models import StoreInfo
 import pytest
 
-from homeassistant.config_entries import ConfigEntriesFlowManager, FlowResult
+from homeassistant.config_entries import (
+    DISCOVERY_SOURCES,
+    ConfigEntriesFlowManager,
+    FlowResult,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
@@ -455,7 +459,7 @@ def check_config_translations() -> Generator[None]:
         if (
             result["type"] is FlowResultType.ABORT
             and isinstance(self, ConfigEntriesFlowManager)
-            and flow.source not in {"bluetooth", "dhcp", "hardware", "usb", "zeroconf"}
+            and flow.source not in DISCOVERY_SOURCES
         ):
             reason = result.get("reason")
             translations = await async_get_translations(
