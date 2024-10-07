@@ -167,4 +167,6 @@ async def test_idle(
     state = hass.states.get("media_player.spotify_spotify")
     assert state
     assert state.state == MediaPlayerState.IDLE
-    assert state.attributes["supported_features"] == 2048
+    assert (
+        state.attributes["supported_features"] == MediaPlayerEntityFeature.SELECT_SOURCE
+    )
