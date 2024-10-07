@@ -67,7 +67,7 @@
       "fields": {
         "command": {
           "name": "Items",
-          "description": "The items to search for on LMS"
+          "description": "The items to search for on LMS.\n."
         },
         "return_items": {
           "name": "Number of Items",

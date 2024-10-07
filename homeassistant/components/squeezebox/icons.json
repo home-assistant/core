@@ -33,6 +33,9 @@
     },
     "unsync": {
       "service": "mdi:sync-off"
+    },
+    "search": {
+      "service":"mdi:folder-search-outline"
     }
   }
 }
