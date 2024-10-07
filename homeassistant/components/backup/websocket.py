@@ -75,7 +75,8 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_MANAGER].generate_backup()
+    manager = hass.data[DATA_MANAGER]
+    backup = await manager.generate_backup()
     connection.send_result(msg["id"], backup)
     await manager.sync_backup(backup=backup)
 
@@ -133,7 +134,7 @@ async def backup_agents_info(
     msg: dict[str, Any],
 ) -> None:
     """Return backup agents info."""
-    manager: BackupManager = hass.data[DOMAIN]
+    manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
     connection.send_result(
         msg["id"],
@@ -153,7 +154,7 @@ async def backup_agents_list_synced_backups(
     msg: dict[str, Any],
 ) -> None:
     """Return a list of synced backups."""
-    manager: BackupManager = hass.data[DOMAIN]
+    manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
     await manager.load_platforms()
     for agent_id, agent in manager.sync_agents.items():
@@ -177,7 +178,7 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download a synced backup."""
-    manager: BackupManager = hass.data[DOMAIN]
+    manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
     if not (agent := manager.sync_agents.get(msg["agent"])):
