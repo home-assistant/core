@@ -60,6 +60,70 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "add_alarm": {
+      "name": "Add alarm",
+      "description": "Add an alarm to a player.",
+      "fields": {
+        "time": {
+          "name": "Time",
+          "description": "Time of the alarm in HH:MM format."
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether the alarm is enabled."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "Volume of the alarm as a float between 0 and 1."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "Whether the alarm should repeat the item played."
+        },
+        "dow": {
+          "name": "Days",
+          "description": "List of days of the week the alarm should be active. 0 is Sunday, 6 is Saturday."
+        },
+        "url": {
+          "name": "url",
+          "description": "The item to play when the alarm sounds."
+        }
+      }
+    },
+    "update_alarm": {
+      "name": "Update alarm",
+      "description": "Update an existing alarm on a player.",
+      "fields": {
+        "time": {
+          "name": "Time",
+          "description": "Time of the alarm in HH:MM format."
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether the alarm is enabled."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "Volume of the alarm as a float between 0 and 1."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "Whether the alarm should repeat the item played."
+        },
+        "dow": {
+          "name": "Days",
+          "description": "List of days of the week the alarm should be active. 0 is Sunday, 6 is Saturday."
+        },
+        "url": {
+          "name": "url",
+          "description": "The item to play when the alarm sounds."
+        }
+      }
+    },
+    "delete_alarm": {
+      "name": "Delete alarm",
+      "description": "Delete an existing alarm on a player."
     }
   },
   "entity": {
