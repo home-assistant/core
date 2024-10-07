@@ -733,11 +733,11 @@ async def test_tls_assets_writer(hass: HomeAssistant) -> None:
         mocked_file().write.assert_called_with("content_key")
 
 
-# @pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_register_multiple_controllers(hass: HomeAssistant) -> None:
     """Test register multiple controllers.
 
-    Each registered controller must get its own key/certifiacate pair,
+    Each registered controller must get its own key/certificate pair,
     which must not get overwritten when a new controller is added.
     """
 
