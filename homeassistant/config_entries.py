@@ -2745,11 +2745,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
-            reason = (
-                "reconfigure_successful"
-                if self.source == SOURCE_RECONFIGURE
-                else "reauth_successful"
-            )
+            reason = "reauth_successful"
+            if self.source == SOURCE_RECONFIGURE:
+                reason = "reconfigure_successful"
         return self.async_abort(reason=reason)
 
     def is_matching(self, other_flow: Self) -> bool:
