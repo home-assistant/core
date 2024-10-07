@@ -32,6 +32,7 @@ ATTR_CONFIG_OUTPUT_FILE_PREFIX = "config_output_file_prefix"
 ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
+ATTR_VALVE_POSITION = "valve_position"
 ATTR_COOLING = "cooling"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
