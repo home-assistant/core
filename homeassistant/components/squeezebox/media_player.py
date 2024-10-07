@@ -573,39 +573,39 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "0",
                     str(return_items),
                     "tags:laay",
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "favorites":
                 _param = [
                     "items",
                     "0",
                     str(return_items),
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "artists":
                 _param = [
                     "0",
                     str(return_items),
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "genres":
                 _param = [
                     "0",
                     str(return_items),
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "tracks":
                 _param = [
                     "0",
                     str(return_items),
                     "tags:aglQrTy",
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "playlists":
                 _param = [
                     "0",
                     str(return_items),
-                    "search:" + search_string if search_string is not None else None,
+                    "search:" + search_string if search_string is not None else "",
                 ]
             case "players":
                 _param = ["0", str(return_items)]
