@@ -10,8 +10,9 @@ from homeassistant.components.nasweb.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.network import NoURLAvailableError
 
-from .conftest import BASE_CONFIG_FLOW, BASE_NASWEB_DATA
+from .conftest import BASE_CONFIG_FLOW, BASE_COORDINATOR, BASE_NASWEB_DATA
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -85,6 +86,25 @@ async def test_form_invalid_auth(
     assert result2.get("errors") == {"base": "invalid_auth"}
 
 
+async def test_form_missing_internal_url(
+    hass: HomeAssistant,
+    validate_input_all_ok: dict[str, AsyncMock | MagicMock],
+) -> None:
+    """Test missing internal url."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        BASE_NASWEB_DATA + "NASwebData.get_webhook_url", side_effect=NoURLAvailableError
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT
+        )
+        assert result2.get("type") == FlowResultType.FORM
+        assert result2.get("errors") == {"base": "missing_internal_url"}
+
+
 async def test_form_missing_nasweb_data(
     hass: HomeAssistant,
     validate_input_all_ok: dict[str, AsyncMock | MagicMock],
@@ -103,30 +123,50 @@ async def test_form_missing_nasweb_data(
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    with patch(
-        "homeassistant.components.nasweb.nasweb_data.NASwebData.get_webhook_url",
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_INPUT
-        )
-        assert result2.get("type") == FlowResultType.FORM
-        assert result2.get("errors") == {"base": "missing_nasweb_data"}
+    # with patch(
+    #     "homeassistant.components.nasweb.nasweb_data.NASwebData.get_webhook_url",
+    #     return_value=None,
+    # ):
+    #     result2 = await hass.config_entries.flow.async_configure(
+    #         result["flow_id"], TEST_USER_INPUT
+    #     )
+    #     assert result2.get("type") == FlowResultType.FORM
+    #     assert result2.get("errors") == {"base": "missing_nasweb_data"}
     with patch(BASE_CONFIG_FLOW + "WebioAPI.status_subscription", return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
+    # with patch(
+    #     BASE_NASWEB_DATA + "NotificationCoordinator.check_connection",
+    #     return_value=False,
+    # ):
+    #     result2 = await hass.config_entries.flow.async_configure(
+    #         result["flow_id"], TEST_USER_INPUT
+    #     )
+    #     assert result2.get("type") == FlowResultType.FORM
+    #     assert result2.get("errors") == {"base": "missing_nasweb_data"}
+
+
+async def test_missing_status(
+    hass: HomeAssistant,
+    validate_input_all_ok: dict[str, AsyncMock | MagicMock],
+) -> None:
+    """Test missing status update."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with patch(
-        BASE_NASWEB_DATA + "NotificationCoordinator.check_connection",
+        BASE_COORDINATOR + "NotificationCoordinator.check_connection",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") == FlowResultType.FORM
-        assert result2.get("errors") == {"base": "missing_nasweb_data"}
+        assert result2.get("errors") == {"base": "missing_status"}
 
 
 async def test_form_exception(

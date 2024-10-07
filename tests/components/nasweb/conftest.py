@@ -7,7 +7,7 @@ import pytest
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.nasweb.async_setup_entry", return_value=True
@@ -17,10 +17,11 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 BASE_CONFIG_FLOW = "homeassistant.components.nasweb.config_flow."
 BASE_NASWEB_DATA = "homeassistant.components.nasweb.nasweb_data."
+BASE_COORDINATOR = "homeassistant.components.nasweb.coordinator."
 
 
 @pytest.fixture
-def validate_input_all_ok() -> Generator[dict[str, AsyncMock | MagicMock], None, None]:
+def validate_input_all_ok() -> Generator[dict[str, AsyncMock | MagicMock]]:
     """Yield dictionary of mocked functions required for successful test_form execution."""
     with (
         patch(
