@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
+from aioautomower.model import WorkArea
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -13,6 +14,7 @@ from homeassistant.components.husqvarna_automower.const import (
     DOMAIN,
     EXECUTION_TIME_DELAY,
 )
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -107,6 +109,73 @@ async def test_number_workarea_commands(
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2
+
+
+async def test_add_work_area(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test adding a work area commands."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    current_entites = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].work_area_names.append("new_work_area")
+    values[TEST_MOWER_ID].work_area_dict.update({1: "new_work_area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {1: WorkArea(name="new_work_area", cutting_height=12, enabled=True)}
+    )
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    entity_id = "number.test_mower_1_new_work_area_cutting_height"
+    current_entites_after_addition = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    assert current_entites_after_addition == current_entites + 1
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "12"
+
+
+async def test_remove_work_area(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test adding a work area commands."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    current_entites = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].work_area_names.remove("Back lawn")
+    values[TEST_MOWER_ID].work_area_dict.pop(654321)
+    values[TEST_MOWER_ID].work_areas.pop(654321)
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    current_entites_after_deletion = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    assert current_entites_after_deletion == current_entites - 1
+    entity_id = "number.test_mower_1_back_lawn_cutting_height"
+    state = hass.states.get(entity_id)
+    assert state is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

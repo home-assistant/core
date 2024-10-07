@@ -9,8 +9,9 @@ from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -19,7 +20,6 @@ from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
     _work_area_translation_key,
-    async_remove_work_area_entities,
     handle_sending_exception,
 )
 
@@ -111,7 +111,7 @@ async def async_setup_entry(
     """Set up number platform."""
     coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
-
+    current_work_areas = {}
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
@@ -123,13 +123,62 @@ async def async_setup_entry(
                     for description in WORK_AREA_NUMBER_TYPES
                     for work_area_id in _work_areas
                 )
-            async_remove_work_area_entities(hass, coordinator, entry, mower_id)
+                current_work_areas[mower_id] = set(_work_areas)
         entities.extend(
             AutomowerNumberEntity(mower_id, coordinator, description)
             for description in NUMBER_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
     async_add_entities(entities)
+
+    def _async_measurement_listener() -> None:
+        """Listen for new measurements and add sensors if they did not exist."""
+        received_work_areas = {}
+        removed_work_areas = {}
+        new_work_areas = {}
+        for mower_id in coordinator.data:  # pylint: disable=too-many-nested-blocks
+            if coordinator.data[mower_id].capabilities.work_areas:
+                _work_areas = coordinator.data[mower_id].work_areas
+                if _work_areas is not None:
+                    received_work_areas[mower_id] = set(_work_areas)
+                    new_work_areas[mower_id] = (
+                        received_work_areas[mower_id] - current_work_areas[mower_id]
+                    )
+                    removed_work_areas[mower_id] = (
+                        current_work_areas[mower_id] - received_work_areas[mower_id]
+                    )
+                    if new_work_areas[mower_id]:
+                        current_work_areas[mower_id].update(new_work_areas[mower_id])
+                        async_add_entities(
+                            AutomowerWorkAreaNumberEntity(
+                                mower_id, coordinator, description, work_area_id
+                            )
+                            for description in WORK_AREA_NUMBER_TYPES
+                            for work_area_id in _work_areas
+                        )
+                    if removed_work_areas[mower_id]:
+                        set1 = set(current_work_areas[mower_id])
+                        set2 = set(removed_work_areas[mower_id])
+                        current_work_areas[mower_id] = set(set1 - set2)
+                        work_areas_to_keep = [
+                            f"{mower_id}_{work_area_id}_cutting_height_work_area"
+                            for work_area_id in current_work_areas[mower_id]
+                        ]
+                        entity_reg = er.async_get(hass)
+                        for entity_entry in er.async_entries_for_config_entry(
+                            entity_reg, entry.entry_id
+                        ):
+                            if (
+                                (split := entity_entry.unique_id.split("_"))[0]
+                                == mower_id
+                                and entity_entry.domain == Platform.NUMBER
+                                and split[-1] == "area"
+                                and entity_entry.unique_id not in work_areas_to_keep
+                            ):
+                                _LOGGER.debug("Deleting: %s", entity_entry.entity_id)
+                                entity_reg.async_remove(entity_entry.entity_id)
+
+    coordinator.async_add_listener(_async_measurement_listener)
 
 
 class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
