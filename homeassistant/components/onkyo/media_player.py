@@ -31,8 +31,8 @@ from .const import (
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
+    PYEISCP_COMMANDS,
     ZONES,
-    InputLibValue,
     InputSource,
     VolumeResolution,
 )
@@ -127,6 +127,17 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 
 
+type InputLibValue = str | tuple[str, ...]
+
+_cmds: dict[str, InputLibValue] = {
+    k: v["name"]
+    for k, v in {
+        **PYEISCP_COMMANDS["main"]["SLI"]["values"],
+        **PYEISCP_COMMANDS["zone2"]["SLZ"]["values"],
+    }.items()
+}
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -135,6 +146,27 @@ async def async_setup_platform(
 ) -> None:
     """Import config from yaml."""
     host = config.get(CONF_HOST)
+
+    source_mapping: dict[str, InputSource] = {}
+    for value, source_lib in _cmds.items():
+        try:
+            source = InputSource(value)
+        except ValueError:
+            continue
+        if isinstance(source_lib, str):
+            source_mapping.setdefault(source_lib, source)
+        else:
+            for source_lib_single in source_lib:
+                source_mapping.setdefault(source_lib_single, source)
+
+    sources: dict[InputSource, str] = {}
+    for source_lib_single, source_name in config[CONF_SOURCES].items():
+        user_source = source_mapping.get(source_lib_single.lower())
+        if user_source is not None:
+            sources[user_source] = source_name
+
+    config[CONF_SOURCES] = sources
+
     results = []
     if host is not None:
         _LOGGER.debug("Importing yaml single: %s", host)
@@ -305,10 +337,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_unique_id = f"{identifier}_{zone}"
 
         self._zone = zone
+
+        self._volume_resolution = volume_resolution
+        self._max_volume = max_volume
+
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
-        self._max_volume = max_volume
-        self._volume_resolution = volume_resolution
+        self._lib_mapping = {_cmds[source.value]: source for source in InputSource}
 
         self._attr_source_list = list(sources.values())
         self._attr_extra_state_attributes = {}
@@ -380,7 +415,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source_lib = self._reverse_mapping[source].value_lib
+            source_lib = _cmds[self._reverse_mapping[source].value]
             if isinstance(source_lib, str):
                 source_lib_single = source_lib
             else:
@@ -471,7 +506,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     @callback
     def _parse_source(self, source_lib: InputLibValue) -> None:
-        source = InputSource.from_lib(source_lib)
+        source = self._lib_mapping[source_lib]
         if source in self._source_mapping:
             self._attr_source = self._source_mapping[source]
             return

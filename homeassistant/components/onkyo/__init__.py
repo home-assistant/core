@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     receiver = await Receiver.async_create(info)
 
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
-    sources = {InputSource(int(k, 16)): v for k, v in sources_store.items()}
+    sources = {InputSource(k): v for k, v in sources_store.items()}
 
     entry.runtime_data = OnkyoData(receiver, sources)
 
