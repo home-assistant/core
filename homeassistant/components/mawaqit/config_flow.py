@@ -187,6 +187,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 keyword = user_input[CONF_SEARCH]
 
                 if keyword == self.previous_keyword_search:
+                    # if the form is submitted with the same keyword as the previous one, we check if the user has selected a mosque
                     if CONF_UUID in user_input:
                         title, data_entry = await utils.async_save_mosque(
                             self.hass,

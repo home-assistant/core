@@ -11,6 +11,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.mawaqit import DOMAIN, config_flow
 from homeassistant.components.mawaqit.const import (
     CONF_CALC_METHOD,
+    CONF_SEARCH,
     CONF_TYPE_SEARCH,
     MAWAQIT_STORAGE_VERSION,
     MAWAQIT_TEST_STORAGE_KEY,
@@ -304,16 +305,8 @@ async def test_async_step_search_method_coordinate_no_neighborhood(
     with (
         patch.object(flow, "store", new=setup_test_environment),
         patch(
-            "homeassistant.components.mawaqit.utils.is_another_instance",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
-            return_value="MAWAQIT_API_TOKEN",
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
@@ -326,6 +319,240 @@ async def test_async_step_search_method_coordinate_no_neighborhood(
         # Check that the flow is aborted due to the lack of mosques nearby
         assert result.get("type") == data_entry_flow.FlowResultType.ABORT
         assert result.get("reason") == "no_mosque"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_coordinate_valid(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the user step when no mosque is found in the neighborhood."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "coordinates"})
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "mosques_coordinates"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the user step when no mosque is found in the neighborhood."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "keyword"})
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_input_None(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the user step when no mosque is found in the neighborhood."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method(None)
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "search_method"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_Input_UNKNOWN(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the user step when no mosque is found in the neighborhood."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "UNKNOWN"})
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "search_method"
+
+
+# ----- MOSQUES KEYWORD SEARCH FORM ----- #
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_initial(hass: HomeAssistant) -> None:
+    """Test the initial keyword search step with no user input."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_keyword_search(user_input=None)
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "mosque_test_keyword"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_new_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch.object(flow, "previous_keyword_search", "previous_mosque_test_keyword"),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "new_mosque_test_keyword", CONF_UUID: "uuid1"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_same_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    previous_keyword_search = "mosque_test_keyword"
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch.object(flow, "previous_keyword_search", previous_keyword_search),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_raw_all_mosques_NN_file",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
+            return_value={},
+        ),
+    ):
+        # Now simulate the user selecting a mosque and submitting the form
+        # Assuming the user selects the first mosque
+        mosque_uuid_label = mocked_mosques_data[0][0]
+        mosque_uuid = mocked_mosques_data[1][0]  # uuid of the first mosque
+
+        result = await flow.async_step_keyword_search(
+            user_input={
+                CONF_SEARCH: previous_keyword_search,
+                CONF_UUID: mosque_uuid_label,
+            }
+        )
+
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert "data" in result and result["data"][CONF_UUID] == mosque_uuid
 
 
 # ----- MOSQUES COORDINATES FORM ----- #
@@ -376,9 +603,8 @@ async def test_async_step_mosques_coordinates(
         )
 
         # Now simulate the user selecting a mosque and submitting the form
-        mosque_uuid_label = mocked_mosques_data[0][
-            0
-        ]  # Assuming the user selects the first mosque
+        # Assuming the user selects the first mosque
+        mosque_uuid_label = mocked_mosques_data[0][0]
         mosque_uuid = mocked_mosques_data[1][0]  # uuid of the first mosque
 
         result = await flow.async_step_mosques_coordinates(

@@ -61,6 +61,22 @@ async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
     await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
 
 
+async def read_raw_all_mosques_NN_file(store: Store | None):
+    """Read the raw mosque data from the store.
+
+    This function acts as a wrapper to read_all_mosques_NN_file,
+    ensuring that the data is read in its raw form.
+
+    Args:
+        store (Store | None): The storage object to read from.
+
+    Returns:
+        The raw mosque data read from the store.
+
+    """
+    return await read_all_mosques_NN_file(store, raw=True)
+
+
 async def read_all_mosques_NN_file(store: Store | None, raw=False):
     """Read all mosques from the store and return their names, UUIDs, and calculation methods.
 
@@ -410,7 +426,7 @@ async def async_save_mosque(
         mawaqit_token = await read_mawaqit_token(hass, store)
 
     name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(store)
-    raw_all_mosques_data = await read_all_mosques_NN_file(store, raw=True)
+    raw_all_mosques_data = await read_raw_all_mosques_NN_file(store)
 
     mosque = UUID
     index = name_servers.index(mosque)
