@@ -341,6 +341,7 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
     """Test options flow for when multi-PAN firmware is installed."""
     mock_integration(hass, MockModule("hassio"))
