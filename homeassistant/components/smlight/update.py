@@ -160,7 +160,6 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def _update_done(self) -> None:
         """Handle cleanup for update done."""
         self._finished_event.set()
-        self.coordinator.in_progress = False
 
         for remove_cb in self._unload:
             remove_cb()
@@ -175,7 +174,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     @callback
     def _update_failed(self, event: MessageEvent) -> None:
         self._update_done()
-
+        self.coordinator.in_progress = False
         raise HomeAssistantError(f"Update failed for {self.name}")
 
     async def async_install(
@@ -193,5 +192,13 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             # block until update finished event received
             await self._finished_event.wait()
 
-            await self.coordinator.async_refresh()
+            # allow time for SLZB-06 to reboot before updating coordinator data
+            while (
+                self.coordinator.in_progress
+                and self.installed_version != self._firmware.ver
+            ):
+                await self.coordinator.async_refresh()
+                await asyncio.sleep(0)
+
+            self.coordinator.in_progress = False
             self._finished_event.clear()
