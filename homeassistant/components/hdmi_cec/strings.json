@@ -24,11 +24,11 @@
         },
         "cmd": {
           "name": "Command",
-          "description": "Command itself. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Command itself. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         },
         "dst": {
           "name": "Destination",
-          "description": "Destination for command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Destination for command. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         },
         "raw": {
           "name": "Raw",
@@ -36,7 +36,7 @@
         },
         "src": {
           "name": "Source",
-          "description": "Source of command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Source of command. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         }
       }
     },

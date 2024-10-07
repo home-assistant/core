@@ -79,7 +79,6 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_FILENAME: user_input[CONF_FILENAME],
                         CONF_SYSTEM_ZONE: system_zone,
                     },
-                    reason="reconfigure_successful",
                 )
             errors["base"] = "cannot_connect"
         return self.async_show_form(
