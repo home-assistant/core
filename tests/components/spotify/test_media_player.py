@@ -27,7 +27,7 @@ async def test_entities(
 ) -> None:
     """Test the Spotify entities."""
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes["media_content_type"] == "music"
@@ -69,7 +69,7 @@ async def test_podcast(
         "playback_episode.json", DOMAIN
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes["media_content_type"] == "podcast"
@@ -100,7 +100,7 @@ async def test_free_account(
     """Test the Spotify entities with a free account."""
     mock_spotify.return_value.me.return_value["product"] = "free"
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.attributes["supported_features"] == 0
 
@@ -116,7 +116,7 @@ async def test_restricted_device(
         "is_restricted"
     ] = True
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert (
         state.attributes["supported_features"] == MediaPlayerEntityFeature.SELECT_SOURCE
@@ -134,7 +134,7 @@ async def test_spotify_dj_list(
         "spotify:playlist:37i9dQZF1EYkqdzj48dyYq"
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.attributes["media_playlist"] == "DJ"
 
@@ -150,7 +150,7 @@ async def test_fetching_playlist_does_not_fail(
         404, "Not Found", "msg"
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert "media_playlist" not in state.attributes
 
@@ -164,7 +164,7 @@ async def test_idle(
     """Test the Spotify entities in idle state."""
     mock_spotify.return_value.current_playback.return_value = {}
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify")
+    state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert state.state == MediaPlayerState.IDLE
     assert (
