@@ -6791,12 +6791,12 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
 
 
 @pytest.mark.parametrize(
-    ("original_unique_id", "new_unique_id", "recreate"),
+    ("original_unique_id", "new_unique_id", "count"),
     [
-        ("unique", "unique", True),
-        ("unique", "new", False),
-        ("unique", None, False),
-        (None, "unique", False),
+        ("unique", "unique", 1),
+        ("unique", "new", 2),
+        ("unique", None, 2),
+        (None, "unique", 2),
     ],
 )
 @pytest.mark.parametrize(
@@ -6808,7 +6808,7 @@ async def test_create_entry_reauth_reconfigure(
     source: str,
     original_unique_id: str | None,
     new_unique_id: str | None,
-    recreate: bool,
+    count: int,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test to highlight unexpected behavior on create_entry."""
@@ -6860,13 +6860,10 @@ async def test_create_entry_reauth_reconfigure(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     entries = hass.config_entries.async_entries("test")
-    if recreate:
+    assert len(entries) == count
+    if count == 1:
         # Show that the previous entry got binned and recreated
-        assert len(entries) == 1
         assert entries[0].entry_id != entry.entry_id
-    else:
-        # Show that a new entry got created
-        assert len(entries) == 2
 
     assert (
         f"Detected {source} config flow creating a new entry, when it is expected "
