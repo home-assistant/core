@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
-
 import voluptuous as vol
 from wallbox import Wallbox
 
