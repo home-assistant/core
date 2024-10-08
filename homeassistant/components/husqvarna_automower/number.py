@@ -144,10 +144,7 @@ async def async_setup_entry(
     def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
         for mower_id in coordinator.data:
-            if (
-                coordinator.data[mower_id].capabilities.work_areas
-                and coordinator.data[mower_id].work_areas
-            ):
+            if coordinator.data[mower_id].capabilities.work_areas:
                 _work_areas = coordinator.data[mower_id].work_areas
                 if _work_areas is not None:
                     received_work_areas = set(_work_areas)
