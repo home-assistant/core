@@ -36,6 +36,7 @@ class StartButton(ButtonEntity):
         if self._coordinator.data[DATA_PHASE] == "Standby":
             LOGGER.info("Sending command to start combustion")
             await self._coordinator.api.start()
+            await self._coordinator.async_request_refresh()
         else:
             LOGGER.debug("Omitted to send command to start combustion")
             LOGGER.debug(f"phase = {self._coordinator.data[DATA_PHASE]}")

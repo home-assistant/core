@@ -15,6 +15,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 type StoveConfigEntry = ConfigEntry[Stove]  # noqa: F821

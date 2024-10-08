@@ -65,6 +65,11 @@
       "valve3_position": {
         "name": "Valve 3"
       }
+    },
+    "switch": {
+      "night_lowering": {
+        "name": "Night Lowering"
+      }
     }
   }
 }
