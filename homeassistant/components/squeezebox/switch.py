@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
@@ -90,6 +89,7 @@ class SqueezeBoxAlarmEntity(
     """Representation of a Squeezebox alarm switch."""
 
     _attr_icon = "mdi:alarm"
+    _attr_has_entity_name = True
 
     def __init__(
         self, alarm: Alarm, coordinator: SqueezeBoxPlayerUpdateCoordinator
@@ -97,6 +97,7 @@ class SqueezeBoxAlarmEntity(
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
         self._alarm: Alarm | None = alarm
+        self._attr_available = True
         self._attr_unique_id: str = f"{coordinator.player_uuid}-alarm-{alarm["id"]}"
         self.entity_id: str = ENTITY_ID_FORMAT.format(
             f"squeezebox_alarm_{self.alarm["id"]}"
@@ -105,11 +106,29 @@ class SqueezeBoxAlarmEntity(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if "alarms" not in self.coordinator.data:
-            self._alarm = None
-            return
-        self._alarm = self.coordinator.data["alarms"].get(self.alarm["id"])
+        if (
+            "alarms" not in self.coordinator.data
+            or self.coordinator.data["alarms"].get(self.alarm["id"]) is None
+        ):
+            self._attr_available = False
+            self.check_if_deleted()
+        else:
+            self._alarm = self.coordinator.data["alarms"].get(self.alarm["id"])
         self.async_write_ha_state()
+
+    def check_if_deleted(self) -> None:
+        """Check if alarm has been deleted from player."""
+        if not self.coordinator.available:
+            # The player is not available, so the alarm is not available but probably still exists
+            return
+
+        # The alarm is not available, but the player is, so the alarm has been deleted
+        _LOGGER.debug("%s has been deleted", self.entity_id)
+
+        entity_registry = er.async_get(self.hass)
+        if entity_registry.async_get(self.entity_id):
+            entity_registry.async_remove(self.entity_id)
+            self.coordinator.known_alarms.remove(self.alarm["id"])
 
     async def async_added_to_hass(self) -> None:
         """Set up alarm switch when added to hass."""
@@ -125,32 +144,6 @@ class SqueezeBoxAlarmEntity(
                 self.hass, async_write_state_daily, hour=0, minute=0, second=0
             )
         )
-
-    async def _async_handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not self.async_check_if_available():
-            return
-        self.async_write_ha_state()
-
-    def async_check_if_available(self) -> bool:
-        """Check if alarm exists and interpret meaning if not available."""
-        if self.alarm:
-            return True
-
-        if not self.coordinator.available:
-            # The player is not available, so the alarm is not available but probably still exists
-            self._attr_available = False
-            return False
-
-        # The alarm is not available, but the player is, so the alarm has been deleted
-        _LOGGER.debug("%s has been deleted", self.entity_id)
-
-        entity_registry = er.async_get(self.hass)
-        if entity_registry.async_get(self.entity_id):
-            entity_registry.async_remove(self.entity_id)
-            self.coordinator.known_alarms.remove(self.alarm["id"])
-
-        return False
 
     @property
     def alarm(self) -> Alarm:
@@ -188,7 +181,7 @@ class SqueezeBoxAlarmEntity(
     @property
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
-        daynum = int(datetime.datetime.today().strftime("%w"))
+        daynum = datetime.datetime.today().weekday()
         return daynum in self.alarm["dow"]
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -205,11 +198,8 @@ class SqueezeBoxAlarmEntity(
 
     async def async_update_alarm(self, **kwargs: Any) -> None:
         """Update the alarm."""
-        try:
-            alarm = self.alarm.copy()
-            alarm.update(kwargs)
-        except (TypeError, ValueError) as err:
-            raise ServiceValidationError from err
+        alarm = self.alarm.copy()
+        alarm.update(kwargs)
         await self.coordinator.player.async_update_alarm(alarm.pop("id"), **alarm)
         await self.coordinator.async_request_refresh()
 
