@@ -48,7 +48,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
         key=str(Units.CONDUCTIVITY),
-        device_class=None,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
         native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
