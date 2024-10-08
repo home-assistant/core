@@ -81,11 +81,11 @@ def manager(request: pytest.FixtureRequest) -> None:
 
 @pytest.fixture(name="integration_manager")
 async def integration_manager_fixture(
-    hass: HomeAssistant, repo: None
+    hass: HomeAssistant, repo: None, tmp_path: Path
 ) -> AsyncGenerator[IntegrationRepositoryManager]:
     """Fixture for integration manager."""
     # every instance is created using homeassistant.components.gpm.get_manager()
-    manager = _testing_integration_manager(hass)
+    manager = _testing_integration_manager(hass, tmp_path)
     with patch(
         "homeassistant.components.gpm.IntegrationRepositoryManager",
         autospec=True,
@@ -97,7 +97,7 @@ async def integration_manager_fixture(
 
 @pytest.fixture(name="resource_manager")
 async def resource_manager_fixture(
-    hass: HomeAssistant, repo: None
+    hass: HomeAssistant, repo: None, tmp_path: Path
 ) -> AsyncGenerator[ResourceRepositoryManager]:
     """Fixture for resource manager."""
     # lovelace is needed to test resource management
@@ -106,7 +106,7 @@ async def resource_manager_fixture(
     def async_download(_1, _2, install_path: Path) -> None:
         install_path.touch()
 
-    manager = _testing_resource_manager(hass)
+    manager = _testing_resource_manager(hass, tmp_path)
     # every instance is created using homeassistant.components.gpm.get_manager()
     with (
         patch(
@@ -124,7 +124,7 @@ async def resource_manager_fixture(
 
 
 def _testing_integration_manager(
-    hass: HomeAssistant,
+    hass: HomeAssistant, tmp_path: Path
 ) -> IntegrationRepositoryManager:
     return _testing_manager(
         hass,
@@ -133,11 +133,12 @@ def _testing_integration_manager(
             CONF_URL: "https://github.com/user/awesome-component",
             CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
         },
+        tmp_path,
     )
 
 
 def _testing_resource_manager(
-    hass: HomeAssistant,
+    hass: HomeAssistant, tmp_path: Path
 ) -> ResourceRepositoryManager:
     return _testing_manager(
         hass,
@@ -147,10 +148,13 @@ def _testing_resource_manager(
             CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
             CONF_DOWNLOAD_URL: "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js",
         },
+        tmp_path,
     )
 
 
-def _testing_manager(hass: HomeAssistant, data: Mapping[str, str]) -> RepositoryManager:
+def _testing_manager(
+    hass: HomeAssistant, data: Mapping[str, str], tmp_path: Path
+) -> RepositoryManager:
     """Get the RepositoryManager for testing.
 
     Uses the same interface as homeassistant.components.gpm.get_manager().
@@ -170,6 +174,10 @@ def _testing_manager(hass: HomeAssistant, data: Mapping[str, str]) -> Repository
         "get_latest_version",
     ):
         setattr(manager, method, AsyncMock(wraps=getattr(manager, method)))
+    manager.clone_basedir = tmp_path / "clone_basedir"
+    manager.clone_basedir.mkdir()
+    manager.install_basedir = tmp_path / "install_basedir"
+    manager.install_basedir.mkdir()
     return manager
 
 
