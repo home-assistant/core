@@ -159,7 +159,7 @@ async def async_setup_entry(
                                 mower_id, coordinator, description, work_area_id
                             )
                             for description in WORK_AREA_NUMBER_TYPES
-                            for work_area_id in _work_areas
+                            for work_area_id in new_work_areas
                         )
                     if removed_work_areas:
                         _remove_all_work_areas(removed_work_areas, mower_id)
