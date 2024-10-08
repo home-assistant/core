@@ -12,6 +12,8 @@ from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -656,14 +658,12 @@ async def test_options_default(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
-        },
+        result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+        OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
     }
 
 
@@ -680,10 +680,17 @@ async def test_options_set(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+            OPTION_DISABLE_KEEP_ALIVE: True,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+        OPTION_DISABLE_KEEP_ALIVE: True,
+    }
 
 
 async def test_reconfigure(

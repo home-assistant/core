@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.cover import (
     STATE_CLOSED,
@@ -14,9 +15,25 @@ from homeassistant.components.cover import (
     STATE_OPENING,
     CoverEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
+
+
+@pytest.mark.usefixtures("matter_devices")
+async def test_covers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test covers."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.COVER)
 
 
 @pytest.mark.parametrize(
