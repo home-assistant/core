@@ -9,6 +9,7 @@ from kasa import Feature
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
+    ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
@@ -47,6 +48,7 @@ BUTTON_DESCRIPTIONS: Final = [
     ),
     TPLinkButtonEntityDescription(
         key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
     ),
 ]
 
