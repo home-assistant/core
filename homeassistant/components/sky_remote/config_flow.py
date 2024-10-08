@@ -43,21 +43,18 @@ class SkyRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             logging.debug("user_input: %s", user_input)
             try:
                 port = await async_find_box_port(user_input[CONF_HOST])
             except SkyBoxConnectionError:
                 logging.exception("while finding port of skybox")
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=DATA_SCHEMA,
-                    errors={"base": "cannot_connect"},
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data={**user_input, CONF_PORT: port},
                 )
-            user_input[CONF_PORT] = port
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
-            )
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)
