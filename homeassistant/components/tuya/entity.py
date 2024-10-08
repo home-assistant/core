@@ -256,7 +256,9 @@ class TuyaEntity(Entity):
             order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return TuyaEntity.determine_dptype(getattr(self.device, key)[dpcode].type)
+                return TuyaEntity.determine_dptype(
+                    getattr(self.device, key)[dpcode].type
+                )
 
         return None
 
