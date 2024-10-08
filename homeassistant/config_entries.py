@@ -1269,7 +1269,7 @@ class ConfigEntriesFlowManager(
                 type=data_entry_flow.FlowResultType.ABORT,
                 flow_id=flow_id,
                 handler=handler,
-                reason="already_in_progress",
+                reason="reauth_already_in_progress",
                 translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
