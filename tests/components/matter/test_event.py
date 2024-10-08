@@ -5,11 +5,24 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import trigger_subscription_callback
+from .common import snapshot_matter_entities, trigger_subscription_callback
+
+
+@pytest.mark.usefixtures("matter_devices")
+async def test_events(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test events."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
 
 
 @pytest.mark.parametrize("node_fixture", ["generic_switch"])
