@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Server, async_discover
-from pysqueezebox.player import Alarm
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -49,12 +48,6 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
-    ATTR_DAYS_OF_WEEK,
-    ATTR_ENABLED,
-    ATTR_REPEAT,
-    ATTR_TIME,
-    ATTR_URL,
-    ATTR_VOLUME,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
@@ -67,7 +60,6 @@ from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
 
-SERVICE_ADD_ALARM = "add_alarm"
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 
@@ -151,18 +143,6 @@ async def async_setup_entry(
             ),
         },
         "async_call_query",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ADD_ALARM,
-        {
-            vol.Required(ATTR_TIME): cv.time,
-            vol.Optional(ATTR_DAYS_OF_WEEK): vol.All(cv.ensure_list, [cv.positive_int]),
-            vol.Optional(ATTR_ENABLED): cv.boolean,
-            vol.Optional(ATTR_REPEAT): cv.boolean,
-            vol.Optional(ATTR_VOLUME): cv.small_float,
-            vol.Optional(ATTR_URL): cv.string,
-        },
-        "async_add_alarm",
     )
 
     # Start server discovery task if not already running
@@ -619,16 +599,3 @@ class SqueezeBoxMediaPlayerEntity(
             return result
 
         return (None, None)
-
-    async def async_add_alarm(self, **kwargs: Any) -> None:
-        """Add an alarm to the player."""
-        try:
-            # Make sure the parameters are valid
-            alarm = Alarm(**kwargs)
-            if alarm["time"] is None:
-                raise ServiceValidationError("Time must be provided")
-        except (TypeError, ValueError) as err:
-            raise ServiceValidationError from err
-        time = alarm.pop("time")
-        await self._player.async_add_alarm(time, alarm)
-        await self.coordinator.async_refresh()

@@ -1,6 +1,6 @@
 """Tests for the squeezebox media player component."""
 
-from datetime import time, timedelta
+from datetime import timedelta
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -813,21 +813,4 @@ async def test_squeezebox_media_position_property(
             ]
         )
         > last_update
-    )
-
-
-async def test_add_alarm(hass: HomeAssistant, configured_player: MagicMock) -> None:
-    """Test adding an alarm to a player."""
-    await hass.services.async_call(
-        DOMAIN,
-        "add_alarm",
-        {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            "time": "06:00",
-            "enabled": True,
-        },
-        blocking=True,
-    )
-    configured_player.async_add_alarm.assert_called_once_with(
-        time(6, 0), {"enabled": True}
     )

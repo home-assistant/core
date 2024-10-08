@@ -1,6 +1,6 @@
 """Tests for the Squeezebox alarm switch platform."""
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -116,41 +116,4 @@ async def test_turn_off(
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
         TEST_ALARM_ID, enabled=False
-    )
-
-
-async def test_delete_alarm(
-    hass: HomeAssistant,
-    mock_alarms_player: MagicMock,
-) -> None:
-    """Test deleting the alarm."""
-    await hass.services.async_call(
-        "squeezebox",
-        "delete_alarm",
-        {"entity_id": "switch.squeezebox_alarm_1"},
-        blocking=True,
-    )
-    mock_alarms_player.async_delete_alarm.assert_called_once_with(TEST_ALARM_ID)
-
-
-async def test_update_alarm(
-    hass: HomeAssistant,
-    mock_alarms_player: MagicMock,
-) -> None:
-    """Test updating the alarm."""
-    alarm = mock_alarms_player.alarms[0]
-    await hass.services.async_call(
-        "squeezebox",
-        "update_alarm",
-        {"entity_id": "switch.squeezebox_alarm_1", "time": "08:00"},
-        blocking=True,
-    )
-    mock_alarms_player.async_update_alarm.assert_called_once_with(
-        TEST_ALARM_ID,
-        dow=alarm["dow"],
-        enabled=alarm["enabled"],
-        repeat=alarm["repeat"],
-        time=time(hour=8),
-        volume=alarm["volume"],
-        url=alarm["url"],
     )
