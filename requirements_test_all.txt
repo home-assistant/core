@@ -1919,7 +1919,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.7
+pytouchlinesl==0.1.8
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server

@@ -2413,7 +2413,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.7
+pytouchlinesl==0.1.8
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
