@@ -1,9 +1,9 @@
 """The habitica integration."""
 
-from datetime import datetime, time
+from datetime import date, datetime, time
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import uuid
 
 from aiohttp import ClientResponseError
@@ -55,8 +55,11 @@ from .const import (
     ATTR_REMOVE_CHECKLIST_ITEM,
     ATTR_REMOVE_REMINDER,
     ATTR_REMOVE_TAG,
+    ATTR_REPEAT,
+    ATTR_REPEAT_MONTHLY,
     ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_SKILL,
+    ATTR_START_DATE,
     ATTR_TAG,
     ATTR_TASK,
     ATTR_UNSCORE_CHECKLIST_ITEM,
@@ -71,9 +74,10 @@ from .const import (
     SERVICE_UPDATE_HABIT,
     SERVICE_UPDATE_REWARD,
     SERVICE_UPDATE_TODO,
+    WEEK_DAYS,
 )
 from .coordinator import HabiticaDataUpdateCoordinator
-from .util import get_config_entry, lookup_task
+from .util import get_config_entry, lookup_task, to_date
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -123,8 +127,13 @@ SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_UP_DOWN): vol.All(
             cv.ensure_list, [vol.In({"positive", "negative"})]
         ),
+        vol.Optional(ATTR_START_DATE): cv.date,
         vol.Optional(ATTR_FREQUENCY): vol.All(
             cv.string, vol.In({"daily", "weekly", "monthly", "yearly"})
+        ),
+        vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
+        vol.Optional(ATTR_REPEAT_MONTHLY): vol.All(
+            cv.string, vol.In({"day_of_month", "day_of_week"})
         ),
         vol.Optional(ATTR_COUNTER_UP): int,
         vol.Optional(ATTR_COUNTER_DOWN): int,
@@ -248,8 +257,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         if call.data.get(ATTR_CLEAR_REMINDER):
             data.update({"reminders": []})
 
-        if date := call.data.get(ATTR_DATE):
-            data.update({"date": (datetime.combine(date, time()).isoformat())})
+        if due_date := call.data.get(ATTR_DATE):
+            data.update({"date": (datetime.combine(due_date, time()).isoformat())})
 
         if call.data.get(ATTR_CLEAR_DATE):
             data.update({"date": None})
@@ -364,6 +373,48 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     "down": "negative" in up_down,
                 }
             )
+        if start_date := call.data.get(ATTR_START_DATE):
+            data.update(
+                {"startDate": (datetime.combine(start_date, time()).isoformat())}
+            )
+
+        if repeat := call.data.get(ATTR_REPEAT):
+            if (frequency or current_task.get("frequency")) == "weekly":
+                data.update({"repeat": {d: d in repeat for d in WEEK_DAYS}})
+            else:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="frequency_not_weekly",
+                )
+        if repeat_monthly := call.data.get(ATTR_REPEAT_MONTHLY):
+            if (frequency or current_task.get("frequency")) != "monthly":
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="frequency_not_monthly",
+                )
+
+            current_start_date = start_date or to_date(current_task["startDate"])
+            if not current_start_date:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="frequency_not_monthly",
+                )
+
+            if TYPE_CHECKING:
+                assert isinstance(current_start_date, date)
+            if repeat_monthly == "day_of_week":
+                weekday = current_start_date.weekday()
+                data.update(
+                    {
+                        "weeksOfMonth": (current_start_date.day - 1) // 7,
+                        "repeat": {
+                            day: i == weekday for i, day in enumerate(WEEK_DAYS)
+                        },
+                        "daysOfMonth": [],
+                    }
+                )
+            else:
+                data.update({"daysOfMonth": current_start_date.day, "weeksOfMonth": []})
 
         if counter_up := call.data.get(ATTR_COUNTER_UP):
             data.update({"counterUp": counter_up})

@@ -42,6 +42,9 @@ ATTR_UP_DOWN = "up_down"
 ATTR_FREQUENCY = "frequency"
 ATTR_COUNTER_UP = "counter_up"
 ATTR_COUNTER_DOWN = "counter_down"
+ATTR_START_DATE = "start_date"
+ATTR_REPEAT = "repeat"
+ATTR_REPEAT_MONTHLY = "repeat_monthly"
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_UPDATE_TASK = "update_task"
 SERVICE_UPDATE_TODO = "update_todo"
@@ -50,3 +53,4 @@ SERVICE_UPDATE_HABIT = "update_habit"
 SERVICE_UPDATE_DAILY = "update_daily"
 
 PRIORITIES = {"trivial": 0.1, "easy": 1, "medium": 1.5, "hard": 2}
+WEEK_DAYS = ["m", "t", "w", "th", "f", "s", "su"]
