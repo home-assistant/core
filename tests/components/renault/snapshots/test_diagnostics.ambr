@@ -1,0 +1,402 @@
+# serializer version: 1
+# name: test_device_diagnostics[zoe_40]
+  dict({
+    'data': dict({
+      'battery': dict({
+        'batteryAutonomy': 141,
+        'batteryAvailableEnergy': 31,
+        'batteryCapacity': 0,
+        'batteryLevel': 60,
+        'batteryTemperature': 20,
+        'chargingInstantaneousPower': 27,
+        'chargingRemainingTime': 145,
+        'chargingStatus': 1.0,
+        'plugStatus': 1,
+        'timestamp': '2020-01-12T21:40:16Z',
+      }),
+      'charge_mode': dict({
+        'chargeMode': 'always',
+      }),
+      'cockpit': dict({
+        'totalMileage': 49114.27,
+      }),
+      'hvac_status': dict({
+        'externalTemperature': 8.0,
+        'hvacStatus': 'off',
+      }),
+      'res_state': dict({
+      }),
+    }),
+    'details': dict({
+      'assets': list([
+        dict({
+          'assetType': 'PICTURE',
+          'renditions': list([
+            dict({
+              'resolutionType': 'ONE_MYRENAULT_LARGE',
+              'url': 'https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_LARGE',
+            }),
+            dict({
+              'resolutionType': 'ONE_MYRENAULT_SMALL',
+              'url': 'https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_SMALL_V2',
+            }),
+          ]),
+        }),
+        dict({
+          'assetRole': 'GUIDE',
+          'assetType': 'PDF',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'https://cdn.group.renault.com/ren/gb/myr/assets/x101ve/manual.pdf.asset.pdf/1558704861676.pdf',
+            }),
+          ]),
+          'title': 'PDF Guide',
+        }),
+        dict({
+          'assetRole': 'GUIDE',
+          'assetType': 'URL',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'http://gb.e-guide.renault.com/eng/Zoe',
+            }),
+          ]),
+          'title': 'e-guide',
+        }),
+        dict({
+          'assetRole': 'CAR',
+          'assetType': 'VIDEO',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': '39r6QEKcOM4',
+            }),
+          ]),
+          'title': '10 Fundamentals about getting the best out of your electric vehicle',
+        }),
+        dict({
+          'assetRole': 'CAR',
+          'assetType': 'VIDEO',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'Va2FnZFo_GE',
+            }),
+          ]),
+          'title': 'Automatic Climate Control',
+        }),
+        dict({
+          'assetRole': 'CAR',
+          'assetType': 'URL',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'https://www.youtube.com/watch?v=wfpCMkK1rKI',
+            }),
+          ]),
+          'title': 'More videos',
+        }),
+        dict({
+          'assetRole': 'CAR',
+          'assetType': 'VIDEO',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'RaEad8DjUJs',
+            }),
+          ]),
+          'title': 'Charging the battery',
+        }),
+        dict({
+          'assetRole': 'CAR',
+          'assetType': 'VIDEO',
+          'description': '',
+          'renditions': list([
+            dict({
+              'url': 'zJfd7fJWtr0',
+            }),
+          ]),
+          'title': 'Charging the battery at a station with a flap',
+        }),
+      ]),
+      'battery': dict({
+        'code': 'BT4AR1',
+        'group': '968',
+        'label': 'BATTERIE BT4AR1',
+      }),
+      'brand': dict({
+        'label': 'RENAULT',
+      }),
+      'connectivityTechnology': 'RLINK1',
+      'deliveryCountry': dict({
+        'code': 'FR',
+        'label': 'FRANCE',
+      }),
+      'deliveryDate': '2017-08-11',
+      'easyConnectStore': False,
+      'electrical': True,
+      'energy': dict({
+        'code': 'ELEC',
+        'group': '019',
+        'label': 'ELECTRIQUE',
+      }),
+      'engineEnergyType': 'ELEC',
+      'engineRatio': '601',
+      'engineType': '5AQ',
+      'family': dict({
+        'code': 'X10',
+        'group': '007',
+        'label': 'FAMILLE X10',
+      }),
+      'firstRegistrationDate': '2017-08-01',
+      'gearbox': dict({
+        'code': 'BVEL',
+        'group': '427',
+        'label': 'BOITE A VARIATEUR ELECTRIQUE',
+      }),
+      'model': dict({
+        'code': 'X101VE',
+        'group': '971',
+        'label': 'ZOE',
+      }),
+      'modelSCR': 'ZOE',
+      'navigationAssistanceLevel': dict({
+        'code': 'NAV3G5',
+        'group': '408',
+        'label': 'LEVEL 3 TYPE 5 NAVIGATION',
+      }),
+      'radioCode': '**REDACTED**',
+      'radioType': dict({
+        'code': 'RAD37A',
+        'group': '425',
+        'label': 'RADIO 37A',
+      }),
+      'registrationCountry': dict({
+        'code': 'FR',
+      }),
+      'registrationDate': '2017-08-01',
+      'registrationNumber': '**REDACTED**',
+      'retrievedFromDhs': False,
+      'rlinkStore': False,
+      'tcu': dict({
+        'code': 'TCU0G2',
+        'group': 'E70',
+        'label': 'TCU VER 0 GEN 2',
+      }),
+      'vcd': 'SYTINC/SKTPOU/SAND41/FDIU1/SSESM/MAPSUP/SSCALL/SAND88/SAND90/SQKDRO/SDIFPA/FACBA2/PRLEX1/SSRCAR/CABDO2/TCU0G2/SWALBO/EVTEC1/STANDA/X10/B10/EA2/MB/ELEC/DG/TEMP/TR4X2/RV/ABS/CAREG/LAC/VT003/CPE/RET03/SPROJA/RALU16/CEAVRH/AIRBA1/SERIE/DRA/DRAP08/HARM02/ATAR/TERQG/SFBANA/KM/DPRPN/AVREPL/SSDECA/ASRESP/RDAR02/ALEVA/CACBL2/SOP02C/CTHAB2/TRNOR/LVAVIP/LVAREL/SASURV/KTGREP/SGSCHA/APL03/ALOUCC/CMAR3P/NAV3G5/RAD37A/BVEL/AUTAUG/RNORM/ISOFIX/EQPEUR/HRGM01/SDPCLV/TLFRAN/SPRODI/SAN613/SSAPEX/GENEV1/ELC1/SANCML/PE2012/PHAS1/SAN913/045KWH/BT4AR1/VEC153/X101VE/NBT017/5AQ',
+      'version': dict({
+        'code': 'INT MB 10R',
+      }),
+      'vin': '**REDACTED**',
+      'yearsOfMaintenance': 12,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[zoe_40]
+  dict({
+    'entry': dict({
+      'data': dict({
+        'kamereon_account_id': '**REDACTED**',
+        'locale': 'fr_FR',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'title': 'Mock Title',
+    }),
+    'vehicles': list([
+      dict({
+        'data': dict({
+          'battery': dict({
+            'batteryAutonomy': 141,
+            'batteryAvailableEnergy': 31,
+            'batteryCapacity': 0,
+            'batteryLevel': 60,
+            'batteryTemperature': 20,
+            'chargingInstantaneousPower': 27,
+            'chargingRemainingTime': 145,
+            'chargingStatus': 1.0,
+            'plugStatus': 1,
+            'timestamp': '2020-01-12T21:40:16Z',
+          }),
+          'charge_mode': dict({
+            'chargeMode': 'always',
+          }),
+          'cockpit': dict({
+            'totalMileage': 49114.27,
+          }),
+          'hvac_status': dict({
+            'externalTemperature': 8.0,
+            'hvacStatus': 'off',
+          }),
+          'res_state': dict({
+          }),
+        }),
+        'details': dict({
+          'assets': list([
+            dict({
+              'assetType': 'PICTURE',
+              'renditions': list([
+                dict({
+                  'resolutionType': 'ONE_MYRENAULT_LARGE',
+                  'url': 'https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_LARGE',
+                }),
+                dict({
+                  'resolutionType': 'ONE_MYRENAULT_SMALL',
+                  'url': 'https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_SMALL_V2',
+                }),
+              ]),
+            }),
+            dict({
+              'assetRole': 'GUIDE',
+              'assetType': 'PDF',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'https://cdn.group.renault.com/ren/gb/myr/assets/x101ve/manual.pdf.asset.pdf/1558704861676.pdf',
+                }),
+              ]),
+              'title': 'PDF Guide',
+            }),
+            dict({
+              'assetRole': 'GUIDE',
+              'assetType': 'URL',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'http://gb.e-guide.renault.com/eng/Zoe',
+                }),
+              ]),
+              'title': 'e-guide',
+            }),
+            dict({
+              'assetRole': 'CAR',
+              'assetType': 'VIDEO',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': '39r6QEKcOM4',
+                }),
+              ]),
+              'title': '10 Fundamentals about getting the best out of your electric vehicle',
+            }),
+            dict({
+              'assetRole': 'CAR',
+              'assetType': 'VIDEO',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'Va2FnZFo_GE',
+                }),
+              ]),
+              'title': 'Automatic Climate Control',
+            }),
+            dict({
+              'assetRole': 'CAR',
+              'assetType': 'URL',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'https://www.youtube.com/watch?v=wfpCMkK1rKI',
+                }),
+              ]),
+              'title': 'More videos',
+            }),
+            dict({
+              'assetRole': 'CAR',
+              'assetType': 'VIDEO',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'RaEad8DjUJs',
+                }),
+              ]),
+              'title': 'Charging the battery',
+            }),
+            dict({
+              'assetRole': 'CAR',
+              'assetType': 'VIDEO',
+              'description': '',
+              'renditions': list([
+                dict({
+                  'url': 'zJfd7fJWtr0',
+                }),
+              ]),
+              'title': 'Charging the battery at a station with a flap',
+            }),
+          ]),
+          'battery': dict({
+            'code': 'BT4AR1',
+            'group': '968',
+            'label': 'BATTERIE BT4AR1',
+          }),
+          'brand': dict({
+            'label': 'RENAULT',
+          }),
+          'connectivityTechnology': 'RLINK1',
+          'deliveryCountry': dict({
+            'code': 'FR',
+            'label': 'FRANCE',
+          }),
+          'deliveryDate': '2017-08-11',
+          'easyConnectStore': False,
+          'electrical': True,
+          'energy': dict({
+            'code': 'ELEC',
+            'group': '019',
+            'label': 'ELECTRIQUE',
+          }),
+          'engineEnergyType': 'ELEC',
+          'engineRatio': '601',
+          'engineType': '5AQ',
+          'family': dict({
+            'code': 'X10',
+            'group': '007',
+            'label': 'FAMILLE X10',
+          }),
+          'firstRegistrationDate': '2017-08-01',
+          'gearbox': dict({
+            'code': 'BVEL',
+            'group': '427',
+            'label': 'BOITE A VARIATEUR ELECTRIQUE',
+          }),
+          'model': dict({
+            'code': 'X101VE',
+            'group': '971',
+            'label': 'ZOE',
+          }),
+          'modelSCR': 'ZOE',
+          'navigationAssistanceLevel': dict({
+            'code': 'NAV3G5',
+            'group': '408',
+            'label': 'LEVEL 3 TYPE 5 NAVIGATION',
+          }),
+          'radioCode': '**REDACTED**',
+          'radioType': dict({
+            'code': 'RAD37A',
+            'group': '425',
+            'label': 'RADIO 37A',
+          }),
+          'registrationCountry': dict({
+            'code': 'FR',
+          }),
+          'registrationDate': '2017-08-01',
+          'registrationNumber': '**REDACTED**',
+          'retrievedFromDhs': False,
+          'rlinkStore': False,
+          'tcu': dict({
+            'code': 'TCU0G2',
+            'group': 'E70',
+            'label': 'TCU VER 0 GEN 2',
+          }),
+          'vcd': 'SYTINC/SKTPOU/SAND41/FDIU1/SSESM/MAPSUP/SSCALL/SAND88/SAND90/SQKDRO/SDIFPA/FACBA2/PRLEX1/SSRCAR/CABDO2/TCU0G2/SWALBO/EVTEC1/STANDA/X10/B10/EA2/MB/ELEC/DG/TEMP/TR4X2/RV/ABS/CAREG/LAC/VT003/CPE/RET03/SPROJA/RALU16/CEAVRH/AIRBA1/SERIE/DRA/DRAP08/HARM02/ATAR/TERQG/SFBANA/KM/DPRPN/AVREPL/SSDECA/ASRESP/RDAR02/ALEVA/CACBL2/SOP02C/CTHAB2/TRNOR/LVAVIP/LVAREL/SASURV/KTGREP/SGSCHA/APL03/ALOUCC/CMAR3P/NAV3G5/RAD37A/BVEL/AUTAUG/RNORM/ISOFIX/EQPEUR/HRGM01/SDPCLV/TLFRAN/SPRODI/SAN613/SSAPEX/GENEV1/ELC1/SANCML/PE2012/PHAS1/SAN913/045KWH/BT4AR1/VEC153/X101VE/NBT017/5AQ',
+          'version': dict({
+            'code': 'INT MB 10R',
+          }),
+          'vin': '**REDACTED**',
+          'yearsOfMaintenance': 12,
+        }),
+      }),
+    ]),
+  })
+# ---

@@ -1,4 +1,5 @@
 """ONVIF event parsers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -11,9 +12,9 @@ from homeassistant.util.decorator import Registry
 
 from .models import Event
 
-PARSERS: Registry[
-    str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]
-] = Registry()
+PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]] = (
+    Registry()
+)
 
 VIDEO_SOURCE_MAPPING = {
     "vsconf": "VideoSourceToken",
@@ -22,7 +23,7 @@ VIDEO_SOURCE_MAPPING = {
 
 def extract_message(msg: Any) -> tuple[str, Any]:
     """Extract the message content and the topic."""
-    return msg.Topic._value_1, msg.Message._value_1  # pylint: disable=protected-access
+    return msg.Topic._value_1, msg.Message._value_1  # noqa: SLF001
 
 
 def _normalize_video_source(source: str) -> str:
@@ -220,9 +221,9 @@ async def async_parse_field_detector(uid: str, msg) -> Event | None:
             None,
             payload.Data.SimpleItem[0].Value == "true",
         )
-        return evt
     except (AttributeError, KeyError):
         return None
+    return evt
 
 
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/Motion")
@@ -707,6 +708,32 @@ async def async_parse_count_aggregation_counter(uid: str, msg) -> Event | None:
             None,
             payload.Data.SimpleItem[0].Value,
             EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:UserAlarm/IVA/HumanShapeDetect")
+async def async_parse_human_shape_detect(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:UserAlarm/IVA/HumanShapeDetect
+    """
+    try:
+        topic, payload = extract_message(msg)
+        video_source = ""
+        for source in payload.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = _normalize_video_source(source.Value)
+                break
+
+        return Event(
+            f"{uid}_{topic}_{video_source}",
+            "Human Shape Detect",
+            "binary_sensor",
+            "motion",
+            None,
+            payload.Data.SimpleItem[0].Value == "true",
         )
     except (AttributeError, KeyError):
         return None

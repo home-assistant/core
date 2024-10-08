@@ -1,4 +1,5 @@
 """Test the Electric Kiwi config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -17,7 +18,6 @@ from homeassistant.components.electric_kiwi.const import (
     OAUTH2_TOKEN,
     SCOPE_VALUES,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -48,15 +48,15 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -106,11 +106,11 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_existing_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -149,26 +149,22 @@ async def test_existing_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: MagicMock,
     config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
     """Test Electric Kiwi reauthentication."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": DOMAIN}
-    )
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert "flow_id" in flows[0]
-
-    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -194,6 +190,7 @@ async def test_reauthentication(
     )
 
     await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1

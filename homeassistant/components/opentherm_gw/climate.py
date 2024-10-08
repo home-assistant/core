@@ -1,48 +1,51 @@
 """Support for OpenTherm Gateway climate devices."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ID,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from . import OpenThermGatewayHub
 from .const import (
-    CONF_FLOOR_TEMP,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
+    THERMOSTAT_DEVICE_DESCRIPTION,
+    OpenThermDataSource,
 )
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpenThermClimateEntityDescription(
+    ClimateEntityDescription, OpenThermEntityDescription
+):
+    """Describes an opentherm_gw climate entity."""
 
 
 async def async_setup_entry(
@@ -55,6 +58,10 @@ async def async_setup_entry(
     ents.append(
         OpenThermClimate(
             hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
+            OpenThermClimateEntityDescription(
+                key="thermostat_entity",
+                device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+            ),
             config_entry.options,
         )
     )
@@ -62,97 +69,81 @@ async def async_setup_entry(
     async_add_entities(ents)
 
 
-class OpenThermClimate(ClimateEntity):
+class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
     """Representation of a climate device."""
 
-    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_available = False
     _attr_hvac_modes = []
+    _attr_name = None
     _attr_preset_modes = []
     _attr_min_temp = 1
     _attr_max_temp = 30
-    _hvac_mode = HVACMode.HEAT
-    _current_temperature: float | None = None
-    _new_target_temperature: float | None = None
-    _target_temperature: float | None = None
+    _attr_hvac_mode = HVACMode.HEAT
     _away_mode_a: int | None = None
     _away_mode_b: int | None = None
     _away_state_a = False
     _away_state_b = False
-    _current_operation: HVACAction | None = None
+    _enable_turn_on_off_backwards_compatibility = False
+    _target_temperature: float | None = None
+    _new_target_temperature: float | None = None
+    entity_description: OpenThermClimateEntityDescription
 
-    def __init__(self, gw_dev, options):
-        """Initialize the device."""
-        self._gateway = gw_dev
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass
-        )
-        self.friendly_name = gw_dev.name
-        self._attr_name = self.friendly_name
-        self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
-        self.temp_read_precision = options.get(CONF_READ_PRECISION)
-        self.temp_set_precision = options.get(CONF_SET_PRECISION)
+    def __init__(
+        self,
+        gw_hub: OpenThermGatewayHub,
+        description: OpenThermClimateEntityDescription,
+        options: MappingProxyType[str, Any],
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(gw_hub, description)
+        if CONF_READ_PRECISION in options:
+            self._attr_precision = options[CONF_READ_PRECISION]
+        self._attr_target_temperature_step = options.get(CONF_SET_PRECISION)
         self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
-        self._unsub_options = None
-        self._unsub_updates = None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, gw_dev.gw_id)},
-            manufacturer="Schelte Bron",
-            model="OpenTherm Gateway",
-            name=gw_dev.name,
-            sw_version=gw_dev.gw_version,
-        )
-        self._attr_unique_id = gw_dev.gw_id
 
     @callback
     def update_options(self, entry):
         """Update climate entity options."""
-        self.floor_temp = entry.options[CONF_FLOOR_TEMP]
-        self.temp_read_precision = entry.options[CONF_READ_PRECISION]
-        self.temp_set_precision = entry.options[CONF_SET_PRECISION]
+        self._attr_precision = entry.options[CONF_READ_PRECISION]
+        self._attr_target_temperature_step = entry.options[CONF_SET_PRECISION]
         self.temporary_ovrd_mode = entry.options[CONF_TEMPORARY_OVRD_MODE]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Connect to the OpenTherm Gateway device."""
-        _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
-        self._unsub_updates = async_dispatcher_connect(
-            self.hass, self._gateway.update_signal, self.receive_report
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._gateway.options_update_signal, self.update_options
+            )
         )
-        self._unsub_options = async_dispatcher_connect(
-            self.hass, self._gateway.options_update_signal, self.update_options
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from updates from the component."""
-        _LOGGER.debug("Removing OpenTherm Gateway climate %s", self.friendly_name)
-        self._unsub_options()
-        self._unsub_updates()
 
     @callback
-    def receive_report(self, status):
+    def receive_report(self, status: dict[OpenThermDataSource, dict]):
         """Receive and handle a new report from the Gateway."""
-        self._attr_available = status != gw_vars.DEFAULT_STATUS
-        ch_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
-        flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
-        cooling_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
+        ch_active = status[OpenThermDataSource.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
+        flame_on = status[OpenThermDataSource.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
+        cooling_active = status[OpenThermDataSource.BOILER].get(
+            gw_vars.DATA_SLAVE_COOLING_ACTIVE
+        )
         if ch_active and flame_on:
-            self._current_operation = HVACAction.HEATING
-            self._hvac_mode = HVACMode.HEAT
+            self._attr_hvac_action = HVACAction.HEATING
+            self._attr_hvac_mode = HVACMode.HEAT
         elif cooling_active:
-            self._current_operation = HVACAction.COOLING
-            self._hvac_mode = HVACMode.COOL
+            self._attr_hvac_action = HVACAction.COOLING
+            self._attr_hvac_mode = HVACMode.COOL
         else:
-            self._current_operation = HVACAction.IDLE
+            self._attr_hvac_action = HVACAction.IDLE
 
-        self._current_temperature = status[gw_vars.THERMOSTAT].get(
+        self._attr_current_temperature = status[OpenThermDataSource.THERMOSTAT].get(
             gw_vars.DATA_ROOM_TEMP
         )
-        temp_upd = status[gw_vars.THERMOSTAT].get(gw_vars.DATA_ROOM_SETPOINT)
+        temp_upd = status[OpenThermDataSource.THERMOSTAT].get(
+            gw_vars.DATA_ROOM_SETPOINT
+        )
 
         if self._target_temperature != temp_upd:
             self._new_target_temperature = None
@@ -160,82 +151,35 @@ class OpenThermClimate(ClimateEntity):
 
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
-        gpio_a_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A)
-        if gpio_a_state == 5:
-            self._away_mode_a = 0
-        elif gpio_a_state == 6:
-            self._away_mode_a = 1
-        else:
-            self._away_mode_a = None
-        gpio_b_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B)
-        if gpio_b_state == 5:
-            self._away_mode_b = 0
-        elif gpio_b_state == 6:
-            self._away_mode_b = 1
-        else:
-            self._away_mode_b = None
-        if self._away_mode_a is not None:
-            self._away_state_a = (
-                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a
+        gpio_a_state = status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_GPIO_A)
+        gpio_b_state = status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_GPIO_B)
+        self._away_mode_a = gpio_a_state - 5 if gpio_a_state in (5, 6) else None
+        self._away_mode_b = gpio_b_state - 5 if gpio_b_state in (5, 6) else None
+        self._away_state_a = (
+            (
+                status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_GPIO_A_STATE)
+                == self._away_mode_a
             )
-        if self._away_mode_b is not None:
-            self._away_state_b = (
-                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
+            if self._away_mode_a is not None
+            else False
+        )
+        self._away_state_b = (
+            (
+                status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_GPIO_B_STATE)
+                == self._away_mode_b
             )
+            if self._away_mode_b is not None
+            else False
+        )
         self.async_write_ha_state()
 
     @property
-    def precision(self):
-        """Return the precision of the system."""
-        if self.temp_read_precision:
-            return self.temp_read_precision
-        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
-            return PRECISION_HALVES
-        return PRECISION_WHOLE
-
-    @property
-    def hvac_action(self) -> HVACAction | None:
-        """Return current HVAC operation."""
-        return self._current_operation
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return current HVAC mode."""
-        return self._hvac_mode
-
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set the HVAC mode."""
-        _LOGGER.warning("Changing HVAC mode is not supported")
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        if self._current_temperature is None:
-            return
-        if self.floor_temp is True:
-            if self.precision == PRECISION_HALVES:
-                return int(2 * self._current_temperature) / 2
-            if self.precision == PRECISION_TENTHS:
-                return int(10 * self._current_temperature) / 10
-            return int(self._current_temperature)
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._new_target_temperature or self._target_temperature
 
     @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        if self.temp_set_precision:
-            return self.temp_set_precision
-        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
-            return PRECISION_HALVES
-        return PRECISION_WHOLE
-
-    @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return current preset mode."""
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY

@@ -1,9 +1,10 @@
 {
   "domain": "homeassistant_green",
   "name": "Home Assistant Green",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "dependencies": ["hardware", "hassio", "homeassistant_hardware"],
+  "dependencies": ["hardware", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_green",
   "integration_type": "hardware"
 }

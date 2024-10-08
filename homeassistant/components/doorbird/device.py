@@ -1,19 +1,53 @@
 """Support for DoorBird devices."""
+
 from __future__ import annotations
 
+from collections import defaultdict
+from dataclasses import dataclass
+from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any
 
-from doorbirdpy import DoorBird
+from aiohttp import ClientResponseError
+from doorbirdpy import (
+    DoorBird,
+    DoorBirdScheduleEntry,
+    DoorBirdScheduleEntryOutput,
+    DoorBirdScheduleEntrySchedule,
+)
+from propcache import cached_property
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import API_URL
+from .const import (
+    API_URL,
+    DEFAULT_EVENT_TYPES,
+    HTTP_EVENT_TYPE,
+    MAX_WEEKDAY,
+    MIN_WEEKDAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class DoorbirdEvent:
+    """Describes a doorbird event."""
+
+    event: str
+    event_type: str
+
+
+@dataclass(slots=True)
+class DoorbirdEventConfig:
+    """Describes the configuration of doorbird events."""
+
+    events: list[DoorbirdEvent]
+    schedule: list[DoorBirdScheduleEntry]
+    unconfigured_favorites: defaultdict[str, list[str]]
 
 
 class ConfiguredDoorBird:
@@ -21,6 +55,7 @@ class ConfiguredDoorBird:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: DoorBird,
         name: str | None,
         custom_url: str | None,
@@ -28,13 +63,17 @@ class ConfiguredDoorBird:
         event_entity_ids: dict[str, str],
     ) -> None:
         """Initialize configured device."""
+        self._hass = hass
         self._name = name
         self._device = device
         self._custom_url = custom_url
         self._token = token
         self._event_entity_ids = event_entity_ids
+        # Raw events, ie "doorbell" or "motion"
         self.events: list[str] = []
+        # Event names, ie "doorbird_1234_doorbell" or "doorbird_1234_motion"
         self.door_station_events: list[str] = []
+        self.event_descriptions: list[DoorbirdEvent] = []
 
     def update_events(self, events: list[str]) -> None:
         """Update the doorbird events."""
@@ -43,47 +82,128 @@ class ConfiguredDoorBird:
             self._get_event_name(event) for event in self.events
         ]
 
-    @property
+    @cached_property
     def name(self) -> str | None:
         """Get custom device name."""
         return self._name
 
-    @property
+    @cached_property
     def device(self) -> DoorBird:
         """Get the configured device."""
         return self._device
 
-    @property
+    @cached_property
     def custom_url(self) -> str | None:
         """Get custom url for device."""
         return self._custom_url
 
-    @property
+    @cached_property
     def token(self) -> str:
         """Get token for device."""
         return self._token
 
-    def register_events(self, hass: HomeAssistant) -> None:
+    async def async_register_events(self) -> None:
         """Register events on device."""
-        # Get the URL of this server
-        hass_url = get_url(hass, prefer_external=False)
-
-        # Override url if another is specified in the configuration
-        if self.custom_url is not None:
-            hass_url = self.custom_url
-
         if not self.door_station_events:
-            # User may not have permission to get the favorites
+            # The config entry might not have any events configured yet
             return
+        http_fav = await self._async_register_events()
+        event_config = await self._async_get_event_config(http_fav)
+        _LOGGER.debug("%s: Event config: %s", self.name, event_config)
+        if event_config.unconfigured_favorites:
+            await self._configure_unconfigured_favorites(event_config)
+            event_config = await self._async_get_event_config(http_fav)
+        self.event_descriptions = event_config.events
 
-        favorites = self.device.favorites()
-        for event in self.door_station_events:
-            if self._register_event(hass_url, event, favs=favorites):
-                _LOGGER.info(
-                    "Successfully registered URL for %s on %s", event, self.name
+    async def _configure_unconfigured_favorites(
+        self, event_config: DoorbirdEventConfig
+    ) -> None:
+        """Configure unconfigured favorites."""
+        for entry in event_config.schedule:
+            modified_schedule = False
+            for identifier in event_config.unconfigured_favorites.get(entry.input, ()):
+                schedule = DoorBirdScheduleEntrySchedule()
+                schedule.add_weekday(MIN_WEEKDAY, MAX_WEEKDAY)
+                entry.output.append(
+                    DoorBirdScheduleEntryOutput(
+                        enabled=True,
+                        event=HTTP_EVENT_TYPE,
+                        param=identifier,
+                        schedule=schedule,
+                    )
                 )
+                modified_schedule = True
 
-    @property
+            if modified_schedule:
+                update_ok, code = await self.device.change_schedule(entry)
+                if not update_ok:
+                    _LOGGER.error(
+                        "Unable to update schedule entry %s to %s. Error code: %s",
+                        self.name,
+                        entry.export,
+                        code,
+                    )
+
+    async def _async_register_events(self) -> dict[str, Any]:
+        """Register events on device."""
+        # Override url if another is specified in the configuration
+        if custom_url := self.custom_url:
+            hass_url = custom_url
+        else:
+            # Get the URL of this server
+            hass_url = get_url(self._hass, prefer_external=False)
+
+        http_fav = await self._async_get_http_favorites()
+        if any(
+            # Note that a list comp is used here to ensure all
+            # events are registered and the any does not short circuit
+            [
+                await self._async_register_event(hass_url, event, http_fav)
+                for event in self.door_station_events
+            ]
+        ):
+            # If any events were registered, get the updated favorites
+            http_fav = await self._async_get_http_favorites()
+
+        return http_fav
+
+    async def _async_get_event_config(
+        self, http_fav: dict[str, dict[str, Any]]
+    ) -> DoorbirdEventConfig:
+        """Get events and unconfigured favorites from http favorites."""
+        device = self.device
+        events: list[DoorbirdEvent] = []
+        unconfigured_favorites: defaultdict[str, list[str]] = defaultdict(list)
+        try:
+            schedule = await device.schedule()
+        except ClientResponseError as ex:
+            if ex.status == HTTPStatus.NOT_FOUND:
+                # D301 models do not support schedules
+                return DoorbirdEventConfig(events, [], unconfigured_favorites)
+            raise
+        favorite_input_type = {
+            output.param: entry.input
+            for entry in schedule
+            for output in entry.output
+            if output.event == HTTP_EVENT_TYPE
+        }
+        default_event_types = {
+            self._get_event_name(event): event_type
+            for event, event_type in DEFAULT_EVENT_TYPES
+        }
+        for identifier, data in http_fav.items():
+            title: str | None = data.get("title")
+            if not title or not title.startswith("Home Assistant"):
+                continue
+            event = title.partition("(")[2].strip(")")
+            if input_type := favorite_input_type.get(identifier):
+                events.append(DoorbirdEvent(event, input_type))
+            elif input_type := default_event_types.get(event):
+                unconfigured_favorites[input_type].append(identifier)
+
+        return DoorbirdEventConfig(events, schedule, unconfigured_favorites)
+
+    @cached_property
     def slug(self) -> str:
         """Get device slug."""
         return slugify(self._name)
@@ -91,49 +211,37 @@ class ConfiguredDoorBird:
     def _get_event_name(self, event: str) -> str:
         return f"{self.slug}_{event}"
 
-    def _register_event(
-        self, hass_url: str, event: str, favs: dict[str, Any] | None = None
+    async def _async_get_http_favorites(self) -> dict[str, dict[str, Any]]:
+        """Get the HTTP favorites from the device."""
+        return (await self.device.favorites()).get(HTTP_EVENT_TYPE) or {}
+
+    async def _async_register_event(
+        self, hass_url: str, event: str, http_fav: dict[str, dict[str, Any]]
     ) -> bool:
-        """Add a schedule entry in the device for a sensor."""
+        """Register an event.
+
+        Returns True if the event was registered, False if
+        the event was already registered or registration failed.
+        """
         url = f"{hass_url}{API_URL}/{event}?token={self._token}"
+        _LOGGER.debug("Registering URL %s for event %s", url, event)
+        # If its already registered, don't register it again
+        if any(fav["value"] == url for fav in http_fav.values()):
+            _LOGGER.debug("URL already registered for %s", event)
+            return False
 
-        # Register HA URL as webhook if not already, then get the ID
-        if self.webhook_is_registered(url, favs=favs):
-            return True
-
-        self.device.change_favorite("http", f"Home Assistant ({event})", url)
-        if not self.webhook_is_registered(url):
+        if not await self.device.change_favorite(
+            HTTP_EVENT_TYPE, f"Home Assistant ({event})", url
+        ):
             _LOGGER.warning(
                 'Unable to set favorite URL "%s". Event "%s" will not fire',
                 url,
                 event,
             )
             return False
+
+        _LOGGER.debug("Successfully registered URL for %s on %s", event, self.name)
         return True
-
-    def webhook_is_registered(
-        self, url: str, favs: dict[str, Any] | None = None
-    ) -> bool:
-        """Return whether the given URL is registered as a device favorite."""
-        return self.get_webhook_id(url, favs) is not None
-
-    def get_webhook_id(
-        self, url: str, favs: dict[str, Any] | None = None
-    ) -> str | None:
-        """Return the device favorite ID for the given URL.
-
-        The favorite must exist or there will be problems.
-        """
-        favs = favs if favs else self.device.favorites()
-
-        if "http" not in favs:
-            return None
-
-        for fav_id in favs["http"]:
-            if favs["http"][fav_id]["value"] == url:
-                return cast(str, fav_id)
-
-        return None
 
     def get_event_data(self, event: str) -> dict[str, str | None]:
         """Get data to pass along with HA event."""
@@ -147,18 +255,11 @@ class ConfiguredDoorBird:
         }
 
 
-async def async_reset_device_favorites(
-    hass: HomeAssistant, door_station: ConfiguredDoorBird
-) -> None:
+async def async_reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
     """Handle clearing favorites on device."""
-    await hass.async_add_executor_job(_reset_device_favorites, door_station)
-
-
-def _reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
-    """Handle clearing favorites on device."""
-    # Clear webhooks
     door_bird = door_station.device
-    favorites: dict[str, list[str]] = door_bird.favorites()
+    favorites = await door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
-            door_bird.delete_favorite(favorite_type, favorite_id)
+            await door_bird.delete_favorite(favorite_type, favorite_id)
+    await door_station.async_register_events()

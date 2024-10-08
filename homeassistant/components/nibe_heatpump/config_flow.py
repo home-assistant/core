@@ -1,4 +1,5 @@
 """Config flow for Nibe Heat Pump integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,10 +18,9 @@ from nibe.heatpump import HeatPump, Model
 import voluptuous as vol
 import yarl
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
@@ -166,20 +166,20 @@ async def validate_modbus_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nibe Heat Pump."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         return self.async_show_menu(step_id="user", menu_options=["modbus", "nibegw"])
 
     async def async_step_modbus(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the modbus step."""
         if user_input is None:
             return self.async_show_form(
@@ -193,7 +193,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.debug("Validation error %s", exception)
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -205,7 +205,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_nibegw(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the nibegw step."""
         if user_input is None:
             return self.async_show_form(
@@ -219,7 +219,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.exception("Validation error")
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

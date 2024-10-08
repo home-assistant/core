@@ -1,4 +1,5 @@
 """Cover Platform for the Somfy MyLink component."""
+
 import logging
 from typing import Any
 
@@ -51,7 +52,7 @@ async def async_setup_entry(
 
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Adding Somfy Cover: %s with targetID %s",
             cover_config["name"],
             cover_config["target_id"],

@@ -1,6 +1,9 @@
 """Constants used be the HomeKit component."""
 
+from __future__ import annotations
+
 from homeassistant.const import CONF_DEVICES
+from homeassistant.util.signal_type import SignalTypeFormat
 
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
@@ -10,6 +13,10 @@ PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
+EMPTY_MAC = "00:00:00:00:00:00"
+SIGNAL_RELOAD_ENTITIES: SignalTypeFormat[tuple[str, ...]] = SignalTypeFormat(
+    "homekit_reload_entities_{}"
+)
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
@@ -52,6 +59,8 @@ CONF_MAX_WIDTH = "max_width"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
+CONF_THRESHOLD_CO = "co_threshold"
+CONF_THRESHOLD_CO2 = "co2_threshold"
 CONF_VIDEO_CODEC = "video_codec"
 CONF_VIDEO_PROFILE_NAMES = "video_profile_names"
 CONF_VIDEO_MAP = "video_map"

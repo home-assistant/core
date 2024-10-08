@@ -1,13 +1,12 @@
 """Provides device conditions for sensors."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
-    async_get_entity_registry_entry_or_raise,
-)
-from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+    async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.const import (
     CONF_ABOVE,
@@ -40,6 +39,7 @@ CONF_IS_ATMOSPHERIC_PRESSURE = "is_atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
+CONF_IS_CONDUCTIVITY = "is_conductivity"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_DATA_RATE = "is_data_rate"
 CONF_IS_DATA_SIZE = "is_data_size"
@@ -77,6 +77,7 @@ CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_VOLUME_FLOW_RATE = "is_volume_flow_rate"
 CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
 CONF_IS_WIND_SPEED = "is_wind_speed"
@@ -88,6 +89,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
+    SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_IS_CONDUCTIVITY}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_IS_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_IS_DATA_SIZE}],
@@ -132,6 +134,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
     SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_IS_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
@@ -150,6 +153,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
+                    CONF_IS_CONDUCTIVITY,
                     CONF_IS_CURRENT,
                     CONF_IS_DATA_RATE,
                     CONF_IS_DATA_SIZE,
@@ -186,6 +190,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VOLUME,
+                    CONF_IS_VOLUME_FLOW_RATE,
                     CONF_IS_WATER,
                     CONF_IS_WEIGHT,
                     CONF_IS_WIND_SPEED,

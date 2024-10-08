@@ -1,4 +1,5 @@
 """The sensor websocket API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,6 +15,8 @@ from .const import (
     UNIT_CONVERTERS,
     SensorDeviceClass,
 )
+
+_NUMERIC_DEVICE_CLASSES = list(set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES)
 
 
 @callback
@@ -54,7 +57,6 @@ def ws_numeric_device_classes(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return numeric sensor device classes."""
-    numeric_device_classes = set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
     connection.send_result(
-        msg["id"], {"numeric_device_classes": list(numeric_device_classes)}
+        msg["id"], {"numeric_device_classes": _NUMERIC_DEVICE_CLASSES}
     )

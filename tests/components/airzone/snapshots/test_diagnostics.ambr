@@ -238,6 +238,8 @@
         'port': 3000,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'airzone',
       'entry_id': '6e7a0798c1734ba81d26ced0e690eaec',
       'minor_version': 1,
@@ -267,10 +269,6 @@
         'temp-set': 45,
         'temp-unit': 0,
       }),
-      'new-systems': list([
-      ]),
-      'new-zones': list([
-      ]),
       'num-systems': 3,
       'num-zones': 7,
       'systems': dict({

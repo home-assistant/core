@@ -1,4 +1,5 @@
 """The button tests for the august platform."""
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -19,5 +20,4 @@ async def test_wake_lock(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
     api_instance.async_status_async.assert_called_once()

@@ -56,7 +56,7 @@ class SmartTubController:
             # credentials were changed or invalidated, we need new ones
             raise ConfigEntryAuthFailed from ex
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             client_exceptions.ClientOSError,
             client_exceptions.ServerDisconnectedError,
             client_exceptions.ContentTypeError,

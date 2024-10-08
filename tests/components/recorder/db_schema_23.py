@@ -5,6 +5,7 @@ used by Home Assistant Core 2021.11.0, which adds the name column
 to statistics_meta.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -82,7 +83,7 @@ DOUBLE_TYPE = (
 )
 
 
-class Events(Base):  # type: ignore
+class Events(Base):  # type: ignore[valid-type,misc]
     """Event history data."""
 
     __table_args__ = (
@@ -146,7 +147,7 @@ class Events(Base):  # type: ignore
             return None
 
 
-class States(Base):  # type: ignore
+class States(Base):  # type: ignore[valid-type,misc]
     """State change history."""
 
     __table_args__ = (
@@ -281,13 +282,13 @@ class StatisticsBase:
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData):
         """Create object from a statistics."""
-        return cls(  # type: ignore
+        return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
             **stats,
         )
 
 
-class Statistics(Base, StatisticsBase):  # type: ignore
+class Statistics(Base, StatisticsBase):  # type: ignore[valid-type,misc]
     """Long term statistics."""
 
     duration = timedelta(hours=1)
@@ -299,7 +300,7 @@ class Statistics(Base, StatisticsBase):  # type: ignore
     __tablename__ = TABLE_STATISTICS
 
 
-class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
+class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore[valid-type,misc]
     """Short term statistics."""
 
     duration = timedelta(minutes=5)
@@ -322,7 +323,7 @@ class StatisticMetaData(TypedDict):
     unit_of_measurement: str | None
 
 
-class StatisticsMeta(Base):  # type: ignore
+class StatisticsMeta(Base):  # type: ignore[valid-type,misc]
     """Statistics meta data."""
 
     __table_args__ = (
@@ -343,7 +344,7 @@ class StatisticsMeta(Base):  # type: ignore
         return StatisticsMeta(**meta)
 
 
-class RecorderRuns(Base):  # type: ignore
+class RecorderRuns(Base):  # type: ignore[valid-type,misc]
     """Representation of recorder run."""
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
@@ -393,7 +394,7 @@ class RecorderRuns(Base):  # type: ignore
         return self
 
 
-class SchemaChanges(Base):  # type: ignore
+class SchemaChanges(Base):  # type: ignore[valid-type,misc]
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
@@ -411,7 +412,7 @@ class SchemaChanges(Base):  # type: ignore
         )
 
 
-class StatisticsRuns(Base):  # type: ignore
+class StatisticsRuns(Base):  # type: ignore[valid-type,misc]
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
@@ -428,13 +429,11 @@ class StatisticsRuns(Base):  # type: ignore
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -448,13 +447,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
@@ -473,15 +470,13 @@ class LazyState(State):
 
     __slots__ = [
         "_row",
-        "entity_id",
-        "state",
         "_attributes",
         "_last_changed",
         "_last_updated",
         "_context",
     ]
 
-    def __init__(self, row):  # pylint: disable=super-init-not-called
+    def __init__(self, row) -> None:  # pylint: disable=super-init-not-called
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
@@ -491,7 +486,7 @@ class LazyState(State):
         self._last_updated = None
         self._context = None
 
-    @property  # type: ignore
+    @property
     def attributes(self):
         """State attributes."""
         if not self._attributes:
@@ -508,7 +503,7 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore
+    @property
     def context(self):
         """State context."""
         if not self._context:
@@ -520,7 +515,7 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore
+    @property
     def last_changed(self):
         """Last changed datetime."""
         if not self._last_changed:
@@ -532,7 +527,7 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore
+    @property
     def last_updated(self):
         """Last updated datetime."""
         if not self._last_updated:

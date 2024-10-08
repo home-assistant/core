@@ -1,7 +1,7 @@
 """The tests for the litejet component."""
+
 from homeassistant.components import litejet
 from homeassistant.components.litejet.const import DOMAIN
-from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -12,15 +12,6 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that nothing happens."""
     assert await async_setup_component(hass, DOMAIN, {}) is True
     assert DOMAIN not in hass.data
-
-
-async def test_setup_with_config_to_import(hass: HomeAssistant, mock_litejet) -> None:
-    """Test that import happens."""
-    assert (
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PORT: "/dev/hello"}})
-        is True
-    )
-    assert DOMAIN in hass.data
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_litejet) -> None:

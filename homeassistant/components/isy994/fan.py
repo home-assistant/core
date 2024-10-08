@@ -1,4 +1,5 @@
 """Support for ISY fans."""
+
 from __future__ import annotations
 
 import math
@@ -31,13 +32,15 @@ async def async_setup_entry(
     """Set up the ISY fan platform."""
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
-    entities: list[ISYFanEntity | ISYFanProgramEntity] = []
+    entities: list[ISYFanEntity | ISYFanProgramEntity] = [
+        ISYFanEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.FAN]
+    ]
 
-    for node in isy_data.nodes[Platform.FAN]:
-        entities.append(ISYFanEntity(node, devices.get(node.primary_node)))
-
-    for name, status, actions in isy_data.programs[Platform.FAN]:
-        entities.append(ISYFanProgramEntity(name, status, actions))
+    entities.extend(
+        ISYFanProgramEntity(name, status, actions)
+        for name, status, actions in isy_data.programs[Platform.FAN]
+    )
 
     async_add_entities(entities)
 
@@ -45,7 +48,12 @@ async def async_setup_entry(
 class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY fan device."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

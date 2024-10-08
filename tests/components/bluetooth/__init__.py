@@ -1,6 +1,6 @@
 """Tests for the Bluetooth integration."""
 
-
+from collections.abc import Iterable
 from contextlib import contextmanager
 import itertools
 import time
@@ -58,13 +58,14 @@ BLE_DEVICE_DEFAULTS = {
 @contextmanager
 def patch_bluetooth_time(mock_time: float) -> None:
     """Patch the bluetooth time."""
-    with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
-    ), patch(
-        "habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time
-    ), patch(
-        "habluetooth.manager.monotonic_time_coarse", return_value=mock_time
-    ), patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time):
+    with (
+        patch(
+            "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
+        ),
+        patch("habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.manager.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time),
+    ):
         yield
 
 
@@ -154,6 +155,7 @@ def inject_advertisement_with_time_and_source_connectable(
             advertisement=adv,
             connectable=connectable,
             time=time,
+            tx_power=adv.tx_power,
         )
     )
 
@@ -269,7 +271,7 @@ async def _async_setup_with_adapter(
 class MockBleakClient(BleakClient):
     """Mock bleak client."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock init."""
         super().__init__(*args, **kwargs)
         self._device_path = "/dev/test"
@@ -295,7 +297,20 @@ class MockBleakClient(BleakClient):
         return True
 
 
-class FakeScanner(BaseHaScanner):
+class FakeScannerMixin:
+    def get_discovered_device_advertisement_data(
+        self, address: str
+    ) -> tuple[BLEDevice, AdvertisementData] | None:
+        """Return the advertisement data for a discovered device."""
+        return self.discovered_devices_and_advertisement_data.get(address)
+
+    @property
+    def discovered_addresses(self) -> Iterable[str]:
+        """Return an iterable of discovered devices."""
+        return self.discovered_devices_and_advertisement_data
+
+
+class FakeScanner(FakeScannerMixin, BaseHaScanner):
     """Fake scanner."""
 
     @property

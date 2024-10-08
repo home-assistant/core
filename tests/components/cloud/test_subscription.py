@@ -1,5 +1,5 @@
 """Test cloud subscription functions."""
-import asyncio
+
 from unittest.mock import AsyncMock, Mock
 
 from hass_nabucasa import Cloud
@@ -33,7 +33,7 @@ async def test_fetching_subscription_with_timeout_error(
     """Test that we handle timeout error."""
     aioclient_mock.get(
         "https://accounts.nabucasa.com/payments/subscription_info",
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
     assert await async_subscription_info(mocked_cloud) is None
@@ -51,7 +51,7 @@ async def test_migrate_paypal_agreement_with_timeout_error(
     """Test that we handle timeout error."""
     aioclient_mock.post(
         "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
     assert await async_migrate_paypal_agreement(mocked_cloud) is None

@@ -1,4 +1,5 @@
 """Representation of Z-Wave updates."""
+
 from __future__ import annotations
 
 import asyncio
@@ -79,7 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave update entity from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
     cnt: Counter = Counter()
 
     @callback
@@ -191,7 +192,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         # If hass hasn't started yet, push the next update to the next day so that we
         # can preserve the offsets we've created between each node
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )

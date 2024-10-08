@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the easyEnergy integration."""
+
 from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError

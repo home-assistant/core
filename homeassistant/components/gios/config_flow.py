@@ -1,4 +1,5 @@
 """Adds config flow for GIOS."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,22 +9,21 @@ from aiohttp.client_exceptions import ClientConnectorError
 from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
 
 
-class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for GIOS."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -45,7 +45,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=gios.station_name,
                     data=user_input,
                 )
-            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+            except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except NoStationError:
                 errors[CONF_STATION_ID] = "wrong_station_id"

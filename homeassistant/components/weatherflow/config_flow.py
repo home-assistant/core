@@ -1,4 +1,5 @@
 """Config flow for WeatherFlow."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,9 +10,8 @@ from typing import Any
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.errors import AddressInUseError, EndpointError, ListenerError
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     DOMAIN,
@@ -36,20 +36,20 @@ async def _async_can_discover_devices() -> bool:
         try:
             client.on(EVENT_DEVICE_DISCOVERED, _async_found)
             await future_event
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
 
     return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WeatherFlow."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         # Only allow a single instance of integration since the listener

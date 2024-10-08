@@ -1,4 +1,5 @@
 """Support for Fibaro sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -26,8 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
@@ -105,34 +107,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
-    entities: list[SensorEntity] = []
 
     controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    entities: list[SensorEntity] = [
+        FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
+        for device in controller.fibaro_devices[Platform.SENSOR]
+        # Some sensor devices do not have a value but report power or energy.
+        # These sensors are added to the sensor list but need to be excluded
+        # here as the FibaroSensor expects a value. One example is the
+        # Qubino 3 phase power meter.
+        if device.value.has_value
+    ]
 
-    for device in controller.fibaro_devices[Platform.SENSOR]:
-        entity_description = MAIN_SENSOR_TYPES.get(device.type)
-
-        # main sensors are created even if the entity type is not known
-        entities.append(FibaroSensor(device, entity_description))
-
-    for platform in (
-        Platform.BINARY_SENSOR,
-        Platform.CLIMATE,
-        Platform.COVER,
-        Platform.LIGHT,
-        Platform.LOCK,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ):
-        for device in controller.fibaro_devices[platform]:
-            for entity_description in ADDITIONAL_SENSOR_TYPES:
-                if entity_description.key in device.properties:
-                    entities.append(FibaroAdditionalSensor(device, entity_description))
+    entities.extend(
+        FibaroAdditionalSensor(device, entity_description)
+        for platform in (
+            Platform.BINARY_SENSOR,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        )
+        for device in controller.fibaro_devices[platform]
+        for entity_description in ADDITIONAL_SENSOR_TYPES
+        if entity_description.key in device.properties
+    )
 
     async_add_entities(entities, True)
 
 
-class FibaroSensor(FibaroDevice, SensorEntity):
+class FibaroSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
@@ -161,7 +167,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
             self._attr_native_value = self.fibaro_device.value.float_value()
 
 
-class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
+class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(

@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -20,6 +21,7 @@ from homeassistant.components import (
     light,
     media_player,
     number,
+    remote,
     timer,
     vacuum,
     valve,
@@ -119,11 +121,18 @@ async def async_api_discovery(
 
     Async friendly.
     """
-    discovery_endpoints = [
-        alexa_entity.serialize_discovery()
-        for alexa_entity in async_get_entities(hass, config)
-        if config.should_expose(alexa_entity.entity_id)
-    ]
+    discovery_endpoints: list[dict[str, Any]] = []
+    for alexa_entity in async_get_entities(hass, config):
+        if not config.should_expose(alexa_entity.entity_id):
+            continue
+        try:
+            discovered_serialized_entity = alexa_entity.serialize_discovery()
+        except Exception:
+            _LOGGER.exception(
+                "Unable to serialize %s for discovery", alexa_entity.entity_id
+            )
+        else:
+            discovery_endpoints.append(discovered_serialized_entity)
 
     return directive.response(
         name="Discover.Response",
@@ -144,7 +153,6 @@ async def async_api_accept_grant(
     Async friendly.
     """
     auth_code: str = directive.payload["grant"]["code"]
-    _LOGGER.debug("AcceptGrant code: %s", auth_code)
 
     if config.supports_auth:
         await config.async_accept_grant(auth_code)
@@ -172,10 +180,14 @@ async def async_api_turn_on(
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_ON
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_ON
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -221,8 +233,12 @@ async def async_api_turn_off(
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == climate.DOMAIN:
+        service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
@@ -571,7 +587,7 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST, [])
+    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST) or []
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -988,7 +1004,7 @@ async def async_api_set_thermostat_mode(
     ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
 
     if ha_preset:
-        presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
+        presets = entity.attributes.get(climate.ATTR_PRESET_MODES) or []
 
         if ha_preset not in presets:
             msg = f"The requested thermostat mode {ha_preset} is not supported"
@@ -998,7 +1014,7 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_PRESET_MODE] = ha_preset
 
     elif mode == "CUSTOM":
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
         custom_mode = directive.payload["thermostatMode"]["customName"]
         custom_mode = next(
             (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
@@ -1014,7 +1030,7 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
         ha_modes: dict[str, str] = {
             k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode
         }
@@ -1185,6 +1201,17 @@ async def async_api_set_mode(
         if mode != PRESET_MODE_NA and modes and mode in modes:
             service = humidifier.SERVICE_SET_MODE
             data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
+    # Remote Activity
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        activity = mode.split(".")[1]
+        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        if activity != PRESET_MODE_NA and activities and activity in activities:
+            service = remote.SERVICE_TURN_ON
+            data[remote.ATTR_ACTIVITY] = activity
         else:
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)
@@ -1486,7 +1513,7 @@ async def async_api_adjust_range(
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
+        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

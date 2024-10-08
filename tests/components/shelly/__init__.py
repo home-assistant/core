@@ -1,5 +1,4 @@
 """Tests for the Shelly integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
@@ -12,6 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -20,8 +20,13 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntry,
+    DeviceRegistry,
+    format_mac,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -30,7 +35,7 @@ MOCK_MAC = "123456789ABC"
 
 async def init_integration(
     hass: HomeAssistant,
-    gen: int,
+    gen: int | None,
     model=MODEL_25,
     sleep_period=0,
     options: dict[str, Any] | None = None,
@@ -41,8 +46,9 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
-        "gen": gen,
     }
+    if gen is not None:
+        data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
@@ -72,7 +78,7 @@ def mutate_rpc_device_status(
 def inject_rpc_device_event(
     monkeypatch: pytest.MonkeyPatch,
     mock_rpc_device: Mock,
-    event: dict[str, dict[str, Any]],
+    event: Mapping[str, list[dict[str, Any]] | float],
 ) -> None:
     """Inject event for rpc device."""
     monkeypatch.setattr(mock_rpc_device, "event", event)
@@ -83,14 +89,16 @@ async def mock_rest_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     seconds=REST_SENSORS_UPDATE_INTERVAL,
-):
+) -> None:
     """Move time to create REST sensors update event."""
     freezer.tick(timedelta(seconds=seconds))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
-async def mock_polling_rpc_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+async def mock_polling_rpc_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Move time to create polling RPC sensors update event."""
     freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
     async_fire_time_changed(hass)
@@ -104,9 +112,10 @@ def register_entity(
     unique_id: str,
     config_entry: ConfigEntry | None = None,
     capabilities: Mapping[str, Any] | None = None,
+    device_id: str | None = None,
 ) -> str:
     """Register enabled entity, return entity_id."""
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         domain,
         DOMAIN,
@@ -115,13 +124,35 @@ def register_entity(
         disabled_by=None,
         config_entry=config_entry,
         capabilities=capabilities,
+        device_id=device_id,
     )
     return f"{domain}.{object_id}"
 
 
-def register_device(device_reg, config_entry: ConfigEntry):
+def get_entity(
+    hass: HomeAssistant,
+    domain: str,
+    unique_id: str,
+) -> str | None:
+    """Get Shelly entity."""
+    entity_registry = er.async_get(hass)
+    return entity_registry.async_get_entity_id(
+        domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
+    )
+
+
+def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
+    """Return entity state."""
+    entity = hass.states.get(entity_id)
+    assert entity
+    return entity.state
+
+
+def register_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry
+) -> DeviceEntry:
     """Register Shelly device."""
-    device_reg.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )

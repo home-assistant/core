@@ -1,31 +1,34 @@
 """Device Tracker platform for Tessie integration."""
+
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from . import TessieConfigEntry
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie device tracker platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        klass(coordinator)
+        klass(vehicle)
         for klass in (
             TessieDeviceTrackerLocationEntity,
             TessieDeviceTrackerRouteEntity,
         )
-        for coordinator in coordinators
+        for vehicle in data.vehicles
     )
 
 
@@ -34,21 +37,15 @@ class TessieDeviceTrackerEntity(TessieEntity, TrackerEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the device tracker."""
-        super().__init__(coordinator, self.key)
-
-    @property
-    def source_type(self) -> SourceType | str:
-        """Return the source type of the device tracker."""
-        return SourceType.GPS
+        super().__init__(vehicle, self.key)
 
 
 class TessieDeviceTrackerLocationEntity(TessieDeviceTrackerEntity):
     """Vehicle Location Device Tracker Class."""
 
-    _attr_name = None
     key = "location"
 
     @property

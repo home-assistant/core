@@ -1,4 +1,5 @@
 """Config flow for Dormakaba dKey integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,14 +10,13 @@ from bleak import BleakError
 from py_dormakaba_dkey import DKEYLock, device_filter, errors as dkey_errors
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
     async_last_service_info,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ASSOCIATION_DATA, DOMAIN
 
@@ -29,12 +29,10 @@ STEP_ASSOCIATE_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dormakaba dKey."""
 
     VERSION = 1
-
-    _reauth_entry: config_entries.ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -46,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
 
@@ -92,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the Bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -103,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle bluetooth confirm step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
@@ -117,25 +115,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_associate()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
-        reauth_entry = self._reauth_entry
-        assert reauth_entry is not None
 
         if user_input is not None:
             if (
                 discovery_info := async_last_service_info(
-                    self.hass, reauth_entry.data[CONF_ADDRESS], True
+                    self.hass, self._get_reauth_entry().data[CONF_ADDRESS], True
                 )
             ) is None:
                 errors = {"base": "no_longer_in_range"}
@@ -149,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_associate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle associate step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
@@ -173,7 +168,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_code"
         except dkey_errors.WrongActivationCode:
             errors["base"] = "wrong_code"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
@@ -181,10 +176,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: self._discovery_info.device.address,
                 CONF_ASSOCIATION_DATA: association_data.to_json(),
             }
-            if reauth_entry := self._reauth_entry:
-                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=data
+                )
 
             return self.async_create_entry(
                 title=lock.device_info.device_name

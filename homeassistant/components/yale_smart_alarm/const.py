@@ -1,4 +1,5 @@
 """Yale integration constants."""
+
 import logging
 
 from yalesmartalarmclient.client import (
@@ -25,7 +26,6 @@ MANUFACTURER = "Yale"
 MODEL = "main"
 
 DOMAIN = "yale_smart_alarm"
-COORDINATOR = "coordinator"
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -39,6 +39,9 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LOCK,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 STATE_MAP = {

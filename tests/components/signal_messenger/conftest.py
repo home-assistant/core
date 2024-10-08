@@ -1,4 +1,5 @@
 """Signal notification test helpers."""
+
 from http import HTTPStatus
 
 from pysignalclirestapi import SignalCliRestApi
@@ -31,7 +32,7 @@ def signal_requests_mock_factory(requests_mock: Mocker) -> Mocker:
     """Create signal service mock from factory."""
 
     def _signal_requests_mock_factory(
-        success_send_result: bool = True, content_length_header: str = None
+        success_send_result: bool = True, content_length_header: str | None = None
     ) -> Mocker:
         requests_mock.register_uri(
             "GET",

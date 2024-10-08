@@ -1,4 +1,5 @@
 """Support for Android IP Webcam sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,38 +13,28 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import AndroidIPCamDataUpdateCoordinator
+from .coordinator import AndroidIPCamConfigEntry, AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass(frozen=True)
-class AndroidIPWebcamSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[PyDroidIPCam], StateType]
-
-
-@dataclass(frozen=True)
-class AndroidIPWebcamSensorEntityDescription(
-    SensorEntityDescription, AndroidIPWebcamSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class AndroidIPWebcamSensorEntityDescription(SensorEntityDescription):
     """Entity description class for Android IP Webcam sensors."""
 
+    value_fn: Callable[[PyDroidIPCam], StateType]
     unit_fn: Callable[[PyDroidIPCam], str | None] = lambda _: None
 
 
 SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     AndroidIPWebcamSensorEntityDescription(
         key="audio_connections",
+        translation_key="audio_connections",
         name="Audio connections",
-        icon="mdi:speaker",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.status_data.get("audio_connections"),
@@ -59,8 +50,8 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_temp",
+        translation_key="battery_temperature",
         name="Battery temperature",
-        icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.get_sensor_value("battery_temp"),
@@ -76,48 +67,48 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="light",
+        translation_key="light",
         name="Light level",
-        icon="mdi:flashlight",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.get_sensor_value("light"),
         unit_fn=lambda ipcam: ipcam.get_sensor_unit("light"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="motion",
+        translation_key="motion",
         name="Motion",
-        icon="mdi:run",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.get_sensor_value("motion"),
         unit_fn=lambda ipcam: ipcam.get_sensor_unit("motion"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="pressure",
+        translation_key="pressure",
         name="Pressure",
-        icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.get_sensor_value("pressure"),
         unit_fn=lambda ipcam: ipcam.get_sensor_unit("pressure"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="proximity",
+        translation_key="proximity",
         name="Proximity",
-        icon="mdi:map-marker-radius",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.get_sensor_value("proximity"),
         unit_fn=lambda ipcam: ipcam.get_sensor_unit("proximity"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="sound",
+        translation_key="sound",
         name="Sound",
-        icon="mdi:speaker",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.get_sensor_value("sound"),
         unit_fn=lambda ipcam: ipcam.get_sensor_unit("sound"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="video_connections",
+        translation_key="video_connections",
         name="Video connections",
-        icon="mdi:eye",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.status_data.get("video_connections"),
@@ -127,19 +118,21 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AndroidIPCamConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the IP Webcam sensors from config entry."""
 
-    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     sensor_types = [
         sensor
         for sensor in SENSOR_TYPES
         if sensor.key
-        in coordinator.cam.enabled_sensors + ["audio_connections", "video_connections"]
+        in [
+            *coordinator.cam.enabled_sensors,
+            "audio_connections",
+            "video_connections",
+        ]
     ]
     async_add_entities(
         IPWebcamSensor(coordinator, description) for description in sensor_types

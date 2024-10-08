@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -17,7 +18,13 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Equal or part of name, description or camera id"
+          "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+        }
+      },
+      "multiple_cameras": {
+        "description": "Result came back with multiple cameras",
+        "data": {
+          "id": "Choose camera"
         }
       }
     }

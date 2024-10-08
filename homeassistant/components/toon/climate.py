@@ -1,4 +1,5 @@
 """Support for Toon thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,8 +28,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToonDataUpdateCoordinator
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .entity import ToonDisplayDeviceEntity
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity
 
 
 async def async_setup_entry(
@@ -51,6 +52,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

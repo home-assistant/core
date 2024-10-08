@@ -1,4 +1,5 @@
 """Adds constants for SQL integration."""
+
 import re
 
 from homeassistant.const import Platform

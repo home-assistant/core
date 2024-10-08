@@ -1,0 +1,12 @@
+{
+  "domain": "analytics_insights",
+  "name": "Home Assistant Analytics Insights",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/analytics_insights",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["python_homeassistant_analytics"],
+  "requirements": ["python-homeassistant-analytics==0.8.0"],
+  "single_config_entry": true
+}

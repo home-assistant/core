@@ -1,6 +1,8 @@
 """The tests for the group cover platform."""
+
 import asyncio
 from datetime import timedelta
+from typing import Any
 
 import pytest
 
@@ -9,7 +11,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
 )
 from homeassistant.components.group.cover import DEFAULT_NAME
 from homeassistant.const import (
@@ -50,7 +52,7 @@ DEMO_COVER_TILT = "cover.living_room_window"
 DEMO_TILT = "cover.tilt_demo"
 
 CONFIG_ALL = {
-    DOMAIN: [
+    COVER_DOMAIN: [
         {"platform": "demo"},
         {
             "platform": "group",
@@ -60,7 +62,7 @@ CONFIG_ALL = {
 }
 
 CONFIG_POS = {
-    DOMAIN: [
+    COVER_DOMAIN: [
         {"platform": "demo"},
         {
             "platform": "group",
@@ -70,7 +72,7 @@ CONFIG_POS = {
 }
 
 CONFIG_TILT_ONLY = {
-    DOMAIN: [
+    COVER_DOMAIN: [
         {"platform": "demo"},
         {
             "platform": "group",
@@ -80,7 +82,7 @@ CONFIG_TILT_ONLY = {
 }
 
 CONFIG_ATTRIBUTES = {
-    DOMAIN: {
+    COVER_DOMAIN: {
         "platform": "group",
         CONF_ENTITIES: [DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT, DEMO_TILT],
         CONF_UNIQUE_ID: "unique_identifier",
@@ -89,18 +91,21 @@ CONFIG_ATTRIBUTES = {
 
 
 @pytest.fixture
-async def setup_comp(hass, config_count):
+async def setup_comp(
+    hass: HomeAssistant, config_count: tuple[dict[str, Any], int]
+) -> None:
     """Set up group cover component."""
     config, count = config_count
-    with assert_setup_component(count, DOMAIN):
-        await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(count, COVER_DOMAIN):
+        await async_setup_component(hass, COVER_DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_state(hass: HomeAssistant) -> None:
     """Test handling of state.
 
     The group state is unknown if all group members are unknown or unavailable.
@@ -249,8 +254,9 @@ async def test_state(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+@pytest.mark.usefixtures("setup_comp")
 async def test_attributes(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
@@ -415,9 +421,8 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])
-async def test_cover_that_only_supports_tilt_removed(
-    hass: HomeAssistant, setup_comp
-) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_cover_that_only_supports_tilt_removed(hass: HomeAssistant) -> None:
     """Test removing a cover that support tilt."""
     hass.states.async_set(
         DEMO_COVER_TILT,
@@ -445,10 +450,11 @@ async def test_cover_that_only_supports_tilt_removed(
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_open_covers(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_open_covers(hass: HomeAssistant) -> None:
     """Test open cover function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
     for _ in range(10):
@@ -466,10 +472,11 @@ async def test_open_covers(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_close_covers(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_close_covers(hass: HomeAssistant) -> None:
     """Test close cover function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
     for _ in range(10):
@@ -487,11 +494,12 @@ async def test_close_covers(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_toggle_covers(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_toggle_covers(hass: HomeAssistant) -> None:
     """Test toggle cover function."""
     # Start covers in open state
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -503,7 +511,7 @@ async def test_toggle_covers(hass: HomeAssistant, setup_comp) -> None:
 
     # Toggle will close covers
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -520,7 +528,7 @@ async def test_toggle_covers(hass: HomeAssistant, setup_comp) -> None:
 
     # Toggle again will open covers
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -537,17 +545,18 @@ async def test_toggle_covers(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_stop_covers(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_stop_covers(hass: HomeAssistant) -> None:
     """Test stop cover function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -563,10 +572,11 @@ async def test_stop_covers(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_set_cover_position(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_set_cover_position(hass: HomeAssistant) -> None:
     """Test set cover position function."""
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: COVER_GROUP, ATTR_POSITION: 50},
         blocking=True,
@@ -586,10 +596,14 @@ async def test_set_cover_position(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_open_tilts(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_open_tilts(hass: HomeAssistant) -> None:
     """Test open tilt function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(5):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -606,10 +620,14 @@ async def test_open_tilts(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_close_tilts(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_close_tilts(hass: HomeAssistant) -> None:
     """Test close tilt function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(5):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -624,11 +642,15 @@ async def test_close_tilts(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_toggle_tilts(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_toggle_tilts(hass: HomeAssistant) -> None:
     """Test toggle tilt function."""
     # Start tilted open
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -645,7 +667,10 @@ async def test_toggle_tilts(hass: HomeAssistant, setup_comp) -> None:
 
     # Toggle will tilt closed
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -660,7 +685,10 @@ async def test_toggle_tilts(hass: HomeAssistant, setup_comp) -> None:
 
     # Toggle again will tilt open
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -677,17 +705,24 @@ async def test_toggle_tilts(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_stop_tilts(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_stop_tilts(hass: HomeAssistant) -> None:
     """Test stop tilts function."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -701,10 +736,11 @@ async def test_stop_tilts(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_set_tilt_positions(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_set_tilt_positions(hass: HomeAssistant) -> None:
     """Test set tilt position function."""
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: COVER_GROUP, ATTR_TILT_POSITION: 80},
         blocking=True,
@@ -722,10 +758,11 @@ async def test_set_tilt_positions(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_POS, 2)])
-async def test_is_opening_closing(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_is_opening_closing(hass: HomeAssistant) -> None:
     """Test is_opening property."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -740,7 +777,7 @@ async def test_is_opening_closing(hass: HomeAssistant, setup_comp) -> None:
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
     # Both covers closing -> closing
@@ -798,9 +835,9 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested cover group."""
     await async_setup_component(
         hass,
-        DOMAIN,
+        COVER_DOMAIN,
         {
-            DOMAIN: [
+            COVER_DOMAIN: [
                 {"platform": "demo"},
                 {
                     "platform": "group",
@@ -832,7 +869,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     # Test controlling the nested group
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
-            DOMAIN,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: "cover.nested_group"},
             blocking=True,

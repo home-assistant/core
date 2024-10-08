@@ -1,4 +1,5 @@
 """Support for Synology DSM switch."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMSwitchEntityDescription(
     SwitchEntityDescription, SynologyDSMEntityDescription
 ):
@@ -34,7 +35,6 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
         translation_key="home_mode",
-        icon="mdi:home-account",
     ),
 )
 
@@ -79,6 +79,8 @@ class SynoDSMSurveillanceHomeModeToggle(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""
+        assert self._api.surveillance_station is not None
+        assert self._api.information
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
             self._api.information.serial,
@@ -88,6 +90,8 @@ class SynoDSMSurveillanceHomeModeToggle(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Home mode."""
+        assert self._api.surveillance_station is not None
+        assert self._api.information
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
             self._api.information.serial,
@@ -98,11 +102,14 @@ class SynoDSMSurveillanceHomeModeToggle(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.surveillance_station)
+        return bool(self._api.surveillance_station) and super().available
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        assert self._api.surveillance_station is not None
+        assert self._api.information is not None
+        assert self._api.network is not None
         return DeviceInfo(
             identifiers={
                 (

@@ -1,4 +1,5 @@
 """Test the Apple WeatherKit config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from apple_weatherkit import DataSetType
@@ -45,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -58,7 +59,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     location = EXAMPLE_USER_INPUT[CONF_LOCATION]
     assert result["title"] == f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
@@ -93,7 +94,7 @@ async def test_error_handling(
             EXAMPLE_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
 
@@ -112,7 +113,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
             EXAMPLE_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unsupported_location"}
 
     # Test that we can recover from this error by changing the location
@@ -125,7 +126,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
             EXAMPLE_USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -158,7 +159,7 @@ async def test_auto_fix_key_input(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -173,7 +174,7 @@ async def test_auto_fix_key_input(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert result["data"][CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
     assert len(mock_setup_entry.mock_calls) == 1

@@ -1,11 +1,12 @@
 """Methods and classes related to executing Z-Wave commands."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator, Sequence
+from collections.abc import Collection, Generator, Sequence
 import logging
 import math
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -25,13 +26,13 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.group import expand_entity_ids
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -45,7 +46,13 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", ZwaveNode, Endpoint)
+type _NodeOrEndpointType = ZwaveNode | Endpoint
+
+TARGET_VALIDATORS = {
+    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+}
 
 
 def parameter_name_does_not_need_bitmask(
@@ -80,22 +87,24 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-def get_valid_responses_from_results(
-    zwave_objects: Sequence[T], results: Sequence[Any]
-) -> Generator[tuple[T, Any], None, None]:
+def get_valid_responses_from_results[_T: ZwaveNode | Endpoint](
+    zwave_objects: Sequence[_T], results: Sequence[Any]
+) -> Generator[tuple[_T, Any]]:
     """Return valid responses from a list of results."""
-    for zwave_object, result in zip(zwave_objects, results):
+    for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):
             yield zwave_object, result
 
 
 def raise_exceptions_from_results(
-    zwave_objects: Sequence[T], results: Sequence[Any]
+    zwave_objects: Sequence[_NodeOrEndpointType], results: Sequence[Any]
 ) -> None:
     """Raise list of exceptions from a list of results."""
-    errors: Sequence[tuple[T, Any]]
+    errors: Sequence[tuple[_NodeOrEndpointType, Any]]
     if errors := [
-        tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
+        tup
+        for tup in zip(zwave_objects, results, strict=True)
+        if isinstance(tup[1], Exception)
     ]:
         lines = [
             *(
@@ -109,7 +118,7 @@ def raise_exceptions_from_results(
 
 
 async def _async_invoke_cc_api(
-    nodes_or_endpoints: set[T],
+    nodes_or_endpoints: Collection[_NodeOrEndpointType],
     command_class: CommandClass,
     method_name: str,
     *args: Any,
@@ -258,13 +267,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                             vol.Coerce(int), cv.string
@@ -302,13 +305,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
@@ -353,13 +350,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
                         vol.Required(const.ATTR_PROPERTY): vol.Any(
                             vol.Coerce(int), str
@@ -388,13 +379,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
                         vol.Required(const.ATTR_PROPERTY): vol.Any(
@@ -425,15 +410,7 @@ class ZWaveServices:
             self.async_ping,
             schema=vol.Schema(
                 vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    },
+                    TARGET_VALIDATORS,
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
@@ -450,13 +427,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.All(
                             vol.Coerce(int), vol.Coerce(CommandClass)
                         ),
@@ -480,13 +451,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_NOTIFICATION_TYPE): vol.All(
                             vol.Coerce(int), vol.Coerce(NotificationType)
                         ),
@@ -558,7 +523,7 @@ class ZWaveServices:
         )
 
         def process_results(
-            nodes_or_endpoints_list: list[T], _results: list[Any]
+            nodes_or_endpoints_list: Sequence[_NodeOrEndpointType], _results: list[Any]
         ) -> None:
             """Process results for given nodes or endpoints."""
             for node_or_endpoint, result in get_valid_responses_from_results(
@@ -724,8 +689,8 @@ class ZWaveServices:
             first_node = next(node for node in nodes)
             client = first_node.client
         except StopIteration:
-            entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
-            client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+            data = self._hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
+            client = data[const.DATA_CLIENT]
             assert client.driver
             first_node = next(
                 node

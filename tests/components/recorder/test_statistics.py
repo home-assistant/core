@@ -1,7 +1,8 @@
 """The tests for sensor recorder platform."""
-from collections.abc import Callable
+
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from sqlalchemy import select
@@ -15,41 +16,66 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt,
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
+    async_list_statistic_ids,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
     _generate_get_metadata_stmt,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import setup_component
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
+    async_record_states,
+    async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
-    record_states,
+    get_start_time,
     statistics_during_period,
-    wait_recording_done,
 )
 
-from tests.common import mock_registry
-from tests.typing import WebSocketGenerator
+from tests.common import MockPlatform, mock_platform
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
+
+@pytest.fixture
+def setup_recorder(recorder_mock: Recorder) -> None:
+    """Set up recorder."""
+
+
+async def _setup_mock_domain(
+    hass: HomeAssistant,
+    platform: Any | None = None,  # There's no RecorderPlatform class yet
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, "some_domain.recorder", platform or MockPlatform())
+    assert await async_setup_component(hass, "some_domain", {})
 
 
 def test_converters_align_with_sensor() -> None:
@@ -61,12 +87,14 @@ def test_converters_align_with_sensor() -> None:
         assert converter in UNIT_CONVERTERS.values()
 
 
-def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) -> None:
+async def test_compile_hourly_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
     """Test compiling hourly statistics."""
-    hass = hass_recorder()
     instance = recorder.get_instance(hass)
-    setup_component(hass, "sensor", {})
-    zero, four, states = record_states(hass)
+    await async_setup_component(hass, "sensor", {})
+    zero, four, states = await async_record_states(hass)
     hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -94,7 +122,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     metadata = get_metadata(hass, statistic_ids={"sensor.test1", "sensor.test2"})
     assert metadata["sensor.test1"][1]["has_mean"] is True
@@ -282,14 +310,17 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, session, start, _end):
+        instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
                 sensor_stats("sensor.test3", start),
             ],
-            get_metadata(
-                _hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"}
+            get_metadata_with_session(
+                instance,
+                session,
+                statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"},
             ),
         )
 
@@ -321,18 +352,16 @@ def mock_from_stats():
         yield
 
 
-def test_compile_periodic_statistics_exception(
-    hass_recorder: Callable[..., HomeAssistant], mock_sensor_statistics, mock_from_stats
+async def test_compile_periodic_statistics_exception(
+    hass: HomeAssistant, setup_recorder: None, mock_sensor_statistics, mock_from_stats
 ) -> None:
     """Test exception handling when compiling periodic statistics."""
+    await async_setup_component(hass, "sensor", {})
 
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     do_adhoc_statistics(hass, start=now)
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     expected_1 = {
         "start": process_timestamp(now).timestamp(),
         "end": process_timestamp(now + timedelta(minutes=5)).timestamp(),
@@ -365,27 +394,22 @@ def test_compile_periodic_statistics_exception(
     }
 
 
-def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
+async def test_rename_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_recorder: None
+) -> None:
     """Test statistics is migrated when entity_id is changed."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
+    await async_setup_component(hass, "sensor", {})
 
-    entity_reg = mock_registry(hass)
+    reg_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_0000",
+        suggested_object_id="test1",
+    )
+    assert reg_entry.entity_id == "sensor.test1"
+    await hass.async_block_till_done()
 
-    @callback
-    def add_entry():
-        reg_entry = entity_reg.async_get_or_create(
-            "sensor",
-            "test",
-            "unique_0000",
-            suggested_object_id="test1",
-        )
-        assert reg_entry.entity_id == "sensor.test1"
-
-    hass.add_job(add_entry)
-    hass.block_till_done()
-
-    zero, four, states = record_states(hass)
+    zero, four, states = await async_record_states(hass)
     hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -402,7 +426,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     expected_1 = {
         "start": process_timestamp(zero).timestamp(),
         "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -420,23 +444,19 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
-    @callback
-    def rename_entry():
-        entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
-
-    hass.add_job(rename_entry)
-    wait_recording_done(hass)
+    entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+    await async_wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
 
 
-def test_statistics_during_period_set_back_compat(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_statistics_during_period_set_back_compat(
+    hass: HomeAssistant,
+    setup_recorder: None,
 ) -> None:
     """Test statistics_during_period can handle a list instead of a set."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
+    await async_setup_component(hass, "sensor", {})
     # This should not throw an exception when passed a list instead of a set
     assert (
         statistics.statistics_during_period(
@@ -452,29 +472,29 @@ def test_statistics_during_period_set_back_compat(
     )
 
 
-def test_rename_entity_collision(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_rename_entity_collision(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test statistics is migrated when entity_id is changed."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
+    """Test statistics is migrated when entity_id is changed.
 
-    entity_reg = mock_registry(hass)
+    This test relies on the safeguard in the statistics_meta_manager
+    and should not hit the filter_unique_constraint_integrity_error safeguard.
+    """
+    await async_setup_component(hass, "sensor", {})
 
-    @callback
-    def add_entry():
-        reg_entry = entity_reg.async_get_or_create(
-            "sensor",
-            "test",
-            "unique_0000",
-            suggested_object_id="test1",
-        )
-        assert reg_entry.entity_id == "sensor.test1"
+    reg_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_0000",
+        suggested_object_id="test1",
+    )
+    assert reg_entry.entity_id == "sensor.test1"
+    await hass.async_block_till_done()
 
-    hass.add_job(add_entry)
-    hass.block_till_done()
-
-    zero, four, states = record_states(hass)
+    zero, four, states = await async_record_states(hass)
     hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -491,7 +511,7 @@ def test_rename_entity_collision(
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     expected_1 = {
         "start": process_timestamp(zero).timestamp(),
         "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -522,30 +542,126 @@ def test_rename_entity_collision(
         session.add(recorder.db_schema.StatisticsMeta.from_meta(metadata_1))
 
     # Rename entity sensor.test1 to sensor.test99
-    @callback
-    def rename_entry():
-        entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
-
-    hass.add_job(rename_entry)
-    wait_recording_done(hass)
+    entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+    await async_wait_recording_done(hass)
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
-    assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
+
+    # Verify the safeguard in the states meta manager was hit
+    assert (
+        "Cannot rename statistic_id `sensor.test1` to `sensor.test99` "
+        "because the new statistic_id is already in use"
+    ) in caplog.text
+
+    # Verify the filter_unique_constraint_integrity_error safeguard was not hit
+    assert "Blocked attempt to insert duplicated statistic rows" not in caplog.text
 
 
-def test_statistics_duplicated(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_rename_entity_collision_states_meta_check_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test statistics with same start time is not compiled."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    zero, four, states = record_states(hass)
+    """Test statistics is migrated when entity_id is changed.
+
+    This test disables the safeguard in the statistics_meta_manager
+    and relies on the filter_unique_constraint_integrity_error safeguard.
+    """
+    await async_setup_component(hass, "sensor", {})
+
+    reg_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_0000",
+        suggested_object_id="test1",
+    )
+    assert reg_entry.entity_id == "sensor.test1"
+    await hass.async_block_till_done()
+
+    zero, four, states = await async_record_states(hass)
     hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
-    wait_recording_done(hass)
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
+        assert stats == {}
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
+    assert stats == {}
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+    expected_1 = {
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+    }
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
+
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Insert metadata for sensor.test99
+    metadata_1 = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "sensor.test99",
+        "unit_of_measurement": "kWh",
+    }
+
+    with session_scope(hass=hass) as session:
+        session.add(recorder.db_schema.StatisticsMeta.from_meta(metadata_1))
+
+    instance = recorder.get_instance(hass)
+    # Patch out the safeguard in the states meta manager
+    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
+    with patch.object(instance.statistics_meta_manager, "get", return_value=None):
+        # Rename entity sensor.test1 to sensor.test99
+        entity_registry.async_update_entity(
+            "sensor.test1", new_entity_id="sensor.test99"
+        )
+        await async_wait_recording_done(hass)
+
+    # Statistics failed to migrate due to the collision
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Verify the filter_unique_constraint_integrity_error safeguard was hit
+    assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
+
+    # Verify the safeguard in the states meta manager was not hit
+    assert (
+        "Cannot rename statistic_id `sensor.test1` to `sensor.test99` "
+        "because the new statistic_id is already in use"
+    ) not in caplog.text
+
+
+async def test_statistics_duplicated(
+    hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test statistics with same start time is not compiled."""
+    await async_setup_component(hass, "sensor", {})
+    zero, four, states = await async_record_states(hass)
+    hist = history.get_significant_states(hass, zero, four, list(states))
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -554,7 +670,7 @@ def test_statistics_duplicated(
         return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         do_adhoc_statistics(hass, start=zero)
-        wait_recording_done(hass)
+        await async_wait_recording_done(hass)
         assert compile_statistics.called
         compile_statistics.reset_mock()
         assert "Compiling statistics for" in caplog.text
@@ -562,7 +678,7 @@ def test_statistics_duplicated(
         caplog.clear()
 
         do_adhoc_statistics(hass, start=zero)
-        wait_recording_done(hass)
+        await async_wait_recording_done(hass)
         assert not compile_statistics.called
         compile_statistics.reset_mock()
         assert "Compiling statistics for" not in caplog.text
@@ -570,13 +686,13 @@ def test_statistics_duplicated(
         caplog.clear()
 
 
-@pytest.mark.parametrize("last_reset_str", ("2022-01-01T00:00:00+02:00", None))
+@pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
-    (
+    [
         ("test", "test:total_energy_import", async_add_external_statistics),
         ("recorder", "sensor.total_energy_import", async_import_statistics),
-    ),
+    ],
 )
 async def test_import_statistics(
     recorder_mock: Recorder,
@@ -785,9 +901,8 @@ async def test_import_statistics(
     }
 
     # Adjust the statistics in a different unit
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "recorder/adjust_sum_statistics",
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
@@ -822,12 +937,11 @@ async def test_import_statistics(
     }
 
 
-def test_external_statistics_errors(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_external_statistics_errors(
+    hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test validation of external statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -859,7 +973,7 @@ def test_external_statistics_errors(
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
@@ -869,7 +983,7 @@ def test_external_statistics_errors(
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
@@ -882,7 +996,7 @@ def test_external_statistics_errors(
     }
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
@@ -892,7 +1006,7 @@ def test_external_statistics_errors(
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
@@ -905,18 +1019,17 @@ def test_external_statistics_errors(
     }
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
 
 
-def test_import_statistics_errors(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_import_statistics_errors(
+    hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test validation of imported statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -948,7 +1061,7 @@ def test_import_statistics_errors(
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
@@ -958,7 +1071,7 @@ def test_import_statistics_errors(
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
@@ -971,7 +1084,7 @@ def test_import_statistics_errors(
     }
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
@@ -981,7 +1094,7 @@ def test_import_statistics_errors(
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
@@ -994,7 +1107,7 @@ def test_import_statistics_errors(
     }
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
@@ -1002,16 +1115,15 @@ def test_import_statistics_errors(
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_daily_statistics_sum(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_daily_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
     """Test daily statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -1071,7 +1183,7 @@ def test_daily_statistics_sum(
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="day", statistic_ids={"test:total_energy_import"}
     )
@@ -1180,21 +1292,18 @@ def test_daily_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_weekly_statistics_mean(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_weekly_statistics_mean(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -1244,7 +1353,7 @@ def test_weekly_statistics_mean(
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     # Get all data
     stats = statistics_during_period(
         hass, zero, period="week", statistic_ids={"test:total_energy_import"}
@@ -1318,21 +1427,18 @@ def test_weekly_statistics_mean(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_weekly_statistics_sum(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_weekly_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -1392,7 +1498,7 @@ def test_weekly_statistics_sum(
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="week", statistic_ids={"test:total_energy_import"}
     )
@@ -1501,21 +1607,18 @@ def test_weekly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-def test_monthly_statistics_sum(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_monthly_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
     """Test monthly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -1575,7 +1678,7 @@ def test_monthly_statistics_sum(
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="month", statistic_ids={"test:total_energy_import"}
     )
@@ -1740,8 +1843,6 @@ def test_monthly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
@@ -1829,16 +1930,15 @@ def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_change(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_change(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
     """Test deriving change from sum statistic."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -1884,7 +1984,7 @@ def test_change(
     }
 
     async_import_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     # Get change from far in the past
     stats = statistics_during_period(
         hass,
@@ -2162,13 +2262,12 @@ def test_change(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_change_with_none(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_change_with_none(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     timezone,
 ) -> None:
@@ -2177,10 +2276,8 @@ def test_change_with_none(
     This tests the behavior when some record has None sum. The calculated change
     is not expected to be correct, but we should not raise on this error.
     """
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -2226,7 +2323,7 @@ def test_change_with_none(
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     # Get change from far in the past
     stats = statistics_during_period(
         hass,
@@ -2392,4 +2489,161 @@ def test_change_with_none(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+
+async def test_recorder_platform_with_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    recorder_platform = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
+        update_statistics_issues=Mock(),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.update_statistics_issues.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    recorder_platform.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5)
+    )
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once_with(
+        hass, statistic_ids=None, statistic_type=None
+    )
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_called_once_with(hass)
+
+
+async def test_recorder_platform_without_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    recorder_data = hass.data["recorder"]
+    assert recorder_data.recorder_platforms == {}
+
+    await _setup_mock_domain(hass)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {}
+
+
+@pytest.mark.parametrize(
+    "supported_methods",
+    [
+        ("compile_statistics",),
+        ("list_statistic_ids",),
+        ("update_statistics_issues",),
+        ("validate_statistics",),
+    ],
+)
+async def test_recorder_platform_with_partial_statistics_support(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    supported_methods: tuple[str, ...],
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    mock_impl = {
+        "compile_statistics": _mock_compile_statistics,
+        "list_statistic_ids": _mock_list_statistic_ids,
+        "update_statistics_issues": None,
+        "validate_statistics": _mock_validate_statistics,
+    }
+
+    kwargs = {meth: Mock(wraps=mock_impl[meth]) for meth in supported_methods}
+
+    recorder_platform = Mock(
+        spec=supported_methods,
+        **kwargs,
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_called_once()

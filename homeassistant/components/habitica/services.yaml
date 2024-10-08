@@ -15,3 +15,25 @@ api_call:
       example: '{"text": "Use API from Home Assistant", "type": "todo"}'
       selector:
         object:
+cast_skill:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    skill:
+      required: true
+      selector:
+        select:
+          options:
+            - "pickpocket"
+            - "backstab"
+            - "smash"
+            - "fireball"
+          mode: dropdown
+          translation_key: "skill_select"
+    task:
+      required: true
+      selector:
+        text:

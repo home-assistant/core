@@ -1,5 +1,5 @@
 """Test the init file for the Insteon component."""
-import asyncio
+
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_USER_INPUT_PLM, PATCH_CONNECTION
+from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
 
 from tests.common import MockConfigEntry
@@ -31,10 +31,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
 
-    with patch.object(
-        insteon, "async_connect", new=mock_successful_connection
-    ), patch.object(insteon, "async_close") as mock_close, patch.object(
-        insteon, "devices", new=MockDevices()
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "async_close") as mock_close,
+        patch.object(insteon, "devices", new=MockDevices()),
     ):
         assert await async_setup_component(
             hass,
@@ -55,9 +55,10 @@ async def test_setup_entry_failed_connection(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
 
-    with patch.object(
-        insteon, "async_connect", new=mock_failed_connection
-    ), patch.object(insteon, "devices", new=MockDevices(connected=False)):
+    with (
+        patch.object(insteon, "async_connect", new=mock_failed_connection),
+        patch.object(insteon, "devices", new=MockDevices(connected=False)),
+    ):
         assert await async_setup_component(
             hass,
             insteon.DOMAIN,
@@ -68,21 +69,24 @@ async def test_setup_entry_failed_connection(
 
 async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
     """Test importing a dev_url config entry."""
-    config = {}
-    config[DOMAIN] = {CONF_DEV_PATH: "/some/path"}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_INPUT_PLM, options={CONF_DEV_PATH: "/some/path"}
+    )
+    config_entry.add_to_hass(hass)
 
-    with patch.object(
-        insteon, "async_connect", new=mock_successful_connection
-    ), patch.object(insteon, "close_insteon_connection"), patch.object(
-        insteon, "devices", new=MockDevices()
-    ), patch(
-        PATCH_CONNECTION,
-        new=mock_successful_connection,
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "async_close") as mock_close,
+        patch.object(insteon, "devices", new=MockDevices()),
     ):
         assert await async_setup_component(
             hass,
             insteon.DOMAIN,
-            config,
+            {},
         )
         await hass.async_block_till_done()
-        await asyncio.sleep(0.01)
+        assert hass.data[DOMAIN][CONF_DEV_PATH] == "/some/path"
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        assert insteon.devices.async_save.call_count == 1
+        assert mock_close.called

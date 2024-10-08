@@ -2,6 +2,7 @@
 
 This component is part of the device_tracker platform.
 """
+
 from __future__ import annotations
 
 import logging
@@ -12,8 +13,8 @@ from fortiosapi import FortiOSAPI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
 
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
@@ -36,9 +37,11 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
     """Validate the configuration and return a FortiOSDeviceScanner."""
-    host = config[DOMAIN][CONF_HOST]
-    verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
-    token = config[DOMAIN][CONF_TOKEN]
+    config = config[DEVICE_TRACKER_DOMAIN]
+
+    host = config[CONF_HOST]
+    verify_ssl = config[CONF_VERIFY_SSL]
+    token = config[CONF_TOKEN]
 
     fgt = FortiOSAPI()
 
@@ -47,7 +50,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 

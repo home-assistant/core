@@ -1,0 +1,40 @@
+[
+  {
+    "halfLevelNotificationEnabled": false,
+    "thresholds": {},
+    "on_boarding_date": 1672751375085,
+    "dummy": "D",
+    "name": "AquaCell name",
+    "ssn": "SSN",
+    "dsn": "DSN",
+    "salt": {
+      "leftPercent": 100,
+      "rightPercent": 100,
+      "leftDays": 30,
+      "rightDays": 30,
+      "leftBlocks": 2,
+      "rightBlocks": 2,
+      "daysLeft": 30
+    },
+    "wifiLevel": "high",
+    "fwVersion": "HSWS 1.0 v1.0 Apr 16 2021 15:10:32",
+    "lastUpdate": 1715327070000,
+    "battery": 40,
+    "lidInPlace": true,
+    "buzzerNotificationEnabled": false,
+    "brand": "harvey",
+    "numberOfPeople": 1,
+    "location": {
+      "address": "address",
+      "postcode": "postal",
+      "country": "country"
+    },
+    "dealer": {
+      "website": "",
+      "dealerId": "",
+      "shop": {},
+      "name": "",
+      "support": {}
+    }
+  }
+]

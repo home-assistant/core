@@ -1,4 +1,5 @@
 """Light/LED support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from typing import Any

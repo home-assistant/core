@@ -1,4 +1,5 @@
 """Balboa entities."""
+
 from __future__ import annotations
 
 from pybalboa import EVENT_UPDATE, SpaClient

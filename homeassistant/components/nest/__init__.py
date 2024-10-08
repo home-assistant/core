@@ -1,4 +1,5 @@
 """Support for Nest devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -19,6 +20,7 @@ from google_nest_sdm.exceptions import (
     DecodeException,
     SubscriberException,
 )
+from google_nest_sdm.traits import TraitType
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -33,9 +35,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     CONF_STRUCTURE,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -63,6 +66,8 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .media_source import (
+    EVENT_MEDIA_API_URL_FORMAT,
+    EVENT_THUMBNAIL_URL_FORMAT,
     async_get_media_event_store,
     async_get_media_source_devices,
     async_get_transcoder,
@@ -95,7 +100,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # Platforms for SDM API
-PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
+PLATFORMS = [Platform.CAMERA, Platform.CLIMATE, Platform.EVENT, Platform.SENSOR]
 
 # Fetch media events with a disk backed cache, with a limit for each camera
 # device. The largest media items are mp4 clips at ~120kb each, and we target
@@ -134,11 +139,15 @@ class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
     def __init__(
-        self, hass: HomeAssistant, config_reload_cb: Callable[[], Awaitable[None]]
+        self,
+        hass: HomeAssistant,
+        config_reload_cb: Callable[[], Awaitable[None]],
+        config_entry_id: str,
     ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
         self._config_reload_cb = config_reload_cb
+        self._config_entry_id = config_entry_id
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
@@ -157,18 +166,43 @@ class SignalUpdateCallback:
         )
         if not device_entry:
             return
+        supported_traits = self._supported_traits(device_id)
         for api_event_type, image_event in events.items():
             if not (event_type := EVENT_NAME_MAP.get(api_event_type)):
                 continue
+            nest_event_id = image_event.event_token
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_token,
+                "nest_event_id": nest_event_id,
             }
+            if (
+                TraitType.CAMERA_EVENT_IMAGE in supported_traits
+                or TraitType.CAMERA_CLIP_PREVIEW in supported_traits
+            ):
+                attachment = {
+                    "image": EVENT_THUMBNAIL_URL_FORMAT.format(
+                        device_id=device_entry.id, event_token=image_event.event_token
+                    )
+                }
+                if TraitType.CAMERA_CLIP_PREVIEW in supported_traits:
+                    attachment["video"] = EVENT_MEDIA_API_URL_FORMAT.format(
+                        device_id=device_entry.id, event_token=image_event.event_token
+                    )
+                message["attachment"] = attachment
             if image_event.zones:
                 message["zones"] = image_event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
+
+    def _supported_traits(self, device_id: str) -> list[TraitType]:
+        if not (
+            device_manager := self._hass.data[DOMAIN]
+            .get(self._config_entry_id, {})
+            .get(DATA_DEVICE_MANAGER)
+        ) or not (device := device_manager.devices.get(device_id)):
+            return []
+        return list(device.traits)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -195,13 +229,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_config_reload() -> None:
         await hass.config_entries.async_reload(entry.entry_id)
 
-    callback = SignalUpdateCallback(hass, async_config_reload)
-    subscriber.set_update_callback(callback.async_handle_event)
+    update_callback = SignalUpdateCallback(hass, async_config_reload, entry.entry_id)
+    subscriber.set_update_callback(update_callback.async_handle_event)
     try:
         await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
-            f"Subscriber authentication error: {str(err)}"
+            f"Subscriber authentication error: {err!s}"
         ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
@@ -209,13 +243,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except SubscriberException as err:
         subscriber.stop_async()
-        raise ConfigEntryNotReady(f"Subscriber error: {str(err)}") from err
+        raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
         subscriber.stop_async()
-        raise ConfigEntryNotReady(f"Device manager error: {str(err)}") from err
+        raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
+
+    @callback
+    def on_hass_stop(_: Event) -> None:
+        """Close connection when hass stops."""
+        subscriber.stop_async()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SUBSCRIBER: subscriber,

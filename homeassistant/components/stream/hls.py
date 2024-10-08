@@ -1,4 +1,5 @@
 """Provide functionality to stream HLS."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

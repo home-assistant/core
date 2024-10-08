@@ -1,10 +1,12 @@
 """Tests for LCN events."""
+
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
-import pytest
 
 from homeassistant.core import HomeAssistant
+
+from .conftest import MockConfigEntry, init_integration
 
 from tests.common import async_capture_events
 
@@ -14,8 +16,11 @@ LCN_TRANSMITTER = "lcn_transmitter"
 LCN_SEND_KEYS = "lcn_send_keys"
 
 
-async def test_fire_transponder_event(hass: HomeAssistant, lcn_connection) -> None:
+async def test_fire_transponder_event(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test the transponder event is fired."""
+    lcn_connection = await init_integration(hass, entry)
     events = async_capture_events(hass, LCN_TRANSPONDER)
 
     inp = ModStatusAccessControl(
@@ -32,8 +37,11 @@ async def test_fire_transponder_event(hass: HomeAssistant, lcn_connection) -> No
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_fingerprint_event(hass: HomeAssistant, lcn_connection) -> None:
+async def test_fire_fingerprint_event(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test the fingerprint event is fired."""
+    lcn_connection = await init_integration(hass, entry)
     events = async_capture_events(hass, LCN_FINGERPRINT)
 
     inp = ModStatusAccessControl(
@@ -50,8 +58,9 @@ async def test_fire_fingerprint_event(hass: HomeAssistant, lcn_connection) -> No
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_codelock_event(hass: HomeAssistant, lcn_connection) -> None:
+async def test_fire_codelock_event(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test the codelock event is fired."""
+    lcn_connection = await init_integration(hass, entry)
     events = async_capture_events(hass, "lcn_codelock")
 
     inp = ModStatusAccessControl(
@@ -68,8 +77,11 @@ async def test_fire_codelock_event(hass: HomeAssistant, lcn_connection) -> None:
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_transmitter_event(hass: HomeAssistant, lcn_connection) -> None:
+async def test_fire_transmitter_event(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test the transmitter event is fired."""
+    lcn_connection = await init_integration(hass, entry)
     events = async_capture_events(hass, LCN_TRANSMITTER)
 
     inp = ModStatusAccessControl(
@@ -92,8 +104,9 @@ async def test_fire_transmitter_event(hass: HomeAssistant, lcn_connection) -> No
     assert events[0].data["action"] == "hit"
 
 
-async def test_fire_sendkeys_event(hass: HomeAssistant, lcn_connection) -> None:
+async def test_fire_sendkeys_event(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test the send_keys event is fired."""
+    lcn_connection = await init_integration(hass, entry)
     events = async_capture_events(hass, LCN_SEND_KEYS)
 
     inp = ModSendKeysHost(
@@ -121,9 +134,10 @@ async def test_fire_sendkeys_event(hass: HomeAssistant, lcn_connection) -> None:
 
 
 async def test_dont_fire_on_non_module_input(
-    hass: HomeAssistant, lcn_connection
+    hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
     """Test for no event is fired if a non-module input is received."""
+    lcn_connection = await init_integration(hass, entry)
     inp = Input()
 
     for event_name in (
@@ -138,16 +152,16 @@ async def test_dont_fire_on_non_module_input(
         assert len(events) == 0
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_dont_fire_on_unknown_module(hass: HomeAssistant, lcn_connection) -> None:
+async def test_dont_fire_on_unknown_module(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test for no event is fired if an input from an unknown module is received."""
+    lcn_connection = await init_integration(hass, entry)
     inp = ModStatusAccessControl(
         LcnAddr(0, 10, False),  # unknown module
         periphery=AccessControlPeriphery.FINGERPRINT,
         code="aabbcc",
     )
-
     events = async_capture_events(hass, LCN_FINGERPRINT)
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()

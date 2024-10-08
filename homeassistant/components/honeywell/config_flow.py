@@ -1,17 +1,21 @@
 """Config flow to configure the honeywell integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any
 
 import aiosomecomfort
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -30,13 +34,15 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
-class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a honeywell config flow."""
 
     VERSION = 1
-    entry: config_entries.ConfigEntry | None
+    entry: ConfigEntry | None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Honeywell."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -44,10 +50,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Honeywell."""
         errors: dict[str, str] = {}
         assert self.entry is not None
+
         if user_input:
             try:
                 await self.is_valid(
@@ -57,36 +64,34 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except aiosomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
-
             except (
                 aiosomecomfort.ConnectionError,
                 aiosomecomfort.ConnectionTimeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
-
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self.entry,
                     data={
                         **self.entry.data,
                         **user_input,
                     },
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                REAUTH_SCHEMA, self.entry.data
+                REAUTH_SCHEMA,
+                self.entry.data,
             ),
             errors=errors,
+            description_placeholders={"name": "Honeywell"},
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Create config entry. Show the setup form to the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 await self.is_valid(**user_input)
@@ -95,10 +100,9 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (
                 aiosomecomfort.ConnectionError,
                 aiosomecomfort.ConnectionTimeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
-
             if not errors:
                 return self.async_create_entry(
                     title=DOMAIN,
@@ -110,7 +114,9 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
         }
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def is_valid(self, **kwargs) -> bool:
@@ -127,20 +133,20 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> HoneywellOptionsFlowHandler:
         """Options callback for Honeywell."""
         return HoneywellOptionsFlowHandler(config_entry)
 
 
-class HoneywellOptionsFlowHandler(config_entries.OptionsFlow):
+class HoneywellOptionsFlowHandler(OptionsFlow):
     """Config flow options for Honeywell."""
 
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize Honeywell options flow."""
         self.config_entry = entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title=DOMAIN, data=user_input)

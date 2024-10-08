@@ -1,18 +1,18 @@
 """Connection session."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -26,8 +26,8 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
-MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
-BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
+type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
 class ActiveConnection:
@@ -51,7 +51,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:
@@ -65,9 +65,9 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
-            const.DOMAIN
-        ]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
+            self.hass.data[const.DOMAIN]
+        )
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
@@ -171,7 +171,7 @@ class ActiveConnection:
 
         try:
             handler(self.hass, self, payload)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Error handling binary message")
             self.binary_handlers[index] = None
 
@@ -185,6 +185,7 @@ class ActiveConnection:
             or (
                 not (cur_id := msg.get("id"))
                 or type(cur_id) is not int  # noqa: E721
+                or cur_id < 0
                 or not (type_ := msg.get("type"))
                 or type(type_) is not str  # noqa: E721
             )
@@ -220,8 +221,13 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            handler(self.hass, self, schema(msg))
-        except Exception as err:  # pylint: disable=broad-except
+            if schema is False:
+                if len(msg) > 2:
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
+                handler(self.hass, self, msg)
+            else:
+                handler(self.hass, self, schema(msg))
+        except Exception as err:  # noqa: BLE001
             self.async_handle_exception(msg, err)
 
         self.last_id = cur_id
@@ -232,7 +238,7 @@ class ActiveConnection:
         for unsub in self.subscriptions.values():
             try:
                 unsub()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If one fails, make sure we still try the rest
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub
@@ -244,7 +250,7 @@ class ActiveConnection:
 
     @callback
     def _connect_closed_error(
-        self, msg: str | dict[str, Any] | Callable[[], str]
+        self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
         self.logger.debug("Tried to send message %s on closed connection", msg)
@@ -266,7 +272,7 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
-        elif isinstance(err, asyncio.TimeoutError):
+        elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):

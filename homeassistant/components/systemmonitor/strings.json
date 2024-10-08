@@ -1,0 +1,106 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure a monitoring sensor for a running process",
+        "data": {
+          "process": "Processes to add as sensor(s)"
+        },
+        "data_description": {
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "process": {
+        "name": "Process {process}"
+      }
+    },
+    "sensor": {
+      "disk_free": {
+        "name": "Disk free {mount_point}"
+      },
+      "disk_use": {
+        "name": "Disk use {mount_point}"
+      },
+      "disk_use_percent": {
+        "name": "Disk usage {mount_point}"
+      },
+      "ipv4_address": {
+        "name": "IPv4 address {ip_address}"
+      },
+      "ipv6_address": {
+        "name": "IPv6 address {ip_address}"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "load_15m": {
+        "name": "Load (15m)"
+      },
+      "load_1m": {
+        "name": "Load (1m)"
+      },
+      "load_5m": {
+        "name": "Load (5m)"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_use": {
+        "name": "Memory use"
+      },
+      "memory_use_percent": {
+        "name": "Memory usage"
+      },
+      "network_in": {
+        "name": "Network in {interface}"
+      },
+      "network_out": {
+        "name": "Network out {interface}"
+      },
+      "packets_in": {
+        "name": "Packets in {interface}"
+      },
+      "packets_out": {
+        "name": "Packets out {interface}"
+      },
+      "throughput_network_in": {
+        "name": "Network throughput in {interface}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {interface}"
+      },
+      "process": {
+        "name": "Process {process}"
+      },
+      "processor_use": {
+        "name": "Processor use"
+      },
+      "processor_temperature": {
+        "name": "Processor temperature"
+      },
+      "swap_free": {
+        "name": "Swap free"
+      },
+      "swap_use": {
+        "name": "Swap use"
+      },
+      "swap_use_percent": {
+        "name": "Swap usage"
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_valve_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -21,6 +22,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_valve_connection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

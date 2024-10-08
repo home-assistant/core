@@ -1,4 +1,5 @@
 """Support for Vera binary sensors."""
+
 from __future__ import annotations
 
 import pyvera as veraApi
@@ -9,8 +10,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
@@ -29,7 +30,7 @@ async def async_setup_entry(
     )
 
 
-class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity):
+class VeraBinarySensor(VeraEntity[veraApi.VeraBinarySensor], BinarySensorEntity):
     """Representation of a Vera Binary Sensor."""
 
     _attr_is_on = False
@@ -38,7 +39,7 @@ class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity)
         self, vera_device: veraApi.VeraBinarySensor, controller_data: ControllerData
     ) -> None:
         """Initialize the binary_sensor."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def update(self) -> None:

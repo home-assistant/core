@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "printer": {
+        "default": "mdi:printer"
+      },
+      "uptime": {
+        "default": "mdi:clock-outline"
+      },
+      "marker": {
+        "default": "mdi:water"
+      }
+    }
+  }
+}

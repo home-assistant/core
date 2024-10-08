@@ -1,7 +1,10 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-
-from bimmer_connected.const import REMOTE_SERVICE_BASE_URL, VEHICLE_CHARGING_BASE_URL
+from bimmer_connected.const import (
+    REMOTE_SERVICE_V4_BASE_URL,
+    VEHICLE_CHARGING_BASE_URL,
+    VEHICLE_POI_URL,
+)
 import respx
 
 from homeassistant import config_entries
@@ -37,13 +40,14 @@ FIXTURE_CONFIG_ENTRY = {
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
-    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
+    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_USERNAME]}",
 }
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""
 
+    # Mock config entry and add to HA
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
@@ -55,9 +59,9 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 def check_remote_service_call(
     router: respx.MockRouter,
-    remote_service: str = None,
-    remote_service_params: dict = None,
-    remote_service_payload: dict = None,
+    remote_service: str | None = None,
+    remote_service_params: dict | None = None,
+    remote_service_payload: dict | None = None,
 ):
     """Check if the last call was a successful remote service call."""
 
@@ -67,10 +71,11 @@ def check_remote_service_call(
         first_remote_service_call: respx.models.Call = next(
             c
             for c in router.calls
-            if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+            if c.request.url.path.startswith(REMOTE_SERVICE_V4_BASE_URL)
             or c.request.url.path.startswith(
                 VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
+            or c.request.url.path.endswith(VEHICLE_POI_URL.rsplit("/", maxsplit=1)[-1])
         )
         assert (
             first_remote_service_call.request.url.path.endswith(remote_service) is True
@@ -86,6 +91,10 @@ def check_remote_service_call(
                 dict(first_remote_service_call.request.url.params.items())
                 == remote_service_params
             )
+
+    # Send POI doesn't return a status response, so we can't check it
+    if remote_service == "send-to-car":
+        return
 
     # Now check final result
     last_event_status_call = next(

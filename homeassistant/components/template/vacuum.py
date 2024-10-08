@@ -1,4 +1,5 @@
 """Support for Template vacuums."""
+
 from __future__ import annotations
 
 import logging
@@ -99,7 +100,7 @@ async def _async_create_entities(hass, config):
     vacuums = []
 
     for object_id, entity_config in config[CONF_VACUUMS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         vacuums.append(
@@ -317,7 +318,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         try:
             battery_level_int = int(battery_level)
             if not 0 <= battery_level_int <= 100:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.error(
                 "Received invalid battery level: %s for entity %s. Expected: 0-100",

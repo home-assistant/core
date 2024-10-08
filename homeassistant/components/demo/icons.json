@@ -1,0 +1,82 @@
+{
+  "entity": {
+    "climate": {
+      "ubercool": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto_high": "mdi:fan-auto",
+              "auto_low": "mdi:fan-auto",
+              "on_high": "mdi:fan-chevron-up",
+              "on_low": "mdi:fan-chevron-down"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "mdi:numeric-1",
+              "2": "mdi:numeric-2",
+              "3": "mdi:numeric-3",
+              "auto": "mdi:arrow-oscillating",
+              "off": "mdi:arrow-oscillating-off"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "auto": "mdi:fan-auto",
+              "sleep": "mdi:bed",
+              "smart": "mdi:brain",
+              "on": "mdi:power"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "volume": {
+        "default": "mdi:volume-high"
+      },
+      "pwm": {
+        "default": "mdi:square-wave"
+      },
+      "range": {
+        "default": "mdi:square-wave"
+      }
+    },
+    "select": {
+      "speed": {
+        "state": {
+          "light_speed": "mdi:speedometer-slow",
+          "ludicrous_speed": "mdi:speedometer-medium",
+          "ridiculous_speed": "mdi:speedometer"
+        }
+      }
+    },
+    "sensor": {
+      "thermostat_mode": {
+        "state": {
+          "away": "mdi:home-export-outline",
+          "comfort": "mdi:home-account",
+          "eco": "mdi:leaf",
+          "sleep": "mdi:weather-night"
+        }
+      }
+    },
+    "switch": {
+      "air_conditioner": {
+        "default": "mdi:air-conditioner"
+      }
+    }
+  },
+  "services": {
+    "randomize_device_tracker_data": {
+      "service": "mdi:dice-multiple"
+    }
+  }
+}

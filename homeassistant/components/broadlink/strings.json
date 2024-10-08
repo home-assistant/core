@@ -43,6 +43,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
@@ -60,6 +61,20 @@
       },
       "total_consumption": {
         "name": "Total consumption"
+      }
+    },
+    "select": {
+      "day_of_week": {
+        "name": "Day of week",
+        "state": {
+          "monday": "[%key:common::time::monday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "friday": "[%key:common::time::friday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]"
+        }
       }
     }
   }

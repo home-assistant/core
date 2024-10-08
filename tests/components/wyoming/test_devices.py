@@ -1,4 +1,5 @@
 """Test Wyoming devices."""
+
 from __future__ import annotations
 
 from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED
@@ -31,8 +32,8 @@ async def test_device_registry_info(
     assist_in_progress_id = satellite_device.get_assist_in_progress_entity_id(hass)
     assert assist_in_progress_id
     assist_in_progress_state = hass.states.get(assist_in_progress_id)
-    assert assist_in_progress_state is not None
-    assert assist_in_progress_state.state == STATE_OFF
+    # assist_in_progress binary sensor is disabled
+    assert assist_in_progress_state is None
 
     muted_id = satellite_device.get_muted_entity_id(hass)
     assert muted_id
@@ -57,7 +58,8 @@ async def test_remove_device_registry_entry(
     # Check associated entities
     assist_in_progress_id = satellite_device.get_assist_in_progress_entity_id(hass)
     assert assist_in_progress_id
-    assert hass.states.get(assist_in_progress_id) is not None
+    # assist_in_progress binary sensor is disabled
+    assert hass.states.get(assist_in_progress_id) is None
 
     muted_id = satellite_device.get_muted_entity_id(hass)
     assert muted_id

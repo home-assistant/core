@@ -1,4 +1,5 @@
 """Entity classes for the QNAP QSW integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

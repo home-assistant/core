@@ -1,4 +1,5 @@
 """Support for Clementine Music Player as media player."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,7 @@ from clementineremote import ClementineRemote
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -25,7 +26,7 @@ DEFAULT_PORT = 5500
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_ACCESS_TOKEN): cv.positive_int,
@@ -65,7 +66,6 @@ class ClementineDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.PLAY
     )
-    _attr_volume_step = 4 / 100
 
     def __init__(self, client, name):
         """Initialize the Clementine device."""
@@ -123,6 +123,16 @@ class ClementineDevice(MediaPlayerEntity):
             return (image, "image/png")
 
         return None, None
+
+    def volume_up(self) -> None:
+        """Volume up the media player."""
+        newvolume = min(self._client.volume + 4, 100)
+        self._client.set_volume(newvolume)
+
+    def volume_down(self) -> None:
+        """Volume down media player."""
+        newvolume = max(self._client.volume - 4, 0)
+        self._client.set_volume(newvolume)
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""

@@ -1,4 +1,5 @@
 """Tests for the Hyperion integration."""
+
 from __future__ import annotations
 
 import asyncio

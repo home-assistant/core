@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "sensor": {
+      "devices_connected": {
+        "default": "mdi:router-network"
+      },
+      "download_speed": {
+        "default": "mdi:download-network"
+      },
+      "upload_speed": {
+        "default": "mdi:upload-network"
+      },
+      "download": {
+        "default": "mdi:download"
+      },
+      "upload": {
+        "default": "mdi:upload"
+      },
+      "load_avg_1m": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "load_avg_5m": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "load_avg_15m": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "cpu_core_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_used": {
+        "default": "mdi:memory"
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Representation of a Hue remote firing events for button presses."""
+
 import logging
 
 from aiohue.v1.sensors import (

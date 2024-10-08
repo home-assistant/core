@@ -1,9 +1,10 @@
 """Define tests for the GeoNet NZ Volcano config flow."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
-from homeassistant.components.geonetnz_volcano import config_flow
+from homeassistant.components.geonetnz_volcano import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
@@ -19,21 +21,20 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
 
     config_entry.add_to_hass(hass)
-    flow = config_flow.GeonetnzVolcanoFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
     assert result["errors"] == {"base": "already_configured"}
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    flow = config_flow.GeonetnzVolcanoFlowHandler()
-    flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=None
+    )
 
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -47,16 +48,19 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: timedelta(minutes=4),
     }
 
-    flow = config_flow.GeonetnzVolcanoFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    with (
+        patch(
+            "homeassistant.components.geonetnz_volcano.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+        ),
     ):
-        result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,
@@ -73,16 +77,19 @@ async def test_step_user(hass: HomeAssistant) -> None:
     hass.config.longitude = 174.7
     conf = {CONF_RADIUS: 25}
 
-    flow = config_flow.GeonetnzVolcanoFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    with (
+        patch(
+            "homeassistant.components.geonetnz_volcano.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+        ),
     ):
-        result = await flow.async_step_user(user_input=conf)
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,

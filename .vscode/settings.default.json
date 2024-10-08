@@ -4,5 +4,7 @@
   // https://github.com/microsoft/vscode-python/issues/14067
   "python.testing.pytestArgs": ["--no-cov"],
   // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
-  "python.testing.pytestEnabled": false
+  "python.testing.pytestEnabled": false,
+  // https://code.visualstudio.com/docs/python/linting#_general-settings
+  "pylint.importStrategy": "fromEnvironment"
 }

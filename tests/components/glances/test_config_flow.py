@@ -1,9 +1,11 @@
 """Tests for Glances config flow."""
+
 from unittest.mock import MagicMock
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
     GlancesApiConnectionError,
+    GlancesApiNoDataAvailable,
 )
 import pytest
 
@@ -30,14 +32,14 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "0.0.0.0:61208"
     assert result["data"] == MOCK_USER_INPUT
 
@@ -47,6 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (GlancesApiAuthorizationError, "invalid_auth"),
         (GlancesApiConnectionError, "cannot_connect"),
+        (GlancesApiNoDataAvailable, "cannot_connect"),
     ],
 )
 async def test_form_fails(
@@ -54,7 +57,7 @@ async def test_form_fails(
 ) -> None:
     """Test flow fails when api exception is raised."""
 
-    mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
+    mock_api.return_value.get_ha_sensor_data.side_effect = error
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -62,14 +65,8 @@ async def test_form_fails(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": message}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_INPUT
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
@@ -83,7 +80,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -92,16 +89,8 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_USER_INPUT,
-    )
-
-    assert result["type"] == FlowResultType.FORM
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "username"}
 
@@ -112,7 +101,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -131,16 +120,8 @@ async def test_reauth_fails(
     entry.add_to_hass(hass)
 
     mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_USER_INPUT,
-    )
-
-    assert result["type"] == FlowResultType.FORM
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "username"}
 
@@ -151,7 +132,7 @@ async def test_reauth_fails(
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": message}
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -161,5 +142,5 @@ async def test_reauth_fails(
         },
     )
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"

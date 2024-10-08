@@ -1,10 +1,11 @@
 """Support for the Hive devices and services."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Auth, Hive
@@ -17,18 +18,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
-
-_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
-_P = ParamSpec("_P")
+from .entity import HiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
@@ -130,7 +125,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-def refresh_system(
+def refresh_system[_HiveEntityT: HiveEntity, **_P](
     func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
@@ -141,29 +136,3 @@ def refresh_system(
         async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
-
-
-class HiveEntity(Entity):
-    """Initiate Hive Base Class."""
-
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
-        """Initialize the instance."""
-        self.hive = hive
-        self.device = hive_device
-        self._attr_name = self.device["haName"]
-        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
-            model=self.device["deviceData"]["model"],
-            manufacturer=self.device["deviceData"]["manufacturer"],
-            name=self.device["device_name"],
-            sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
-        )
-        self.attributes: dict[str, Any] = {}
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )

@@ -1,4 +1,5 @@
-"""Constants for the Huisbaasje integration."""
+"""Constants for the EnergyFlip integration."""
+
 from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
     SOURCE_TYPE_ELECTRICITY_IN,
@@ -12,7 +13,7 @@ DATA_COORDINATOR = "coordinator"
 
 DOMAIN = "huisbaasje"
 
-"""Interval in seconds between polls to huisbaasje."""
+"""Interval in seconds between polls to EnergyFlip."""
 POLLING_INTERVAL = 20
 
 """Timeout for fetching sensor data"""

@@ -2,8 +2,11 @@
 
 from pytest_unordered import unordered
 
-from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
-from homeassistant.components.event.const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    ATTR_EVENT_TYPE,
+    ATTR_EVENT_TYPES,
+    DOMAIN as EVENT_DOMAIN,
+)
 from homeassistant.components.group import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

@@ -1,4 +1,5 @@
 """Tests for the Picnic services."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

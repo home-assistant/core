@@ -1,4 +1,5 @@
 """Test the BTHome sensors."""
+
 from datetime import timedelta
 import logging
 import time
@@ -161,7 +162,7 @@ _LOGGER = logging.getLogger(__name__)
             "A4:C1:38:8D:18:B2",
             make_bthome_v1_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x23\x08\xCA\x06",
+                b"\x23\x08\xca\x06",
             ),
             None,
             [
@@ -481,7 +482,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x06\x5E\x1F",
+                b"\x40\x06\x5e\x1f",
             ),
             None,
             [
@@ -498,7 +499,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x07\x3E\x1d",
+                b"\x40\x07\x3e\x1d",
             ),
             None,
             [
@@ -515,7 +516,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x08\xCA\x06",
+                b"\x40\x08\xca\x06",
             ),
             None,
             [
@@ -676,7 +677,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x3F\x02\x0c",
+                b"\x40\x3f\x02\x0c",
             ),
             None,
             [
@@ -693,7 +694,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x40\x0C\x00",
+                b"\x40\x40\x0c\x00",
             ),
             None,
             [
@@ -710,7 +711,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x41\x4E\x00",
+                b"\x40\x41\x4e\x00",
             ),
             None,
             [
@@ -727,7 +728,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x42\x4E\x34\x00",
+                b"\x40\x42\x4e\x34\x00",
             ),
             None,
             [
@@ -744,7 +745,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x43\x4E\x34",
+                b"\x40\x43\x4e\x34",
             ),
             None,
             [
@@ -761,7 +762,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x44\x4E\x34",
+                b"\x40\x44\x4e\x34",
             ),
             None,
             [
@@ -819,7 +820,7 @@ async def test_v1_sensors(
                     "sensor_entity": "sensor.test_device_18b2_volume",
                     "friendly_name": "Test Device 18B2 Volume",
                     "unit_of_measurement": "L",
-                    "state_class": "measurement",
+                    "state_class": "total",
                     "expected_state": "2215.1",
                 },
             ],
@@ -828,7 +829,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x48\xDC\x87",
+                b"\x40\x48\xdc\x87",
             ),
             None,
             [
@@ -836,7 +837,7 @@ async def test_v1_sensors(
                     "sensor_entity": "sensor.test_device_18b2_volume",
                     "friendly_name": "Test Device 18B2 Volume",
                     "unit_of_measurement": "mL",
-                    "state_class": "measurement",
+                    "state_class": "total",
                     "expected_state": "34780",
                 },
             ],
@@ -845,7 +846,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x49\xDC\x87",
+                b"\x40\x49\xdc\x87",
             ),
             None,
             [
@@ -862,14 +863,14 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x44\x50\x5D\x39\x61\x64",
+                b"\x44\x50\x5d\x39\x61\x64",
             ),
             None,
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_timestamp",
                     "friendly_name": "Test Device 18B2 Timestamp",
-                    "state_class": "measurement",
+                    "state_class": None,
                     "expected_state": "2023-05-14T19:41:17+00:00",
                 },
             ],
@@ -946,7 +947,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x44\x53\x0C\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x21",
+                b"\x44\x53\x0c\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64\x21",
             ),
             None,
             [
@@ -961,7 +962,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x44\x54\x0C\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x21",
+                b"\x44\x54\x0c\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64\x21",
             ),
             None,
             [
@@ -969,6 +970,23 @@ async def test_v1_sensors(
                     "sensor_entity": "sensor.test_device_18b2_raw",
                     "friendly_name": "Test Device 18B2 Raw",
                     "expected_state": "48656c6c6f20576f726c6421",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x55\x87\x56\x2a\x01",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume_storage",
+                    "friendly_name": "Test Device 18B2 Volume Storage",
+                    "unit_of_measurement": "L",
+                    "state_class": "measurement",
+                    "expected_state": "19551.879",
                 },
             ],
         ),

@@ -1,4 +1,5 @@
 """Support for KNX/IP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,8 +34,8 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
 from . import KNXModule
-from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxEntity
+from .const import ATTR_SOURCE, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -55,7 +56,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     KNXSystemEntityDescription(
         key="individual_address",
         always_available=False,
-        icon="mdi:router-network",
         should_poll=False,
         value_fn=lambda knx: str(knx.xknx.current_address),
     ),
@@ -76,7 +76,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming",
-        icon="mdi:upload-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -84,13 +83,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming_error",
-        icon="mdi:help-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_incoming_error,
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing",
-        icon="mdi:download-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -98,13 +95,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing_error",
-        icon="mdi:close-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
     ),
     KNXSystemEntityDescription(
         key="telegram_count",
-        icon="mdi:plus-network",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing
@@ -120,18 +115,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-
-    async_add_entities(
+    knx_module = hass.data[KNX_MODULE_KEY]
+    entities: list[SensorEntity] = []
+    entities.extend(
         KNXSystemSensor(knx_module, description)
         for description in SYSTEM_ENTITY_DESCRIPTIONS
     )
-
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG].get(Platform.SENSOR)
+    config: list[ConfigType] | None = knx_module.config_yaml.get(Platform.SENSOR)
     if config:
-        async_add_entities(
-            KNXSensor(knx_module.xknx, entity_config) for entity_config in config
+        entities.extend(
+            KNXSensor(knx_module, entity_config) for entity_config in config
         )
+    async_add_entities(entities)
 
 
 def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
@@ -146,14 +141,17 @@ def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
     )
 
 
-class KNXSensor(KnxEntity, SensorEntity):
+class KNXSensor(KnxYamlEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
     _device: XknxSensor
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
-        super().__init__(_create_sensor(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_sensor(knx_module.xknx, config),
+        )
         if device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = device_class
         else:
@@ -213,7 +211,7 @@ class KNXSystemSensor(SensorEntity):
             return True
         return self.knx.xknx.connection_manager.state is XknxConnectionState.CONNECTED
 
-    async def after_update_callback(self, _: XknxConnectionState) -> None:
+    def after_update_callback(self, _: XknxConnectionState) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

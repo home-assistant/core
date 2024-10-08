@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      '3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8': dict({
+        'diesel': 1.659,
+        'e10': 1.659,
+        'e5': 1.719,
+        'status': 'open',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'fuel_types': list([
+          'e5',
+        ]),
+        'location': dict({
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
+        }),
+        'name': 'Home',
+        'radius': 2.0,
+        'stations': list([
+          '3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8',
+        ]),
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'tankerkoenig',
+      'entry_id': '8036b4412f2fae6bb9dbab7fe8e37f87',
+      'minor_version': 1,
+      'options': dict({
+        'show_on_map': True,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

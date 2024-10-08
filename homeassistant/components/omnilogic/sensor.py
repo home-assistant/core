@@ -1,4 +1,5 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
+
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -14,8 +15,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import check_guard
 from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
+from .entity import OmniLogicEntity
 
 
 async def async_setup_entry(

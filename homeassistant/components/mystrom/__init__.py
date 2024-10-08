@@ -1,4 +1,5 @@
 """The myStrom integration."""
+
 from __future__ import annotations
 
 import logging
@@ -29,7 +30,7 @@ async def _async_get_device_state(
         await device.get_state()
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", ip_address)
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
 
 def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", host)
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
     info.setdefault("type", 101)
 

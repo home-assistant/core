@@ -69,6 +69,8 @@ class FitbitOAuth2Implementation(AuthImplementation):
                 )
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise FitbitAuthException(f"Unauthorized error: {err}") from err
+            if err.status == HTTPStatus.BAD_REQUEST:
+                raise FitbitAuthException(f"Bad Request error: {err}") from err
             raise FitbitApiException(f"Server error response: {err}") from err
         except aiohttp.ClientError as err:
             raise FitbitApiException(f"Client connection error: {err}") from err

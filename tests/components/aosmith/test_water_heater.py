@@ -1,16 +1,12 @@
 """Tests for the water heater platform of the A. O. Smith integration."""
 
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock, patch
 
+from py_aosmith.models import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aosmith.const import (
-    AOSMITH_MODE_ELECTRIC,
-    AOSMITH_MODE_HEAT_PUMP,
-    AOSMITH_MODE_HYBRID,
-    AOSMITH_MODE_VACATION,
-)
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
@@ -24,43 +20,38 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_setup(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test the setup of the water heater entity."""
-    entry = entity_registry.async_get("water_heater.my_water_heater")
-    assert entry
-    assert entry.unique_id == "junctionId"
-
-    state = hass.states.get("water_heater.my_water_heater")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My water heater"
-
-
-async def test_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
-) -> None:
-    """Test the state of the water heater entity."""
-    state = hass.states.get("water_heater.my_water_heater")
-    assert state == snapshot
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.aosmith.PLATFORMS", [Platform.WATER_HEATER]):
+        yield
 
 
 @pytest.mark.parametrize(
-    ("get_devices_fixture"),
-    ["get_devices_no_vacation_mode"],
+    ("get_devices_fixture_heat_pump"),
+    [False, True],
+)
+async def test_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the state of the water heater entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("get_devices_fixture_has_vacation_mode"),
+    [False],
 )
 async def test_state_away_mode_unsupported(
     hass: HomeAssistant, init_integration: MockConfigEntry
@@ -77,9 +68,9 @@ async def test_state_away_mode_unsupported(
 @pytest.mark.parametrize(
     ("hass_mode", "aosmith_mode"),
     [
-        (STATE_HEAT_PUMP, AOSMITH_MODE_HEAT_PUMP),
-        (STATE_ECO, AOSMITH_MODE_HYBRID),
-        (STATE_ELECTRIC, AOSMITH_MODE_ELECTRIC),
+        (STATE_HEAT_PUMP, OperationMode.HEAT_PUMP),
+        (STATE_ECO, OperationMode.HYBRID),
+        (STATE_ELECTRIC, OperationMode.ELECTRIC),
     ],
 )
 async def test_set_operation_mode(
@@ -103,6 +94,24 @@ async def test_set_operation_mode(
     mock_client.update_mode.assert_called_once_with("junctionId", aosmith_mode)
 
 
+async def test_unsupported_operation_mode(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test setting the operation mode with an unsupported mode."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: "water_heater.my_water_heater",
+                ATTR_OPERATION_MODE: "unsupported_mode",
+            },
+            blocking=True,
+        )
+
+
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_client: MagicMock,
@@ -120,10 +129,12 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("hass_away_mode", "aosmith_mode"),
+    ("get_devices_fixture_heat_pump", "hass_away_mode", "aosmith_mode"),
     [
-        (True, AOSMITH_MODE_VACATION),
-        (False, AOSMITH_MODE_HYBRID),
+        (True, True, OperationMode.VACATION),
+        (True, False, OperationMode.HYBRID),
+        (False, True, OperationMode.VACATION),
+        (False, False, OperationMode.ELECTRIC),
     ],
 )
 async def test_away_mode(

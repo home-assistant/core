@@ -1,6 +1,5 @@
 """Test the Fully Kiosk Browser config flow."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -33,7 +32,7 @@ async def test_user_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -46,7 +45,7 @@ async def test_user_flow(
         },
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test device"
     assert result2.get("data") == {
         CONF_HOST: "1.1.1.1",
@@ -67,7 +66,7 @@ async def test_user_flow(
     [
         (FullyKioskError("error", "status"), "cannot_connect"),
         (ClientConnectorError(None, Mock()), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
 )
@@ -95,7 +94,7 @@ async def test_errors(
         },
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": reason}
 
@@ -113,7 +112,7 @@ async def test_errors(
         },
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "Test device"
     assert result3.get("data") == {
         CONF_HOST: "1.1.1.1",
@@ -140,7 +139,7 @@ async def test_duplicate_updates_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -153,7 +152,7 @@ async def test_duplicate_updates_existing_entry(
         },
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "1.1.1.1",
@@ -179,11 +178,11 @@ async def test_dhcp_discovery_updates_entry(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.2",
@@ -207,11 +206,11 @@ async def test_dhcp_unknown_device(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:00",
+            macaddress="aabbccddee00",
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "unknown"
 
 
@@ -235,7 +234,7 @@ async def test_mqtt_discovery_flow(
             timestamp=None,
         ),
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "discovery_confirm"
 
     confirmResult = await hass.config_entries.flow.async_configure(
@@ -248,7 +247,7 @@ async def test_mqtt_discovery_flow(
     )
 
     assert confirmResult
-    assert confirmResult.get("type") == FlowResultType.CREATE_ENTRY
+    assert confirmResult.get("type") is FlowResultType.CREATE_ENTRY
     assert confirmResult.get("title") == "Test device"
     assert confirmResult.get("data") == {
         CONF_HOST: "192.168.1.234",

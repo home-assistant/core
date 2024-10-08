@@ -1,8 +1,12 @@
 """Tests for Shelly diagnostics platform."""
-from unittest.mock import ANY
+
+from copy import deepcopy
+from unittest.mock import ANY, Mock, PropertyMock
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 from aioshelly.const import MODEL_25
+from aioshelly.exceptions import DeviceConnectionError
+import pytest
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.shelly.const import (
@@ -23,7 +27,7 @@ RELAY_BLOCK_ID = 0
 
 
 async def test_block_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_block_device
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_block_device: Mock
 ) -> None:
     """Test config entry diagnostics for block device."""
     await init_integration(hass, 1)
@@ -34,10 +38,14 @@ async def test_block_config_entry_diagnostics(
         {key: REDACTED for key in TO_REDACT if key in entry_dict["data"]}
     )
 
+    type(mock_block_device).last_error = PropertyMock(
+        return_value=DeviceConnectionError()
+    )
+
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result == {
-        "entry": entry_dict,
+        "entry": entry_dict | {"discovery_keys": {}},
         "bluetooth": "not initialized",
         "device_info": {
             "name": "Test name",
@@ -46,14 +54,15 @@ async def test_block_config_entry_diagnostics(
         },
         "device_settings": {"coiot": {"update_period": 15}},
         "device_status": MOCK_STATUS_COAP,
+        "last_error": "DeviceConnectionError()",
     }
 
 
 async def test_rpc_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_rpc_device,
-    monkeypatch,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test config entry diagnostics for rpc device."""
     await init_integration(
@@ -89,10 +98,14 @@ async def test_rpc_config_entry_diagnostics(
         {key: REDACTED for key in TO_REDACT if key in entry_dict["data"]}
     )
 
+    type(mock_rpc_device).last_error = PropertyMock(
+        return_value=DeviceConnectionError()
+    )
+
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result == {
-        "entry": entry_dict,
+        "entry": entry_dict | {"discovery_keys": {}},
         "bluetooth": {
             "scanner": {
                 "connectable": False,
@@ -139,14 +152,43 @@ async def test_rpc_config_entry_diagnostics(
             "model": MODEL_25,
             "sw_version": "some fw string",
         },
-        "device_settings": {},
+        "device_settings": {"ws_outbound_enabled": False},
         "device_status": {
             "sys": {
                 "available_updates": {
                     "beta": {"version": "some_beta_version"},
                     "stable": {"version": "some_beta_version"},
-                }
+                },
+                "relay_in_thermostat": True,
             },
             "wifi": {"rssi": -63},
         },
+        "last_error": "DeviceConnectionError()",
     }
+
+
+@pytest.mark.parametrize(
+    ("ws_outbound_server", "ws_outbound_server_valid"),
+    [("ws://10.10.10.10:8123/api/shelly/ws", True), ("wrong_url", False)],
+)
+async def test_rpc_config_entry_diagnostics_ws_outbound(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    ws_outbound_server: str,
+    ws_outbound_server_valid: bool,
+) -> None:
+    """Test config entry diagnostics for rpc device with websocket outbound."""
+    config = deepcopy(mock_rpc_device.config)
+    config["ws"] = {"enable": True, "server": ws_outbound_server}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entry = await init_integration(hass, 2, sleep_period=60)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert (
+        result["device_settings"]["ws_outbound_server_valid"]
+        == ws_outbound_server_valid
+    )

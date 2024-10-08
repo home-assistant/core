@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "chime_level": {
+        "default": "mdi:bell-ring"
+      },
+      "last_button_event": {
+        "default": "mdi:clock"
+      },
+      "last_motion_event": {
+        "default": "mdi:clock"
+      },
+      "last_check_in": {
+        "default": "mdi:clock"
+      },
+      "motion_threshold": {
+        "default": "mdi:walk"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi-settings"
+      },
+      "wifi_status": {
+        "default": "mdi:wifi-strength-3"
+      }
+    }
+  }
+}

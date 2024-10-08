@@ -1,20 +1,22 @@
 """Data update coordinator for the Deluge integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-import socket
 from ssl import SSLError
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_KEYS, LOGGER
+from .const import LOGGER, DelugeGetSessionStatusKeys
+
+if TYPE_CHECKING:
+    from . import DelugeConfigEntry
 
 
 class DelugeDataUpdateCoordinator(
@@ -22,10 +24,10 @@ class DelugeDataUpdateCoordinator(
 ):
     """Data update coordinator for the Deluge integration."""
 
-    config_entry: ConfigEntry
+    config_entry: DelugeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, api: DelugeRPCClient, entry: ConfigEntry
+        self, hass: HomeAssistant, api: DelugeRPCClient, entry: DelugeConfigEntry
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -44,7 +46,7 @@ class DelugeDataUpdateCoordinator(
             _data = await self.hass.async_add_executor_job(
                 self.api.call,
                 "core.get_session_status",
-                DATA_KEYS,
+                [iter_member.value for iter_member in list(DelugeGetSessionStatusKeys)],
             )
             data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
@@ -52,7 +54,7 @@ class DelugeDataUpdateCoordinator(
             )
         except (
             ConnectionRefusedError,
-            socket.timeout,
+            TimeoutError,
             SSLError,
             FailedToReconnectException,
         ) as ex:
@@ -63,5 +65,5 @@ class DelugeDataUpdateCoordinator(
                     "Credentials for Deluge client are not valid"
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
-            raise ex
+            raise
         return data

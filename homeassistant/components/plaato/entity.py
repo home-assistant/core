@@ -1,4 +1,7 @@
 """PlaatoEntity class."""
+
+from typing import Any
+
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
@@ -58,7 +61,7 @@ class PlaatoEntity(entity.Entity):
         return self._entry_data[SENSOR_DATA]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the monitored installation."""
         if self._attributes:
             return {
@@ -67,6 +70,7 @@ class PlaatoEntity(entity.Entity):
                 if plaato_key in self._attributes
                 and self._attributes[plaato_key] is not None
             }
+        return None
 
     @property
     def available(self):

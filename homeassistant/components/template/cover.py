@@ -1,4 +1,5 @@
 """Support for covers which integrate with other components."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -23,10 +24,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -44,11 +41,17 @@ from .template_entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+OPEN_STATE = "open"
+OPENING_STATE = "opening"
+CLOSED_STATE = "closed"
+CLOSING_STATE = "closing"
+
 _VALID_STATES = [
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_CLOSED,
-    STATE_CLOSING,
+    OPEN_STATE,
+    OPENING_STATE,
+    CLOSED_STATE,
+    CLOSING_STATE,
     "true",
     "false",
     "none",
@@ -95,7 +98,7 @@ COVER_SCHEMA = vol.All(
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
@@ -105,7 +108,7 @@ async def _async_create_entities(hass, config):
     covers = []
 
     for object_id, entity_config in config[CONF_COVERS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
@@ -226,13 +229,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
         if state in _VALID_STATES:
             if not self._position_template:
-                if state in ("true", STATE_OPEN):
+                if state in ("true", OPEN_STATE):
                     self._position = 100
                 else:
                     self._position = 0
 
-            self._is_opening = state == STATE_OPENING
-            self._is_closing = state == STATE_CLOSING
+            self._is_opening = state == OPENING_STATE
+            self._is_closing = state == CLOSING_STATE
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s for entity %s. Expected: %s",

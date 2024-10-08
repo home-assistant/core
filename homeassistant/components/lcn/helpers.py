@@ -1,11 +1,12 @@
 """Helpers for LCN component."""
+
 from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import TypeAlias, cast
+from typing import cast
 
 import pypck
 import voluptuous as vol
@@ -36,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BINSENSOR_PORTS,
+    CONF_ACKNOWLEDGE,
     CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
@@ -59,12 +61,10 @@ from .const import (
 )
 
 # typing
-AddressType = tuple[int, int, bool]
-DeviceConnectionType: TypeAlias = (
-    pypck.module.ModuleConnection | pypck.module.GroupConnection
-)
+type AddressType = tuple[int, int, bool]
+type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
-InputType = type[pypck.inputs.Input]
+type InputType = type[pypck.inputs.Input]
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -85,7 +85,7 @@ DOMAIN_LOOKUP = {
 
 def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
-) -> DeviceConnectionType | None:
+) -> DeviceConnectionType:
     """Return a lcn device_connection."""
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
     addr = pypck.lcn_addr.LcnAddr(*address)
@@ -159,6 +159,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
         "password": "lcn,
         "sk_num_tries: 0,
         "dim_mode: "STEPS200",
+        "acknowledge": False,
         "devices": [
             {
                 "address": (0, 7, False)
@@ -193,6 +194,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
             CONF_PASSWORD: connection[CONF_PASSWORD],
             CONF_SK_NUM_TRIES: connection[CONF_SK_NUM_TRIES],
             CONF_DIM_MODE: connection[CONF_DIM_MODE],
+            CONF_ACKNOWLEDGE: False,
             CONF_DEVICES: [],
             CONF_ENTITIES: [],
         }
@@ -286,7 +288,8 @@ def purge_device_registry(
 
     # Find all devices that are referenced in the entity registry.
     references_entities = {
-        entry.device_id for entry in entity_registry.entities.values()
+        entry.device_id
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
     }
 
     # Find device that references the host.
@@ -421,6 +424,16 @@ async def async_update_config_entry(
 
     # schedule config_entry for save
     hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+
+def get_device_config(
+    address: AddressType, config_entry: ConfigEntry
+) -> ConfigType | None:
+    """Return the device configuration for given address and ConfigEntry."""
+    for device_config in config_entry.data[CONF_DEVICES]:
+        if tuple(device_config[CONF_ADDRESS]) == address:
+            return cast(ConfigType, device_config)
+    return None
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:

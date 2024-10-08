@@ -1,4 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+
 from __future__ import annotations
 
 import logging
@@ -117,7 +118,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                 return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Reconnected to %s",
                 self.name or afsapi.webfsapi_endpoint,
             )
@@ -151,9 +152,6 @@ class AFSAPIDevice(MediaPlayerEntity):
         # If call to get_volume fails set to 0 and try again next time.
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
-
-        if self._max_volume:
-            self._attr_volume_step = 1 / self._max_volume
 
         if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
@@ -242,6 +240,18 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.set_mute(mute)
 
     # volume
+    async def async_volume_up(self) -> None:
+        """Send volume up command."""
+        volume = await self.fs_device.get_volume()
+        volume = int(volume or 0) + 1
+        await self.fs_device.set_volume(min(volume, self._max_volume))
+
+    async def async_volume_down(self) -> None:
+        """Send volume down command."""
+        volume = await self.fs_device.get_volume()
+        volume = int(volume or 0) - 1
+        await self.fs_device.set_volume(max(volume, 0))
+
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set
@@ -298,10 +308,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             # Keys of presets are 0-based, while the list shown on the device starts from 1
             preset = int(keys[0]) - 1
 
-            result = await self.fs_device.select_preset(preset)
+            await self.fs_device.select_preset(preset)
         else:
-            result = await self.fs_device.nav_select_item_via_path(keys)
+            await self.fs_device.nav_select_item_via_path(keys)
 
         await self.async_update()
         self._attr_media_content_id = media_id
-        return result

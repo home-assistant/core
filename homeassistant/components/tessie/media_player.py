@@ -1,4 +1,5 @@
 """Media Player platform for Tessie integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
@@ -6,13 +7,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from . import TessieConfigEntry
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 STATES = {
     "Playing": MediaPlayerState.PLAYING,
@@ -20,28 +20,31 @@ STATES = {
     "Stopped": MediaPlayerState.IDLE,
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Media platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(TessieMediaEntity(coordinator) for coordinator in coordinators)
+    async_add_entities(TessieMediaEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     """Vehicle Location Media Class."""
 
-    _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the media player entity."""
-        super().__init__(coordinator, "media")
+        super().__init__(vehicle, "media")
 
     @property
     def state(self) -> MediaPlayerState:

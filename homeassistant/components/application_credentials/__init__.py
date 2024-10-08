@@ -5,6 +5,7 @@ of other integrations. Integrations register an authorization server, and then
 the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from typing import Any, Protocol
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -28,13 +29,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_application_credentials,
     async_get_integration,
 )
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
 __all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
 
@@ -44,18 +46,18 @@ DOMAIN = "application_credentials"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-DATA_STORAGE = "storage"
+DATA_COMPONENT: HassKey[ApplicationCredentialsStorageCollection] = HassKey(DOMAIN)
 CONF_AUTH_DOMAIN = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
     vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 }
-UPDATE_FIELDS: dict = {}  # Not supported
+UPDATE_FIELDS: VolDictType = {}  # Not supported
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -149,7 +151,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         id_manager,
     )
     await storage_collection.async_load()
-    hass.data[DOMAIN][DATA_STORAGE] = storage_collection
+    hass.data[DATA_COMPONENT] = storage_collection
 
     collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
@@ -174,7 +176,6 @@ async def async_import_client_credential(
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     item = {
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
@@ -182,7 +183,7 @@ async def async_import_client_credential(
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
     item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
-    await storage_collection.async_import_item(item)
+    await hass.data[DATA_COMPONENT].async_import_item(item)
 
 
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -221,8 +222,7 @@ async def _async_provide_implementation(
     if not platform:
         return []
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    credentials = storage_collection.async_client_credentials(domain)
+    credentials = hass.data[DATA_COMPONENT].async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
         return [
             await platform.async_get_auth_implementation(hass, auth_domain, credential)
@@ -245,8 +245,7 @@ async def _async_config_entry_app_credentials(
     ):
         return None
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    for item in storage_collection.async_items():
+    for item in hass.data[DATA_COMPONENT].async_items():
         item_id = item[CONF_ID]
         if (
             item[CONF_DOMAIN] == config_entry.domain
@@ -291,7 +290,7 @@ async def _get_platform(
         _LOGGER.debug("Integration '%s' does not exist: %s", integration_domain, err)
         return None
     try:
-        platform = integration.get_platform("application_credentials")
+        platform = await integration.async_get_platform("application_credentials")
     except ImportError as err:
         _LOGGER.debug(
             "Integration '%s' does not provide application_credentials: %s",

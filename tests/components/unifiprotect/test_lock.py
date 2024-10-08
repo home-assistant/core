@@ -4,18 +4,14 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Doorlock, LockStatusType
+from uiprotect.data import Doorlock, LockStatusType
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -45,6 +41,7 @@ async def test_lock_remove(
 
 async def test_lock_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -57,14 +54,13 @@ async def test_lock_setup(
     unique_id = f"{doorlock.mac}_lock"
     entity_id = "lock.test_lock_lock"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -92,7 +88,7 @@ async def test_lock_locked(
 
     state = hass.states.get("lock.test_lock_lock")
     assert state
-    assert state.state == STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
 
 async def test_lock_unlocking(
@@ -119,7 +115,7 @@ async def test_lock_unlocking(
 
     state = hass.states.get("lock.test_lock_lock")
     assert state
-    assert state.state == STATE_UNLOCKING
+    assert state.state == LockState.UNLOCKING
 
 
 async def test_lock_locking(
@@ -146,7 +142,7 @@ async def test_lock_locking(
 
     state = hass.states.get("lock.test_lock_lock")
     assert state
-    assert state.state == STATE_LOCKING
+    assert state.state == LockState.LOCKING
 
 
 async def test_lock_jammed(
@@ -173,7 +169,7 @@ async def test_lock_jammed(
 
     state = hass.states.get("lock.test_lock_lock")
     assert state
-    assert state.state == STATE_JAMMED
+    assert state.state == LockState.JAMMED
 
 
 async def test_lock_unavailable(

@@ -1,4 +1,5 @@
 """Tests for Google Tasks."""
+
 from collections.abc import Awaitable, Callable
 import http
 import time
@@ -29,7 +30,7 @@ async def test_setup(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.services.async_services().get(DOMAIN)
 
 
@@ -67,7 +68,7 @@ async def test_expired_token_refresh_success(
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
-            ConfigEntryState.SETUP_RETRY,  # Will trigger reauth in the future
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             time.time() - 3600,

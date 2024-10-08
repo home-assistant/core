@@ -1,4 +1,5 @@
 """Validate requirements."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -14,28 +15,21 @@ from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
+from script.gen_requirements_all import (
+    EXCLUDED_REQUIREMENTS_ALL,
+    normalize_package_name,
+)
 
 from .model import Config, Integration
 
-IGNORE_PACKAGES = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
-}
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
-IGNORE_VIOLATIONS = {
-    # Still has standard library requirements.
-    "acmeda",
-    "blink",
-    "ezviz",
-    "hdmi_cec",
-    "juicenet",
-    "lupusec",
-    "rainbird",
+IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
+    # Integrations which have standard library requirements.
     "slide",
     "suez_water",
 }
@@ -90,18 +84,19 @@ def validate_requirements_format(integration: Integration) -> bool:
         if not version:
             continue
 
-        for part in version.split(";", 1)[0].split(","):
-            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
-            if (
-                version_part
-                and AwesomeVersion(version_part.group(2)).strategy
-                == AwesomeVersionStrategy.UNKNOWN
-            ):
-                integration.add_error(
-                    "requirements",
-                    f"Unable to parse package version ({version}) for {pkg}.",
-                )
-                continue
+        if integration.core:
+            for part in version.split(";", 1)[0].split(","):
+                version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
+                if (
+                    version_part
+                    and AwesomeVersion(version_part.group(2)).strategy
+                    == AwesomeVersionStrategy.UNKNOWN
+                ):
+                    integration.add_error(
+                        "requirements",
+                        f"Unable to parse package version ({version}) for {pkg}.",
+                    )
+                    continue
 
     return len(integration.errors) == start_errors
 
@@ -109,10 +104,6 @@ def validate_requirements_format(integration: Integration) -> bool:
 def validate_requirements(integration: Integration) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
-        return
-
-    # Some integrations have not been fixed yet so are allowed to have violations.
-    if integration.domain in IGNORE_VIOLATIONS:
         return
 
     integration_requirements = set()
@@ -125,7 +116,7 @@ def validate_requirements(integration: Integration) -> None:
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if (package == ign for ign in IGNORE_PACKAGES):
+        if package in EXCLUDED_REQUIREMENTS_ALL:
             continue
         integration_requirements.add(req)
         integration_packages.add(package)
@@ -148,12 +139,34 @@ def validate_requirements(integration: Integration) -> None:
         return
 
     # Check for requirements incompatible with standard library.
+    standard_library_violations = set()
     for req in all_integration_requirements:
-        if req in sys.stlib_module_names:
-            integration.add_error(
-                "requirements",
-                f"Package {req} is not compatible with the Python standard library",
-            )
+        if req in sys.stdlib_module_names:
+            standard_library_violations.add(req)
+
+    if (
+        standard_library_violations
+        and integration.domain not in IGNORE_STANDARD_LIBRARY_VIOLATIONS
+    ):
+        integration.add_error(
+            "requirements",
+            (
+                f"Package {req} has dependencies {standard_library_violations} which "
+                "are not compatible with the Python standard library"
+            ),
+        )
+    elif (
+        not standard_library_violations
+        and integration.domain in IGNORE_STANDARD_LIBRARY_VIOLATIONS
+    ):
+        integration.add_error(
+            "requirements",
+            (
+                f"Integration {integration.domain} no longer has requirements which are"
+                " incompatible with the Python standard library, remove it from "
+                "IGNORE_STANDARD_LIBRARY_VIOLATIONS"
+            ),
+        )
 
 
 @cache
@@ -255,7 +268,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if is_installed:
             continue
 
-        args = [sys.executable, "-m", "pip", "install", "--quiet"]
+        args = ["uv", "pip", "install", "--quiet"]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)

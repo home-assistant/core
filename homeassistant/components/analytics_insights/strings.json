@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tracked_integrations": "Integrations",
+          "tracked_custom_integrations": "Custom integrations"
+        },
+        "data_description": {
+          "tracked_integrations": "Select the integrations you want to track",
+          "tracked_custom_integrations": "Select the custom integrations you want to track"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "no_integrations_selected": "You must select at least one integration to track"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tracked_integrations": "[%key:component::analytics_insights::config::step::user::data::tracked_integrations%]",
+          "tracked_custom_integrations": "[%key:component::analytics_insights::config::step::user::data::tracked_custom_integrations%]"
+        },
+        "data_description": {
+          "tracked_integrations": "[%key:component::analytics_insights::config::step::user::data_description::tracked_integrations%]",
+          "tracked_custom_integrations": "[%key:component::analytics_insights::config::step::user::data_description::tracked_custom_integrations%]"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "no_integrations_selected": "[%key:component::analytics_insights::config::error::no_integrations_selected%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "custom_integrations": {
+        "name": "{custom_integration_domain} (custom)"
+      },
+      "total_active_installations": {
+        "name": "Total active installations"
+      },
+      "total_reports_integrations": {
+        "name": "Total reported integrations"
+      }
+    }
+  }
+}

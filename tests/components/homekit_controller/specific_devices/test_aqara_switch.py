@@ -5,6 +5,7 @@ service-label-index despite not being linked to a service-label.
 
 https://github.com/home-assistant/core/pull/39090
 """
+
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant

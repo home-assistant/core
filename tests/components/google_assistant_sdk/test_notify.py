@@ -1,4 +1,5 @@
 """Tests for the Google Assistant notify."""
+
 from unittest.mock import call, patch
 
 import pytest
@@ -33,7 +34,9 @@ async def test_broadcast_no_targets(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entry.options = {"language_code": language_code}
+    hass.config_entries.async_update_entry(
+        entry, options={"language_code": language_code}
+    )
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
@@ -47,6 +50,7 @@ async def test_broadcast_no_targets(
     mock_text_assistant.assert_called_once_with(
         ExpectedCredentials(), language_code, audio_out=False
     )
+    # pylint:disable-next=unnecessary-dunder-call
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 
 
@@ -87,7 +91,9 @@ async def test_broadcast_one_target(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entry.options = {"language_code": language_code}
+    hass.config_entries.async_update_entry(
+        entry, options={"language_code": language_code}
+    )
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",

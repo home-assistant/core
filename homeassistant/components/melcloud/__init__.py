@@ -1,4 +1,5 @@
 """The MELCloud Climate integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,58 +10,22 @@ from typing import Any
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device, get_devices
 from pymelcloud.atw_device import Zone
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
-
-CONF_LANGUAGE = "language"
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_TOKEN): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Establish connection with MELCloud."""
-    if DOMAIN not in config:
-        return True
-
-    username = config[DOMAIN][CONF_USERNAME]
-    token = config[DOMAIN][CONF_TOKEN]
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_USERNAME: username, CONF_TOKEN: token},
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -72,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(ex, ClientResponseError) and ex.code == 401:
             raise ConfigEntryAuthFailed from ex
         raise ConfigEntryNotReady from ex
-    except (asyncio.TimeoutError, ClientConnectionError) as ex:
+    except (TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
@@ -159,11 +124,6 @@ class MelCloudDevice:
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
-    @property
-    def daily_energy_consumed(self) -> float | None:
-        """Return energy consumed during the current day in kWh."""
-        return self.device.daily_energy_consumed
-
 
 async def mel_devices_setup(
     hass: HomeAssistant, token: str
@@ -174,8 +134,8 @@ async def mel_devices_setup(
         all_devices = await get_devices(
             token,
             session,
-            conf_update_interval=timedelta(minutes=5),
-            device_set_debounce=timedelta(seconds=1),
+            conf_update_interval=timedelta(minutes=30),
+            device_set_debounce=timedelta(seconds=2),
         )
     wrapped_devices: dict[str, list[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():

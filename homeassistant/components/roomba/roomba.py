@@ -1,9 +1,10 @@
 """Class for Roomba devices."""
+
 import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature
 
-from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
+from .entity import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ FAN_SPEEDS = [FAN_SPEED_AUTOMATIC, FAN_SPEED_ECO, FAN_SPEED_PERFORMANCE]
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 
-class RoombaVacuum(IRobotVacuum):
+class RoombaVacuum(IRobotVacuum):  # pylint: disable=hass-enforce-class-module
     """Basic Roomba robot (without carpet boost)."""
 
     @property
@@ -39,7 +40,7 @@ class RoombaVacuum(IRobotVacuum):
         return state_attrs
 
 
-class RoombaVacuumCarpetBoost(RoombaVacuum):
+class RoombaVacuumCarpetBoost(RoombaVacuum):  # pylint: disable=hass-enforce-class-module
     """Roomba robot with carpet boost."""
 
     _attr_fan_speed_list = FAN_SPEEDS

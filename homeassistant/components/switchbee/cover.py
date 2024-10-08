@@ -55,7 +55,7 @@ class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
             await self.coordinator.api.set_state(self._device.id, command)
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to fire {command} for {self.name}, {str(exp)}"
+                f"Failed to fire {command} for {self.name}, {exp!s}"
             ) from exp
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -145,7 +145,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
                 f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error:"
-                f" {str(exp)}"
+                f" {exp!s}"
             ) from exp
 
         self._get_coordinator_device().position = kwargs[ATTR_POSITION]

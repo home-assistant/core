@@ -1,0 +1,9 @@
+{
+  "domain": "sanix",
+  "name": "Sanix",
+  "codeowners": ["@tomaszsluszniak"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sanix",
+  "iot_class": "cloud_polling",
+  "requirements": ["sanix==1.0.6"]
+}

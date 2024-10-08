@@ -1,10 +1,12 @@
 """Code to handle a DenonAVR receiver."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
 
 from denonavr import DenonAVR
+import httpx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ class ConnectDenonAVR:
         zone3: bool,
         use_telnet: bool,
         update_audyssey: bool,
-        async_client_getter: Callable,
+        async_client_getter: Callable[[], httpx.AsyncClient],
     ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
@@ -91,9 +93,10 @@ class ConnectDenonAVR:
         await receiver.async_setup()
         # Do an initial update if telnet is used.
         if self._use_telnet:
-            await receiver.async_update()
-            if self._update_audyssey:
-                await receiver.async_update_audyssey()
+            for zone in receiver.zones.values():
+                await zone.async_update()
+                if self._update_audyssey:
+                    await zone.async_update_audyssey()
             await receiver.async_telnet_connect()
 
         self._receiver = receiver

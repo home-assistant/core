@@ -38,11 +38,12 @@ async def test_adam_change_select_entity(
         blocking=True,
     )
 
-    assert mock_smile_adam.set_schedule_state.call_count == 1
-    mock_smile_adam.set_schedule_state.assert_called_with(
+    assert mock_smile_adam.set_select.call_count == 1
+    mock_smile_adam.set_select.assert_called_with(
+        "select_schedule",
         "c50f167537524366a5af7aa3942feb1e",
-        "on",
         "Badkamer Schema",
+        "on",
     )
 
 
@@ -54,6 +55,9 @@ async def test_adam_select_regulation_mode(
     Also tests a change in climate _previous mode.
     """
 
+    state = hass.states.get("select.adam_gateway_mode")
+    assert state
+    assert state.state == "full"
     state = hass.states.get("select.adam_regulation_mode")
     assert state
     assert state.state == "cooling"
@@ -66,5 +70,19 @@ async def test_adam_select_regulation_mode(
         },
         blocking=True,
     )
-    assert mock_smile_adam_3.set_regulation_mode.call_count == 1
-    mock_smile_adam_3.set_regulation_mode.assert_called_with("heating")
+    assert mock_smile_adam_3.set_select.call_count == 1
+    mock_smile_adam_3.set_select.assert_called_with(
+        "select_regulation_mode",
+        "bc93488efab249e5bc54fd7e175a6f91",
+        "heating",
+        "on",
+    )
+
+
+async def test_legacy_anna_select_entities(
+    hass: HomeAssistant,
+    mock_smile_legacy_anna: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test not creating a select-entity for a legacy Anna without a thermostat-schedule."""
+    assert not hass.states.get("select.anna_thermostat_schedule")

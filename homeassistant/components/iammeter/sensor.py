@@ -1,7 +1,7 @@
 """Support for iammeter via local API."""
+
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -12,7 +12,7 @@ from iammeter.client import IamMeter
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 80
 DEFAULT_DEVICE_NAME = "IamMeter"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
@@ -75,8 +75,8 @@ def _migrate_to_new_unique_id(
     phase_list = ["A", "B", "C", "NET"]
     id_phase_range = 1 if model == DEVICE_3080 else 4
     id_name_range = 5 if model == DEVICE_3080 else 7
-    for row in range(0, id_phase_range):
-        for idx in range(0, id_name_range):
+    for row in range(id_phase_range):
+        for idx in range(id_name_range):
             old_unique_id = f"{serial_number}-{row}-{idx}"
             new_unique_id = (
                 f"{serial_number}_{name_list[idx]}"
@@ -117,7 +117,7 @@ async def async_setup_platform(
         api = await hass.async_add_executor_job(
             IamMeter, config_host, config_port, config_name
         )
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         _LOGGER.error("Device is not ready")
         raise PlatformNotReady from err
 
@@ -125,7 +125,7 @@ async def async_setup_platform(
         try:
             async with timeout(PLATFORM_TIMEOUT):
                 return await hass.async_add_executor_job(api.client.get_data)
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(

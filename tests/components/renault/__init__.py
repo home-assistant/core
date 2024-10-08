@@ -1,4 +1,5 @@
 """Tests for the Renault integration."""
+
 from __future__ import annotations
 
 from types import MappingProxyType
@@ -9,9 +10,9 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_STATE,
-    ATTR_SW_VERSION,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -45,7 +46,7 @@ def check_device_registry(
     assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
     assert registry_entry.name == expected_device[ATTR_NAME]
     assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    assert registry_entry.model_id == expected_device[ATTR_MODEL_ID]
 
 
 def check_entities(
@@ -81,8 +82,6 @@ def check_entities_no_data(
         assert state.state == expected_state
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
 def check_entities_unavailable(
@@ -100,5 +99,3 @@ def check_entities_unavailable(
         assert state.state == STATE_UNAVAILABLE
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)

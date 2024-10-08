@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
@@ -17,6 +18,7 @@ async def test_diagnostics(
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert diag == {
+        "model": "MockJet",
         "loads": [1, 2],
         "button_switches": [1, 2],
         "scenes": [1, 2],

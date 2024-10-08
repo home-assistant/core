@@ -1,4 +1,5 @@
 """Constants for Brunt."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform

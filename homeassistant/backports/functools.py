@@ -1,81 +1,31 @@
-"""Functools backports from standard lib."""
+"""Functools backports from standard lib.
 
-# This file contains parts of Python's module wrapper
-# for the _functools C module
-# to allow utilities written in Python to be added
-# to the functools module.
-# Written by Nick Coghlan <ncoghlan at gmail.com>,
-# Raymond Hettinger <python at rcn.com>,
-# and Łukasz Langa <lukasz at langa.pl>.
-# Copyright © 2001-2023 Python Software Foundation; All Rights Reserved
+This file contained the backport of the cached_property implementation of Python 3.12.
+
+Since we have dropped support for Python 3.11, we can remove this backport.
+This file is kept for now to avoid breaking custom components that might
+import it.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from types import GenericAlias
-from typing import Any, Generic, Self, TypeVar, overload
+# pylint: disable-next=hass-deprecated-import
+from functools import cached_property as _cached_property, partial
 
-_T = TypeVar("_T")
+from homeassistant.helpers.deprecation import (
+    DeprecatedAlias,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
+# cached_property deprecated as of 2024.5 use functools.cached_property instead.
+_DEPRECATED_cached_property = DeprecatedAlias(
+    _cached_property, "functools.cached_property", "2025.5"
+)
 
-class cached_property(Generic[_T]):
-    """Backport of Python 3.12's cached_property.
-
-    Includes https://github.com/python/cpython/pull/101890/files
-    """
-
-    def __init__(self, func: Callable[[Any], _T]) -> None:
-        """Initialize."""
-        self.func: Callable[[Any], _T] = func
-        self.attrname: str | None = None
-        self.__doc__ = func.__doc__
-
-    def __set_name__(self, owner: type[Any], name: str) -> None:
-        """Set name."""
-        if self.attrname is None:
-            self.attrname = name
-        elif name != self.attrname:
-            raise TypeError(
-                "Cannot assign the same cached_property to two different names "
-                f"({self.attrname!r} and {name!r})."
-            )
-
-    @overload
-    def __get__(self, instance: None, owner: type[Any] | None = None) -> Self:
-        ...
-
-    @overload
-    def __get__(self, instance: Any, owner: type[Any] | None = None) -> _T:
-        ...
-
-    def __get__(
-        self, instance: Any | None, owner: type[Any] | None = None
-    ) -> _T | Self:
-        """Get."""
-        if instance is None:
-            return self
-        if self.attrname is None:
-            raise TypeError(
-                "Cannot use cached_property instance without calling __set_name__ on it."
-            )
-        try:
-            cache = instance.__dict__
-        # not all objects have __dict__ (e.g. class defines slots)
-        except AttributeError:
-            msg = (
-                f"No '__dict__' attribute on {type(instance).__name__!r} "
-                f"instance to cache {self.attrname!r} property."
-            )
-            raise TypeError(msg) from None
-        val = self.func(instance)
-        try:
-            cache[self.attrname] = val
-        except TypeError:
-            msg = (
-                f"The '__dict__' attribute on {type(instance).__name__!r} instance "
-                f"does not support item assignment for caching {self.attrname!r} property."
-            )
-            raise TypeError(msg) from None
-        return val
-
-    __class_getitem__ = classmethod(GenericAlias)  # type: ignore[var-annotated]
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

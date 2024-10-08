@@ -31,7 +31,7 @@
     }
   },
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Sheets. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type.\n\n"
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Sheets. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
   },
   "services": {
     "append_sheet": {
@@ -48,7 +48,7 @@
         },
         "data": {
           "name": "Data",
-          "description": "Data to be appended to the worksheet. This puts the values on a new row underneath the matching column (key). Any new key is placed on the top of a new column."
+          "description": "Data to be appended to the worksheet. This puts the values on new rows underneath the matching column (key). Any new key is placed on the top of a new column."
         }
       }
     }

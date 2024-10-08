@@ -20,7 +20,7 @@
     ]),
     'max_temp': 20,
     'min_temp': 10,
-    'supported_features': <ClimateEntityFeature: 41>,
+    'supported_features': <ClimateEntityFeature: 425>,
     'swing_mode': 'stopped',
     'swing_modes': list([
       'stopped',

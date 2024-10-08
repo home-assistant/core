@@ -5,8 +5,19 @@ import textwrap
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_ENTITY
@@ -60,21 +71,32 @@ async def ws_move_item(
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant) -> None:
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests that keesp UTC-6 all year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
+
+
+EXPECTED_ADD_ITEM = {
+    "status": "needs_action",
+    "summary": "replace batteries",
+}
 
 
 @pytest.mark.parametrize(
     ("item_data", "expected_item_data"),
     [
-        ({}, {}),
-        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
+        ({}, EXPECTED_ADD_ITEM),
+        ({ATTR_DUE_DATE: "2023-11-17"}, {**EXPECTED_ADD_ITEM, "due": "2023-11-17"}),
         (
-            {"due_datetime": "2023-11-17T11:30:00+00:00"},
-            {"due": "2023-11-17T05:30:00-06:00"},
+            {ATTR_DUE_DATETIME: "2023-11-17T11:30:00+00:00"},
+            {**EXPECTED_ADD_ITEM, "due": "2023-11-17T05:30:00-06:00"},
         ),
-        ({"description": "Additional detail"}, {"description": "Additional detail"}),
+        (
+            {ATTR_DESCRIPTION: "Additional detail"},
+            {**EXPECTED_ADD_ITEM, "description": "Additional detail"},
+        ),
+        ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
+        ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
     ],
 )
 async def test_add_item(
@@ -93,19 +115,18 @@ async def test_add_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "replace batteries", **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "replace batteries", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
     items = await ws_get_items()
     assert len(items) == 1
-    assert items[0]["summary"] == "replace batteries"
-    assert items[0]["status"] == "needs_action"
-    for k, v in expected_item_data.items():
-        assert items[0][k] == v
-    assert "uid" in items[0]
+    item_data = items[0]
+    assert "uid" in item_data
+    del item_data["uid"]
+    assert item_data == expected_item_data
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -116,12 +137,12 @@ async def test_add_item(
     ("item_data", "expected_item_data"),
     [
         ({}, {}),
-        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
+        ({ATTR_DUE_DATE: "2023-11-17"}, {"due": "2023-11-17"}),
         (
             {"due_datetime": "2023-11-17T11:30:00+00:00"},
             {"due": "2023-11-17T05:30:00-06:00"},
         ),
-        ({"description": "Additional detail"}, {"description": "Additional detail"}),
+        ({ATTR_DESCRIPTION: "Additional detail"}, {"description": "Additional detail"}),
     ],
 )
 async def test_remove_item(
@@ -134,9 +155,9 @@ async def test_remove_item(
     """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "replace batteries", **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "replace batteries", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -154,9 +175,9 @@ async def test_remove_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": [items[0]["uid"]]},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: [items[0]["uid"]]},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -174,12 +195,12 @@ async def test_bulk_remove(
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test removing multiple todo items."""
-    for i in range(0, 5):
+    for i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": f"soda #{i}"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: f"soda #{i}"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -193,9 +214,9 @@ async def test_bulk_remove(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": uids},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: uids},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -207,19 +228,33 @@ async def test_bulk_remove(
     assert state.state == "0"
 
 
+EXPECTED_UPDATE_ITEM = {
+    "status": "needs_action",
+    "summary": "soda",
+}
+
+
 @pytest.mark.parametrize(
     ("item_data", "expected_item_data", "expected_state"),
     [
-        ({"status": "completed"}, {"status": "completed"}, "0"),
-        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}, "1"),
         (
-            {"due_datetime": "2023-11-17T11:30:00+00:00"},
-            {"due": "2023-11-17T05:30:00-06:00"},
+            {ATTR_STATUS: "completed"},
+            {**EXPECTED_UPDATE_ITEM, "status": "completed"},
+            "0",
+        ),
+        (
+            {ATTR_DUE_DATE: "2023-11-17"},
+            {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17"},
             "1",
         ),
         (
-            {"description": "Additional detail"},
-            {"description": "Additional detail"},
+            {ATTR_DUE_DATETIME: "2023-11-17T11:30:00+00:00"},
+            {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17T05:30:00-06:00"},
+            "1",
+        ),
+        (
+            {ATTR_DESCRIPTION: "Additional detail"},
+            {**EXPECTED_UPDATE_ITEM, "description": "Additional detail"},
             "1",
         ),
     ],
@@ -237,15 +272,16 @@ async def test_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
     # Fetch item
     items = await ws_get_items()
     assert len(items) == 1
+
     item = items[0]
     assert item["summary"] == "soda"
     assert item["status"] == "needs_action"
@@ -254,12 +290,12 @@ async def test_update_item(
     assert state
     assert state.state == "1"
 
-    # Mark item completed
+    # Update item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": item["uid"], **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -268,12 +304,132 @@ async def test_update_item(
     assert len(items) == 1
     item = items[0]
     assert item["summary"] == "soda"
-    for k, v in expected_item_data.items():
-        assert items[0][k] == v
+    assert "uid" in item
+    del item["uid"]
+    assert item == expected_item_data
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        (
+            {ATTR_STATUS: "completed"},
+            {
+                "summary": "soda",
+                "status": "completed",
+                "description": "Additional detail",
+                "due": "2024-01-01",
+            },
+        ),
+        (
+            {ATTR_DUE_DATE: "2024-01-02"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+                "due": "2024-01-02",
+            },
+        ),
+        (
+            {ATTR_DUE_DATE: None},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+            },
+        ),
+        (
+            {ATTR_DUE_DATETIME: "2024-01-01 10:30:00"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+                "due": "2024-01-01T10:30:00-06:00",
+            },
+        ),
+        (
+            {ATTR_DUE_DATETIME: None},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+            },
+        ),
+        (
+            {ATTR_DESCRIPTION: "updated description"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "due": "2024-01-01",
+                "description": "updated description",
+            },
+        ),
+        (
+            {ATTR_DESCRIPTION: None},
+            {"summary": "soda", "status": "needs_action", "due": "2024-01-01"},
+        ),
+    ],
+    ids=[
+        "status",
+        "due_date",
+        "clear_due_date",
+        "due_datetime",
+        "clear_due_datetime",
+        "description",
+        "clear_description",
+    ],
+)
+async def test_update_existing_field(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
+) -> None:
+    """Test updating a todo item."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "soda",
+            ATTR_DESCRIPTION: "Additional detail",
+            ATTR_DUE_DATE: "2024-01-01",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+
+    # Perform update
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify item is updated
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == expected_item_data
 
 
 async def test_rename(
@@ -286,9 +442,9 @@ async def test_rename(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -306,9 +462,9 @@ async def test_rename(
     # Rename item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": item["uid"], "rename": "water"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], ATTR_RENAME: "water"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -363,9 +519,9 @@ async def test_move_item(
     for i in range(1, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": f"item {i}"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: f"item {i}"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -421,9 +577,9 @@ async def test_move_item_previous_unknown(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "item 1"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "item 1"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     items = await ws_get_items()
@@ -491,13 +647,87 @@ async def test_move_item_previous_unknown(
             ),
             "1",
         ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 1.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231023
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 2.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231024
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 2.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231024T113000
+                    DTSTART;TZID=CST:20231024T113000
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
     ],
-    ids=("empty", "not_exists", "completed", "needs_action"),
+    ids=(
+        "empty",
+        "not_exists",
+        "completed",
+        "needs_action",
+        "migrate_legacy_due",
+        "due",
+        "invalid_dtstart_tzname",
+    ),
 )
 async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
     """Test parsing ics content."""
@@ -505,6 +735,9 @@ async def test_parse_existing_ics(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    items = await ws_get_items()
+    assert items == snapshot
 
 
 async def test_susbcribe(
@@ -517,9 +750,9 @@ async def test_susbcribe(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -550,9 +783,9 @@ async def test_susbcribe(
     # Rename item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": uid, "rename": "milk"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: uid, ATTR_RENAME: "milk"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

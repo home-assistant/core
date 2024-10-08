@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Credentials for FYTA API",
+        "description": "Provide username and password to connect to the FYTA server",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update your credentials for FYTA API",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "password_error": "Invalid password",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "scientific_name": {
+        "name": "Scientific name"
+      },
+      "plant_status": {
+        "name": "Plant state",
+        "state": {
+          "deleted": "Deleted",
+          "doing_great": "Doing great",
+          "need_attention": "Needs attention",
+          "no_sensor": "No sensor"
+        }
+      },
+      "temperature_status": {
+        "name": "Temperature state",
+        "state": {
+          "no_data": "No data",
+          "too_low": "Too low",
+          "low": "Low",
+          "perfect": "Perfect",
+          "high": "High",
+          "too_high": "Too high"
+        }
+      },
+      "light_status": {
+        "name": "Light state",
+        "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
+          "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::temperature_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::temperature_status::state::too_high%]"
+        }
+      },
+      "moisture_status": {
+        "name": "Moisture state",
+        "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
+          "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::temperature_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::temperature_status::state::too_high%]"
+        }
+      },
+      "salinity_status": {
+        "name": "Salinity state",
+        "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
+          "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::temperature_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::temperature_status::state::too_high%]"
+        }
+      },
+      "light": {
+        "name": "Light"
+      },
+      "salinity": {
+        "name": "Salinity"
+      }
+    }
+  }
+}

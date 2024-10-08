@@ -1,15 +1,15 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
+
 from __future__ import annotations
 
 import logging
-import socket
 
 from pyblackbird import get_blackbird
 from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -56,7 +56,7 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-    PLATFORM_SCHEMA.extend(
+    MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         {
             vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
             vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
@@ -93,7 +93,7 @@ def setup_platform(
         try:
             blackbird = get_blackbird(host, False)
             connection = host
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
@@ -103,7 +103,7 @@ def setup_platform(
 
     devices = []
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
+        _LOGGER.debug("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         unique_id = f"{connection}-{zone_id}"
         device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
         hass.data[DATA_BLACKBIRD][unique_id] = device

@@ -1,4 +1,5 @@
 """Provide animated GIF loops of Buienradar imagery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -114,7 +115,9 @@ class BuienradarCam(Camera):
             headers = {}
 
         try:
-            async with session.get(url, timeout=5, headers=headers) as res:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5), headers=headers
+            ) as res:
                 res.raise_for_status()
 
                 if res.status == 304:
@@ -128,7 +131,7 @@ class BuienradarCam(Camera):
                 _LOGGER.debug("HTTP 200 - Last-Modified: %s", last_modified)
 
                 return True
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 

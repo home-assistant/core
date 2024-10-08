@@ -1,4 +1,5 @@
 """Sensor tests for the YouTube integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -28,6 +29,9 @@ async def test_sensor(
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state == snapshot
 
+    state = hass.states.get("sensor.google_for_developers_views")
+    assert state == snapshot
+
 
 async def test_sensor_without_uploaded_video(
     hass: HomeAssistant, snapshot: SnapshotAssertion, setup_integration: ComponentSetup
@@ -49,6 +53,9 @@ async def test_sensor_without_uploaded_video(
     assert state == snapshot
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state == snapshot
+
+    state = hass.states.get("sensor.google_for_developers_views")
     assert state == snapshot
 
 
@@ -94,6 +101,9 @@ async def test_sensor_reauth_trigger(
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state.state == "2290000"
 
+    state = hass.states.get("sensor.google_for_developers_views")
+    assert state.state == "214141263"
+
     mock.set_thrown_exception(UnauthorizedError())
     future = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future)
@@ -120,6 +130,9 @@ async def test_sensor_unavailable(
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state.state == "2290000"
 
+    state = hass.states.get("sensor.google_for_developers_views")
+    assert state.state == "214141263"
+
     mock.set_thrown_exception(YouTubeBackendError())
     future = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future)
@@ -129,4 +142,7 @@ async def test_sensor_unavailable(
     assert state.state == "unavailable"
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state.state == "unavailable"
+
+    state = hass.states.get("sensor.google_for_developers_views")
     assert state.state == "unavailable"

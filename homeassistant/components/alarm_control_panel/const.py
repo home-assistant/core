@@ -1,10 +1,12 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
 from functools import partial
 from typing import Final
 
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -60,10 +62,6 @@ _DEPRECATED_SUPPORT_ALARM_ARM_VACATION: Final = DeprecatedConstantEnum(
     AlarmControlPanelEntityFeature.ARM_VACATION, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 CONDITION_TRIGGERED: Final = "is_triggered"
 CONDITION_DISARMED: Final = "is_disarmed"
 CONDITION_ARMED_HOME: Final = "is_armed_home"
@@ -71,3 +69,10 @@ CONDITION_ARMED_AWAY: Final = "is_armed_away"
 CONDITION_ARMED_NIGHT: Final = "is_armed_night"
 CONDITION_ARMED_VACATION: Final = "is_armed_vacation"
 CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

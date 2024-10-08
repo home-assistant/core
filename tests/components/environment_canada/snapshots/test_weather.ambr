@@ -1,0 +1,94 @@
+# serializer version: 1
+# name: test_forecast_daily
+  dict({
+    'weather.home_forecast': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2022-10-04T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 18.0,
+          'templow': 3.0,
+        }),
+        dict({
+          'condition': 'sunny',
+          'datetime': '2022-10-05T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 20.0,
+          'templow': 9.0,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2022-10-06T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 20.0,
+          'templow': 7.0,
+        }),
+        dict({
+          'condition': 'rainy',
+          'datetime': '2022-10-07T15:00:00+00:00',
+          'precipitation_probability': 40,
+          'temperature': 13.0,
+          'templow': 1.0,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2022-10-08T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 10.0,
+          'templow': 3.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_daily_with_some_previous_days_data
+  dict({
+    'weather.home_forecast': dict({
+      'forecast': list([
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2022-10-03T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': None,
+          'templow': -1.0,
+        }),
+        dict({
+          'condition': 'sunny',
+          'datetime': '2022-10-04T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 18.0,
+          'templow': 3.0,
+        }),
+        dict({
+          'condition': 'sunny',
+          'datetime': '2022-10-05T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 20.0,
+          'templow': 9.0,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2022-10-06T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 20.0,
+          'templow': 7.0,
+        }),
+        dict({
+          'condition': 'rainy',
+          'datetime': '2022-10-07T15:00:00+00:00',
+          'precipitation_probability': 40,
+          'temperature': 13.0,
+          'templow': 1.0,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2022-10-08T15:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 10.0,
+          'templow': 3.0,
+        }),
+      ]),
+    }),
+  })
+# ---

@@ -1,4 +1,5 @@
 """Support for VOC."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -15,8 +16,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VolvoEntity, VolvoUpdateCoordinator
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
+from .coordinator import VolvoUpdateCoordinator
+from .entity import VolvoEntity
 
 
 async def async_setup_entry(
@@ -31,21 +33,17 @@ async def async_setup_entry(
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
         """Discover and add a discovered Volvo On Call binary sensor."""
-        entities: list[VolvoSensor] = []
-
-        for instrument in instruments:
-            if instrument.component == "binary_sensor":
-                entities.append(
-                    VolvoSensor(
-                        coordinator,
-                        instrument.vehicle.vin,
-                        instrument.component,
-                        instrument.attr,
-                        instrument.slug_attr,
-                    )
-                )
-
-        async_add_entities(entities)
+        async_add_entities(
+            VolvoSensor(
+                coordinator,
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
+            for instrument in instruments
+            if instrument.component == "binary_sensor"
+        )
 
     async_discover_device([*volvo_data.instruments])
 

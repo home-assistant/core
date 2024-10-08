@@ -1,4 +1,5 @@
 """Constants for the Axis component."""
+
 import logging
 
 from homeassistant.const import Platform
@@ -9,7 +10,6 @@ DOMAIN = "axis"
 
 ATTR_MANUFACTURER = "Axis Communications AB"
 
-CONF_EVENTS = "events"
 CONF_STREAM_PROFILE = "stream_profile"
 CONF_VIDEO_SOURCE = "video_source"
 

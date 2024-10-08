@@ -1,4 +1,5 @@
 """Support for the Italian train system using ViaggiaTreno API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,10 @@ import time
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -51,7 +55,7 @@ CANCELLED_STRING = "Cancelled"
 NOT_DEPARTED_STRING = "Not departed yet"
 NO_INFORMATION_STRING = "No information for this train now"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TRAIN_ID): cv.string,
         vol.Required(CONF_STATION_ID): cv.string,
@@ -83,11 +87,13 @@ async def async_http_request(hass, uri):
         if req.status != HTTPStatus.OK:
             return {"error": req.status}
         json_response = await req.json()
-        return json_response
-    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
+    except (TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
+        return None
     except ValueError:
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")
+        return None
+    return json_response
 
 
 class ViaggiaTrenoSensor(SensorEntity):
@@ -168,7 +174,7 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._state = NO_INFORMATION_STRING
                 self._unit = ""
             else:
-                self._state = "Error: {}".format(res["error"])
+                self._state = f"Error: {res['error']}"
                 self._unit = ""
         else:
             for i in MONITORED_INFO:

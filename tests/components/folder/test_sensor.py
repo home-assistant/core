@@ -1,4 +1,5 @@
 """The tests for the folder sensor."""
+
 import os
 
 from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS
@@ -14,7 +15,7 @@ TEST_FILE = os.path.join(TEST_DIR, TEST_TXT)
 
 def create_file(path):
     """Create a test file."""
-    with open(path, "w") as test_file:
+    with open(path, "w", encoding="utf8") as test_file:
         test_file.write("test")
 
 
