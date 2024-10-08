@@ -9,6 +9,7 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
+    STATE_ERROR,
     STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
@@ -34,6 +35,7 @@ TUYA_STATUS_TO_HA = {
     "goto_pos": STATE_CLEANING,
     "mop_clean": STATE_CLEANING,
     "part_clean": STATE_CLEANING,
+    "pause": STATE_PAUSED,
     "paused": STATE_PAUSED,
     "pick_zone_clean": STATE_CLEANING,
     "pos_arrived": STATE_CLEANING,
@@ -143,9 +145,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self.device.status.get(DPCode.STATUS)
         ):
             return STATE_PAUSED
-        if not (status := self.device.status.get(DPCode.STATUS)):
+        if self.device.status.get(DPCode.FAULT):
+            return STATE_ERROR
+        if not (
+            ha_status := TUYA_STATUS_TO_HA.get(self.device.status.get(DPCode.STATUS))
+            or TUYA_STATUS_TO_HA.get(self.device.status.get(DPCode.MODE))
+        ):
             return None
-        return TUYA_STATUS_TO_HA.get(status)
+        return ha_status
 
     def start(self, **kwargs: Any) -> None:
         """Start the device."""
