@@ -459,7 +459,7 @@ _IGNORE_TRANSLATION_VIOLATIONS = {
     "component.airvisual.config.step.user.data.type",
     "component.ambient_network.config.step.user.data.location",
     "component.axis.options.step.configure_stream.data.video_source",
-    "config.step.pick_implementation.data.implementation",
+    "component.tesla_fleet.config.step.pick_implementation.data.implementation",
 }
 
 
