@@ -6852,10 +6852,7 @@ async def test_create_entry_reauth_reconfigure(
     assert len(hass.config_entries.async_entries("test")) == 1
 
     with mock_config_flow("test", TestFlow):
-        if source == config_entries.SOURCE_REAUTH:
-            result = await entry.start_reauth_flow(hass)
-        elif source == config_entries.SOURCE_RECONFIGURE:
-            result = await entry.start_reconfigure_flow(hass)
+        result = await getattr(entry, f"start_{source}_flow")(hass)
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
