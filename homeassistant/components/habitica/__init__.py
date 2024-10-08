@@ -210,7 +210,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         coordinator = entry.runtime_data
         await coordinator.async_refresh()
 
-        current_task = lookup_task(coordinator.data.tasks, call.data[ATTR_TASK])
+        current_task = lookup_task(
+            coordinator.data.tasks, call.data[ATTR_TASK], call.service
+        )
         task_id = current_task["id"]
         data = {}
 

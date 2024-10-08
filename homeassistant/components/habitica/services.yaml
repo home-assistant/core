@@ -75,7 +75,6 @@ update_todo:
               multiple: true
     priority: &priority
       required: false
-      default: "easy"
       selector:
         select:
           options:
@@ -170,7 +169,6 @@ update_habit:
     priority: *priority
     frequency:
       required: false
-      default: "daily"
       selector:
         select:
           options:
@@ -214,7 +212,6 @@ update_daily:
         date:
     frequency:
       required: false
-      default: "daily"
       selector:
         select:
           options:
@@ -226,7 +223,6 @@ update_daily:
           mode: dropdown
     every_x:
       required: false
-      default: 1
       selector:
         number:
           min: 0
