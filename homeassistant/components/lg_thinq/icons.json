@@ -159,9 +159,6 @@
       "light_brightness": {
         "default": "mdi:list-status"
       },
-      "warm_mode": {
-        "default": "mdi:heat-wave"
-      },
       "wind_angle": {
         "default": "mdi:rotate-360"
       },

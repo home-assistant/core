@@ -43,10 +43,6 @@ AIR_FLOW_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         key=ThinQProperty.WIND_ANGLE,
         translation_key=ThinQProperty.WIND_ANGLE,
     ),
-    ThinQProperty.WARM_MODE: SelectEntityDescription(
-        key=ThinQProperty.WARM_MODE,
-        translation_key=ThinQProperty.WARM_MODE,
-    ),
 }
 OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
     ThinQProperty.AIR_CLEAN_OPERATION_MODE: SelectEntityDescription(
@@ -91,7 +87,6 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     DeviceType.AIR_PURIFIER_FAN: (
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_ANGLE],
-        AIR_FLOW_SELECT_DESC[ThinQProperty.WARM_MODE],
         SELECT_DESC[ThinQProperty.DISPLAY_LIGHT],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
     ),
