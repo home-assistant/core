@@ -42,7 +42,6 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         self.lms = lms
         self.can_server_restart = False
         self.newversion_regex_leavefirstsentance = re.compile("\\.[^)]*$")
-        self.newplugins_regex_leavepluginnames = re.compile(".* - ")
 
     async def _async_setup(self) -> None:
         """Query LMS capabilities."""
