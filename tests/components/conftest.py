@@ -454,9 +454,12 @@ def supervisor_client() -> Generator[AsyncMock]:
 
 
 _IGNORE_TRANSLATION_VIOLATIONS = {
-    "component.airvisual.config.step.user.data.type",  # Uses description
-    "component.ambient_network.config.step.user.data.location",  # Uses description
-    "component.axis.options.step.configure_stream.data.video_source",  # Uses description
+    # These data input have a step description and it would be redundant to add
+    # a separate description for the data input
+    "component.airvisual.config.step.user.data.type",
+    "component.ambient_network.config.step.user.data.location",
+    "component.axis.options.step.configure_stream.data.video_source",
+    "config.step.pick_implementation.data.implementation",
 }
 
 
