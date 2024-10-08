@@ -234,55 +234,55 @@
         "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
-        "name": "Energy consumption for heating today"
+        "name": "Electricity consumption for heating today"
       },
       "energy_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption for heating this month"
+        "name": "Electricity consumption for heating this month"
       },
       "energy_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption for heating this year"
+        "name": "Electricity consumption for heating this year"
       },
       "energy_summary_consumption_heating_lastsevendays": {
-        "name": "Energy consumption for heating last seven days"
+        "name": "Electricity consumption for heating last seven days"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
-        "name": "Energy consumption for DHW today"
+        "name": "Electricity consumption for DHW today"
       },
       "energy_dhw_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption for DHW this month"
+        "name": "Electricity consumption for DHW this month"
       },
       "energy_dhw_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption for DHW this year"
+        "name": "Electricity consumption for DHW this year"
       },
       "energy_summary_dhw_consumption_heating_lastsevendays": {
-        "name": "Energy consumption for DHW last seven days"
+        "name": "Electricity consumption for DHW last seven days"
       },
       "power_consumption_today": {
-        "name": "Energy consumption today"
+        "name": "Electricity consumption today"
       },
       "power_consumption_this_week": {
-        "name": "Energy consumption this week"
+        "name": "Electricity consumption this week"
       },
       "power_consumption_this_month": {
-        "name": "Energy consumption this month"
+        "name": "Electricity consumption this month"
       },
       "power_consumption_this_year": {
-        "name": "Energy consumption this year"
+        "name": "Electricity consumption this year"
       },
       "power_production_current": {
-        "name": "Power production current"
+        "name": "Electricity production current"
       },
       "power_production_today": {
-        "name": "Energy production today"
+        "name": "Electricity production today"
       },
       "power_production_this_week": {
-        "name": "Energy production this week"
+        "name": "Electricity production this week"
       },
       "power_production_this_month": {
-        "name": "Energy production this month"
+        "name": "Electricity production this month"
       },
       "power_production_this_year": {
-        "name": "Energy production this year"
+        "name": "Electricity production this year"
       },
       "solar_storage_temperature": {
         "name": "Solar storage temperature"
@@ -338,13 +338,13 @@
         "name": "Battery discharge total"
       },
       "pcc_transfer_power_exchange": {
-        "name": "Power exchange with grid"
+        "name": "Electricity exchange with grid"
       },
       "pcc_energy_consumption": {
-        "name": "Energy import from grid"
+        "name": "Electricity import from grid"
       },
       "pcc_energy_feed_in": {
-        "name": "Energy export to grid"
+        "name": "Electricity export to grid"
       },
       "photovoltaic_power_production_current": {
         "name": "Solar power"
