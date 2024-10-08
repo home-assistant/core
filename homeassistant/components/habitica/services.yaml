@@ -252,7 +252,7 @@ update_habit:
             number:
               min: 0
               step: 1
-              unit_of_measurement: "➕"
+              unit_of_measurement: "➖"
               mode: box
         alias: *alias
 update_daily:
