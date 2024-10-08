@@ -11,7 +11,11 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import StoveDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
 
 type StoveConfigEntry = ConfigEntry[Stove]  # noqa: F821
 

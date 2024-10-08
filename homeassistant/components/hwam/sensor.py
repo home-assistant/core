@@ -103,6 +103,9 @@ class StoveSensorEntity(CoordinatorEntity[StoveDataUpdateCoordinator], SensorEnt
     @property
     def native_value(self) -> StateType:
         """Return the state."""
+        if self.device_class == SensorDeviceClass.ENUM:
+            return str(self._coordinator.data[self.entity_description.key])
+
         return self._coordinator.data[self.entity_description.key]
 
 

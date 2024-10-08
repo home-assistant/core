@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from pystove import Stove
+from pystove import DATA_FIRMWARE_VERSION, Stove
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -56,5 +56,5 @@ class StoveDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             manufacturer="DanSkan",
             model="Orbit",
             model_id=self.stove.series,
-            sw_version=self.stove.algo_version,
+            sw_version=self.data[DATA_FIRMWARE_VERSION],
         )
