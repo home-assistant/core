@@ -453,31 +453,34 @@ def supervisor_client() -> Generator[AsyncMock]:
         yield supervisor_client
 
 
-_IGNORE_TRANSLATION_VIOLATIONS = {
-    # These data input have a step description and it would be redundant to add
-    # a separate description for the data input
-    "component.airvisual.config.step.user.data.type",
-    "component.ambient_network.config.step.user.data.location",
-    "component.axis.options.step.configure_stream.data.video_source",
-    "component.tesla_fleet.config.step.pick_implementation.data.implementation",
-}
-
-
 async def _ensure_translation_exists(
     hass: HomeAssistant, category: str, component: str, key: str
 ) -> None:
     """Raise if translation doesn't exist."""
-    full_key = f"component.{component}.{category}.{key}"
-    if full_key in _IGNORE_TRANSLATION_VIOLATIONS:
+    translations = await async_get_translations(hass, "en", category, [component])
+    if f"component.{component}.{category}.{key}" in translations:
         return
 
-    translations = await async_get_translations(hass, "en", category, [component])
-    if full_key not in translations:
-        raise ValueError(
-            f"Translation not found for {component}: `{category}.{key}`. "
-            f"Please add to homeassistant/components/{component}/strings.json "
-            "or add to _IGNORE_TRANSLATION_VIOLATIONS."
+    key_parts = key.split(".")
+    # Ignore step data translations if title or description exists
+    if (
+        len(key_parts) >= 3
+        and key_parts[0] == "step"
+        and key_parts[2] == "data"
+        and (
+            f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.description"
+            in translations
+            or f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.title"
+            in translations
         )
+    ):
+        return
+
+    raise ValueError(
+        f"Translation not found for {component}: `{category}.{key}`. "
+        f"Please add to homeassistant/components/{component}/strings.json "
+        "or add to _IGNORE_TRANSLATION_VIOLATIONS."
+    )
 
 
 @pytest.fixture(autouse=True)
