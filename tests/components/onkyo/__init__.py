@@ -10,10 +10,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def _mock_async_create(info):
-    return AsyncMock()
-
-
 def create_empty_receiver_info() -> ReceiverInfo:
     """Create an empty receiver info object for testing."""
     return ReceiverInfo(
@@ -34,7 +30,7 @@ def create_empty_config_entry() -> MockConfigEntry:
         options=options,
         title="Unit test Onkyo",
         domain=DOMAIN,
-        unique_id="airzone_unique_id",
+        unique_id="onkyo_unique_id",
     )
 
 
@@ -50,7 +46,7 @@ async def setup_integration(
             "homeassistant.components.onkyo.async_interview",
             return_value=receiver_info,
         ),
-        patch.object(Receiver, "async_create", _mock_async_create),
+        patch.object(Receiver, "async_create", AsyncMock()),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
