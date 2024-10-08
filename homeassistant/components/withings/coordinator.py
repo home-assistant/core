@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from aiowithings import (
     Activity,
+    Device,
     Goals,
     MeasurementPosition,
     MeasurementType,
@@ -291,3 +292,17 @@ class WithingsWorkoutDataUpdateCoordinator(
             self._previous_data = latest_workout
             self._last_valid_update = latest_workout.end_date
         return self._previous_data
+
+
+class WithingsDeviceDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[dict[str, Device]]
+):
+    """Withings device coordinator."""
+
+    coordinator_name: str = "device"
+    _default_update_interval = timedelta(hours=1)
+
+    async def _internal_update_data(self) -> dict[str, Device]:
+        """Update coordinator data."""
+        devices = await self._client.get_devices()
+        return {device.device_id: device for device in devices}

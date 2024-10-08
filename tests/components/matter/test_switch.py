@@ -5,14 +5,29 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_switches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test switches."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SWITCH)
+
+
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_on(
     hass: HomeAssistant,
@@ -48,8 +63,6 @@ async def test_turn_on(
     assert state.state == "on"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_turn_off(
     hass: HomeAssistant,
@@ -78,8 +91,6 @@ async def test_turn_off(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
@@ -92,8 +103,6 @@ async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None
     assert state.attributes["friendly_name"] == "Mock SwitchUnit Switch"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
 async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""

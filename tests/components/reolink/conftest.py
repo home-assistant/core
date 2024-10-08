@@ -80,6 +80,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.protocol = "rtsp"
         host_mock.channels = [0]
         host_mock.stream_channels = [0]
+        host_mock.new_devices = False
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
@@ -92,6 +93,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.camera_sw_version_update_required.return_value = False
         host_mock.camera_uid.return_value = TEST_UID_CAM
+        host_mock.camera_online.return_value = True
         host_mock.channel_for_uid.return_value = 0
         host_mock.get_encoding.return_value = "h264"
         host_mock.firmware_update_available.return_value = False

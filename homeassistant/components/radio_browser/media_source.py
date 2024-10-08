@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import mimetypes
 
+import pycountry
 from radios import FilterBy, Order, RadioBrowser, Station
-from radios.radio_browser import pycountry
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (

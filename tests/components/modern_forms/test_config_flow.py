@@ -84,10 +84,9 @@ async def test_full_zeroconf_flow_implementation(
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") is FlowResultType.FORM
 
-    flow = flows[0]
-    assert "context" in flow
-    assert flow["context"][CONF_HOST] == "192.168.1.123"
-    assert flow["context"][CONF_NAME] == "example"
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow.host == "192.168.1.123"
+    assert flow.name == "example"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

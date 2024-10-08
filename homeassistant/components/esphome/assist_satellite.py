@@ -133,7 +133,7 @@ class EsphomeAssistSatellite(
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=0
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
     @property
@@ -179,7 +179,13 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
-        config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
+        try:
+            config = await self.cli.get_voice_assistant_configuration(
+                _CONFIG_TIMEOUT_SEC
+            )
+        except TimeoutError:
+            # Placeholder config will be used
+            return
 
         # Update available/active wake words
         self._satellite_config.available_wake_words = [
@@ -206,7 +212,7 @@ class EsphomeAssistSatellite(
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
             # TCP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -216,7 +222,7 @@ class EsphomeAssistSatellite(
             )
         else:
             # UDP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -229,7 +235,7 @@ class EsphomeAssistSatellite(
             assert (self.registry_entry is not None) and (
                 self.registry_entry.device_id is not None
             )
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 async_register_timer_handler(
                     self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
