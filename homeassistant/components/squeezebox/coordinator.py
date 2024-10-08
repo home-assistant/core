@@ -117,7 +117,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
                     self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
 
-            if self.player.alarms:
+            elif self.player.alarms:
                 for alarm in self.player.alarms:
                     if alarm["id"] not in self.known_alarms:
                         self.known_alarms.append(alarm["id"])

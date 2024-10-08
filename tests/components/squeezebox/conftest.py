@@ -44,6 +44,7 @@ SERVER_UUIDS = [
 TEST_MAC = ["aa:bb:cc:dd:ee:ff", "ff:ee:dd:cc:bb:aa"]
 TEST_PLAYER_NAME = "Test Player"
 TEST_SERVER_NAME = "Test Server"
+TEST_ALARM_ID = "1"
 FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
@@ -290,7 +291,7 @@ async def configure_squeezebox_switch_platform(
 
 
 @pytest.fixture
-async def mock_alarms(
+async def mock_alarms_player(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     lms: MagicMock,
@@ -299,7 +300,7 @@ async def mock_alarms(
     players = await lms.async_get_players()
     players[0].alarms = [
         {
-            "id": "1",
+            "id": TEST_ALARM_ID,
             "enabled": True,
             "time": "07:00",
             "dow": [1, 2, 3, 4, 5],
@@ -309,6 +310,7 @@ async def mock_alarms(
         },
     ]
     await configure_squeezebox_switch_platform(hass, config_entry, lms)
+    return players[0]
 
 
 @pytest.fixture
