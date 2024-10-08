@@ -234,40 +234,40 @@
         "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
-        "name": "Energy consumption for heating today"
+        "name": "Electrical energy consumption for heating today"
       },
       "energy_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption for heating this month"
+        "name": "Electrical energy consumption for heating this month"
       },
       "energy_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption for heating this year"
+        "name": "Electrical energy consumption for heating this year"
       },
       "energy_summary_consumption_heating_lastsevendays": {
-        "name": "Energy consumption for heating last seven days"
+        "name": "Electrical energy consumption for heating last seven days"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
-        "name": "Energy consumption for DHW today"
+        "name": "Electrical energy consumption for DHW today"
       },
       "energy_dhw_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption for DHW this month"
+        "name": "Electrical energy consumption for DHW this month"
       },
       "energy_dhw_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption for DHW this year"
+        "name": "Electrical energy consumption for DHW this year"
       },
       "energy_summary_dhw_consumption_heating_lastsevendays": {
-        "name": "Energy consumption for DHW last seven days"
+        "name": "Electrical energy consumption for DHW last seven days"
       },
       "power_consumption_today": {
-        "name": "Energy consumption today"
+        "name": "Electrical energy consumption today"
       },
       "power_consumption_this_week": {
-        "name": "Energy consumption this week"
+        "name": "Electrical energy consumption this week"
       },
       "power_consumption_this_month": {
-        "name": "Energy consumption this month"
+        "name": "Electrical energy consumption this month"
       },
       "power_consumption_this_year": {
-        "name": "Energy consumption this year"
+        "name": "Electrical energy consumption this year"
       },
       "power_production_current": {
         "name": "Power production current"
