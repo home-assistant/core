@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def repo() -> Generator[None, None, None]:
+def repo() -> Generator[None]:
     """Mock socket oriented functions of git.Repo object."""
 
     repo = None
@@ -82,7 +82,7 @@ def manager(request: pytest.FixtureRequest) -> None:
 @pytest.fixture(name="integration_manager")
 async def integration_manager_fixture(
     hass: HomeAssistant, repo: None
-) -> AsyncGenerator[IntegrationRepositoryManager, None, None]:
+) -> AsyncGenerator[IntegrationRepositoryManager]:
     """Fixture for integration manager."""
     # every instance is created using homeassistant.components.gpm.get_manager()
     manager = _testing_integration_manager(hass)
@@ -98,7 +98,7 @@ async def integration_manager_fixture(
 @pytest.fixture(name="resource_manager")
 async def resource_manager_fixture(
     hass: HomeAssistant, repo: None
-) -> AsyncGenerator[ResourceRepositoryManager, None, None]:
+) -> AsyncGenerator[ResourceRepositoryManager]:
     """Fixture for resource manager."""
     # lovelace is needed to test resource management
     assert await async_setup_component(hass, "lovelace", {})
