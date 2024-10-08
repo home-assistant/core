@@ -98,6 +98,9 @@
       }
     },
     "button": {
+      "reboot": {
+        "name": "Reboot"
+      },
       "test_alarm": {
         "name": "Test alarm"
       },

@@ -45,6 +45,9 @@ BUTTON_DESCRIPTIONS: Final = [
             breaks_in_ha_version="2025.4.0",
         ),
     ),
+    TPLinkButtonEntityDescription(
+        key="reboot",
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
