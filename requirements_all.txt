@@ -2959,7 +2959,7 @@ waterfurnace==1.1.0
 weatherflow4py==1.0.6
 
 # homeassistant.components.cisco_webex_teams
-webexpythonsdk==2.0.1;python_version>'3.11'
+webexpythonsdk==2.0.1
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
