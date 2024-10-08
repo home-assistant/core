@@ -2769,7 +2769,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Update config entry, reload config entry and finish config flow.
 
         :param data: used to replace the entry data with new data
-        :param data_updates: used to merge of updated data with pre-existing entry data
+        :param data_updates: add items from data_updates to entry data
         :param options: used to replace the entry options with new options
         :param title: used to replace the title of the entry
         :param unique_id: used to replace the unique_id of the entry
