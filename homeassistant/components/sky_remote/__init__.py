@@ -8,9 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-
-from .const import DOMAIN
 
 PLATFORMS = [Platform.REMOTE]
 
@@ -32,14 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkyRemoteConfigEntry) ->
     except SkyBoxConnectionError as e:
         raise ConfigEntryNotReady from e
 
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        manufacturer="SKY",
-        model="Sky Box",
-        name=host,
-        identifiers={(DOMAIN, entry.entry_id)},
-    )
     entry.runtime_data = remote
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
