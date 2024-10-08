@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverDeviceClass,
     CoverEntity,
+    CoverState,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -20,8 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -38,16 +37,14 @@ ATTR_TIME_IN_STATE = "time_in_state"
 
 DEFAULT_NAME = "Garadget"
 
-STATE_CLOSING = "closing"
 STATE_OFFLINE = "offline"
-STATE_OPENING = "opening"
 STATE_STOPPED = "stopped"
 
 STATES_MAP = {
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
+    "open": CoverState.OPEN,
+    "opening": CoverState.OPENING,
+    "closed": CoverState.CLOSED,
+    "closing": CoverState.CLOSING,
     "stopped": STATE_STOPPED,
 }
 
@@ -175,7 +172,7 @@ class GaradgetCover(CoverEntity):
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state == STATE_CLOSED
+        return self._state == CoverState.CLOSED
 
     def get_token(self):
         """Get new token for usage during this session."""
@@ -249,7 +246,7 @@ class GaradgetCover(CoverEntity):
             self._state = STATE_OFFLINE
 
         if (
-            self._state not in [STATE_CLOSING, STATE_OPENING]
+            self._state not in [CoverState.CLOSING, CoverState.OPENING]
             and self._unsub_listener_cover is not None
         ):
             self._unsub_listener_cover()

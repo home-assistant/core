@@ -463,7 +463,7 @@ async def ignore_config_flow(
         )
         return
 
-    context = {"source": config_entries.SOURCE_IGNORE}
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_IGNORE)
     if "discovery_key" in flow["context"]:
         context["discovery_key"] = flow["context"]["discovery_key"]
     await hass.config_entries.flow.async_init(
