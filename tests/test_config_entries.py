@@ -5202,7 +5202,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             None,
         ),
         (
-            {"updates": {"buyer": "me"}},
+            {"data_updates": {"buyer": "me"}},
             "Test",
             "1234",
             {"vendor": "data", "buyer": "me"},
@@ -5216,7 +5216,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
                 "title": "Updated title",
                 "data": {"vendor": "data2"},
                 "options": {"vendor": "options2"},
-                "updates": {"buyer": "me"},
+                "data_updates": {"buyer": "me"},
             },
             "Test",
             "1234",

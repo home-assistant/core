@@ -110,7 +110,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), updates=user_input
+            self._get_reauth_entry(), data_updates=user_input
         )
 
     async def async_step_user(

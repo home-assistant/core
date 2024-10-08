@@ -92,7 +92,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
             if error is None:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
-                    updates=user_input,
+                    data_updates=user_input,
                 )
             errors["base"] = error
 
