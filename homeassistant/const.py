@@ -513,7 +513,7 @@ _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
 )
 
 # #### ALARM CONTROL PANEL STATES ####
-# STATE_ALARM_* below are deprecated as of 2024.10
+# STATE_ALARM_* below are deprecated as of 2024.11
 # use the AlarmControlPanelEntityState enum instead.
 _DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
     "disarmed",
