@@ -210,13 +210,22 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     return entry
 
 
-def lookup_task(tasks: list[dict], search: str) -> dict[str, Any]:
+def lookup_task(
+    tasks: list[dict], search: str, service: str = "unknown"
+) -> dict[str, Any]:
     """Lookup a task by it's name, task ID or alias."""
+    task_type = {
+        "update_todo": "todo",
+        "update_habit": "habit",
+        "update_reward": "reward",
+        "update_daily": "daily",
+    }
     try:
         return next(
             task
             for task in tasks
-            if search in (task["id"], task.get("alias")) or search == task["text"]
+            if task_type.get(service, task["type"]) == task["type"]
+            and (search in (task["id"], task.get("alias")) or search == task["text"])
         )
     except StopIteration as e:
         raise ServiceValidationError(
