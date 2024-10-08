@@ -532,19 +532,19 @@ async def test_forward_range_header_for_logs(
 
     test_range = ":-100:50"
 
-    hostResp = await hassio_client.get(
+    host_resp = await hassio_client.get(
         "/api/hassio/host/logs", headers={"Range": test_range}
     )
-    addonResp = await hassio_client.get(
+    addon_resp = await hassio_client.get(
         "/api/hassio/addons/123abc_esphome/logs", headers={"Range": test_range}
     )
-    backupResp = await hassio_client.get(
+    backup_resp = await hassio_client.get(
         "/api/hassio/backups/1234abcd/download", headers={"Range": test_range}
     )
 
-    assert hostResp.status == HTTPStatus.OK
-    assert addonResp.status == HTTPStatus.OK
-    assert backupResp.status == HTTPStatus.OK
+    assert host_resp.status == HTTPStatus.OK
+    assert addon_resp.status == HTTPStatus.OK
+    assert backup_resp.status == HTTPStatus.OK
 
     assert len(aioclient_mock.mock_calls) == 3
 
