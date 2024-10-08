@@ -9,6 +9,7 @@ import os.path
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, _patch, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import httpx
 import pytest
 import respx
@@ -44,7 +45,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 TESTDATA = {
@@ -515,7 +516,6 @@ async def test_form_image_http_exceptions(
             user_flow["flow_id"],
             TESTDATA,
         )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == expected_message
@@ -534,7 +534,6 @@ async def test_form_stream_invalidimage(
             user_flow["flow_id"],
             TESTDATA,
         )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
@@ -553,7 +552,6 @@ async def test_form_stream_invalidimage2(
             user_flow["flow_id"],
             TESTDATA,
         )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
@@ -572,7 +570,6 @@ async def test_form_stream_invalidimage3(
             user_flow["flow_id"],
             TESTDATA,
         )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
@@ -730,6 +727,38 @@ async def test_form_oserror(hass: HomeAssistant, user_flow: ConfigFlowResult) ->
             user_flow["flow_id"],
             TESTDATA,
         )
+
+
+@respx.mock
+async def test_form_stream_preview_auto_timeout(
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_create_stream: _patch[MagicMock],
+    freezer: FrozenDateTimeFactory,
+    fakeimgbytes_png: bytes,
+) -> None:
+    """Test that the stream preview times out after 10mins."""
+    respx.get("http://fred_flintstone:bambam@127.0.0.1/testurl/2").respond(
+        stream=fakeimgbytes_png
+    )
+    data = TESTDATA.copy()
+    data.pop(CONF_STILL_IMAGE_URL)
+
+    with mock_create_stream as mock_stream:
+        result1 = await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            data,
+        )
+        assert result1["type"] is FlowResultType.FORM
+        assert result1["step_id"] == "user_confirm"
+
+        freezer.tick(600 + 12)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_str = mock_stream.return_value
+    mock_str.start.assert_awaited_once()
+    mock_str.stop.assert_awaited_once()
 
 
 @respx.mock
