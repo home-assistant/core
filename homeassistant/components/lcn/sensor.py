@@ -36,7 +36,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType
 
-SENSOR_DEVICE_CLASS = {
+DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
     pypck.lcn_defs.VarUnit.KELVIN: SensorDeviceClass.TEMPERATURE,
     pypck.lcn_defs.VarUnit.FAHRENHEIT: SensorDeviceClass.TEMPERATURE,
@@ -104,7 +104,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         )
 
         self._attr_native_unit_of_measurement = cast(str, self.unit.value)
-        self._attr_device_class = SENSOR_DEVICE_CLASS.get(self.unit, None)
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit, None)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
