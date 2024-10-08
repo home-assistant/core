@@ -211,7 +211,7 @@
     },
     "update_service_deprecated": {
       "title": "Deprecated update add-on service",
-      "description": "The update add-on service has been deprecated and will be removed in 2025.5. Please use the update entity and the respective service call to update the add-on instead."
+      "description": "The update add-on action has been deprecated and will be removed in 2025.5. Please use the update entity and the respective action to update the add-on instead."
     }
   },
   "entity": {
