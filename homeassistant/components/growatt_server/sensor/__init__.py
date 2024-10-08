@@ -54,7 +54,7 @@ def get_device_list(api, config):
         plant_id = plant_info["data"][0]["plantId"]
 
     # Get a list of devices for specified plant to add sensors for.
-    devices = api.device_list(plant_id)
+    devices = api.get_all_devices(plant_id)
     return [devices, plant_id]
 
 
@@ -164,7 +164,7 @@ class GrowattInverter(SensorEntity):
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description)
         if self.entity_description.precision is not None:
-            result = round(result, self.entity_description.precision)
+            result = round(float(result), self.entity_description.precision)
         return result
 
     @property
@@ -212,8 +212,20 @@ class GrowattData:
                 inverter_info = self.api.inverter_detail(self.device_id)
                 self.data = inverter_info
             elif self.growatt_type == "tlx":
-                tlx_info = self.api.tlx_detail(self.device_id)
-                self.data = tlx_info["data"]
+                # fetch 'chargePower' and 'pdisCharge' from tlx_get_system_status() as it is missing from tlx_detail()
+                tlx_system_status = self.api.tlx_get_system_status(
+                    self.plant_id, self.device_id
+                )
+                # fetch 'epvToday' from tlx_get_energy_overview() as it is missing from tlx_detail()
+                tlx_energy_overview = self.api.tlx_get_energy_overview(
+                    self.plant_id, self.device_id
+                )
+                tlx_details = self.api.tlx_detail(self.device_id)
+                self.data = {
+                    **tlx_system_status,
+                    **tlx_energy_overview,
+                    **tlx_details["data"],
+                }
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
