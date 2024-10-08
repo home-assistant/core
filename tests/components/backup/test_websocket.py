@@ -1,10 +1,11 @@
 """Tests for the Backup integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -41,12 +42,16 @@ async def test_info(
     """Test getting backup info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
 
+    hass.data[DATA_MANAGER].backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.backup.manager.BackupManager.get_backups",
-        return_value={TEST_BACKUP.slug: TEST_BACKUP},
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.load_backups",
+            AsyncMock(),
+        ),
     ):
         await client.send_json_auto_id({"type": "backup/info"})
         assert snapshot == await client.receive_json()
@@ -250,8 +255,7 @@ async def test_agents_info(
 ) -> None:
     """Test getting backup agents info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    manager = hass.data["backup"]
-    manager.sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -275,8 +279,7 @@ async def test_agents_synced(
 ) -> None:
     """Test getting backup agents synced details."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    manager = hass.data["backup"]
-    manager.sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -298,10 +301,9 @@ async def test_agents_download(
     snapshot: SnapshotAssertion,
     with_hassio: bool,
 ) -> None:
-    """Test getting backup agents synced details."""
+    """Test WS command to start downloading a synced backup."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    manager = hass.data["backup"]
-    manager.sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -324,10 +326,9 @@ async def test_agents_download_exception(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test getting backup agents synced details."""
+    """Test WS command to start downloading a synced backup throwing an exception."""
     await setup_backup_integration(hass)
-    manager = hass.data["backup"]
-    manager.sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -343,3 +344,25 @@ async def test_agents_download_exception(
     with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
         download_mock.side_effect = Exception("Boom")
         assert snapshot == await client.receive_json()
+
+
+async def test_agents_download_unknown_agent(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a synced backup with an unknown agent."""
+    await setup_backup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "slug": "abc123",
+            "agent": "domain.test",
+            "sync_id": "abc123",
+        }
+    )
+    assert snapshot == await client.receive_json()

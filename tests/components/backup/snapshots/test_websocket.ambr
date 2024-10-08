@@ -30,6 +30,17 @@
     'type': 'result',
   })
 # ---
+# name: test_agents_download_unknown_agent
+  dict({
+    'error': dict({
+      'code': 'unknown_agent',
+      'message': 'Agent domain.test not found',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_agents_info[with_hassio]
   dict({
     'id': 1,

@@ -42,7 +42,7 @@ async def handle_info(
     connection.send_result(
         msg["id"],
         {
-            "backups": list(backups.values()),
+            "backups": [b.as_dict() for b in backups.values()],
             "backing_up": manager.backing_up,
         },
     )
