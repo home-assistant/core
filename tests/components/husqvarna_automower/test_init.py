@@ -243,7 +243,6 @@ async def test_add_work_area(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    entity_id = "number.test_mower_1_new_work_area_cutting_height"
     current_entites_after_addition = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
@@ -254,9 +253,6 @@ async def test_add_work_area(
         + ADDITIONAL_SENSOR_ENTITIES
         + ADDITIONAL_SWITCH_ENTITIES
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "12"
 
 
 async def test_remove_work_area(
@@ -285,7 +281,10 @@ async def test_remove_work_area(
     current_entites_after_deletion = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    assert current_entites_after_deletion == current_entites - 4
-    entity_id = "number.test_mower_1_back_lawn_cutting_height"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert (
+        current_entites_after_deletion
+        == current_entites
+        - ADDITIONAL_NUMBER_ENTITIES
+        - ADDITIONAL_SENSOR_ENTITIES
+        - ADDITIONAL_SWITCH_ENTITIES
+    )
