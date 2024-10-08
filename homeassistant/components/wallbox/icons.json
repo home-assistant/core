@@ -25,7 +25,7 @@
     }
   },
   "services": {
-    "send_magic_packet": {
+    "get_sessions": {
       "service": "mdi:format-list-group"
     }
   }
