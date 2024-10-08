@@ -255,6 +255,7 @@ class Manifest(TypedDict, total=False):
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
+    overwrites_built_in: bool
     version: str
     codeowners: list[str]
     loggers: list[str]
@@ -451,6 +452,7 @@ async def async_get_integration_descriptions(
             "single_config_entry": integration.manifest.get(
                 "single_config_entry", False
             ),
+            "overwrites_built_in": integration.overwrites_built_in,
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -762,6 +764,7 @@ class Integration:
         self.file_path = file_path
         self.manifest = manifest
         manifest["is_built_in"] = self.is_built_in
+        manifest["overwrites_built_in"] = self.overwrites_built_in
 
         if self.dependencies:
             self._all_dependencies_resolved: bool | None = None
@@ -908,6 +911,16 @@ class Integration:
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
+    @property
+    def overwrites_built_in(self) -> bool:
+        """Return if package overwrites a built-in integration."""
+        if self.is_built_in:
+            return False
+        core_comp_path = (
+            pathlib.Path(__file__).parent / "components" / self.domain / "manifest.json"
+        )
+        return core_comp_path.is_file()
 
     @property
     def version(self) -> AwesomeVersion | None:
