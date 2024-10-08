@@ -215,7 +215,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             report_issue = "report it to the custom integration author."
             _LOGGER.warning(
                 "Entity %s (%s) is setting state directly"
-                " which will stop working in HA Core 2025.10."
+                " which will stop working in HA Core 2025.11."
                 " Entities should implement the 'alarm_state' property and"
                 " return it's state using the AlarmControlPanelEntityState enum, please %s",
                 self.entity_id,
@@ -226,7 +226,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 self.hass,
                 DOMAIN,
                 f"deprecated_alarm_state_{self.platform.platform_name}",
-                breaks_in_ha_version="2025.10.0",
+                breaks_in_ha_version="2025.11.0",
                 is_fixable=False,
                 is_persistent=False,
                 issue_domain=self.platform.platform_name,
