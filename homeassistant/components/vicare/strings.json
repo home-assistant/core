@@ -210,25 +210,25 @@
         "name": "Gas consumption this year"
       },
       "gas_summary_consumption_heating_currentday": {
-        "name": "[%key:component::vicare::entity::sensor::gas_consumption_heating_today::name%]"
+        "name": "Heating gas consumption today"
       },
       "gas_summary_consumption_heating_currentmonth": {
-        "name": "[%key:component::vicare::entity::sensor::gas_consumption_heating_this_month::name%]"
+        "name": "Heating gas consumption this month"
       },
       "gas_summary_consumption_heating_currentyear": {
-        "name": "[%key:component::vicare::entity::sensor::gas_consumption_heating_this_year::name%]"
+        "name": "Heating gas consumption this year"
       },
       "gas_summary_consumption_heating_lastsevendays": {
         "name": "Heating gas consumption last seven days"
       },
       "hotwater_gas_summary_consumption_heating_currentday": {
-        "name": "[%key:component::vicare::entity::sensor::hotwater_gas_consumption_today::name%]"
+        "name": "DHW gas consumption today"
       },
       "hotwater_gas_summary_consumption_heating_currentmonth": {
-        "name": "[%key:component::vicare::entity::sensor::hotwater_gas_consumption_heating_this_month::name%]"
+        "name": "DHW gas consumption this month"
       },
       "hotwater_gas_summary_consumption_heating_currentyear": {
-        "name": "[%key:component::vicare::entity::sensor::hotwater_gas_consumption_heating_this_year::name%]"
+        "name": "DHW gas consumption this year"
       },
       "hotwater_gas_summary_consumption_heating_lastsevendays": {
         "name": "DHW gas consumption last seven days"
