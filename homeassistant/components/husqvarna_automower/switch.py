@@ -31,6 +31,7 @@ async def async_setup_entry(
     """Set up switch platform."""
     coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
+    current_work_areas = {}
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
         for mower_id in coordinator.data
@@ -53,7 +54,25 @@ async def async_setup_entry(
                     WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
                     for work_area_id in _work_areas
                 )
+                current_work_areas[mower_id] = set(_work_areas)
     async_add_entities(entities)
+
+    def _async_work_area_listener() -> None:
+        """Listen for new work areas and add switch entities if they did not exist."""
+        for mower_id in coordinator.data:
+            if coordinator.data[mower_id].capabilities.work_areas:
+                _work_areas = coordinator.data[mower_id].work_areas
+                if _work_areas is not None:
+                    received_work_areas = set(_work_areas)
+                    new_work_areas = received_work_areas - current_work_areas[mower_id]
+                    if new_work_areas:
+                        current_work_areas[mower_id].update(new_work_areas)
+                        async_add_entities(
+                            WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                            for work_area_id in new_work_areas
+                        )
+
+    coordinator.async_add_listener(_async_work_area_listener)
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):

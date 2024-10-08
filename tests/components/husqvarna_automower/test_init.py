@@ -34,6 +34,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
+ADDITIONAL_SWITCH_ENTITIES = 1
 
 
 async def test_load_unload_entry(
@@ -248,7 +249,10 @@ async def test_add_work_area(
     )
     assert (
         current_entites_after_addition
-        == current_entites + ADDITIONAL_NUMBER_ENTITIES + ADDITIONAL_SENSOR_ENTITIES
+        == current_entites
+        + ADDITIONAL_NUMBER_ENTITIES
+        + ADDITIONAL_SENSOR_ENTITIES
+        + ADDITIONAL_SWITCH_ENTITIES
     )
     state = hass.states.get(entity_id)
     assert state is not None
