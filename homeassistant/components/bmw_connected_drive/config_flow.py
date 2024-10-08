@@ -21,7 +21,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
@@ -75,7 +74,6 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _existing_entry_data: Mapping[str, Any] | None = None
-    _existing_entry_unique_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -85,15 +83,12 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
+            await self.async_set_unique_id(unique_id)
 
-            if self.source not in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-                await self.async_set_unique_id(unique_id)
+            if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
+                self._abort_if_unique_id_mismatch(reason="account_mismatch")
+            else:
                 self._abort_if_unique_id_configured()
-            elif (
-                self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}
-                and unique_id != self._existing_entry_unique_id
-            ):
-                raise AbortFlow("account_mismatch")
 
             info = None
             try:
@@ -135,16 +130,13 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._existing_entry_data = entry_data
-        self._existing_entry_unique_id = self._get_reauth_entry().unique_id
         return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        self._existing_entry_data = reconfigure_entry.data
-        self._existing_entry_unique_id = reconfigure_entry.unique_id
+        self._existing_entry_data = self._get_reconfigure_entry().data
         return await self.async_step_user()
 
     @staticmethod
