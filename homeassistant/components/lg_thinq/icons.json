@@ -131,6 +131,47 @@
         "default": "mdi:bed-clock"
       }
     },
+    "select": {
+      "wind_strength": {
+        "default": "mdi:wind-power-outline"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "operation_mode": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "operation_mode_for_location": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
+      },
+      "cook_mode": {
+        "default": "mdi:chef-hat"
+      },
+      "cook_mode_for_location": {
+        "default": "mdi:chef-hat"
+      },
+      "light_brightness": {
+        "default": "mdi:list-status"
+      },
+      "wind_angle": {
+        "default": "mdi:rotate-360"
+      },
+      "display_light": {
+        "default": "mdi:brightness-6"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle-outline"
