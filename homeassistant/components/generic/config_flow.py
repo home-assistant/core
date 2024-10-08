@@ -341,14 +341,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler()
 
-    def check_for_existing(self, options: dict[str, Any]) -> bool:
-        """Check whether an existing entry is using the same URLs."""
-        return any(
-            entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
-            and entry.options.get(CONF_STREAM_SOURCE) == options.get(CONF_STREAM_SOURCE)
-            for entry in self._async_current_entries()
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -405,7 +397,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
-            if ha_stream := self.context.get("preview_stream"):
+            if ha_stream := self.preview_stream:
                 # Kill off the temp stream we created.
                 await ha_stream.stop()
             if not user_input.get(CONF_CONFIRMED_OK):
