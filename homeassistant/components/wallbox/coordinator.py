@@ -186,7 +186,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data: JsonObjectType = self._wallbox.getSessionList(
             charger_id, start_date, end_date
         )
-        return data
+        return {"sessions": data["data"]}
 
     async def async_get_sessions(
         self,
