@@ -63,7 +63,7 @@ ATTR_DST_ENABLED = "dst_enabled"
 ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
-ATTR_SENSOR_LIST = "sensors"
+ATTR_SENSOR_LIST = "device_ids"
 ATTR_PRESET_MODE = "preset_mode"
 
 DEFAULT_RESUME_ALL = False
@@ -805,7 +805,7 @@ class Thermostat(ClimateEntity):
         self.update_without_throttle = True
 
     def set_sensors_used_in_climate(
-        self, sensors: list[str], preset_mode: str | None = None
+        self, device_ids: list[str], preset_mode: str | None = None
     ) -> None:
         """Set the sensors used on a climate for a thermostat."""
         if preset_mode is None:
@@ -821,8 +821,8 @@ class Thermostat(ClimateEntity):
         device_registry = dr.async_get(self.hass)
         sensor_names: list[str] = []
         sensor_ids: list[str] = []
-        for sensor in sensors:
-            sensor_registry = device_registry.async_get(sensor)
+        for device_id in device_ids:
+            sensor_registry = device_registry.async_get(device_id)
             if sensor_registry and sensor_registry.name:
                 r_sensors = self.thermostat.get("remoteSensors", [])
                 code = next(iter(sensor_registry.identifiers))[1]

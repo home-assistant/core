@@ -145,7 +145,7 @@ set_sensors_used_in_climate:
       example: "Home"
       selector:
         text:
-    sensors:
+    device_ids:
       required: true
       selector:
         device:
