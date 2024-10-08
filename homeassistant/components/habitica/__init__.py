@@ -49,11 +49,13 @@ from .const import (
 from .coordinator import HabiticaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.TODO]
+
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
