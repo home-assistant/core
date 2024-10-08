@@ -9,6 +9,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, cached_property, lru_cache, partial, wraps
 import json
@@ -2166,7 +2167,8 @@ def merge_response(value: ServiceResponse) -> list[Any]:
 
     is_single_list = False
     response_items: list = []
-    for entity_id, entity_response in value.items():  # pylint: disable=too-many-nested-blocks
+    input_service_response = deepcopy(value)
+    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():
