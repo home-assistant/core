@@ -1,6 +1,14 @@
 """The go2rtc component."""
 
-from go2rtc_client import Go2RtcClient, WebRTCSdpOffer
+from collections.abc import Callable
+
+from go2rtc_client import Go2RtcRestClient
+from go2rtc_client.ws import (
+    Go2RtcWsClient,
+    ReceiveMessages,
+    WebRTCCandidate,
+    WebRTCOffer,
+)
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.camera.webrtc import (
@@ -9,7 +17,7 @@ from homeassistant.components.camera.webrtc import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BINARY
@@ -54,9 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(server.stop)
         server.start()
 
-    client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
+    client = Go2RtcRestClient(async_get_clientsession(hass), entry.data[CONF_HOST])
 
-    provider = WebRTCProvider(client)
+    provider = WebRTCProvider(client, hass)
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
@@ -64,28 +72,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
-    def __init__(self, client: Go2RtcClient) -> None:
+    def __init__(self, rest_client: Go2RtcRestClient, hass: HomeAssistant) -> None:
         """Initialize the WebRTC provider."""
-        self._client = client
+        self._rest_client = rest_client
+        self._hass = hass
+        self._sessions: dict[str, Go2RtcWsClient] = {}
 
     async def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
 
     async def async_handle_web_rtc_offer(
-        self, camera: Camera, offer_sdp: str
-    ) -> str | None:
-        """Handle the WebRTC offer and return an answer."""
-        streams = await self._client.streams.list()
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_result: Callable[[dict], None],
+    ) -> bool:
+        """Handle the WebRTC offer and return the answer via the provided callback.
+
+        Return value determines if the offer was handled successfully.
+        """
+        streams = await self._rest_client.streams.list()
         if camera.entity_id not in streams:
             if not (stream_source := await camera.stream_source()):
-                return None
-            await self._client.streams.add(camera.entity_id, stream_source)
+                return False
+            await self._rest_client.streams.add(camera.entity_id, stream_source)
 
-        answer = await self._client.webrtc.forward_whep_sdp_offer(
-            camera.entity_id, WebRTCSdpOffer(offer_sdp)
-        )
-        return answer.sdp
+        self._sessions[session_id] = ws_client = Go2RtcWsClient(self._rest_client.host)
+
+        @callback
+        def on_messages(message: ReceiveMessages) -> None:
+            """Handle messages."""
+            send_result(message.to_dict())
+
+        ws_client.subscribe(on_messages)
+        await ws_client.send(WebRTCOffer(offer_sdp))
+
+        return True
+
+    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+        """Handle the WebRTC candidate."""
+
+        if ws_client := self._sessions.get(session_id):
+            await ws_client.send(WebRTCCandidate(candidate))
+        else:
+            raise ValueError("Unknown session")
+
+    def close_session(self, session_id: str) -> None:
+        """Close the session."""
+        if ws_client := self._sessions.pop(session_id, None):
+            self._hass.async_create_task(ws_client.close())
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
