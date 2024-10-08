@@ -2783,7 +2783,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
-            data = {**entry.data, **data_updates}
+            data = entry.data | data_updates
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
