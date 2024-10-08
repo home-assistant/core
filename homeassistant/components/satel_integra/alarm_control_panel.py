@@ -11,14 +11,8 @@ from satel_integra.satel_integra import AlarmState
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
     CodeFormat,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,7 +90,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         state = self._read_alarm_state()
         _LOGGER.debug("Got status update, current status: %s", state)
         if state != self._attr_state:
-            self._attr_state = state
+            self._attr_alarm_state = state
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Ignoring alarm status message, same state")
@@ -105,22 +99,28 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         """Read current status of the alarm and translate it into HA status."""
 
         # Default - disarmed:
-        hass_alarm_status = STATE_ALARM_DISARMED
+        hass_alarm_status = AlarmControlPanelEntityState.DISARMED
 
         if not self._satel.connected:
             return None
 
         state_map = OrderedDict(
             [
-                (AlarmState.TRIGGERED, STATE_ALARM_TRIGGERED),
-                (AlarmState.TRIGGERED_FIRE, STATE_ALARM_TRIGGERED),
-                (AlarmState.ENTRY_TIME, STATE_ALARM_PENDING),
-                (AlarmState.ARMED_MODE3, STATE_ALARM_ARMED_HOME),
-                (AlarmState.ARMED_MODE2, STATE_ALARM_ARMED_HOME),
-                (AlarmState.ARMED_MODE1, STATE_ALARM_ARMED_HOME),
-                (AlarmState.ARMED_MODE0, STATE_ALARM_ARMED_AWAY),
-                (AlarmState.EXIT_COUNTDOWN_OVER_10, STATE_ALARM_PENDING),
-                (AlarmState.EXIT_COUNTDOWN_UNDER_10, STATE_ALARM_PENDING),
+                (AlarmState.TRIGGERED, AlarmControlPanelEntityState.TRIGGERED),
+                (AlarmState.TRIGGERED_FIRE, AlarmControlPanelEntityState.TRIGGERED),
+                (AlarmState.ENTRY_TIME, AlarmControlPanelEntityState.PENDING),
+                (AlarmState.ARMED_MODE3, AlarmControlPanelEntityState.ARMED_HOME),
+                (AlarmState.ARMED_MODE2, AlarmControlPanelEntityState.ARMED_HOME),
+                (AlarmState.ARMED_MODE1, AlarmControlPanelEntityState.ARMED_HOME),
+                (AlarmState.ARMED_MODE0, AlarmControlPanelEntityState.ARMED_AWAY),
+                (
+                    AlarmState.EXIT_COUNTDOWN_OVER_10,
+                    AlarmControlPanelEntityState.PENDING,
+                ),
+                (
+                    AlarmState.EXIT_COUNTDOWN_UNDER_10,
+                    AlarmControlPanelEntityState.PENDING,
+                ),
             ]
         )
         _LOGGER.debug("State map of Satel: %s", self._satel.partition_states)
@@ -141,7 +141,9 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
             _LOGGER.debug("Code was empty or None")
             return
 
-        clear_alarm_necessary = self._attr_state == STATE_ALARM_TRIGGERED
+        clear_alarm_necessary = (
+            self._attr_alarm_state == AlarmControlPanelEntityState.TRIGGERED
+        )
 
         _LOGGER.debug("Disarming, self._attr_state: %s", self._attr_state)
 

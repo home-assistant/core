@@ -14,6 +14,7 @@ from prometheus_client.metrics import MetricWrapperBase
 import voluptuous as vol
 
 from homeassistant import core as hacore
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -51,16 +52,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_ON,
@@ -829,16 +820,16 @@ class PrometheusMetrics:
             )
 
             alarm_states = [
-                STATE_ALARM_ARMED_AWAY,
-                STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                STATE_ALARM_ARMED_HOME,
-                STATE_ALARM_ARMED_NIGHT,
-                STATE_ALARM_ARMED_VACATION,
-                STATE_ALARM_DISARMED,
-                STATE_ALARM_TRIGGERED,
-                STATE_ALARM_PENDING,
-                STATE_ALARM_ARMING,
-                STATE_ALARM_DISARMING,
+                AlarmControlPanelEntityState.ARMED_AWAY,
+                AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelEntityState.ARMED_HOME,
+                AlarmControlPanelEntityState.ARMED_NIGHT,
+                AlarmControlPanelEntityState.ARMED_VACATION,
+                AlarmControlPanelEntityState.DISARMED,
+                AlarmControlPanelEntityState.TRIGGERED,
+                AlarmControlPanelEntityState.PENDING,
+                AlarmControlPanelEntityState.ARMING,
+                AlarmControlPanelEntityState.DISARMING,
             ]
 
             for alarm_state in alarm_states:

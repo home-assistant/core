@@ -26,16 +26,9 @@ from simplipy.websocket import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,33 +58,33 @@ ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
 STATE_MAP_FROM_REST_API = {
-    SystemStates.ALARM: STATE_ALARM_TRIGGERED,
-    SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
-    SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
-    SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
-    SystemStates.ENTRY_DELAY: STATE_ALARM_PENDING,
-    SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
-    SystemStates.HOME: STATE_ALARM_ARMED_HOME,
-    SystemStates.HOME_COUNT: STATE_ALARM_ARMING,
-    SystemStates.OFF: STATE_ALARM_DISARMED,
-    SystemStates.TEST: STATE_ALARM_DISARMED,
+    SystemStates.ALARM: AlarmControlPanelEntityState.TRIGGERED,
+    SystemStates.ALARM_COUNT: AlarmControlPanelEntityState.PENDING,
+    SystemStates.AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
+    SystemStates.AWAY_COUNT: AlarmControlPanelEntityState.ARMING,
+    SystemStates.ENTRY_DELAY: AlarmControlPanelEntityState.PENDING,
+    SystemStates.EXIT_DELAY: AlarmControlPanelEntityState.ARMING,
+    SystemStates.HOME: AlarmControlPanelEntityState.ARMED_HOME,
+    SystemStates.HOME_COUNT: AlarmControlPanelEntityState.ARMING,
+    SystemStates.OFF: AlarmControlPanelEntityState.DISARMED,
+    SystemStates.TEST: AlarmControlPanelEntityState.DISARMED,
 }
 
 STATE_MAP_FROM_WEBSOCKET_EVENT = {
-    EVENT_ALARM_CANCELED: STATE_ALARM_DISARMED,
-    EVENT_ALARM_TRIGGERED: STATE_ALARM_TRIGGERED,
-    EVENT_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-    EVENT_ARMED_AWAY_BY_KEYPAD: STATE_ALARM_ARMED_AWAY,
-    EVENT_ARMED_AWAY_BY_REMOTE: STATE_ALARM_ARMED_AWAY,
-    EVENT_ARMED_HOME: STATE_ALARM_ARMED_HOME,
-    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: STATE_ALARM_ARMING,
-    EVENT_AWAY_EXIT_DELAY_BY_REMOTE: STATE_ALARM_ARMING,
-    EVENT_DISARMED_BY_KEYPAD: STATE_ALARM_DISARMED,
-    EVENT_DISARMED_BY_REMOTE: STATE_ALARM_DISARMED,
-    EVENT_ENTRY_DELAY: STATE_ALARM_PENDING,
-    EVENT_HOME_EXIT_DELAY: STATE_ALARM_ARMING,
-    EVENT_SECRET_ALERT_TRIGGERED: STATE_ALARM_TRIGGERED,
-    EVENT_USER_INITIATED_TEST: STATE_ALARM_DISARMED,
+    EVENT_ALARM_CANCELED: AlarmControlPanelEntityState.DISARMED,
+    EVENT_ALARM_TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
+    EVENT_ARMED_AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD: AlarmControlPanelEntityState.ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_REMOTE: AlarmControlPanelEntityState.ARMED_AWAY,
+    EVENT_ARMED_HOME: AlarmControlPanelEntityState.ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: AlarmControlPanelEntityState.ARMING,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE: AlarmControlPanelEntityState.ARMING,
+    EVENT_DISARMED_BY_KEYPAD: AlarmControlPanelEntityState.DISARMED,
+    EVENT_DISARMED_BY_REMOTE: AlarmControlPanelEntityState.DISARMED,
+    EVENT_ENTRY_DELAY: AlarmControlPanelEntityState.PENDING,
+    EVENT_HOME_EXIT_DELAY: AlarmControlPanelEntityState.ARMING,
+    EVENT_SECRET_ALERT_TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
+    EVENT_USER_INITIATED_TEST: AlarmControlPanelEntityState.DISARMED,
 }
 
 WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
@@ -145,7 +138,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     def _set_state_from_system_data(self) -> None:
         """Set the state based on the latest REST API data."""
         if self._system.alarm_going_off:
-            self._attr_state = STATE_ALARM_TRIGGERED
+            self._attr_alarm_state = AlarmControlPanelEntityState.TRIGGERED
         elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
             self._attr_state = state
             self.async_reset_error_count()
@@ -162,7 +155,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
                 f'Error while disarming "{self._system.system_id}": {err}'
             ) from err
 
-        self._attr_state = STATE_ALARM_DISARMED
+        self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
@@ -174,7 +167,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
                 f'Error while arming (home) "{self._system.system_id}": {err}'
             ) from err
 
-        self._attr_state = STATE_ALARM_ARMED_HOME
+        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
@@ -186,7 +179,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
                 f'Error while arming (away) "{self._system.system_id}": {err}'
             ) from err
 
-        self._attr_state = STATE_ALARM_ARMING
+        self._attr_alarm_state = AlarmControlPanelEntityState.ARMING
         self.async_write_ha_state()
 
     @callback
