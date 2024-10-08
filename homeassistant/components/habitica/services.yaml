@@ -317,4 +317,15 @@ update_daily:
               translation_key: repeat_monthly
               mode: list
     tag_options: *tag_options
-    developer_options: *developer_options
+    developer_options:
+      collapsed: true
+      fields:
+        streak:
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              unit_of_measurement: "▶▶"
+              mode: box
+        alias: *alias
