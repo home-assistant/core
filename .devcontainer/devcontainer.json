@@ -2,8 +2,8 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "script/setup",
-  "postStartCommand": "script/bootstrap",
+  "postCreateCommand": "script/setup && sudo ln -s /usr/share/code/bin/code /usr/local/bin/code && pip install zlib-ng isal && ln -s ~/.local/ha-venv/lib/python3.12/site-packages/attrs ~/.local/ha-venv/lib/python3.12/site-packages/attr",
+  "postStartCommand": "script/bootstrap && source /home/vscode/.local/ha-venv/bin/activate && export PYTHONPATH=\"/home/vscode/.local/ha-venv/lib/python3.12/site-packages\"",
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },
