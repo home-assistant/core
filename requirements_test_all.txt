@@ -469,7 +469,7 @@ asyncarve==0.1.1
 asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
-auroranoaa==0.0.3
+auroranoaa==0.0.5
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7

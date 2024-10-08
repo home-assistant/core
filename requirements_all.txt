@@ -514,7 +514,7 @@ asyncsleepiq==1.5.2
 # atenpdu==0.3.2
 
 # homeassistant.components.aurora
-auroranoaa==0.0.3
+auroranoaa==0.0.5
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
