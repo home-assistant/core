@@ -81,8 +81,8 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
     ConductivityConverter: (
-        UnitOfConductivity.MICROSIEMENS,
-        UnitOfConductivity.MILLISIEMENS,
+        UnitOfConductivity.MICROSIEMENS_PER_CM,
+        UnitOfConductivity.MILLISIEMENS_PER_CM,
         1000,
     ),
     DataRateConverter: (
@@ -131,12 +131,84 @@ _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
     ConductivityConverter: [
+        # Deprecated to deprecated
         (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
         (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
         (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
         (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
         (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
         (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
+        # Deprecated to new
+        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS_PER_CM),
+        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS_PER_CM),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS_PER_CM),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS_PER_CM),
+        # New to deprecated
+        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e6, UnitOfConductivity.MICROSIEMENS),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS,
+        ),
+        (5, UnitOfConductivity.MILLISIEMENS_PER_CM, 5e-3, UnitOfConductivity.SIEMENS),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS,
+        ),
+        (5e6, UnitOfConductivity.MICROSIEMENS_PER_CM, 5, UnitOfConductivity.SIEMENS),
+        # New to new
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e-3,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
     ],
     DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
@@ -173,6 +245,13 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfLength.MILES, 8800.0, UnitOfLength.YARDS),
         (5, UnitOfLength.MILES, 26400.0008448, UnitOfLength.FEET),
         (5, UnitOfLength.MILES, 316800.171072, UnitOfLength.INCHES),
+        (5, UnitOfLength.NAUTICAL_MILES, 9.26, UnitOfLength.KILOMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 9260.0, UnitOfLength.METERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 926000.0, UnitOfLength.CENTIMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 9260000.0, UnitOfLength.MILLIMETERS),
+        (5, UnitOfLength.NAUTICAL_MILES, 10126.859142607176, UnitOfLength.YARDS),
+        (5, UnitOfLength.NAUTICAL_MILES, 30380.57742782153, UnitOfLength.FEET),
+        (5, UnitOfLength.NAUTICAL_MILES, 364566.9291338583, UnitOfLength.INCHES),
         (5, UnitOfLength.YARDS, 0.004572, UnitOfLength.KILOMETERS),
         (5, UnitOfLength.YARDS, 4.572, UnitOfLength.METERS),
         (5, UnitOfLength.YARDS, 457.2, UnitOfLength.CENTIMETERS),

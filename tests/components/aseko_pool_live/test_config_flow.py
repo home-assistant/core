@@ -153,6 +153,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant, user: User) -> Non
             result["flow_id"],
             {CONF_EMAIL: "aseko@example.com", CONF_PASSWORD: "passw0rd"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
