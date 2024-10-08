@@ -21,7 +21,9 @@ from git import GitCommandError, Remote, Repo
 from homeassistant.components.lovelace.const import (  # pylint: disable=hass-component-root-import
     DOMAIN as LOVELACE_DOMAIN,
 )
-from homeassistant.components.lovelace.resources import ResourceStorageCollection
+from homeassistant.components.lovelace.resources import (  # pylint: disable=hass-component-root-import
+    ResourceStorageCollection,
+)
 from homeassistant.const import EVENT_LOVELACE_UPDATED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
