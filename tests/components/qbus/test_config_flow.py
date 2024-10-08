@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
 from qbusmqttapi.state import QbusMqttGatewayState
@@ -183,7 +183,7 @@ async def test_handle_config_topic(
             return_value=QbusDiscovery({"devices": [], "app": "UbieLite"}),
         ),
         patch.object(
-            QbusConfigContainer, "store_config", return_value=None
+            QbusConfigContainer, "store_config", return_value=None, autospec=True
         ) as mock_store,
         patch("homeassistant.components.mqtt.client.async_publish") as mock_publish,
     ):
@@ -201,12 +201,18 @@ async def test_handle_controller_topic_success(
     qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_controller: MqttServiceInfo
 ) -> None:
     """Test handling of controller topic."""
+
+    mock_qbus_config = MagicMock(spec=QbusDiscovery)
+    mock_qbus_config.get_device_by_id.return_value = QbusMqttDevice(
+        {"serialNr": "000001"}
+    )
+
     with (
-        patch("qbusmqttapi.discovery.QbusDiscovery", autospec=True) as mock_discovery,
         patch.object(
             QbusConfigContainer,
             "async_get_or_request_config",
-            return_value=mock_discovery,
+            return_value=mock_qbus_config,
+            autospec=True,
         ) as mock_get_config,
         patch.object(
             qbus_config_flow,
@@ -214,8 +220,6 @@ async def test_handle_controller_topic_success(
             return_value=FlowResult(type=FlowResultType.FORM),
         ) as mock_step_discovery,
     ):
-        discovery = mock_discovery.return_value
-        discovery.get_device_by_id.return_value = QbusMqttDevice({"serialNr": "000001"})
         result = await qbus_config_flow._async_handle_controller_topic(
             mqtt_discovery_info_controller
         )
@@ -229,6 +233,20 @@ async def test_handle_controller_topic_missing_config(
     qbus_config_flow: QbusFlowHandler, mqtt_discovery_info_controller: MqttServiceInfo
 ) -> None:
     """Test handling of controller topic when config is missing."""
+    with (
+        patch.object(
+            QbusConfigContainer,
+            "async_get_or_request_config",
+            return_value=None,
+        ) as mock_get_config,
+    ):
+        result = await qbus_config_flow._async_handle_controller_topic(
+            mqtt_discovery_info_controller
+        )
+
+    assert mock_get_config.called
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
 
 
 async def test_handle_controller_topic_device_not_found(
@@ -236,9 +254,28 @@ async def test_handle_controller_topic_device_not_found(
 ) -> None:
     """Test handling of controller topic when device is not found."""
 
+    mock_qbus_config = MagicMock(spec=QbusDiscovery)
+    mock_qbus_config.get_device_by_id.return_value = None
 
-async def test_step_discovery_confirm_form(qbus_config_flow: QbusFlowHandler) -> None:
+    with patch(
+        "homeassistant.components.qbus.config_flow.QbusConfigContainer.async_get_or_request_config",
+        return_value=mock_qbus_config,
+    ):
+        result = await qbus_config_flow._async_handle_controller_topic(
+            mqtt_discovery_info_controller
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_step_discovery_confirm_form(
+    qbus_config_flow_with_device: QbusFlowHandler,
+) -> None:
     """Test mqtt confirm showing the form."""
+    result = await qbus_config_flow_with_device.async_step_discovery_confirm()
+
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_step_discovery_confirm_create_entry(
