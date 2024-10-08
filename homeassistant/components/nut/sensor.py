@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 import logging
 from typing import Final, cast
 
@@ -30,13 +31,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import NutConfigEntry, PyNUTData
-from .const import DOMAIN, KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
+from .const import (
+    AMBIENT_THRESHOLD_STATUS_OPTIONS,
+    DOMAIN,
+    KEY_STATUS,
+    KEY_STATUS_DISPLAY,
+    STATE_TYPES,
+)
 
 NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
@@ -46,20 +54,28 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
-    "ups.status.display": SensorEntityDescription(
+
+@dataclass(frozen=True)
+class NutSensorEntityDescription(SensorEntityDescription):
+    """Describes Nut sensor entity."""
+
+    ambient_threshold_value_fn: Callable[[StateType], StateType] = lambda x: x
+
+
+SENSOR_TYPES: Final[dict[str, NutSensorEntityDescription]] = {
+    "ups.status.display": NutSensorEntityDescription(
         key="ups.status.display",
         translation_key="ups_status_display",
     ),
-    "ups.status": SensorEntityDescription(
+    "ups.status": NutSensorEntityDescription(
         key="ups.status",
         translation_key="ups_status",
     ),
-    "ups.alarm": SensorEntityDescription(
+    "ups.alarm": NutSensorEntityDescription(
         key="ups.alarm",
         translation_key="ups_alarm",
     ),
-    "ups.temperature": SensorEntityDescription(
+    "ups.temperature": NutSensorEntityDescription(
         key="ups.temperature",
         translation_key="ups_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -68,26 +84,26 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.load": SensorEntityDescription(
+    "ups.load": NutSensorEntityDescription(
         key="ups.load",
         translation_key="ups_load",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "ups.load.high": SensorEntityDescription(
+    "ups.load.high": NutSensorEntityDescription(
         key="ups.load.high",
         translation_key="ups_load_high",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.id": SensorEntityDescription(
+    "ups.id": NutSensorEntityDescription(
         key="ups.id",
         translation_key="ups_id",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.delay.start": SensorEntityDescription(
+    "ups.delay.start": NutSensorEntityDescription(
         key="ups.delay.start",
         translation_key="ups_delay_start",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -95,7 +111,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.delay.reboot": SensorEntityDescription(
+    "ups.delay.reboot": NutSensorEntityDescription(
         key="ups.delay.reboot",
         translation_key="ups_delay_reboot",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -103,7 +119,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.delay.shutdown": SensorEntityDescription(
+    "ups.delay.shutdown": NutSensorEntityDescription(
         key="ups.delay.shutdown",
         translation_key="ups_delay_shutdown",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -111,7 +127,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.timer.start": SensorEntityDescription(
+    "ups.timer.start": NutSensorEntityDescription(
         key="ups.timer.start",
         translation_key="ups_timer_start",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -119,7 +135,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.timer.reboot": SensorEntityDescription(
+    "ups.timer.reboot": NutSensorEntityDescription(
         key="ups.timer.reboot",
         translation_key="ups_timer_reboot",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -127,7 +143,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.timer.shutdown": SensorEntityDescription(
+    "ups.timer.shutdown": NutSensorEntityDescription(
         key="ups.timer.shutdown",
         translation_key="ups_timer_shutdown",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -135,7 +151,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.test.interval": SensorEntityDescription(
+    "ups.test.interval": NutSensorEntityDescription(
         key="ups.test.interval",
         translation_key="ups_test_interval",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -143,31 +159,31 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.test.result": SensorEntityDescription(
+    "ups.test.result": NutSensorEntityDescription(
         key="ups.test.result",
         translation_key="ups_test_result",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.test.date": SensorEntityDescription(
+    "ups.test.date": NutSensorEntityDescription(
         key="ups.test.date",
         translation_key="ups_test_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.display.language": SensorEntityDescription(
+    "ups.display.language": NutSensorEntityDescription(
         key="ups.display.language",
         translation_key="ups_display_language",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.contacts": SensorEntityDescription(
+    "ups.contacts": NutSensorEntityDescription(
         key="ups.contacts",
         translation_key="ups_contacts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.efficiency": SensorEntityDescription(
+    "ups.efficiency": NutSensorEntityDescription(
         key="ups.efficiency",
         translation_key="ups_efficiency",
         native_unit_of_measurement=PERCENTAGE,
@@ -175,7 +191,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.power": SensorEntityDescription(
+    "ups.power": NutSensorEntityDescription(
         key="ups.power",
         translation_key="ups_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -184,7 +200,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.power.nominal": SensorEntityDescription(
+    "ups.power.nominal": NutSensorEntityDescription(
         key="ups.power.nominal",
         translation_key="ups_power_nominal",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -192,7 +208,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.realpower": SensorEntityDescription(
+    "ups.realpower": NutSensorEntityDescription(
         key="ups.realpower",
         translation_key="ups_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -201,7 +217,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.realpower.nominal": SensorEntityDescription(
+    "ups.realpower.nominal": NutSensorEntityDescription(
         key="ups.realpower.nominal",
         translation_key="ups_realpower_nominal",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -209,81 +225,81 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.beeper.status": SensorEntityDescription(
+    "ups.beeper.status": NutSensorEntityDescription(
         key="ups.beeper.status",
         translation_key="ups_beeper_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.type": SensorEntityDescription(
+    "ups.type": NutSensorEntityDescription(
         key="ups.type",
         translation_key="ups_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.watchdog.status": SensorEntityDescription(
+    "ups.watchdog.status": NutSensorEntityDescription(
         key="ups.watchdog.status",
         translation_key="ups_watchdog_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.start.auto": SensorEntityDescription(
+    "ups.start.auto": NutSensorEntityDescription(
         key="ups.start.auto",
         translation_key="ups_start_auto",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.start.battery": SensorEntityDescription(
+    "ups.start.battery": NutSensorEntityDescription(
         key="ups.start.battery",
         translation_key="ups_start_battery",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.start.reboot": SensorEntityDescription(
+    "ups.start.reboot": NutSensorEntityDescription(
         key="ups.start.reboot",
         translation_key="ups_start_reboot",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.shutdown": SensorEntityDescription(
+    "ups.shutdown": NutSensorEntityDescription(
         key="ups.shutdown",
         translation_key="ups_shutdown",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.charge": SensorEntityDescription(
+    "battery.charge": NutSensorEntityDescription(
         key="battery.charge",
         translation_key="battery_charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "battery.charge.low": SensorEntityDescription(
+    "battery.charge.low": NutSensorEntityDescription(
         key="battery.charge.low",
         translation_key="battery_charge_low",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.charge.restart": SensorEntityDescription(
+    "battery.charge.restart": NutSensorEntityDescription(
         key="battery.charge.restart",
         translation_key="battery_charge_restart",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.charge.warning": SensorEntityDescription(
+    "battery.charge.warning": NutSensorEntityDescription(
         key="battery.charge.warning",
         translation_key="battery_charge_warning",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.charger.status": SensorEntityDescription(
+    "battery.charger.status": NutSensorEntityDescription(
         key="battery.charger.status",
         translation_key="battery_charger_status",
     ),
-    "battery.voltage": SensorEntityDescription(
+    "battery.voltage": NutSensorEntityDescription(
         key="battery.voltage",
         translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -292,7 +308,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.voltage.nominal": SensorEntityDescription(
+    "battery.voltage.nominal": NutSensorEntityDescription(
         key="battery.voltage.nominal",
         translation_key="battery_voltage_nominal",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -300,7 +316,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.voltage.low": SensorEntityDescription(
+    "battery.voltage.low": NutSensorEntityDescription(
         key="battery.voltage.low",
         translation_key="battery_voltage_low",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -308,7 +324,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.voltage.high": SensorEntityDescription(
+    "battery.voltage.high": NutSensorEntityDescription(
         key="battery.voltage.high",
         translation_key="battery_voltage_high",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -316,14 +332,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.capacity": SensorEntityDescription(
+    "battery.capacity": NutSensorEntityDescription(
         key="battery.capacity",
         translation_key="battery_capacity",
         native_unit_of_measurement="Ah",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.current": SensorEntityDescription(
+    "battery.current": NutSensorEntityDescription(
         key="battery.current",
         translation_key="battery_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -332,7 +348,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.current.total": SensorEntityDescription(
+    "battery.current.total": NutSensorEntityDescription(
         key="battery.current.total",
         translation_key="battery_current_total",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -340,7 +356,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.temperature": SensorEntityDescription(
+    "battery.temperature": NutSensorEntityDescription(
         key="battery.temperature",
         translation_key="battery_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -349,7 +365,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.runtime": SensorEntityDescription(
+    "battery.runtime": NutSensorEntityDescription(
         key="battery.runtime",
         translation_key="battery_runtime",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -357,7 +373,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.runtime.low": SensorEntityDescription(
+    "battery.runtime.low": NutSensorEntityDescription(
         key="battery.runtime.low",
         translation_key="battery_runtime_low",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -365,7 +381,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.runtime.restart": SensorEntityDescription(
+    "battery.runtime.restart": NutSensorEntityDescription(
         key="battery.runtime.restart",
         translation_key="battery_runtime_restart",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -373,49 +389,49 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.alarm.threshold": SensorEntityDescription(
+    "battery.alarm.threshold": NutSensorEntityDescription(
         key="battery.alarm.threshold",
         translation_key="battery_alarm_threshold",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.date": SensorEntityDescription(
+    "battery.date": NutSensorEntityDescription(
         key="battery.date",
         translation_key="battery_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.mfr.date": SensorEntityDescription(
+    "battery.mfr.date": NutSensorEntityDescription(
         key="battery.mfr.date",
         translation_key="battery_mfr_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.packs": SensorEntityDescription(
+    "battery.packs": NutSensorEntityDescription(
         key="battery.packs",
         translation_key="battery_packs",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.packs.bad": SensorEntityDescription(
+    "battery.packs.bad": NutSensorEntityDescription(
         key="battery.packs.bad",
         translation_key="battery_packs_bad",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "battery.type": SensorEntityDescription(
+    "battery.type": NutSensorEntityDescription(
         key="battery.type",
         translation_key="battery_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.sensitivity": SensorEntityDescription(
+    "input.sensitivity": NutSensorEntityDescription(
         key="input.sensitivity",
         translation_key="input_sensitivity",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.transfer.low": SensorEntityDescription(
+    "input.transfer.low": NutSensorEntityDescription(
         key="input.transfer.low",
         translation_key="input_transfer_low",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -423,7 +439,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.transfer.high": SensorEntityDescription(
+    "input.transfer.high": NutSensorEntityDescription(
         key="input.transfer.high",
         translation_key="input_transfer_high",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -431,20 +447,20 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.transfer.reason": SensorEntityDescription(
+    "input.transfer.reason": NutSensorEntityDescription(
         key="input.transfer.reason",
         translation_key="input_transfer_reason",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.voltage": SensorEntityDescription(
+    "input.voltage": NutSensorEntityDescription(
         key="input.voltage",
         translation_key="input_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "input.voltage.nominal": SensorEntityDescription(
+    "input.voltage.nominal": NutSensorEntityDescription(
         key="input.voltage.nominal",
         translation_key="input_voltage_nominal",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -452,7 +468,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L1-N.voltage": SensorEntityDescription(
+    "input.L1-N.voltage": NutSensorEntityDescription(
         key="input.L1-N.voltage",
         translation_key="input_l1_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -461,7 +477,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L2-N.voltage": SensorEntityDescription(
+    "input.L2-N.voltage": NutSensorEntityDescription(
         key="input.L2-N.voltage",
         translation_key="input_l2_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -470,7 +486,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L3-N.voltage": SensorEntityDescription(
+    "input.L3-N.voltage": NutSensorEntityDescription(
         key="input.L3-N.voltage",
         translation_key="input_l3_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -479,7 +495,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.frequency": SensorEntityDescription(
+    "input.frequency": NutSensorEntityDescription(
         key="input.frequency",
         translation_key="input_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -488,7 +504,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.frequency.nominal": SensorEntityDescription(
+    "input.frequency.nominal": NutSensorEntityDescription(
         key="input.frequency.nominal",
         translation_key="input_frequency_nominal",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -496,13 +512,13 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.frequency.status": SensorEntityDescription(
+    "input.frequency.status": NutSensorEntityDescription(
         key="input.frequency.status",
         translation_key="input_frequency_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L1.frequency": SensorEntityDescription(
+    "input.L1.frequency": NutSensorEntityDescription(
         key="input.L1.frequency",
         translation_key="input_l1_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -511,7 +527,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L2.frequency": SensorEntityDescription(
+    "input.L2.frequency": NutSensorEntityDescription(
         key="input.L2.frequency",
         translation_key="input_l2_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -520,7 +536,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L3.frequency": SensorEntityDescription(
+    "input.L3.frequency": NutSensorEntityDescription(
         key="input.L3.frequency",
         translation_key="input_l3_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -529,7 +545,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.current": SensorEntityDescription(
+    "input.bypass.current": NutSensorEntityDescription(
         key="input.bypass.current",
         translation_key="input_bypass_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -538,7 +554,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L1.current": SensorEntityDescription(
+    "input.bypass.L1.current": NutSensorEntityDescription(
         key="input.bypass.L1.current",
         translation_key="input_bypass_l1_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -547,7 +563,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L2.current": SensorEntityDescription(
+    "input.bypass.L2.current": NutSensorEntityDescription(
         key="input.bypass.L2.current",
         translation_key="input_bypass_l2_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -556,7 +572,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L3.current": SensorEntityDescription(
+    "input.bypass.L3.current": NutSensorEntityDescription(
         key="input.bypass.L3.current",
         translation_key="input_bypass_l3_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -565,7 +581,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.frequency": SensorEntityDescription(
+    "input.bypass.frequency": NutSensorEntityDescription(
         key="input.bypass.frequency",
         translation_key="input_bypass_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -574,13 +590,13 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.phases": SensorEntityDescription(
+    "input.bypass.phases": NutSensorEntityDescription(
         key="input.bypass.phases",
         translation_key="input_bypass_phases",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.realpower": SensorEntityDescription(
+    "input.bypass.realpower": NutSensorEntityDescription(
         key="input.bypass.realpower",
         translation_key="input_bypass_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -589,7 +605,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L1.realpower": SensorEntityDescription(
+    "input.bypass.L1.realpower": NutSensorEntityDescription(
         key="input.bypass.L1.realpower",
         translation_key="input_bypass_l1_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -598,7 +614,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L2.realpower": SensorEntityDescription(
+    "input.bypass.L2.realpower": NutSensorEntityDescription(
         key="input.bypass.L2.realpower",
         translation_key="input_bypass_l2_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -607,7 +623,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L3.realpower": SensorEntityDescription(
+    "input.bypass.L3.realpower": NutSensorEntityDescription(
         key="input.bypass.L3.realpower",
         translation_key="input_bypass_l3_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -616,7 +632,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.voltage": SensorEntityDescription(
+    "input.bypass.voltage": NutSensorEntityDescription(
         key="input.bypass.voltage",
         translation_key="input_bypass_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -625,7 +641,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L1-N.voltage": SensorEntityDescription(
+    "input.bypass.L1-N.voltage": NutSensorEntityDescription(
         key="input.bypass.L1-N.voltage",
         translation_key="input_bypass_l1_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -634,7 +650,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L2-N.voltage": SensorEntityDescription(
+    "input.bypass.L2-N.voltage": NutSensorEntityDescription(
         key="input.bypass.L2-N.voltage",
         translation_key="input_bypass_l2_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -643,7 +659,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.bypass.L3-N.voltage": SensorEntityDescription(
+    "input.bypass.L3-N.voltage": NutSensorEntityDescription(
         key="input.bypass.L3-N.voltage",
         translation_key="input_bypass_l3_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -652,7 +668,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.current": SensorEntityDescription(
+    "input.current": NutSensorEntityDescription(
         key="input.current",
         translation_key="input_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -660,7 +676,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    "input.L1.current": SensorEntityDescription(
+    "input.L1.current": NutSensorEntityDescription(
         key="input.L1.current",
         translation_key="input_l1_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -669,7 +685,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L2.current": SensorEntityDescription(
+    "input.L2.current": NutSensorEntityDescription(
         key="input.L2.current",
         translation_key="input_l2_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -678,7 +694,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L3.current": SensorEntityDescription(
+    "input.L3.current": NutSensorEntityDescription(
         key="input.L3.current",
         translation_key="input_l3_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -687,13 +703,13 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.phases": SensorEntityDescription(
+    "input.phases": NutSensorEntityDescription(
         key="input.phases",
         translation_key="input_phases",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.realpower": SensorEntityDescription(
+    "input.realpower": NutSensorEntityDescription(
         key="input.realpower",
         translation_key="input_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -702,7 +718,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L1.realpower": SensorEntityDescription(
+    "input.L1.realpower": NutSensorEntityDescription(
         key="input.L1.realpower",
         translation_key="input_l1_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -711,7 +727,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L2.realpower": SensorEntityDescription(
+    "input.L2.realpower": NutSensorEntityDescription(
         key="input.L2.realpower",
         translation_key="input_l2_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -720,7 +736,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "input.L3.realpower": SensorEntityDescription(
+    "input.L3.realpower": NutSensorEntityDescription(
         key="input.L3.realpower",
         translation_key="input_l3_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -729,7 +745,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.power.nominal": SensorEntityDescription(
+    "output.power.nominal": NutSensorEntityDescription(
         key="output.power.nominal",
         translation_key="output_power_nominal",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -737,28 +753,28 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L1.power.percent": SensorEntityDescription(
+    "output.L1.power.percent": NutSensorEntityDescription(
         key="output.L1.power.percent",
         translation_key="output_l1_power_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L2.power.percent": SensorEntityDescription(
+    "output.L2.power.percent": NutSensorEntityDescription(
         key="output.L2.power.percent",
         translation_key="output_l2_power_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L3.power.percent": SensorEntityDescription(
+    "output.L3.power.percent": NutSensorEntityDescription(
         key="output.L3.power.percent",
         translation_key="output_l3_power_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.current": SensorEntityDescription(
+    "output.current": NutSensorEntityDescription(
         key="output.current",
         translation_key="output_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -767,7 +783,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.current.nominal": SensorEntityDescription(
+    "output.current.nominal": NutSensorEntityDescription(
         key="output.current.nominal",
         translation_key="output_current_nominal",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -775,7 +791,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L1.current": SensorEntityDescription(
+    "output.L1.current": NutSensorEntityDescription(
         key="output.L1.current",
         translation_key="output_l1_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -784,7 +800,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L2.current": SensorEntityDescription(
+    "output.L2.current": NutSensorEntityDescription(
         key="output.L2.current",
         translation_key="output_l2_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -793,7 +809,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L3.current": SensorEntityDescription(
+    "output.L3.current": NutSensorEntityDescription(
         key="output.L3.current",
         translation_key="output_l3_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -802,14 +818,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.voltage": SensorEntityDescription(
+    "output.voltage": NutSensorEntityDescription(
         key="output.voltage",
         translation_key="output_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "output.voltage.nominal": SensorEntityDescription(
+    "output.voltage.nominal": NutSensorEntityDescription(
         key="output.voltage.nominal",
         translation_key="output_voltage_nominal",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -817,7 +833,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L1-N.voltage": SensorEntityDescription(
+    "output.L1-N.voltage": NutSensorEntityDescription(
         key="output.L1-N.voltage",
         translation_key="output_l1_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -826,7 +842,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L2-N.voltage": SensorEntityDescription(
+    "output.L2-N.voltage": NutSensorEntityDescription(
         key="output.L2-N.voltage",
         translation_key="output_l2_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -835,7 +851,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L3-N.voltage": SensorEntityDescription(
+    "output.L3-N.voltage": NutSensorEntityDescription(
         key="output.L3-N.voltage",
         translation_key="output_l3_n_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -844,7 +860,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.frequency": SensorEntityDescription(
+    "output.frequency": NutSensorEntityDescription(
         key="output.frequency",
         translation_key="output_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -853,7 +869,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.frequency.nominal": SensorEntityDescription(
+    "output.frequency.nominal": NutSensorEntityDescription(
         key="output.frequency.nominal",
         translation_key="output_frequency_nominal",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -861,13 +877,13 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.phases": SensorEntityDescription(
+    "output.phases": NutSensorEntityDescription(
         key="output.phases",
         translation_key="output_phases",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.power": SensorEntityDescription(
+    "output.power": NutSensorEntityDescription(
         key="output.power",
         translation_key="output_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -876,7 +892,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.realpower": SensorEntityDescription(
+    "output.realpower": NutSensorEntityDescription(
         key="output.realpower",
         translation_key="output_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -885,7 +901,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.realpower.nominal": SensorEntityDescription(
+    "output.realpower.nominal": NutSensorEntityDescription(
         key="output.realpower.nominal",
         translation_key="output_realpower_nominal",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -893,7 +909,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L1.realpower": SensorEntityDescription(
+    "output.L1.realpower": NutSensorEntityDescription(
         key="output.L1.realpower",
         translation_key="output_l1_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -902,7 +918,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L2.realpower": SensorEntityDescription(
+    "output.L2.realpower": NutSensorEntityDescription(
         key="output.L2.realpower",
         translation_key="output_l2_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -911,7 +927,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "output.L3.realpower": SensorEntityDescription(
+    "output.L3.realpower": NutSensorEntityDescription(
         key="output.L3.realpower",
         translation_key="output_l3_realpower",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -920,7 +936,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ambient.humidity": SensorEntityDescription(
+    "ambient.humidity": NutSensorEntityDescription(
         key="ambient.humidity",
         translation_key="ambient_humidity",
         native_unit_of_measurement=PERCENTAGE,
@@ -928,7 +944,15 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "ambient.temperature": SensorEntityDescription(
+    "ambient.humidity.status": NutSensorEntityDescription(
+        key="ambient.humidity.status",
+        translation_key="ambient_humidity_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        ambient_threshold_value_fn=lambda x: x.lower() if isinstance(x, str) else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ambient.temperature": NutSensorEntityDescription(
         key="ambient.temperature",
         translation_key="ambient_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -936,7 +960,15 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "watts": SensorEntityDescription(
+    "ambient.temperature.status": NutSensorEntityDescription(
+        key="ambient.temperature.status",
+        translation_key="ambient_temperature_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        ambient_threshold_value_fn=lambda x: x.lower() if isinstance(x, str) else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "watts": NutSensorEntityDescription(
         key="watts",
         translation_key="watts",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -996,7 +1028,7 @@ class NUTSensor(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]], Sensor
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, str]],
-        sensor_description: SensorEntityDescription,
+        sensor_description: NutSensorEntityDescription,
         data: PyNUTData,
         unique_id: str,
     ) -> None:

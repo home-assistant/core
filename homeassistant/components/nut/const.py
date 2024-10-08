@@ -37,6 +37,14 @@ STATE_TYPES = {
     "TEST": "Battery Testing",
 }
 
+AMBIENT_THRESHOLD_STATUS_OPTIONS = [
+    "good",
+    "warning-low",
+    "critical-low",
+    "warning-high",
+    "critical-high",
+]
+
 COMMAND_BEEPER_DISABLE = "beeper.disable"
 COMMAND_BEEPER_ENABLE = "beeper.enable"
 COMMAND_BEEPER_MUTE = "beeper.mute"
