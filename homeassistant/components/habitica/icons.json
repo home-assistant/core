@@ -226,7 +226,9 @@
       "sections": {
         "checklist_options": "mdi:format-list-checks",
         "tag_options": "mdi:tag",
-        "developer_options": "mdi:test-tube"
+        "developer_options": "mdi:test-tube",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
       }
     }
   }

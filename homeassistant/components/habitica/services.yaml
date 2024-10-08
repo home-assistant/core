@@ -286,20 +286,35 @@ update_daily:
           step: 1
           unit_of_measurement: "Day/Week/Month/Year"
           mode: box
-    repeat:
-      required: false
-      selector:
-        select:
-          options:
-            - "su"
-            - "m"
-            - "t"
-            - "w"
-            - "th"
-            - "f"
-            - "s"
-          mode: list
-          translation_key: repeat
-          multiple: true
+    repeat_weekly_options:
+      collapsed: true
+      fields:
+        repeat:
+          required: false
+          selector:
+            select:
+              options:
+                - "su"
+                - "m"
+                - "t"
+                - "w"
+                - "th"
+                - "f"
+                - "s"
+              mode: list
+              translation_key: repeat
+              multiple: true
+    repeat_monthly_options:
+      collapsed: true
+      fields:
+        repeat_monthly:
+          required: false
+          selector:
+            select:
+              options:
+                - "day_of_month"
+                - "day_of_week"
+              translation_key: repeat_monthly
+              mode: list
     tag_options: *tag_options
     developer_options: *developer_options

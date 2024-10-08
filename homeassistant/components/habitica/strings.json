@@ -35,7 +35,8 @@
     "tag_options_name": "Tags",
     "tag_options_description": "Add or remove tags from a task.",
     "checklist_options_name": "Checklist",
-    "checklist_options_description": "Add, remove, or update status of an item on a task's checklist."
+    "checklist_options_description": "Add, remove, or update status of an item on a task's checklist.",
+    "repeat_name": "Repeat on"
   },
   "config": {
     "abort": {
@@ -807,11 +808,15 @@
         },
         "every_x": {
           "name": "Repeat every X",
-          "description": "Set the number of days, weeks, months, or years after which the daily repeats. A value of 0 means the daily will never be due (grey daily)."
+          "description": "Set the number of days, weeks, months, or years after which the daily repeats. A value of 0 means the daily will never be due (a grey daily)."
         },
         "repeat": {
-          "name": "Weekly repeat days",
-          "description": "Update the days of the week the daily repeats. Applies if the repetition interval is set to weekly."
+          "name": "[%key:component::habitica::common::repeat_name%]",
+          "description": "Update the days of the week the daily repeats."
+        },
+        "repeat_monthly": {
+          "name": "[%key:component::habitica::common::repeat_name%]",
+          "description": "Update if a monthly recurring task repeats on the same day or the same week and weekday of the month, determined by the start date."
         },
         "add_checklist_item": {
           "name": "[%key:component::habitica::common::add_checklist_item_name%]",
@@ -834,6 +839,14 @@
         "checklist_options": {
           "name": "[%key:component::habitica::common::checklist_options_name%]",
           "description": "[%key:component::habitica::common::checklist_options_description%]"
+        },
+        "repeat_weekly_options": {
+          "name": "Weekly repeat days",
+          "description": "Applies if the repetition interval is set to weekly."
+        },
+        "repeat_monthly_options": {
+          "name": "Monthly repeat day",
+          "description": "Applies when the repetition interval is set to monthly."
         },
         "tag_options": {
           "name": "[%key:component::habitica::common::tag_options_name%]",
@@ -894,6 +907,12 @@
         "th": "Thursday",
         "f": "Friday",
         "s": "Saturday"
+      }
+    },
+    "repeat_monthly": {
+      "options": {
+        "day_of_month": "Day of the month",
+        "day_of_week": "Day of the week"
       }
     }
   }
