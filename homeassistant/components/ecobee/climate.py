@@ -825,20 +825,24 @@ class Thermostat(ClimateEntity):
             sensor_registry = device_registry.async_get(device_id)
             if sensor_registry and sensor_registry.name:
                 r_sensors = self.thermostat.get("remoteSensors", [])
-                code = next(iter(sensor_registry.identifiers))[1]
-                for r_sensor in r_sensors:
-                    if (  # occurs if remote sensor
-                        len(code) == 4 and r_sensor.get("code") == code
-                    ) or (  # occurs if thermostat
-                        len(code) != 4 and r_sensor.get("type") == "thermostat"
-                    ):
-                        sensor_ids.append(r_sensor.get("id"))  # noqa: PERF401
-                sensor_names.append(sensor_registry.name)
-
-        # Check that an id was found for each sensor
-        if len(sensor_names) != len(sensor_ids):
-            msg = "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
-            raise ServiceValidationError(msg)
+                ecobee_identifier = next(
+                    (
+                        identifier
+                        for identifier in sensor_registry.identifiers
+                        if identifier[0] == "ecobee"
+                    ),
+                    None,
+                )
+                if ecobee_identifier:
+                    code = ecobee_identifier[1]
+                    for r_sensor in r_sensors:
+                        if (  # occurs if remote sensor
+                            len(code) == 4 and r_sensor.get("code") == code
+                        ) or (  # occurs if thermostat
+                            len(code) != 4 and r_sensor.get("type") == "thermostat"
+                        ):
+                            sensor_ids.append(r_sensor.get("id"))  # noqa: PERF401
+                    sensor_names.append(sensor_registry.name)
 
         # Ensure sensors provided are available for thermostat or not empty.
         if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
