@@ -6575,6 +6575,8 @@ async def test_merge_response_not_mutate_original_object(
     _template = (
         "{% set calendar_response = " + value + "} %}"
         "{{ merge_response(calendar_response) }}"
+        # We should be able to merge the same response again
+        # as the merge is working on a copy of the original object (response)
         "{{ merge_response(calendar_response) }}"
     )
 
