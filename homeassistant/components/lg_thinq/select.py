@@ -6,7 +6,7 @@ import logging
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
-from thinqconnect.integration import ActiveMode, ThinQPropertyEx
+from thinqconnect.integration import ActiveMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -25,29 +25,13 @@ SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         key=ThinQProperty.COOK_MODE,
         translation_key=ThinQProperty.COOK_MODE,
     ),
-    ThinQProperty.POWER_SAVE_ENABLED: SelectEntityDescription(
-        key=ThinQProperty.POWER_SAVE_ENABLED,
-        translation_key=ThinQProperty.POWER_SAVE_ENABLED,
-    ),
     ThinQProperty.DISPLAY_LIGHT: SelectEntityDescription(
         key=ThinQProperty.DISPLAY_LIGHT,
         translation_key=ThinQProperty.DISPLAY_LIGHT,
     ),
-    ThinQPropertyEx.HUMIDITY_WARM_MODE: SelectEntityDescription(
-        key=ThinQProperty.WARM_MODE,
-        translation_key=ThinQPropertyEx.HUMIDITY_WARM_MODE,
-    ),
     ThinQProperty.CURRENT_JOB_MODE: SelectEntityDescription(
         key=ThinQProperty.CURRENT_JOB_MODE,
         translation_key=ThinQProperty.CURRENT_JOB_MODE,
-    ),
-    ThinQProperty.UV_NANO: SelectEntityDescription(
-        key=ThinQProperty.UV_NANO,
-        translation_key=ThinQProperty.UV_NANO,
-    ),
-    ThinQProperty.MOOD_LAMP_STATE: SelectEntityDescription(
-        key=ThinQProperty.MOOD_LAMP_STATE,
-        translation_key=ThinQProperty.MOOD_LAMP_STATE,
     ),
 }
 AIR_FLOW_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
@@ -69,10 +53,6 @@ OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         key=ThinQProperty.AIR_CLEAN_OPERATION_MODE,
         translation_key="air_clean_operation_mode",
     ),
-    ThinQProperty.AUTO_MODE: SelectEntityDescription(
-        key=ThinQProperty.AUTO_MODE,
-        translation_key=ThinQProperty.AUTO_MODE,
-    ),
     ThinQProperty.DISH_WASHER_OPERATION_MODE: SelectEntityDescription(
         key=ThinQProperty.DISH_WASHER_OPERATION_MODE,
         translation_key="operation_mode",
@@ -80,10 +60,6 @@ OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
     ThinQProperty.DRYER_OPERATION_MODE: SelectEntityDescription(
         key=ThinQProperty.DRYER_OPERATION_MODE,
         translation_key="operation_mode",
-    ),
-    ThinQProperty.HOT_WATER_MODE: SelectEntityDescription(
-        key=ThinQProperty.HOT_WATER_MODE,
-        translation_key=ThinQProperty.HOT_WATER_MODE,
     ),
     ThinQProperty.HYGIENE_DRY_MODE: SelectEntityDescription(
         key=ThinQProperty.HYGIENE_DRY_MODE,
@@ -93,17 +69,9 @@ OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         key=ThinQProperty.LIGHT_BRIGHTNESS,
         translation_key=ThinQProperty.LIGHT_BRIGHTNESS,
     ),
-    ThinQProperty.OPTIMAL_HUMIDITY: SelectEntityDescription(
-        key=ThinQProperty.OPTIMAL_HUMIDITY,
-        translation_key=ThinQProperty.OPTIMAL_HUMIDITY,
-    ),
     ThinQProperty.OVEN_OPERATION_MODE: SelectEntityDescription(
         key=ThinQProperty.OVEN_OPERATION_MODE,
         translation_key="operation_mode",
-    ),
-    ThinQProperty.SLEEP_MODE: SelectEntityDescription(
-        key=ThinQProperty.SLEEP_MODE,
-        translation_key=ThinQProperty.SLEEP_MODE,
     ),
     ThinQProperty.STYLER_OPERATION_MODE: SelectEntityDescription(
         key=ThinQProperty.STYLER_OPERATION_MODE,
@@ -114,24 +82,11 @@ OPERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         translation_key="operation_mode",
     ),
 }
-REFRIGERATION_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
-    ThinQProperty.EXPRESS_MODE: SelectEntityDescription(
-        key=ThinQProperty.EXPRESS_MODE,
-        translation_key=ThinQProperty.EXPRESS_MODE,
-    ),
-    ThinQProperty.RAPID_FREEZE: SelectEntityDescription(
-        key=ThinQProperty.RAPID_FREEZE,
-        translation_key=ThinQProperty.RAPID_FREEZE,
-    ),
-}
-WASHER_SELECTS: tuple[SelectEntityDescription, ...] = (
-    OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
-)
+
 DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
         SELECT_DESC[ThinQProperty.MONITORING_ENABLED],
         OPERATION_SELECT_DESC[ThinQProperty.AIR_CLEAN_OPERATION_MODE],
-        SELECT_DESC[ThinQProperty.POWER_SAVE_ENABLED],
     ),
     DeviceType.AIR_PURIFIER_FAN: (
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
@@ -139,7 +94,6 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         AIR_FLOW_SELECT_DESC[ThinQProperty.WARM_MODE],
         SELECT_DESC[ThinQProperty.DISPLAY_LIGHT],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
-        SELECT_DESC[ThinQProperty.UV_NANO],
     ),
     DeviceType.AIR_PURIFIER: (
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
@@ -151,25 +105,16 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.DRYER: (OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],),
     DeviceType.HUMIDIFIER: (
-        SELECT_DESC[ThinQPropertyEx.HUMIDITY_WARM_MODE],
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
         SELECT_DESC[ThinQProperty.DISPLAY_LIGHT],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
-        SELECT_DESC[ThinQProperty.MOOD_LAMP_STATE],
-        OPERATION_SELECT_DESC[ThinQProperty.AUTO_MODE],
-        OPERATION_SELECT_DESC[ThinQProperty.SLEEP_MODE],
         OPERATION_SELECT_DESC[ThinQProperty.HYGIENE_DRY_MODE],
     ),
     DeviceType.OVEN: (
         SELECT_DESC[ThinQProperty.COOK_MODE],
         OPERATION_SELECT_DESC[ThinQProperty.OVEN_OPERATION_MODE],
     ),
-    DeviceType.REFRIGERATOR: (
-        REFRIGERATION_SELECT_DESC[ThinQProperty.EXPRESS_MODE],
-        REFRIGERATION_SELECT_DESC[ThinQProperty.RAPID_FREEZE],
-    ),
     DeviceType.STYLER: (OPERATION_SELECT_DESC[ThinQProperty.STYLER_OPERATION_MODE],),
-    DeviceType.SYSTEM_BOILER: (OPERATION_SELECT_DESC[ThinQProperty.HOT_WATER_MODE],),
     DeviceType.WASHCOMBO_MAIN: (
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
     ),
@@ -188,10 +133,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
     ),
     DeviceType.WATER_HEATER: (SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],),
-    DeviceType.WINE_CELLAR: (
-        OPERATION_SELECT_DESC[ThinQProperty.LIGHT_BRIGHTNESS],
-        OPERATION_SELECT_DESC[ThinQProperty.OPTIMAL_HUMIDITY],
-    ),
+    DeviceType.WINE_CELLAR: (OPERATION_SELECT_DESC[ThinQProperty.LIGHT_BRIGHTNESS],),
 }
 
 _LOGGER = logging.getLogger(__name__)

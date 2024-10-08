@@ -126,16 +126,7 @@
       "light_brightness": {
         "default": "mdi:list-status"
       },
-      "optimal_humidity": {
-        "default": "mdi:water-percent"
-      },
-      "hot_water_mode": {
-        "default": "mdi:list-status"
-      },
       "warm_mode": {
-        "default": "mdi:heat-wave"
-      },
-      "humidity_warm_mode": {
         "default": "mdi:heat-wave"
       },
       "wind_angle": {
@@ -144,32 +135,11 @@
       "display_light": {
         "default": "mdi:brightness-6"
       },
-      "uv_nano": {
-        "default": "mdi:air-filter"
-      },
-      "power_save_enabled": {
-        "default": "mdi:hydro-power"
-      },
-      "rapid_freeze": {
-        "default": "mdi:snowflake"
-      },
-      "express_mode": {
-        "default": "mdi:snowflake-variant"
-      },
       "fresh_air_filter": {
         "default": "mdi:air-filter"
       },
-      "auto_mode": {
-        "default": "mdi:cogs"
-      },
-      "sleep_mode": {
-        "default": "mdi:format-list-bulleted"
-      },
       "hygiene_dry_mode": {
         "default": "mdi:format-list-bulleted"
-      },
-      "mood_lamp_state": {
-        "default": "mdi:lamp"
       }
     },
     "sensor": {

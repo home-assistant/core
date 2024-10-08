@@ -631,7 +631,7 @@
           "circulator": "Booster",
           "clean": "Single",
           "direct_clean": "Direct mode",
-          "dual_clean": "Daul",
+          "dual_clean": "Dual",
           "fast": "Turbo",
           "heat_pump": "Heat pump",
           "humidify": "Mist",
@@ -701,29 +701,8 @@
       "light_brightness": {
         "name": "Light"
       },
-      "optimal_humidity": {
-        "name": "Ventilation",
-        "state": {
-          "on": "On",
-          "off": "Off"
-        }
-      },
-      "hot_water_mode": {
-        "name": "Hot water",
-        "state": {
-          "on": "On",
-          "off": "Off"
-        }
-      },
       "warm_mode": {
         "name": "Heating",
-        "state": {
-          "warm_on": "On",
-          "warm_off": "Off"
-        }
-      },
-      "humidity_warm_mode": {
-        "name": "Warm mist",
         "state": {
           "warm_on": "On",
           "warm_off": "Off"
@@ -748,34 +727,6 @@
           "level_3": "Brightness 3"
         }
       },
-      "uv_nano": {
-        "name": "UVnano",
-        "state": {
-          "on": "On",
-          "off": "Off"
-        }
-      },
-      "power_save_enabled": {
-        "name": "Energy saving",
-        "state": {
-          "true": "On",
-          "false": "Off"
-        }
-      },
-      "rapid_freeze": {
-        "name": "Quick freeze",
-        "state": {
-          "true": "On",
-          "false": "Off"
-        }
-      },
-      "express_mode": {
-        "name": "Ice plus",
-        "state": {
-          "true": "On",
-          "false": "Off"
-        }
-      },
       "fresh_air_filter": {
         "name": "Fresh air filter",
         "state": {
@@ -788,20 +739,6 @@
           "smart_on": "Smart safe storage"
         }
       },
-      "auto_mode": {
-        "name": "Auto mode",
-        "state": {
-          "auto_on": "On",
-          "auto_off": "Off"
-        }
-      },
-      "sleep_mode": {
-        "name": "Sleep mode",
-        "state": {
-          "sleep_on": "On",
-          "sleep_off": "Off"
-        }
-      },
       "hygiene_dry_mode": {
         "name": "Drying mode",
         "state": {
@@ -809,13 +746,6 @@
           "fast": "Fast",
           "silent": "Silent",
           "normal": "Delicate"
-        }
-      },
-      "mood_lamp_state": {
-        "name": "Mood light",
-        "state": {
-          "on": "On",
-          "off": "Off"
         }
       }
     }
