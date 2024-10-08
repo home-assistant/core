@@ -4787,29 +4787,29 @@ async def test_reconfigure(
 
     assert entry.entry_id != entry2.entry_id
 
-    # Check that we can't start duplicate reconfigure flows
+    # Check that we can start duplicate reconfigure flows
     _async_start_reconfigure(entry)
     await hass.async_block_till_done()
-    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert len(hass.config_entries.flow.async_progress()) == 2
 
     # Check that we can start a reconfigure flow for a different entry
     _async_start_reconfigure(entry2)
     await hass.async_block_till_done()
-    assert len(hass.config_entries.flow.async_progress()) == 2
+    assert len(hass.config_entries.flow.async_progress()) == 3
 
     # Abort all existing flows
     for flow in hass.config_entries.flow.async_progress():
         hass.config_entries.flow.async_abort(flow["flow_id"])
     await hass.async_block_till_done()
 
-    # Check that we can't start duplicate reconfigure flows
+    # Check that we can start duplicate reconfigure flows
     # without blocking between flows
     _async_start_reconfigure(entry)
     _async_start_reconfigure(entry)
     _async_start_reconfigure(entry)
     _async_start_reconfigure(entry)
     await hass.async_block_till_done()
-    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert len(hass.config_entries.flow.async_progress()) == 4
 
     # Abort all existing flows
     for flow in hass.config_entries.flow.async_progress():
