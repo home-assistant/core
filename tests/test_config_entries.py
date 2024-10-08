@@ -4776,7 +4776,6 @@ async def test_reconfigure(
             f"{config_entry.domain} {config_entry.entry_id}",
         )
 
-    flow = hass.config_entries.flow
     _async_start_reconfigure(entry)
     await hass.async_block_till_done()
 
