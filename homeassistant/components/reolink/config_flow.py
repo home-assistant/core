@@ -136,7 +136,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
         config_entry = self.hass.config_entries.async_get_entry(

@@ -345,6 +345,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
@@ -352,6 +353,7 @@ homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.panel_custom.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
@@ -369,6 +371,7 @@ homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
+homeassistant.components.radio_browser.*
 homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
 homeassistant.components.raspberry_pi.*
@@ -406,6 +409,7 @@ homeassistant.components.sensor.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
+homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
 homeassistant.components.simplepush.*
@@ -502,6 +506,7 @@ homeassistant.components.whois.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
+homeassistant.components.workday.*
 homeassistant.components.worldclock.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*

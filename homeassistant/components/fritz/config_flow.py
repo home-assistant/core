@@ -336,7 +336,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfigure flow ."""
         self._entry = self._get_reconfigure_entry()

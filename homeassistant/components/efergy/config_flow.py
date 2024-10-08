@@ -33,9 +33,7 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
             if error is None:
                 entry = await self.async_set_unique_id(hid)
                 if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_update_reload_and_abort(entry, data=user_input)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=DEFAULT_NAME,

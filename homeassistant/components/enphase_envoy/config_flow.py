@@ -29,6 +29,8 @@ from .const import (
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -233,7 +235,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to manually reconfigure a config entry."""
         self._reconnect_entry = self._get_reconfigure_entry()
@@ -326,6 +328,13 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         default=self.config_entry.options.get(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                    vol.Required(
+                        OPTION_DISABLE_KEEP_ALIVE,
+                        default=self.config_entry.options.get(
+                            OPTION_DISABLE_KEEP_ALIVE,
+                            OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
                         ),
                     ): bool,
                 }
