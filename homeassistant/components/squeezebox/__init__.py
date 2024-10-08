@@ -28,6 +28,8 @@ from .const import (
     CONF_BROWSE_LIMIT,
     CONF_HTTPS,
     CONF_VOLUME_STEP,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
     MANUFACTURER,
@@ -136,8 +138,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         coordinator=coordinator,
         server=lms,
         options=SqueezeboxOptions(
-            browse_limit=entry.options.get(CONF_BROWSE_LIMIT, 1000),
-            volume_step=entry.options.get(CONF_VOLUME_STEP, 5),
+            browse_limit=entry.options.get(CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT),
+            volume_step=entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
         ),
     )
 
@@ -151,8 +153,12 @@ async def options_update_listener(
 ) -> None:
     """Handle options update."""
 
-    entry.runtime_data.options.browse_limit = entry.options.get(CONF_BROWSE_LIMIT, 1000)
-    entry.runtime_data.options.volume_step = entry.options.get(CONF_VOLUME_STEP, 1000)
+    entry.runtime_data.options.browse_limit = entry.options.get(
+        CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+    )
+    entry.runtime_data.options.volume_step = entry.options.get(
+        CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+    )
 
     await hass.config_entries.async_reload(entry.entry_id)
 

@@ -29,3 +29,5 @@ STATUS_QUERY_VERSION = "version"
 SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
 CONF_BROWSE_LIMIT = "browse_limit"
 CONF_VOLUME_STEP = "volume_step"
+DEFAULT_BROWSE_LIMIT = 1000
+DEFAULT_VOLUME_STEP = 5

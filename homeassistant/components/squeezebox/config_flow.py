@@ -25,7 +25,15 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_BROWSE_LIMIT, CONF_HTTPS, CONF_VOLUME_STEP, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_BROWSE_LIMIT,
+    CONF_HTTPS,
+    CONF_VOLUME_STEP,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_PORT,
+    DEFAULT_VOLUME_STEP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -280,11 +288,15 @@ class OptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_BROWSE_LIMIT,
-                        default=self.config_entry.options.get(CONF_BROWSE_LIMIT, 1000),
+                        default=self.config_entry.options.get(
+                            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+                        ),
                     ): int,
                     vol.Optional(
                         CONF_VOLUME_STEP,
-                        default=self.config_entry.options.get(CONF_VOLUME_STEP, 5),
+                        default=self.config_entry.options.get(
+                            CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                        ),
                     ): int,
                 }
             ),
