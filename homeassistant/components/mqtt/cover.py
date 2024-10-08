@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -354,9 +355,9 @@ class MqttCover(MqttEntity, CoverEntity):
             # Reset the state to `unknown`
             self._attr_is_closed = None
         else:
-            self._attr_is_closed = state == STATE_CLOSED
-        self._attr_is_opening = state == STATE_OPENING
-        self._attr_is_closing = state == STATE_CLOSING
+            self._attr_is_closed = state == CoverState.CLOSED
+        self._attr_is_opening = state == CoverState.OPENING
+        self._attr_is_closing = state == CoverState.CLOSING
 
     @callback
     def _tilt_message_received(self, msg: ReceiveMessage) -> None:
@@ -382,24 +383,24 @@ class MqttCover(MqttEntity, CoverEntity):
         if payload == self._config[CONF_STATE_STOPPED]:
             if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
                 state = (
-                    STATE_CLOSED
+                    CoverState.CLOSED
                     if self._attr_current_cover_position == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
+                    else CoverState.OPEN
                 )
             else:
                 state = (
-                    STATE_CLOSED
-                    if self.state in [STATE_CLOSED, STATE_CLOSING]
-                    else STATE_OPEN
+                    CoverState.CLOSED
+                    if self.state in [CoverState.CLOSED, CoverState.CLOSING]
+                    else CoverState.OPEN
                 )
         elif payload == self._config[CONF_STATE_OPENING]:
-            state = STATE_OPENING
+            state = CoverState.OPENING
         elif payload == self._config[CONF_STATE_CLOSING]:
-            state = STATE_CLOSING
+            state = CoverState.CLOSING
         elif payload == self._config[CONF_STATE_OPEN]:
-            state = STATE_OPEN
+            state = CoverState.OPEN
         elif payload == self._config[CONF_STATE_CLOSED]:
-            state = STATE_CLOSED
+            state = CoverState.CLOSED
         elif payload == PAYLOAD_NONE:
             state = None
         else:
@@ -451,7 +452,9 @@ class MqttCover(MqttEntity, CoverEntity):
         self._attr_current_cover_position = min(100, max(0, percentage_payload))
         if self._config.get(CONF_STATE_TOPIC) is None:
             self._update_state(
-                STATE_CLOSED if self.current_cover_position == 0 else STATE_OPEN
+                CoverState.CLOSED
+                if self.current_cover_position == 0
+                else CoverState.OPEN
             )
 
     @callback
@@ -493,7 +496,7 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._update_state(STATE_OPEN)
+            self._update_state(CoverState.OPEN)
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._attr_current_cover_position = 100
             self.async_write_ha_state()
@@ -508,7 +511,7 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._update_state(STATE_CLOSED)
+            self._update_state(CoverState.CLOSED)
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._attr_current_cover_position = 0
             self.async_write_ha_state()
@@ -609,9 +612,9 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             self._update_state(
-                STATE_CLOSED
+                CoverState.CLOSED
                 if position_percentage <= self._config[CONF_POSITION_CLOSED]
-                else STATE_OPEN
+                else CoverState.OPEN
             )
             self._attr_current_cover_position = position_percentage
             self.async_write_ha_state()

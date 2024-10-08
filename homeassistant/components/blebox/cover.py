@@ -14,9 +14,9 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,15 +32,15 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
     # all blebox covers
-    BleboxCoverState.MOVING_DOWN: STATE_CLOSING,
-    BleboxCoverState.MOVING_UP: STATE_OPENING,
-    BleboxCoverState.MANUALLY_STOPPED: STATE_OPEN,
-    BleboxCoverState.LOWER_LIMIT_REACHED: STATE_CLOSED,
-    BleboxCoverState.UPPER_LIMIT_REACHED: STATE_OPEN,
+    BleboxCoverState.MOVING_DOWN: CoverState.CLOSING,
+    BleboxCoverState.MOVING_UP: CoverState.OPENING,
+    BleboxCoverState.MANUALLY_STOPPED: CoverState.OPEN,
+    BleboxCoverState.LOWER_LIMIT_REACHED: CoverState.CLOSED,
+    BleboxCoverState.UPPER_LIMIT_REACHED: CoverState.OPEN,
     # extra states of gateController product
-    BleboxCoverState.OVERLOAD: STATE_OPEN,
-    BleboxCoverState.MOTOR_FAILURE: STATE_OPEN,
-    BleboxCoverState.SAFETY_STOP: STATE_OPEN,
+    BleboxCoverState.OVERLOAD: CoverState.OPEN,
+    BleboxCoverState.MOTOR_FAILURE: CoverState.OPEN,
+    BleboxCoverState.SAFETY_STOP: CoverState.OPEN,
 }
 
 
@@ -98,17 +98,17 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     @property
     def is_opening(self) -> bool | None:
         """Return whether cover is opening."""
-        return self._is_state(STATE_OPENING)
+        return self._is_state(CoverState.OPENING)
 
     @property
     def is_closing(self) -> bool | None:
         """Return whether cover is closing."""
-        return self._is_state(STATE_CLOSING)
+        return self._is_state(CoverState.CLOSING)
 
     @property
     def is_closed(self) -> bool | None:
         """Return whether cover is closed."""
-        return self._is_state(STATE_CLOSED)
+        return self._is_state(CoverState.CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open the cover position."""
