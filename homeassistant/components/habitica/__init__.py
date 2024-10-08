@@ -57,6 +57,7 @@ from .const import (
     ATTR_REPEAT_MONTHLY,
     ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_START_DATE,
+    ATTR_STREAK,
     ATTR_TAG,
     ATTR_TASK,
     ATTR_UNSCORE_CHECKLIST_ITEM,
@@ -309,7 +310,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             else:
                 data.update({"daysOfMonth": current_start_date.day, "weeksOfMonth": []})
-
+        if streak := call.data.get(ATTR_STREAK):
+            data.update({"streak": streak})
         if counter_up := call.data.get(ATTR_COUNTER_UP):
             data.update({"counterUp": counter_up})
         if counter_down := call.data.get(ATTR_COUNTER_DOWN):

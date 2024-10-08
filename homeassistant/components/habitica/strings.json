@@ -839,6 +839,10 @@
         "unscore_checklist_item": {
           "name": "[%key:component::habitica::common::unscore_checklist_item_name%]",
           "description": "[%key:component::habitica::common::unscore_checklist_item_description%]"
+        },
+        "streak": {
+          "name": "Adjust streak",
+          "description": "Adjust or reset the streak counter of the daily."
         }
       },
       "sections": {
