@@ -18,6 +18,7 @@ from aiohttp.hdrs import (
     CONTENT_ENCODING,
     CONTENT_LENGTH,
     CONTENT_TYPE,
+    RANGE,
     TRANSFER_ENCODING,
 )
 from aiohttp.web_exceptions import HTTPBadGateway
@@ -116,6 +117,29 @@ NO_COMPRESS = re.compile(
     r"|addons/[^/]+/logs/follow"
     r")$"
 )
+
+PATHS_LOGS = re.compile(
+    r"^(?:"
+    r"|audio/logs"
+    r"|audio/logs/follow"
+    r"|cli/logs"
+    r"|cli/logs/follow"
+    r"|core/logs"
+    r"|core/logs/follow"
+    r"|dns/logs"
+    r"|dns/logs/follow"
+    r"|host/logs"
+    r"|host/logs/follow"
+    r"|multicast/logs"
+    r"|multicast/logs/follow"
+    r"|observer/logs"
+    r"|observer/logs/follow"
+    r"|supervisor/logs"
+    r"|supervisor/logs/follow"
+    r"|addons/[^/]+/logs"
+    r"|addons/[^/]+/logs/follow"
+    r")$"
+)
 # fmt: on
 
 
@@ -194,6 +218,10 @@ class HassIOView(HomeAssistantView):
                     if TYPE_CHECKING:
                         assert isinstance(request._stored_content_type, str)  # noqa: SLF001
                     headers[CONTENT_TYPE] = request._stored_content_type  # noqa: SLF001
+
+            # forward range headers for logs
+            if PATHS_LOGS.match(path) and request.headers.get(RANGE):
+                headers[RANGE] = request.headers[RANGE]
 
         try:
             client = await self._websession.request(

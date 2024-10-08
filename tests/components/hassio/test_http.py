@@ -520,3 +520,39 @@ async def test_no_follow_logs_compress(
 
     assert resp2.status == HTTPStatus.OK
     assert resp2.headers.get("Content-Encoding") == "deflate"
+
+
+async def test_forward_range_header_for_logs(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that we forward the Range header for logs."""
+    aioclient_mock.get("http://127.0.0.1/host/logs")
+    aioclient_mock.get("http://127.0.0.1/addons/123abc_esphome/logs")
+    aioclient_mock.get("http://127.0.0.1/backups/1234abcd/download")
+
+    test_range = ":-100:50"
+
+    hostResp = await hassio_client.get(
+        "/api/hassio/host/logs", headers={"Range": test_range}
+    )
+    addonResp = await hassio_client.get(
+        "/api/hassio/addons/123abc_esphome/logs", headers={"Range": test_range}
+    )
+    backupResp = await hassio_client.get(
+        "/api/hassio/backups/1234abcd/download", headers={"Range": test_range}
+    )
+
+    assert hostResp.status == HTTPStatus.OK
+    assert addonResp.status == HTTPStatus.OK
+    assert backupResp.status == HTTPStatus.OK
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+    req_headers1 = aioclient_mock.mock_calls[0][-1]
+    assert req_headers1.get("Range") == test_range
+
+    req_headers2 = aioclient_mock.mock_calls[1][-1]
+    assert req_headers2.get("Range") == test_range
+
+    req_headers3 = aioclient_mock.mock_calls[2][-1]
+    assert req_headers3.get("Range") is None
