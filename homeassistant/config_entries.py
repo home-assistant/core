@@ -2766,7 +2766,20 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
-        """Update config entry, reload config entry and finish config flow."""
+        """Update config entry, reload config entry and finish config flow.
+
+        :param data: used to replace the entry data with new data
+        :param data_updates: used to merge of updated data with pre-existing entry data
+        :param options: used to replace the entry options with new options
+        :param title: used to replace the title of the entry
+        :param unique_id: used to replace the unique_id of the entry
+
+        :param reason: used to set the reason for the abort, defaults to
+        `reauth_successful` or `reconfigure_successful` based on flow source
+
+        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
+        should not be reloaded if it is unchanged
+        """
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
