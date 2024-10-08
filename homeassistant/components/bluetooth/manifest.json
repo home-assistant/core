@@ -14,12 +14,12 @@
   ],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.22.2",
-    "bleak-retry-connector==3.5.0",
-    "bluetooth-adapters==0.19.4",
+    "bleak==0.22.3",
+    "bleak-retry-connector==3.6.0",
+    "bluetooth-adapters==0.20.0",
     "bluetooth-auto-recovery==1.4.2",
     "bluetooth-data-tools==1.20.0",
-    "dbus-fast==2.24.0",
-    "habluetooth==3.4.0"
+    "dbus-fast==2.24.3",
+    "habluetooth==3.5.0"
   ]
 }

@@ -9,8 +9,9 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
-from functools import cache, cached_property, lru_cache, partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -34,6 +35,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
+from propcache import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -1023,6 +1025,8 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
+    __slots__ = ("_hass", "_collect", "_entity_id", "_state")
+
     _state: State
 
     __setitem__ = _readonly
@@ -1035,6 +1039,7 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
+        self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
         if self._collect and (render_info := _render_info.get()):
@@ -1055,7 +1060,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @cached_property
+    @under_cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -1112,7 +1117,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore[override]
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1149,7 +1154,7 @@ class TemplateStateBase(State):
 class TemplateState(TemplateStateBase):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_state",)
+    __slots__ = ()
 
     # Inheritance is done so functions that check against State keep working
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
@@ -1164,6 +1169,8 @@ class TemplateState(TemplateStateBase):
 
 class TemplateStateFromEntityId(TemplateStateBase):
     """Class to represent a state object in a template."""
+
+    __slots__ = ()
 
     def __init__(
         self, hass: HomeAssistant, entity_id: str, collect: bool = True
@@ -2166,7 +2173,8 @@ def merge_response(value: ServiceResponse) -> list[Any]:
 
     is_single_list = False
     response_items: list = []
-    for entity_id, entity_response in value.items():  # pylint: disable=too-many-nested-blocks
+    input_service_response = deepcopy(value)
+    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():

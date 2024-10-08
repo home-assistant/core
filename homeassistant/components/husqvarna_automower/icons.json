@@ -27,6 +27,12 @@
       "error": {
         "default": "mdi:alert-circle-outline"
       },
+      "my_lawn_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "my_lawn_progress": {
+        "default": "mdi:collage"
+      },
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
       },
@@ -35,6 +41,12 @@
       },
       "restricted_reason": {
         "default": "mdi:tooltip-question"
+      },
+      "work_area_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "work_area_progress": {
+        "default": "mdi:collage"
       }
     }
   },
