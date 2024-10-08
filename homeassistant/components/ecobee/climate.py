@@ -814,8 +814,13 @@ class Thermostat(ClimateEntity):
         # Check if climate is an available preset option.
         elif preset_mode not in self._preset_modes.values():
             if self.preset_modes:
-                msg = f"Invalid climate name, available options are: {', '.join(self._preset_modes.values())}"
-                raise ServiceValidationError(msg)
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset",
+                    translation_placeholders={
+                        "options": ", ".join(self._preset_modes.values())
+                    },
+                )
 
         # Get device name from device id.
         device_registry = dr.async_get(self.hass)
@@ -846,14 +851,28 @@ class Thermostat(ClimateEntity):
 
         # Ensure sensors provided are available for thermostat or not empty.
         if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
-            msg = f"Invalid sensor for thermostat, available options are: {', '.join(self._sensors)}"
-            raise ServiceValidationError(msg)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sensor",
+                translation_placeholders={
+                    "options": ", ".join(self.remote_sensor_devices)
+                },
+            )
+
+        # Check that an id was found for each sensor
+        if len(sensor_names) != len(sensor_ids):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="sensor_lookup_failed"
+            )
 
         # Check if sensors are currently used on the climate for the thermostat.
         current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
         if set(sensor_names) == set(current_sensors_in_climate):
-            msg = f"This action would not be an update, current sensors on climate ({preset_mode}) are: {', '.join(current_sensors_in_climate)}"
-            _LOGGER.debug(msg)
+            _LOGGER.debug(
+                "This action would not be an update, current sensors on climate (%s) are: %s",
+                preset_mode,
+                ", ".join(current_sensors_in_climate),
+            )
             return
 
         _LOGGER.debug(

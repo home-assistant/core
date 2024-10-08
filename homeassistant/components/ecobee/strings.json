@@ -187,6 +187,17 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_preset": {
+      "message": "Invalid climate name, available options are: {options}"
+    },
+    "invalid_sensor": {
+      "message": "Invalid sensor for thermostat, available options are: {options}"
+    },
+    "sensor_lookup_failed": {
+      "message": "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
+    }
+  },
   "issues": {
     "migrate_aux_heat": {
       "title": "Migration of Ecobee set_aux_heat action",
