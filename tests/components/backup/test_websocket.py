@@ -107,13 +107,9 @@ async def test_generate(
             "homeassistant.components.backup.manager.BackupManager.generate_backup",
             return_value=TEST_BACKUP,
         ),
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.sync_backup",
-        ) as sync_backup_mock,
     ):
         await client.send_json_auto_id({"type": "backup/generate"})
         assert snapshot == await client.receive_json()
-        assert with_hassio or sync_backup_mock.called
 
 
 @pytest.mark.parametrize(

@@ -395,9 +395,11 @@ async def test_syncing_backup_no_agents(
     await hass.async_block_till_done()
 
     backup = await _mock_backup_generation(manager)
-    with patch("asyncio.gather") as mocked_gather:
+    with patch(
+        "homeassistant.components.backup.sync_agent.BackupSyncAgent.async_upload_backup"
+    ) as mocked_async_upload_backup:
         await manager.sync_backup(backup=backup)
-        assert mocked_gather.call_count == 0
+        assert mocked_async_upload_backup.call_count == 0
 
 
 async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
