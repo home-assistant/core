@@ -7,6 +7,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverState,
 )
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -15,8 +16,6 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
-    STATE_CLOSED,
-    STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
@@ -28,32 +27,32 @@ async def test_reproducing_states(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reproducing Cover states."""
-    hass.states.async_set("cover.entity_close", STATE_CLOSED, {})
+    hass.states.async_set("cover.entity_close", CoverState.CLOSED, {})
     hass.states.async_set(
         "cover.entity_close_attr",
-        STATE_CLOSED,
+        CoverState.CLOSED,
         {ATTR_CURRENT_POSITION: 0, ATTR_CURRENT_TILT_POSITION: 0},
     )
     hass.states.async_set(
-        "cover.entity_close_tilt", STATE_CLOSED, {ATTR_CURRENT_TILT_POSITION: 50}
+        "cover.entity_close_tilt", CoverState.CLOSED, {ATTR_CURRENT_TILT_POSITION: 50}
     )
-    hass.states.async_set("cover.entity_open", STATE_OPEN, {})
+    hass.states.async_set("cover.entity_open", CoverState.OPEN, {})
     hass.states.async_set(
-        "cover.entity_slightly_open", STATE_OPEN, {ATTR_CURRENT_POSITION: 50}
+        "cover.entity_slightly_open", CoverState.OPEN, {ATTR_CURRENT_POSITION: 50}
     )
     hass.states.async_set(
         "cover.entity_open_attr",
-        STATE_OPEN,
+        CoverState.OPEN,
         {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 0},
     )
     hass.states.async_set(
         "cover.entity_open_tilt",
-        STATE_OPEN,
+        CoverState.OPEN,
         {ATTR_CURRENT_POSITION: 50, ATTR_CURRENT_TILT_POSITION: 50},
     )
     hass.states.async_set(
         "cover.entity_entirely_open",
-        STATE_OPEN,
+        CoverState.OPEN,
         {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
     )
 
@@ -70,34 +69,36 @@ async def test_reproducing_states(
     await async_reproduce_state(
         hass,
         [
-            State("cover.entity_close", STATE_CLOSED),
+            State("cover.entity_close", CoverState.CLOSED),
             State(
                 "cover.entity_close_attr",
-                STATE_CLOSED,
+                CoverState.CLOSED,
                 {ATTR_CURRENT_POSITION: 0, ATTR_CURRENT_TILT_POSITION: 0},
             ),
             State(
                 "cover.entity_close_tilt",
-                STATE_CLOSED,
+                CoverState.CLOSED,
                 {ATTR_CURRENT_TILT_POSITION: 50},
             ),
-            State("cover.entity_open", STATE_OPEN),
+            State("cover.entity_open", CoverState.OPEN),
             State(
-                "cover.entity_slightly_open", STATE_OPEN, {ATTR_CURRENT_POSITION: 50}
+                "cover.entity_slightly_open",
+                CoverState.OPEN,
+                {ATTR_CURRENT_POSITION: 50},
             ),
             State(
                 "cover.entity_open_attr",
-                STATE_OPEN,
+                CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 0},
             ),
             State(
                 "cover.entity_open_tilt",
-                STATE_OPEN,
+                CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 50, ATTR_CURRENT_TILT_POSITION: 50},
             ),
             State(
                 "cover.entity_entirely_open",
-                STATE_OPEN,
+                CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
             ),
         ],
@@ -125,26 +126,28 @@ async def test_reproducing_states(
     await async_reproduce_state(
         hass,
         [
-            State("cover.entity_close", STATE_OPEN),
+            State("cover.entity_close", CoverState.OPEN),
             State(
                 "cover.entity_close_attr",
-                STATE_OPEN,
+                CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 50, ATTR_CURRENT_TILT_POSITION: 50},
             ),
             State(
                 "cover.entity_close_tilt",
-                STATE_CLOSED,
+                CoverState.CLOSED,
                 {ATTR_CURRENT_TILT_POSITION: 100},
             ),
-            State("cover.entity_open", STATE_CLOSED),
-            State("cover.entity_slightly_open", STATE_OPEN, {}),
-            State("cover.entity_open_attr", STATE_CLOSED, {}),
+            State("cover.entity_open", CoverState.CLOSED),
+            State("cover.entity_slightly_open", CoverState.OPEN, {}),
+            State("cover.entity_open_attr", CoverState.CLOSED, {}),
             State(
-                "cover.entity_open_tilt", STATE_OPEN, {ATTR_CURRENT_TILT_POSITION: 0}
+                "cover.entity_open_tilt",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 0},
             ),
             State(
                 "cover.entity_entirely_open",
-                STATE_CLOSED,
+                CoverState.CLOSED,
                 {ATTR_CURRENT_POSITION: 0, ATTR_CURRENT_TILT_POSITION: 0},
             ),
             # Should not raise
