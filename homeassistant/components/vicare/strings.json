@@ -162,52 +162,52 @@
         "name": "DHW storage bottom temperature"
       },
       "hotwater_gas_consumption_today": {
-        "name": "Gas consumption (DHW) today"
+        "name": "DHW gas consumption today"
       },
       "hotwater_gas_consumption_heating_this_week": {
-        "name": "Gas consumption (DHW) this week"
+        "name": "DHW gas consumption this week"
       },
       "hotwater_gas_consumption_heating_this_month": {
-        "name": "Gas consumption (DHW) this month"
+        "name": "DHW gas consumption this month"
       },
       "hotwater_gas_consumption_heating_this_year": {
-        "name": "Gas consumption (DHW) this year"
+        "name": "DHW gas consumption this year"
       },
       "gas_consumption_heating_today": {
-        "name": "Gas consumption (heating) today"
+        "name": "Heating gas consumption today"
       },
       "gas_consumption_heating_this_week": {
-        "name": "Gas consumption (heating) this week"
+        "name": "Heating gas consumption this week"
       },
       "gas_consumption_heating_this_month": {
-        "name": "Gas consumption (heating) this month"
+        "name": "Heating gas consumption this month"
       },
       "gas_consumption_heating_this_year": {
-        "name": "Gas consumption (heating) this year"
+        "name": "Heating gas consumption this year"
       },
       "gas_consumption_fuelcell_today": {
-        "name": "Gas consumption (power) today"
+        "name": "Fuel cell gas consumption today"
       },
       "gas_consumption_fuelcell_this_week": {
-        "name": "Gas consumption (power) this week"
+        "name": "Fuel cell gas consumption this week"
       },
       "gas_consumption_fuelcell_this_month": {
-        "name": "Gas consumption (power) this month"
+        "name": "Fuel cell gas consumption this month"
       },
       "gas_consumption_fuelcell_this_year": {
-        "name": "Gas consumption (power) this year"
+        "name": "Fuel cell gas consumption this year"
       },
       "gas_consumption_total_today": {
-        "name": "Gas consumption (total) today"
+        "name": "Gas consumption today"
       },
       "gas_consumption_total_this_week": {
-        "name": "Gas consumption (total) this week"
+        "name": "Gas consumption this week"
       },
       "gas_consumption_total_this_month": {
-        "name": "Gas consumption (total) this month"
+        "name": "Gas consumption this month"
       },
       "gas_consumption_total_this_year": {
-        "name": "Gas consumption (total) this year"
+        "name": "Gas consumption this year"
       },
       "gas_summary_consumption_heating_currentday": {
         "name": "[%key:component::vicare::entity::sensor::gas_consumption_heating_today::name%]"
@@ -219,7 +219,7 @@
         "name": "[%key:component::vicare::entity::sensor::gas_consumption_heating_this_year::name%]"
       },
       "gas_summary_consumption_heating_lastsevendays": {
-        "name": "Gas consumption (heating) last seven days"
+        "name": "Heating gas consumption last seven days"
       },
       "hotwater_gas_summary_consumption_heating_currentday": {
         "name": "[%key:component::vicare::entity::sensor::hotwater_gas_consumption_today::name%]"
@@ -231,43 +231,43 @@
         "name": "[%key:component::vicare::entity::sensor::hotwater_gas_consumption_heating_this_year::name%]"
       },
       "hotwater_gas_summary_consumption_heating_lastsevendays": {
-        "name": "Gas consumption (DHW) last seven days"
+        "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
-        "name": "Energy consumption (heating) today"
+        "name": "Energy consumption for heating today"
       },
       "energy_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption (heating) this month"
+        "name": "Energy consumption for heating this month"
       },
       "energy_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption (heating) this year"
+        "name": "Energy consumption for heating this year"
       },
       "energy_summary_consumption_heating_lastsevendays": {
-        "name": "Energy consumption (heating) last seven days"
+        "name": "Energy consumption for heating last seven days"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
-        "name": "Energy consumption (DHW) today"
+        "name": "Energy consumption for DHW today"
       },
       "energy_dhw_summary_consumption_heating_currentmonth": {
-        "name": "Energy consumption (DHW) this month"
+        "name": "Energy consumption for DHW this month"
       },
       "energy_dhw_summary_consumption_heating_currentyear": {
-        "name": "Energy consumption (DHW) this year"
+        "name": "Energy consumption for DHW this year"
       },
       "energy_summary_dhw_consumption_heating_lastsevendays": {
-        "name": "Energy consumption (DHW) last seven days"
+        "name": "Energy consumption for DHW last seven days"
       },
       "power_consumption_today": {
-        "name": "Energy consumption (total) today"
+        "name": "Energy consumption today"
       },
       "power_consumption_this_week": {
-        "name": "Energy consumption (total) this week"
+        "name": "Energy consumption this week"
       },
       "power_consumption_this_month": {
-        "name": "Energy consumption (total) this month"
+        "name": "Energy consumption this month"
       },
       "power_consumption_this_year": {
-        "name": "Energy consumption (total) this year"
+        "name": "Energy consumption this year"
       },
       "power_production_current": {
         "name": "Power production current"
