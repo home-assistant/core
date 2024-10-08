@@ -326,7 +326,6 @@ class ConfigEntry(Generic[_DataT]):
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
     setup_lock: asyncio.Lock
     _reauth_lock: asyncio.Lock
-    _reconfigure_lock: asyncio.Lock
     _tasks: set[asyncio.Future[Any]]
     _background_tasks: set[asyncio.Future[Any]]
     _integration_for_domain: loader.Integration | None
@@ -430,8 +429,6 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "setup_lock", asyncio.Lock())
         # Reauth lock to prevent concurrent reauth flows
         _setter(self, "_reauth_lock", asyncio.Lock())
-        # Reconfigure lock to prevent concurrent reconfigure flows
-        _setter(self, "_reconfigure_lock", asyncio.Lock())
 
         _setter(self, "_tasks", set())
         _setter(self, "_background_tasks", set())
@@ -1093,49 +1090,6 @@ class ConfigEntry(Generic[_DataT]):
             translation_key="config_entry_reauth",
             translation_placeholders={"name": self.title},
         )
-
-    @callback
-    def async_start_reconfigure(
-        self,
-        hass: HomeAssistant,
-        context: ConfigFlowContext | None = None,
-        data: dict[str, Any] | None = None,
-    ) -> None:
-        """Start a reconfigure flow."""
-        # We will check this again in the task when we hold the lock,
-        # but we also check it now to try to avoid creating the task.
-        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
-            # Reconfigure or reauth flow already in progress for this entry
-            return
-        hass.async_create_task(
-            self._async_init_reconfigure(hass, context, data),
-            f"config entry reconfigure {self.title} {self.domain} {self.entry_id}",
-        )
-
-    async def _async_init_reconfigure(
-        self,
-        hass: HomeAssistant,
-        context: ConfigFlowContext | None = None,
-        data: dict[str, Any] | None = None,
-    ) -> None:
-        """Start a reconfigure flow."""
-        async with self._reconfigure_lock:
-            if any(
-                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
-            ):
-                # Reconfigure or reauth flow already in progress for this entry
-                return
-            await hass.config_entries.flow.async_init(
-                self.domain,
-                context=ConfigFlowContext(
-                    source=SOURCE_RECONFIGURE,
-                    entry_id=self.entry_id,
-                    title_placeholders={"name": self.title},
-                    unique_id=self.unique_id,
-                )
-                | (context or {}),
-                data=self.data | (data or {}),
-            )
 
     @callback
     def async_get_active_flows(
