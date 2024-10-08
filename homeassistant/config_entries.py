@@ -2726,6 +2726,20 @@ class ConfigFlow(ConfigEntryBaseFlow):
         options: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
+        if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=self.handler
+            )
+            _LOGGER.warning(
+                (
+                    "Detected %s config flow creating a new entry, "
+                    "when it is expected to update an existing entry and abort. "
+                    "This will stop working in %s, please %s"
+                ),
+                self.source,
+                "2025.11",
+                report_issue,
+            )
         result = super().async_create_entry(
             title=title,
             data=data,
