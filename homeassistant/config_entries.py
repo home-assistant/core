@@ -2768,13 +2768,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
-        :param data: used to replace the entry data with new data
-        :param data_updates: add items from data_updates to entry data
-        :param options: used to replace the entry options with new options
-        :param title: used to replace the title of the entry
-        :param unique_id: used to replace the unique_id of the entry
+        :param data: replace the entry data with new data
+        :param data_updates: add items from data_updates to entry data - existing keys
+        are overridden
+        :param options: replace the entry options with new options
+        :param title: replace the title of the entry
+        :param unique_id: replace the unique_id of the entry
 
-        :param reason: used to set the reason for the abort, defaults to
+        :param reason: set the reason for the abort, defaults to
         `reauth_successful` or `reconfigure_successful` based on flow source
 
         :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
