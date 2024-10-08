@@ -2096,6 +2096,25 @@ class ConfigEntries:
         _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
+            # Deprecated in 2024.11, should fail in 2025.11
+            if (
+                unique_id is not None
+                and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
+                is not None
+            ):
+                report_issue = async_suggest_report_issue(
+                    self.hass, integration_domain=entry.domain
+                )
+                _LOGGER.error(
+                    (
+                        "Unique id of config entry '%s' from integration %s changed to"
+                        " '%s' which is already in use, please %s"
+                    ),
+                    entry.title,
+                    entry.domain,
+                    unique_id,
+                    report_issue,
+                )
             # Reindex the entry if the unique_id has changed
             self._entries.update_unique_id(entry, unique_id)
             changed = True
