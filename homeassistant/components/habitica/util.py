@@ -14,6 +14,9 @@ from homeassistant.util import dt as dt_util
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
     """Calculate due date for dailies and yesterdailies."""
 
+    if task["everyX"] == 0 or not task.get("nextDue"):  # grey dailies never become due
+        return None
+
     today = to_date(last_cron)
     startdate = to_date(task["startDate"])
     if TYPE_CHECKING:
