@@ -20,8 +20,41 @@
   },
   "entity": {
     "switch": {
+      "auto_mode": {
+        "name": "Auto mode"
+      },
+      "express_mode": {
+        "name": "Ice plus"
+      },
+      "hot_water_mode": {
+        "name": "Hot water"
+      },
+      "humidity_warm_mode": {
+        "name": "Warm mist"
+      },
+      "hygiene_dry_mode": {
+        "name": "Drying mode"
+      },
+      "mood_lamp_state": {
+        "name": "Mood light"
+      },
       "operation_power": {
         "name": "Power"
+      },
+      "optimal_humidity": {
+        "name": "Ventilation"
+      },
+      "power_save_enabled": {
+        "name": "Energy saving"
+      },
+      "rapid_freeze": {
+        "name": "Quick freeze"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
+      },
+      "uv_nano": {
+        "name": "UVnano"
       }
     },
     "binary_sensor": {
