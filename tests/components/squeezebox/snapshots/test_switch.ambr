@@ -75,7 +75,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.squeezebox_alarm_1',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
