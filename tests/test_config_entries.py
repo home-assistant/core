@@ -6787,3 +6787,31 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     )
     loaded = json_loads(json_dumps(entry.as_json_fragment))
     assert loaded["disabled_by"] == "user"
+
+
+async def test_async_update_entry_unique_id_collision(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we warn when async_update_entry creates a unique_id collision."""
+
+    entry1 = MockConfigEntry(domain="test", unique_id=None)
+    entry2 = MockConfigEntry(domain="test", unique_id="not none")
+    entry3 = MockConfigEntry(domain="test", unique_id="very unique")
+    entry4 = MockConfigEntry(domain="test", unique_id="also very unique")
+    entry1.add_to_manager(manager)
+    entry2.add_to_manager(manager)
+    entry3.add_to_manager(manager)
+    entry4.add_to_manager(manager)
+
+    manager.async_update_entry(entry2, unique_id=None)
+    assert len(caplog.record_tuples) == 0
+
+    manager.async_update_entry(entry4, unique_id="very unique")
+    assert len(caplog.record_tuples) == 1
+
+    assert (
+        "Unique id of config entry 'Mock Title' from integration test changed to "
+        "'very unique' which is already in use"
+    ) in caplog.text
