@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "reauth_already_in_progress": "Re-authentication flow is already in progress",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {}
