@@ -812,6 +812,22 @@
         "repeat": {
           "name": "Weekly repeat days",
           "description": "Update the days of the week the daily repeats. Applies if the repetition interval is set to weekly."
+        },
+        "add_checklist_item": {
+          "name": "[%key:component::habitica::common::add_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::add_checklist_item_description%]"
+        },
+        "remove_checklist_item": {
+          "name": "[%key:component::habitica::common::remove_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::remove_checklist_item_description%]"
+        },
+        "score_checklist_item": {
+          "name": "[%key:component::habitica::common::score_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::score_checklist_item_description%]"
+        },
+        "unscore_checklist_item": {
+          "name": "[%key:component::habitica::common::unscore_checklist_item_name%]",
+          "description": "[%key:component::habitica::common::unscore_checklist_item_description%]"
         }
       },
       "sections": {
