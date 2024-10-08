@@ -1263,7 +1263,7 @@ class ConfigEntriesFlowManager(
                 match_context={"entry_id": context["entry_id"]},
                 include_uninitialized=True,
             )
-            if flow["context"].get("source") in {SOURCE_REAUTH, SOURCE_RECONFIGURE}
+            if flow["context"].get("source") == SOURCE_REAUTH
         ):
             return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
