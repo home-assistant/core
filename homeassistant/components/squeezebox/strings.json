@@ -79,7 +79,7 @@
         },
         "repeat": {
           "name": "Repeat",
-          "description": "Whether the alarm should repeat the item played."
+          "description": "Whether the alarm should repeat rather than trigger only once."
         },
         "dow": {
           "name": "Days",
@@ -109,7 +109,7 @@
         },
         "repeat": {
           "name": "Repeat",
-          "description": "Whether the alarm should repeat the item played."
+          "description": "Whether the alarm should repeat rather than trigger only once."
         },
         "dow": {
           "name": "Days",
