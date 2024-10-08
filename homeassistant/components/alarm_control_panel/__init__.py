@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-import inspect
 import logging
 from typing import Any, Final, final
 
@@ -26,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.deprecation import (
@@ -148,7 +146,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "code_arm_required",
     "supported_features",
     "alarm_state",
-    "state",
 }
 
 
@@ -200,6 +197,10 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         if self.__alarm_legacy_state and not self.__alarm_legacy_state_reported:
             self._report_deprecated_alarm_state_handling()
 
+    async def _async_report_deprecated_alarm_state_handling(self) -> None:
+        """Async version of _report_deprecated_alarm_state_handling."""
+        self.hass.async_add_executor_job(self._report_deprecated_alarm_state_handling)
+
     @callback
     def _report_deprecated_alarm_state_handling(self) -> None:
         """Report on deprecated handling of alarm state.
@@ -209,9 +210,8 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         if self.__alarm_legacy_state_reported is True:
             return
         self.__alarm_legacy_state_reported = True
-        module = inspect.getmodule(self)
-        if module and module.__file__ and "custom_components" in module.__file__:
-            # Do not report on core integrations as they will be fixed.
+        if "custom_components" in type(self).__module__:
+            # Do not report on core integrations as they have been fixed.
             report_issue = "report it to the custom integration author."
             _LOGGER.warning(
                 "Entity %s (%s) is setting state directly"
@@ -222,24 +222,9 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 type(self),
                 report_issue,
             )
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_alarm_state_{self.platform.platform_name}",
-                breaks_in_ha_version="2025.11.0",
-                is_fixable=False,
-                is_persistent=False,
-                issue_domain=self.platform.platform_name,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_alarm_state",
-                translation_placeholders={
-                    "platform": self.platform.platform_name,
-                    "report_issue": report_issue,
-                },
-            )
 
     @final
-    @cached_property
+    @property
     def state(self) -> str | None:
         """Return the current state."""
         if (alarm_state := self.alarm_state) is None:

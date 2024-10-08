@@ -7,19 +7,10 @@ from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    CONF_PLATFORM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    STATE_UNKNOWN,
-    EntityCategory,
-)
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -541,27 +532,45 @@ async def test_action(
 
     hass.bus.async_fire("test_event_arm_away")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.ARMED_AWAY
+    )
 
     hass.bus.async_fire("test_event_arm_home")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_ARMED_HOME
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.ARMED_HOME
+    )
 
     hass.bus.async_fire("test_event_arm_vacation")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_ARMED_VACATION
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.ARMED_VACATION
+    )
 
     hass.bus.async_fire("test_event_arm_night")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.ARMED_NIGHT
+    )
 
     hass.bus.async_fire("test_event_disarm")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_DISARMED
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.DISARMED
+    )
 
     hass.bus.async_fire("test_event_trigger")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_TRIGGERED
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.TRIGGERED
+    )
 
 
 async def test_action_legacy(
@@ -615,4 +624,7 @@ async def test_action_legacy(
 
     hass.bus.async_fire("test_event_arm_away")
     await hass.async_block_till_done()
-    assert hass.states.get(entity_entry.entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert (
+        hass.states.get(entity_entry.entity_id).state
+        == AlarmControlPanelEntityState.ARMED_AWAY
+    )
