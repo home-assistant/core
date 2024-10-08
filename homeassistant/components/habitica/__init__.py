@@ -10,12 +10,14 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    APPLICATION_NAME,
     ATTR_NAME,
     CONF_API_KEY,
     CONF_NAME,
     CONF_URL,
     CONF_VERIFY_SSL,
     Platform,
+    __version__,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -41,6 +43,7 @@ from .const import (
     ATTR_SKILL,
     ATTR_TASK,
     CONF_API_USER,
+    DEVELOPER_ID,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
@@ -163,6 +166,13 @@ async def async_setup_entry(
 
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
+
+        def _make_headers(self) -> dict[str, str]:
+            headers = super()._make_headers()
+            headers.update(
+                {"x-client": f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"}
+            )
+            return headers
 
     async def handle_api_call(call: ServiceCall) -> None:
         name = call.data[ATTR_NAME]
