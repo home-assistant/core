@@ -201,3 +201,52 @@ async def test_zone_set_temperature(
             assert mock_fcn.await_args.kwargs == {}
 
     assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_zone_turn_off(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+) -> None:
+    """Test climate methods of a evohome-compatible zone."""
+
+    async for _ in setup_evohome(hass, config, install=install):
+        zone = get_zone_entity(hass)
+
+        # turn_off(): PermanentOverride, minHeatSetpoint
+        with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
+            await zone.async_turn_off()
+
+            assert mock_fcn.await_count == 1
+            assert mock_fcn.await_args.args == (
+                {
+                    "setpointMode": "PermanentOverride",
+                    "HeatSetpointValue": zone.min_temp,
+                },
+            )
+            assert mock_fcn.await_args.kwargs == {}
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_zone_turn_on(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+) -> None:
+    """Test climate methods of a evohome-compatible zone."""
+
+    async for _ in setup_evohome(hass, config, install=install):
+        zone = get_zone_entity(hass)
+
+        # turn_on(): FollowSchedule
+        with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
+            await zone.async_turn_on()
+
+            assert mock_fcn.await_count == 1
+            assert mock_fcn.await_args.args == (
+                {
+                    "setpointMode": "FollowSchedule",
+                },
+            )
+            assert mock_fcn.await_args.kwargs == {}
