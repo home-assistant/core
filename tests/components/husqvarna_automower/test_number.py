@@ -172,7 +172,7 @@ async def test_remove_work_area(
     current_entites_after_deletion = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    assert current_entites_after_deletion == current_entites - 1
+    assert current_entites_after_deletion == current_entites - 2
     entity_id = "number.test_mower_1_back_lawn_cutting_height"
     state = hass.states.get(entity_id)
     assert state is None
