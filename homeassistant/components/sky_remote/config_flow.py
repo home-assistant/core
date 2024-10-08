@@ -3,13 +3,13 @@
 import logging
 from typing import Any
 
+from skyboxremote import RemoteControl, SkyBoxConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-from . import RemoteControl, SkyBoxConnectionError
 from .const import DEFAULT_PORT, DOMAIN, LEGACY_PORT
 
 DATA_SCHEMA = vol.Schema(
@@ -43,9 +43,11 @@ class SkyRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
+
         errors: dict[str, str] = {}
         if user_input is not None:
             logging.debug("user_input: %s", user_input)
+            self._async_abort_entries_match(user_input)
             try:
                 port = await async_find_box_port(user_input[CONF_HOST])
             except SkyBoxConnectionError:
@@ -57,4 +59,6 @@ class SkyRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**user_input, CONF_PORT: port},
                 )
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )

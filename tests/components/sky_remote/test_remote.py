@@ -1,29 +1,46 @@
 """Test sky_remote remote."""
 
-from unittest.mock import MagicMock
-
 import pytest
 
-from homeassistant.components.sky_remote.remote import SkyRemote
+from homeassistant.components.remote import (
+    ATTR_COMMAND,
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
+from . import setup_mock_entry
 
-def test_send_command() -> None:
+ENTITY_ID = "remote.example_com"
+
+
+async def test_send_command(
+    hass: HomeAssistant, mock_config_entry, mock_remote_control
+) -> None:
     """Test "send_command" method."""
-    mock_remote = MagicMock()
-    remote = SkyRemote(mock_remote, "test_remote")
-    remote.send_command(
-        ["sky"],
+    await setup_mock_entry(hass, mock_config_entry)
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["sky"]},
+        blocking=True,
     )
-    mock_remote.send_keys.assert_called_once_with(["sky"])
+    mock_remote_control._instance_mock.send_keys.assert_called_once_with(["sky"])
 
 
-def test_send_invalid_command() -> None:
+async def test_send_invalid_command(
+    hass: HomeAssistant, mock_config_entry, mock_remote_control
+) -> None:
     """Test "send_command" method."""
-    mock_remote = MagicMock()
-    remote = SkyRemote(mock_remote, "test_remote")
+    await setup_mock_entry(hass, mock_config_entry)
+
     with pytest.raises(ServiceValidationError):
-        remote.send_command(
-            ["apple"],
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEND_COMMAND,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["apple"]},
+            blocking=True,
         )
-    mock_remote.send_keys.assert_not_called()
+    mock_remote_control._instance_mock.send_keys.assert_not_called()
