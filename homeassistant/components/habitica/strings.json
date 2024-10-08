@@ -395,6 +395,12 @@
     },
     "item_not_found": {
       "message": "Unable to use {item}, you don't own this item."
+    },
+    "frequency_not_weekly": {
+      "message": "Unable to update task, weekly repeat settings apply only to weekly recurring dailies."
+    },
+    "frequency_not_monthly": {
+      "message": "Unable to update task, monthly repeat settings apply only to monthly recurring dailies."
     }
   },
   "issues": {
