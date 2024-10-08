@@ -2,29 +2,29 @@
 
 from __future__ import annotations
 
-# from unittest.mock import patch
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
-# from homeassistant.config_entries import ConfigEntryState
-# from homeassistant.core import HomeAssistant
+from . import create_empty_config_entry, create_empty_receiver_info, setup_integration
 
-# from . import setup_integration
-
-# from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry
 
 
-# async def test_load_unload_entry(
-#     hass: HomeAssistant,
-#     config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test load and unload entry."""
-#     await setup_integration(hass, config_entry)
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload entry."""
 
-#     assert config_entry.state is ConfigEntryState.LOADED
+    config_entry = create_empty_config_entry()
+    receiver_info = create_empty_receiver_info()
+    await setup_integration(hass, config_entry, receiver_info)
 
-#     await hass.config_entries.async_unload(config_entry.entry_id)
-#     await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
 
-#     assert config_entry.state is ConfigEntryState.NOT_LOADED
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 # async def test_update_entry(
