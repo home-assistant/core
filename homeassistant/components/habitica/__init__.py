@@ -152,20 +152,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             "smash": {"spellId": "smash", "cost": "10 MP"},
             "fireball": {"spellId": "fireball", "cost": "10 MP"},
         }
-        try:
-            task_id = next(
-                task["id"]
-                for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
-                or call.data[ATTR_TASK] == task["text"]
-            )
-        except StopIteration as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="task_not_found",
-                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
-            ) from e
-
+        task_id = lookup_task(
+            coordinator.data.tasks, call.data[ATTR_TASK], call.service
+        )["id"]
         try:
             response: dict[str, Any] = await coordinator.api.user.class_.cast[
                 skill[call.data[ATTR_SKILL]]["spellId"]
