@@ -141,11 +141,7 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
                 valid_keys.add(user_input[CONF_API_KEY])
 
         if existing_entry := await self.async_set_unique_id(self._geo_id):
-            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(existing_entry, data=user_input)
 
         return self.async_create_entry(
             title=f"Cloud API ({self._geo_id})",
