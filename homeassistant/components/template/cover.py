@@ -15,7 +15,6 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
-    CoverState,
 )
 from homeassistant.const import (
     CONF_COVERS,
@@ -235,8 +234,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 else:
                     self._position = 0
 
-            self._is_opening = state == CoverState.OPENING
-            self._is_closing = state == CoverState.CLOSING
+            self._is_opening = state == OPENING_STATE
+            self._is_closing = state == CLOSING_STATE
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s for entity %s. Expected: %s",
