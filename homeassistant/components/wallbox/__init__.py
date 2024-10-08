@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime
+
 import voluptuous as vol
 from wallbox import Wallbox
 
@@ -66,11 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_get_sessions_service(service_call: ServiceCall) -> ServiceResponse:
         """Get charging sessions between timestamps for Wallbox."""
-        start = dt_util.as_local(service_call.data.get(SESSION_START_DATETIME))
-        end = dt_util.as_local(service_call.data.get(SESSION_END_DATETIME))
-        serial = service_call.data.get(SESSION_SERIAL)
+        start: datetime.datetime = service_call.data.get(SESSION_START_DATETIME)
+        end: datetime.datetime = service_call.data.get(SESSION_END_DATETIME)
+        serial: str = service_call.data.get(SESSION_SERIAL)
 
-        return await wallbox_coordinator.async_get_sessions(serial, start, end)
+        return await wallbox_coordinator.async_get_sessions(
+            serial, dt_util.as_local(start), dt_util.as_local(end)
+        )
 
     hass.services.async_register(
         DOMAIN,
