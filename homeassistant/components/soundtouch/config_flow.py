@@ -65,7 +65,9 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         except RequestException:
             return self.async_abort(reason="cannot_connect")
 
-        self.context["title_placeholders"] = {"name": self.name}
+        if self.name:
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(

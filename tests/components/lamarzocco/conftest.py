@@ -24,7 +24,7 @@ def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         version=2,
@@ -37,8 +37,25 @@ def mock_config_entry(
         },
         unique_id=mock_lamarzocco.serial_number,
     )
-    entry.add_to_hass(hass)
-    return entry
+
+
+@pytest.fixture
+def mock_config_entry_no_local_connection(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=2,
+        data=USER_INPUT
+        | {
+            CONF_MODEL: mock_lamarzocco.model,
+            CONF_TOKEN: "token",
+            CONF_NAME: "GS3",
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
 
 
 @pytest.fixture
@@ -129,17 +146,6 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
 
         yield lamarzocco
-
-
-@pytest.fixture
-def remove_local_connection(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Remove the local connection."""
-    data = mock_config_entry.data.copy()
-    del data[CONF_HOST]
-    hass.config_entries.async_update_entry(mock_config_entry, data=data)
-    return mock_config_entry
 
 
 @pytest.fixture(autouse=True)

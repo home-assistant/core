@@ -59,7 +59,7 @@ async def test_camera(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     entity_id = f"{CAMERA_DOMAIN}.{NAME}"
-    camera_entity = camera._get_camera_from_entity_id(hass, entity_id)
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, entity_id)
     assert camera_entity.image_source == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi"
     assert (
         camera_entity.mjpeg_source == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi"
