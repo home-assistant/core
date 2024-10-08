@@ -36,7 +36,7 @@ class BackupSyncAgent(abc.ABC):
     ) -> None:
         """Download a backup file.
 
-        The `id` parameter is the ID of the syced backup that was returned in async_list_backups.
+        The `id` parameter is the ID of the synced backup that was returned in async_list_backups.
 
         The `path` parameter is the full file path to download the synced backup to.
         """

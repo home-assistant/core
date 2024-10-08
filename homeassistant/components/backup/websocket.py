@@ -169,6 +169,7 @@ async def backup_agents_list_synced_backups(
         vol.Required("type"): "backup/agents/download",
         vol.Required("agent"): str,
         vol.Required("sync_id"): str,
+        vol.Required("slug"): str,
     }
 )
 @websocket_api.async_response
@@ -188,7 +189,8 @@ async def backup_agents_download(
         return
     try:
         await agent.async_download_backup(
-            id=msg["sync_id"], path=Path(hass.config.path("backup"))
+            id=msg["sync_id"],
+            path=Path(hass.config.path("backup"), f"{msg['slug']}.tar"),
         )
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))

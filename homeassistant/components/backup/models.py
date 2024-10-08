@@ -19,7 +19,7 @@ class BaseBackup:
 
 
 class BackupSyncMetadata(TypedDict):
-    """Dictionaly type for backup sync metadata."""
+    """Dictionary type for backup sync metadata."""
 
     date: str  # The date the backup was created
     slug: str  # The slug of the backup
