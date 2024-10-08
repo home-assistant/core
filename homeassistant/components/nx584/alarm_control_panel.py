@@ -13,17 +13,10 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
     CodeFormat,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -136,15 +129,15 @@ class NX584Alarm(AlarmControlPanelEntity):
                 break
 
         if not part["armed"]:
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
         elif bypassed:
-            self._attr_state = STATE_ALARM_ARMED_HOME
+            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
         else:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
 
         for flag in part["condition_flags"]:
             if flag == "Siren on":
-                self._attr_state = STATE_ALARM_TRIGGERED
+                self._attr_alarm_state = AlarmControlPanelEntityState.TRIGGERED
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

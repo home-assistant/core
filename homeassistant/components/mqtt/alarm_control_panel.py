@@ -7,23 +7,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -185,16 +174,16 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._attr_state = None
             return
         if payload not in (
-            STATE_ALARM_DISARMED,
-            STATE_ALARM_ARMED_HOME,
-            STATE_ALARM_ARMED_AWAY,
-            STATE_ALARM_ARMED_NIGHT,
-            STATE_ALARM_ARMED_VACATION,
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            STATE_ALARM_PENDING,
-            STATE_ALARM_ARMING,
-            STATE_ALARM_DISARMING,
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelEntityState.DISARMED,
+            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelEntityState.ARMED_AWAY,
+            AlarmControlPanelEntityState.ARMED_NIGHT,
+            AlarmControlPanelEntityState.ARMED_VACATION,
+            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelEntityState.PENDING,
+            AlarmControlPanelEntityState.ARMING,
+            AlarmControlPanelEntityState.DISARMING,
+            AlarmControlPanelEntityState.TRIGGERED,
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
