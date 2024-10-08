@@ -46,7 +46,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 client_session=async_get_clientsession(self.hass),
             )
 
-            if custom_account := user_input.get(CONF_ACCOUNT) is not None:
+            if (custom_account := user_input.get(CONF_ACCOUNT)) is not None:
                 client.custom_account_id = custom_account
 
             try:

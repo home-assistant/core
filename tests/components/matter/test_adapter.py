@@ -18,8 +18,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "name"),
     [
@@ -54,8 +52,6 @@ async def test_device_registry_single_node_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
@@ -125,8 +121,6 @@ async def test_device_registry_bridge(
 
 
 @pytest.mark.usefixtures("integration")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,
