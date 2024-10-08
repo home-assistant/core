@@ -123,30 +123,12 @@ async def test_form_missing_nasweb_data(
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    # with patch(
-    #     "homeassistant.components.nasweb.nasweb_data.NASwebData.get_webhook_url",
-    #     return_value=None,
-    # ):
-    #     result2 = await hass.config_entries.flow.async_configure(
-    #         result["flow_id"], TEST_USER_INPUT
-    #     )
-    #     assert result2.get("type") == FlowResultType.FORM
-    #     assert result2.get("errors") == {"base": "missing_nasweb_data"}
     with patch(BASE_CONFIG_FLOW + "WebioAPI.status_subscription", return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
-    # with patch(
-    #     BASE_NASWEB_DATA + "NotificationCoordinator.check_connection",
-    #     return_value=False,
-    # ):
-    #     result2 = await hass.config_entries.flow.async_configure(
-    #         result["flow_id"], TEST_USER_INPUT
-    #     )
-    #     assert result2.get("type") == FlowResultType.FORM
-    #     assert result2.get("errors") == {"base": "missing_nasweb_data"}
 
 
 async def test_missing_status(
