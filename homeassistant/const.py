@@ -479,21 +479,6 @@ STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
 STATE_STANDBY: Final = "standby"
-STATE_ALARM_DISARMED: Final = "disarmed"
-STATE_ALARM_ARMED_HOME: Final = "armed_home"
-STATE_ALARM_ARMED_AWAY: Final = "armed_away"
-STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
-STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
-STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
-STATE_ALARM_PENDING: Final = "pending"
-STATE_ALARM_ARMING: Final = "arming"
-STATE_ALARM_DISARMING: Final = "disarming"
-STATE_ALARM_TRIGGERED: Final = "triggered"
-STATE_LOCKED: Final = "locked"
-STATE_UNLOCKED: Final = "unlocked"
-STATE_LOCKING: Final = "locking"
-STATE_UNLOCKING: Final = "unlocking"
-STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
@@ -524,6 +509,7 @@ _DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
 _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
     "jammed",
     "LockState.JAMMED",
+    "2025.10",
 )
 
 # #### ALARM CONTROL PANEL STATES ####
@@ -532,52 +518,52 @@ _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
 _DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
     "disarmed",
     "AlarmControlPanelEntityState.DISARMED",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
     "armed_home",
     "AlarmControlPanelEntityState.ARMED_HOME",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
     "armed_away",
     "AlarmControlPanelEntityState.ARMED_AWAY",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
     "armed_night",
     "AlarmControlPanelEntityState.ARMED_NIGHT",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
     "armed_vacation",
     "AlarmControlPanelEntityState.ARMED_VACATION",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
     "armed_custom_bypass",
     "AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
     "pending",
     "AlarmControlPanelEntityState.PENDING",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
     "arming",
     "AlarmControlPanelEntityState.ARMING",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
     "disarming",
     "AlarmControlPanelEntityState.DISARMING",
-    "2025.10",
+    "2025.11",
 )
 _DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
     "triggered",
     "AlarmControlPanelEntityState.TRIGGERED",
-    "2025.10",
+    "2025.11",
 )
 
 # #### STATE AND EVENT ATTRIBUTES ####
