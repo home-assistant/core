@@ -1,5 +1,6 @@
 """Tests for the Backup integration."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -313,8 +314,11 @@ async def test_agents_download(
         }
     )
     with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
-        assert await client.receive_json()
-        assert snapshot == download_mock.call_args
+        assert snapshot == await client.receive_json()
+        assert download_mock.call_args[1] == {
+            "id": "abc123",
+            "path": Path(hass.config.path("backup"), "abc123.tar"),
+        }
 
 
 async def test_agents_download_exception(

@@ -1,23 +1,19 @@
 # serializer version: 1
 # name: test_agents_download[with_hassio]
-  _Call(
-    tuple(
-    ),
-    dict({
-      'id': 'abc123',
-      'path': PosixPath('/workspaces/core/tests/testing_config/backup/abc123.tar'),
-    }),
-  )
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
 # ---
 # name: test_agents_download[without_hassio]
-  _Call(
-    tuple(
-    ),
-    dict({
-      'id': 'abc123',
-      'path': PosixPath('/workspaces/core/tests/testing_config/backup/abc123.tar'),
-    }),
-  )
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
 # ---
 # name: test_agents_download_exception
   dict({
