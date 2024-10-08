@@ -1,8 +1,41 @@
 {
   "entity": {
     "switch": {
+      "auto_mode": {
+        "default": "mdi:cogs"
+      },
+      "express_mode": {
+        "default": "mdi:snowflake-variant"
+      },
+      "hot_water_mode": {
+        "default": "mdi:list-status"
+      },
+      "humidity_warm_mode": {
+        "default": "mdi:heat-wave"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "mood_lamp_state": {
+        "default": "mdi:lamp"
+      },
       "operation_power": {
         "default": "mdi:power"
+      },
+      "optimal_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "power_save_enabled": {
+        "default": "mdi:hydro-power"
+      },
+      "rapid_freeze": {
+        "default": "mdi:snowflake"
+      },
+      "sleep_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "uv_nano": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
