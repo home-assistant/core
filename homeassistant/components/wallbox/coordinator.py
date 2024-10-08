@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+import datetime
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
@@ -14,6 +14,7 @@ from wallbox import Wallbox
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.json import JsonObjectType
 
 from .const import (
     CHARGER_CURRENCY_KEY,
@@ -101,7 +102,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=datetime.timedelta(seconds=UPDATE_INTERVAL),
         )
 
     def authenticate(self) -> None:
@@ -173,6 +174,27 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._set_charging_current, charging_current
         )
         await self.async_request_refresh()
+
+    @_require_authentication
+    def _get_sessions(
+        self,
+        charger_id: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> JsonObjectType:
+        """Get charging sessions between timestamps for Wallbox."""
+        return self._wallbox.getSessionList(charger_id, start_date, end_date)
+
+    async def async_get_sessions(
+        self,
+        charger_id: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> JsonObjectType:
+        """Get charging sessions between timestamps for Wallbox."""
+        return await self.hass.async_add_executor_job(
+            self._get_sessions, charger_id, start_date, end_date
+        )
 
     @_require_authentication
     def _set_icp_current(self, icp_current: float) -> None:

@@ -38,6 +38,10 @@ CHARGER_STATE_OF_CHARGE_KEY = "state_of_charge"
 CHARGER_STATUS_ID_KEY = "status_id"
 CHARGER_STATUS_DESCRIPTION_KEY = "status_description"
 CHARGER_CONNECTIONS = "connections"
+SERVICE_GET_SESSIONS = "get_sessions"
+SESSION_SERIAL = "serial"
+SESSION_START_DATETIME = "start_date_time"
+SESSION_END_DATETIME = "end_date_time"
 
 
 class ChargerStatus(StrEnum):

@@ -1,0 +1,14 @@
+get_sessions:
+  fields:
+    serial:
+      example: "12345"
+      selector:
+        text:
+    start_date_time:
+      example: "2022-01-01 00:00:00"
+      selector:
+        datetime:
+    end_date_time:
+      example: "2022-02-01 00:00:00"
+      selector:
+        datetime:

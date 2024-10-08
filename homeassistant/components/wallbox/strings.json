@@ -92,5 +92,25 @@
         "name": "Pause/resume"
       }
     }
+  },
+  "services": {
+    "get_sessions": {
+      "name": "Get charging sessions",
+      "description": "Get all the charging sessions between the timestamps.",
+      "fields": {
+        "serial": {
+          "name": "Serial number",
+          "description": "Serial number of the Wallbox charger."
+        },
+        "start_date_time": {
+          "name": "Start time",
+          "description": "Returns sessions after this time."
+        },
+        "end_date_time": {
+          "name": "End time",
+          "description": "Returns sessions before this time."
+        }
+      }
+    }
   }
 }
