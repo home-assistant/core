@@ -60,7 +60,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
         self._attr_available = self._client.is_available
         armed = self._client.is_armed
         if armed is None:
-            self._attr_state = None
+            self._attr_alarm_state = None
             return
         if armed:
             prof = (await self._client.get_active_profile()).lower()

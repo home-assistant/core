@@ -171,7 +171,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             )
             return
         if payload == PAYLOAD_NONE:
-            self._attr_state = None
+            self._attr_alarm_state = None
             return
         if payload not in (
             AlarmControlPanelEntityState.DISARMED,
@@ -187,13 +187,13 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
-        self._attr_state = str(payload)
+        self._attr_alarm_state = AlarmControlPanelEntityState(payload)
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_state"}
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
     async def _subscribe_topics(self) -> None:

@@ -14,7 +14,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -109,8 +109,12 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
-        if last_state is not None:
-            self._attr_state = last_state.state
+        self._attr_alarm_state = None
+        if last_state is not None and last_state.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            self._attr_alarm_state = AlarmControlPanelEntityState(last_state.state)
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
 

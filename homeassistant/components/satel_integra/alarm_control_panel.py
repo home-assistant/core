@@ -61,7 +61,6 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
-    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -89,7 +88,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         """Handle alarm status update."""
         state = self._read_alarm_state()
         _LOGGER.debug("Got status update, current status: %s", state)
-        if state != self._attr_state:
+        if state != self._attr_alarm_state:
             self._attr_alarm_state = state
             self.async_write_ha_state()
         else:
@@ -145,7 +144,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelEntityState.TRIGGERED
         )
 
-        _LOGGER.debug("Disarming, self._attr_state: %s", self._attr_state)
+        _LOGGER.debug("Disarming, self._attr_alarm_state: %s", self._attr_alarm_state)
 
         await self._satel.disarm(code, [self._partition_id])
 

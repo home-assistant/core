@@ -88,7 +88,6 @@ class NX584Alarm(AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
-    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -111,11 +110,11 @@ class NX584Alarm(AlarmControlPanelEntity):
                 "Unable to connect to %(host)s: %(reason)s",
                 {"host": self._url, "reason": ex},
             )
-            self._attr_state = None
+            self._attr_alarm_state = None
             zones = []
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
-            self._attr_state = None
+            self._attr_alarm_state = None
             zones = []
 
         bypassed = False

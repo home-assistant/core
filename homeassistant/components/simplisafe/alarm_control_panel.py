@@ -140,7 +140,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         if self._system.alarm_going_off:
             self._attr_alarm_state = AlarmControlPanelEntityState.TRIGGERED
         elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
-            self._attr_state = state
+            self._attr_alarm_state = state
             self.async_reset_error_count()
         else:
             LOGGER.warning("Unexpected system state (REST API): %s", self._system.state)
@@ -223,7 +223,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         assert event.event_type
 
         if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
-            self._attr_state = state
+            self._attr_alarm_state = state
             self.async_reset_error_count()
         else:
             LOGGER.error("Unknown alarm websocket event: %s", event.event_type)

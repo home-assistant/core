@@ -115,6 +115,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 XIAOMI_STATE_DISARMED_VALUE,
                 XIAOMI_STATE_ARMING_VALUE,
             )
-            self._attr_state = None
+            self._attr_alarm_state = None
 
-        _LOGGER.debug("State value: %s", self._attr_state)
+        _LOGGER.debug("State value: %s", self._attr_alarm_state)

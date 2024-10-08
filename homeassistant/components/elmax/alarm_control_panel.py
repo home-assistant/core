@@ -71,7 +71,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self._attr_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
+        if self._attr_alarm_state == AlarmStatus.NOT_ARMED_NOT_ARMABLE:
             raise InvalidStateError(
                 f"Cannot arm {self.name}: please check for open windows/doors first"
             )
