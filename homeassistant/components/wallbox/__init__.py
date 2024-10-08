@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get charging sessions between timestamps for Wallbox."""
         start = service_call.data.get(SESSION_START_DATETIME, dt_util.now())
         end = service_call.data.get(SESSION_END_DATETIME, dt_util.now())
-        serial = service_call.data.get(SESSION_SERIAL, "0")
+        serial = service_call.data.get(SESSION_SERIAL, "12345")
 
         return await wallbox_coordinator.async_get_sessions(
             serial, dt_util.as_local(start), dt_util.as_local(end)
