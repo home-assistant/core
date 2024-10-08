@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components import fan, switch
+from homeassistant.components import fan, input_boolean, switch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_NAME, DEGREE
 from homeassistant.helpers import selector
@@ -38,7 +38,13 @@ OPTIONS_SCHEMA = {
         )
     ),
     vol.Required(CONF_HEATER): selector.EntitySelector(
-        selector.EntitySelectorConfig(domain=[fan.DOMAIN, switch.DOMAIN])
+        selector.EntitySelectorConfig(
+            domain=[
+                fan.DOMAIN,
+                input_boolean.DOMAIN,
+                switch.DOMAIN,
+            ]
+        )
     ),
     vol.Required(
         CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
