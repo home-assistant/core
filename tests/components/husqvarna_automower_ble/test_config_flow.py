@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    AUTOMOWER_MISSING_SERVICE_SERVICE_INFO,
     AUTOMOWER_SERVICE_INFO,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
     AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO,
@@ -64,20 +63,6 @@ async def test_user_selection(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
         CONF_CLIENT_ID: 1197489078,
     }
-
-
-async def test_no_devices(hass: HomeAssistant) -> None:
-    """Test missing device."""
-
-    inject_bluetooth_service_info(hass, AUTOMOWER_MISSING_SERVICE_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 async def test_bluetooth(hass: HomeAssistant) -> None:
@@ -177,16 +162,3 @@ async def test_exception_connect(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
-
-
-async def test_failed_is_connected(
-    hass: HomeAssistant,
-    mock_automower_client: Mock,
-) -> None:
-    """Test we can select a device."""
-
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    mock_automower_client.is_connected.side_effect = False

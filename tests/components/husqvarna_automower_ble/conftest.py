@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.husqvarna_automower_ble.async_setup_entry",

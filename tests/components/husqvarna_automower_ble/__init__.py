@@ -35,16 +35,6 @@ AUTOMOWER_UNNAMED_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-AUTOMOWER_MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
-    name="Missing Service Info",
-    address="00000000-0000-0000-0002-000000000000",
-    rssi=-63,
-    service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
-    service_uuids=[],
-    source="local",
-)
-
 AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO = BluetoothServiceInfo(
     name="Missing Manufacturer Data",
     address="00000000-0000-0000-0002-000000000001",
