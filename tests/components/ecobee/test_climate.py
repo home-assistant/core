@@ -481,6 +481,8 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             device_id = device.id
         if device.name == "ecobee":
             ecobee_id = device.id
+        if device.name == "Remote Sensor 2":
+            device_id_1 = device.id
 
     # Test that the function call works in its entirety.
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
@@ -548,6 +550,19 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_PRESET_MODE: "Climate1",
                 ATTR_SENSOR_LIST: ["abcd"],
+            },
+            blocking=True,
+        )
+
+    ## Error raised because sensor not available on device.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [device_id_1],
             },
             blocking=True,
         )

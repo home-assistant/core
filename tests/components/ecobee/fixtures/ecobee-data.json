@@ -194,6 +194,25 @@
               "value": "false"
             }
           ]
+        },
+        {
+          "id": "rs:101",
+          "name": "Remote Sensor 2",
+          "type": "ecobee3_remote_sensor",
+          "code": "VTRK",
+          "inUse": false,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "occupancy",
+              "value": "false"
+            }
+          ]
         }
       ]
     },
