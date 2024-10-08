@@ -26,7 +26,7 @@ async def test_numbers(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test numbers."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])

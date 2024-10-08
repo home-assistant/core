@@ -27,7 +27,7 @@ async def test_locks(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test locks."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.LOCK)
 
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])

@@ -25,7 +25,7 @@ async def test_switches(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test switches."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])

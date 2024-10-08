@@ -22,7 +22,7 @@ async def test_events(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
 
 
 @pytest.mark.parametrize("node_fixture", ["generic_switch"])

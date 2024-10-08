@@ -25,7 +25,7 @@ async def test_valves(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test valves."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.VALVE)
 
 
 @pytest.mark.parametrize("node_fixture", ["valve"])

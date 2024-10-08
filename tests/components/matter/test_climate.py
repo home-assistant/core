@@ -27,7 +27,7 @@ async def test_climates(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climates."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.CLIMATE)
 
 
 @pytest.mark.parametrize("node_fixture", ["thermostat"])

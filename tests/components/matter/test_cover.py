@@ -33,7 +33,7 @@ async def test_covers(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test covers."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.COVER)
 
 
 @pytest.mark.parametrize(

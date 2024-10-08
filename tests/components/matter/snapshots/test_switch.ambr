@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches[door_lock][binary_sensor.mock_door_lock_battery-entry]
+# name: test_switches[door_lock][switch.mock_door_lock_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9,56 +9,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-BatteryChargeLevel-47-14',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock][binary_sensor.mock_door_lock_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock Battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[door_lock][binary_sensor.mock_door_lock_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
+    'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
+    'entity_id': 'switch.mock_door_lock_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -68,32 +21,32 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Switch',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockDoorStateSensor-257-3',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock][binary_sensor.mock_door_lock_door-state]
+# name: test_switches[door_lock][switch.mock_door_lock_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Mock Door Lock Door',
+      'device_class': 'outlet',
+      'friendly_name': 'Mock Door Lock Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
+    'entity_id': 'switch.mock_door_lock_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery-entry]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -103,56 +56,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-BatteryChargeLevel-47-14',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock Battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][binary_sensor.mock_door_lock_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
+    'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
+    'entity_id': 'switch.mock_door_lock_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -162,32 +68,32 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Switch',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockDoorStateSensor-257-3',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][binary_sensor.mock_door_lock_door-state]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Mock Door Lock Door',
+      'device_class': 'outlet',
+      'friendly_name': 'Mock Door Lock Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
+    'entity_id': 'switch.mock_door_lock_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[eve_contact_sensor][binary_sensor.eve_door_door-entry]
+# name: test_switches[eve_energy_plug][switch.eve_energy_plug_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -197,9 +103,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
+    'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'binary_sensor.eve_door_door',
+    'entity_id': 'switch.eve_energy_plug_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -209,497 +115,263 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Switch',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ContactSensor-69-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[eve_contact_sensor][binary_sensor.eve_door_door-state]
+# name: test_switches[eve_energy_plug][switch.eve_energy_plug_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Eve Door Door',
+      'device_class': 'outlet',
+      'friendly_name': 'Eve Energy Plug Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.eve_door_door',
+    'entity_id': 'switch.eve_energy_plug_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.eve_energy_plug_patched_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Eve Energy Plug Patched Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_plug_patched_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[on_off_plugin_unit][switch.mock_onoffpluginunit_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_onoffpluginunit_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[on_off_plugin_unit][switch.mock_onoffpluginunit_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Mock OnOffPluginUnit Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_onoffpluginunit_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[room_airconditioner][switch.room_airconditioner_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.room_airconditioner_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[room_airconditioner][switch.room_airconditioner_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Room AirConditioner Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.room_airconditioner_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch_unit][switch.mock_switchunit_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_switchunit_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch_unit][switch.mock_switchunit_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Mock SwitchUnit Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_switchunit_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[thermostat][switch.longan_link_hvac_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.longan_link_hvac_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[thermostat][switch.longan_link_hvac_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Longan link HVAC Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.longan_link_hvac_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_switches[leak_sensor][binary_sensor.water_leak_detector_water_leak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.water_leak_detector_water_leak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
-    'original_icon': None,
-    'original_name': 'Water leak',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_leak',
-    'unique_id': '00000000000004D2-0000000000000020-MatterNodeDevice-1-WaterLeakDetector-69-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[leak_sensor][binary_sensor.water_leak_detector_water_leak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Water Leak Detector Water leak',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.water_leak_detector_water_leak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switches[occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.mock_occupancy_sensor_occupancy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': None,
-    'original_name': 'Occupancy',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock Occupancy Sensor Occupancy',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_occupancy_sensor_occupancy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switches[onoff_light_alt_name][binary_sensor.mock_onoff_light_occupancy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.mock_onoff_light_occupancy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': None,
-    'original_name': 'Occupancy',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[onoff_light_alt_name][binary_sensor.mock_onoff_light_occupancy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock OnOff Light Occupancy',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_onoff_light_occupancy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[onoff_light_no_name][binary_sensor.mock_light_occupancy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.mock_light_occupancy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': None,
-    'original_name': 'Occupancy',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[onoff_light_no_name][binary_sensor.mock_light_occupancy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock Light Occupancy',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_light_occupancy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_battery_alert-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smoke_sensor_battery_alert',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery alert',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_alert',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmBatteryAlertSensor-92-3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_battery_alert-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Smoke sensor Battery alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_battery_alert',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_end_of_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smoke_sensor_end_of_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'End of service',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'end_of_service',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmEndfOfServiceSensor-92-7',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_end_of_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smoke sensor End of service',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_end_of_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_hardware_fault-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smoke_sensor_hardware_fault',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Hardware fault',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'hardware_fault',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmHardwareFaultAlertSensor-92-6',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_hardware_fault-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smoke sensor Hardware fault',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_hardware_fault',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_muted-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smoke_sensor_muted',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Muted',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'muted',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmDeviceMutedSensor-92-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_muted-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke sensor Muted',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_muted',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_smoke-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.smoke_sensor_smoke',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
-    'original_icon': None,
-    'original_name': 'Smoke',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmSmokeStateSensor-92-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_smoke-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Smoke sensor Smoke',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_smoke',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_test_in_progress-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smoke_sensor_test_in_progress',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
-    'original_icon': None,
-    'original_name': 'Test in progress',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'test_in_progress',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmTestInProgressSensor-92-5',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[smoke_detector][binary_sensor.smoke_sensor_test_in_progress-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Smoke sensor Test in progress',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_sensor_test_in_progress',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---

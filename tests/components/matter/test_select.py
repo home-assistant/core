@@ -25,7 +25,7 @@ async def test_selects(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test selects."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SELECT)
 
 
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])

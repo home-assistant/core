@@ -41,7 +41,7 @@ async def test_fans(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fans."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.FAN)
 
 
 @pytest.mark.parametrize("node_fixture", ["air_purifier"])

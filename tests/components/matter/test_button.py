@@ -21,7 +21,7 @@ async def test_buttons(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test buttons."""
-    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BUTTON)
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_plug"])
