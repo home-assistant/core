@@ -330,6 +330,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
         self.preview_cam: dict[str, Any] = {}
+        self.preview_stream: PreviewStream | None = None
         self.user_input: dict[str, Any] = {}
         self.title = ""
 
@@ -365,10 +366,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors, still_format = await async_test_still(hass, user_input)
                 try:
                     result = await async_test_and_preview_stream(hass, user_input)
-                    self.context["preview_stream"] = result
+                    self.preview_stream = result
                 except InvalidStreamException as err:
                     errors |= {CONF_STREAM_SOURCE: str(err)}
-                    self.context.pop("preview_stream", None)
+                    self.preview_stream = None
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     still_url = user_input.get(CONF_STILL_IMAGE_URL)
@@ -438,6 +439,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
     def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
         self.preview_cam: dict[str, Any] = {}
+        self.preview_stream: PreviewStream | None = None
         self.user_input: dict[str, Any] = {}
 
     async def async_step_init(
@@ -601,8 +603,15 @@ async def ws_start_preview(
     ha_still_url = None
     ha_stream_url = None
 
-    flow = hass.config_entries.flow.async_get(msg["flow_id"])
-    user_input = flow["context"]["preview_cam"]
+    flow_id = msg["flow_id"]
+    flow = cast(
+        GenericIPCamConfigFlow,
+        hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
+    ) or cast(
+        GenericOptionsFlowHandler,
+        hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
+    )
+    user_input = flow.preview_cam
 
     # Create an EntityPlatform, needed for name translations
     platform = await async_prepare_setup_platform(hass, {}, CAMERA_DOMAIN, DOMAIN)
@@ -621,7 +630,7 @@ async def ws_start_preview(
         ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 
-    if ha_stream := flow["context"].get("preview_stream"):
+    if ha_stream := flow.preview_stream:
         ha_stream_url = ha_stream.endpoint_url(HLS_PROVIDER)
         _LOGGER.debug("Got preview stream URL: %s", ha_stream_url)
 

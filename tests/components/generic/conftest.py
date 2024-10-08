@@ -82,6 +82,7 @@ def mock_create_stream(hass: HomeAssistant) -> _patch[MagicMock]:
     mock_stream.add_provider.return_value = mock_provider
     mock_stream.start = AsyncMock()
     mock_stream.stop = AsyncMock()
+    mock_stream.endpoint_url.return_value = "http://127.0.0.1/nothing"
     return patch(
         "homeassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,

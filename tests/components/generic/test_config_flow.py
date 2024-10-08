@@ -46,7 +46,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TESTDATA = {
     CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
@@ -76,6 +76,7 @@ async def test_form(
     hass_client: ClientSessionGenerator,
     user_flow: ConfigFlowResult,
     mock_create_stream: _patch[MagicMock],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the form with a normal set of settings."""
 
@@ -98,11 +99,24 @@ async def test_form(
         resp = await client.get(preview_url)
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
+
+        # HA should now be serving a WS connection for a preview stream.
+        ws_client = await hass_ws_client()
+        flow_id = user_flow["flow_id"]
+        await ws_client.send_json_auto_id(
+            {
+                "type": "generic_camera/start_preview",
+                "flow_id": flow_id,
+                "flow_type": "config_flow",
+                "user_input": {},
+            },
+        )
+        _ = await ws_client.receive_json()
+
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
-        await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -116,7 +130,6 @@ async def test_form(
         CONF_VERIFY_SSL: False,
     }
 
-    await hass.async_block_till_done()
     # Check that the preview image is disabled after.
     resp = await client.get(preview_url)
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -403,7 +416,6 @@ async def test_form_rtsp_mode(
         CONF_VERIFY_SSL: False,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
 
 
@@ -429,7 +441,6 @@ async def test_form_only_stream(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
-        await hass.async_block_till_done()
 
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -441,8 +452,6 @@ async def test_form_only_stream(
         CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
-
-    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera._async_get_stream_image",
@@ -876,7 +885,6 @@ async def test_options_only_stream(
     )
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
