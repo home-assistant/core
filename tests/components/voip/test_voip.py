@@ -3,6 +3,7 @@
 import asyncio
 import io
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 import wave
 
@@ -10,11 +11,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
-from homeassistant.components import assist_pipeline, assist_satellite, voip
-from homeassistant.components.assist_satellite.entity import (
-    AssistSatelliteEntity,
-    AssistSatelliteState,
-)
+from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
+from homeassistant.components.assist_satellite import AssistSatelliteEntity
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.voip import HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
@@ -56,6 +57,7 @@ def async_get_satellite_entity(
     )
     if satellite_entity_id is None:
         return None
+    assert not satellite_entity_id.endswith("none")
 
     component: EntityComponent[AssistSatelliteEntity] = hass.data[
         assist_satellite.DOMAIN
@@ -197,7 +199,7 @@ async def test_pipeline(
     assert voip_user_id
 
     # Satellite is muted until a call begins
-    assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert satellite.state == AssistSatelliteState.IDLE
 
     done = asyncio.Event()
 
@@ -205,10 +207,23 @@ async def test_pipeline(
     bad_chunk = bytes([1, 2, 3, 4])
 
     async def async_pipeline_from_audio_stream(
-        hass: HomeAssistant, context: Context, *args, device_id: str | None, **kwargs
+        hass: HomeAssistant,
+        context: Context,
+        *args,
+        device_id: str | None,
+        tts_audio_output: str | dict[str, Any] | None,
+        **kwargs,
     ):
         assert context.user_id == voip_user_id
         assert device_id == voip_device.device_id
+
+        # voip can only stream WAV
+        assert tts_audio_output == {
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        }
 
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
@@ -236,7 +251,7 @@ async def test_pipeline(
             )
         )
 
-        assert satellite.state == AssistSatelliteState.LISTENING_COMMAND
+        assert satellite.state == AssistSatelliteState.LISTENING
 
         # Fake STT result
         event_callback(
@@ -330,7 +345,7 @@ async def test_pipeline(
         satellite.transport = Mock()
 
         satellite.connection_made(satellite.transport)
-        assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert satellite.state == AssistSatelliteState.IDLE
 
         # Ensure audio queue is cleared before pipeline starts
         satellite._audio_queue.put_nowait(bad_chunk)
@@ -355,7 +370,7 @@ async def test_pipeline(
             await done.wait()
 
         # Finished speaking
-        assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_stt_stream_timeout(

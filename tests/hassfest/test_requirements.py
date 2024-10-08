@@ -87,3 +87,22 @@ def test_validate_requirements_format_successful(integration: Integration) -> No
     ]
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
+
+
+def test_validate_requirements_format_github_core(integration: Integration) -> None:
+    """Test requirement that points to github fails with core component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    assert not validate_requirements_format(integration)
+    assert len(integration.errors) == 1
+
+
+def test_validate_requirements_format_github_custom(integration: Integration) -> None:
+    """Test requirement that points to github succeeds with custom component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    integration.path = Path("")
+    assert validate_requirements_format(integration)
+    assert len(integration.errors) == 0

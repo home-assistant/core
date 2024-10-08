@@ -19,7 +19,7 @@ from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
+from .const import AUTO_BYPASS, CODE_REQUIRED, CONF_USERCODES, DOMAIN
 
 PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -217,7 +217,11 @@ class TotalConnectOptionsFlowHandler(OptionsFlow):
                     vol.Required(
                         AUTO_BYPASS,
                         default=self.config_entry.options.get(AUTO_BYPASS, False),
-                    ): bool
+                    ): bool,
+                    vol.Required(
+                        CODE_REQUIRED,
+                        default=self.config_entry.options.get(CODE_REQUIRED, False),
+                    ): bool,
                 }
             ),
         )

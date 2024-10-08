@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
@@ -96,7 +96,7 @@ PARALLEL_UPDATES = 0
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(
-            [DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
+            [SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
         ),
         vol.Required(CONF_TYPE): vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -503,7 +503,7 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if all(x == state_classes[0] for x in state_classes):
             async_delete_issue(
-                self.hass, DOMAIN, f"{self.entity_id}_state_classes_not_matching"
+                self.hass, SENSOR_DOMAIN, f"{self.entity_id}_state_classes_not_matching"
             )
             return state_classes[0]
         async_create_issue(
@@ -546,7 +546,9 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if all(x == device_classes[0] for x in device_classes):
             async_delete_issue(
-                self.hass, DOMAIN, f"{self.entity_id}_device_classes_not_matching"
+                self.hass,
+                SENSOR_DOMAIN,
+                f"{self.entity_id}_device_classes_not_matching",
             )
             return device_classes[0]
         async_create_issue(
@@ -614,10 +616,14 @@ class SensorGroup(GroupEntity, SensorEntity):
             )
         ):
             async_delete_issue(
-                self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_device_class"
+                self.hass,
+                SENSOR_DOMAIN,
+                f"{self.entity_id}_uoms_not_matching_device_class",
             )
             async_delete_issue(
-                self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_no_device_class"
+                self.hass,
+                SENSOR_DOMAIN,
+                f"{self.entity_id}_uoms_not_matching_no_device_class",
             )
             return unit_of_measurements[0]
 

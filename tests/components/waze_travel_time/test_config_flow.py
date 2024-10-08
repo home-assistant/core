@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
@@ -60,18 +61,13 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data=MOCK_CONFIG,
         options=DEFAULT_OPTIONS,
+        version=WazeConfigFlow.VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    reconfigure_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
+    reconfigure_result = await entry.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "user"
 
@@ -103,6 +99,7 @@ async def test_options(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data=MOCK_CONFIG,
         options=DEFAULT_OPTIONS,
+        version=WazeConfigFlow.VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -119,8 +116,8 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
+            CONF_EXCL_FILTER: ["exclude"],
+            CONF_INCL_FILTER: ["include"],
             CONF_REALTIME: False,
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
@@ -132,8 +129,8 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: "exclude",
-        CONF_INCL_FILTER: "include",
+        CONF_EXCL_FILTER: ["exclude"],
+        CONF_INCL_FILTER: ["include"],
         CONF_REALTIME: False,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
@@ -143,8 +140,8 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: "exclude",
-        CONF_INCL_FILTER: "include",
+        CONF_EXCL_FILTER: ["exclude"],
+        CONF_INCL_FILTER: ["include"],
         CONF_REALTIME: False,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
@@ -209,10 +206,14 @@ async def test_invalid_config_entry(
 async def test_reset_filters(hass: HomeAssistant) -> None:
     """Test resetting inclusive and exclusive filters to empty string."""
     options = {**DEFAULT_OPTIONS}
-    options[CONF_INCL_FILTER] = "test"
-    options[CONF_EXCL_FILTER] = "test"
+    options[CONF_INCL_FILTER] = ["test"]
+    options[CONF_EXCL_FILTER] = ["test"]
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, options=options, entry_id="test"
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=options,
+        entry_id="test",
+        version=WazeConfigFlow.VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -228,8 +229,6 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "",
-            CONF_INCL_FILTER: "",
             CONF_REALTIME: False,
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
@@ -240,8 +239,8 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: "",
-        CONF_INCL_FILTER: "",
+        CONF_EXCL_FILTER: [""],
+        CONF_INCL_FILTER: [""],
         CONF_REALTIME: False,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",

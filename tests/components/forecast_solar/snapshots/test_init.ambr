@@ -6,6 +6,8 @@
       'longitude': 4.42,
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'forecast_solar',
     'entry_id': <ANY>,
     'minor_version': 1,

@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import DEVICES, SomaEntity
-from .const import API, DOMAIN
+from .const import API, DEVICES, DOMAIN
+from .entity import SomaEntity
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 

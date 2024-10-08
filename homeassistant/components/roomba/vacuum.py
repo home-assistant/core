@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import roomba_reported_state
 from .braava import BraavaJet
 from .const import DOMAIN
-from .irobot_base import IRobotVacuum
+from .entity import IRobotVacuum
 from .models import RoombaData
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 
