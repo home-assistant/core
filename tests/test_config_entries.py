@@ -6789,6 +6789,87 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     assert loaded["disabled_by"] == "user"
 
 
+@pytest.mark.parametrize(
+    ("original_unique_id", "new_unique_id", "count"),
+    [
+        ("unique", "unique", 1),
+        ("unique", "new", 2),
+        ("unique", None, 2),
+        (None, "unique", 2),
+    ],
+)
+@pytest.mark.parametrize(
+    "source",
+    [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE],
+)
+async def test_create_entry_reauth_reconfigure(
+    hass: HomeAssistant,
+    source: str,
+    original_unique_id: str | None,
+    new_unique_id: str | None,
+    count: int,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=original_unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            await self.async_set_unique_id(new_unique_id)
+            return self.async_create_entry(
+                title="From config flow",
+                data={"token": "supersecret"},
+            )
+
+    assert len(hass.config_entries.async_entries("test")) == 1
+
+    with mock_config_flow("test", TestFlow):
+        result = await getattr(entry, f"start_{source}_flow")(hass)
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == count
+    if count == 1:
+        # Show that the previous entry got binned and recreated
+        assert entries[0].entry_id != entry.entry_id
+
+    assert (
+        f"Detected {source} config flow creating a new entry, when it is expected "
+        "to update an existing entry and abort. This will stop working in "
+        "2025.11, please create a bug report at https://github.com/home"
+        "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+        "label%3A%22integration%3A+test%22"
+    ) in caplog.text
+
+
 async def test_async_update_entry_unique_id_collision(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
