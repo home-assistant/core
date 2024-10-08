@@ -141,8 +141,8 @@ async def async_setup_entry(
                 if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}"):
                     entity_reg.async_remove(entity_entry.entity_id)
 
-    def _async_measurement_listener() -> None:
-        """Listen for new measurements and add sensors if they did not exist."""
+    def _async_work_area_listener() -> None:
+        """Listen for new work areas and add number entities if they did not exist."""
         for mower_id in coordinator.data:
             if coordinator.data[mower_id].capabilities.work_areas:
                 _work_areas = coordinator.data[mower_id].work_areas
@@ -164,7 +164,7 @@ async def async_setup_entry(
                     if removed_work_areas:
                         _remove_all_work_areas(removed_work_areas, mower_id)
 
-    coordinator.async_add_listener(_async_measurement_listener)
+    coordinator.async_add_listener(_async_work_area_listener)
 
 
 class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
