@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.lock import LockState
 from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
@@ -20,12 +21,6 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
 )
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_HOME,
     STATE_IDLE,
@@ -60,12 +55,12 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.ALARM_CONTROL_PANEL: (
         {
             STATE_ON,
-            STATE_ALARM_ARMED_AWAY,
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            STATE_ALARM_ARMED_HOME,
-            STATE_ALARM_ARMED_NIGHT,
-            STATE_ALARM_ARMED_VACATION,
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelEntityState.ARMED_AWAY,
+            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelEntityState.ARMED_NIGHT,
+            AlarmControlPanelEntityState.ARMED_VACATION,
+            AlarmControlPanelEntityState.TRIGGERED,
         },
         STATE_ON,
         STATE_OFF,
