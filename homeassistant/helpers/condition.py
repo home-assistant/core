@@ -851,10 +851,10 @@ def time(
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            before_timedatime = dt_util.parse_datetime(before_entity.state)
-            if before_timedatime is None:
+            before_datetime = dt_util.parse_datetime(before_entity.state)
+            if before_datetime is None:
                 return False
-            before = dt_util.as_local(before_timedatime).time()
+            before = dt_util.as_local(before_datetime).time()
         else:
             return False
 
@@ -893,6 +893,208 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
         return time(hass, before, after, weekday)
 
     return time_if
+
+
+def date(
+    hass: HomeAssistant,
+    before: dt_time | str | None = None,
+    after: dt_time | str | None = None,
+    weekday: str | Container[str] | None = None,
+) -> bool:
+    """Test if date condition matches.
+    """
+    now = dt_util.now()
+    now_date = now.date()
+
+    if after is None:
+        after = dt_time(0)
+    elif isinstance(after, str):
+        if not (after_entity := hass.states.get(after)):
+            raise ConditionErrorMessage("date", f"unknown 'after' entity {after}")
+        if after_entity.domain == "input_datetime":
+            after = dt_time(
+                after_entity.attributes.get("year", 9999),
+                after_entity.attributes.get("month", 12),
+                after_entity.attributes.get("day", 31),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
+                return False
+            after = dt_util.as_local(after_datetime).time()
+        else:
+            return False
+
+    if before is None:
+        before = dt_time(9999, 12, 31)
+    elif isinstance(before, str):
+        if not (before_entity := hass.states.get(before)):
+            raise ConditionErrorMessage("date", f"unknown 'before' entity {before}")
+        if before_entity.domain == "input_datetime":
+            before = dt_time(
+                before_entity.attributes.get("year", 9999),
+                before_entity.attributes.get("month", 12),
+                before_entity.attributes.get("day", 31),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_datetime = dt_util.parse_datetime(before_entity.state)
+            if before_datetime is None:
+                return False
+            before = dt_util.as_local(before_datetime).time()
+        else:
+            return False
+
+    if after < before:
+        condition_trace_update_result(after=after, now_date=now_date, before=before)
+        if not after <= now_date < before:
+            return False
+    else:
+        condition_trace_update_result(after=after, now_date=now_date, before=before)
+        if before <= now_date < after:
+            return False
+
+    if weekday is not None:
+        now_weekday = WEEKDAYS[now.weekday()]
+
+        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
+        if (
+            isinstance(weekday, str)
+            and weekday != now_weekday
+            or now_weekday not in weekday
+        ):
+            return False
+
+    return True
+
+
+def date_from_config(config: ConfigType) -> ConditionCheckerType:
+    """Wrap action method with date based condition."""
+    before = config.get(CONF_BEFORE)
+    after = config.get(CONF_AFTER)
+    weekday = config.get(CONF_WEEKDAY)
+
+    @trace_condition_function
+    def datetime_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate date based if-condition."""
+        return datetime(hass, before, after, weekday)
+
+    return datetime_if
+
+
+def datetime(
+    hass: HomeAssistant,
+    before: dt_time | str | None = None,
+    after: dt_time | str | None = None,
+    weekday: str | Container[str] | None = None,
+) -> bool:
+    """Test if local time and date condition matches.
+
+    Handle the fact that time is continuous and we may be testing for
+    a period that crosses midnight. In that case it is easier to test
+    for the opposite. "(23:59 <= now < 00:01)" would be the same as
+    "not (00:01 <= now < 23:59)".
+    """
+    now = dt_util.now()
+
+    if after is None:
+        after = dt_time(0)
+    elif isinstance(after, str):
+        if not (after_entity := hass.states.get(after)):
+            raise ConditionErrorMessage("datetime", f"unknown 'after' entity {after}")
+        if after_entity.domain == "input_datetime":
+            after = dt_time(
+                after_entity.attributes.get("year", 9999),
+                after_entity.attributes.get("month", 12),
+                after_entity.attributes.get("day", 31),
+                after_entity.attributes.get("hour", 23),
+                after_entity.attributes.get("minute", 59),
+                after_entity.attributes.get("second", 59),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
+                return False
+            after = dt_util.as_local(after_datetime).time()
+        else:
+            return False
+
+    if before is None:
+        before = dt_time(9999, 12, 31, 23, 59, 59, 999999)
+    elif isinstance(before, str):
+        if not (before_entity := hass.states.get(before)):
+            raise ConditionErrorMessage("datetime", f"unknown 'before' entity {before}")
+        if before_entity.domain == "input_datetime":
+            before = dt_time(
+                before_entity.attributes.get("year", 9999),
+                before_entity.attributes.get("month", 12),
+                before_entity.attributes.get("day", 31),
+                before_entity.attributes.get("hour", 23),
+                before_entity.attributes.get("minute", 59),
+                before_entity.attributes.get("second", 59),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_datetime = dt_util.parse_datetime(before_entity.state)
+            if before_datetime is None:
+                return False
+            before = dt_util.as_local(before_datetime).time()
+        else:
+            return False
+
+    if after < before:
+        condition_trace_update_result(after=after, now=now, before=before)
+        if not after <= now < before:
+            return False
+    else:
+        condition_trace_update_result(after=after, now=now, before=before)
+        if before <= now < after:
+            return False
+
+    if weekday is not None:
+        now_weekday = WEEKDAYS[now.weekday()]
+
+        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
+        if (
+            isinstance(weekday, str)
+            and weekday != now_weekday
+            or now_weekday not in weekday
+        ):
+            return False
+
+    return True
+
+
+def datetime_from_config(config: ConfigType) -> ConditionCheckerType:
+    """Wrap action method with datetime based condition."""
+    before = config.get(CONF_BEFORE)
+    after = config.get(CONF_AFTER)
+    weekday = config.get(CONF_WEEKDAY)
+
+    @trace_condition_function
+    def datetime_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate datetime based if-condition."""
+        return datetime(hass, before, after, weekday)
+
+    return datetime_if
 
 
 def zone(

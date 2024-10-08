@@ -1076,6 +1076,362 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         condition.time(hass, before="sensor.not_existing")
 
 
+async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
+    """Test date conditions using input_datetime entities."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {
+            "input_datetime": {
+                "am": {"has_date": True, "has_time": True},
+                "pm": {"has_date": True, "has_time": True},
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.am",
+            "datetime": str(
+                dt_util.now()
+                .replace(year=2021, month=5, day=1, hour=6, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.pm",
+            "datetime": str(
+                dt_util.now()
+                .replace(year=2020, month=5, day=1, hour=18, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=3),
+    ):
+        assert not condition.date(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.date(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=9),
+    ):
+        assert condition.date(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.date(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=15),
+    ):
+        assert condition.date(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.date(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=21),
+    ):
+        assert not condition.date(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.date(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with pytest.raises(ConditionError):
+        condition.date(hass, after="input_datetime.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.date(hass, before="input_datetime.not_existing")
+
+
+async def test_date_using_sensor(hass: HomeAssistant) -> None:
+    """Test date conditions using sensor entities."""
+    hass.states.async_set(
+        "sensor.am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.pm",
+        "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.no_device_class",
+        "2020-06-01 01:00:00.000000+00:00",
+    )
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "This is not a timestamp",
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=6, day=1),
+    ):
+        assert not condition.date(hass, after="sensor.am", before="sensor.pm")
+        assert condition.date(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=6, day=9),
+    ):
+        assert condition.date(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.date(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=15),
+    ):
+        assert condition.date(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.date(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2022, month=6, day=1),
+    ):
+        assert not condition.date(hass, after="sensor.am", before="sensor.pm")
+        assert condition.date(hass, after="sensor.pm", before="sensor.am")
+
+    assert not condition.date(hass, after="sensor.invalid_timestamp")
+    assert not condition.date(hass, before="sensor.invalid_timestamp")
+
+    with pytest.raises(ConditionError):
+        condition.date(hass, after="sensor.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.date(hass, before="sensor.not_existing")
+
+
+async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
+    """Test datetime conditions using input_datetime entities."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {
+            "input_datetime": {
+                "am": {"has_date": True, "has_time": True},
+                "pm": {"has_date": True, "has_time": True},
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.am",
+            "datetime": str(
+                dt_util.now()
+                .replace(year=2021, month=5, day=1, hour=6, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            "entity_id": "input_datetime.pm",
+            "datetime": str(
+                dt_util.now()
+                .replace(year=2020, month=5, day=1, hour=18, minute=0, second=0, microsecond=0)
+                .replace(tzinfo=None)
+            ),
+        },
+        blocking=True,
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=3),
+    ):
+        assert not condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=9),
+    ):
+        assert condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=15),
+    ):
+        assert condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert not condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=21),
+    ):
+        assert not condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=18, minute=0, second=0),
+    ):
+        assert condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert not condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.datetime(hass, after="input_datetime.pm")
+        assert not condition.datetime(hass, before="input_datetime.pm")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=6, minute=0, second=0),
+    ):
+        assert not condition.datetime(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert condition.datetime(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.datetime(hass, after="input_datetime.am")
+        assert not condition.datetime(hass, before="input_datetime.am")
+
+    with pytest.raises(ConditionError):
+        condition.datetime(hass, after="input_datetime.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.datetime(hass, before="input_datetime.not_existing")
+
+
+async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
+    """Test datetime conditions using sensor entities."""
+    hass.states.async_set(
+        "sensor.am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.pm",
+        "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.no_device_class",
+        "2020-06-01 01:00:00.000000+00:00",
+    )
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "This is not a timestamp",
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=3),
+    ):
+        assert not condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert condition.datetime(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=9),
+    ):
+        assert condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=15),
+    ):
+        assert condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=21),
+    ):
+        assert not condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert condition.datetime(hass, after="sensor.pm", before="sensor.am")
+
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=18, minute=0, second=0),
+    ):
+        assert condition.datetime(hass, after="sensor.pm", before="sensor.am")
+        assert not condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert condition.datetime(hass, after="sensor.pm")
+        assert not condition.datetime(hass, before="sensor.pm")
+
+        # Even though valid, the device class is missing
+        assert not condition.datetime(hass, after="sensor.no_device_class")
+        assert not condition.datetime(hass, before="sensor.no_device_class")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=6, minute=0, second=0),
+    ):
+        assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
+        assert condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert condition.datetime(hass, after="sensor.am")
+        assert not condition.datetime(hass, before="sensor.am")
+
+    assert not condition.datetime(hass, after="sensor.invalid_timestamp")
+    assert not condition.datetime(hass, before="sensor.invalid_timestamp")
+
+    with pytest.raises(ConditionError):
+        condition.datetime(hass, after="sensor.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.datetime(hass, before="sensor.not_existing")
+
+
 async def test_state_raises(hass: HomeAssistant) -> None:
     """Test that state raises ConditionError on errors."""
     # No entity
