@@ -26,6 +26,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.components.zwave_js.const import LOGGER
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
@@ -33,10 +34,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -63,7 +60,7 @@ async def test_window_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test setting position
@@ -170,7 +167,7 @@ async def test_window_cover(
     client.async_send_command.reset_mock()
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test closing
     await hass.services.async_call(
@@ -233,7 +230,7 @@ async def test_window_cover(
     node.receive_event(event)
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 async def test_fibaro_fgr222_shutter_cover(
@@ -244,7 +241,7 @@ async def test_fibaro_fgr222_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Test opening tilts
@@ -345,7 +342,7 @@ async def test_fibaro_fgr223_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Test opening tilts
@@ -441,7 +438,7 @@ async def test_aeotec_nano_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test opening
@@ -507,7 +504,7 @@ async def test_aeotec_nano_shutter_cover(
     client.async_send_command.reset_mock()
 
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test closing
     await hass.services.async_call(
@@ -579,7 +576,7 @@ async def test_motor_barrier_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GARAGE
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     # Test open
     await hass.services.async_call(
@@ -602,7 +599,7 @@ async def test_motor_barrier_cover(
 
     # state doesn't change until currentState value update is received
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     client.async_send_command.reset_mock()
 
@@ -627,7 +624,7 @@ async def test_motor_barrier_cover(
 
     # state doesn't change until currentState value update is received
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     client.async_send_command.reset_mock()
 
@@ -652,7 +649,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     # Barrier sends an opened state
     event = Event(
@@ -675,7 +672,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Barrier sends a closing state
     event = Event(
@@ -698,7 +695,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     # Barrier sends a closed state
     event = Event(
@@ -721,7 +718,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     # Barrier sends a stopped state
     event = Event(
@@ -827,7 +824,7 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
 
     state = hass.states.get(FIBARO_FGR_223_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert ATTR_CURRENT_POSITION in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
@@ -944,7 +941,7 @@ async def test_nice_ibt4zwave_cover(
     state = hass.states.get(entity_id)
     assert state
     # This device has no state because there is no position value
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.CLOSE
         | CoverEntityFeature.OPEN

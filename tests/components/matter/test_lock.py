@@ -5,18 +5,31 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import LockEntityFeature, LockState
-from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
+from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_locks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test locks."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.LOCK)
+
+
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock(
     hass: HomeAssistant,
@@ -100,8 +113,6 @@ async def test_lock(
     assert state.attributes["supported_features"] & LockEntityFeature.OPEN
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock_requires_pin(
     hass: HomeAssistant,
@@ -165,8 +176,6 @@ async def test_lock_requires_pin(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock_with_unbolt"])
 async def test_lock_with_unbolt(
     hass: HomeAssistant,

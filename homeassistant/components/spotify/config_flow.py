@@ -47,12 +47,14 @@ class SpotifyFlowHandler(
 
         await self.async_set_unique_id(current_user.user_id)
 
+        name = current_user.display_name
+
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            if reauth_entry.unique_id != current_user.user_id:
-                return self.async_abort(reason="reauth_account_mismatch")
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
-        return self.async_create_entry(title=current_user.display_name, data=data)
+            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), title=name, data=data
+            )
+        return self.async_create_entry(title=name, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

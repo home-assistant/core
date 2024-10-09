@@ -1,4 +1,4 @@
-"""Constands for CalDAV."""
+"""Constants for CalDAV."""
 
 from typing import Final
 
