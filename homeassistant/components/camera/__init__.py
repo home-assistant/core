@@ -787,7 +787,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         get_all_candidates_upfront = not self.supports_async_webrtc_offer
         if self._legacy_webrtc_provider:
             get_all_candidates_upfront = True
-        config.get_all_candidates_upfront = get_all_candidates_upfront
+        config.get_candidates_upfront = get_all_candidates_upfront
 
         return config
 

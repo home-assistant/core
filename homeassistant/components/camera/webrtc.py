@@ -92,7 +92,9 @@ class WebRTCClientConfiguration(DataClassDictMixin):
     data_channel: str | None = field(
         metadata=field_options(alias="dataChannel"), default=None
     )
-    get_all_candidates_upfront: bool = field(init=False, default=False)
+    get_candidates_upfront: bool = field(
+        metadata=field_options(alias="getCandidatesUpfront"), init=False, default=False
+    )
 
 
 @dataclass(frozen=True)
