@@ -795,3 +795,38 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     unsub()
     await crd.async_refresh()
     assert len(last_update_success_times) == 1
+
+
+async def test_config_entry(hass: HomeAssistant) -> None:
+    """Test behavior of coordinator.entry."""
+    entry = MockConfigEntry()
+
+    # Default should be None
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is None
+
+    # Explicit None is OK
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=None
+    )
+    assert crd.config_entry is None
+
+    # Explicit entry is OK
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=entry
+    )
+    assert crd.config_entry is entry
+
+    # set ContextVar
+    config_entries.current_entry.set(entry)
+
+    # Default should match the ContextVar
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is entry
+
+    # Explicit entry not recommended, but should work
+    another_entry = MockConfigEntry()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=another_entry
+    )
+    assert crd.config_entry is another_entry
