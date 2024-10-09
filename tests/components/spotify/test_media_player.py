@@ -205,7 +205,7 @@ async def test_idle(
         (SERVICE_MEDIA_NEXT_TRACK, "next_track"),
     ],
 )
-async def test_mutating(
+async def test_simple_actions(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
