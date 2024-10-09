@@ -813,7 +813,9 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     assert len(last_update_success_times) == 1
 
 
-async def test_config_entry(hass: HomeAssistant) -> None:
+async def test_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test behavior of coordinator.entry."""
     entry = MockConfigEntry()
 
@@ -834,11 +836,19 @@ async def test_config_entry(hass: HomeAssistant) -> None:
     assert crd.config_entry is entry
 
     # set ContextVar
+    assert (
+        "Detected code that initialises coordinator test without "
+        "explicit config entry for integration"
+    ) not in caplog.text
     config_entries.current_entry.set(entry)
 
     # Default with ContextVar should match the ContextVar
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is entry
+    assert (
+        "Detected code that initialises coordinator test without "
+        "explicit config entry for integration"
+    ) in caplog.text
 
     # Explicit entry different from ContextVar not recommended, but should work
     another_entry = MockConfigEntry()
@@ -846,3 +856,7 @@ async def test_config_entry(hass: HomeAssistant) -> None:
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+    assert (
+        "Detected code that initialises coordinator test without "
+        "explicit config entry for integration"
+    ) not in caplog.text
