@@ -76,8 +76,11 @@ def mock_spotify() -> Generator[MagicMock]:
         client.current_user_playlists.return_value = load_json_value_fixture(
             "current_user_playlist.json", DOMAIN
         )
-        client.current_user.return_value = load_json_value_fixture(
-            "current_user.json", DOMAIN
+        current_user = load_json_value_fixture("current_user.json", DOMAIN)
+        client.current_user.return_value = current_user
+        client.me.return_value = current_user
+        client.current_playback.return_value = load_json_value_fixture(
+            "playback.json", DOMAIN
         )
         client.current_user_followed_artists.return_value = load_json_value_fixture(
             "followed_artists.json", DOMAIN
