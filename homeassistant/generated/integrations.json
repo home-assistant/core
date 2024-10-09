@@ -5570,6 +5570,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "sky_remote": {
+      "name": "Sky Remote Control",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "skybeacon": {
       "name": "Skybeacon",
       "integration_type": "hub",
