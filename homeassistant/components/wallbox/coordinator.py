@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
 import logging
@@ -11,10 +12,11 @@ from typing import Any, Concatenate
 import requests
 from wallbox import Wallbox
 
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CHARGER_CURRENCY_KEY,
@@ -70,6 +72,27 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
 }
 
 
+@dataclass
+class WallboxEventMixIn:
+    """Mixin for Wallbox calendar event."""
+
+    charger_name: str
+    username: str
+    session_id: str
+    currency: str
+    session_type: str
+    serial_number: int
+    energy: float
+    mid_energy: float
+    cost_kw: float
+    session_cost: float
+
+
+@dataclass
+class WallboxEvent(CalendarEvent, WallboxEventMixIn):
+    """A class to describe a Wallbox calendar event."""
+
+
 def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     func: Callable[Concatenate[_WallboxCoordinatorT, _P], Any],
 ) -> Callable[Concatenate[_WallboxCoordinatorT, _P], Any]:
@@ -97,6 +120,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
         self._station = station
         self._wallbox = wallbox
+        self.event: WallboxEvent | None = None
 
         super().__init__(
             hass,
@@ -181,19 +205,66 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         charger_id: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-    ) -> JsonObjectType:
+    ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
-        data: JsonObjectType = self._wallbox.getSessionList(
-            charger_id, start_date, end_date
-        )
-        return {"sessions": data["data"]}
+        data = self._wallbox.getSessionList(charger_id, start_date, end_date)
+        events: list[WallboxEvent] = []
+
+        tzone = dt_util.get_default_time_zone()
+        for event in data["data"]:
+            if event["type"] == "charger_charging_session":
+                events.append(
+                    WallboxEvent(
+                        charger_name=event["attributes"]["charger_name"],
+                        username=event["attributes"]["user_name"],
+                        session_id=event["attributes"]["id"],
+                        currency=event["attributes"]["currency_code"],
+                        session_type=event["attributes"]["session_type"],
+                        serial_number=event["attributes"]["charger_id"],
+                        energy=event["attributes"]["energy"],
+                        mid_energy=event["attributes"]["mid_energy"],
+                        cost_kw=event["attributes"]["energy_price"],
+                        session_cost=event["attributes"]["total_cost"],
+                        start=datetime.datetime.fromtimestamp(
+                            event["attributes"]["start_time"], tzone
+                        ),
+                        end=datetime.datetime.fromtimestamp(
+                            event["attributes"]["end_time"], tzone
+                        ),
+                        summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
+                    )
+                )
+            elif event["type"] == "charger_log_session":
+                events.append(
+                    WallboxEvent(
+                        charger_name=event["attributes"]["charger_name"],
+                        username=event["attributes"]["user_name"],
+                        session_id=event["id"],
+                        currency=event["attributes"]["currency"]["code"],
+                        session_type="",
+                        serial_number=event["attributes"]["charger"],
+                        energy=event["attributes"]["energy"],
+                        mid_energy=event["attributes"]["mid_energy"],
+                        cost_kw=0,
+                        session_cost=event["attributes"]["cost"],
+                        start=datetime.datetime.fromtimestamp(
+                            event["attributes"]["start"], tzone
+                        ),
+                        end=datetime.datetime.fromtimestamp(
+                            event["attributes"]["end"], tzone
+                        ),
+                        summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
+                    )
+                )
+
+        return events
 
     async def async_get_sessions(
         self,
         charger_id: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-    ) -> JsonObjectType:
+    ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         return await self.hass.async_add_executor_job(
             self._get_sessions, charger_id, start_date, end_date
