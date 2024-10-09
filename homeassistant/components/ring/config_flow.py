@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -169,7 +169,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self.reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: self.reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: self.reauth_entry.data[CONF_USERNAME],
             },
         )
 
