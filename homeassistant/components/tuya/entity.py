@@ -18,15 +18,16 @@ from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 _DPTYPE_MAPPING: dict[str, DPType] = {
-    "bool":   DPType.BOOLEAN,
-    "enum":   DPType.ENUM,
-    "value":  DPType.INTEGER,
-    "json":   DPType.JSON,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "value": DPType.INTEGER,
+    "json": DPType.JSON,
     "bitmap": DPType.RAW,
     "Bitmap": DPType.RAW,
-    "raw":    DPType.RAW,
+    "raw": DPType.RAW,
     "string": DPType.STRING,
 }
+
 
 @dataclass
 class IntegerTypeData:
@@ -271,7 +272,8 @@ class TuyaEntity(Entity):
                     return DPType(current_type)
                 except ValueError:
                     """Sometimes, we get ill-formed DPTypes from the cloud,
-                    this fixes them and maps them to the correct DPType."""
+                    this fixes them and maps them to the correct DPType.
+                    """
                     return _DPTYPE_MAPPING.get(current_type)
 
         return None
