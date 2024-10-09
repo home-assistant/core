@@ -40,7 +40,7 @@ FIXTURE_CONFIG_ENTRY = {
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
-    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
+    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_USERNAME]}",
 }
 
 

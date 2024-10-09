@@ -258,7 +258,7 @@ async def test_unknown_error(
     result = await start_config_flow(hass, cloud)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown_error"}
+    assert result["errors"] == {"base": "unknown"}
     assert crownstone_setup.call_count == 0
 
 
