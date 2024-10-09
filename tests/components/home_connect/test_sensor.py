@@ -109,7 +109,7 @@ ENTITY_ID_STATES = {
         "Run",
         "Ready",
     ),
-    "sensor.dishwasher_remaining_program_time": (
+    "sensor.dishwasher_finish_time": (
         "unavailable",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
@@ -187,7 +187,7 @@ ENTITY_ID_EDGE_CASE_STATES = [
 
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 @pytest.mark.usefixtures("bypass_throttle")
-async def test_remaining_prog_time_edge_cases(
+async def test_finish_time_edge_cases(
     appliance: Mock,
     freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
@@ -198,7 +198,7 @@ async def test_remaining_prog_time_edge_cases(
 ) -> None:
     """Run program sequence to test edge cases for the remaining_prog_time entity."""
     get_appliances.return_value = [appliance]
-    entity_id = "sensor.dishwasher_remaining_program_time"
+    entity_id = "sensor.dishwasher_finish_time"
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 

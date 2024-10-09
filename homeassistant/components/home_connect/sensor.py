@@ -18,6 +18,7 @@ import homeassistant.util.dt as dt_util
 
 from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import (
+    ATTR_BSH_KEY,
     ATTR_DEVICE,
     ATTR_VALUE,
     BSH_EVENT_PRESENT_STATE_OFF,
@@ -25,6 +26,7 @@ from .const import (
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
+    BSH_REMAINING_PROGRAM_TIME,
     COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
     COFFEE_EVENT_DRIP_TRAY_FULL,
     COFFEE_EVENT_WATER_TANK_EMPTY,
@@ -98,6 +100,11 @@ async def async_setup_entry(
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("sensor", [])
             entities += [HomeConnectSensor(**d) for d in entity_dicts]
+            for entity_dict in entity_dicts:
+                if entity_dict[ATTR_BSH_KEY] == BSH_REMAINING_PROGRAM_TIME:
+                    entities.append(
+                        HomeConnectFinishTimeSensor(device_dict[ATTR_DEVICE])
+                    )
             device: HomeConnectDevice = device_dict[ATTR_DEVICE]
             # Auto-discover entities
             entities.extend(
@@ -117,21 +124,18 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     """Sensor class for Home Connect."""
 
     _key: str
-    _sign: int
 
     def __init__(
         self,
         device: HomeConnectDevice,
         bsh_key: str,
         desc: str,
-        unit: str,
-        icon: str,
-        device_class: SensorDeviceClass,
-        sign: int = 1,
+        unit: str | None,
+        icon: str | None,
+        device_class: SensorDeviceClass | None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(device, bsh_key, desc)
-        self._sign = sign
         self._attr_native_unit_of_measurement = unit
         self._attr_icon = icon
         self._attr_device_class = device_class
@@ -143,44 +147,14 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Update the sensor's status."""
-        status = self.device.appliance.status
-        if self.bsh_key not in status:
-            self._attr_native_value = None
-        elif self.device_class == SensorDeviceClass.TIMESTAMP:
-            if ATTR_VALUE not in status[self.bsh_key]:
-                self._attr_native_value = None
-            elif (
-                self._attr_native_value is not None
-                and self._sign == 1
-                and isinstance(self._attr_native_value, datetime)
-                and self._attr_native_value < dt_util.utcnow()
-            ):
-                # if the date is supposed to be in the future but we're
-                # already past it, set state to None.
-                self._attr_native_value = None
-            elif (
-                BSH_OPERATION_STATE in status
-                and ATTR_VALUE in status[BSH_OPERATION_STATE]
-                and status[BSH_OPERATION_STATE][ATTR_VALUE]
-                in [
-                    BSH_OPERATION_STATE_RUN,
-                    BSH_OPERATION_STATE_PAUSE,
-                    BSH_OPERATION_STATE_FINISHED,
-                ]
-            ):
-                seconds = self._sign * float(status[self.bsh_key][ATTR_VALUE])
-                self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
-            else:
-                self._attr_native_value = None
-        else:
-            self._attr_native_value = status[self.bsh_key].get(ATTR_VALUE)
-            if self.bsh_key == BSH_OPERATION_STATE:
-                # Value comes back as an enum, we only really care about the
-                # last part, so split it off
-                # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = cast(str, self._attr_native_value).split(".")[
-                    -1
-                ]
+        self._attr_native_value = self.device.appliance.status.get(
+            self.bsh_key, {}
+        ).get(ATTR_VALUE)
+        if self._attr_native_value and self.bsh_key == BSH_OPERATION_STATE:
+            # Value comes back as an enum, we only really care about the
+            # last part, so split it off
+            # https://developer.home-connect.com/docs/status/operation_state
+            self._attr_native_value = cast(str, self._attr_native_value).split(".")[-1]
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
 
 
@@ -218,3 +192,54 @@ class HomeConnectAlarmSensor(HomeConnectEntity, SensorEntity):
             self._attr_unique_id,
             self._attr_native_value,
         )
+
+
+class HomeConnectFinishTimeSensor(HomeConnectSensor):
+    """Sensor for remaining program time."""
+
+    _sign: int
+
+    def __init__(self, device: HomeConnectDevice) -> None:
+        """Initialize the entity."""
+        super().__init__(
+            device,
+            BSH_REMAINING_PROGRAM_TIME,
+            "Finish Time",
+            None,
+            None,
+            SensorDeviceClass.TIMESTAMP,
+        )
+        self._sign = 1
+        # We leave the old unique_id although it doesn't fit with the real functionality
+        # to avoid breaking users setups during deprecation period
+        self._attr_unique_id = f"{device.appliance.haId}-Remaining Program Time"
+
+    async def async_update(self) -> None:
+        """Update the sensor's status."""
+        status = self.device.appliance.status
+        if self.bsh_key not in status or ATTR_VALUE not in status[self.bsh_key]:
+            self._attr_native_value = None
+        elif (
+            self._attr_native_value is not None
+            and self._sign == 1
+            and isinstance(self._attr_native_value, datetime)
+            and self._attr_native_value < dt_util.utcnow()
+        ):
+            # if the date is supposed to be in the future but we're
+            # already past it, set state to None.
+            self._attr_native_value = None
+        elif (
+            BSH_OPERATION_STATE in status
+            and ATTR_VALUE in status[BSH_OPERATION_STATE]
+            and status[BSH_OPERATION_STATE][ATTR_VALUE]
+            in [
+                BSH_OPERATION_STATE_RUN,
+                BSH_OPERATION_STATE_PAUSE,
+                BSH_OPERATION_STATE_FINISHED,
+            ]
+        ):
+            seconds = self._sign * float(status[self.bsh_key][ATTR_VALUE])
+            self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
+        else:
+            self._attr_native_value = None
+        _LOGGER.debug("Updated, new state: %s", self._attr_native_value)

@@ -29,7 +29,6 @@ from .const import (
     ATTR_DEVICE,
     ATTR_KEY,
     ATTR_SENSOR_TYPE,
-    ATTR_SIGN,
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
@@ -191,24 +190,21 @@ class DeviceWithPrograms(HomeConnectDevice):
         sensors = {
             BSH_REMAINING_PROGRAM_TIME: (
                 "Remaining Program Time",
+                UnitOfTime.SECONDS,
                 None,
-                None,
-                SensorDeviceClass.TIMESTAMP,
-                1,
+                SensorDeviceClass.DURATION,
             ),
             BSH_COMMON_OPTION_DURATION: (
                 "Duration",
                 UnitOfTime.SECONDS,
                 "mdi:update",
                 None,
-                1,
             ),
             BSH_COMMON_OPTION_PROGRAM_PROGRESS: (
                 "Program Progress",
                 PERCENTAGE,
                 "mdi:progress-clock",
                 None,
-                1,
             ),
         }
         return [
@@ -219,9 +215,8 @@ class DeviceWithPrograms(HomeConnectDevice):
                 ATTR_UNIT: unit,
                 ATTR_ICON: icon,
                 ATTR_DEVICE_CLASS: device_class,
-                ATTR_SIGN: sign,
             }
-            for k, (desc, unit, icon, device_class, sign) in sensors.items()
+            for k, (desc, unit, icon, device_class) in sensors.items()
         ]
 
 
@@ -239,7 +234,6 @@ class DeviceWithOpState(HomeConnectDevice):
                 ATTR_UNIT: None,
                 ATTR_ICON: "mdi:state-machine",
                 ATTR_DEVICE_CLASS: None,
-                ATTR_SIGN: 1,
             }
         ]
 

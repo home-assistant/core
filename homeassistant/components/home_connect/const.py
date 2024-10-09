@@ -102,7 +102,6 @@ ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
-ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
@@ -112,7 +111,6 @@ OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
     "Light": COOKING_LIGHTING,
     "AmbientLight": BSH_AMBIENT_LIGHT_ENABLED,
     "Power": BSH_POWER_STATE,
-    "Remaining Program Time": BSH_REMAINING_PROGRAM_TIME,
     "Duration": BSH_COMMON_OPTION_DURATION,
     "Program Progress": BSH_COMMON_OPTION_PROGRAM_PROGRESS,
     "Remote Control": BSH_REMOTE_CONTROL_ACTIVATION_STATE,
