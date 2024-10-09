@@ -3017,7 +3017,7 @@ class ConfigSubentryFlowManager(
 
 
 class ConfigSubentryFlow(data_entry_flow.FlowHandler[FlowContext, SubentryFlowResult]):
-    """Base class for config options flows."""
+    """Base class for config subentry flows."""
 
     _flow_result = SubentryFlowResult
     handler: str
