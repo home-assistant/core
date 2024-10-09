@@ -96,6 +96,14 @@ class WebRTCClientConfiguration(DataClassDictMixin):
 
 
 @dataclass(frozen=True)
+class WebRTCSessionId(DataClassDictMixin):
+    """WebRTC session ID."""
+
+    session_id: str
+    type: str = field(default="session_id", init=False)
+
+
+@dataclass(frozen=True)
 class WebRTCAnswer(DataClassDictMixin):
     """WebRTC answer."""
 
@@ -111,7 +119,7 @@ class WebRTCCandidate(DataClassDictMixin):
     type: str = field(default="candidate", init=False)
 
 
-type WebRTCMessages = WebRTCAnswer | WebRTCCandidate
+type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId
 type WebRTCSendMessage = Callable[[WebRTCMessages], None]
 
 
@@ -254,6 +262,8 @@ async def ws_webrtc_offer(
             )
         )
 
+    send_message(WebRTCSessionId(session_id))
+
     if camera.supports_async_webrtc_offer:
         await camera.async_handle_web_rtc_offer(offer, session_id, send_message)
     else:
@@ -334,7 +344,7 @@ async def ws_candidate(
         )
         return
 
-    await camera.async_on_webrtc_candiate(msg["subscription_id"], msg["candidate"])
+    await camera.async_on_webrtc_candiate(msg["session_id"], msg["candidate"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
