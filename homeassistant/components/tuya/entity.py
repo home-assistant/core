@@ -271,9 +271,8 @@ class TuyaEntity(Entity):
                 try:
                     return DPType(current_type)
                 except ValueError:
-                    """Sometimes, we get ill-formed DPTypes from the cloud,
-                    this fixes them and maps them to the correct DPType.
-                    """
+                    # Sometimes, we get ill-formed DPTypes from the cloud,
+                    # this fixes them and maps them to the correct DPType.
                     return _DPTYPE_MAPPING.get(current_type)
 
         return None
