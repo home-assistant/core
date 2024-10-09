@@ -269,7 +269,6 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(envoy.serial_number)
                 self._abort_if_unique_id_mismatch()
-                # If envoy exists in configuration update fields and exit
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={
