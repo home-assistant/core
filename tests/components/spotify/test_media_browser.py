@@ -98,3 +98,43 @@ async def test_browse_media_playlists(
         f"spotify://{config_entry_id}/current_user_playlists",
     )
     assert response.as_dict() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id"),
+    [
+        ("current_user_playlists", "current_user_playlists"),
+        ("current_user_followed_artists", "current_user_followed_artists"),
+        ("current_user_saved_albums", "current_user_saved_albums"),
+        ("current_user_saved_tracks", "current_user_saved_tracks"),
+        ("current_user_saved_shows", "current_user_saved_shows"),
+        ("current_user_recently_played", "current_user_recently_played"),
+        ("current_user_top_artists", "current_user_top_artists"),
+        ("current_user_top_tracks", "current_user_top_tracks"),
+        ("featured_playlists", "featured_playlists"),
+        ("categories", "categories"),
+        ("category_playlists", "dinner"),
+        ("new_releases", "new_releases"),
+        ("playlist", "spotify:playlist:3cEYpjA9oz9GiPac4AsH4n"),
+        ("album", "spotify:album:3IqzqH6ShrRtie9Yd2ODyG"),
+        ("artist", "spotify:artist:0TnOYISbd1XYRBk9myaseg"),
+        ("show", "spotify:show:1Y9ExMgMxoBVrgrfU7u0nD"),
+    ],
+)
+@pytest.mark.usefixtures("setup_credentials")
+async def test_browsing(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    media_content_type: str,
+    media_content_id: str,
+) -> None:
+    """Test browsing playlists for the two config entries."""
+    await setup_integration(hass, mock_config_entry)
+    response = await async_browse_media(
+        hass,
+        f"spotify://{media_content_type}",
+        f"spotify://{mock_config_entry.entry_id}/{media_content_id}",
+    )
+    assert response.as_dict() == snapshot
