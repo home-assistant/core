@@ -75,7 +75,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.source == dhcp.DOMAIN:
             discovery_info: DhcpServiceInfo = self.init_data
-            data_values = {CONF_HOST: discovery_info.hostname or discovery_info.ip}
+            data_values = {CONF_HOST: discovery_info.ip}
         else:
             data_values = {CONF_HOST: SUGGESTED_HOST}
 
