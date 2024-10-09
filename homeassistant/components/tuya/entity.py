@@ -17,6 +17,16 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "bool":   DPType.BOOLEAN,
+    "enum":   DPType.ENUM,
+    "value":  DPType.INTEGER,
+    "json":   DPType.JSON,
+    "bitmap": DPType.RAW,
+    "Bitmap": DPType.RAW,
+    "raw":    DPType.RAW,
+    "string": DPType.STRING,
+}
 
 @dataclass
 class IntegerTypeData:
@@ -256,39 +266,16 @@ class TuyaEntity(Entity):
             order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return TuyaEntity.determine_dptype(
-                    getattr(self.device, key)[dpcode].type
-                )
+                current_type = getattr(self.device, key)[dpcode].type
+                try:
+                    return DPType(current_type)
+                except ValueError:
+                    """
+                    Sometimes, we get ill-formed DPTypes from the cloud,
+                    this fixes them and maps them to the correct DPType.
+                    """
+                    return _DPTYPE_MAPPING.get(current_type)
 
-        return None
-
-    @staticmethod
-    def determine_dptype(type) -> DPType | None:
-        """Determine the DPType.
-
-        Sometimes, we get ill-formed DPTypes from the cloud,
-        this fixes them and maps them to the correct DPType.
-        """
-        try:
-            return DPType(type)
-        except ValueError:
-            match type:
-                case "value":
-                    return DPType.INTEGER
-                case "bitmap":
-                    return DPType.RAW
-                case "Bitmap":
-                    return DPType.RAW
-                case "raw":
-                    return DPType.RAW
-                case "enum":
-                    return DPType.ENUM
-                case "bool":
-                    return DPType.BOOLEAN
-                case "json":
-                    return DPType.JSON
-                case "string":
-                    return DPType.STRING
         return None
 
     async def async_added_to_hass(self) -> None:
