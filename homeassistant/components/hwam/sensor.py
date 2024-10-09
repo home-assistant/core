@@ -1,7 +1,6 @@
 """The HWAM Smart Control sensors."""
 
 from pystove import (
-    DATA_BURN_LEVEL,
     DATA_OXYGEN_LEVEL,
     DATA_PHASE,
     DATA_ROOM_TEMPERATURE,
@@ -30,16 +29,11 @@ from .coordinator import StoveDataUpdateCoordinator
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=DATA_BURN_LEVEL,
-        translation_key=DATA_BURN_LEVEL,
-        device_class=SensorDeviceClass.ENUM,
-        options=["0", "1", "2", "3", "4", "5"],
-    ),
-    SensorEntityDescription(
         key=DATA_PHASE,
         translation_key=DATA_PHASE,
         device_class=SensorDeviceClass.ENUM,
         options=PHASE,
+        icon="mdi:state-machine",
     ),
     SensorEntityDescription(
         key=DATA_STOVE_TEMPERATURE,
@@ -47,6 +41,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:fire",
     ),
     SensorEntityDescription(
         key=DATA_ROOM_TEMPERATURE,
@@ -60,24 +55,28 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key=DATA_OXYGEN_LEVEL,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent-outline",
     ),
     SensorEntityDescription(
         key=DATA_VALVE1_POSITION,
         translation_key=DATA_VALVE1_POSITION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:valve",
     ),
     SensorEntityDescription(
         key=DATA_VALVE2_POSITION,
         translation_key=DATA_VALVE2_POSITION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:valve",
     ),
     SensorEntityDescription(
         key=DATA_VALVE3_POSITION,
         translation_key=DATA_VALVE3_POSITION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:valve",
     ),
 )
 

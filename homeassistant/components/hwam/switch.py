@@ -21,6 +21,7 @@ class NightLoweringSwitch(CoordinatorEntity[StoveDataUpdateCoordinator], SwitchE
     """
 
     _attr_has_entity_name = True
+    _attr_icon = "mdi:clock-time-nine-outline"
 
     def __init__(self, coordinator: StoveDataUpdateCoordinator) -> None:
         """Initialize the switch."""

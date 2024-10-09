@@ -20,6 +20,7 @@ class StartButton(ButtonEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_icon = "mdi:power"
 
     _coordinator: StoveDataUpdateCoordinator
 

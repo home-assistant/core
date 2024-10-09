@@ -24,7 +24,7 @@
         "name": "Start"
       }
     },
-    "sensor": {
+    "select": {
       "burn_level": {
         "name": "Burn Level",
         "state": {
@@ -35,7 +35,9 @@
           "4": "Level 4",
           "5": "MAX"
         }
-      },
+      }
+    },
+    "sensor": {
       "phase": {
         "name": "Phase",
         "state": {

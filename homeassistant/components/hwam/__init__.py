@@ -13,7 +13,7 @@ from .coordinator import StoveDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
-    Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
