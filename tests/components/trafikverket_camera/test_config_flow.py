@@ -329,7 +329,7 @@ async def test_reconfigure_flow(
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -427,7 +427,7 @@ async def test_reconfigure_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["step_id"] == "reconfigure_confirm"
+    assert result2["step_id"] == "reconfigure"
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_key: p_error}
 
