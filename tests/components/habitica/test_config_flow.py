@@ -17,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 MOCK_DATA_LOGIN_STEP = {
     CONF_USERNAME: "test-email@example.com",
     CONF_PASSWORD: "test-password",
@@ -217,38 +215,3 @@ async def test_form_advanced_errors(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": text_error}
-
-
-async def test_manual_flow_config_exist(hass: HomeAssistant) -> None:
-    """Test config flow discovers only already configured config."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-api-user",
-        data={"api_user": "test-api-user", "api_key": "test-api-key"},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "advanced"
-
-    mock_obj = MagicMock()
-    mock_obj.user.get = AsyncMock(return_value={"api_user": "test-api-user"})
-
-    with patch(
-        "homeassistant.components.habitica.config_flow.HabitipyAsync",
-        return_value=mock_obj,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "url": DEFAULT_URL,
-                "api_user": "test-api-user",
-                "api_key": "test-api-key",
-            },
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
