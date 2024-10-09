@@ -1,0 +1,72 @@
+{
+  "$id": "1",
+  "actual": {
+    "$id": "3",
+    "actualradarurl": "https://api.buienradar.nl/image/1.0/RadarMapNL?w=500&h=512",
+    "stationmeasurements": [
+      {
+        "$id": "10",
+        "airpressure": 1020.0,
+        "feeltemperature": 20.5,
+        "fullIconUrl": "https://www.buienradar.nl/resources/images/icons/weather/96x96/CC.png",
+        "graphUrl": "https://www.buienradar.nl/nederland/weerbericht/weergrafieken/cc",
+        "groundtemperature": 19.8,
+        "humidity": 76.0,
+        "iconurl": "https://www.buienradar.nl/resources/images/icons/weather/30x30/cc.png",
+        "lat": 51.45,
+        "lon": 5.42,
+        "precipitation": 0.0,
+        "rainFallLast24Hour": 2.2,
+        "rainFallLastHour": 0.0,
+        "regio": "Eindhoven",
+        "stationid": 6370,
+        "stationname": "Meetstation Eindhoven",
+        "sunpower": 0.0,
+        "temperature": 20.4,
+        "timestamp": "2024-08-31T21:10:00",
+        "visibility": 32600.0,
+        "weatherdescription": "Zwaar bewolkt",
+        "winddirection": "NO",
+        "winddirectiondegrees": 38,
+        "windgusts": 6.5,
+        "windspeed": 4.0,
+        "windspeedBft": 3
+      },
+      {
+        "$id": "10",
+        "_airpressure": 1020.0,
+        "_feeltemperature": 20.5,
+        "fullIconUrl": "https://www.buienradar.nl/resources/images/icons/weather/96x96/CC.png",
+        "graphUrl": "https://www.buienradar.nl/nederland/weerbericht/weergrafieken/cc",
+        "groundtemperature": 19.8,
+        "_humidity": 76.0,
+        "iconurl": "https://www.buienradar.nl/resources/images/icons/weather/30x30/cc.png",
+        "lat": 53.45,
+        "lon": 6.42,
+        "precipitation": 0.0,
+        "rainFallLast24Hour": 2.2,
+        "rainFallLastHour": 0.0,
+        "regio": "Invalid",
+        "stationid": 6380,
+        "stationname": "Meetstation with Invalid Data",
+        "sunpower": 0.0,
+        "_temperature": 20.4,
+        "timestamp": "2024-08-31T21:10:00",
+        "_visibility": 32600.0,
+        "weatherdescription": "Zwaar bewolkt",
+        "winddirection": "NO",
+        "_winddirectiondegrees": 38,
+        "_windgusts": 6.5,
+        "_windspeed": 4.0,
+        "_windspeedBft": 3
+      }
+    ],
+    "sunrise": "2024-08-31T06:47:00",
+    "sunset": "2024-08-31T20:26:00"
+  },
+  "buienradar": {
+    "$id": "2",
+    "copyright": "(C)opyright Buienradar / RTL. Alle rechten voorbehouden",
+    "terms": "Deze feed mag vrij worden gebruikt onder voorwaarde van bronvermelding buienradar.nl inclusief een hyperlink naar https://www.buienradar.nl. Aan de feed kunnen door gebruikers of andere personen geen rechten worden ontleend."
+  }
+}
