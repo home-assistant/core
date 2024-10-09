@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -203,7 +202,7 @@ class MetOfficeCurrentSensor(
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         value = None
 
@@ -237,7 +236,7 @@ class MetOfficeCurrentSensor(
         """Return the icon for the entity card."""
         value = self.entity_description.icon
         if self.entity_description.key == "weather":
-            value = self.state
+            value = self.native_value
             if value is None:
                 value = "sunny"
             elif value == "partlycloudy":

@@ -275,7 +275,7 @@ class MadvrSensor(MadVREntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         val = self.entity_description.value_fn(self.coordinator)
         # check if sensor is enum

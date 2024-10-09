@@ -1369,7 +1369,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         if self.restored_data is None:
             return None
 
-        return cast(StateType, self.restored_data.native_value)
+        return self.restored_data.native_value
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -1414,7 +1414,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         if self.restored_data is None:
             return None
 
-        return cast(StateType, self.restored_data.native_value)
+        return self.restored_data.native_value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

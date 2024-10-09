@@ -14,7 +14,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
@@ -42,7 +41,7 @@ async def async_setup_entry(
 class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
     """Describes Ring number entity."""
 
-    value_fn: Callable[[RingDeviceT], StateType]
+    value_fn: Callable[[RingDeviceT], str | int | float | None]
     setter_fn: Callable[[RingDeviceT, float], Awaitable[None]]
     exists_fn: Callable[[RingGeneric], bool]
 

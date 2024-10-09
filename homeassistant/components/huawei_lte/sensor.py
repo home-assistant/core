@@ -65,7 +65,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     return value, unit
 
 
-def format_freq_mhz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
+def format_freq_mhz(value: str | None) -> tuple[StateType, UnitOfFrequency]:
     """Format a frequency value for which source is in tenths of MHz."""
     return (
         float(value) / 10 if value is not None else None,
@@ -121,7 +121,7 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
+    format_fn: Callable[[str | None], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
     device_class_fn: Callable[[StateType], SensorDeviceClass | None] | None = None
     last_reset_item: str | None = None
@@ -258,7 +258,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="mode",
                 translation_key="mode",
                 format_fn=lambda x: (
-                    {"0": "2G", "2": "3G", "7": "4G"}.get(x),
+                    {"0": "2G", "2": "3G", "7": "4G"}.get(x),  # type: ignore[arg-type]
                     None,
                 ),
                 icon_fn=lambda x: (

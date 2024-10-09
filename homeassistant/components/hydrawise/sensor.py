@@ -223,7 +223,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         if (
             self.entity_description.key in FLOW_MEASUREMENT_KEYS
             and self.entity_description.device_class == SensorDeviceClass.VOLUME
-            and round(self.state, 2) == 0.0
+            and round(self.state, 2) == 0.0  # type: ignore[arg-type]
         ):
             return "mdi:water-outline"
         return None
