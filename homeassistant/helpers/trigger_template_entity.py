@@ -241,6 +241,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         }
 
         self._render_templates(variables)
+        self.async_write_ha_state()
 
 
 class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
