@@ -168,12 +168,18 @@ async def snapshot_platform(
     ), "Please limit the loaded platforms to 1 platform."
 
     translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
+    unique_device_classes = []
     for entity_entry in entity_entries:
         if entity_entry.translation_key:
             key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            single_device_class_translation = False
+            if key not in translations and entity_entry.original_device_class:
+                if entity_entry.original_device_class not in unique_device_classes:
+                    single_device_class_translation = True
+                    unique_device_classes.append(entity_entry.original_device_class)
             assert (
-                key in translations
-            ), f"No translation for entity {entity_entry.unique_id}, expected {key}"
+                (key in translations) or single_device_class_translation
+            ), f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
         assert entity_entry == snapshot(
             name=f"{entity_entry.entity_id}-entry"
         ), f"entity entry snapshot failed for {entity_entry.entity_id}"
