@@ -3,6 +3,7 @@
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
@@ -300,6 +301,8 @@ async def test_gen24(
         FroniusMeterUpdateCoordinator.default_interval,
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=BINARY_SENSOR_DOMAIN)) == 2
+
     # inverter 1
     assert_state("sensor.inverter_name_ac_current", 0.1589)
     assert_state("sensor.inverter_name_dc_current_2", 0.0754)
@@ -357,6 +360,8 @@ async def test_gen24(
     assert_state("sensor.solarnet_meter_mode", "meter")
     assert_state("sensor.solarnet_relative_autonomy", 5.3592)
     assert_state("sensor.solarnet_total_energy", 1530193.42)
+    assert_state("binary_sensor.solarnet_backup_mode", "off")
+    assert_state("binary_sensor.solarnet_battery_standby", "off")
 
     # Gen24 devices may report 0 for total energy while doing firmware updates.
     # This should yield "unknown" state instead of 0.
@@ -401,6 +406,7 @@ async def test_gen24_storage(
         FroniusMeterUpdateCoordinator.default_interval,
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 72
+    assert len(hass.states.async_all(domain_filter=BINARY_SENSOR_DOMAIN)) == 2
     # inverter 1
     assert_state("sensor.gen24_storage_dc_current", 0.3952)
     assert_state("sensor.gen24_storage_dc_voltage_2", 318.8103)
@@ -467,6 +473,8 @@ async def test_gen24_storage(
     assert_state("sensor.solarnet_relative_autonomy", 7.4984)
     assert_state("sensor.solarnet_meter_mode", "bidirectional")
     assert_state("sensor.solarnet_total_energy", 7512664.4042)
+    assert_state("binary_sensor.solarnet_backup_mode", "on")
+    assert_state("binary_sensor.solarnet_battery_standby", "off")
     # storage
     assert_state("sensor.byd_battery_box_premium_hv_dc_current", 0.0)
     assert_state("sensor.byd_battery_box_premium_hv_state_of_charge", 4.6)

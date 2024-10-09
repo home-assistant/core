@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -29,7 +30,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -41,11 +41,11 @@ from .const import (
     get_meter_location_description,
     get_ohmpilot_state_message,
 )
+from .entity import FroniusEntity, FroniusEntityDescription
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
     from .coordinator import (
-        FroniusCoordinatorBase,
         FroniusInverterUpdateCoordinator,
         FroniusLoggerUpdateCoordinator,
         FroniusMeterUpdateCoordinator,
@@ -67,33 +67,35 @@ async def async_setup_entry(
 
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, InverterSensor
+            async_add_entities, Platform.SENSOR, InverterSensor
         )
     if solar_net.logger_coordinator is not None:
         solar_net.logger_coordinator.add_entities_for_seen_keys(
-            async_add_entities, LoggerSensor
+            async_add_entities, Platform.SENSOR, LoggerSensor
         )
     if solar_net.meter_coordinator is not None:
         solar_net.meter_coordinator.add_entities_for_seen_keys(
-            async_add_entities, MeterSensor
+            async_add_entities, Platform.SENSOR, MeterSensor
         )
     if solar_net.ohmpilot_coordinator is not None:
         solar_net.ohmpilot_coordinator.add_entities_for_seen_keys(
-            async_add_entities, OhmpilotSensor
+            async_add_entities, Platform.SENSOR, OhmpilotSensor
         )
     if solar_net.power_flow_coordinator is not None:
         solar_net.power_flow_coordinator.add_entities_for_seen_keys(
-            async_add_entities, PowerFlowSensor
+            async_add_entities, Platform.SENSOR, PowerFlowSensor
         )
     if solar_net.storage_coordinator is not None:
         solar_net.storage_coordinator.add_entities_for_seen_keys(
-            async_add_entities, StorageSensor
+            async_add_entities, Platform.SENSOR, StorageSensor
         )
 
     @callback
     def async_add_new_entities(coordinator: FroniusInverterUpdateCoordinator) -> None:
         """Add newly found inverter entities."""
-        coordinator.add_entities_for_seen_keys(async_add_entities, InverterSensor)
+        coordinator.add_entities_for_seen_keys(
+            async_add_entities, Platform.SENSOR, InverterSensor
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -105,18 +107,17 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True)
-class FroniusSensorEntityDescription(SensorEntityDescription):
+class FroniusSensorEntityDescription(FroniusEntityDescription, SensorEntityDescription):
     """Describes Fronius sensor entity."""
 
     default_value: StateType | None = None
     # Gen24 devices may report 0 for total energy while doing firmware updates.
     # Handling such values shall mitigate spikes in delta calculations.
     invalid_when_falsy: bool = False
-    response_key: str | None = None
     value_fn: Callable[[StateType], StateType] | None = None
 
 
-INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+INVERTER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_day",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -228,7 +229,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-LOGGER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+LOGGER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="co2_factor",
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,7 +244,7 @@ LOGGER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+METER_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="current_ac_phase_1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -478,7 +479,7 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_real_ac_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -516,7 +517,7 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="energy_day",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -643,7 +644,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     ),
 ]
 
-STORAGE_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
+STORAGE_ENTITY_DESCRIPTIONS: list[FroniusEntityDescription] = [
     FroniusSensorEntityDescription(
         key="capacity_maximum",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -695,30 +696,12 @@ STORAGE_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
 ]
 
 
-class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEntity):
+class _FroniusSensorEntity(FroniusEntity, SensorEntity):
     """Defines a Fronius coordinator entity."""
 
     entity_description: FroniusSensorEntityDescription
 
     _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: FroniusCoordinatorBase,
-        description: FroniusSensorEntityDescription,
-        solar_net_id: str,
-    ) -> None:
-        """Set up an individual Fronius meter sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self.response_key = description.response_key or description.key
-        self.solar_net_id = solar_net_id
-        self._attr_native_value = self._get_entity_value()
-        self._attr_translation_key = description.key
-
-    def _device_data(self) -> dict[str, Any]:
-        """Extract information for SolarNet device from coordinator data."""
-        return self.coordinator.data[self.solar_net_id]
 
     def _get_entity_value(self) -> Any:
         """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
@@ -733,11 +716,15 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
             return round(new_value, 4)
         return new_value
 
+    def _set_entity_value(self) -> None:
+        """Sensor requires a value in _attr_native_value."""
+        self._attr_native_value = self._get_entity_value()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            self._attr_native_value = self._get_entity_value()
+            self._set_entity_value()
         except KeyError:
             # sets state to `None` if no default_value is defined in entity description
             # KeyError: raised when omitted in response - eg. at night when no production
