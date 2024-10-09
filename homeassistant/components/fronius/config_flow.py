@@ -155,7 +155,6 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match(dict(info))
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
 
