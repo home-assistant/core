@@ -557,8 +557,6 @@ OPTIONS_FLOW = {
 class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
 
-    _context_entry: ConfigEntry
-
     async def _validate_edit_controller(
         self, user_input: dict[str, Any]
     ) -> dict[str, Any]:
@@ -585,7 +583,6 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
-        self._context_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -593,11 +590,12 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_HOST: self._context_entry.options[CONF_HOST],
-            CONF_PORT: self._context_entry.options[CONF_PORT],
-            CONF_USERNAME: self._context_entry.data.get(CONF_USERNAME),
-            CONF_PASSWORD: self._context_entry.data.get(CONF_PASSWORD),
+            CONF_HOST: reconfigure_entry.options[CONF_HOST],
+            CONF_PORT: reconfigure_entry.options[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
         }
 
         if user_input:
@@ -614,19 +612,18 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 password = user_input.pop(CONF_PASSWORD, None)
                 username = user_input.pop(CONF_USERNAME, None)
-                new_data = self._context_entry.data | {
+                new_data = reconfigure_entry.data | {
                     CONF_PASSWORD: password,
                     CONF_USERNAME: username,
                 }
-                new_options = self._context_entry.options | {
+                new_options = reconfigure_entry.options | {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    self._context_entry,
+                    reconfigure_entry,
                     data=new_data,
                     options=new_options,
-                    reason="reconfigure_successful",
                     reload_even_if_entry_is_unchanged=False,
                 )
 
