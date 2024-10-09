@@ -89,7 +89,9 @@ from .webrtc import (
     CameraWebRTCLegacyProvider,
     CameraWebRTCProvider,
     RTCIceServer,
+    WebRTCAnswer,
     WebRTCClientConfiguration,
+    WebRTCSendMessage,
     async_get_supported_legacy_provider,
     async_get_supported_provider,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
@@ -583,7 +585,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     async def async_handle_web_rtc_offer(
-        self, offer_sdp: str, session_id: str, send_message: Callable[[dict], None]
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle the WebRTC offer and return an answer.
 
@@ -605,7 +607,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self, offer_sdp
             )
         ):
-            send_message({"answer": answer})
+            send_message(WebRTCAnswer(answer))
             return
 
         raise HomeAssistantError(
@@ -732,7 +734,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         self.supports_async_webrtc_offer = (
             inspect.signature(self.async_handle_web_rtc_offer).parameters.get(
-                "send_result"
+                "send_message"
             )
             is not None
         )

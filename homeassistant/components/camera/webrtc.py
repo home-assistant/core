@@ -95,6 +95,26 @@ class WebRTCClientConfiguration(DataClassDictMixin):
     get_all_candidates_upfront: bool = field(init=False, default=False)
 
 
+@dataclass(frozen=True)
+class WebRTCAnswer(DataClassDictMixin):
+    """WebRTC answer."""
+
+    answer: str
+    type: str = field(default="answer", init=False)
+
+
+@dataclass(frozen=True)
+class WebRTCCandidate(DataClassDictMixin):
+    """WebRTC candidate."""
+
+    candidate: str
+    type: str = field(default="candidate", init=False)
+
+
+type WebRTCMessages = WebRTCAnswer | WebRTCCandidate
+type WebRTCSendMessage = Callable[[WebRTCMessages], None]
+
+
 class CameraWebRTCProvider(Protocol):
     """WebRTC provider."""
 
@@ -106,7 +126,7 @@ class CameraWebRTCProvider(Protocol):
         camera: Camera,
         offer_sdp: str,
         session_id: str,
-        send_result: Callable[[dict], None],
+        send_message: WebRTCSendMessage,
     ) -> bool:
         """Handle the WebRTC offer and return the answer via the provided callback.
 
@@ -216,36 +236,37 @@ async def ws_webrtc_offer(
         return
 
     session_id = uuid.uuid4().hex
-    connection.subscriptions[session_id] = partial(
+    connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )
 
     # Send subscription id to client
-    connection.send_result(msg["id"], {"subscription_id": session_id})
+    connection.send_result(msg["id"], {"session_id": session_id})
 
     @callback
-    def send_event(value: dict) -> None:
+    def send_message(message: WebRTCMessages | dict) -> None:
         """Push a value to websocket."""
+        value = message if isinstance(message, dict) else message.to_dict()
         connection.send_message(
             websocket_api.event_message(
-                session_id,
+                msg["id"],
                 value,
             )
         )
 
     if camera.supports_async_webrtc_offer:
-        await camera.async_handle_web_rtc_offer(offer, session_id, send_event)
+        await camera.async_handle_web_rtc_offer(offer, session_id, send_message)
     else:
         try:
-            answer = await camera.async_handle_web_rtc_offer(offer)
+            answer = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg]
         except (HomeAssistantError, ValueError) as ex:
             _LOGGER.error("Error handling WebRTC offer: %s", ex)
-            send_event(
+            send_message(
                 {"type": "error", "code": "web_rtc_offer_failed", "message": str(ex)}
             )
         except TimeoutError:
             _LOGGER.error("Timeout handling WebRTC offer")
-            send_event(
+            send_message(
                 {
                     "type": "error",
                     "code": "web_rtc_offer_failed",
@@ -253,7 +274,7 @@ async def ws_webrtc_offer(
                 }
             )
         else:
-            send_event({"type": "answer", "answer": answer})
+            send_message(WebRTCAnswer(answer))
 
 
 @websocket_api.websocket_command(
@@ -291,7 +312,7 @@ async def ws_get_client_config(
     {
         vol.Required("type"): "camera/webrtc/candidate",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required("subscription_id"): str,
+        vol.Required("session_id"): str,
         vol.Required("candidate"): str,
     }
 )

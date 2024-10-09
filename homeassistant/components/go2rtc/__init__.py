@@ -1,11 +1,10 @@
 """The go2rtc component."""
 
-from collections.abc import Callable
-
 from go2rtc_client import Go2RtcRestClient
 from go2rtc_client.ws import (
     Go2RtcWsClient,
     ReceiveMessages,
+    WebRTCAnswer,
     WebRTCCandidate,
     WebRTCOffer,
 )
@@ -13,6 +12,10 @@ from go2rtc_client.ws import (
 from homeassistant.components.camera import Camera
 from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
+    WebRTCAnswer as HAWebRTCAnswer,
+    WebRTCCandidate as HAWebRTCCandidate,
+    WebRTCMessages,
+    WebRTCSendMessage,
     async_register_webrtc_provider,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -62,9 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(server.stop)
         server.start()
 
-    client = Go2RtcRestClient(async_get_clientsession(hass), entry.data[CONF_HOST])
-
-    provider = WebRTCProvider(client, hass)
+    provider = WebRTCProvider(hass, entry.data[CONF_HOST])
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 
@@ -72,10 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
-    def __init__(self, rest_client: Go2RtcRestClient, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant,url:str,) -> None:
         """Initialize the WebRTC provider."""
-        self._rest_client = rest_client
         self._hass = hass
+        self._url = url
+        self._session = async_get_clientsession(hass)
+        self._rest_client = Go2RtcRestClient(self._session, url)
         self._sessions: dict[str, Go2RtcWsClient] = {}
 
     async def async_is_supported(self, stream_source: str) -> bool:
@@ -87,7 +90,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera: Camera,
         offer_sdp: str,
         session_id: str,
-        send_result: Callable[[dict], None],
+        send_message: WebRTCSendMessage,
     ) -> bool:
         """Handle the WebRTC offer and return the answer via the provided callback.
 
@@ -99,12 +102,18 @@ class WebRTCProvider(CameraWebRTCProvider):
                 return False
             await self._rest_client.streams.add(camera.entity_id, stream_source)
 
-        self._sessions[session_id] = ws_client = Go2RtcWsClient(self._rest_client.host)
+        self._sessions[session_id] = ws_client = Go2RtcWsClient(self._session, self._url,source=camera.entity_id)
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:
             """Handle messages."""
-            send_result(message.to_dict())
+            value: WebRTCMessages
+            if isinstance(message, WebRTCCandidate):
+                value = HAWebRTCCandidate(message.candidate)
+            elif isinstance(message, WebRTCAnswer):
+                value = HAWebRTCAnswer(message.answer)
+
+            send_message(value)
 
         ws_client.subscribe(on_messages)
         await ws_client.send(WebRTCOffer(offer_sdp))
