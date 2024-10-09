@@ -84,8 +84,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -93,12 +91,13 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm re-authentication with Trafikverket."""
         errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
             try:
-                await self.validate_input(api_key, self.entry.data[CONF_STATION])
+                await self.validate_input(api_key, reauth_entry.data[CONF_STATION])
             except InvalidAuthentication:
                 errors["base"] = "invalid_auth"
             except NoWeatherStationFound:
@@ -109,7 +108,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
-                    self.entry, data={**self.entry.data, CONF_API_KEY: api_key}
+                    reauth_entry, data_updates={CONF_API_KEY: api_key}
                 )
 
         return self.async_show_form(
@@ -122,14 +121,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-configuration with Trafikverket."""
-
-        self.entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm re-configuration with Trafikverket."""
         errors: dict[str, str] = {}
 
         if user_input:
@@ -147,10 +138,9 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
-                    self.entry,
+                    self._get_reconfigure_entry(),
                     title=user_input[CONF_STATION],
                     data=user_input,
-                    reason="reconfigure_successful",
                 )
 
         schema = self.add_suggested_values_to_schema(
@@ -162,11 +152,11 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_STATION): TextSelector(),
                 }
             ),
-            {**self.entry.data, **(user_input or {})},
+            {**self._get_reconfigure_entry().data, **(user_input or {})},
         )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=schema,
             errors=errors,
         )
