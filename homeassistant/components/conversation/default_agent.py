@@ -159,7 +159,6 @@ class DefaultAgent(ConversationEntity):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
-        self._all_names_list: SlotList | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: list[TriggerData] = []
@@ -446,9 +445,41 @@ class DefaultAgent(ConversationEntity):
             # Successful strict match
             return strict_result
 
-        # Try again with all entities (including unexpoed)
-        assert self._all_names_list is not None
-        slot_lists = {**slot_lists, "name": self._all_names_list}
+        # Try again with all entities (including unexposed)
+        entity_registry = er.async_get(self.hass)
+        all_entity_names: list[tuple[str, str, dict[str, Any]]] = []
+
+        for state in self.hass.states.async_all():
+            context = {"domain": state.domain}
+            if state.attributes:
+                # Include some attributes
+                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                    if attr not in state.attributes:
+                        continue
+                    context[attr] = state.attributes[attr]
+
+            if entity := entity_registry.async_get(state.entity_id):
+                # Skip config/hidden entities
+                if (entity.entity_category is not None) or (
+                    entity.hidden_by is not None
+                ):
+                    continue
+
+                if entity.aliases:
+                    # Also add aliases
+                    for alias in entity.aliases:
+                        if not alias.strip():
+                            continue
+
+                        all_entity_names.append((alias, alias, context))
+
+            # Default name
+            all_entity_names.append((state.name, state.name, context))
+
+        slot_lists = {
+            **slot_lists,
+            "name": TextSlotList.from_tuples(all_entity_names, allow_template=False),
+        }
 
         strict_result = self._recognize_strict(
             user_input,
@@ -861,7 +892,6 @@ class DefaultAgent(ConversationEntity):
         if self._unsub_clear_slot_list is None:
             return
         self._slot_lists = None
-        self._all_names_list = None
         for unsub in self._unsub_clear_slot_list:
             unsub()
         self._unsub_clear_slot_list = None
@@ -869,7 +899,7 @@ class DefaultAgent(ConversationEntity):
     @core.callback
     def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
-        if (self._slot_lists is not None) and (self._all_names_list is not None):
+        if self._slot_lists is not None:
             return self._slot_lists
 
         start = time.monotonic()
@@ -883,7 +913,6 @@ class DefaultAgent(ConversationEntity):
         # have the same name. The intent matcher doesn't gather all matching
         # values for a list, just the first. So we will need to match by name no
         # matter what.
-        all_entity_names = []
         exposed_entity_names = []
         for state in self.hass.states.async_all():
             is_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
@@ -905,13 +934,11 @@ class DefaultAgent(ConversationEntity):
                         continue
 
                     name_tuple = (alias, alias, context)
-                    all_entity_names.append(name_tuple)
                     if is_exposed:
                         exposed_entity_names.append(name_tuple)
 
             # Default name
             name_tuple = (state.name, state.name, context)
-            all_entity_names.append(name_tuple)
             if is_exposed:
                 exposed_entity_names.append(name_tuple)
 
@@ -954,9 +981,6 @@ class DefaultAgent(ConversationEntity):
             ),
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
-        self._all_names_list = TextSlotList.from_tuples(
-            all_entity_names, allow_template=False
-        )
 
         self._listen_clear_slot_list()
 
