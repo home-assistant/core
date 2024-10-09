@@ -46,7 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import SensorValueType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -151,7 +151,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 
 @callback
 def async_uptime_value_changed_fn(
-    old: SensorValueType, new: datetime | float | str | None
+    old: StateType, new: datetime | float | str | None
 ) -> bool:
     """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
@@ -366,10 +366,9 @@ class UnifiSensorEntityDescription(
     # Optional
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
     """Calculate if source is connected."""
-    value_changed_fn: Callable[
-        [SensorValueType, datetime | float | str | None],
-        bool,
-    ] = lambda old, new: old != new
+    value_changed_fn: Callable[[StateType, datetime | float | str | None], bool] = (
+        lambda old, new: old != new
+    )
     """Calculate whether a state change should be recorded."""
 
 

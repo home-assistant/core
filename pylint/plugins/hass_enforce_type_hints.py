@@ -612,7 +612,16 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="state",
-        return_type=["StateType", None, "str", "int", "float"],
+        return_type=[
+            "StateType",
+            "str",
+            "int",
+            "float",
+            "date",
+            "datetime",
+            "Decimal",
+            None,
+        ],
     ),
     TypeHintMatch(
         function_name="capability_attributes",
@@ -2306,15 +2315,14 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="native_value",
                     return_type=[
-                        "SensorValueType",
                         "StateType",
                         "str",
                         "int",
                         "float",
-                        None,
                         "date",
                         "datetime",
                         "Decimal",
+                        None,
                     ],
                 ),
                 TypeHintMatch(

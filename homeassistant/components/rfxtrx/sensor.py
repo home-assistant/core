@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import SensorValueType
+from homeassistant.helpers.typing import StateType
 
 from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
@@ -62,7 +62,7 @@ def _rssi_convert(value: int | None) -> str | None:
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 
-    convert: Callable[[Any], SensorValueType] = lambda x: cast(SensorValueType, x)
+    convert: Callable[[Any], StateType] = lambda x: cast(StateType, x)
 
 
 SENSOR_TYPES = (
@@ -302,7 +302,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             self._apply_event(get_rfx_object(event))
 
     @property
-    def native_value(self) -> SensorValueType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if not self._event:
             return None

@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import SensorValueType, StateType
+from homeassistant.helpers.typing import StateType
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -177,7 +177,7 @@ class ReolinkSensorEntity(ReolinkChannelCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data, channel)
 
     @property
-    def native_value(self) -> SensorValueType:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api, self._channel)
 
@@ -197,7 +197,7 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data)
 
     @property
-    def native_value(self) -> SensorValueType:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api)
 
@@ -227,7 +227,7 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
             self._attr_translation_key = "sd_storage"
 
     @property
-    def native_value(self) -> SensorValueType:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api, self._hdd_index)
 

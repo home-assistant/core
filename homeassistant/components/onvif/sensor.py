@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import SensorValueType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
@@ -84,7 +84,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
         super().__init__(device)
 
     @property
-    def native_value(self) -> SensorValueType:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         assert self._attr_unique_id is not None
         if (event := self.device.events.get_uid(self._attr_unique_id)) is not None:
