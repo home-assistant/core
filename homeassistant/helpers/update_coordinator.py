@@ -89,16 +89,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
             self.config_entry = config_entries.current_entry.get()
-            if self.config_entry:
-                report(
-                    f"initialises coordinator {name} without explicit config entry for "
-                    f"integration, {self.config_entry.domain} with title: {self.config_entry.title} "
-                    f"and entry_id: {self.config_entry.entry_id}, which is deprecated and "
-                    "will stop working in Home Assistant 2025.11, "
-                    "pass config entry explicitly instead",
-                    error_if_core=True,
-                    error_if_integration=True,
-                )
+            report(
+                f"initialises coordinator {name} without explicit config entry, "
+                "which is deprecated and will stop working in "
+                "Home Assistant 2025.11, pass config entry explicitly instead",
+                error_if_core=True,
+                error_if_integration=True,
+            )
         else:
             self.config_entry = config_entry
         self.always_update = always_update

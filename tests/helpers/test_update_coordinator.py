@@ -818,37 +818,41 @@ async def test_config_entry(
 ) -> None:
     """Test behavior of coordinator.entry."""
     entry = MockConfigEntry()
+    caplog.clear()
+
+    deprecated_text = (
+        "Detected code that initialises coordinator test "
+        "without explicit config entry"
+    )
 
     # Default without context should be None
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is None
+    assert deprecated_text in caplog.text
+    caplog.clear()
 
     # Explicit None is OK
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=None
     )
     assert crd.config_entry is None
+    assert deprecated_text not in caplog.text
 
     # Explicit entry is OK
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=entry
     )
     assert crd.config_entry is entry
+    assert deprecated_text not in caplog.text
 
     # set ContextVar
-    assert (
-        "Detected code that initialises coordinator test without "
-        "explicit config entry for integration"
-    ) not in caplog.text
     config_entries.current_entry.set(entry)
 
     # Default with ContextVar should match the ContextVar
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is entry
-    assert (
-        "Detected code that initialises coordinator test without "
-        "explicit config entry for integration"
-    ) in caplog.text
+    assert deprecated_text in caplog.text
+    caplog.clear()
 
     # Explicit entry different from ContextVar not recommended, but should work
     another_entry = MockConfigEntry()
@@ -856,7 +860,4 @@ async def test_config_entry(
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
-    assert (
-        "Detected code that initialises coordinator test without "
-        "explicit config entry for integration"
-    ) not in caplog.text
+    assert deprecated_text not in caplog.text
