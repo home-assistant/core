@@ -12,6 +12,7 @@
       "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
     }
   ],
+  "available_markets": [],
   "copyrights": [
     {
       "text": "2020 Smihilism Records",
@@ -70,6 +71,7 @@
             "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
           }
         ],
+        "available_markets": [],
         "disc_number": 1,
         "duration_ms": 260372,
         "explicit": false,
@@ -98,6 +100,7 @@
             "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
           }
         ],
+        "available_markets": [],
         "disc_number": 1,
         "duration_ms": 206613,
         "explicit": true,

@@ -153,11 +153,13 @@
         },
         "track": {
           "preview_url": "https://p.scdn.co/mp3-preview/d61fbb7016904624373008ea056d45e6df891071?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "available_markets": [],
           "explicit": false,
           "type": "track",
           "episode": false,
           "track": true,
           "album": {
+            "available_markets": [],
             "type": "album",
             "album_type": "compilation",
             "href": "https://api.spotify.com/v1/albums/6nlfkk5GoXRL1nktlATNsy",
