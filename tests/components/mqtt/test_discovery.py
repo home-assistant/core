@@ -70,7 +70,7 @@ TEST_SINGLE_CONFIGS = [
     (
         "homeassistant/device_automation/0AFFD2/bla1/config",
         {
-            "device": {"identifiers": ["0AFFD2"]},
+            "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
             "automation_type": "trigger",
             "payload": "short_press",
             "topic": "foobar/triggers/button1",
@@ -81,20 +81,21 @@ TEST_SINGLE_CONFIGS = [
     (
         "homeassistant/sensor/0AFFD2/bla2/config",
         {
-            "device": {"identifiers": ["0AFFD2"]},
+            "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
             "state_topic": "foobar/sensors/bla2/state",
+            "unique_id": "bla002",
         },
     ),
     (
         "homeassistant/tag/0AFFD2/bla3/config",
         {
-            "device": {"identifiers": ["0AFFD2"]},
+            "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
             "topic": "foobar/tags/bla3/see",
         },
     ),
 ]
 TEST_DEVICE_CONFIG = {
-    "device": {"identifiers": ["0AFFD2"]},
+    "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
     "o": {"name": "foobar"},
     "cmp": {
         "bla1": {
@@ -108,6 +109,8 @@ TEST_DEVICE_CONFIG = {
         "bla2": {
             "platform": "sensor",
             "state_topic": "foobar/sensors/bla2/state",
+            "unique_id": "bla002",
+            "name": "mqtt_sensor",
         },
         "bla3": {
             "platform": "tag",
@@ -131,7 +134,7 @@ async def help_check_discovered_items(
     )
     assert len(triggers) == 1
     # Check the sensor was discovered
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.test_device_mqtt_sensor")
     assert state is not None
 
     # Check the tag works
@@ -1383,7 +1386,7 @@ async def test_duplicate_removal(
                 '"platform": "sensor",'
                 '"name": "sensor2",'
                 '"state_topic": "foobar/sensor2",'
-                '  "unique_id": "unique2"'
+                '"unique_id": "unique2"'
                 "}}}"
             },
             ["sensor.none_sensor1", "sensor.none_sensor2"],
