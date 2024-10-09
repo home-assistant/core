@@ -197,12 +197,12 @@ async def test_idle(
 
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
-    ("service", "service_data", "method"),
+    ("service", "method"),
     [
-        (SERVICE_MEDIA_PLAY, {}, "start_playback"),
-        (SERVICE_MEDIA_PAUSE, {}, "pause_playback"),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, "previous_track"),
-        (SERVICE_MEDIA_NEXT_TRACK, {}, "next_track"),
+        (SERVICE_MEDIA_PLAY, "start_playback"),
+        (SERVICE_MEDIA_PAUSE, "pause_playback"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous_track"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next_track"),
     ],
 )
 async def test_mutating(
@@ -210,7 +210,6 @@ async def test_mutating(
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     service: str,
-    service_data: dict,
     method: str,
 ) -> None:
     """Test the Spotify media player."""
@@ -218,10 +217,10 @@ async def test_mutating(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
-        service_data | {ATTR_ENTITY_ID: "media_player.spotify_spotify_1"},
+        {ATTR_ENTITY_ID: "media_player.spotify_spotify_1"},
         blocking=True,
     )
-    assert getattr(mock_spotify.return_value, method).call_count == 1
+    getattr(mock_spotify.return_value, method).assert_called_once_with()
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -243,7 +242,8 @@ async def test_repeat_mode(
             {ATTR_ENTITY_ID: "media_player.spotify_spotify_1", ATTR_MEDIA_REPEAT: mode},
             blocking=True,
         )
-        mock_spotify.return_value.repeat.assert_called_with(spotify_mode)
+        mock_spotify.return_value.repeat.assert_called_once_with(spotify_mode)
+        mock_spotify.return_value.repeat.reset_mock()
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -264,7 +264,8 @@ async def test_shuffle(
             },
             blocking=True,
         )
-        mock_spotify.return_value.shuffle.assert_called_with(shuffle)
+        mock_spotify.return_value.shuffle.assert_called_once_with(shuffle)
+        mock_spotify.return_value.shuffle.reset_mock()
 
 
 @pytest.mark.usefixtures("setup_credentials")
