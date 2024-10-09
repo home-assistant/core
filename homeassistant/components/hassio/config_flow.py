@@ -19,6 +19,6 @@ class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         # We only need one Hass.io config entry
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         return self.async_create_entry(title="Supervisor", data={})
