@@ -344,7 +344,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     """Test reconfiguring an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123.4567890",
+        unique_id="1234567",
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -490,7 +490,7 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "unique_id_mismatch"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -531,4 +531,4 @@ async def test_reconfigure_already_existing(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result2["reason"] == "unique_id_mismatch"
