@@ -79,51 +79,28 @@ def mock_spotify() -> Generator[MagicMock]:
         current_user = load_json_value_fixture("current_user.json", DOMAIN)
         client.current_user.return_value = current_user
         client.me.return_value = current_user
-        client.current_playback.return_value = load_json_value_fixture(
-            "playback.json", DOMAIN
-        )
-        client.current_user_followed_artists.return_value = load_json_value_fixture(
-            "followed_artists.json", DOMAIN
-        )
-        client.current_user_saved_albums.return_value = load_json_value_fixture(
-            "saved_albums.json", DOMAIN
-        )
-        client.current_user_saved_tracks.return_value = load_json_value_fixture(
-            "saved_tracks.json", DOMAIN
-        )
-        client.current_user_saved_shows.return_value = load_json_value_fixture(
-            "saved_shows.json", DOMAIN
-        )
-        client.current_user_recently_played.return_value = load_json_value_fixture(
-            "recently_played_tracks.json", DOMAIN
-        )
-        client.current_user_top_artists.return_value = load_json_value_fixture(
-            "top_artists.json", DOMAIN
-        )
-        client.current_user_top_tracks.return_value = load_json_value_fixture(
-            "top_tracks.json", DOMAIN
-        )
-        client.featured_playlists.return_value = load_json_value_fixture(
-            "featured_playlists.json", DOMAIN
-        )
-        client.categories.return_value = load_json_value_fixture(
-            "categories.json", DOMAIN
-        )
-        client.category_playlists.return_value = load_json_value_fixture(
-            "category_playlists.json", DOMAIN
-        )
-        client.category.return_value = load_json_value_fixture("category.json", DOMAIN)
-        client.new_releases.return_value = load_json_value_fixture(
-            "new_releases.json", DOMAIN
-        )
-        client.playlist.return_value = load_json_value_fixture("playlist.json", DOMAIN)
-        client.album.return_value = load_json_value_fixture("album.json", DOMAIN)
-        client.artist.return_value = load_json_value_fixture("artist.json", DOMAIN)
-        client.artist_albums.return_value = load_json_value_fixture(
-            "artist_albums.json", DOMAIN
-        )
-        client.show_episodes.return_value = load_json_value_fixture(
-            "show_episodes.json", DOMAIN
-        )
-        client.show.return_value = load_json_value_fixture("show.json", DOMAIN)
+        for fixture, method in (
+            ("playback.json", "current_playback"),
+            ("followed_artists.json", "current_user_followed_artists"),
+            ("saved_albums.json", "current_user_saved_albums"),
+            ("saved_tracks.json", "current_user_saved_tracks"),
+            ("saved_shows.json", "current_user_saved_shows"),
+            ("recently_played_tracks.json", "current_user_recently_played"),
+            ("top_artists.json", "current_user_top_artists"),
+            ("top_tracks.json", "current_user_top_tracks"),
+            ("featured_playlists.json", "featured_playlists"),
+            ("categories.json", "categories"),
+            ("category_playlists.json", "category_playlists"),
+            ("category.json", "category"),
+            ("new_releases.json", "new_releases"),
+            ("playlist.json", "playlist"),
+            ("album.json", "album"),
+            ("artist.json", "artist"),
+            ("artist_albums.json", "artist_albums"),
+            ("show_episodes.json", "show_episodes"),
+            ("show.json", "show"),
+        ):
+            getattr(client, method).return_value = load_json_value_fixture(
+                fixture, DOMAIN
+            )
         yield spotify_mock
