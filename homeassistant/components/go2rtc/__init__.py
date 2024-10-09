@@ -96,13 +96,15 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         Return value determines if the offer was handled successfully.
         """
+        self._sessions[session_id] = ws_client = Go2RtcWsClient(
+            self._session, self._url, source=camera.entity_id
+        )
+
         streams = await self._rest_client.streams.list()
         if camera.entity_id not in streams:
             if not (stream_source := await camera.stream_source()):
                 return False
             await self._rest_client.streams.add(camera.entity_id, stream_source)
-
-        self._sessions[session_id] = ws_client = Go2RtcWsClient(self._session, self._url,source=camera.entity_id)
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:

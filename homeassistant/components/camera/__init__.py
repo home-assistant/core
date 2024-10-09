@@ -795,8 +795,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
-
-        raise HomeAssistantError("Cannot handle WebRTC candidate")
+        else:
+            raise HomeAssistantError("Cannot handle WebRTC candidate")
 
     @callback
     def close_webrtc_session(self, session_id: str) -> None:

@@ -252,7 +252,7 @@ async def ws_webrtc_offer(
     connection.send_result(msg["id"], {"session_id": session_id})
 
     @callback
-    def send_message(message: WebRTCMessages | dict) -> None:
+    def send_message(message: WebRTCMessages | dict[str, Any]) -> None:
         """Push a value to websocket."""
         value = message if isinstance(message, dict) else message.to_dict()
         connection.send_message(
@@ -268,7 +268,7 @@ async def ws_webrtc_offer(
         await camera.async_handle_web_rtc_offer(offer, session_id, send_message)
     else:
         try:
-            answer = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg]
+            answer: str = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg, ]
         except (HomeAssistantError, ValueError) as ex:
             _LOGGER.error("Error handling WebRTC offer: %s", ex)
             send_message(
