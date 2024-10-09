@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
 )
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
@@ -18,13 +19,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -42,25 +36,25 @@ SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.name_1"
 
 CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
 TEST_RISCO_TO_HA = {
-    "arm": STATE_ALARM_ARMED_AWAY,
-    "partial_arm": STATE_ALARM_ARMED_HOME,
-    "A": STATE_ALARM_ARMED_HOME,
-    "B": STATE_ALARM_ARMED_HOME,
-    "C": STATE_ALARM_ARMED_NIGHT,
-    "D": STATE_ALARM_ARMED_NIGHT,
+    "arm": AlarmControlPanelEntityState.ARMED_AWAY,
+    "partial_arm": AlarmControlPanelEntityState.ARMED_HOME,
+    "A": AlarmControlPanelEntityState.ARMED_HOME,
+    "B": AlarmControlPanelEntityState.ARMED_HOME,
+    "C": AlarmControlPanelEntityState.ARMED_NIGHT,
+    "D": AlarmControlPanelEntityState.ARMED_NIGHT,
 }
 TEST_FULL_RISCO_TO_HA = {
     **TEST_RISCO_TO_HA,
-    "D": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    "D": AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
 }
 TEST_HA_TO_RISCO = {
-    STATE_ALARM_ARMED_AWAY: "arm",
-    STATE_ALARM_ARMED_HOME: "partial_arm",
-    STATE_ALARM_ARMED_NIGHT: "C",
+    AlarmControlPanelEntityState.ARMED_AWAY: "arm",
+    AlarmControlPanelEntityState.ARMED_HOME: "partial_arm",
+    AlarmControlPanelEntityState.ARMED_NIGHT: "C",
 }
 TEST_FULL_HA_TO_RISCO = {
     **TEST_HA_TO_RISCO,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: "D",
+    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS: "D",
 }
 CUSTOM_MAPPING_OPTIONS = {
     "risco_states_to_ha": TEST_RISCO_TO_HA,
@@ -210,7 +204,7 @@ async def test_cloud_states(
             hass,
             two_part_cloud_alarm,
             "triggered",
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelEntityState.TRIGGERED,
             entity_id,
             partition_id,
         )
@@ -218,7 +212,7 @@ async def test_cloud_states(
             hass,
             two_part_cloud_alarm,
             "arming",
-            STATE_ALARM_ARMING,
+            AlarmControlPanelEntityState.ARMING,
             entity_id,
             partition_id,
         )
@@ -226,7 +220,7 @@ async def test_cloud_states(
             hass,
             two_part_cloud_alarm,
             "armed",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelEntityState.ARMED_AWAY,
             entity_id,
             partition_id,
         )
@@ -234,7 +228,7 @@ async def test_cloud_states(
             hass,
             two_part_cloud_alarm,
             "partially_armed",
-            STATE_ALARM_ARMED_HOME,
+            AlarmControlPanelEntityState.ARMED_HOME,
             entity_id,
             partition_id,
         )
@@ -242,7 +236,7 @@ async def test_cloud_states(
             hass,
             two_part_cloud_alarm,
             "disarmed",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelEntityState.DISARMED,
             entity_id,
             partition_id,
         )
@@ -257,7 +251,7 @@ async def test_cloud_states(
                 hass,
                 two_part_cloud_alarm,
                 "partially_armed",
-                STATE_ALARM_ARMED_NIGHT,
+                AlarmControlPanelEntityState.ARMED_NIGHT,
                 entity_id,
                 partition_id,
             )
@@ -595,7 +589,7 @@ async def test_local_states(
             hass,
             two_part_local_alarm,
             "triggered",
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelEntityState.TRIGGERED,
             entity_id,
             partition_id,
             callback,
@@ -604,7 +598,7 @@ async def test_local_states(
             hass,
             two_part_local_alarm,
             "arming",
-            STATE_ALARM_ARMING,
+            AlarmControlPanelEntityState.ARMING,
             entity_id,
             partition_id,
             callback,
@@ -613,7 +607,7 @@ async def test_local_states(
             hass,
             two_part_local_alarm,
             "armed",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelEntityState.ARMED_AWAY,
             entity_id,
             partition_id,
             callback,
@@ -622,7 +616,7 @@ async def test_local_states(
             hass,
             two_part_local_alarm,
             "partially_armed",
-            STATE_ALARM_ARMED_HOME,
+            AlarmControlPanelEntityState.ARMED_HOME,
             entity_id,
             partition_id,
             callback,
@@ -631,7 +625,7 @@ async def test_local_states(
             hass,
             two_part_local_alarm,
             "disarmed",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelEntityState.DISARMED,
             entity_id,
             partition_id,
             callback,
@@ -647,7 +641,7 @@ async def test_local_states(
                 hass,
                 two_part_local_alarm,
                 "partially_armed",
-                STATE_ALARM_ARMED_NIGHT,
+                AlarmControlPanelEntityState.ARMED_NIGHT,
                 entity_id,
                 partition_id,
                 callback,
