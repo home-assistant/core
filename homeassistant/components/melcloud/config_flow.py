@@ -12,7 +12,7 @@ from aiohttp import ClientError, ClientResponseError
 import pymelcloud
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,7 +25,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    entry: ConfigEntry
 
     async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
@@ -82,7 +81,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with MELCloud."""
-        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -95,15 +93,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             aquired_token, errors = await self.async_reauthenticate_client(user_input)
 
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={CONF_TOKEN: aquired_token},
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data={CONF_TOKEN: aquired_token}
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
-
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -152,7 +144,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -161,9 +152,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
         acquired_token = None
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            user_input[CONF_USERNAME] = self.entry.data[CONF_USERNAME]
+            user_input[CONF_USERNAME] = reconfigure_entry.data[CONF_USERNAME]
             try:
                 async with asyncio.timeout(10):
                     acquired_token = await pymelcloud.login(
@@ -194,9 +186,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 user_input[CONF_TOKEN] = acquired_token
                 return self.async_update_reload_and_abort(
-                    self.entry,
-                    data={**self.entry.data, **user_input},
-                    reason="reconfigure_successful",
+                    reconfigure_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
@@ -207,5 +197,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: self.entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
+            },
         )

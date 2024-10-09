@@ -73,7 +73,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tado."""
 
     VERSION = 1
-    config_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -120,7 +119,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.config_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -128,9 +126,10 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            user_input[CONF_USERNAME] = self.config_entry.data[CONF_USERNAME]
+            user_input[CONF_USERNAME] = reconfigure_entry.data[CONF_USERNAME]
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -145,9 +144,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self.config_entry,
-                    data={**self.config_entry.data, **user_input},
-                    reason="reconfigure_successful",
+                    reconfigure_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
@@ -159,7 +156,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
             },
         )
 
