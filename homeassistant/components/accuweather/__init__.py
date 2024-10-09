@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
 
     coordinator_observation = AccuWeatherObservationDataUpdateCoordinator(
         hass,
+        entry,
         accuweather,
         name,
         "observation",
@@ -58,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
 
     coordinator_daily_forecast = AccuWeatherDailyForecastDataUpdateCoordinator(
         hass,
+        entry,
         accuweather,
         name,
         "daily forecast",

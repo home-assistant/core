@@ -1,5 +1,7 @@
 """The AccuWeather coordinator."""
 
+from __future__ import annotations
+
 from asyncio import timeout
 from datetime import timedelta
 import logging
@@ -18,6 +20,9 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, MANUFACTURER
 
+if TYPE_CHECKING:
+    from . import AccuWeatherConfigEntry
+
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +36,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
         name: str,
         coordinator_type: str,
@@ -48,6 +54,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{name} ({coordinator_type})",
             update_interval=update_interval,
         )
@@ -73,6 +80,7 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
         name: str,
         coordinator_type: str,
@@ -90,6 +98,7 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{name} ({coordinator_type})",
             update_interval=update_interval,
         )
