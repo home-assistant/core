@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_states[button.my_device_reboot-entry]
+# name: test_states[button.my_device_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.my_device_reboot',
+    'entity_id': 'button.my_device_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +23,7 @@
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Reboot',
+    'original_name': 'Restart',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
