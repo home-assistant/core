@@ -518,25 +518,14 @@ def async_match_targets(  # noqa: C901
     candidates = [
         MatchTargetsCandidate(
             state=state,
-            is_exposed=async_should_expose(
-                hass, constraints.assistant, state.entity_id
+            is_exposed=(
+                async_should_expose(hass, constraints.assistant, state.entity_id)
+                if constraints.assistant
+                else True
             ),
         )
         for state in states
     ]
-
-    # if constraints.assistant:
-    #     # Filter by exposure
-    #     exposed_states: list[State] = []
-    #     for state in states:
-    #         if async_should_expose(hass, constraints.assistant, state.entity_id):
-    #             exposed_states.append(state)
-    #         else:
-    #             unexposed_states.append(state)
-
-    #     states = exposed_states
-    #     if not states:
-    #         return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
 
     if constraints.domains and (not filtered_by_domain):
         # Filter by domain (if we didn't already do it)
