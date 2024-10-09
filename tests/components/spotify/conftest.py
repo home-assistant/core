@@ -9,6 +9,7 @@ from spotifyaio.models import (
     Album,
     Artist,
     ArtistResponse,
+    CategoriesResponse,
     Category,
     CategoryPlaylistResponse,
     FeaturedPlaylistResponse,
@@ -109,8 +110,8 @@ def mock_spotify() -> Generator[AsyncMock]:
                 "get_recently_played_tracks",
                 PlayedTrackResponse,
             ),
-            ("top_artists.json", "current_user_top_artists", TopArtistsResponse),
-            ("top_tracks.json", "current_user_top_tracks", TopTracksResponse),
+            ("top_artists.json", "get_top_artists", TopArtistsResponse),
+            ("top_tracks.json", "get_top_tracks", TopTracksResponse),
             ("show_episodes.json", "get_show_episodes", ShowEpisodesResponse),
         ):
             getattr(client, method).return_value = obj.from_json(
