@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -108,12 +107,14 @@ async def async_setup_entry(
 class FroniusSensorEntityDescription(SensorEntityDescription):
     """Describes Fronius sensor entity."""
 
-    default_value: StateType | None = None
+    default_value: int | None = None
     # Gen24 devices may report 0 for total energy while doing firmware updates.
     # Handling such values shall mitigate spikes in delta calculations.
     invalid_when_falsy: bool = False
     response_key: str | None = None
-    value_fn: Callable[[StateType], StateType] | None = None
+    value_fn: Callable[[str | int | float | None], str | int | float | None] | None = (
+        None
+    )
 
 
 INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
