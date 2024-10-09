@@ -97,7 +97,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     "will stop working in Home Assistant 2025.11, "
                     "pass config entry explicitly instead",
                     error_if_core=True,
-                    error_if_integration=False,
+                    error_if_integration=True,
                 )
         else:
             self.config_entry = config_entry
