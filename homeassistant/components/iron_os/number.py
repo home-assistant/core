@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     async_add_entities(
         IronOSNumberEntity(coordinator, description)
