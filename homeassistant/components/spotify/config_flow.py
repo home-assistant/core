@@ -45,9 +45,9 @@ class SpotifyFlowHandler(
             self.logger.exception("Failed to fetch user details")
             return self.async_abort(reason="connection_error")
 
-        await self.async_set_unique_id(current_user.user_id)
-
         name = current_user.display_name
+
+        await self.async_set_unique_id(current_user.user_id)
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
