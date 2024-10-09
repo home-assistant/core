@@ -94,12 +94,6 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-configuration with Trafikverket."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm re-configuration with Trafikverket."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
 
@@ -134,7 +128,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=schema,
             errors=errors,
         )
