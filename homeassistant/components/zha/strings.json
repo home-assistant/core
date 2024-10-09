@@ -585,6 +585,12 @@
       },
       "preheat_status": {
         "name": "Pre-heat status"
+      },
+      "valve_leak": {
+        "name": "Valve leak status"
+      },
+      "water_supply": {
+        "name": "Water supply status"
       }
     },
     "button": {
