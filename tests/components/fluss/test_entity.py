@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
+from fluss_api import FlussApiClientCommunicationError
 import pytest
 
 from homeassistant.components.fluss.button import FlussButton
@@ -19,17 +20,15 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-async def mock_entity_description() -> EntityDescription:
+def mock_entity_description() -> EntityDescription:
     """Return a mock entity description."""
-    description = AsyncMock(spec=EntityDescription)
-    description.key = "mock_key"
-    return description
+    return EntityDescription(key="mock_key")
 
 
 @pytest.fixture
-async def mock_entry() -> ConfigEntry:
+def mock_entry() -> ConfigEntry:
     """Return a mock config entry."""
-    entry = AsyncMock(spec=ConfigEntry)
+    entry = Mock(spec=ConfigEntry)
     entry.entry_id = "test_entry"
     entry.data = {"api_key": "mock_api_key", "address": "mock_address"}
     entry.domain = DOMAIN
@@ -39,7 +38,7 @@ async def mock_entry() -> ConfigEntry:
 
 
 @pytest.fixture
-async def mock_config_entries() -> Mock:
+def mock_config_entries() -> Mock:
     """Return a mock ConfigEntries."""
     config_entries = Mock()
     config_entries.async_get_entry = Mock(return_value=None)
@@ -49,11 +48,10 @@ async def mock_config_entries() -> Mock:
 
 
 @pytest.fixture
-async def mock_fluss_button() -> Mock:
+def mock_fluss_button() -> Mock:
     """Return a mock FlussButton."""
     button = Mock(spec=FlussButton)
     button.unique_id = "mock_unique_id"
-    button.state = "mock_state"
     button.async_update = AsyncMock()
     return button
 
@@ -76,9 +74,7 @@ async def test_fluss_entity_initialization(
         entity_description=mock_entity_description,
     )
 
-    expected_unique_id = (
-        f"{mock_entry.data[CONF_ADDRESS]}_{mock_entity_description.key}"
-    )
+    expected_unique_id = f"{mock_fluss_button.unique_id}_{mock_entity_description.key}"
 
     assert entity.hass == hass
     assert entity.device == mock_fluss_button
@@ -106,7 +102,6 @@ async def test_fluss_entity_update_entry_data(
             entry=mock_entry,
             entity_description=mock_entity_description,
         )
-        entity.async_write_ha_state = AsyncMock()  # Mock this if called
         entity._update_entry_data()
 
         mock_update_entry.assert_called_once_with(
@@ -125,7 +120,7 @@ async def test_fluss_entity_no_update_needed(
     """Test FlussEntity when no update to address is needed."""
     mock_entry = Mock(spec=ConfigEntry)
     mock_entry.entry_id = "test_entry"
-    mock_entry.data = {CONF_ADDRESS: "mock_unique_id"}
+    mock_entry.data = {CONF_ADDRESS: "mock_unique_id"}  # Match device.unique_id
     hass.config_entries = mock_config_entries
 
     with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
@@ -135,7 +130,6 @@ async def test_fluss_entity_no_update_needed(
             entry=mock_entry,
             entity_description=mock_entity_description,
         )
-        entity.async_write_ha_state = AsyncMock()  # Mock this if called
         entity._update_entry_data()
         mock_update_entry.assert_not_called()
 
@@ -169,18 +163,31 @@ async def test_fluss_entity_async_update(
     mock_fluss_button.async_update.assert_called_once()
 
 
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item):
-    """Pytest hook to add detailed logging for test results.
+@pytest.mark.asyncio
+async def test_fluss_entity_async_update_error(
+    hass: HomeAssistant,
+    mock_fluss_button: Mock,
+    mock_entry: ConfigEntry,
+    mock_entity_description: EntityDescription,
+    mock_config_entries: Mock,
+) -> None:
+    """Test FlussEntity async_update method with communication error."""
+    hass.config_entries = mock_config_entries
 
-    This function is used to capture and log additional information
-    during test execution, such as exceptions.
-    """
-    outcome = yield
-    rep = outcome.get_result()
-    if rep.failed:
-        # Capture exception details
-        if hasattr(rep.longrepr, "sections"):
-            for section in rep.longrepr.sections:
-                if section[0] == "Captured exception":
-                    logger.error(section[1])
+    # Initialize the entity
+    entity = FlussEntity(
+        hass=hass,
+        device=mock_fluss_button,
+        entry=mock_entry,
+        entity_description=mock_entity_description,
+    )
+
+    # Simulate a communication error during async_update
+    mock_fluss_button.async_update.side_effect = FlussApiClientCommunicationError()
+
+    # Patch the logger to catch the error log
+    with patch("homeassistant.components.fluss.entity._LOGGER.error") as mock_logger:
+        await entity.async_update()
+        mock_logger.assert_called_once_with(
+            "Failed to update device: %s", mock_fluss_button
+        )

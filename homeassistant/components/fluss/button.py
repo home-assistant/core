@@ -20,8 +20,8 @@ class FlussButton(ButtonEntity):
         """Initialize the cover."""
         self.api = api
         self.device = device
-        self._name = device.get("deviceName", "unknown")
-        self._attr_unique_id = f"fluss_{device.get('deviceName', 'unknown')}"
+        self._name = device.get("deviceName", "Unknown Device")
+        self._attr_unique_id = f"fluss_{device.get('deviceId', 'unknown_id')}"
 
     @property
     def name(self) -> str:
@@ -38,22 +38,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fluss Devices."""
 
-    entry_data = entry.runtime_data
-    api: FlussApiClient = entry_data["api"]
+    api: FlussApiClient = entry.runtime_data
 
     devices_data = await api.async_get_devices()
     devices = devices_data["devices"]
 
-    device_info_list = []
-    for device in devices:
-        device_info = {
-            "deviceId": device.get("deviceId"),
-            "deviceName": device.get("deviceName"),
-            "userType": device.get("userPermissions", {}).get("userType"),
-        }
-        device_info_list.append(device_info)
-
     buttons = [
         FlussButton(api, device) for device in devices if isinstance(device, dict)
     ]
+    LOGGER.debug("Adding entities: %s", buttons)
     async_add_entities(buttons)
