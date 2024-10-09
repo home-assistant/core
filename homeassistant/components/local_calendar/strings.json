@@ -13,6 +13,9 @@
         "description": "You can import events in iCal format (.ics file)."
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "invalid_ics_file": "Invalid .ics file"
     }
