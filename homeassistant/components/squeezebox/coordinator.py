@@ -61,7 +61,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.lms.async_status()
 
         if not data:
-            raise UpdateFailed(f"No data from server status for {self.lms.name}")
+            raise UpdateFailed("No data from status poll")
         _LOGGER.debug("Raw serverstatus %s=%s", self.lms.name, data)
 
         return self._prepare_status_data(data)
