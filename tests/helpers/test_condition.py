@@ -1096,7 +1096,9 @@ async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
             "entity_id": "input_datetime.am",
             "datetime": str(
                 dt_util.now()
-                .replace(year=2020, month=5, day=2, hour=6, minute=0, second=0, microsecond=0)
+                .replace(
+                    year=2020, month=5, day=2, hour=6, minute=0, second=0, microsecond=0
+                )
                 .replace(tzinfo=None)
             ),
         },
@@ -1110,7 +1112,9 @@ async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
             "entity_id": "input_datetime.pm",
             "datetime": str(
                 dt_util.now()
-                .replace(year=2021, month=5, day=1, hour=18, minute=0, second=0, microsecond=0)
+                .replace(
+                    year=2021, month=5, day=1, hour=18, minute=0, second=0, microsecond=0
+                )
                 .replace(tzinfo=None)
             ),
         },
@@ -1249,7 +1253,9 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
             "entity_id": "input_datetime.am",
             "datetime": str(
                 dt_util.now()
-                .replace(year=2020, month=5, day=1, hour=6, minute=0, second=0, microsecond=0)
+                .replace(
+                    year=2020, month=5, day=1, hour=6, minute=0, second=0, microsecond=0
+                )
                 .replace(tzinfo=None)
             ),
         },
@@ -1263,7 +1269,15 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
             "entity_id": "input_datetime.pm",
             "datetime": str(
                 dt_util.now()
-                .replace(year=2020, month=5, day=1, hour=18, minute=0, second=0, microsecond=0)
+                .replace(
+                    year=2020,
+                    month=5,
+                    day=1,
+                    hour=18,
+                    minute=0,
+                    second=0,
+                    microsecond=0
+                )
                 .replace(tzinfo=None)
             ),
         },
@@ -1277,7 +1291,9 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
             "entity_id": "input_datetime.later",
             "datetime": str(
                 dt_util.now()
-                .replace(year=2021, month=6, day=1, hour=15, minute=0, second=0, microsecond=0)
+                .replace(
+                    year=2021, month=6, day=1, hour=15, minute=0, second=0, microsecond=0
+                )
                 .replace(tzinfo=None)
             ),
         },
@@ -1320,7 +1336,9 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
     # Trigger on PM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=18, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=18, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(
             hass, after="input_datetime.pm", before="input_datetime.am"
@@ -1336,7 +1354,9 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
     # Trigger on AM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=6, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=6, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(
             hass, after="input_datetime.pm", before="input_datetime.am"
@@ -1352,7 +1372,9 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
     # Trigger 2 on AM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=1, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=1, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(
             hass, after="input_datetime.pm", before="input_datetime.am"
@@ -1423,7 +1445,9 @@ async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
     # Trigger on PM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=18, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=18, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
         assert not condition.datetime(hass, after="sensor.am", before="sensor.pm")
@@ -1439,7 +1463,9 @@ async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
     # Trigger on AM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=6, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=6, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
         assert condition.datetime(hass, after="sensor.am", before="sensor.pm")
@@ -1451,7 +1477,9 @@ async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
     # Trigger 2 on AM time
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
-        return_value=dt_util.now().replace(year=2020, month=5, day=1, hour=1, minute=0, second=0),
+        return_value=dt_util.now().replace(
+            year=2020, month=5, day=1, hour=1, minute=0, second=0
+        ),
     ):
         assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
         assert condition.datetime(hass, after="sensor.am", before="sensor.pm")

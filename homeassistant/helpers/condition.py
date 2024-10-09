@@ -6,7 +6,9 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
-from datetime import datetime, time as dt_time, timedelta
+from datetime import datetime as dt_datetime
+from datetime import time as dt_time
+from datetime import timedelta as dt_timedelta
 import functools as ft
 import logging
 import re
@@ -545,7 +547,7 @@ def state(
     hass: HomeAssistant,
     entity: str | State | None,
     req_state: Any,
-    for_period: timedelta | None = None,
+    for_period: dt_timedelta | None = None,
     attribute: str | None = None,
     variables: TemplateVarsType = None,
 ) -> bool:
@@ -608,7 +610,7 @@ def state(
     except vol.Invalid as ex:
         raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
 
-    duration = dt_util.utcnow() - cast(timedelta, for_period)
+    duration = dt_util.utcnow() - cast(dt_timedelta, for_period)
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok
@@ -659,14 +661,14 @@ def sun(
     hass: HomeAssistant,
     before: str | None = None,
     after: str | None = None,
-    before_offset: timedelta | None = None,
-    after_offset: timedelta | None = None,
+    before_offset: dt_timedelta | None = None,
+    after_offset: dt_timedelta | None = None,
 ) -> bool:
     """Test if current time matches sun requirements."""
     utcnow = dt_util.utcnow()
     today = dt_util.as_local(utcnow).date()
-    before_offset = before_offset or timedelta(0)
-    after_offset = after_offset or timedelta(0)
+    before_offset = before_offset or dt_timedelta(0)
+    after_offset = after_offset or dt_timedelta(0)
 
     sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
     sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
@@ -676,12 +678,12 @@ def sun(
 
     after_sunrise = today > dt_util.as_local(cast(datetime, sunrise)).date()
     if after_sunrise and has_sunrise_condition:
-        tomorrow = today + timedelta(days=1)
+        tomorrow = today + dt_timedelta(days=1)
         sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
 
     after_sunset = today > dt_util.as_local(cast(datetime, sunset)).date()
     if after_sunset and has_sunset_condition:
-        tomorrow = today + timedelta(days=1)
+        tomorrow = today + dt_timedelta(days=1)
         sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
 
     # Special case: before sunrise OR after sunset
@@ -897,22 +899,21 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def date(
     hass: HomeAssistant,
-    before: dt_time | str | None = None,
-    after: dt_time | str | None = None,
+    before: dt_datetime | str | None = None,
+    after: dt_datetime | str | None = None,
     weekday: str | Container[str] | None = None,
 ) -> bool:
-    """Test if date condition matches.
-    """
+    """Test if date condition matches."""
     now = dt_util.now()
     now_date = now.date()
 
     if after is None:
-        after = dt_time(0)
+        after = dt_datetime(0)
     elif isinstance(after, str):
         if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("date", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
-            after = dt_time(
+            after = dt_datetime(
                 after_entity.attributes.get("year", 9999),
                 after_entity.attributes.get("month", 12),
                 after_entity.attributes.get("day", 31),
@@ -931,12 +932,12 @@ def date(
             return False
 
     if before is None:
-        before = dt_time(9999, 12, 31)
+        before = dt_timedelta(9999, 12, 31)
     elif isinstance(before, str):
         if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("date", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
-            before = dt_time(
+            before = dt_timedelta(
                 before_entity.attributes.get("year", 9999),
                 before_entity.attributes.get("month", 12),
                 before_entity.attributes.get("day", 31),
@@ -956,11 +957,11 @@ def date(
 
     if after < before:
         condition_trace_update_result(after=after, now_date=now_date, before=before)
-        if not after <= now_date < before:
+        if not after.date() <= now_date < before.date():
             return False
     else:
         condition_trace_update_result(after=after, now_date=now_date, before=before)
-        if before <= now_date < after:
+        if before.date() <= now_date.date() < after.date():
             return False
 
     if weekday is not None:
@@ -993,8 +994,8 @@ def date_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def datetime(
     hass: HomeAssistant,
-    before: dt_time | str | None = None,
-    after: dt_time | str | None = None,
+    before: dt_datetime | str | None = None,
+    after: dt_datetime | str | None = None,
     weekday: str | Container[str] | None = None,
 ) -> bool:
     """Test if local time and date condition matches.
@@ -1007,12 +1008,12 @@ def datetime(
     now = dt_util.now()
 
     if after is None:
-        after = dt_time(0)
+        after = dt_datetime(0)
     elif isinstance(after, str):
         if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("datetime", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
-            after = dt_time(
+            after = dt_datetime(
                 after_entity.attributes.get("year", 9999),
                 after_entity.attributes.get("month", 12),
                 after_entity.attributes.get("day", 31),
@@ -1034,12 +1035,12 @@ def datetime(
             return False
 
     if before is None:
-        before = dt_time(9999, 12, 31, 23, 59, 59, 999999)
+        before = dt_datetime(9999, 12, 31, 23, 59, 59, 999999)
     elif isinstance(before, str):
         if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("datetime", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
-            before = dt_time(
+            before = dt_datetime(
                 before_entity.attributes.get("year", 9999),
                 before_entity.attributes.get("month", 12),
                 before_entity.attributes.get("day", 31),
