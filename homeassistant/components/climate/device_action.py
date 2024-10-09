@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
 
-ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
+ACTION_TYPES = {"set_hvac_mode", "set_preset_mode", "set_temperature"}
 
 SET_HVAC_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -42,7 +42,19 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-_ACTION_SCHEMA = vol.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
+SET_TEMPERATURE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): "set_temperature",
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        vol.Required(const.ATTR_TEMPERATURE): int,
+    }
+)
+
+_ACTION_SCHEMA = vol.Any(
+    SET_HVAC_MODE_SCHEMA,
+    SET_PRESET_MODE_SCHEMA,
+    SET_TEMPERATURE_SCHEMA
+)
 
 
 async def async_validate_action_config(
@@ -75,6 +87,8 @@ async def async_get_actions(
         actions.append({**base_action, CONF_TYPE: "set_hvac_mode"})
         if supported_features & const.ClimateEntityFeature.PRESET_MODE:
             actions.append({**base_action, CONF_TYPE: "set_preset_mode"})
+        if supported_features & const.ClimateEntityFeature.TARGET_TEMPERATURE:
+            actions.append({**base_action, CONF_TYPE: "set_temperature"})
 
     return actions
 
@@ -94,6 +108,9 @@ async def async_call_action_from_config(
     elif config[CONF_TYPE] == "set_preset_mode":
         service = const.SERVICE_SET_PRESET_MODE
         service_data[const.ATTR_PRESET_MODE] = config[const.ATTR_PRESET_MODE]
+    elif config[CONF_TYPE] == "set_temperature":
+        service = const.SERVICE_SET_TEMPERATURE
+        service_data[const.ATTR_TEMPERATURE] = config[const.ATTR_TEMPERATURE]
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
@@ -127,5 +144,15 @@ async def async_get_action_capabilities(
         except HomeAssistantError:
             preset_modes = []
         fields[vol.Required(const.ATTR_PRESET_MODE)] = vol.In(preset_modes)
+    elif action_type == "set_temperature":
+        try:
+            entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
+            # no default values b/c Climate entity provides defaults automatically
+            min_temp = get_capability(hass, entry.entity_id, const.ATTR_MIN_TEMP)
+            max_temp = get_capability(hass, entry.entity_id, const.ATTR_MAX_TEMP)
+        except HomeAssistantError:
+            min_temp = const.DEFAULT_MIN_TEMP
+            max_temp = const.DEFAULT_MAX_TEMP
+        fields[vol.Required(const.ATTR_TEMPERATURE)] = vol.Range(min_temp, max_temp)
 
     return {"extra_fields": vol.Schema(fields)}
