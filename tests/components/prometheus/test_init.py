@@ -259,13 +259,13 @@ async def test_sensor_without_unit(
     assert (
         'sensor_state{domain="sensor",'
         'entity="sensor.text",'
-        'friendly_name="Text"} 0' not in body
+        'friendly_name="Text"} 0.0' not in body
     )
 
     assert (
         'sensor_unit_text{domain="sensor",'
         'entity="sensor.text_unit",'
-        'friendly_name="Text Unit"} 0' not in body
+        'friendly_name="Text Unit"} 0.0' not in body
     )
 
 
