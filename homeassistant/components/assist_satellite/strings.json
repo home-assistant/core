@@ -25,6 +25,20 @@
           "description": "The media ID to announce instead of using text-to-speech."
         }
       }
+    },
+    "start_conversation": {
+      "name": "Start Conversation",
+      "description": "Start a conversation from a satellite.",
+      "fields": {
+        "start_message": {
+          "name": "Message",
+          "description": "The message to start with."
+        },
+        "start_media_id": {
+          "name": "Media ID",
+          "description": "The media ID to start with instead of using text-to-speech."
+        }
+      }
     }
   }
 }
