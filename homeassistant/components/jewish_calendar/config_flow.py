@@ -139,7 +139,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     _get_data_schema(self.hass),
                     reconfigure_entry.data,
                 ),
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
             )
 
         return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
