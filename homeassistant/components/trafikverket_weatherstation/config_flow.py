@@ -13,7 +13,7 @@ from pytrafikverket.exceptions import (
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -30,8 +30,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Weatherstation integration."""
 
     VERSION = 1
-
-    entry: ConfigEntry
 
     async def validate_input(self, sensor_api: str, station: str) -> None:
         """Validate input from user input."""
