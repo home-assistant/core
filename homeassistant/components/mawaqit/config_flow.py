@@ -10,13 +10,21 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
 from .const import (
     CONF_CALC_METHOD,
+    CONF_CHOICE,
+    CONF_CHOICE_TRANSLATION_KEY,
+    CONF_KEEP,
+    CONF_RESET,
     CONF_SEARCH,
     CONF_TYPE_SEARCH,
+    CONF_TYPE_SEARCH_COORDINATES,
+    CONF_TYPE_SEARCH_KEYWORD,
+    CONF_TYPE_SEARCH_TRANSLATION_KEY,
     CONF_UUID,
     DOMAIN,
     MAWAQIT_STORAGE_KEY,
@@ -120,11 +128,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_keep_or_reset_form()
 
-        choice = user_input["choice"]
+        choice = user_input[CONF_CHOICE]
 
-        if choice == "keep":
+        if choice == CONF_KEEP:
             return self.async_abort(reason="configuration_kept")
-        if choice == "reset":
+        if choice == CONF_RESET:
             # Clear existing data and restart the configuration process
             await utils.async_clear_data(self.hass, self.store, DOMAIN)
             return await self.async_step_user()
@@ -141,7 +149,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
-        if search_method == "coordinates":
+        if search_method == CONF_TYPE_SEARCH_COORDINATES:
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
 
@@ -166,7 +174,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_mosques_coordinates()
 
             # return await self._show_config_form2()
-        if search_method == "keyword":
+        if search_method == CONF_TYPE_SEARCH_KEYWORD:
             return await self.async_step_keyword_search()
 
         return await self._show_search_method_form()
@@ -230,10 +238,16 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_search_method_form(self):
         """Show form to ask the user to choose search method."""
+
         options = {
-            vol.Required(CONF_TYPE_SEARCH, default="coordinates"): vol.In(
-                ["coordinates", "keyword"]
-            )
+            vol.Required(
+                CONF_TYPE_SEARCH, default=CONF_TYPE_SEARCH_COORDINATES
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[CONF_TYPE_SEARCH_COORDINATES, CONF_TYPE_SEARCH_KEYWORD],
+                    translation_key=CONF_TYPE_SEARCH_TRANSLATION_KEY,
+                ),
+            ),
         }
 
         return self.async_show_form(
@@ -291,7 +305,14 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_keep_or_reset_form(self):
         """Show form to ask the user if they want to keep current data or reset."""
-        options = {vol.Required("choice", default="keep"): vol.In(["keep", "reset"])}
+        options = {
+            vol.Required(CONF_CHOICE, default=CONF_KEEP): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[CONF_KEEP, CONF_RESET],
+                    translation_key=CONF_CHOICE_TRANSLATION_KEY,
+                ),
+            ),
+        }
 
         return self.async_show_form(
             step_id="keep_or_reset",

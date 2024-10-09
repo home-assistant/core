@@ -46,8 +46,18 @@ PASSWORD = "password"
 
 API = "api"
 CONF_UUID: str = "uuid"
+
 CONF_SEARCH: str = "Keyword"
-CONF_TYPE_SEARCH: str = "search_method"
+
+CONF_TYPE_SEARCH_TRANSLATION_KEY: str = "search_method_choice_translation_key"
+CONF_TYPE_SEARCH: str = "search_method_choice"
+CONF_TYPE_SEARCH_COORDINATES: str = "search_method_coordinates"
+CONF_TYPE_SEARCH_KEYWORD: str = "search_method_keyword"
+
+CONF_CHOICE: str = "choice"
+CONF_CHOICE_TRANSLATION_KEY: str = "choice_translation_key"
+CONF_KEEP: str = "keep"
+CONF_RESET: str = "reset"
 
 
 MAWAQIT_STORAGE_VERSION = 1
