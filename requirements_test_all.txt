@@ -1156,7 +1156,7 @@ mopeka-iot-ble==0.8.0
 motionblinds==0.6.25
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.1.1
+motionblindsble==0.1.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
