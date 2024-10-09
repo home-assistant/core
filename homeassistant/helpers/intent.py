@@ -30,7 +30,6 @@ from . import (
     area_registry,
     config_validation as cv,
     device_registry,
-    entity as entity_helper,
     entity_registry,
     floor_registry,
 )
@@ -352,6 +351,7 @@ class MatchTargetsCandidate:
     """Candidate for async_match_targets."""
 
     state: State
+    is_exposed: bool
     entity: entity_registry.RegistryEntry | None = None
     area: area_registry.AreaEntry | None = None
     floor: floor_registry.FloorEntry | None = None
@@ -439,30 +439,6 @@ def _filter_by_name(
                     break
 
 
-def _matches_name(
-    state: State,
-    name: str,
-    entities: entity_registry.EntityRegistry,
-) -> bool:
-    """Return true if entity's (normalized) name or alias matches the provided name."""
-    name_norm = _normalize_name(name)
-
-    if (state.entity_id == name) or _normalize_name(state.name) == name_norm:
-        return True
-
-    if entity := entities.async_get(state.entity_id):
-        if entity.name and (_normalize_name(entity.name) == name_norm):
-            return True
-
-        # Check aliases
-        if entity.aliases:
-            for alias in entity.aliases:
-                if _normalize_name(alias) == name_norm:
-                    return True
-
-    return False
-
-
 def _filter_by_features(
     features: int,
     candidates: Iterable[MatchTargetsCandidate],
@@ -521,22 +497,6 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.device.area_id)
 
 
-def _get_area_id(
-    entity_id: str,
-    entities: entity_registry.EntityRegistry,
-    devices: device_registry.DeviceRegistry,
-) -> str | None:
-    """Get the area id of an entity from the entity registry or from its device."""
-    if entity := entities.async_get(entity_id):
-        if entity.area_id:
-            return entity.area_id
-
-        if entity.device_id and (device := devices.async_get(entity.device_id)):
-            return device.area_id
-
-    return None
-
-
 @callback
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
@@ -555,36 +515,42 @@ def async_match_targets(  # noqa: C901
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
 
-    # Keep track of states that were filtered out due to exposure so that we can
-    # disambiguate the case of a match failure.
-    unexposed_states: list[State] = list(states)
+    candidates = [
+        MatchTargetsCandidate(
+            state=state,
+            is_exposed=async_should_expose(
+                hass, constraints.assistant, state.entity_id
+            ),
+        )
+        for state in states
+    ]
 
-    if constraints.assistant:
-        # Filter by exposure
-        exposed_states: list[State] = []
-        for state in states:
-            if async_should_expose(hass, constraints.assistant, state.entity_id):
-                exposed_states.append(state)
-            else:
-                unexposed_states.append(state)
+    # if constraints.assistant:
+    #     # Filter by exposure
+    #     exposed_states: list[State] = []
+    #     for state in states:
+    #         if async_should_expose(hass, constraints.assistant, state.entity_id):
+    #             exposed_states.append(state)
+    #         else:
+    #             unexposed_states.append(state)
 
-        states = exposed_states
-        if not states:
-            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+    #     states = exposed_states
+    #     if not states:
+    #         return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
 
     if constraints.domains and (not filtered_by_domain):
         # Filter by domain (if we didn't already do it)
-        states = [s for s in states if s.domain in constraints.domains]
-        if not states:
+        candidates = [c for c in candidates if c.state.domain in constraints.domains]
+        if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
 
     if constraints.states:
         # Filter by state
-        states = [s for s in states if s.state in constraints.states]
-        if not states:
+        candidates = [c for c in candidates if c.state.state in constraints.states]
+        if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.STATE)
 
-    # Exit early so we can avoid registry lookups
+    # Try to exit early so we can avoid registry lookups
     if not (
         constraints.name
         or constraints.features
@@ -592,35 +558,29 @@ def async_match_targets(  # noqa: C901
         or constraints.area_name
         or constraints.floor_name
     ):
-        return MatchTargetsResult(True, states=states)
+        if constraints.assistant:
+            # Check exposure
+            candidates = [c for c in candidates if c.is_exposed]
+            if not candidates:
+                return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
+        return MatchTargetsResult(True, states=[c.state for c in candidates])
 
     # We need entity registry entries now
     er = entity_registry.async_get(hass)
-    candidates = [MatchTargetsCandidate(s, er.async_get(s.entity_id)) for s in states]
+    for candidate in candidates:
+        candidate.entity = er.async_get(candidate.state.entity_id)
 
     if constraints.name:
         # Filter by entity name or alias
         candidates = list(_filter_by_name(constraints.name, candidates))
         if not candidates:
-            # Check if any unexposed entities match the name
-            for state in unexposed_states:
-                if _matches_name(state, constraints.name, er):
-                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
-
             return MatchTargetsResult(False, MatchFailedReason.NAME)
 
     if constraints.features:
         # Filter by supported features
         candidates = list(_filter_by_features(constraints.features, candidates))
         if not candidates:
-            # Check if any unexposed entities match the supported features
-            for state in unexposed_states:
-                if (
-                    entity_helper.get_supported_features(hass, state.entity_id)
-                    == constraints.features
-                ):
-                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
-
             return MatchTargetsResult(False, MatchFailedReason.FEATURE)
 
     if constraints.device_classes:
@@ -629,15 +589,6 @@ def async_match_targets(  # noqa: C901
             _filter_by_device_classes(constraints.device_classes, candidates)
         )
         if not candidates:
-            # Check if any unexposed entities match the device class
-            for state in unexposed_states:
-                if (
-                    device_class := entity_helper.get_device_class(
-                        hass, state.entity_id
-                    )
-                ) and (str(device_class) in constraints.device_classes):
-                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
-
             return MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
 
     # Check floor/area constraints
@@ -677,13 +628,6 @@ def async_match_targets(  # noqa: C901
                 if (c.area is not None) and (c.area.id in possible_area_ids)
             ]
             if not candidates:
-                # Check if any unexposed entities are on this floor
-                for state in unexposed_states:
-                    if _get_area_id(state.entity_id, er, dr) in possible_area_ids:
-                        return MatchTargetsResult(
-                            False, MatchFailedReason.ASSISTANT, floors=targeted_floors
-                        )
-
                 return MatchTargetsResult(
                     False, MatchFailedReason.FLOOR, floors=targeted_floors
                 )
@@ -710,13 +654,6 @@ def async_match_targets(  # noqa: C901
                 if (c.area is not None) and (c.area.id in possible_area_ids)
             ]
             if not candidates:
-                # Check if any unexposed entities are in this area
-                for state in unexposed_states:
-                    if _get_area_id(state.entity_id, er, dr) in possible_area_ids:
-                        return MatchTargetsResult(
-                            False, MatchFailedReason.ASSISTANT, areas=targeted_areas
-                        )
-
                 return MatchTargetsResult(
                     False, MatchFailedReason.AREA, areas=targeted_areas
                 )
@@ -765,6 +702,13 @@ def async_match_targets(  # noqa: C901
                     final_candidates.extend(group_candidates)
                     continue
 
+            # Try to disambiguate by exposure
+            exposed_candidates = [c for c in group_candidates if c.is_exposed]
+            if len(exposed_candidates) < 2:
+                # Only one candidate was exposed
+                final_candidates.extend(exposed_candidates)
+                continue
+
             # Couldn't disambiguate duplicate names
             return MatchTargetsResult(
                 False,
@@ -783,6 +727,12 @@ def async_match_targets(  # noqa: C901
             )
 
         candidates = final_candidates
+
+    if constraints.assistant:
+        # Check exposure
+        candidates = [c for c in candidates if c.is_exposed]
+        if not candidates:
+            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
 
     return MatchTargetsResult(
         True,
