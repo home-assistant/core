@@ -860,7 +860,7 @@ class Thermostat(ClimateEntity):
             )
 
         # Check that an id was found for each sensor
-        if len(sensor_names) != len(sensor_ids):
+        if len(device_ids) != len(sensor_ids):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="sensor_lookup_failed"
             )

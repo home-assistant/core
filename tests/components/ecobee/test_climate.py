@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 
@@ -484,6 +484,12 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         if device.name == "Remote Sensor 2":
             device_id_1 = device.id
 
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_from_other_integration = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "unique")}
+    )
+
     # Test that the function call works in its entirety.
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
         await hass.services.async_call(
@@ -529,7 +535,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         mock_sensors.assert_not_called()
 
     # Error raised because invalid climate name.
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
             "set_sensors_used_in_climate",
@@ -540,9 +546,11 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "invalid_preset"
 
     ## Error raised because invalid sensor.
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as execinfo:
         await hass.services.async_call(
             DOMAIN,
             "set_sensors_used_in_climate",
@@ -553,6 +561,8 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "invalid_sensor"
 
     ## Error raised because sensor not available on device.
     with pytest.raises(ServiceValidationError):
@@ -566,3 +576,17 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+    with pytest.raises(ServiceValidationError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [device_id, device_from_other_integration.id],
+            },
+            blocking=True,
+        )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "sensor_lookup_failed"
