@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from decimal import Decimal, DecimalException
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import TYPE_CHECKING
 
@@ -25,15 +25,23 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_MAX_SUB_INTERVAL,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT,
@@ -77,8 +85,16 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
+        vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
     }
 )
+
+
+def _decimal_state(state: str) -> Decimal | None:
+    try:
+        return Decimal(state)
+    except (InvalidOperation, TypeError):
+        return None
 
 
 async def async_setup_entry(
@@ -102,6 +118,11 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
+    if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
+        max_sub_interval = cv.time_period(max_sub_interval_dict)
+    else:
+        max_sub_interval = None
+
     derivative_sensor = DerivativeSensor(
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
@@ -112,6 +133,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
+        max_sub_interval=max_sub_interval,
     )
 
     async_add_entities([derivative_sensor])
@@ -133,6 +155,7 @@ async def async_setup_platform(
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
         unique_id=None,
+        max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
     )
 
     async_add_entities([derivative])
@@ -154,6 +177,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_of_measurement: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
+        max_sub_interval: timedelta | None,
         unique_id: str | None,
         device_info: DeviceInfo | None = None,
     ) -> None:
@@ -180,6 +204,192 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._time_window = time_window.total_seconds()
+        self._max_sub_interval: timedelta | None = (
+            None  # disable time based derivative
+            if max_sub_interval is None or max_sub_interval.total_seconds() == 0
+            else max_sub_interval
+        )
+        self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        self._last_derivative_time: datetime = datetime.now(tz=UTC)
+
+    @callback
+    def _calc_derivative_on_state_change_and_max_sub_interval(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Calculate derivative based on state change and time.
+
+        Next to doing the derivative based on state change, this method cancels and
+        reschedules time based calculation.
+        """
+        self._cancel_max_sub_interval_exceeded_callback()
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        try:
+            self._calc_derivative_on_state_change(old_state, new_state)
+            self._last_derivative_time = datetime.now(tz=UTC)
+        finally:
+            # When max_sub_interval exceeds without state change the source is assumed
+            # constant with the last known state (new_state).
+            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(new_state)
+
+    @callback
+    def _calc_derivative_on_state_change_callback(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle the sensor state changes."""
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        return self._calc_derivative_on_state_change(old_state, new_state)
+
+    @callback
+    def _calc_derivative_on_state_change(
+        self, old_state: State | None, new_state: State | None
+    ) -> None:
+        """Handle the sensor state changes."""
+        if (
+            old_state is None
+            or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            or new_state is None
+            or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            return
+
+        if self.native_unit_of_measurement is None:
+            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            self._attr_native_unit_of_measurement = self._unit_template.format(
+                "" if unit is None else unit
+            )
+
+        self._prune_state_list(new_state.last_updated)
+
+        try:
+            elapsed_time = (
+                new_state.last_updated - old_state.last_updated
+            ).total_seconds()
+            delta_value = Decimal(new_state.state) - Decimal(old_state.state)
+            new_derivative = (
+                delta_value
+                / Decimal(elapsed_time)
+                / Decimal(self._unit_prefix)
+                * Decimal(self._unit_time)
+            )
+
+        except ValueError as err:
+            _LOGGER.warning("While calculating derivative: %s", err)
+        except DecimalException as err:
+            _LOGGER.warning(
+                "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+            )
+        except AssertionError as err:
+            _LOGGER.error("Could not calculate derivative: %s", err)
+
+        # For total inreasing sensors, the value is expected to continuously increase.
+        # A negative derivative for a total increasing sensor likely indicates the
+        # sensor has been reset. To prevent inaccurate data, discard this sample.
+        if (
+            new_state.attributes.get(ATTR_STATE_CLASS)
+            == SensorStateClass.TOTAL_INCREASING
+            and new_derivative < 0
+        ):
+            return
+
+        # add latest derivative to the window list
+        self._state_list.append(
+            (old_state.last_updated, new_state.last_updated, new_derivative)
+        )
+
+        # If outside of time window just report derivative (is the same as modeling it in the window),
+        # otherwise take the weighted average with the previous derivatives
+        if elapsed_time > self._time_window:
+            derivative = new_derivative
+        else:
+            derivative = self._calc_derivative_from_state_list(new_state.last_updated)
+
+        self._state = derivative
+        self.async_write_ha_state()
+
+    def _schedule_max_sub_interval_exceeded_if_state_is_numeric(
+        self, source_state: State | None
+    ) -> None:
+        """Schedule calculation using the source state and max_sub_interval.
+
+        The callback reference is stored for possible cancellation if the source state
+        reports a change before max_sub_interval has passed.
+        If the callback is executed, meaning there was no state change reported, the
+        source_state is assumed constant and calculation is done using its value.
+        """
+        if (
+            self._max_sub_interval is not None
+            and source_state is not None
+            and (_decimal_state(source_state.state))
+        ):
+
+            @callback
+            def _calc_derivative_on_max_sub_interval_exceeded_callback(
+                now: datetime,
+            ) -> None:
+                """Calculate derivative based on time and reschedule."""
+
+                elapsed_seconds = Decimal(
+                    (now - self._last_derivative_time).total_seconds()
+                )
+
+                self._prune_state_list(now)
+
+                # add latest derivative to the window list. Since we're here on a timeout, the change is 0
+                self._state_list.append((self._last_derivative_time, now, Decimal(0)))
+
+                # If outside of time window just report derivative (is the same as modeling it in the window),
+                # otherwise take the weighted average with the previous derivatives
+                if elapsed_seconds > self._time_window:
+                    derivative = Decimal(0)
+                else:
+                    derivative = self._calc_derivative_from_state_list(now)
+
+                self._state = derivative
+
+                self.async_write_ha_state()
+
+                self._last_derivative_time = datetime.now(tz=UTC)
+
+                # If derivative is now zero, don't schedule another timeout callback, as it will have no effect
+                if derivative != 0:
+                    self._schedule_max_sub_interval_exceeded_if_state_is_numeric(
+                        source_state
+                    )
+
+            self._max_sub_interval_exceeded_callback = async_call_later(
+                self.hass,
+                self._max_sub_interval,
+                _calc_derivative_on_max_sub_interval_exceeded_callback,
+            )
+
+    def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
+        def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
+            window_start = now - timedelta(seconds=self._time_window)
+            if start < window_start:
+                weight = (end - window_start).total_seconds() / self._time_window
+            else:
+                weight = (end - start).total_seconds() / self._time_window
+            return weight
+
+        derivative = Decimal(0)
+        for start, end, value in self._state_list:
+            weight = calculate_weight(start, end, current_time)
+            derivative = derivative + (value * Decimal(weight))
+
+        return derivative
+
+    def _prune_state_list(self, current_time: datetime) -> None:
+        # filter out all derivatives older than `time_window` from our window list
+        self._state_list = [
+            (time_start, time_end, state)
+            for time_start, time_end, state in self._state_list
+            if (current_time - time_end).total_seconds() < self._time_window
+        ]
+
+    def _cancel_max_sub_interval_exceeded_callback(self) -> None:
+        self._max_sub_interval_exceeded_callback()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -194,93 +404,19 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
-        @callback
-        def calc_derivative(event: Event[EventStateChangedData]) -> None:
-            """Handle the sensor state changes."""
-            if (
-                (old_state := event.data["old_state"]) is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or (new_state := event.data["new_state"]) is None
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            ):
-                return
-
-            if self.native_unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._attr_native_unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
-
-            # filter out all derivatives older than `time_window` from our window list
-            self._state_list = [
-                (time_start, time_end, state)
-                for time_start, time_end, state in self._state_list
-                if (new_state.last_updated - time_end).total_seconds()
-                < self._time_window
-            ]
-
-            try:
-                elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
-                ).total_seconds()
-                delta_value = Decimal(new_state.state) - Decimal(old_state.state)
-                new_derivative = (
-                    delta_value
-                    / Decimal(elapsed_time)
-                    / Decimal(self._unit_prefix)
-                    * Decimal(self._unit_time)
-                )
-
-            except ValueError as err:
-                _LOGGER.warning("While calculating derivative: %s", err)
-            except DecimalException as err:
-                _LOGGER.warning(
-                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-                )
-            except AssertionError as err:
-                _LOGGER.error("Could not calculate derivative: %s", err)
-
-            # For total inreasing sensors, the value is expected to continuously increase.
-            # A negative derivative for a total increasing sensor likely indicates the
-            # sensor has been reset. To prevent inaccurate data, discard this sample.
-            if (
-                new_state.attributes.get(ATTR_STATE_CLASS)
-                == SensorStateClass.TOTAL_INCREASING
-                and new_derivative < 0
-            ):
-                return
-
-            # add latest derivative to the window list
-            self._state_list.append(
-                (old_state.last_updated, new_state.last_updated, new_derivative)
+        if self._max_sub_interval is not None:
+            source_state = self.hass.states.get(self._sensor_source_id)
+            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(source_state)
+            self.async_on_remove(self._cancel_max_sub_interval_exceeded_callback)
+            handle_state_change = (
+                self._calc_derivative_on_state_change_and_max_sub_interval
             )
-
-            def calculate_weight(
-                start: datetime, end: datetime, now: datetime
-            ) -> float:
-                window_start = now - timedelta(seconds=self._time_window)
-                if start < window_start:
-                    weight = (end - window_start).total_seconds() / self._time_window
-                else:
-                    weight = (end - start).total_seconds() / self._time_window
-                return weight
-
-            # If outside of time window just report derivative (is the same as modeling it in the window),
-            # otherwise take the weighted average with the previous derivatives
-            if elapsed_time > self._time_window:
-                derivative = new_derivative
-            else:
-                derivative = Decimal(0)
-                for start, end, value in self._state_list:
-                    weight = calculate_weight(start, end, new_state.last_updated)
-                    derivative = derivative + (value * Decimal(weight))
-
-            self._state = derivative
-            self.async_write_ha_state()
+        else:
+            handle_state_change = self._calc_derivative_on_state_change_callback
 
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._sensor_source_id, calc_derivative
+                self.hass, self._sensor_source_id, handle_state_change
             )
         )
 

@@ -11,12 +11,14 @@
           "source": "Input sensor",
           "time_window": "Time window",
           "unit_prefix": "Metric prefix",
-          "unit_time": "Time unit"
+          "unit_time": "Time unit",
+          "max_sub_interval": "Max sub-interval"
         },
         "data_description": {
           "round": "Controls the number of decimal digits in the output.",
           "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
-          "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative."
+          "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative.",
+          "max_sub_interval": "Recalculates derivative if the source did not change for this duration. Use 0 for no time based updates."
         }
       }
     }
@@ -30,12 +32,14 @@
           "source": "[%key:component::derivative::config::step::user::data::source%]",
           "time_window": "[%key:component::derivative::config::step::user::data::time_window%]",
           "unit_prefix": "[%key:component::derivative::config::step::user::data::unit_prefix%]",
-          "unit_time": "[%key:component::derivative::config::step::user::data::unit_time%]"
+          "unit_time": "[%key:component::derivative::config::step::user::data::unit_time%]",
+          "max_sub_interval": "[%key:component::derivative::config::step::user::data::max_sub_interval%]"
         },
         "data_description": {
           "round": "[%key:component::derivative::config::step::user::data_description::round%]",
           "time_window": "[%key:component::derivative::config::step::user::data_description::time_window%]",
-          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]"
+          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]",
+          "max_sub_interval": "[%key:component::derivative::config::step::user::data_description::max_sub_interval%]"
         }
       }
     }
