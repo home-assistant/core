@@ -30,7 +30,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BASE_URL: "https://mastodon.social",
+            CONF_BASE_URL: "https://mastodon.social/home",
             CONF_CLIENT_ID: "client_id",
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
