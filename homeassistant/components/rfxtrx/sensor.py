@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
-from decimal import Decimal
 import logging
 from typing import Any, cast
 
@@ -37,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import SensorValueType
 
 from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
@@ -64,9 +62,7 @@ def _rssi_convert(value: int | None) -> str | None:
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 
-    convert: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: cast(
-        StateType, x
-    )
+    convert: Callable[[Any], SensorValueType] = lambda x: cast(SensorValueType, x)
 
 
 SENSOR_TYPES = (
@@ -306,7 +302,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             self._apply_event(get_rfx_object(event))
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> SensorValueType:
         """Return the state of the sensor."""
         if not self._event:
             return None

@@ -62,7 +62,12 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    SensorValueType,
+    UndefinedType,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
@@ -196,7 +201,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType | date | datetime | Decimal = None
+    _attr_native_value: SensorValueType = None
     _attr_options: list[str] | None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
@@ -457,7 +462,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> SensorValueType:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
@@ -858,14 +863,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class SensorExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    native_value: StateType | date | datetime | Decimal
+    native_value: SensorValueType
     native_unit_of_measurement: str | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | Decimal | dict[str, str] = (
-            self.native_value
-        )
+        native_value: SensorValueType | dict[str, str] = self.native_value
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),

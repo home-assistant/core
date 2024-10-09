@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
-from decimal import Decimal
 import logging
 
 from homeassistant.components.sensor import (
@@ -25,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import SensorValueType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -373,7 +371,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         self.entity_description = entity_description
         self._attr_unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
-        self._value: StateType | date | datetime | Decimal = None
+        self._value: SensorValueType = None
         self.async_update_device()
 
     @property

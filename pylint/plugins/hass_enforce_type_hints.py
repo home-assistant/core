@@ -2306,6 +2306,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="native_value",
                     return_type=[
+                        "SensorValueType",
                         "StateType",
                         "str",
                         "int",

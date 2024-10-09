@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Literal
 
@@ -47,7 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import SensorValueType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -152,7 +151,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 
 @callback
 def async_uptime_value_changed_fn(
-    old: StateType | date | datetime | Decimal, new: datetime | float | str | None
+    old: SensorValueType, new: datetime | float | str | None
 ) -> bool:
     """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
@@ -368,7 +367,7 @@ class UnifiSensorEntityDescription(
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
     """Calculate if source is connected."""
     value_changed_fn: Callable[
-        [StateType | date | datetime | Decimal, datetime | float | str | None],
+        [SensorValueType, datetime | float | str | None],
         bool,
     ] = lambda old, new: old != new
     """Calculate whether a state change should be recorded."""
