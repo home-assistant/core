@@ -18,8 +18,8 @@ from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 _DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.RAW,
     "Bitmap": DPType.RAW,
+    "bitmap": DPType.RAW,
     "bool": DPType.BOOLEAN,
     "enum": DPType.ENUM,
     "json": DPType.JSON,
