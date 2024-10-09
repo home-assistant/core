@@ -18,14 +18,14 @@ from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 _DPTYPE_MAPPING: dict[str, DPType] = {
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "value": DPType.INTEGER,
-    "json": DPType.JSON,
     "bitmap": DPType.RAW,
     "Bitmap": DPType.RAW,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
     "raw": DPType.RAW,
     "string": DPType.STRING,
+    "value": DPType.INTEGER,
 }
 
 
