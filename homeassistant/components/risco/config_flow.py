@@ -61,10 +61,10 @@ LOCAL_SCHEMA = vol.Schema(
     }
 )
 HA_STATES = [
-    AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmControlPanelEntityState.ARMED_HOME,
-    AlarmControlPanelEntityState.ARMED_NIGHT,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelEntityState.ARMED_AWAY.value,
+    AlarmControlPanelEntityState.ARMED_HOME.value,
+    AlarmControlPanelEntityState.ARMED_NIGHT.value,
+    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS.value,
 ]
 
 

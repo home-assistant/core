@@ -78,7 +78,7 @@ async def test_hmip_alarm_control_panel(
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True
     )
-    assert hass.states.get(entity_id).state is AlarmControlPanelEntityState.ARMED_AWAY
+    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.ARMED_AWAY
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
@@ -86,7 +86,7 @@ async def test_hmip_alarm_control_panel(
     assert home.mock_calls[-1][0] == "set_security_zones_activation"
     assert home.mock_calls[-1][1] == (False, True)
     await _async_manipulate_security_zones(hass, home, external_active=True)
-    assert hass.states.get(entity_id).state is AlarmControlPanelEntityState.ARMED_HOME
+    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.ARMED_HOME
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_disarm", {"entity_id": entity_id}, blocking=True
@@ -94,7 +94,7 @@ async def test_hmip_alarm_control_panel(
     assert home.mock_calls[-1][0] == "set_security_zones_activation"
     assert home.mock_calls[-1][1] == (False, False)
     await _async_manipulate_security_zones(hass, home)
-    assert hass.states.get(entity_id).state is AlarmControlPanelEntityState.DISARMED
+    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.DISARMED
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
@@ -104,7 +104,7 @@ async def test_hmip_alarm_control_panel(
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True, alarm_triggered=True
     )
-    assert hass.states.get(entity_id).state is AlarmControlPanelEntityState.TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.TRIGGERED
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
@@ -114,4 +114,4 @@ async def test_hmip_alarm_control_panel(
     await _async_manipulate_security_zones(
         hass, home, external_active=True, alarm_triggered=True
     )
-    assert hass.states.get(entity_id).state is AlarmControlPanelEntityState.TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.TRIGGERED

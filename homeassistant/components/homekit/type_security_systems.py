@@ -152,8 +152,13 @@ class SecuritySystem(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
-        hass_state = AlarmControlPanelEntityState(new_state.state)
-        if (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None:
+        hass_state = None
+        if new_state and new_state.state is not None and new_state.state != "None":
+            hass_state = AlarmControlPanelEntityState(new_state.state)
+        if (
+            hass_state
+            and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None
+        ):
             self.char_current_state.set_value(current_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
@@ -161,5 +166,8 @@ class SecuritySystem(HomeAccessory):
                 hass_state,
                 current_state,
             )
-        if (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None:
+        if (
+            hass_state
+            and (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None
+        ):
             self.char_target_state.set_value(target_state)
