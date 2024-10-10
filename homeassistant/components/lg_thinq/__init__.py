@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.EVENT,
     Platform.FAN,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
