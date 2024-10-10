@@ -191,9 +191,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
-                return self.async_update_reload_and_abort(
-                    self.reauth_entry, data_updates=data
-                )
+                return self.async_update_reload_and_abort(self.reauth_entry, data=data)
 
         return self.async_show_form(
             step_id="reconfigure" if reconfigure else "reauth_confirm",
