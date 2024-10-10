@@ -1,4 +1,4 @@
-"""Test squeezebox update platform."""
+"""Test squeezebox initialization."""
 
 from unittest.mock import patch
 
