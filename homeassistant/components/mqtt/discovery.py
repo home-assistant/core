@@ -35,6 +35,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_COMPONENTS,
+    CONF_MIGRATE_DISCOVERY,
     CONF_ORIGIN,
     CONF_TOPIC,
     DOMAIN,
@@ -67,12 +68,35 @@ MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
 
 TOPIC_BASE = "~"
 
+MIGRATE_DISCOVERY_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_MIGRATE_DISCOVERY): True},
+)
+
 
 class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
 
     device_discovery: bool = False
+    migrate_discovery: bool = False
     discovery_data: DiscoveryInfoType
+
+
+@callback
+def _async_process_discovery_migration(payload: MQTTDiscoveryPayload) -> bool:
+    """Process a discovery migration request in the discovery payload."""
+    # Allow abbreviation
+    if migr_discvry := (payload.pop("migr_discvry", None)):
+        payload[CONF_MIGRATE_DISCOVERY] = migr_discvry
+    if CONF_MIGRATE_DISCOVERY in payload:
+        try:
+            MIGRATE_DISCOVERY_SCHEMA(payload)
+        except vol.Invalid as exc:
+            _LOGGER.warning(exc)
+            return False
+        payload.migrate_discovery = True
+        payload.clear()
+        return True
+    return False
 
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
@@ -116,7 +140,7 @@ def async_log_discovery_origin_info(
 
 @callback
 def _replace_abbreviations(
-    payload: Any | dict[str, Any],
+    payload: dict[str, Any] | str,
     abbreviations: dict[str, str],
     abbreviations_set: set[str],
 ) -> None:
@@ -153,7 +177,7 @@ def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> None:
 
 
 @callback
-def _replace_topic_base(discovery_payload: dict[str, Any]) -> None:
+def _replace_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
     """Replace topic base in MQTT discovery data."""
     base = discovery_payload.pop(TOPIC_BASE)
     for key, value in discovery_payload.items():
@@ -174,17 +198,21 @@ def _replace_topic_base(discovery_payload: dict[str, Any]) -> None:
 
 
 @callback
-def _generate_device_cleanup_config(
-    hass: HomeAssistant, object_id: str, node_id: str | None
-) -> dict[str, Any]:
-    """Generate a cleanup message on device cleanup.
+def _generate_device_config(
+    hass: HomeAssistant,
+    object_id: str,
+    node_id: str | None,
+    migrate_discovery: bool = False,
+) -> MQTTDiscoveryPayload:
+    """Generate a cleanup or discovery migration message on device cleanup.
 
-    If an empty payload is received for a device,
-    we forward an emppty payload for all previously discovered components.
+    If an empty payload, or a migrate discovery request is received for a device,
+    we forward an empty payload for all previously discovered components.
     """
     mqtt_data = hass.data[DATA_MQTT]
     device_node_id: str = f"{node_id} {object_id}" if node_id else object_id
-    config: dict[str, Any] = {CONF_DEVICE: {}, CONF_COMPONENTS: {}}
+    config = MQTTDiscoveryPayload({CONF_DEVICE: {}, CONF_COMPONENTS: {}})
+    config.migrate_discovery = migrate_discovery
     comp_config = config[CONF_COMPONENTS]
     for platform, discover_id in mqtt_data.discovery_already_discovered:
         ids = discover_id.split(" ")
@@ -195,7 +223,7 @@ def _generate_device_cleanup_config(
         if device_node_id == component_node_id:
             comp_config[component_object_id] = {CONF_PLATFORM: platform}
 
-    return config if comp_config else {}
+    return config if comp_config else MQTTDiscoveryPayload({})
 
 
 @callback
@@ -204,7 +232,7 @@ def _parse_device_payload(
     payload: ReceivePayloadType,
     object_id: str,
     node_id: str | None,
-) -> dict[str, Any]:
+) -> MQTTDiscoveryPayload:
     """Parse a device discovery payload.
 
     The device discovery payload is translated info the config payloads for every single
@@ -212,11 +240,9 @@ def _parse_device_payload(
     An empty payload is translated in a cleanup, which forwards an empty payload to all
     removed components.
     """
-    device_payload: dict[str, Any] = {}
+    device_payload = MQTTDiscoveryPayload()
     if payload == "":
-        if not (
-            device_payload := _generate_device_cleanup_config(hass, object_id, node_id)
-        ):
+        if not (device_payload := _generate_device_config(hass, object_id, node_id)):
             _LOGGER.warning(
                 "No device components to cleanup for %s, node_id '%s'",
                 object_id,
@@ -227,7 +253,9 @@ def _parse_device_payload(
         device_payload = MQTTDiscoveryPayload(json_loads_object(payload))
     except ValueError:
         _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
-        return {}
+        return device_payload
+    if _async_process_discovery_migration(device_payload):
+        return _generate_device_config(hass, object_id, node_id, migrate_discovery=True)
     _replace_all_abbreviations(device_payload)
     try:
         DEVICE_DISCOVERY_SCHEMA(device_payload)
@@ -238,7 +266,7 @@ def _parse_device_payload(
             exc,
             payload,
         )
-        return {}
+        return MQTTDiscoveryPayload({})
     return device_payload
 
 
@@ -271,7 +299,6 @@ def _merge_common_options(
         CONF_AVAILABILITY_TEMPLATE,
         CONF_AVAILABILITY_TOPIC,
         CONF_COMMAND_TOPIC,
-        CONF_MIGRATE_DISCOVERY,
         CONF_PAYLOAD_AVAILABLE,
         CONF_PAYLOAD_NOT_AVAILABLE,
         CONF_STATE_TOPIC,
@@ -373,12 +400,15 @@ async def async_start(  # noqa: C901
                 # assumed to remove the existing config and we do not want to add
                 # device or orig or shared availability attributes.
                 if discovery_payload := MQTTDiscoveryPayload(config):
-                    discovery_payload.device_discovery = True
                     discovery_payload[CONF_DEVICE] = device_config
                     discovery_payload[CONF_ORIGIN] = origin_config
                     # Only assign shared config options
                     # when they are not set at entity level
                     _merge_common_options(discovery_payload, device_discovery_payload)
+                discovery_payload.device_discovery = True
+                discovery_payload.migrate_discovery = (
+                    device_discovery_payload.migrate_discovery
+                )
                 discovered_components.append(
                     MqttComponentConfig(
                         component,
@@ -405,9 +435,10 @@ async def async_start(  # noqa: C901
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
-            _replace_all_abbreviations(discovery_payload)
-            if not _valid_origin_info(discovery_payload):
-                return
+            if not _async_process_discovery_migration(discovery_payload):
+                _replace_all_abbreviations(discovery_payload)
+                if not _valid_origin_info(discovery_payload):
+                    return
             discovered_components.append(
                 MqttComponentConfig(component, object_id, node_id, discovery_payload)
             )

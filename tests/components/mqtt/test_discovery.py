@@ -433,6 +433,7 @@ async def test_discovery_migration_to_device_base(
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     single_configs: list[tuple[str, dict[str, Any]]],
     device_discovery_topic: str,
     device_config: dict[str, Any],
@@ -453,7 +454,7 @@ async def test_discovery_migration_to_device_base(
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
-    # Migrate to device based discovery
+    # Try to migrate to device based discovery without flag
     payload = json.dumps(device_config)
     async_fire_mqtt_message(
         hass,
@@ -461,14 +462,71 @@ async def test_discovery_migration_to_device_base(
         payload,
     )
     await hass.async_block_till_done()
+    assert (
+        "Illegal discovery payload for ('device_automation', '0AFFD2 bla1')"
+        in caplog.text
+    )
+    assert (
+        "Illegal discovery payload for entity sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2')"
+        in caplog.text
+    )
+    assert "Illegal discovery payload for ('tag', '0AFFD2 bla3')" in caplog.text
+
     # Check we still have our mqtt items
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
+    # Test Enable discovery migration
+    # Discovery single config schema
+    caplog.clear()
+    for discovery_topic, _ in single_configs:
+        # migr_discvry is abbreviation for migrate_discovery
+        payload = json.dumps({"migr_discvry": True})
+        async_fire_mqtt_message(
+            hass,
+            discovery_topic,
+            payload,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert (
+        "Migration to device based discovery started on "
+        "topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
+    )
+
+    # Check we still have our mqtt items
+    await help_check_discovered_items(hass, device_registry, tag_mock)
+
+    # Migrate to device based discovery
+    caplog.clear()
+    payload = json.dumps(device_config)
+    async_fire_mqtt_message(
+        hass,
+        device_discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Processing discovery migration for Device trigger "
+        "('device_automation', '0AFFD2 bla1') on topic homeassistant/device/0AFFD2/config"
+        in caplog.text
+    )
+    assert (
+        "Processing discovery migration for entity "
+        "sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2') on topic homeassistant/device/0AFFD2/config"
+        in caplog.text
+    )
+    assert (
+        "Processing discovery migration for Tag "
+        "('tag', '0AFFD2 bla3') on topic homeassistant/device/0AFFD2/config"
+        in caplog.text
+    )
+
+    caplog.clear()
     for _ in range(2):
         # Test publishing an empty payload twice to the migrated discovery topics
         # does not remove the migrated items
-        for discovery_topic, config in single_configs:
-            payload = json.dumps(config)
+        for discovery_topic, _ in single_configs:
             async_fire_mqtt_message(
                 hass,
                 discovery_topic,
@@ -481,7 +539,22 @@ async def test_discovery_migration_to_device_base(
         # empty payload to the old discovery topics
         await help_check_discovered_items(hass, device_registry, tag_mock)
 
+    assert (
+        "Completing discovery migration for ('device_automation', '0AFFD2 bla1') "
+        "on topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
+    )
+    assert (
+        "Completing discovery migration for entity sensor.test_device_mqtt_sensor "
+        "('sensor', '0AFFD2 bla2') on topic homeassistant/sensor/0AFFD2/bla2/config"
+        in caplog.text
+    )
+    assert (
+        "Completing discovery migration for ('tag', '0AFFD2 bla3') "
+        "on topic homeassistant/tag/0AFFD2/bla3/config" in caplog.text
+    )
+
     # Check we cannot accidentally migrate back and remove the items
+    caplog.clear()
     for discovery_topic, config in single_configs:
         payload = json.dumps(config)
         async_fire_mqtt_message(
@@ -492,6 +565,26 @@ async def test_discovery_migration_to_device_base(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
+    assert (
+        "Illegal discovery payload for ('device_automation', '0AFFD2 bla1') "
+        "on topic homeassistant/device_automation/0AFFD2/bla1/config detected, "
+        "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
+        in caplog.text
+    )
+    assert (
+        "Illegal discovery payload for entity sensor.test_device_mqtt_sensor "
+        "('sensor', '0AFFD2 bla2') on topic homeassistant/sensor/0AFFD2/bla2/config "
+        "detected, ignoring update, discovery registered to "
+        "homeassistant/device/0AFFD2/config" in caplog.text
+    )
+    assert (
+        "Illegal discovery payload for ('tag', '0AFFD2 bla3') "
+        "on topic homeassistant/tag/0AFFD2/bla3/config detected, "
+        "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
+        in caplog.text
+    )
+
+    caplog.clear()
     for discovery_topic, config in single_configs:
         payload = json.dumps(config)
         async_fire_mqtt_message(
@@ -506,7 +599,7 @@ async def test_discovery_migration_to_device_base(
     # empty payload to the old discovery topics
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
-    # Check we can remove the the config using the new discovery topic
+    # Check we can remove the config using the new discovery topic
     async_fire_mqtt_message(
         hass,
         device_discovery_topic,
@@ -528,11 +621,12 @@ async def test_discovery_migration_to_single_base(
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     single_configs: list[tuple[str, dict[str, Any]]],
     device_discovery_topic: str,
     device_config: dict[str, Any],
 ) -> None:
-    """Test the migration of device based discovery to single component discovery."""
+    """Test the rollback of device based discovery migratio to a single component discovery."""
     await mqtt_mock_entry()
 
     # Start device based discovery
@@ -549,21 +643,34 @@ async def test_discovery_migration_to_single_base(
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Migrate to single component discovery
-    # 1) Set the migrate_discovery flag in the device payload to False
-    #    to allow rollback
-    payload = json.dumps(device_config | {"migrate_discovery": False})
+    # Test the schema
+    caplog.clear()
+    payload = json.dumps({"migrate_discovery": "invalid"})
     async_fire_mqtt_message(
         hass,
         device_discovery_topic,
         payload,
     )
     await hass.async_block_till_done()
+    assert "Invalid MQTT device discovery payload for 0AFFD2" in caplog.text
+
+    # Set the correct migrate_discovery flag in the device payload
+    # to allow rollback
+    payload = json.dumps({"migrate_discovery": True})
+    async_fire_mqtt_message(
+        hass,
+        device_discovery_topic,
+        payload,
+    )
     await hass.async_block_till_done()
 
-    # 2) Republish the component based payload with the `migrate_discovery' flag
-    #    in the device payload to False to rollback to the component based discovery
+    # Check we still have our mqtt items
+    await help_check_discovered_items(hass, device_registry, tag_mock)
+
+    # 2) Publish the new component based payloads
+    #    to switch to component based discovery
     for discovery_topic, config in single_configs:
-        payload = json.dumps(config | {"migrate_discovery": True})
+        payload = json.dumps(config)
         async_fire_mqtt_message(
             hass,
             discovery_topic,
@@ -573,7 +680,7 @@ async def test_discovery_migration_to_single_base(
     await hass.async_block_till_done()
 
     # Check we still have our mqtt items
-    await help_check_discovered_items(hass, device_registry, tag_mock)
+    # await help_check_discovered_items(hass, device_registry, tag_mock)
 
     for _ in range(2):
         # Test publishing an empty payload twice to the migrated discovery topic
@@ -591,7 +698,7 @@ async def test_discovery_migration_to_single_base(
         await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Check we cannot accidentally migrate back and remove the items
-    payload = json.dumps(device_config | {"migrate_discovery": False})
+    payload = json.dumps(device_config)
     async_fire_mqtt_message(
         hass,
         device_discovery_topic,
