@@ -55,6 +55,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     smarty.update()
 
     # Load platforms
+    discovery.load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
     discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
     discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
     discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
