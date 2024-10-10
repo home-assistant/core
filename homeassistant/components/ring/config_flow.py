@@ -213,7 +213,10 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Trigger a reconfiguration flow."""
         errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
+        reconfigure_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert reconfigure_entry
         entry_data = reconfigure_entry.data
         username = entry_data[CONF_USERNAME]
         await self.async_set_unique_id(username)
