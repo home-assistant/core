@@ -134,3 +134,26 @@ async def test_error(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_unsupported_device_type(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unsupported device types are handled appropriately."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.LIGHT])
+
+    assert hass.states.get("light.test_garage_4_light") is None
+    assert (
+        "Device 'Test Garage 4' has unknown device type 'unknown-device-type'"
+        in caplog.text
+    )
+    assert "which is not supported by the light platform" in caplog.text
+    assert "This device type is unknown" in caplog.text
+    assert (
+        "so please create an issue even if your device does not have a light"
+        in caplog.text
+    )
