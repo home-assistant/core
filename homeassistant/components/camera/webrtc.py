@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
-import uuid
 
 from mashumaro import field_options
 from mashumaro.config import BaseConfig
@@ -20,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ulid import ulid
 
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
@@ -128,7 +128,8 @@ type WebRTCSendMessage = Callable[[WebRTCMessages], None]
 class CameraWebRTCProvider(Protocol):
     """WebRTC provider."""
 
-    async def async_is_supported(self, stream_source: str) -> bool:
+    @callback
+    def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
 
     async def async_handle_web_rtc_offer(
@@ -147,7 +148,7 @@ class CameraWebRTCProvider(Protocol):
         """Handle the WebRTC candidate."""
 
     @callback
-    def close_session(self, session_id: str) -> None:
+    def async_close_session(self, session_id: str) -> None:
         """Close the session."""
 
 
@@ -190,6 +191,7 @@ def _async_register_webrtc_provider[_T](
     return remove_provider
 
 
+@callback
 def async_register_webrtc_provider(
     hass: HomeAssistant,
     provider: CameraWebRTCProvider,
@@ -245,13 +247,12 @@ async def ws_webrtc_offer(
         )
         return
 
-    session_id = uuid.uuid4().hex
+    session_id = ulid()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )
 
-    # Send subscription id to client
-    connection.send_result(msg["id"], {"session_id": session_id})
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
     @callback
     def send_message(message: WebRTCMessages | dict[str, Any]) -> None:
@@ -270,7 +271,7 @@ async def ws_webrtc_offer(
         await camera.async_handle_web_rtc_offer(offer, session_id, send_message)
     else:
         try:
-            answer: str = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg, ]
+            answer: str = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg, assignment]
         except (HomeAssistantError, ValueError) as ex:
             _LOGGER.error("Error handling WebRTC offer: %s", ex)
             send_message(
@@ -350,7 +351,8 @@ async def ws_candidate(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-async def async_register_ws(hass: HomeAssistant) -> None:
+@callback
+def async_register_ws(hass: HomeAssistant) -> None:
     """Register camera webrtc ws endpoints."""
 
     websocket_api.async_register_command(hass, ws_webrtc_offer)
@@ -367,7 +369,7 @@ async def _async_get_supported_provider[
         return None
 
     for provider in providers:
-        if await provider.async_is_supported(stream_source):
+        if provider.async_is_supported(stream_source):
             return provider
 
     return None

@@ -1,5 +1,7 @@
 """The go2rtc component."""
 
+import logging
+
 from go2rtc_client import Go2RtcRestClient
 from go2rtc_client.ws import (
     Go2RtcWsClient,
@@ -25,6 +27,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BINARY
 from .server import Server
+
+_LOGGER = logging.getLogger(__name__)
 
 _SUPPORTED_STREAMS = frozenset(
     (
@@ -73,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WebRTCProvider(CameraWebRTCProvider):
     """WebRTC provider."""
 
-    def __init__(self, hass: HomeAssistant,url:str,) -> None:
+    def __init__(self, hass: HomeAssistant, url: str) -> None:
         """Initialize the WebRTC provider."""
         self._hass = hass
         self._url = url
@@ -81,7 +85,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._rest_client = Go2RtcRestClient(self._session, url)
         self._sessions: dict[str, Go2RtcWsClient] = {}
 
-    async def async_is_supported(self, stream_source: str) -> bool:
+    def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
 
@@ -128,9 +132,10 @@ class WebRTCProvider(CameraWebRTCProvider):
         if ws_client := self._sessions.get(session_id):
             await ws_client.send(WebRTCCandidate(candidate))
         else:
-            raise ValueError("Unknown session")
+            _LOGGER.debug("Unknown session %s", session_id)
 
-    def close_session(self, session_id: str) -> None:
+    @callback
+    def async_close_session(self, session_id: str) -> None:
         """Close the session."""
         if ws_client := self._sessions.pop(session_id, None):
             self._hass.async_create_task(ws_client.close())

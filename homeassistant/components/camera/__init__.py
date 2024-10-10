@@ -349,7 +349,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
-    await async_register_ws(hass)
+    async_register_ws(hass)
 
     await component.async_setup(config)
 
@@ -802,7 +802,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
         if self._webrtc_provider:
-            self._webrtc_provider.close_session(session_id)
+            self._webrtc_provider.async_close_session(session_id)
 
 
 class CameraView(HomeAssistantView):
