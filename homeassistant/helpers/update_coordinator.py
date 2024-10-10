@@ -284,6 +284,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
+        if self.config_entry is None:
+            raise ValueError(
+                "This method is only supported for coordinators with a config entry"
+            )
         if await self.__wrap_async_setup():
             await self._async_refresh(
                 log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
