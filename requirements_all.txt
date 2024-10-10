@@ -2961,6 +2961,9 @@ weatherflow4py==1.0.6
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
 
+# homeassistant.components.weconnect
+weconnect==0.60.3
+
 # homeassistant.components.weheat
 weheat==2024.09.23
 
