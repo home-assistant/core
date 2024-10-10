@@ -613,8 +613,9 @@ async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) ->
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, None)
     crd.setup_method = AsyncMock()
     with pytest.raises(
-        ValueError,
-        match="This method is only supported for coordinators with a config entry",
+        RuntimeError,
+        match="Detected code that uses `async_config_entry_first_refresh` "
+        "without a config entry",
     ):
         await crd.async_config_entry_first_refresh()
 
