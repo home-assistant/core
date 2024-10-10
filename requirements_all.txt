@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
-aioairzone==0.9.3
+aioairzone==0.9.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
