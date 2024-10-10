@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import selector
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,6 +22,7 @@ from .const import (
     CONF_MESSAGE,
     CONF_ONLY_INCLUDE_FEEDID,
     CONF_SUCCESS,
+    CONF_SYNC_ALL_FEEDS,
     DOMAIN,
     FEED_ID,
     FEED_NAME,
@@ -180,14 +182,18 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
         api_key = data[CONF_API_KEY]
         include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
         options: list = include_only_feeds
+        all_feed_ids: list = []
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
             errors["base"] = result[CONF_MESSAGE]
         else:
             options = get_options(result[CONF_MESSAGE])
+            all_feed_ids = [elem[FEED_ID] for elem in result[CONF_MESSAGE]]
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
         if user_input:
             include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
+            if user_input.get(CONF_SYNC_ALL_FEEDS):
+                include_only_feeds = all_feed_ids
             return self.async_create_entry(
                 title=sensor_name(url),
                 data={
@@ -204,6 +210,7 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
                     vol.Required(
                         CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
                     ): selector({"select": dropdown}),
+                    vol.Optional(CONF_SYNC_ALL_FEEDS): cv.boolean,
                 }
             ),
             errors=errors,

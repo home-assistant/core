@@ -22,7 +22,8 @@
     "step": {
       "init": {
         "data": {
-          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]"
+          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]",
+          "sync_all_feeds": "Synchronise all feeds once"
         }
       }
     }
