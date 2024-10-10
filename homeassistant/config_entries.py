@@ -2499,12 +2499,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
-        self, unique_id: str | None = None, *, raise_on_progress: bool = True
+        self, unique_id: str | None = None, *, raise_on_progress: bool | None = None
     ) -> ConfigEntry | None:
         """Set a unique ID for the config flow.
 
         Returns optionally existing config entry with same ID.
         """
+        if raise_on_progress is None:
+            raise_on_progress = self.source != SOURCE_USER
         if unique_id is None:
             self.context["unique_id"] = None
             return None
