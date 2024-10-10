@@ -266,7 +266,9 @@ class RequirementsManager:
         async with self.pip_lock:
             # Recalculate missing again now that we have the lock
             if missing := self._find_missing_requirements(requirements):
-                await self._async_process_requirements(name, missing)
+                # Freeze all the timers since installing packages can take a long time
+                async with self.hass.timeout.async_freeze():
+                    await self._async_process_requirements(name, missing)
 
     def _find_missing_requirements(self, requirements: list[str]) -> list[str]:
         """Find requirements that are missing in the cache."""
