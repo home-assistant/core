@@ -7,7 +7,7 @@ from typing import Any
 from aioautomower.utils import structure_token
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
@@ -74,7 +74,11 @@ class HusqvarnaConfigFlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            assert self.reauth_entry
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self.reauth_entry.title},
+            )
         return await self.async_step_user()
 
     async def async_step_missing_scope(

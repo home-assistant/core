@@ -264,6 +264,97 @@ async def test_setup_invalid_auth(
     assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
+async def test_reauth_successful(hass: HomeAssistant) -> None:
+    """Test starting a reauthentication flow."""
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+    mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
+            new_callable=PropertyMock,
+            return_value=[0],
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
+            return_value=MOCK_PHONEBOOK_INFO_1,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
+            return_value=MOCK_PHONEBOOK_NAME_1,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.updatecheck",
+            new_callable=PropertyMock,
+            return_value=MOCK_DEVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other_fake_user",
+                CONF_PASSWORD: "other_fake_password",
+            },
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert mock_config.data == {
+            **MOCK_CONFIG_ENTRY,
+            CONF_USERNAME: "other_fake_user",
+            CONF_PASSWORD: "other_fake_password",
+        }
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (FritzConnectionException, ConnectResult.INVALID_AUTH),
+        (FritzSecurityError, ConnectResult.INSUFFICIENT_PERMISSIONS),
+    ],
+)
+async def test_reauth_not_successful(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test starting a reauthentication flow but no connection found."""
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+    mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other_fake_user",
+                CONF_PASSWORD: "other_fake_password",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"]["base"] == error
+
+
 async def test_options_flow_correct_prefixes(hass: HomeAssistant) -> None:
     """Test config flow options."""
 

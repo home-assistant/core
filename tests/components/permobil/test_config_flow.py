@@ -294,14 +294,15 @@ async def test_config_flow_reauth_success(
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
-    # request request new token
+    # request new token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_CODE: reauth_code},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {
         CONF_EMAIL: MOCK_EMAIL,
         CONF_REGION: MOCK_URL,
         CONF_CODE: reauth_code,

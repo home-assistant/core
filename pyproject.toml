@@ -27,7 +27,7 @@ dependencies    = [
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor
     "aiohasupervisor==0.1.0",
-    "aiohttp==3.10.8",
+    "aiohttp==3.10.9",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
@@ -46,14 +46,16 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.2",
-    "home-assistant-bluetooth==1.12.2",
+    "home-assistant-bluetooth==1.13.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.4",
     "lru-dict==1.3.0",
+    "mashumaro==3.13.1",
     "PyJWT==2.9.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==43.0.1",
     "Pillow==10.4.0",
+    "propcache==0.2.0",
     "pyOpenSSL==24.2.1",
     "orjson==3.10.7",
     "packaging>=23.1",
@@ -68,11 +70,11 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.15",
+    "uv==0.4.17",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.13.1",
+    "yarl==1.14.0",
 ]
 
 [project.urls]
@@ -920,3 +922,6 @@ split-on-trailing-comma = false
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.ruff.lint.pydocstyle]
+property-decorators = ["propcache.cached_property"]

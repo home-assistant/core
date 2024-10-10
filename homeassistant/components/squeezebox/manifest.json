@@ -1,7 +1,7 @@
 {
   "domain": "squeezebox",
   "name": "Squeezebox (Lyrion Music Server)",
-  "codeowners": ["@rajlaud"],
+  "codeowners": ["@rajlaud", "@pssc", "@peteS-UK"],
   "config_flow": true,
   "dhcp": [
     {
