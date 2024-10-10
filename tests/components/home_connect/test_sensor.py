@@ -8,6 +8,10 @@ from homeconnect.api import HomeConnectAPI
 import pytest
 
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE,
+    BSH_DOOR_STATE_CLOSED,
+    BSH_DOOR_STATE_LOCKED,
+    BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
@@ -15,7 +19,7 @@ from homeassistant.components.home_connect.const import (
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -103,11 +107,11 @@ PROGRAM_SEQUENCE_EVENTS = (
 # Entity mapping to expected state at each program sequence.
 ENTITY_ID_STATES = {
     "sensor.dishwasher_operation_state": (
-        "Delayed",
-        "Run",
-        "Run",
-        "Run",
-        "Ready",
+        "delayed",
+        "run",
+        "run",
+        "run",
+        "ready",
     ),
     "sensor.dishwasher_remaining_program_time": (
         "unavailable",
@@ -220,6 +224,34 @@ async def test_remaining_prog_time_edge_cases(
 @pytest.mark.parametrize(
     ("entity_id", "status_key", "event_value_update", "expected", "appliance"),
     [
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_CLOSED,
+            "closed",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_OPEN,
+            "open",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            None,
+            STATE_UNAVAILABLE,
+            "Dishwasher",
+        ),
         (
             "sensor.fridgefreezer_door_alarm_freezer",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",

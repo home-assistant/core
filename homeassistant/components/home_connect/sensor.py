@@ -20,6 +20,7 @@ from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import (
     ATTR_DEVICE,
     ATTR_VALUE,
+    BSH_DOOR_STATE,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_OPERATION_STATE,
     BSH_OPERATION_STATE_FINISHED,
@@ -50,7 +51,22 @@ class HomeConnectSensorEntityDescription(SensorEntityDescription):
     appliance_types: tuple[str, ...]
 
 
-SENSORS: tuple[HomeConnectSensorEntityDescription, ...] = (
+SENSORS = (
+    SensorEntityDescription(
+        key=BSH_DOOR_STATE,
+        has_entity_name=True,
+        options=[
+            "closed",
+            "locked",
+            "open",
+        ],
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="door",
+    ),
+)
+
+
+EVENT_SENSORS = (
     HomeConnectSensorEntityDescription(
         key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
         desc="Door Alarm Freezer",
@@ -101,11 +117,16 @@ async def async_setup_entry(
             device: HomeConnectDevice = device_dict[ATTR_DEVICE]
             # Auto-discover entities
             entities.extend(
+                HomeConnectSensor.from_description(device, description)
+                for description in SENSORS
+                if description.key in device.appliance.status
+            )
+            entities.extend(
                 HomeConnectAlarmSensor(
                     device,
                     entity_description=description,
                 )
-                for description in SENSORS
+                for description in EVENT_SENSORS
                 if device.appliance.type in description.appliance_types
             )
         return entities
@@ -124,9 +145,9 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         device: HomeConnectDevice,
         bsh_key: str,
         desc: str,
-        unit: str,
-        icon: str,
-        device_class: SensorDeviceClass,
+        unit: str | None,
+        icon: str | None,
+        device_class: SensorDeviceClass | None,
         sign: int = 1,
     ) -> None:
         """Initialize the entity."""
@@ -135,6 +156,24 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_icon = icon
         self._attr_device_class = device_class
+
+    @classmethod
+    def from_description(
+        cls, device: HomeConnectDevice, description: SensorEntityDescription
+    ):
+        """Initialize the entity from a description."""
+        sensor_entity = cls(
+            device,
+            description.key,
+            "",
+            description.unit_of_measurement,
+            description.icon,
+            description.device_class,
+        )
+        sensor_entity.entity_description = description
+        del sensor_entity._attr_name  # noqa: SLF001
+        del sensor_entity._attr_icon  # noqa: SLF001
+        return sensor_entity
 
     @property
     def available(self) -> bool:
@@ -174,13 +213,20 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 self._attr_native_value = None
         else:
             self._attr_native_value = status[self.bsh_key].get(ATTR_VALUE)
-            if self.bsh_key == BSH_OPERATION_STATE:
+            if self._attr_native_value is not None and (
+                self.bsh_key == BSH_OPERATION_STATE
+                or (
+                    hasattr(self, "entity_description")
+                    and self.entity_description
+                    and self.entity_description.device_class == SensorDeviceClass.ENUM
+                )
+            ):
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off
                 # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = cast(str, self._attr_native_value).split(".")[
-                    -1
-                ]
+                self._attr_native_value = (
+                    cast(str, self._attr_native_value).split(".")[-1].lower()
+                )
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
 
 

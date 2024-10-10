@@ -136,6 +136,14 @@
   },
   "entity": {
     "sensor": {
+      "door": {
+        "name": "Door",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "locked": "[%key:common::state::locked%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
       "alarm_sensor_fridge": {
         "state": {
           "confirmed": "[%key:component::home_connect::common::confirmed%]",

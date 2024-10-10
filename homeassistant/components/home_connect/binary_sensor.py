@@ -172,10 +172,20 @@ class HomeConnectFridgeDoorBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._attr_unique_id,
             self.state,
         )
-        self._attr_is_on = self.entity_description.boolean_map.get(
-            self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE)
-        )
-        self._attr_available = self._attr_is_on is not None
+        original_value = self.device.appliance.status.get(
+            self.entity_description.key, {}
+        ).get(ATTR_VALUE)
+        if original_value not in self.entity_description.boolean_map:
+            self._attr_is_on = None
+            self._attr_available = False
+            _LOGGER.warning(
+                "Unexpected value for HomeConnect %s state: %s",
+                self.entity_id,
+                original_value,
+            )
+            return
+        self._attr_is_on = self.entity_description.boolean_map.get(original_value)
+        self._attr_available = True
         _LOGGER.debug(
             "Updated: %s, new state: %s",
             self._attr_unique_id,
