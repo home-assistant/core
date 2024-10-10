@@ -413,11 +413,13 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        await self._device.pow_on(log_api_exception=False)
+        if not await self._device.get_power_state(log_api_exception=False):
+            await self._device.pow_on(log_api_exception=False)
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        await self._device.pow_off(log_api_exception=False)
+        if await self._device.get_power_state(log_api_exception=False):
+            await self._device.pow_off(log_api_exception=False)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -439,7 +441,7 @@ class VizioDevice(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source in self._available_inputs:
-            await self._device.set_input(source, log_api_exception=False)
+            await self._device.set_input(source.replace("-", "").lower(), log_api_exception=False)
         elif source in self._get_additional_app_names():
             await self._device.launch_app_config(
                 **next(
