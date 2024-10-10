@@ -28,11 +28,14 @@
     "call_query": {
       "service": "mdi:database"
     },
-    "sync": {
-      "service": "mdi:sync"
+    "add_alarm": {
+      "service": "mdi:alarm-plus"
     },
-    "unsync": {
-      "service": "mdi:sync-off"
+    "update_alarm": {
+      "service": "mdi:alarm"
+    },
+    "delete_alarm": {
+      "service": "mdi:alarm-off"
     }
   }
 }
