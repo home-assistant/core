@@ -70,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
             data={**entry.data, CONF_LISTEN_CREDENTIALS: token},
         )
 
-    # Replace with migration step after testing
     if CONF_DEVICE_ID not in entry.data:
         hardware_id = await _get_legacy_hardware_id(hass)
         hass.config_entries.async_update_entry(

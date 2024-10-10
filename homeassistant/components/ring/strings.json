@@ -23,7 +23,7 @@
       },
       "reconfigure": {
         "title": "Reconfigure Ring Integration",
-        "description": "Will create a new Authorized Device at ring.com",
+        "description": "Will create a new Authorized Device for {username} at ring.com",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
