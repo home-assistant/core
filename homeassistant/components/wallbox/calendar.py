@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CHARGER_DATA_KEY, CHARGER_SERIAL_NUMBER_KEY, DOMAIN
+from .const import (
+    CHARGER_DATA_KEY,
+    CHARGER_LAST_EVENT,
+    CHARGER_SERIAL_NUMBER_KEY,
+    DOMAIN,
+)
 from .coordinator import WallboxCoordinator, WallboxEvent
 from .entity import WallboxEntity
 
@@ -43,14 +48,14 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
 
     @property
     def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-        if not self.coordinator.event:
+        """Return the last event."""
+        if not self.coordinator.data[CHARGER_LAST_EVENT]:
             return None
         return CalendarEvent(
-            summary=self.coordinator.event.summary,
-            start=self.coordinator.event.start,
-            end=self.coordinator.event.end,
-            description=self.coordinator.event.description,
+            summary=self.coordinator.data[CHARGER_LAST_EVENT].summary,
+            start=self.coordinator.data[CHARGER_LAST_EVENT].start,
+            end=self.coordinator.data[CHARGER_LAST_EVENT].end,
+            description=self.coordinator.data[CHARGER_LAST_EVENT].description,
         )
 
     # pylint: disable-next=hass-return-type
@@ -67,18 +72,20 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
     @callback
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if self.coordinator.event:
+        if self.coordinator.data[CHARGER_LAST_EVENT]:
             self._attr_extra_state_attributes = {
-                "charger_name": self.coordinator.event.charger_name,
-                "username": self.coordinator.event.username,
-                "session_id": self.coordinator.event.session_id,
-                "currency": self.coordinator.event.currency,
-                "session_type": self.coordinator.event.session_type,
-                "serial_number": self.coordinator.event.serial_number,
-                "energy": self.coordinator.event.energy,
-                "mid_energy": self.coordinator.event.mid_energy,
-                "cost_kw": self.coordinator.event.cost_kw,
-                "session_cost": self.coordinator.event.session_cost,
+                "charger_name": self.coordinator.data[CHARGER_LAST_EVENT].charger_name,
+                "username": self.coordinator.data[CHARGER_LAST_EVENT].username,
+                "session_id": self.coordinator.data[CHARGER_LAST_EVENT].session_id,
+                "currency": self.coordinator.data[CHARGER_LAST_EVENT].currency,
+                "session_type": self.coordinator.data[CHARGER_LAST_EVENT].session_type,
+                "serial_number": self.coordinator.data[
+                    CHARGER_LAST_EVENT
+                ].serial_number,
+                "energy": self.coordinator.data[CHARGER_LAST_EVENT].energy,
+                "mid_energy": self.coordinator.data[CHARGER_LAST_EVENT].mid_energy,
+                "cost_kw": self.coordinator.data[CHARGER_LAST_EVENT].cost_kw,
+                "session_cost": self.coordinator.data[CHARGER_LAST_EVENT].session_cost,
             }
         else:
             self._attr_extra_state_attributes = {}

@@ -23,11 +23,13 @@ from .const import (
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_LAST_EVENT,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -120,7 +122,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
         self._station = station
         self._wallbox = wallbox
-        self.event: WallboxEvent | None = None
 
         super().__init__(
             hass,
@@ -176,6 +177,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
+
+        events = self._get_sessions(
+            data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
+            dt_util.now() - datetime.timedelta(days=30),
+            dt_util.now(),
+        )
+        data[CHARGER_LAST_EVENT] = events[0] if len(events) > 0 else None
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
