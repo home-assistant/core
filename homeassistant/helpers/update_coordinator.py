@@ -29,6 +29,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
+from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -68,6 +69,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
+        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -84,7 +86,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        self.config_entry = config_entries.current_entry.get()
+        if config_entry is UNDEFINED:
+            self.config_entry = config_entries.current_entry.get()
+            # This should be deprecated once all core integrations are updated
+            # to pass in the config entry explicitly.
+        else:
+            self.config_entry = config_entry
         self.always_update = always_update
 
         # It's None before the first successful update.
@@ -277,6 +284,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
+        if self.config_entry is None:
+            raise ValueError(
+                "This method is only supported for coordinators with a config entry"
+            )
         if await self.__wrap_async_setup():
             await self._async_refresh(
                 log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
