@@ -121,7 +121,16 @@ class WebRTCCandidate(DataClassDictMixin):
     type: str = field(default="candidate", init=False)
 
 
-type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId
+@dataclass(frozen=True)
+class WebRTCError(DataClassDictMixin):
+    """WebRTC error."""
+
+    code: str
+    message: str
+    type: str = field(default="error", init=False)
+
+
+type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId | WebRTCError
 type WebRTCSendMessage = Callable[[WebRTCMessages], None]
 
 
@@ -132,7 +141,7 @@ class CameraWebRTCProvider(Protocol):
     def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
 
-    async def async_handle_web_rtc_offer(
+    async def async_handle_webrtc_offer(
         self,
         camera: Camera,
         offer_sdp: str,
@@ -239,7 +248,7 @@ async def ws_webrtc_offer(
     if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
-            "web_rtc_offer_failed",
+            "webrtc_offer_failed",
             (
                 "Camera does not support WebRTC,"
                 f" frontend_stream_type={camera.frontend_stream_type}"
@@ -275,16 +284,18 @@ async def ws_webrtc_offer(
         except (HomeAssistantError, ValueError) as ex:
             _LOGGER.error("Error handling WebRTC offer: %s", ex)
             send_message(
-                {"type": "error", "code": "web_rtc_offer_failed", "message": str(ex)}
+                WebRTCError(
+                    "webrtc_offer_failed",
+                    str(ex),
+                )
             )
         except TimeoutError:
             _LOGGER.error("Timeout handling WebRTC offer")
             send_message(
-                {
-                    "type": "error",
-                    "code": "web_rtc_offer_failed",
-                    "message": "Timeout handling WebRTC offer",
-                }
+                WebRTCError(
+                    "webrtc_offer_failed",
+                    "Timeout handling WebRTC offer",
+                )
             )
         else:
             send_message(WebRTCAnswer(answer))
@@ -306,7 +317,7 @@ async def ws_get_client_config(
     if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
-            "web_rtc_offer_failed",
+            "webrtc_get_client_config_failed",
             (
                 "Camera does not support WebRTC,"
                 f" frontend_stream_type={camera.frontend_stream_type}"
@@ -339,7 +350,7 @@ async def ws_candidate(
     if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
-            "web_rtc_offer_failed",
+            "webrtc_candidate_failed",
             (
                 "Camera does not support WebRTC,"
                 f" frontend_stream_type={camera.frontend_stream_type}"

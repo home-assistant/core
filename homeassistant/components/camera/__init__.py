@@ -596,7 +596,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if (
             self._webrtc_provider
-            and await self._webrtc_provider.async_handle_web_rtc_offer(
+            and await self._webrtc_provider.async_handle_webrtc_offer(
                 self, offer_sdp, session_id, send_message
             )
         ):

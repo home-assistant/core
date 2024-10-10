@@ -9,6 +9,7 @@ from go2rtc_client.ws import (
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCOffer,
+    WsError,
 )
 
 from homeassistant.components.camera import Camera
@@ -16,6 +17,7 @@ from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
+    WebRTCError,
     WebRTCMessages,
     WebRTCSendMessage,
     async_register_webrtc_provider,
@@ -89,7 +91,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
 
-    async def async_handle_web_rtc_offer(
+    async def async_handle_webrtc_offer(
         self,
         camera: Camera,
         offer_sdp: str,
@@ -114,10 +116,15 @@ class WebRTCProvider(CameraWebRTCProvider):
         def on_messages(message: ReceiveMessages) -> None:
             """Handle messages."""
             value: WebRTCMessages
-            if isinstance(message, WebRTCCandidate):
-                value = HAWebRTCCandidate(message.candidate)
-            elif isinstance(message, WebRTCAnswer):
-                value = HAWebRTCAnswer(message.answer)
+            match message:
+                case WebRTCCandidate():
+                    value = HAWebRTCCandidate(message.candidate)
+                case WebRTCAnswer():
+                    value = HAWebRTCAnswer(message.answer)
+                case WsError():
+                    value = WebRTCError("go2rtc_webrtc_offer_failed", message.error)
+                case _:
+                    _LOGGER.warning("Unknown message %s", message)
 
             send_message(value)
 
