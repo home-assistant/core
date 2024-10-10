@@ -2,14 +2,26 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
+import pytest
+
+from homeassistant.components.emoncms.const import (
+    CONF_ONLY_INCLUDE_FEEDID,
+    CONF_SYNC_ALL_FEEDS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT_SINGLE_FEED, SENSOR_NAME, YAML
+from .conftest import (
+    EMONCMS_FAILURE,
+    FLOW_RESULT,
+    FLOW_RESULT_SINGLE_FEED,
+    SENSOR_NAME,
+    YAML,
+)
 
 from tests.common import MockConfigEntry
 
@@ -107,12 +119,20 @@ CONFIG_ENTRY = {
     CONF_URL: "http://1.1.1.1",
 }
 
+USER_OPTIONS_ALL_FEEDS = {CONF_ONLY_INCLUDE_FEEDID: [], CONF_SYNC_ALL_FEEDS: True}
 
+
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [(USER_OPTIONS, CONFIG_ENTRY), (USER_OPTIONS_ALL_FEEDS, FLOW_RESULT)],
+)
 async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
+    input: dict,
+    output: dict,
 ) -> None:
     """Options flow - success test."""
     await setup_integration(hass, config_entry)
@@ -120,11 +140,11 @@ async def test_options_flow(
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=USER_OPTIONS,
+        user_input=input,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == CONFIG_ENTRY
-    assert config_entry.options == CONFIG_ENTRY
+    assert result["data"] == output
+    assert config_entry.options == output
 
 
 async def test_options_flow_failure(
