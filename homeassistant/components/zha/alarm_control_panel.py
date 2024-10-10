@@ -7,6 +7,7 @@ import functools
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -94,6 +95,6 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelEntityState | None:
         """Return the state of the entity."""
         return self.entity_data.entity.state["state"]

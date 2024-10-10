@@ -6,7 +6,7 @@ from functools import partial
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelEntityState as ESPHomeAlarmControlPanelEntityState,
     AlarmControlPanelInfo,
     AlarmControlPanelState,
     APIIntEnum,
@@ -16,19 +16,8 @@ from aioesphomeapi import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
     CodeFormat,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import callback
 
@@ -40,21 +29,21 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
-_ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[AlarmControlPanelState, str] = (
-    EsphomeEnumMapper(
-        {
-            AlarmControlPanelState.DISARMED: STATE_ALARM_DISARMED,
-            AlarmControlPanelState.ARMED_HOME: STATE_ALARM_ARMED_HOME,
-            AlarmControlPanelState.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-            AlarmControlPanelState.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-            AlarmControlPanelState.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
-            AlarmControlPanelState.ARMED_CUSTOM_BYPASS: STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            AlarmControlPanelState.PENDING: STATE_ALARM_PENDING,
-            AlarmControlPanelState.ARMING: STATE_ALARM_ARMING,
-            AlarmControlPanelState.DISARMING: STATE_ALARM_DISARMING,
-            AlarmControlPanelState.TRIGGERED: STATE_ALARM_TRIGGERED,
-        }
-    )
+_ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
+    AlarmControlPanelState, AlarmControlPanelEntityState
+] = EsphomeEnumMapper(
+    {
+        AlarmControlPanelState.DISARMED: AlarmControlPanelEntityState.DISARMED,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityState.ARMED_HOME,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityState.ARMED_NIGHT,
+        AlarmControlPanelState.ARMED_VACATION: AlarmControlPanelEntityState.ARMED_VACATION,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.PENDING: AlarmControlPanelEntityState.PENDING,
+        AlarmControlPanelState.ARMING: AlarmControlPanelEntityState.ARMING,
+        AlarmControlPanelState.DISARMING: AlarmControlPanelEntityState.DISARMING,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
+    }
 )
 
 
@@ -70,7 +59,7 @@ class EspHomeACPFeatures(APIIntEnum):
 
 
 class EsphomeAlarmControlPanel(
-    EsphomeEntity[AlarmControlPanelInfo, AlarmControlPanelEntityState],
+    EsphomeEntity[AlarmControlPanelInfo, ESPHomeAlarmControlPanelEntityState],
     AlarmControlPanelEntity,
 ):
     """An Alarm Control Panel implementation for ESPHome."""
@@ -101,7 +90,7 @@ class EsphomeAlarmControlPanel(
 
     @property
     @esphome_state_property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelEntityState | None:
         """Return the state of the device."""
         return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
@@ -159,5 +148,5 @@ async_setup_entry = partial(
     platform_async_setup_entry,
     info_type=AlarmControlPanelInfo,
     entity_type=EsphomeAlarmControlPanel,
-    state_type=AlarmControlPanelEntityState,
+    state_type=ESPHomeAlarmControlPanelEntityState,
 )

@@ -30,6 +30,7 @@ from homeassistant.components import (
     switch,
     update,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -63,8 +64,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -1955,7 +1954,9 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_1",
         original_name="Alarm Control Panel 1",
     )
-    set_state_with_entry(hass, alarm_control_panel_1, STATE_ALARM_ARMED_AWAY)
+    set_state_with_entry(
+        hass, alarm_control_panel_1, AlarmControlPanelEntityState.ARMED_AWAY
+    )
     data["alarm_control_panel_1"] = alarm_control_panel_1
 
     alarm_control_panel_2 = entity_registry.async_get_or_create(
@@ -1965,7 +1966,9 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_2",
         original_name="Alarm Control Panel 2",
     )
-    set_state_with_entry(hass, alarm_control_panel_2, STATE_ALARM_ARMED_HOME)
+    set_state_with_entry(
+        hass, alarm_control_panel_2, AlarmControlPanelEntityState.ARMED_HOME
+    )
     data["alarm_control_panel_2"] = alarm_control_panel_2
 
     await hass.async_block_till_done()

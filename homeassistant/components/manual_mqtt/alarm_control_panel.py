@@ -12,6 +12,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityState,
     CodeFormat,
 )
 from homeassistant.const import (
@@ -22,14 +23,6 @@ from homeassistant.const import (
     CONF_PENDING_TIME,
     CONF_PLATFORM,
     CONF_TRIGGER_TIME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -54,6 +47,15 @@ CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 
+CONF_ALARM_ARMED_AWAY = "armed_away"
+CONF_ALARM_ARMED_CUSTOM_BYPASS = "armed_custom_bypass"
+CONF_ALARM_ARMED_HOME = "armed_home"
+CONF_ALARM_ARMED_NIGHT = "armed_night"
+CONF_ALARM_ARMED_VACATION = "armed_vacation"
+CONF_ALARM_DISARMED = "disarmed"
+CONF_ALARM_PENDING = "pending"
+CONF_ALARM_TRIGGERED = "triggered"
+
 DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
 DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
@@ -67,21 +69,25 @@ DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 
 SUPPORTED_STATES = [
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelEntityState.DISARMED,
+    AlarmControlPanelEntityState.ARMED_AWAY,
+    AlarmControlPanelEntityState.ARMED_HOME,
+    AlarmControlPanelEntityState.ARMED_NIGHT,
+    AlarmControlPanelEntityState.ARMED_VACATION,
+    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelEntityState.TRIGGERED,
 ]
 
 SUPPORTED_PRETRIGGER_STATES = [
-    state for state in SUPPORTED_STATES if state != STATE_ALARM_TRIGGERED
+    state
+    for state in SUPPORTED_STATES
+    if state != AlarmControlPanelEntityState.TRIGGERED
 ]
 
 SUPPORTED_PENDING_STATES = [
-    state for state in SUPPORTED_STATES if state != STATE_ALARM_DISARMED
+    state
+    for state in SUPPORTED_STATES
+    if state != AlarmControlPanelEntityState.DISARMED
 ]
 
 ATTR_PRE_PENDING_STATE = "pre_pending_state"
@@ -143,26 +149,26 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
                 ): cv.boolean,
-                vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): _state_schema(
-                    STATE_ALARM_ARMED_AWAY
+                vol.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
+                    AlarmControlPanelEntityState.ARMED_AWAY
                 ),
-                vol.Optional(STATE_ALARM_ARMED_HOME, default={}): _state_schema(
-                    STATE_ALARM_ARMED_HOME
+                vol.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
+                    AlarmControlPanelEntityState.ARMED_HOME
                 ),
-                vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
-                    STATE_ALARM_ARMED_NIGHT
+                vol.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
+                    AlarmControlPanelEntityState.ARMED_NIGHT
                 ),
-                vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
-                    STATE_ALARM_ARMED_VACATION
+                vol.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
+                    AlarmControlPanelEntityState.ARMED_VACATION
                 ),
-                vol.Optional(
-                    STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}
-                ): _state_schema(STATE_ALARM_ARMED_CUSTOM_BYPASS),
-                vol.Optional(STATE_ALARM_DISARMED, default={}): _state_schema(
-                    STATE_ALARM_DISARMED
+                vol.Optional(CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
+                    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
                 ),
-                vol.Optional(STATE_ALARM_TRIGGERED, default={}): _state_schema(
-                    STATE_ALARM_TRIGGERED
+                vol.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
+                    AlarmControlPanelEntityState.DISARMED
+                ),
+                vol.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
+                    AlarmControlPanelEntityState.TRIGGERED
                 ),
                 vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
                 vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -268,7 +274,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         config,
     ):
         """Init the manual MQTT alarm panel."""
-        self._state = STATE_ALARM_DISARMED
+        self._state = AlarmControlPanelEntityState.DISARMED
         self._hass = hass
         self._attr_name = name
         if code_template:
@@ -304,38 +310,38 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._payload_arm_custom_bypass = payload_arm_custom_bypass
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelEntityState:
         """Return the state of the device."""
-        if self._state == STATE_ALARM_TRIGGERED:
+        if self._state == AlarmControlPanelEntityState.TRIGGERED:
             if self._within_pending_time(self._state):
-                return STATE_ALARM_PENDING
+                return AlarmControlPanelEntityState.PENDING
             trigger_time = self._trigger_time_by_state[self._previous_state]
             if (
                 self._state_ts + self._pending_time(self._state) + trigger_time
             ) < dt_util.utcnow():
                 if self._disarm_after_trigger:
-                    return STATE_ALARM_DISARMED
+                    return AlarmControlPanelEntityState.DISARMED
                 self._state = self._previous_state
                 return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and self._within_pending_time(
             self._state
         ):
-            return STATE_ALARM_PENDING
+            return AlarmControlPanelEntityState.PENDING
 
         return self._state
 
     @property
     def _active_state(self):
         """Get the current state."""
-        if self.state == STATE_ALARM_PENDING:
+        if self.state == AlarmControlPanelEntityState.PENDING:
             return self._previous_state
         return self._state
 
     def _pending_time(self, state):
         """Get the pending time."""
         pending_time = self._pending_time_by_state[state]
-        if state == STATE_ALARM_TRIGGERED:
+        if state == AlarmControlPanelEntityState.TRIGGERED:
             pending_time += self._delay_time_by_state[self._previous_state]
         return pending_time
 
@@ -354,35 +360,37 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._async_validate_code(code, STATE_ALARM_DISARMED)
-        self._state = STATE_ALARM_DISARMED
+        self._async_validate_code(code, AlarmControlPanelEntityState.DISARMED)
+        self._state = AlarmControlPanelEntityState.DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._async_validate_code(code, STATE_ALARM_ARMED_HOME)
-        self._async_update_state(STATE_ALARM_ARMED_HOME)
+        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_HOME)
+        self._async_update_state(AlarmControlPanelEntityState.ARMED_HOME)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._async_validate_code(code, STATE_ALARM_ARMED_AWAY)
-        self._async_update_state(STATE_ALARM_ARMED_AWAY)
+        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_AWAY)
+        self._async_update_state(AlarmControlPanelEntityState.ARMED_AWAY)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self._async_validate_code(code, STATE_ALARM_ARMED_NIGHT)
-        self._async_update_state(STATE_ALARM_ARMED_NIGHT)
+        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_NIGHT)
+        self._async_update_state(AlarmControlPanelEntityState.ARMED_NIGHT)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        self._async_validate_code(code, STATE_ALARM_ARMED_VACATION)
-        self._async_update_state(STATE_ALARM_ARMED_VACATION)
+        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_VACATION)
+        self._async_update_state(AlarmControlPanelEntityState.ARMED_VACATION)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        self._async_validate_code(code, STATE_ALARM_ARMED_CUSTOM_BYPASS)
-        self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
+        self._async_validate_code(
+            code, AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
+        )
+        self._async_update_state(AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
@@ -392,7 +400,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
-        self._async_update_state(STATE_ALARM_TRIGGERED)
+        self._async_update_state(AlarmControlPanelEntityState.TRIGGERED)
 
     def _async_update_state(self, state: str) -> None:
         """Update the state."""
@@ -405,7 +413,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
         pending_time = self._pending_time(state)
-        if state == STATE_ALARM_TRIGGERED:
+        if state == AlarmControlPanelEntityState.TRIGGERED:
             async_track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
@@ -424,7 +432,8 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     def _async_validate_code(self, code, state):
         """Validate given code."""
         if (
-            state != STATE_ALARM_DISARMED and not self.code_arm_required
+            state != AlarmControlPanelEntityState.DISARMED
+            and not self.code_arm_required
         ) or self._code is None:
             return
 
@@ -443,7 +452,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.state != STATE_ALARM_PENDING:
+        if self.state != AlarmControlPanelEntityState.PENDING:
             return {}
         return {
             ATTR_PRE_PENDING_STATE: self._previous_state,

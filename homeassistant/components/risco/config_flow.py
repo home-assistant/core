@@ -9,6 +9,7 @@ from typing import Any
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -23,10 +24,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_USERNAME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -64,10 +61,10 @@ LOCAL_SCHEMA = vol.Schema(
     }
 )
 HA_STATES = [
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelEntityState.ARMED_AWAY.value,
+    AlarmControlPanelEntityState.ARMED_HOME.value,
+    AlarmControlPanelEntityState.ARMED_NIGHT.value,
+    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS.value,
 ]
 
 

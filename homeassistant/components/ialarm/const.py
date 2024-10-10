@@ -2,12 +2,7 @@
 
 from pyialarm import IAlarm
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
 
 DATA_COORDINATOR = "ialarm"
 
@@ -16,8 +11,8 @@ DEFAULT_PORT = 18034
 DOMAIN = "ialarm"
 
 IALARM_TO_HASS = {
-    IAlarm.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-    IAlarm.ARMED_STAY: STATE_ALARM_ARMED_HOME,
-    IAlarm.DISARMED: STATE_ALARM_DISARMED,
-    IAlarm.TRIGGERED: STATE_ALARM_TRIGGERED,
+    IAlarm.ARMED_AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
+    IAlarm.ARMED_STAY: AlarmControlPanelEntityState.ARMED_HOME,
+    IAlarm.DISARMED: AlarmControlPanelEntityState.DISARMED,
+    IAlarm.TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
 }

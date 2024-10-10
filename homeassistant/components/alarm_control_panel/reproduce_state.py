@@ -16,28 +16,21 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN
+from . import DOMAIN, AlarmControlPanelEntityState
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 VALID_STATES: Final[set[str]] = {
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelEntityState.ARMED_AWAY,
+    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelEntityState.ARMED_HOME,
+    AlarmControlPanelEntityState.ARMED_NIGHT,
+    AlarmControlPanelEntityState.ARMED_VACATION,
+    AlarmControlPanelEntityState.DISARMED,
+    AlarmControlPanelEntityState.TRIGGERED,
 }
 
 
@@ -65,19 +58,19 @@ async def _async_reproduce_state(
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if state.state == STATE_ALARM_ARMED_AWAY:
+    if state.state == AlarmControlPanelEntityState.ARMED_AWAY:
         service = SERVICE_ALARM_ARM_AWAY
-    elif state.state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+    elif state.state == AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS:
         service = SERVICE_ALARM_ARM_CUSTOM_BYPASS
-    elif state.state == STATE_ALARM_ARMED_HOME:
+    elif state.state == AlarmControlPanelEntityState.ARMED_HOME:
         service = SERVICE_ALARM_ARM_HOME
-    elif state.state == STATE_ALARM_ARMED_NIGHT:
+    elif state.state == AlarmControlPanelEntityState.ARMED_NIGHT:
         service = SERVICE_ALARM_ARM_NIGHT
-    elif state.state == STATE_ALARM_ARMED_VACATION:
+    elif state.state == AlarmControlPanelEntityState.ARMED_VACATION:
         service = SERVICE_ALARM_ARM_VACATION
-    elif state.state == STATE_ALARM_DISARMED:
+    elif state.state == AlarmControlPanelEntityState.DISARMED:
         service = SERVICE_ALARM_DISARM
-    elif state.state == STATE_ALARM_TRIGGERED:
+    elif state.state == AlarmControlPanelEntityState.TRIGGERED:
         service = SERVICE_ALARM_TRIGGER
 
     await hass.services.async_call(
