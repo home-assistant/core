@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from go2rtc_client.client import _StreamClient, _WebRTCClient
+from go2rtc_client.rest import _StreamClient, _WebRTCClient
 import pytest
 
 from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
