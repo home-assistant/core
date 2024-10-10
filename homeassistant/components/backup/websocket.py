@@ -139,7 +139,7 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": list(manager.sync_agents),
+            "agents": [{"id": agent_id} for agent_id in manager.sync_agents],
             "syncing": manager.syncing,
         },
     )
