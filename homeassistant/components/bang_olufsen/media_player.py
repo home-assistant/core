@@ -48,7 +48,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
-    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -63,8 +62,6 @@ from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
 from .const import (
-    BANG_OLUFSEN_REPEAT_FROM_HA,
-    BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
@@ -93,9 +90,9 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -487,11 +484,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
-    def repeat(self) -> RepeatMode | None:
-        """Return current repeat setting for queues."""
-        if self._queue_settings.repeat:
-            return BANG_OLUFSEN_REPEAT_TO_HA[self._queue_settings.repeat]
-        return None
+    def shuffle(self) -> bool | None:
+        """Return if queues should be shuffled."""
+        return self._queue_settings.shuffle
 
     @property
     def state(self) -> MediaPlayerState:
@@ -659,12 +654,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Clear the current playback queue."""
         await self._client.post_clear_queue()
 
-    async def async_set_repeat(self, repeat: RepeatMode) -> None:
-        """Set playback queues to repeat."""
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Set playback queues to shuffle."""
         await self._client.set_settings_queue(
-            play_queue_settings=PlayQueueSettings(
-                repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
-            )
+            play_queue_settings=PlayQueueSettings(shuffle=shuffle),
         )
 
     async def async_select_source(self, source: str) -> None:
