@@ -221,6 +221,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.hausbus.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
