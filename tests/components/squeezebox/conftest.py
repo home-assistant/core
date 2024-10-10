@@ -6,12 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.media_player import MediaType
-from homeassistant.components.squeezebox import const
 from homeassistant.components.squeezebox.browse_media import (
     MEDIA_TYPE_TO_SQUEEZEBOX,
     SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import (
+    CONF_HTTPS,
+    DOMAIN,
+    KNOWN_PLAYERS,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
@@ -30,7 +32,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-# from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
@@ -43,6 +44,7 @@ SERVER_UUIDS = [
 TEST_MAC = ["aa:bb:cc:dd:ee:ff", "ff:ee:dd:cc:bb:aa"]
 TEST_PLAYER_NAME = "Test Player"
 TEST_SERVER_NAME = "Test Server"
+TEST_ALARM_ID = "1"
 FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
@@ -102,12 +104,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the squeezebox mock config entry to hass."""
     config_entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=SERVER_UUIDS[0],
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            const.CONF_HTTPS: TEST_USE_HTTPS,
+            CONF_HTTPS: TEST_USE_HTTPS,
         },
     )
     config_entry.add_to_hass(hass)
@@ -206,7 +208,7 @@ def player_factory() -> MagicMock:
 def mock_pysqueezebox_player(uuid: str) -> MagicMock:
     """Mock a Lyrion Media Server player."""
     with patch(
-        "homeassistant.components.squeezebox.media_player.Player", autospec=True
+        "homeassistant.components.squeezebox.Player", autospec=True
     ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
         mock_player.generate_image_url_from_track_id = MagicMock(
@@ -267,6 +269,47 @@ async def configure_squeezebox_media_player_platform(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def configure_squeezebox_switch_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Configure a squeezebox config entry with appropriate mocks for switch."""
+    with (
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.SWITCH],
+        ),
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.data[DOMAIN][KNOWN_PLAYERS][0].async_refresh()
+
+
+@pytest.fixture
+async def mock_alarms_player(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> MagicMock:
+    """Mock the alarms of a configured player."""
+    players = await lms.async_get_players()
+    players[0].alarms = [
+        {
+            "id": TEST_ALARM_ID,
+            "enabled": True,
+            "time": "07:00",
+            "dow": [1, 2, 3, 4, 5],
+            "repeat": False,
+            "url": "CURRENT_PLAYLIST",
+            "volume": 50,
+        },
+    ]
+    await configure_squeezebox_switch_platform(hass, config_entry, lms)
+    return players[0]
 
 
 @pytest.fixture

@@ -1,18 +1,28 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
 from asyncio import timeout
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 import re
 
-from pysqueezebox import Server
+from pysqueezebox import Player, Server
+from pysqueezebox.player import Alarm
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
+    SIGNAL_ALARM_DISCOVERED,
+    SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEEDSRESTART,
@@ -38,7 +48,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         self.newversion_regex = re.compile("<.*$")
 
     async def _async_update_data(self) -> dict:
-        """Fetch data fromn LMS status call.
+        """Fetch data from LMS status call.
 
         Then we process only a subset to make then nice for HA
         """
@@ -70,3 +80,60 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
+
+
+class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
+    """Coordinator for Squeezebox players."""
+
+    def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=player.name,
+            update_interval=timedelta(seconds=PLAYER_UPDATE_INTERVAL),
+            always_update=True,
+        )
+        self.player = player
+        self.available = True
+        self.known_alarms: list[str] = []
+        self._remove_dispatcher: Callable | None = None
+        self.player_uuid = format_mac(player.player_id)
+        self.server_uuid = server_uuid
+
+    async def _async_update_data(self) -> dict:
+        """Update the Player() object."""
+        if self.available:
+            # Only update players available at last update, unavailable players are rediscovered instead
+            await self.player.async_update()
+
+            if self.player.connected is False:
+                _LOGGER.debug("Player %s is not available", self.name)
+                self.available = False
+
+                # start listening for restored players
+                self._remove_dispatcher = async_dispatcher_connect(
+                    self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
+                )
+
+            elif self.player.alarms:
+                for alarm in self.player.alarms:
+                    if alarm["id"] not in self.known_alarms:
+                        self.known_alarms.append(alarm["id"])
+                        async_dispatcher_send(
+                            self.hass, SIGNAL_ALARM_DISCOVERED, alarm, self
+                        )
+                alarm_dict: dict[str, Alarm] = {
+                    alarm["id"]: alarm for alarm in self.player.alarms
+                }
+                return {"alarms": alarm_dict}
+        return {}
+
+    @callback
+    def rediscovered(self, unique_id: str, connected: bool) -> None:
+        """Make a player available again."""
+        if unique_id == self.player.player_id and connected:
+            self.available = True
+            _LOGGER.debug("Player %s is available again", self.name)
+            if self._remove_dispatcher:
+                self._remove_dispatcher()
