@@ -1120,7 +1120,7 @@ hole==0.8.0
 holidays==0.58
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.2
+home-assistant-frontend==20241002.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -2791,7 +2791,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.7.8
+tesla-fleet-api==0.8.4
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
