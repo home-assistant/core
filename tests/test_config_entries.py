@@ -6937,3 +6937,49 @@ async def test_async_update_entry_unique_id_collision(
         "Unique id of config entry 'Mock Title' from integration test changed to "
         "'very unique' which is already in use"
     ) in caplog.text
+
+
+async def test_context_no_leak(hass: HomeAssistant) -> None:
+    """Test ensure that config entry context does not leak."""
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+
+        return True
+
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock unload entry."""
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(domain="comp")
+    entry2.add_to_hass(hass)
+
+    # All existing domain entries get loaded when first one is loaded
+    # No leak
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry2.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is None
+
+    # Add a new config entry (eg. from config flow) => leak
+    entry3 = MockConfigEntry(domain="comp")
+    await hass.config_entries.async_add(entry3)
+    assert entry3.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is entry3  # Should be None
+
+    # Reload a config entry (eg. via options listener) => leak
+    await hass.config_entries.async_reload(entry.entry_id)
+    assert config_entries.current_entry.get() is entry  # Should be None
