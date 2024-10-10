@@ -23,7 +23,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    ATTR_AMBIENT,
     ATTR_BSH_KEY,
     ATTR_DESC,
     ATTR_DEVICE,
@@ -33,7 +32,6 @@ from .const import (
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
-    BSH_AMBIENT_LIGHT_ENABLED,
     BSH_COMMON_OPTION_DURATION,
     BSH_COMMON_OPTION_PROGRAM_PROGRESS,
     BSH_OPERATION_STATE,
@@ -42,7 +40,6 @@ from .const import (
     BSH_REMAINING_PROGRAM_TIME,
     BSH_REMOTE_CONTROL_ACTIVATION_STATE,
     BSH_REMOTE_START_ALLOWANCE_STATE,
-    COOKING_LIGHTING,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -258,32 +255,6 @@ class DeviceWithDoor(HomeConnectDevice):
         }
 
 
-class DeviceWithLight(HomeConnectDevice):
-    """Device that has lighting."""
-
-    def get_light_entity(self) -> dict[str, Any]:
-        """Get a dictionary with info about the lighting."""
-        return {
-            ATTR_DEVICE: self,
-            ATTR_BSH_KEY: COOKING_LIGHTING,
-            ATTR_DESC: "Light",
-            ATTR_AMBIENT: None,
-        }
-
-
-class DeviceWithAmbientLight(HomeConnectDevice):
-    """Device that has ambient lighting."""
-
-    def get_ambientlight_entity(self) -> dict[str, Any]:
-        """Get a dictionary with info about the ambient lighting."""
-        return {
-            ATTR_DEVICE: self,
-            ATTR_BSH_KEY: BSH_AMBIENT_LIGHT_ENABLED,
-            ATTR_DESC: "AmbientLight",
-            ATTR_AMBIENT: True,
-        }
-
-
 class DeviceWithRemoteControl(HomeConnectDevice):
     """Device that has Remote Control binary sensor."""
 
@@ -336,7 +307,6 @@ class Dryer(
 
 class Dishwasher(
     DeviceWithDoor,
-    DeviceWithAmbientLight,
     DeviceWithOpState,
     DeviceWithPrograms,
     DeviceWithRemoteControl,
@@ -452,8 +422,6 @@ class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
 
 
 class Hood(
-    DeviceWithLight,
-    DeviceWithAmbientLight,
     DeviceWithOpState,
     DeviceWithPrograms,
     DeviceWithRemoteControl,
@@ -465,8 +433,6 @@ class Hood(
         """Get a dictionary with infos about the associated entities."""
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
-        light_entity = self.get_light_entity()
-        ambientlight_entity = self.get_ambientlight_entity()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
@@ -474,7 +440,6 @@ class Hood(
             "binary_sensor": [remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
-            "light": [light_entity, ambientlight_entity],
         }
 
 

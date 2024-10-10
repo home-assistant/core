@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
+    BSH_AMBIENT_LIGHT_COLOR,
     BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
     BSH_AMBIENT_LIGHT_ENABLED,
     COOKING_LIGHTING,
@@ -67,7 +68,7 @@ async def test_light(
     ("entity_id", "status", "service", "service_data", "state", "appliance"),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -79,7 +80,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -92,7 +93,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
                 COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
@@ -103,7 +104,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": None,
@@ -116,7 +117,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -129,7 +130,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
                 BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
@@ -140,13 +141,29 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
             },
             SERVICE_TURN_ON,
             {},
+            STATE_ON,
+            "Hood",
+        ),
+        (
+            "light.hood_ambient_light",
+            {
+                BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
+                BSH_AMBIENT_LIGHT_COLOR: {
+                    "value": "",
+                },
+                BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
+            },
+            SERVICE_TURN_ON,
+            {
+                "rgb_color": [255, 255, 0],
+            },
             STATE_ON,
             "Hood",
         ),
@@ -218,7 +235,7 @@ async def test_light_functionality(
     ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": False,
@@ -231,7 +248,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -245,7 +262,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
             },
@@ -256,7 +273,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -270,7 +287,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -280,7 +297,7 @@ async def test_light_functionality(
             SERVICE_TURN_ON,
             {"brightness": 200},
             "set_setting",
-            [HomeConnectError, None, HomeConnectError, HomeConnectError],
+            [HomeConnectError, None, HomeConnectError],
             "Hood",
         ),
     ],

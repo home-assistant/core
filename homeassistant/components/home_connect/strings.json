@@ -135,6 +135,20 @@
     }
   },
   "entity": {
+    "light": {
+      "internal_light": {
+        "name": "Internal light"
+      },
+      "external_light": {
+        "name": "External light"
+      },
+      "cooking_lighting": {
+        "name": "Functional light"
+      },
+      "ambient_light": {
+        "name": "Ambient light"
+      }
+    },
     "sensor": {
       "alarm_sensor_fridge": {
         "state": {
