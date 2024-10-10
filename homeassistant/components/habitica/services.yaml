@@ -316,6 +316,25 @@ update_daily:
                 - "day_of_week"
               translation_key: repeat_monthly
               mode: list
+    reminder_options:
+      collapsed: true
+      fields:
+        reminder:
+          required: false
+          selector:
+            text:
+              type: datetime-local
+              multiple: true
+        remove_reminder:
+          required: false
+          selector:
+            text:
+              type: datetime-local
+              multiple: true
+        clear_reminder:
+          required: false
+          selector:
+            boolean:
     tag_options: *tag_options
     developer_options:
       collapsed: true
