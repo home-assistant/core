@@ -1,6 +1,6 @@
 """Tests for the Spotify media player platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from spotipy import SpotifyException
@@ -29,9 +29,12 @@ async def test_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Spotify entities."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("secrets.token_hex", return_value="mock-token"):
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -47,9 +50,12 @@ async def test_podcast(
     mock_spotify.return_value.current_playback.return_value = load_json_value_fixture(
         "playback_episode.json", DOMAIN
     )
-    await setup_integration(hass, mock_config_entry)
+    with patch("secrets.token_hex", return_value="mock-token"):
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.usefixtures("setup_credentials")

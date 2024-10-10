@@ -36,7 +36,7 @@
 # name: test_entities[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=646187501cdd0622811ddebca31cea84f093dbf499c0a3fc7ed69010e90a6723&cache=7bb89748322acb6c',
+      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
       'friendly_name': 'Spotify spotify_1',
       'media_album_name': 'Permanent Waves',
       'media_artist': 'Rush',
@@ -99,7 +99,7 @@
 # name: test_podcast[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=ff7e7425959bce6a8e8e02979ba90006339d8205527a0f21e3f707ab64bd7769&cache=cf1e6e1e830f08d3',
+      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
       'friendly_name': 'Spotify spotify_1',
       'media_album_name': 'Safety Third',
       'media_artist': 'Safety Third ',
