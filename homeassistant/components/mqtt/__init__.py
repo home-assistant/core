@@ -76,8 +76,8 @@ from .const import (  # noqa: F401
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
+    ENTITY_PLATFORMS,
     MQTT_CONNECTION_STATE,
-    RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
@@ -438,7 +438,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for entity in list(mqtt_platform.entities.values())
             if getattr(entity, "_discovery_data", None) is None
             and mqtt_platform.config_entry
-            and mqtt_platform.domain in RELOADABLE_PLATFORMS
+            and mqtt_platform.domain in ENTITY_PLATFORMS
         ]
         await asyncio.gather(*tasks)
 
