@@ -287,8 +287,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """
         if self.config_entry is None:
             report(
-                "uses `async_config_entry_first_refresh` without a config entry, "
-                "which is deprecated and will stop working in "
+                "uses `async_config_entry_first_refresh`, which is only supported "
+                "for coordinators with a config entry and will stop working in "
                 "Home Assistant 2025.11",
                 error_if_core=True,
                 error_if_integration=False,
