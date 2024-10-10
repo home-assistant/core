@@ -10,7 +10,7 @@ from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE, Platform
+from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -87,8 +87,7 @@ def _get_appliance_by_device_id(
 ) -> api.HomeConnectDevice:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
-        for dev_dict in hc_api.devices:
-            device = dev_dict[CONF_DEVICE]
+        for device in hc_api.devices:
             if device.device_id == device_id:
                 return device.appliance
     raise ValueError(f"Appliance for device id {device_id} not found")
@@ -255,9 +254,7 @@ async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
-        for device_dict in hc_api.devices:
-            device = device_dict["device"]
-
+        for device in hc_api.devices:
             device_entry = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, device.appliance.haId)},
