@@ -4776,7 +4776,6 @@ async def test_reconfigure(
             f"{config_entry.domain} {config_entry.entry_id}",
         )
 
-    flow = hass.config_entries.flow
     _async_start_reconfigure(entry)
     await hass.async_block_till_done()
 
@@ -5123,6 +5122,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "expected_data",
         "expected_options",
         "calls_entry_load_unload",
+        "raises",
     ),
     [
         (
@@ -5137,6 +5137,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data2"},
             {"vendor": "options2"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5150,6 +5151,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5164,6 +5166,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data2"},
             {"vendor": "options2"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5178,6 +5181,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (1, 0),
+            None,
         ),
         (
             {},
@@ -5186,6 +5190,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (2, 1),
+            None,
         ),
         (
             {"data": {"buyer": "me"}, "options": {}},
@@ -5194,6 +5199,31 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"buyer": "me"},
             {},
             (2, 1),
+            None,
+        ),
+        (
+            {"data_updates": {"buyer": "me"}},
+            "Test",
+            "1234",
+            {"vendor": "data", "buyer": "me"},
+            {"vendor": "options"},
+            (2, 1),
+            None,
+        ),
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "options": {"vendor": "options2"},
+                "data_updates": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            {"vendor": "options"},
+            (1, 0),
+            ValueError,
         ),
     ],
     ids=[
@@ -5203,6 +5233,8 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "unchanged_entry_no_reload",
         "no_kwargs",
         "replace_data",
+        "update_data",
+        "update_and_data_raises",
     ],
 )
 @pytest.mark.parametrize(
@@ -5222,6 +5254,7 @@ async def test_update_entry_and_reload(
     expected_options: dict[str, Any],
     kwargs: dict[str, Any],
     calls_entry_load_unload: tuple[int, int],
+    raises: type[Exception] | None,
 ) -> None:
     """Test updating an entry and reloading."""
     entry = MockConfigEntry(
@@ -5256,11 +5289,15 @@ async def test_update_entry_and_reload(
             """Mock Reconfigure."""
             return self.async_update_reload_and_abort(entry, **kwargs)
 
+    err: Exception
     with mock_config_flow("comp", MockFlowHandler):
-        if source == config_entries.SOURCE_REAUTH:
-            result = await entry.start_reauth_flow(hass)
-        elif source == config_entries.SOURCE_RECONFIGURE:
-            result = await entry.start_reconfigure_flow(hass)
+        try:
+            if source == config_entries.SOURCE_REAUTH:
+                result = await entry.start_reauth_flow(hass)
+            elif source == config_entries.SOURCE_RECONFIGURE:
+                result = await entry.start_reconfigure_flow(hass)
+        except Exception as ex:  # noqa: BLE001
+            err = ex
 
     await hass.async_block_till_done()
 
@@ -5269,8 +5306,11 @@ async def test_update_entry_and_reload(
     assert entry.data == expected_data
     assert entry.options == expected_options
     assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == reason
+    if raises:
+        assert isinstance(err, raises)
+    else:
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == reason
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
@@ -6788,6 +6828,87 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     )
     loaded = json_loads(json_dumps(entry.as_json_fragment))
     assert loaded["disabled_by"] == "user"
+
+
+@pytest.mark.parametrize(
+    ("original_unique_id", "new_unique_id", "count"),
+    [
+        ("unique", "unique", 1),
+        ("unique", "new", 2),
+        ("unique", None, 2),
+        (None, "unique", 2),
+    ],
+)
+@pytest.mark.parametrize(
+    "source",
+    [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE],
+)
+async def test_create_entry_reauth_reconfigure(
+    hass: HomeAssistant,
+    source: str,
+    original_unique_id: str | None,
+    new_unique_id: str | None,
+    count: int,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain="test",
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id=original_unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            await self.async_set_unique_id(new_unique_id)
+            return self.async_create_entry(
+                title="From config flow",
+                data={"token": "supersecret"},
+            )
+
+    assert len(hass.config_entries.async_entries("test")) == 1
+
+    with mock_config_flow("test", TestFlow):
+        result = await getattr(entry, f"start_{source}_flow")(hass)
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == count
+    if count == 1:
+        # Show that the previous entry got binned and recreated
+        assert entries[0].entry_id != entry.entry_id
+
+    assert (
+        f"Detected {source} config flow creating a new entry, when it is expected "
+        "to update an existing entry and abort. This will stop working in "
+        "2025.11, please create a bug report at https://github.com/home"
+        "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+        "label%3A%22integration%3A+test%22"
+    ) in caplog.text
 
 
 async def test_async_update_entry_unique_id_collision(

@@ -790,33 +790,13 @@ async def test_reconfigure_otherenvoy(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unexpected_envoy"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
 
     # entry should still be original entry
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password"
-
-    # set serial back to original to finsich flow
-    mock_envoy.serial_number = "1234"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "new-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # updated original entry
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
-    assert config_entry.data[CONF_USERNAME] == "test-username"
-    assert config_entry.data[CONF_PASSWORD] == "new-password"
 
 
 @pytest.mark.parametrize(
