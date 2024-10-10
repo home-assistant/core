@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 
 from . import get_auth_agent_id
-from .const import CONF_2FA, DOMAIN
+from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ring."""
 
     VERSION = 1
+    MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
 
     user_pass: dict[str, Any] = {}
     reauth_entry: ConfigEntry | None = None

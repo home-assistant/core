@@ -9,9 +9,10 @@ import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
+from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
 from homeassistant.components.ring.const import SCAN_INTERVAL
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -19,6 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
+from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INTERNAL_DEVICE_ID
 
 from tests.common import async_fire_time_changed, snapshot_platform
 
@@ -30,15 +32,44 @@ SMALLEST_VALID_JPEG = (
 SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 
 
+@pytest.fixture
+def create_disabled_camera_entities(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+):
+    """Create the entity so it is not ignored by the deprecation check."""
+    mock_config_entry.add_to_hass(hass)
+
+    def create_entry(
+        device_name,
+        description,
+        device_id,
+    ):
+        unique_id = f"{device_id}-{description}"
+        entity_registry.async_get_or_create(
+            domain=camera.DOMAIN,
+            platform=DOMAIN,
+            unique_id=unique_id,
+            suggested_object_id=f"{device_name}_{description}",
+            config_entry=mock_config_entry,
+        )
+
+    desc = "last_recording"
+    create_entry("front", desc, FRONT_DEVICE_ID)
+    create_entry("front_door", desc, FRONT_DOOR_DEVICE_ID)
+    create_entry("internal", desc, INTERNAL_DEVICE_ID)
+
+
 async def test_states(
     hass: HomeAssistant,
     mock_ring_client: Mock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    create_disabled_camera_entities,
 ) -> None:
     """Test states."""
-    mock_config_entry.add_to_hass(hass)
     # Patch getrandbits so the access_token doesn't change on camera attributes
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_platform(hass, Platform.CAMERA)
@@ -48,8 +79,8 @@ async def test_states(
 @pytest.mark.parametrize(
     ("entity_name", "expected_state", "friendly_name"),
     [
-        ("camera.internal", True, "Internal"),
-        ("camera.front", None, "Front"),
+        ("camera.internal_last_recording", True, "Internal Last recording"),
+        ("camera.front_last_recording", None, "Front Last recording"),
     ],
     ids=["On", "Off"],
 )
@@ -59,6 +90,7 @@ async def test_camera_motion_detection_state_reports_correctly(
     entity_name,
     expected_state,
     friendly_name,
+    create_disabled_camera_entities,
 ) -> None:
     """Tests that the initial state of a device that should be off is correct."""
     await setup_platform(hass, Platform.CAMERA)
@@ -69,36 +101,38 @@ async def test_camera_motion_detection_state_reports_correctly(
 
 
 async def test_camera_motion_detection_can_be_turned_on_and_off(
-    hass: HomeAssistant, mock_ring_client
+    hass: HomeAssistant,
+    mock_ring_client,
+    create_disabled_camera_entities,
 ) -> None:
     """Tests the siren turns on correctly."""
     await setup_platform(hass, Platform.CAMERA)
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_last_recording")
     assert state.attributes.get("motion_detection") is not True
 
     await hass.services.async_call(
         "camera",
         "enable_motion_detection",
-        {"entity_id": "camera.front"},
+        {"entity_id": "camera.front_last_recording"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_last_recording")
     assert state.attributes.get("motion_detection") is True
 
     await hass.services.async_call(
         "camera",
         "disable_motion_detection",
-        {"entity_id": "camera.front"},
+        {"entity_id": "camera.front_last_recording"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_last_recording")
     assert state.attributes.get("motion_detection") is None
 
 
@@ -106,6 +140,7 @@ async def test_camera_motion_detection_not_supported(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
+    create_disabled_camera_entities,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests the siren turns on correctly."""
@@ -121,21 +156,22 @@ async def test_camera_motion_detection_not_supported(
 
     await setup_platform(hass, Platform.CAMERA)
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_last_recording")
     assert state.attributes.get("motion_detection") is None
 
     await hass.services.async_call(
         "camera",
         "enable_motion_detection",
-        {"entity_id": "camera.front"},
+        {"entity_id": "camera.front_last_recording"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_last_recording")
     assert state.attributes.get("motion_detection") is None
     assert (
-        "Entity camera.front does not have motion detection capability" in caplog.text
+        "Entity camera.front_last_recording does not have motion detection capability"
+        in caplog.text
     )
 
 
@@ -152,6 +188,7 @@ async def test_motion_detection_errors_when_turned_on(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
+    create_disabled_camera_entities,
     exception_type,
     reauth_expected,
 ) -> None:
@@ -168,7 +205,7 @@ async def test_motion_detection_errors_when_turned_on(
         await hass.services.async_call(
             "camera",
             "enable_motion_detection",
-            {"entity_id": "camera.front"},
+            {"entity_id": "camera.front_last_recording"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -195,7 +232,7 @@ async def test_camera_handle_mjpeg_stream(
     front_camera_mock = mock_ring_devices.get_device(765432)
     front_camera_mock.async_recording_url.return_value = None
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_live_view")
     assert state is not None
 
     mock_request = make_mocked_request("GET", "/", headers={"token": "x"})
@@ -203,7 +240,9 @@ async def test_camera_handle_mjpeg_stream(
     # history not updated yet
     front_camera_mock.async_history.assert_not_called()
     front_camera_mock.async_recording_url.assert_not_called()
-    stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
+    stream = await camera.async_get_mjpeg_stream(
+        hass, mock_request, "camera.front_live_view"
+    )
     assert stream is None
 
     # Video url will be none so no  stream
@@ -211,9 +250,11 @@ async def test_camera_handle_mjpeg_stream(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     front_camera_mock.async_history.assert_called_once()
-    front_camera_mock.async_recording_url.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called()
 
-    stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
+    stream = await camera.async_get_mjpeg_stream(
+        hass, mock_request, "camera.front_live_view"
+    )
     assert stream is None
 
     # Stop the history updating so we can update the values manually
@@ -223,7 +264,9 @@ async def test_camera_handle_mjpeg_stream(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     front_camera_mock.async_recording_url.assert_called_once()
-    stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
+    stream = await camera.async_get_mjpeg_stream(
+        hass, mock_request, "camera.front_live_view"
+    )
     assert stream is None
 
     # If the history id hasn't changed the camera will not check again for the video url
@@ -235,7 +278,9 @@ async def test_camera_handle_mjpeg_stream(
     await hass.async_block_till_done(wait_background_tasks=True)
     front_camera_mock.async_recording_url.assert_not_called()
 
-    stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
+    stream = await camera.async_get_mjpeg_stream(
+        hass, mock_request, "camera.front_live_view"
+    )
     assert stream is None
 
     freezer.tick(FORCE_REFRESH_INTERVAL)
@@ -250,7 +295,9 @@ async def test_camera_handle_mjpeg_stream(
         mock_camera.return_value.open_camera = AsyncMock()
         mock_camera.return_value.close = AsyncMock()
 
-        stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
+        stream = await camera.async_get_mjpeg_stream(
+            hass, mock_request, "camera.front_live_view"
+        )
         assert stream is not None
         # Check the stream has been read
         assert not await stream_reader.read(-1)
@@ -267,7 +314,7 @@ async def test_camera_image(
 
     front_camera_mock = mock_ring_devices.get_device(765432)
 
-    state = hass.states.get("camera.front")
+    state = hass.states.get("camera.front_live_view")
     assert state is not None
 
     # history not updated yet
@@ -280,7 +327,7 @@ async def test_camera_image(
         ),
         pytest.raises(HomeAssistantError),
     ):
-        image = await camera.async_get_image(hass, "camera.front")
+        image = await camera.async_get_image(hass, "camera.front_live_view")
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -293,5 +340,5 @@ async def test_camera_image(
         "homeassistant.components.ring.camera.ffmpeg.async_get_image",
         return_value=SMALLEST_VALID_JPEG_BYTES,
     ):
-        image = await camera.async_get_image(hass, "camera.front")
+        image = await camera.async_get_image(hass, "camera.front_live_view")
         assert image.content == SMALLEST_VALID_JPEG_BYTES

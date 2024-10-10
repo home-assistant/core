@@ -9,6 +9,7 @@ import uuid
 
 from ring_doorbell import Auth, Ring, RingDevices
 
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
@@ -19,7 +20,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
+from .const import (
+    CONF_CONFIG_ENTRY_MINOR_VERSION,
+    CONF_LISTEN_CREDENTIALS,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import RingDataCoordinator, RingListenCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,8 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
     )
     ring = Ring(auth)
 
-    await _migrate_old_unique_ids(hass, entry.entry_id)
-
     devices_coordinator = RingDataCoordinator(hass, ring)
     listen_credentials = entry.data.get(CONF_LISTEN_CREDENTIALS)
     listen_coordinator = RingListenCoordinator(
@@ -114,27 +118,60 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
-    entity_registry = er.async_get(hass)
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    entry_version = config_entry.version
+    entry_minor_version = config_entry.minor_version
+    entry_id = config_entry.entry_id
 
-    @callback
-    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        # Old format for camera and light was int
-        unique_id = cast(str | int, entity_entry.unique_id)
-        if isinstance(unique_id, int):
-            new_unique_id = str(unique_id)
-            if existing_entity_id := entity_registry.async_get_entity_id(
-                entity_entry.domain, entity_entry.platform, new_unique_id
+    new_minor_version = 2
+    if (
+        entry_version == 1
+        and entry_minor_version < new_minor_version <= CONF_CONFIG_ENTRY_MINOR_VERSION
+    ):
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry_version, entry_minor_version
+        )
+        entity_registry = er.async_get(hass)
+
+        @callback
+        def _async_int_unique_id_migrator(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, str] | None:
+            # Old format for camera and light was int
+            unique_id = cast(str | int, entity_entry.unique_id)
+            if isinstance(unique_id, int):
+                new_unique_id = str(unique_id)
+                if existing_entity_id := entity_registry.async_get_entity_id(
+                    entity_entry.domain, entity_entry.platform, new_unique_id
+                ):
+                    _LOGGER.error(
+                        "Cannot migrate to unique_id '%s', already exists for '%s', "
+                        "You may have to delete unavailable ring entities",
+                        new_unique_id,
+                        existing_entity_id,
+                    )
+                    return None
+                _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
+                return {"new_unique_id": new_unique_id}
+            return None
+
+        @callback
+        def _async_camera_unique_id_migrator(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, str] | None:
+            # Migrate camera unique ids to append -last
+            if entity_entry.domain == CAMERA_DOMAIN and not isinstance(
+                cast(str | int, entity_entry.unique_id), int
             ):
-                _LOGGER.error(
-                    "Cannot migrate to unique_id '%s', already exists for '%s', "
-                    "You may have to delete unavailable ring entities",
-                    new_unique_id,
-                    existing_entity_id,
-                )
-                return None
-            _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
-            return {"new_unique_id": new_unique_id}
-        return None
+                new_unique_id = f"{entity_entry.unique_id}-last_recording"
+                return {"new_unique_id": new_unique_id}
+            return None
 
-    await er.async_migrate_entries(hass, entry_id, _async_migrator)
+        await er.async_migrate_entries(hass, entry_id, _async_int_unique_id_migrator)
+        await er.async_migrate_entries(hass, entry_id, _async_camera_unique_id_migrator)
+
+        _LOGGER.debug(
+            "Migration to version %s.%s complete", entry_version, new_minor_version
+        )
+    return True
