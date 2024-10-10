@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from spotipy import SpotifyException
+from spotifyaio import SpotifyError
 
 from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
@@ -130,7 +130,7 @@ async def test_spotify_dj_list(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Spotify entities with a Spotify DJ playlist."""
-    mock_spotify.return_value.current_playback.return_value["context"]["uri"] = (
+    mock_spotify.return_value.get_playback.return_value.context.uri = (
         "spotify:playlist:37i9dQZF1EYkqdzj48dyYq"
     )
     await setup_integration(hass, mock_config_entry)
@@ -146,9 +146,7 @@ async def test_fetching_playlist_does_not_fail(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
-    mock_spotify.return_value.playlist.side_effect = SpotifyException(
-        404, "Not Found", "msg"
-    )
+    mock_spotify.return_value.get_playlist.side_effect = SpotifyError
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
@@ -162,7 +160,7 @@ async def test_idle(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Spotify entities in idle state."""
-    mock_spotify.return_value.current_playback.return_value = {}
+    mock_spotify.return_value.get_playback.return_value = {}
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
