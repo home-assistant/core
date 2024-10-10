@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_WHITE,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -456,6 +457,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_data_type: ColorTypeData | None = None
     _color_mode: DPCode | None = None
     _color_temp: IntegerTypeData | None = None
+    _white_color_mode: ColorMode | None = None
     _fixed_color_mode: ColorMode | None = None
 
     def __init__(
@@ -492,6 +494,19 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         ):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
+            self._white_color_mode = ColorMode.COLOR_TEMP
+        elif (
+            workmode_type
+            := self.find_dpcode(  # If entity does not have color_temp, check if it has work_mode "white"
+                description.color_mode, dptype=DPType.ENUM, prefer_function=True
+            )
+        ):
+            if WorkMode.WHITE.value in workmode_type.range:
+                color_modes.add(ColorMode.WHITE)
+                self._white_color_mode = ColorMode.WHITE
+
+        if not self._white_color_mode:
+            self._white_color_mode = ColorMode.COLOR_TEMP  # default to COLOR_TEMP
 
         if (
             dpcode := self.find_dpcode(description.color_data, prefer_function=True)
@@ -532,7 +547,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
 
-        if self._color_temp and ATTR_COLOR_TEMP in kwargs:
+        if ATTR_WHITE in kwargs or ATTR_COLOR_TEMP in kwargs:
             if self._color_mode_dpcode:
                 commands += [
                     {
@@ -541,25 +556,27 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     },
                 ]
 
-            commands += [
-                {
-                    "code": self._color_temp.dpcode,
-                    "value": round(
-                        self._color_temp.remap_value_from(
-                            kwargs[ATTR_COLOR_TEMP],
-                            self.min_mireds,
-                            self.max_mireds,
-                            reverse=True,
-                        )
-                    ),
-                },
-            ]
+            if ATTR_COLOR_TEMP in kwargs and self._color_temp:
+                commands += [
+                    {
+                        "code": self._color_temp.dpcode,
+                        "value": round(
+                            self._color_temp.remap_value_from(
+                                kwargs[ATTR_COLOR_TEMP],
+                                self.min_mireds,
+                                self.max_mireds,
+                                reverse=True,
+                            )
+                        ),
+                    },
+                ]
 
         if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
             or (
                 ATTR_BRIGHTNESS in kwargs
                 and self.color_mode == ColorMode.HS
+                and ATTR_WHITE not in kwargs
                 and ATTR_COLOR_TEMP not in kwargs
             )
         ):
@@ -727,7 +744,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
             return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+        return (
+            self._white_color_mode if self._white_color_mode else ColorMode.COLOR_TEMP
+        )  # default to COLOR_TEMP
 
     def _get_color_data(self) -> ColorData | None:
         """Get current color data from device."""
