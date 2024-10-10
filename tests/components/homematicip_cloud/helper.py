@@ -186,6 +186,10 @@ class HomeTemplate(Home):
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
         self.devices = [_get_mock(device) for device in self.devices]
+        for device in self.devices:
+            device.functionalChannels = [
+                _get_mock(ch) for ch in device.functionalChannels
+            ]
 
         self.groups = [_get_mock(group) for group in self.groups]
 
