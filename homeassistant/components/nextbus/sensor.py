@@ -28,8 +28,10 @@ async def async_setup_entry(
     """Load values from configuration and initialize the platform."""
     _LOGGER.debug(config.data)
     entry_agency = config.data[CONF_AGENCY]
+    entry_stop = config.data[CONF_STOP]
+    coordinator_key = f"{entry_agency}-{entry_stop}"
 
-    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(entry_agency)
+    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(coordinator_key)
 
     async_add_entities(
         (

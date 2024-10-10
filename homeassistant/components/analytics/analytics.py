@@ -177,7 +177,6 @@ class Analytics:
         hass = self.hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
-        supervisor_client = hassio.get_supervisor_client(hass)
 
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
@@ -262,6 +261,7 @@ class Analytics:
                 integrations.append(integration.domain)
 
             if supervisor_info is not None:
+                supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
                     *(
                         supervisor_client.addons.addon_info(addon[ATTR_SLUG])

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from toonapi import Agreement, ToonError
 
-from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DOMAIN
+from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -324,7 +324,8 @@ async def test_import_migration(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow.migrate_entry == old_entry.entry_id
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

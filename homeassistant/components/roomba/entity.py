@@ -156,7 +156,7 @@ class IRobotEntity(Entity):
             self.schedule_update_ha_state()
 
 
-class IRobotVacuum(IRobotEntity, StateVacuumEntity):
+class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enforce-class-module
     """Base class for iRobot robots."""
 
     _attr_name = None

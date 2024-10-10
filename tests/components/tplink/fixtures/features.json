@@ -200,6 +200,11 @@
     "type": "BinarySensor",
     "category": "Primary"
   },
+  "alarm": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
   "test_alarm": {
     "value": "<Action>",
     "type": "Action",

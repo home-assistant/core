@@ -268,7 +268,6 @@ async def async_setup_platform(
 
         _LOGGER.debug("Manually creating receiver: %s (%s)", name, host)
 
-        @callback
         async def async_onkyo_interview_callback(conn: pyeiscp.Connection) -> None:
             """Receiver interviewed, connection not yet active."""
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
@@ -284,7 +283,6 @@ async def async_setup_platform(
     else:
         _LOGGER.debug("Discovering receivers")
 
-        @callback
         async def async_onkyo_discovery_callback(conn: pyeiscp.Connection) -> None:
             """Receiver discovered, connection not yet active."""
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)

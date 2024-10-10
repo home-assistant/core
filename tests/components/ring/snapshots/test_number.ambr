@@ -397,7 +397,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 11,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
@@ -434,7 +434,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'friendly_name': 'Downstairs Volume',
-      'max': 10,
+      'max': 11,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,

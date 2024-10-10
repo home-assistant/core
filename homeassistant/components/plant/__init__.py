@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Plant(Entity):  # pylint: disable=hass-enforce-class-module
+class Plant(Entity):
     """Plant monitors the well-being of a plant.
 
     It also checks the measurements against
@@ -155,7 +155,7 @@ class Plant(Entity):  # pylint: disable=hass-enforce-class-module
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },

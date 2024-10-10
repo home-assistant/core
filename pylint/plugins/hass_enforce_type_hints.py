@@ -1318,7 +1318,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="source_type",
-                    return_type=["SourceType", "str"],
+                    return_type="SourceType",
                 ),
             ],
         ),

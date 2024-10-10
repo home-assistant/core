@@ -24,8 +24,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import OVOEnergyDeviceEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .entity import OVOEnergyDeviceEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4

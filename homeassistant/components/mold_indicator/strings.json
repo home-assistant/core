@@ -3,6 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
+    "error": {
+      "calibration_is_zero": "Calibration factor can't be zero."
+    },
     "step": {
       "user": {
         "description": "Add Mold indicator helper",
@@ -26,6 +29,9 @@
   "options": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "calibration_is_zero": "Calibration factor can't be zero."
     },
     "step": {
       "init": {

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiohasupervisor.models import StoreInfo
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -227,13 +228,14 @@ def addon_store_info_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="addon_store_info")
 def addon_store_info_fixture(
+    supervisor_client: AsyncMock,
     addon_store_info_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock Supervisor add-on store info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_store_info
 
-    yield from mock_addon_store_info(addon_store_info_side_effect)
+    return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
 
 
 @pytest.fixture(name="addon_info_side_effect")
@@ -245,12 +247,12 @@ def addon_info_side_effect_fixture() -> Any | None:
 @pytest.fixture(name="addon_info")
 def addon_info_fixture(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock Supervisor add-on info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_info
 
-    yield from mock_addon_info(supervisor_client, addon_info_side_effect)
+    return mock_addon_info(supervisor_client, addon_info_side_effect)
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -300,13 +302,12 @@ def install_addon_side_effect_fixture(
 
 @pytest.fixture(name="install_addon")
 def install_addon_fixture(
+    supervisor_client: AsyncMock,
     install_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock install add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon
-
-    yield from mock_install_addon(install_addon_side_effect)
+    supervisor_client.store.install_addon.side_effect = install_addon_side_effect
+    return supervisor_client.store.install_addon
 
 
 @pytest.fixture(name="start_addon_side_effect")
@@ -321,12 +322,12 @@ def start_addon_side_effect_fixture(
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def start_addon_fixture(
+    supervisor_client: AsyncMock, start_addon_side_effect: Any | None
+) -> AsyncMock:
     """Mock start add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon
-
-    yield from mock_start_addon(start_addon_side_effect)
+    supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
+    return supervisor_client.addons.start_addon
 
 
 @pytest.fixture(name="restart_addon_side_effect")
@@ -337,22 +338,18 @@ def restart_addon_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="restart_addon")
 def restart_addon_fixture(
+    supervisor_client: AsyncMock,
     restart_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock restart add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_restart_addon
-
-    yield from mock_restart_addon(restart_addon_side_effect)
+    supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
+    return supervisor_client.addons.restart_addon
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock]:
+def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock stop add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_stop_addon
-
-    yield from mock_stop_addon()
+    return supervisor_client.addons.stop_addon
 
 
 @pytest.fixture(name="addon_options")
@@ -387,12 +384,9 @@ def set_addon_options_fixture(
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock]:
+def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock uninstall add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_uninstall_addon
-
-    yield from mock_uninstall_addon()
+    return supervisor_client.addons.uninstall_addon
 
 
 @pytest.fixture(name="create_backup")
@@ -411,6 +405,13 @@ def update_addon_fixture() -> Generator[AsyncMock]:
     from .hassio.common import mock_update_addon
 
     yield from mock_update_addon()
+
+
+@pytest.fixture(name="store_info")
+def store_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock store info."""
+    supervisor_client.store.info.return_value = StoreInfo(addons=[], repositories=[])
+    return supervisor_client.store.info
 
 
 @pytest.fixture(name="supervisor_client")

@@ -324,7 +324,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                label = "{} {:.1f}%".format(category, instance["score"])
+                label = f"{category} {instance['score']:.1f}%"
                 draw_box(
                     draw, instance["box"], img_width, img_height, label, (255, 255, 0)
                 )

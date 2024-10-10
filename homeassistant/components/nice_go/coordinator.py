@@ -47,7 +47,7 @@ class NiceGODevice:
     id: str
     name: str
     barrier_status: str
-    light_status: bool
+    light_status: bool | None
     fw_version: str
     connected: bool
     vacation_mode: bool
@@ -113,7 +113,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         else:
             barrier_status = BARRIER_STATUS[int(barrier_status_raw[2])].lower()
 
-        light_status = barrier_state.reported["lightStatus"].split(",")[0] == "1"
+        light_status = (
+            barrier_state.reported["lightStatus"].split(",")[0] == "1"
+            if barrier_state.reported.get("lightStatus")
+            else None
+        )
         fw_version = barrier_state.reported["deviceFwVersion"]
         if barrier_state.connectionState:
             connected = barrier_state.connectionState.connected

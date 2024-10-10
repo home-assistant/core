@@ -203,7 +203,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         url = URL(discovery_info.upnp["presentationURL"])
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: url.host},
+                "title_placeholders": {CONF_HOST: url.host or "-"},
                 "configuration_url": discovery_info.upnp["presentationURL"],
             }
         )

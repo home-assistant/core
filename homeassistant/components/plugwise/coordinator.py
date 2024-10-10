@@ -104,24 +104,19 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         device_list = dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
         )
-        # via_device cannot be None, this will result in the deletion
-        # of other Plugwise Gateways when present!
-        via_device: str = ""
-
         # First find the Plugwise via_device
-        for device_entry in device_list:
-            for identifier in device_entry.identifiers:
-                if identifier[0] != DOMAIN or identifier[1] != data.gateway[GATEWAY_ID]:
-                    continue
-                via_device = device_entry.id
-                break
+        gateway_device = device_reg.async_get_device(
+            {(DOMAIN, data.gateway[GATEWAY_ID])}
+        )
+        assert gateway_device is not None
+        via_device_id = gateway_device.id
 
         # Then remove the connected orphaned device(s)
         for device_entry in device_list:
             for identifier in device_entry.identifiers:
                 if identifier[0] == DOMAIN:
                     if (
-                        device_entry.via_device_id == via_device
+                        device_entry.via_device_id == via_device_id
                         and identifier[1] not in data.devices
                     ):
                         device_reg.async_update_device(

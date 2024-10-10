@@ -71,6 +71,7 @@ from .const import (
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
@@ -215,7 +216,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
 
-    if model == MODEL_AIRPURIFIER_3C:
+    if model in (MODEL_AIRPURIFIER_3C, MODEL_AIRPURIFIER_3C_REV_A):
         entity = XiaomiAirPurifierMB4(
             device,
             config_entry,

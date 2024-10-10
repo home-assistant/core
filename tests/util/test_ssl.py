@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from homeassistant.util.ssl import (
-    SSL_CIPHER_LISTS,
     SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
@@ -25,14 +24,13 @@ def test_client_context(mock_sslcontext) -> None:
         mock_sslcontext.set_ciphers.assert_not_called()
 
         client_context(SSLCipherList.MODERN)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.MODERN]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
 
         client_context(SSLCipherList.INTERMEDIATE)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
+
+        client_context(SSLCipherList.INSECURE)
+        mock_sslcontext.set_ciphers.assert_not_called()
 
 
 def test_no_verify_ssl_context(mock_sslcontext) -> None:
@@ -42,14 +40,13 @@ def test_no_verify_ssl_context(mock_sslcontext) -> None:
         mock_sslcontext.set_ciphers.assert_not_called()
 
         create_no_verify_ssl_context(SSLCipherList.MODERN)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.MODERN]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
 
         create_no_verify_ssl_context(SSLCipherList.INTERMEDIATE)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
+
+        create_no_verify_ssl_context(SSLCipherList.INSECURE)
+        mock_sslcontext.set_ciphers.assert_not_called()
 
 
 def test_ssl_context_caching() -> None:

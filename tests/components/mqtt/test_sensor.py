@@ -303,6 +303,17 @@ async def test_setting_sensor_to_long_state_via_mqtt_message(
             help_custom_config(
                 sensor.DOMAIN,
                 DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
+            ),
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "None",
+            STATE_UNKNOWN,
+            False,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
                 ({"device_class": sensor.SensorDeviceClass.ENUM},),
             ),
             sensor.SensorDeviceClass.ENUM,
@@ -945,7 +956,7 @@ async def test_invalid_state_class(
                     }
                 }
             },
-            "The option `options` can only be used together with "
+            "The option `options` must be used together with "
             "device class `enum`, got `device_class` 'gas'",
         ),
         (

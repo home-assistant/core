@@ -59,7 +59,7 @@ async def test_update_failure(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message",
             side_effect=RoborockException(),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="Error while calling SET_MOP_MOD"),
     ):
         await hass.services.async_call(
             "select",

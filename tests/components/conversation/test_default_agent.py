@@ -13,6 +13,7 @@ import yaml
 
 from homeassistant.components import conversation, cover, media_player
 from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -203,7 +204,7 @@ async def test_exposed_areas(
 @pytest.mark.usefixtures("init_components")
 async def test_conversation_agent(hass: HomeAssistant) -> None:
     """Test DefaultAgent."""
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     with patch(
         "homeassistant.components.conversation.default_agent.get_languages",
         return_value=["dwarvish", "elvish", "entish"],
@@ -380,7 +381,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
 
     callback = AsyncMock(return_value=trigger_response)
@@ -1905,7 +1906,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(

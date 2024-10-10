@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
-from functools import cached_property
 import importlib
 import logging
 import os
@@ -26,6 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from propcache import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -206,7 +206,7 @@ class USBMatcherOptional(TypedDict, total=False):
 
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
-    """Matcher for the bluetooth integration."""
+    """Matcher for the USB integration."""
 
 
 @dataclass(slots=True)
@@ -1586,7 +1586,7 @@ class Helpers:
         report(
             (
                 f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.11, it"
+                " This is deprecated and will stop working in Home Assistant 2025.5, it"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             error_if_core=False,

@@ -27,7 +27,7 @@ BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
 SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 
-class BraavaJet(IRobotVacuum):
+class BraavaJet(IRobotVacuum):  # pylint: disable=hass-enforce-class-module
     """Braava Jet."""
 
     _attr_supported_features = SUPPORT_BRAAVA
