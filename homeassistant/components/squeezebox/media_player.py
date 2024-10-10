@@ -60,6 +60,9 @@ SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 
 ATTR_QUERY_RESULT = "query_result"
+ATTR_LOSSLESS = "lossless"
+ATTR_BITRATE = "bitrate"
+ATTR_REMOTE = "remote"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
@@ -67,14 +70,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_INTERVAL = 60
 
+EXTRA_TAGS = "Q"
 
 KNOWN_SERVERS = "known_servers"
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
-ATTR_TO_PROPERTY = [
-    ATTR_QUERY_RESULT,
-]
+ATTR_TO_PROPERTY = [ATTR_QUERY_RESULT, ATTR_LOSSLESS, ATTR_BITRATE, ATTR_REMOTE]
 
 SQUEEZEBOX_MODE = {
     "pause": MediaPlayerState.PAUSED,
@@ -131,7 +133,7 @@ async def async_setup_entry(
                 None,
             )
             if entity:
-                await player.async_update()
+                await player.async_update(EXTRA_TAGS)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
                 )
@@ -274,7 +276,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         # only update available players, newly available players will be rediscovered and marked available
         if self._attr_available:
             last_media_position = self.media_position
-            await self._player.async_update()
+            await self._player.async_update(EXTRA_TAGS)
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
@@ -388,6 +390,24 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             for player in self._player.sync_group
             if player in player_ids
         ]
+
+    @property
+    def bitrate(self) -> str | None:
+        """Bitrate of content."""
+        return self._player.bitrate
+
+    @property
+    def lossless(self) -> bool:
+        """Lossless content playing."""
+        return (
+            self._player.current_track
+            and self._player.current_track.get("lossless") == "1"
+        )
+
+    @property
+    def remote(self) -> bool:
+        """Is remote content."""
+        return self._player.remote
 
     @property
     def query_result(self) -> dict | bool:
