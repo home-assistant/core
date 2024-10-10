@@ -1067,7 +1067,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # Binary Switch CC when Multilevel Switch and Color Switch CC exist -> On/Off switch, assign color to light entity instead
+    # Binary Switch CC when Multilevel Switch and Color Switch CC exist ->
+    # On/Off switch, assign color to light entity instead
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
