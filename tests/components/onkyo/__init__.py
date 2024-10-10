@@ -1,6 +1,6 @@
 """Tests for the Onkyo integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.onkyo.const import DOMAIN, OPTION_INPUT_SOURCES
 from homeassistant.components.onkyo.receiver import Receiver, ReceiverInfo
@@ -41,12 +41,15 @@ async def setup_integration(
 
     config_entry.add_to_hass(hass)
 
+    mock_receiver = AsyncMock()
+    mock_receiver.conn.close = Mock()
+
     with (
         patch(
             "homeassistant.components.onkyo.async_interview",
             return_value=receiver_info,
         ),
-        patch.object(Receiver, "async_create", AsyncMock()),
+        patch.object(Receiver, "async_create", return_value=mock_receiver),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
