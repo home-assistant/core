@@ -32,7 +32,7 @@ class DuwiEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.device.device_no)},
             manufacturer=MANUFACTURER,
-            name=f"{self.device.room_name + ' ' if self.device.room_name else '默认房间 '} {self.device.device_name}",
+            name=f"{self.device.room_name + ' ' if self.device.room_name else 'default room'} {self.device.device_name}",
             model=self.device.device_type,
             suggested_area=f"{self.device.floor_name} {self.device.room_name}".strip(),
         )

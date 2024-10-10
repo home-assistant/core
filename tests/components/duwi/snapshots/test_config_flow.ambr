@@ -1,4 +1,242 @@
 # serializer version: 1
+# name: test_auth_error
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': dict({
+      'code': 'AUTH_ERROR',
+    }),
+    'errors': dict({
+      'base': 'auth_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_auth_success_but_no_houses_found
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'house_no',
+        'options': list([
+        ]),
+        'required': True,
+        'type': 'select',
+      }),
+    ]),
+    'description_placeholders': dict({
+    }),
+    'errors': dict({
+      'base': 'no_houses_found_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'select_house',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_fetch_house_info_error
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': dict({
+      'code': '10001',
+    }),
+    'errors': dict({
+      'base': 'fetch_house_info_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_invalid_auth_error
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': dict({
+      'code': '11000',
+    }),
+    'errors': dict({
+      'base': 'invalid_auth',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_invalid_sys_error
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': dict({
+      'code': '10001',
+    }),
+    'errors': dict({
+      'base': 'sys_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_no_houses_found_after_auth
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'house_no',
+        'options': list([
+        ]),
+        'required': True,
+        'type': 'select',
+      }),
+    ]),
+    'description_placeholders': dict({
+    }),
+    'errors': dict({
+      'base': 'no_houses_found_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'select_house',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_sys_error
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': dict({
+      'code': '10001',
+    }),
+    'errors': dict({
+      'base': 'sys_error',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
 # name: test_user_flow_failed_by_phone_auth
   FlowResultSnapshot({
     'data_schema': list([
@@ -27,7 +265,7 @@
       'code': '11000',
     }),
     'errors': dict({
-      'base': 'auth_error',
+      'base': 'invalid_auth',
     }),
     'flow_id': <ANY>,
     'handler': 'duwi',

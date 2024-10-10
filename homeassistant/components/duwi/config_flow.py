@@ -90,22 +90,15 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "fetch_house_info_error"
                     placeholders["code"] = house_infos_status
                 else:
-                    if len(house_infos_data.get("data", {}).get("houseInfos", [])) == 0:
-                        # Handle case where no houses are found.
-                        errors["base"] = "no_houses_found_error"
-
                     self.houses = house_infos_data.get("data", {}).get("houseInfos", [])
                     return await self.async_step_select_house()
-
-            if status != DuwiCode.SUCCESS.value:
-                errors["base"] = "auth_error"
-                placeholders["code"] = status
-            elif status == DuwiCode.LOGIN_ERROR.value:
-                errors["base"] = "invalid_auth"
-                placeholders["code"] = status
-            elif status == DuwiCode.SYS_ERROR.value:
-                errors["base"] = "sys_error"
-                placeholders["code"] = status
+            else:
+                if status == DuwiCode.LOGIN_ERROR.value:
+                    errors["base"] = "invalid_auth"
+                    placeholders["code"] = status
+                elif status == DuwiCode.SYS_ERROR.value:
+                    errors["base"] = "sys_error"
+                    placeholders["code"] = status
 
         # Show user input form (with error messages if any).
         return self.async_show_form(
@@ -141,60 +134,48 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
             for house in self.houses
             if house["houseNo"] not in existing_house
         }
+        # If no self.houses remain, handle the error.
+        if len(houses_list) == 0:
+            errors["base"] = "no_houses_found_error"
 
         if user_input is not None:
             houses_dict: dict[str, dict[str, str]] = {
                 house["houseNo"]: {
-                    "house_name": house["houseName"],
-                    "house_key": house["lanSecretKey"],
+                    HOUSE_NAME: house["houseName"],
+                    HOUSE_KEY: house["lanSecretKey"],
                 }
                 for house in self.houses
                 if house["houseNo"] not in existing_house
             }
 
-            # If no self.houses remain, handle the error.
-            if len(houses_list) == 0:
-                errors["base"] = "no_houses_found_error"
-
-            house_no = user_input.get("house_no")
-            if house_no is None:
-                raise ValueError("House number must be provided")
-
+            house_no = user_input.get(HOUSE_NO)
             house_info = houses_dict.get(house_no)
-            if house_info is None:
-                raise ValueError(f"House number {house_no} not found in houses_dict")
-
-            house_name = house_info.get("house_name")
-            if house_name is None:
-                raise ValueError("House name cannot be None")
+            house_name = house_info.get(HOUSE_NAME)
 
             # With user's house selection, create an entry for the selected house.
-            if user_input is not None:
-                return self.async_create_entry(
-                    title=house_name,
-                    data={
-                        PHONE: self.phone,
-                        PASSWORD: self.password,
-                        ADDRESS: HTTP_ADDRESS,
-                        ACCESS_TOKEN: self.access_token,
-                        REFRESH_TOKEN: self.refresh_token,
-                        WS_ADDRESS: WEBSOCKET_ADDRESS,
-                        APP_KEY: self.app_key,
-                        APP_SECRET: self.app_secret,
-                        HOUSE_NO: user_input["house_no"],
-                        HOUSE_NAME: houses_dict[user_input["house_no"]].get(
-                            "house_name"
-                        ),
-                        HOUSE_KEY: houses_dict[user_input["house_no"]].get("house_key"),
-                    },
-                )
+            return self.async_create_entry(
+                title=house_name,
+                data={
+                    PHONE: self.phone,
+                    PASSWORD: self.password,
+                    ADDRESS: HTTP_ADDRESS,
+                    ACCESS_TOKEN: self.access_token,
+                    REFRESH_TOKEN: self.refresh_token,
+                    WS_ADDRESS: WEBSOCKET_ADDRESS,
+                    APP_KEY: self.app_key,
+                    APP_SECRET: self.app_secret,
+                    HOUSE_NO: user_input[HOUSE_NO],
+                    HOUSE_NAME: houses_dict[user_input[HOUSE_NO]].get(HOUSE_NAME),
+                    HOUSE_KEY: houses_dict[user_input[HOUSE_NO]].get(HOUSE_KEY),
+                },
+            )
 
         # If no house has been selected yet, show the selection form.
         return self.async_show_form(
             step_id="select_house",
             data_schema=vol.Schema(
                 {
-                    vol.Required("house_no"): vol.In(houses_list),
+                    vol.Required(HOUSE_NO): vol.In(houses_list),
                 }
             ),
             errors=errors,

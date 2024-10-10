@@ -65,3 +65,53 @@ def mock_duwi_login_and_fetch_house() -> Generator[AsyncMock, None, None]:
         mock_fetch.side_effect = mock_fetch_house_info
 
         yield mock_fetch
+
+
+@pytest.fixture
+def mock_duwi_fetch_house_info_error():
+    """Mock fetch_house_info to simulate an error response."""
+    with patch(
+        "duwi_smarthome_sdk.customer_client.CustomerClient.fetch_house_info"
+    ) as mock_fetch_house_info:
+        # Simulate an error response with a code different from SUCCESS
+        mock_fetch_house_info.return_value = {
+            "code": DuwiCode.SYS_ERROR.value,
+            "message": "System error while fetching house info",
+        }
+        yield mock_fetch_house_info
+
+
+@pytest.fixture
+def mock_duwi_no_houses_found():
+    """Mock fetch_house_info to return no houses."""
+    with patch(
+        "duwi_smarthome_sdk.customer_client.CustomerClient.fetch_house_info"
+    ) as mock_fetch_house_info:
+        # Simulate a successful response but with no houses found
+        mock_fetch_house_info.return_value = {
+            "code": DuwiCode.SUCCESS.value,
+            "data": {
+                "houseInfos": [],  # Empty list to simulate no houses
+            },
+        }
+        yield mock_fetch_house_info
+
+
+@pytest.fixture
+def mock_duwi_login_invalid_auth():
+    """Mock the login function to simulate invalid authentication (e.g., wrong credentials)."""
+    with patch("duwi_smarthome_sdk.customer_client.CustomerClient.login") as mock_login:
+        mock_login.return_value = {
+            "code": DuwiCode.LOGIN_ERROR.value,  # This should match your defined LOGIN_ERROR code
+        }
+        yield mock_login
+
+
+@pytest.fixture
+def mock_duwi_login_sys_error():
+    """Mock the login function to simulate a system error."""
+    with patch("duwi_smarthome_sdk.customer_client.CustomerClient.login") as mock_login:
+        mock_login.return_value = {
+            "code": DuwiCode.SYS_ERROR.value,  # This should match your defined SYS_ERROR code
+        }
+        yield mock_login
