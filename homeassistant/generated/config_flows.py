@@ -142,6 +142,7 @@ FLOWS = {
         "duke_energy",
         "dunehd",
         "duotecno",
+        "duwi",
         "dwd_weather_warnings",
         "dynalite",
         "eafm",
