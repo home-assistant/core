@@ -10,7 +10,7 @@ import uuid
 from ring_doorbell import Auth, Ring, RingDevices
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import APPLICATION_NAME, CONF_TOKEN
+from homeassistant.const import APPLICATION_NAME, CONF_DEVICE_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -38,18 +38,19 @@ class RingData:
 type RingConfigEntry = ConfigEntry[RingData]
 
 
-async def get_auth_agent_id(hass: HomeAssistant) -> tuple[str, str]:
-    """Return user-agent and hardware id for Auth instantiation.
+def get_auth_user_agent() -> str:
+    """Return user-agent for Auth instantiation.
 
     user_agent will be the display name in the ring.com authorised devices.
-    hardware_id will uniquely describe the authorised HA device.
     """
-    user_agent = f"{APPLICATION_NAME}/{DOMAIN}-integration"
+    return f"{APPLICATION_NAME}/{DOMAIN}-integration"
 
+
+async def _get_legacy_hardware_id(hass: HomeAssistant) -> str:
+    """Return the legacy hardware id used before reconfigure workflow."""
     # Generate a new uuid from the instance_uuid to keep the HA one private
     instance_uuid = uuid.UUID(hex=await instance_id.async_get(hass))
-    hardware_id = str(uuid.uuid5(instance_uuid, user_agent))
-    return user_agent, hardware_id
+    return str(uuid.uuid5(instance_uuid, get_auth_user_agent()))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
@@ -69,13 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
             data={**entry.data, CONF_LISTEN_CREDENTIALS: token},
         )
 
-    user_agent, hardware_id = await get_auth_agent_id(hass)
+    # Replace with migration step after testing
+    if CONF_DEVICE_ID not in entry.data:
+        hardware_id = await _get_legacy_hardware_id(hass)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_DEVICE_ID: hardware_id},
+        )
+
+    user_agent = get_auth_user_agent()
     client_session = async_get_clientsession(hass)
     auth = Auth(
         user_agent,
         entry.data[CONF_TOKEN],
         token_updater,
-        hardware_id=hardware_id,
+        hardware_id=entry.data[CONF_DEVICE_ID],
         http_client_session=client_session,
     )
     ring = Ring(auth)

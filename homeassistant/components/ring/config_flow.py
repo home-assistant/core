@@ -3,19 +3,31 @@
 from collections.abc import Mapping
 import logging
 from typing import Any
+import uuid
 
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 
-from . import get_auth_agent_id
+from . import get_auth_user_agent
 from .const import CONF_2FA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,10 +40,12 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 UNKNOWN_RING_ACCOUNT = "unknown_ring_account"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, hardware_id: str, data: dict[str, str]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    user_agent, hardware_id = await get_auth_agent_id(hass)
+    user_agent = get_auth_user_agent()
     auth = Auth(
         user_agent,
         http_client_session=async_get_clientsession(hass),
@@ -58,6 +72,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     user_pass: dict[str, Any] = {}
+    hardware_id: str | None = None
     reauth_entry: ConfigEntry | None = None
 
     async def async_step_dhcp(
@@ -87,8 +102,10 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
+            if not self.hardware_id:
+                self.hardware_id = str(uuid.uuid4())
             try:
-                token = await validate_input(self.hass, user_input)
+                token = await validate_input(self.hass, self.hardware_id, user_input)
             except Require2FA:
                 self.user_pass = user_input
 
@@ -140,11 +157,22 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         assert self.reauth_entry is not None
-
+        reconfigure = self.source == SOURCE_RECONFIGURE
+        username = self.reauth_entry.data[CONF_USERNAME]
+        await self.async_set_unique_id(username)
         if user_input:
-            user_input[CONF_USERNAME] = self.reauth_entry.data[CONF_USERNAME]
+            user_input[CONF_USERNAME] = username
+            # Reconfigure will generate a new hardware id and create a new
+            # authorised device at ring.com. Reauth will use the same
+            # hardware id and re-authorise an existing authorised device.
+            if not self.hardware_id:
+                if reconfigure:
+                    self.hardware_id = str(uuid.uuid4())
+                else:
+                    self.hardware_id = self.reauth_entry.data[CONF_DEVICE_ID]
             try:
-                token = await validate_input(self.hass, user_input)
+                assert self.hardware_id
+                token = await validate_input(self.hass, self.hardware_id, user_input)
             except Require2FA:
                 self.user_pass = user_input
                 return await self.async_step_2fa()
@@ -157,15 +185,14 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_TOKEN: token,
+                    CONF_DEVICE_ID: self.hardware_id,
                 }
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data=data
+                return self.async_update_reload_and_abort(
+                    self.reauth_entry, data_updates=data
                 )
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id="reconfigure" if reconfigure else "reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
@@ -173,6 +200,15 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: self.reauth_entry.data[CONF_USERNAME],
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Trigger a reconfiguration flow."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm(user_input)
 
 
 class Require2FA(HomeAssistantError):
