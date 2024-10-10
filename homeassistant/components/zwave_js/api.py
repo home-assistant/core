@@ -2525,11 +2525,15 @@ async def websocket_node_capabilities(
     node: Node,
 ) -> None:
     """Get node endpoints with their support command classes."""
-
+    # consumers expect snake_case at the moment
+    # remove that addition when consumers are updated
     connection.send_result(
         msg[ID],
         {
-            idx: [command_class.to_dict() for command_class in endpoint.command_classes]
+            idx: [
+                command_class.to_dict() | {"is_secure": command_class.is_secure}
+                for command_class in endpoint.command_classes
+            ]
             for idx, endpoint in node.endpoints.items()
         },
     )

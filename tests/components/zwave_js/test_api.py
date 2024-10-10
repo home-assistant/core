@@ -4819,7 +4819,15 @@ async def test_node_capabilities(
     )
     msg = await ws_client.receive_json()
     assert msg["result"] == {
-        "0": [{"id": 113, "name": "Notification", "version": 8, "is_secure": False}]
+        "0": [
+            {
+                "id": 113,
+                "name": "Notification",
+                "version": 8,
+                "isSecure": False,
+                "is_secure": False,
+            }
+        ]
     }
 
     # Test getting non-existent node fails
