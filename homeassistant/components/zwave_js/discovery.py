@@ -1077,7 +1077,8 @@ DISCOVERY_SCHEMAS = [
             COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
         ],
     ),
-    # Binary Switch CC and Color Switch CC -> Colored light that uses Binary Switch CC for turning on/off.
+    # Binary Switch CC and Color Switch CC ->
+    # Colored light that uses Binary Switch CC for turning on/off.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         hint="color_onoff",
