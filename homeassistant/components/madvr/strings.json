@@ -13,7 +13,7 @@
           "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure madVR Envy",
         "description": "Your device needs to be on in order to reconfigure the integation.",
         "data": {

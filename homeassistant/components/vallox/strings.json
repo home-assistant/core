@@ -9,7 +9,7 @@
           "host": "Hostname or IP address of your Vallox device."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },

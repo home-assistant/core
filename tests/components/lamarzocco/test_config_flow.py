@@ -271,7 +271,7 @@ async def test_reconfigure_flow(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result2 = await __do_successful_user_step(hass, result, mock_cloud_client)
     service_info = get_bluetooth_service_info(

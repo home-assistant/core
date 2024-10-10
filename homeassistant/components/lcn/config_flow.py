@@ -196,12 +196,6 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Reconfigure LCN configuration."""
         reconfigure_entry = self._get_reconfigure_entry()
         errors = None
         if user_input is not None:
@@ -219,7 +213,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA, reconfigure_entry.data
             ),

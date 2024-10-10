@@ -238,12 +238,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = await validate_input(self.hass, user_input)
@@ -253,7 +247,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
