@@ -152,7 +152,7 @@ def _replace_abbreviations(
 
 
 @callback
-def _replace_all_abbreviations(discovery_payload: Any | dict[str, Any]) -> None:
+def _replace_all_abbreviations(discovery_payload: dict[str, Any]) -> None:
     """Replace all abbreviations in an MQTT discovery payload."""
 
     _replace_abbreviations(discovery_payload, ABBREVIATIONS, ABBREVIATIONS_SET)
