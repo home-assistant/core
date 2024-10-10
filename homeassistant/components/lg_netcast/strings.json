@@ -28,16 +28,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The {integration_title} is not online for YAML migration to complete",
-      "description": "Migrating {integration_title} from YAML cannot complete until the TV is online.\n\nPlease turn on your TV for migration to complete."
-    },
-    "deprecated_yaml_import_issue_invalid_host": {
-      "title": "The {integration_title} YAML configuration has an invalid host.",
-      "description": "Configuring {integration_title} using YAML is being removed but the device returned an invalid response.\n\nPlease check or manually remove the YAML configuration."
-    }
-  },
   "device_automation": {
     "trigger_type": {
       "lg_netcast.turn_on": "Device is requested to turn on"
