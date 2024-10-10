@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import (
@@ -875,7 +876,12 @@ def mock_handlers() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("mock_handlers")
-async def test_config_entry_dispatcher(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("do_setup_component", "has_leak"), [(True, True), (False, False)]
+)
+async def test_config_entry_dispatcher(
+    hass: HomeAssistant, do_setup_component: bool, has_leak: bool
+) -> None:
     """Test behavior of coordinator.entry."""
 
     async def _async_setup_entry(
@@ -907,17 +913,25 @@ async def test_config_entry_dispatcher(hass: HomeAssistant) -> None:
     mock_platform(hass, "comp.config_flow", None)
 
     entry1 = MockConfigEntry(domain="comp", title="Entry 1")
+    if do_setup_component:
+        await async_setup_component(hass, "comp", {})
     entry1.add_to_hass(hass)
+
+    expected_entry = None
+    if has_leak:
+        expected_entry = entry1
 
     assert config_entries.current_entry.get() is None
     assert entry1.state is config_entries.ConfigEntryState.NOT_LOADED
     await hass.config_entries.async_setup(entry1.entry_id)
     assert entry1.state is config_entries.ConfigEntryState.LOADED
-    assert config_entries.current_entry.get() is None
+    assert config_entries.current_entry.get() is expected_entry
 
     assert entry1.entry_id in hass.data
     assert hass.data[entry1.entry_id]["first_coordinator"].config_entry is entry1
     assert "second_coordinator" not in hass.data[entry1.entry_id]
     async_dispatcher_send(hass, "create_coordinator", "second_coordinator")
     assert hass.data[entry1.entry_id]["first_coordinator"].config_entry is entry1
-    assert hass.data[entry1.entry_id]["second_coordinator"].config_entry is None
+    assert (
+        hass.data[entry1.entry_id]["second_coordinator"].config_entry is expected_entry
+    )
