@@ -11,6 +11,7 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -19,7 +20,6 @@ from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
     _work_area_translation_key,
-    async_remove_work_area_entities,
     handle_sending_exception,
 )
 
@@ -111,7 +111,7 @@ async def async_setup_entry(
     """Set up number platform."""
     coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
-
+    current_work_areas = {}
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
@@ -123,13 +123,49 @@ async def async_setup_entry(
                     for description in WORK_AREA_NUMBER_TYPES
                     for work_area_id in _work_areas
                 )
-            async_remove_work_area_entities(hass, coordinator, entry, mower_id)
+                current_work_areas[mower_id] = set(_work_areas)
         entities.extend(
             AutomowerNumberEntity(mower_id, coordinator, description)
             for description in NUMBER_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
     async_add_entities(entities)
+
+    def _remove_all_work_areas(removed_work_areas: set, mower_id: str) -> None:
+        """Remove all unused work areas for all platforms."""
+        entity_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_reg, entry.entry_id
+        ):
+            for work_area_id in removed_work_areas:
+                if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}_"):
+                    _LOGGER.info("Deleting: %s", entity_entry.entity_id)
+                    entity_reg.async_remove(entity_entry.entity_id)
+
+    def _async_work_area_listener() -> None:
+        """Listen for new work areas and add number entities if they did not exist."""
+        for mower_id in coordinator.data:
+            if coordinator.data[mower_id].capabilities.work_areas:
+                _work_areas = coordinator.data[mower_id].work_areas
+                if _work_areas is not None:
+                    received_work_areas = set(_work_areas)
+                    new_work_areas = received_work_areas - current_work_areas[mower_id]
+                    removed_work_areas = (
+                        current_work_areas[mower_id] - received_work_areas
+                    )
+                    if new_work_areas:
+                        current_work_areas[mower_id].update(new_work_areas)
+                        async_add_entities(
+                            AutomowerWorkAreaNumberEntity(
+                                mower_id, coordinator, description, work_area_id
+                            )
+                            for description in WORK_AREA_NUMBER_TYPES
+                            for work_area_id in new_work_areas
+                        )
+                    if removed_work_areas:
+                        _remove_all_work_areas(removed_work_areas, mower_id)
+
+    coordinator.async_add_listener(_async_work_area_listener)
 
 
 class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):

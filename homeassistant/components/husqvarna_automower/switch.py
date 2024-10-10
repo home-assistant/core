@@ -31,6 +31,8 @@ async def async_setup_entry(
     """Set up switch platform."""
     coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
+    current_work_areas = {}
+    current_stay_out_zones = {}
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
         for mower_id in coordinator.data
@@ -45,7 +47,7 @@ async def async_setup_entry(
                     )
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
-            async_remove_entities(hass, coordinator, entry, mower_id)
+                current_stay_out_zones[mower_id] = set(_stay_out_zones.zones)
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
             if _work_areas is not None:
@@ -53,7 +55,63 @@ async def async_setup_entry(
                     WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
                     for work_area_id in _work_areas
                 )
+                current_work_areas[mower_id] = set(_work_areas)
     async_add_entities(entities)
+
+    def _async_work_area_listener() -> None:
+        """Listen for new work areas and add switch entities if they did not exist."""
+        for mower_id in coordinator.data:
+            if coordinator.data[mower_id].capabilities.work_areas:
+                _work_areas = coordinator.data[mower_id].work_areas
+                if _work_areas is not None:
+                    received_work_areas = set(_work_areas)
+                    new_work_areas = received_work_areas - current_work_areas[mower_id]
+                    if new_work_areas:
+                        current_work_areas[mower_id].update(new_work_areas)
+                        async_add_entities(
+                            WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                            for work_area_id in new_work_areas
+                        )
+
+    def _remove_stay_out_zone_entities(
+        removed_stay_out_zones: set, mower_id: str
+    ) -> None:
+        """Remove all unused work areas for all platforms."""
+        entity_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_reg, entry.entry_id
+        ):
+            for stay_out_zone_uid in removed_stay_out_zones:
+                if entity_entry.unique_id.startswith(f"{mower_id}_{stay_out_zone_uid}"):
+                    entity_reg.async_remove(entity_entry.entity_id)
+
+    def _async_stay_out_zone_listener() -> None:
+        """Listen for new stay out zones and add switch entities if they did not exist."""
+        for mower_id in coordinator.data:
+            if coordinator.data[mower_id].capabilities.stay_out_zones:
+                _stay_out_zones = coordinator.data[mower_id].stay_out_zones
+                if _stay_out_zones is not None:
+                    _current_stay_out_zones = set(current_stay_out_zones[mower_id])
+                    received_stay_out_zones = set(_stay_out_zones.zones)
+                    new_stay_out_zones = (
+                        received_stay_out_zones - _current_stay_out_zones
+                    )
+                    removed_stay_out_zones = (
+                        _current_stay_out_zones - received_stay_out_zones
+                    )
+                    if new_stay_out_zones:
+                        current_stay_out_zones[mower_id].update(new_stay_out_zones)
+                        async_add_entities(
+                            AutomowerStayOutZoneSwitchEntity(
+                                coordinator, mower_id, stay_out_zone_uid
+                            )
+                            for stay_out_zone_uid in new_stay_out_zones
+                        )
+                    if removed_stay_out_zones:
+                        _remove_stay_out_zone_entities(removed_stay_out_zones, mower_id)
+
+    coordinator.async_add_listener(_async_work_area_listener)
+    coordinator.async_add_listener(_async_stay_out_zone_listener)
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
