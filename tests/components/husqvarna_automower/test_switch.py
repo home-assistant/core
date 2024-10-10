@@ -251,6 +251,7 @@ async def test_add_stay_out_zone(
     )
     assert current_entites_after_addition == current_entites + 1
     values[TEST_MOWER_ID].stay_out_zones.zones.pop(TEST_VARIABLE_ZONE_ID)
+    # values[TEST_MOWER_ID].stay_out_zones.zones.pop(TEST_ZONE_ID)
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

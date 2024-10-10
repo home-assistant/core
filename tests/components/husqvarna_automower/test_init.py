@@ -226,12 +226,12 @@ async def test_add_work_area(
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
-    values[TEST_MOWER_ID].work_area_names.append("new_work_area")
-    values[TEST_MOWER_ID].work_area_dict.update({1: "new_work_area"})
+    values[TEST_MOWER_ID].work_area_names.append("new work area")
+    values[TEST_MOWER_ID].work_area_dict.update({1: "new work area"})
     values[TEST_MOWER_ID].work_areas.update(
         {
             1: WorkArea(
-                name="new_work_area",
+                name="new work area",
                 cutting_height=12,
                 enabled=True,
                 progress=12,
@@ -254,9 +254,12 @@ async def test_add_work_area(
         + ADDITIONAL_SWITCH_ENTITIES
     )
 
-    values[TEST_MOWER_ID].work_area_names.remove("new_work_area")
+    values[TEST_MOWER_ID].work_area_names.remove("new work area")
     values[TEST_MOWER_ID].work_area_dict.pop(1)
     values[TEST_MOWER_ID].work_areas.pop(1)
+    values[TEST_MOWER_ID].work_area_names.remove("Back lawn")
+    values[TEST_MOWER_ID].work_area_dict.pop(654321)
+    values[TEST_MOWER_ID].work_areas.pop(654321)
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -264,4 +267,10 @@ async def test_add_work_area(
     current_entites_after_deletion = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    assert current_entites_after_deletion == current_entites_start
+    assert (
+        current_entites_after_deletion
+        == current_entites_start
+        - ADDITIONAL_SWITCH_ENTITIES
+        - ADDITIONAL_NUMBER_ENTITIES
+        - ADDITIONAL_SENSOR_ENTITIES
+    )
