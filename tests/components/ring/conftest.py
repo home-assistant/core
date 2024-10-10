@@ -8,13 +8,15 @@ import pytest
 import ring_doorbell
 
 from homeassistant.components.ring import DOMAIN
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .device_mocks import get_devices_data, get_mock_devices
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+MOCK_HARDWARE_ID = "foo-bar"
 
 
 @pytest.fixture
@@ -116,6 +118,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Ring",
         domain=DOMAIN,
         data={
+            CONF_DEVICE_ID: MOCK_HARDWARE_ID,
             CONF_USERNAME: "foo@bar.com",
             "token": {"access_token": "mock-token"},
         },
