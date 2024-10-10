@@ -172,6 +172,11 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      }
     }
   }
 }
