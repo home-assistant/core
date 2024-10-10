@@ -8,7 +8,15 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_MANAGER, DOMAIN, LOGGER
 from .http import async_register_http_views
 from .manager import BackupManager
+from .models import BackupSyncMetadata
+from .sync_agent import BackupSyncAgent, SyncedBackup
 from .websocket import async_register_websocket_handlers
+
+__all__ = [
+    "BackupSyncAgent",
+    "BackupSyncMetadata",
+    "SyncedBackup",
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -32,7 +40,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_create_service(call: ServiceCall) -> None:
         """Service handler for creating backups."""
-        await backup_manager.generate_backup()
+        backup = await backup_manager.generate_backup()
+        await backup_manager.sync_backup(backup=backup)
 
     hass.services.async_register(DOMAIN, "create", async_handle_create_service)
 
