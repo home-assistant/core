@@ -118,7 +118,11 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
-                    data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},
+                    data={
+                        CONF_DEVICE_ID: self.hardware_id,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_TOKEN: token,
+                    },
                 )
 
         return self.async_show_form(
