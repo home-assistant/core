@@ -34,21 +34,27 @@ class WebControlProScene(Scene):
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(self, config_entry_id: str, scene: WMS_Scene) -> None:
         """Initialize the entity with the configured scene."""
         super().__init__()
-        scene_id_str = str(scene.id)
+
+        # Scene information
         self._scene = scene
-        self._attr_unique_id = scene_id_str
+        self._attr_name = scene.name
+        self._attr_unique_id = str(scene.id)
+
+        # Room information
+        room = scene.room
+        room_name = room.name
+        room_id_str = str(room.id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, scene_id_str)},
+            identifiers={(DOMAIN, room_id_str)},
             manufacturer=MANUFACTURER,
-            model="Scene",
-            name=scene.name,
-            serial_number=scene_id_str,
-            suggested_area=scene.room.name,
+            model="Room",
+            name=room_name,
+            serial_number=room_id_str,
+            suggested_area=room_name,
             via_device=(DOMAIN, config_entry_id),
             configuration_url=f"http://{scene.host}/control",
         )

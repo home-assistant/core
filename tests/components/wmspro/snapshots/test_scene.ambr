@@ -3,17 +3,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Gute Nacht',
+      'friendly_name': 'Raum 0 Gute Nacht',
     }),
     'context': <ANY>,
-    'entity_id': 'scene.gute_nacht',
+    'entity_id': 'scene.raum_0_gute_nacht',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_scene_device
+# name: test_scene_room_device
   DeviceRegistryEntrySnapshot({
     'area_id': 'raum_0',
     'config_entries': <ANY>,
@@ -27,19 +27,19 @@
     'identifiers': set({
       tuple(
         'wmspro',
-        '688966',
+        '42581',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
-    'model': 'Scene',
+    'model': 'Room',
     'model_id': None,
-    'name': 'Gute Nacht',
+    'name': 'Raum 0',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': '688966',
+    'serial_number': '42581',
     'suggested_area': 'Raum 0',
     'sw_version': None,
     'via_device_id': <ANY>,
