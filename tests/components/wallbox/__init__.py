@@ -74,6 +74,101 @@ test_response_bidir = {
     },
 }
 
+test_response_sessions = {
+    "meta": {"count": 2},
+    "links": {
+        "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
+    },
+    "data": [
+        {
+            "type": "charger_log_session",
+            "id": "123456789",
+            "attributes": {
+                "group": 12345,
+                "charger": 12345,
+                "user": 12345,
+                "start": 1728417604,
+                "end": 1728539458,
+                "energy": 15.06,
+                "discharged_energy": 0,
+                "mid_energy": 0,
+                "green_energy": 0,
+                "time": 13577,
+                "discharging_time": 0,
+                "cost": 6.024,
+                "cost_savings": 0,
+                "cost_unit": "€",
+                "currency": {
+                    "id": 1,
+                    "name": "Euro Member Countries",
+                    "symbol": "€",
+                    "code": "EUR",
+                },
+                "range": 125,
+                "group_name": "Family",
+                "base_group_name": "Family",
+                "charger_name": "Commander 2 SN 12345",
+                "user_subgroup": "Family",
+                "user_name": "user",
+                "user_email": "test.test@test.com",
+                "user_rfid": None,
+                "user_is_rfid": 0,
+                "user_plate": None,
+                "user_extra_information": None,
+                "energy_unit": "kWh",
+                "amount": None,
+                "service_price": None,
+                "service_time": None,
+                "tax_rate": None,
+                "tax_sales": None,
+            },
+        },
+        {
+            "type": "charger_log_session",
+            "id": "987654321",
+            "attributes": {
+                "group": 12345,
+                "charger": 12345,
+                "user": 12345,
+                "start": 1728331202,
+                "end": 1728366534,
+                "energy": 16.139,
+                "discharged_energy": 0,
+                "mid_energy": 0,
+                "green_energy": 0,
+                "time": 14480,
+                "discharging_time": 0,
+                "cost": 6.4556,
+                "cost_savings": 0,
+                "cost_unit": "€",
+                "currency": {
+                    "id": 1,
+                    "name": "Euro Member Countries",
+                    "symbol": "€",
+                    "code": "EUR",
+                },
+                "range": 134,
+                "group_name": "Family",
+                "base_group_name": "Family",
+                "charger_name": "Commander 2 SN 12345",
+                "user_subgroup": "Family",
+                "user_name": "test",
+                "user_email": "test.test@test.com",
+                "user_rfid": None,
+                "user_is_rfid": 0,
+                "user_plate": None,
+                "user_extra_information": None,
+                "energy_unit": "kWh",
+                "amount": None,
+                "service_price": None,
+                "service_time": None,
+                "tax_rate": None,
+                "tax_sales": None,
+            },
+        },
+    ],
+}
+
 
 authorisation_response = {
     "data": {
@@ -118,6 +213,11 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
             json=test_response,
             status_code=HTTPStatus.OK,
         )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
+            status_code=HTTPStatus.OK,
+        )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
@@ -139,6 +239,11 @@ async def setup_integration_bidir(hass: HomeAssistant, entry: MockConfigEntry) -
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_bidir,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(
@@ -164,6 +269,11 @@ async def setup_integration_connection_error(
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.FORBIDDEN,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.FORBIDDEN,
         )
         mock_request.put(
@@ -192,6 +302,11 @@ async def setup_integration_read_only(
             json=test_response,
             status_code=HTTPStatus.OK,
         )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
+            status_code=HTTPStatus.OK,
+        )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json=test_response,
@@ -216,6 +331,11 @@ async def setup_integration_platform_not_ready(
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(

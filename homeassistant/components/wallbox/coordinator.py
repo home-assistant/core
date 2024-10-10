@@ -179,7 +179,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         events = self._get_sessions(
-            data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
+            self._station,
             dt_util.now() - datetime.timedelta(days=30),
             dt_util.now(),
         )
@@ -216,54 +216,29 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
-        events: list[WallboxEvent] = []
-
+        _LOGGER.warning(data)
         tzone = dt_util.get_default_time_zone()
-        for event in data["data"]:
-            if event["type"] == "charger_charging_session":
-                events.append(
-                    WallboxEvent(
-                        charger_name=event["attributes"]["charger_name"],
-                        username=event["attributes"]["user_name"],
-                        session_id=event["attributes"]["id"],
-                        currency=event["attributes"]["currency_code"],
-                        session_type=event["attributes"]["session_type"],
-                        serial_number=event["attributes"]["charger_id"],
-                        energy=event["attributes"]["energy"],
-                        mid_energy=event["attributes"]["mid_energy"],
-                        cost_kw=event["attributes"]["energy_price"],
-                        session_cost=event["attributes"]["total_cost"],
-                        start=datetime.datetime.fromtimestamp(
-                            event["attributes"]["start_time"], tzone
-                        ),
-                        end=datetime.datetime.fromtimestamp(
-                            event["attributes"]["end_time"], tzone
-                        ),
-                        summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
-                    )
-                )
-            elif event["type"] == "charger_log_session":
-                events.append(
-                    WallboxEvent(
-                        charger_name=event["attributes"]["charger_name"],
-                        username=event["attributes"]["user_name"],
-                        session_id=event["id"],
-                        currency=event["attributes"]["currency"]["code"],
-                        session_type="",
-                        serial_number=event["attributes"]["charger"],
-                        energy=event["attributes"]["energy"],
-                        mid_energy=event["attributes"]["mid_energy"],
-                        cost_kw=0,
-                        session_cost=event["attributes"]["cost"],
-                        start=datetime.datetime.fromtimestamp(
-                            event["attributes"]["start"], tzone
-                        ),
-                        end=datetime.datetime.fromtimestamp(
-                            event["attributes"]["end"], tzone
-                        ),
-                        summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
-                    )
-                )
+        events: list[WallboxEvent] = [
+            WallboxEvent(
+                charger_name=event["attributes"]["charger_name"],
+                username=event["attributes"]["user_name"],
+                session_id=event["id"],
+                currency=event["attributes"]["currency"]["code"],
+                session_type="",
+                serial_number=event["attributes"]["charger"],
+                energy=event["attributes"]["energy"],
+                mid_energy=event["attributes"]["mid_energy"],
+                cost_kw=0,
+                session_cost=event["attributes"]["cost"],
+                start=datetime.datetime.fromtimestamp(
+                    event["attributes"]["start"], tzone
+                ),
+                end=datetime.datetime.fromtimestamp(event["attributes"]["end"], tzone),
+                summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
+            )
+            for event in data["data"]
+            if event["type"] == "charger_log_session"
+        ]
 
         return events
 
