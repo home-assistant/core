@@ -1,8 +1,41 @@
 {
   "entity": {
     "switch": {
+      "auto_mode": {
+        "default": "mdi:cogs"
+      },
+      "express_mode": {
+        "default": "mdi:snowflake-variant"
+      },
+      "hot_water_mode": {
+        "default": "mdi:list-status"
+      },
+      "humidity_warm_mode": {
+        "default": "mdi:heat-wave"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "mood_lamp_state": {
+        "default": "mdi:lamp"
+      },
       "operation_power": {
         "default": "mdi:power"
+      },
+      "optimal_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "power_save_enabled": {
+        "default": "mdi:hydro-power"
+      },
+      "rapid_freeze": {
+        "default": "mdi:snowflake"
+      },
+      "sleep_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "uv_nano": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
@@ -96,6 +129,47 @@
       },
       "sleep_timer_relative_hour_to_stop_for_location": {
         "default": "mdi:bed-clock"
+      }
+    },
+    "select": {
+      "wind_strength": {
+        "default": "mdi:wind-power-outline"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "operation_mode": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "operation_mode_for_location": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
+      },
+      "cook_mode": {
+        "default": "mdi:chef-hat"
+      },
+      "cook_mode_for_location": {
+        "default": "mdi:chef-hat"
+      },
+      "light_brightness": {
+        "default": "mdi:list-status"
+      },
+      "wind_angle": {
+        "default": "mdi:rotate-360"
+      },
+      "display_light": {
+        "default": "mdi:brightness-6"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
       }
     },
     "sensor": {
