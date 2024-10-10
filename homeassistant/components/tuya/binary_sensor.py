@@ -397,4 +397,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
 
-        return self.device.status[dpcode] == self.entity_description.on_value
+        state = self.device.status[dpcode]
+        if isinstance(state, str):
+            state = state.lower() in ["true", "on", "1"]
+
+        return state == self.entity_description.on_value

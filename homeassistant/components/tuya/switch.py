@@ -765,7 +765,10 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        state = self.device.status.get(self.entity_description.key, False)
+        if isinstance(state, str):
+            state = state.lower() in ["true", "on", "1"]
+        return state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
