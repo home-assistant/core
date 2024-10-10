@@ -130,6 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"Sense Trends {email}",
         update_method=_async_update_trend,
         update_interval=timedelta(seconds=300),
