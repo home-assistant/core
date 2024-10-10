@@ -1,5 +1,6 @@
 """Tests for the update coordinator."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
@@ -19,9 +20,19 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -846,3 +857,67 @@ async def test_config_entry(hass: HomeAssistant) -> None:
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_handlers() -> Generator[None]:
+    """Mock config flows."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("mock_handlers")
+async def test_config_entry_dispatcher(hass: HomeAssistant) -> None:
+    """Test behavior of coordinator.entry."""
+
+    async def _async_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setup entry."""
+        _LOGGER.info("Setup entry %s", entry.entry_id)
+
+        hass.data[entry.entry_id] = {}
+
+        @callback
+        def _create_coordinator(name: str, **kwargs) -> None:
+            hass.data[entry.entry_id][name] = update_coordinator.DataUpdateCoordinator[
+                int
+            ](hass, _LOGGER, name=entry.title, **kwargs)
+
+        _create_coordinator("first_coordinator")
+        async_dispatcher_connect(hass, "create_coordinator", _create_coordinator)
+
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=_async_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry1 = MockConfigEntry(domain="comp", title="Entry 1")
+    entry1.add_to_hass(hass)
+
+    assert config_entries.current_entry.get() is None
+    assert entry1.state is config_entries.ConfigEntryState.NOT_LOADED
+    await hass.config_entries.async_setup(entry1.entry_id)
+    assert entry1.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is None
+
+    assert entry1.entry_id in hass.data
+    assert hass.data[entry1.entry_id]["first_coordinator"].config_entry is entry1
+    assert "second_coordinator" not in hass.data[entry1.entry_id]
+    async_dispatcher_send(hass, "create_coordinator", "second_coordinator")
+    assert hass.data[entry1.entry_id]["first_coordinator"].config_entry is entry1
+    assert hass.data[entry1.entry_id]["second_coordinator"].config_entry is None
