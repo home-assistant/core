@@ -71,7 +71,7 @@ async def test_cover_update(
     assert len(mock_hub_status_prod_awning.mock_calls) == 3
 
 
-async def test_cover_close_and_open(
+async def test_cover_open_and_close(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
@@ -87,27 +87,8 @@ async def test_cover_close_and_open(
 
     entity = hass.states.get("cover.markise")
     assert entity is not None
-    assert entity.state == "open"
-    assert entity.attributes["current_position"] == 100
-
-    with patch(
-        "wmspro.destination.Destination.refresh",
-        return_value=True,
-    ):
-        before = len(mock_hub_status_prod_awning.mock_calls)
-
-        await hass.services.async_call(
-            Platform.COVER,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-
-        entity = hass.states.get("cover.markise")
-        assert entity is not None
-        assert entity.state == "closed"
-        assert entity.attributes["current_position"] == 0
-        assert len(mock_hub_status_prod_awning.mock_calls) == before
+    assert entity.state == "closed"
+    assert entity.attributes["current_position"] == 0
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -128,8 +109,27 @@ async def test_cover_close_and_open(
         assert entity.attributes["current_position"] == 100
         assert len(mock_hub_status_prod_awning.mock_calls) == before
 
+    with patch(
+        "wmspro.destination.Destination.refresh",
+        return_value=True,
+    ):
+        before = len(mock_hub_status_prod_awning.mock_calls)
 
-async def test_cover_move(
+        await hass.services.async_call(
+            Platform.COVER,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity.entity_id},
+            blocking=True,
+        )
+
+        entity = hass.states.get("cover.markise")
+        assert entity is not None
+        assert entity.state == "closed"
+        assert entity.attributes["current_position"] == 0
+        assert len(mock_hub_status_prod_awning.mock_calls) == before
+
+
+async def test_cover_open_to_pos(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
@@ -137,7 +137,7 @@ async def test_cover_move(
     mock_hub_status_prod_awning: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
-    """Test that a cover entity is moved and closed correctly."""
+    """Test that a cover entity is opened to correct position."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
@@ -145,8 +145,8 @@ async def test_cover_move(
 
     entity = hass.states.get("cover.markise")
     assert entity is not None
-    assert entity.state == "open"
-    assert entity.attributes["current_position"] == 100
+    assert entity.state == "closed"
+    assert entity.attributes["current_position"] == 0
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -168,7 +168,7 @@ async def test_cover_move(
         assert len(mock_hub_status_prod_awning.mock_calls) == before
 
 
-async def test_cover_move_and_stop(
+async def test_cover_open_and_stop(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
@@ -176,7 +176,7 @@ async def test_cover_move_and_stop(
     mock_hub_status_prod_awning: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
-    """Test that a cover entity is moved and closed correctly."""
+    """Test that a cover entity is opened and stopped correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
@@ -184,8 +184,8 @@ async def test_cover_move_and_stop(
 
     entity = hass.states.get("cover.markise")
     assert entity is not None
-    assert entity.state == "open"
-    assert entity.attributes["current_position"] == 100
+    assert entity.state == "closed"
+    assert entity.attributes["current_position"] == 0
 
     with patch(
         "wmspro.destination.Destination.refresh",
