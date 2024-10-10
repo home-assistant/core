@@ -583,15 +583,19 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
+        return await self.async_step_reconfigure_confirm()
 
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfigure flow."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_HOST: entry.options[CONF_HOST],
-            CONF_PORT: entry.options[CONF_PORT],
-            CONF_USERNAME: entry.data.get(CONF_USERNAME),
-            CONF_PASSWORD: entry.data.get(CONF_PASSWORD),
+            CONF_HOST: reconfigure_entry.options[CONF_HOST],
+            CONF_PORT: reconfigure_entry.options[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
         }
 
         if user_input:
@@ -608,24 +612,23 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 password = user_input.pop(CONF_PASSWORD, None)
                 username = user_input.pop(CONF_USERNAME, None)
-                new_data = entry.data | {
+                new_data = reconfigure_entry.data | {
                     CONF_PASSWORD: password,
                     CONF_USERNAME: username,
                 }
-                new_options = entry.options | {
+                new_options = reconfigure_entry.options | {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    entry,
+                    reconfigure_entry,
                     data=new_data,
                     options=new_options,
-                    reason="reconfigure_successful",
                     reload_even_if_entry_is_unchanged=False,
                 )
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 DATA_SCHEMA_EDIT_CONTROLLER, suggested_values
             ),

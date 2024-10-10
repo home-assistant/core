@@ -348,8 +348,6 @@ class LazyState(State):
 
     __slots__ = [
         "_row",
-        "entity_id",
-        "state",
         "_attributes",
         "_last_changed",
         "_last_updated",

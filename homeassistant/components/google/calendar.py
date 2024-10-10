@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, Calendar, DateOrDatetime, Event
+from gcal_sync.model import AccessRole, Calendar, DateOrDatetime, Event, EventTypeEnum
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -84,18 +84,19 @@ RRULE_PREFIX = "RRULE:"
 SERVICE_CREATE_EVENT = "create_event"
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class GoogleCalendarEntityDescription(CalendarEntityDescription):
     """Google calendar entity description."""
 
-    name: str
-    entity_id: str
+    name: str | None
+    entity_id: str | None
     read_only: bool
     ignore_availability: bool
     offset: str | None
     search: str | None
     local_sync: bool
     device_id: str
+    working_location: bool = False
 
 
 def _get_entity_descriptions(
@@ -142,22 +143,42 @@ def _get_entity_descriptions(
         ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
             read_only = True
             local_sync = False
-        entity_descriptions.append(
-            GoogleCalendarEntityDescription(
-                key=key,
-                name=data[CONF_NAME].capitalize(),
-                entity_id=generate_entity_id(
-                    ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
-                ),
-                read_only=read_only,
-                ignore_availability=data.get(CONF_IGNORE_AVAILABILITY, False),
-                offset=data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET),
-                search=search,
-                local_sync=local_sync,
-                entity_registry_enabled_default=entity_enabled,
-                device_id=data[CONF_DEVICE_ID],
-            )
+        entity_description = GoogleCalendarEntityDescription(
+            key=key,
+            name=data[CONF_NAME].capitalize(),
+            entity_id=generate_entity_id(
+                ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
+            ),
+            read_only=read_only,
+            ignore_availability=data.get(CONF_IGNORE_AVAILABILITY, False),
+            offset=data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET),
+            search=search,
+            local_sync=local_sync,
+            entity_registry_enabled_default=entity_enabled,
+            device_id=data[CONF_DEVICE_ID],
         )
+        entity_descriptions.append(entity_description)
+        _LOGGER.debug(
+            "calendar_item.primary=%s, search=%s, calendar_item.access_role=%s - %s",
+            calendar_item.primary,
+            search,
+            calendar_item.access_role,
+            local_sync,
+        )
+        if calendar_item.primary and local_sync:
+            _LOGGER.debug("work location entity")
+            # Create an optional disabled by default entity for Work Location
+            entity_descriptions.append(
+                dataclasses.replace(
+                    entity_description,
+                    key=f"{key}-work-location",
+                    translation_key="working_location",
+                    working_location=True,
+                    name=None,
+                    entity_id=None,
+                    entity_registry_enabled_default=False,
+                )
+            )
     return entity_descriptions
 
 
@@ -233,12 +254,13 @@ async def async_setup_entry(
                     entity_registry.async_remove(
                         entity_entry.entity_id,
                     )
+            _LOGGER.debug("Creating entity with unique_id=%s", unique_id)
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
             if not entity_description.local_sync:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
-                    entity_description.name,
+                    entity_description.name or entity_description.key,
                     calendar_id,
                     entity_description.search,
                 )
@@ -257,7 +279,7 @@ async def async_setup_entry(
                 coordinator = CalendarSyncUpdateCoordinator(
                     hass,
                     sync,
-                    entity_description.name,
+                    entity_description.name or entity_description.key,
                 )
             entities.append(
                 GoogleCalendarEntity(
@@ -310,12 +332,15 @@ class GoogleCalendarEntity(
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
+        _LOGGER.debug("entity_description.entity_id=%s", entity_description.entity_id)
+        _LOGGER.debug("entity_description=%s", entity_description)
         self.calendar_id = calendar_id
         self.entity_description = entity_description
         self._ignore_availability = entity_description.ignore_availability
         self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
-        self.entity_id = entity_description.entity_id
+        if entity_description.entity_id:
+            self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
         if not entity_description.read_only:
             self._attr_supported_features = (
@@ -343,6 +368,8 @@ class GoogleCalendarEntity(
 
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
+        if event.event_type == EventTypeEnum.WORKING_LOCATION:
+            return self.entity_description.working_location
         if self._ignore_availability:
             return True
         return event.transparency == OPAQUE

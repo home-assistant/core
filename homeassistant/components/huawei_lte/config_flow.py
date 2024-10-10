@@ -60,6 +60,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    manufacturer: str | None = None
+    url: str | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -81,10 +84,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_URL,
-                        default=user_input.get(
-                            CONF_URL,
-                            self.context.get(CONF_URL, ""),
-                        ),
+                        default=user_input.get(CONF_URL, self.url or ""),
                     ): str,
                     vol.Optional(
                         CONF_VERIFY_SSL,
@@ -241,7 +241,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input.update(
             {
                 CONF_MAC: get_device_macs(info, wlan_settings),
-                CONF_MANUFACTURER: self.context.get(CONF_MANUFACTURER),
+                CONF_MANUFACTURER: self.manufacturer,
             }
         )
 
@@ -302,11 +302,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 "title_placeholders": {
                     CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-                },
-                CONF_MANUFACTURER: discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER),
-                CONF_URL: url,
+                    or "Huawei LTE"
+                }
             }
         )
+        self.manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
+        self.url = url
         return await self._async_show_user_form()
 
     async def async_step_reauth(

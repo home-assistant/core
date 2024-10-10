@@ -17,7 +17,6 @@ from homeassistant.components.axis.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
-    SOURCE_RECONFIGURE,
     SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -240,13 +239,7 @@ async def test_reconfiguration_flow_update_configuration(
     assert config_entry_setup.data[CONF_USERNAME] == "root"
     assert config_entry_setup.data[CONF_PASSWORD] == "pass"
 
-    result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": config_entry_setup.entry_id,
-        },
-    )
+    result = await config_entry_setup.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

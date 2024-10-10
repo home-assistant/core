@@ -600,3 +600,26 @@ async def test_firmware_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+
+
+async def test_new_device_discovered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry is reloaded when a new camera or chime is detected."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_connect.logout.reset_mock()
+
+    assert reolink_connect.logout.call_count == 0
+    reolink_connect.new_devices = True
+
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_connect.logout.call_count == 1

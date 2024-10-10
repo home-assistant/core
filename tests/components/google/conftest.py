@@ -98,12 +98,21 @@ def calendar_access_role() -> str:
     return "owner"
 
 
+@pytest.fixture
+def calendar_is_primary() -> bool:
+    """Set if the calendar is the primary or not."""
+    return False
+
+
 @pytest.fixture(name="test_api_calendar")
-def api_calendar(calendar_access_role: str) -> dict[str, Any]:
+def api_calendar(
+    calendar_access_role: str, calendar_is_primary: bool
+) -> dict[str, Any]:
     """Return a test calendar object used in API responses."""
     return {
         **TEST_API_CALENDAR,
         "accessRole": calendar_access_role,
+        "primary": calendar_is_primary,
     }
 
 
