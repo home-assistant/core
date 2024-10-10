@@ -93,6 +93,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aidot": {
+      "name": "AiDot Lights Local",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airgradient": {
       "name": "AirGradient",
       "integration_type": "device",
