@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.3
+RestrictedPython==7.4
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -347,7 +347,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.4.2
+aioshelly==12.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -469,7 +469,7 @@ asyncarve==0.1.1
 asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
-auroranoaa==0.0.3
+auroranoaa==0.0.5
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
@@ -783,7 +783,7 @@ freebox-api==1.1.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.13.2
+fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
 fyta_cli==0.6.7
@@ -943,7 +943,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.57
+holidays==0.58
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241002.2
@@ -990,7 +990,7 @@ idasen-ha==2.6.2
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.5
+imgw_pib==1.0.6
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.3-1
@@ -1159,7 +1159,7 @@ mopeka-iot-ble==0.8.0
 motionblinds==0.6.25
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.1.1
+motionblindsble==0.1.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1399,7 +1399,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.9.0
+pyDuotecno==2024.10.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -1499,7 +1499,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.22
+pyeconet==0.1.23
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -1867,7 +1867,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.4
+python-kasa[speedups]==0.7.5
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.15
@@ -1925,7 +1925,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.7
+pytouchlinesl==0.1.8
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -1983,7 +1983,7 @@ pywilight==0.0.74
 pywizlight==0.5.14
 
 # homeassistant.components.wmspro
-pywmspro==0.2.0
+pywmspro==0.2.1
 
 # homeassistant.components.ws66i
 pyws66i==1.1

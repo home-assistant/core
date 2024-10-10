@@ -38,6 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -395,6 +396,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        if service.service == SERVICE_ADDON_UPDATE:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "update_service_deprecated",
+                breaks_in_ha_version="2025.5",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="update_service_deprecated",
+            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()

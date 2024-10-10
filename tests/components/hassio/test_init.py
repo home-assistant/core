@@ -24,7 +24,7 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -510,6 +510,7 @@ async def test_service_calls(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
     addon_installed,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Call service and check the API calls behind that."""
     with (
@@ -542,6 +543,7 @@ async def test_service_calls(
     await hass.services.async_call("hassio", "addon_stop", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_restart", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_update", {"addon": "test"})
+    assert (DOMAIN, "update_service_deprecated") in issue_registry.issues
     await hass.services.async_call(
         "hassio", "addon_stdin", {"addon": "test", "input": "test"}
     )
