@@ -19,7 +19,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Updating FRITZ!Box Tools - configuration",
         "description": "Update FRITZ!Box Tools configuration for: {host}.",
         "data": {
