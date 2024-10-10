@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -54,6 +55,7 @@ from .const import (
     CONF_VIA_DEVICE,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    ENTITY_PLATFORMS,
     SUPPORTED_COMPONENTS,
 )
 from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
@@ -184,9 +186,25 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     }
 )
 
-COMPONENT_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): vol.In(SUPPORTED_COMPONENTS)}
+UNIQUE_ID_SCHEMA = vol.Schema(
+    {vol.Required(CONF_UNIQUE_ID): cv.string},
 ).extend({}, extra=True)
+
+
+def check_unique_id(config: dict[str, Any]) -> dict[str, Any]:
+    """Check if a unique ID is set in case an entity platform is configured."""
+    platform = config[CONF_PLATFORM]
+    if platform in ENTITY_PLATFORMS and len(config.keys()) > 1:
+        UNIQUE_ID_SCHEMA(config)
+    return config
+
+
+COMPONENT_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {vol.Required(CONF_PLATFORM): vol.In(SUPPORTED_COMPONENTS)},
+    ).extend({}, extra=True),
+    check_unique_id,
+)
 
 DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {

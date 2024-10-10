@@ -277,6 +277,7 @@ async def test_invalid_device_discovery_config(
         "homeassistant/device/bla/config",
         '{ "o": {"name": "foobar"}, "cmp": '
         '{ "acp1": {"name": "abc", "state_topic": "home/alarm", '
+        '"unique_id": "very_unique",'
         '"command_topic": "home/alarm/set", '
         '"platform":"alarm_control_panel"}}}',
     )
@@ -351,11 +352,14 @@ async def test_correct_config_discovery(
             "homeassistant/binary_sensor/bla/config",
             (
                 '{"name":"Beer","state_topic": "test-topic",'
-                '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
+                '"unique_id": "very_unique1",'
+                '"o":{"name":"bla2mqtt","sw":"1.0"},'
+                '"dev":{"identifiers":["bla"],"name": "bla"}}',
                 '{"name":"Milk","state_topic": "test-topic",'
+                '"unique_id": "very_unique1",'
                 '"o":{"name":"bla2mqtt","sw":"1.1",'
                 '"url":"https://bla2mqtt.example.com/support"},'
-                '"dev":{"identifiers":["bla"]}}',
+                '"dev":{"identifiers":["bla"],"name": "bla"}}',
             ),
             "bla",
         ),
@@ -363,13 +367,16 @@ async def test_correct_config_discovery(
             "homeassistant/device/bla/config",
             (
                 '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+                '"unique_id": "very_unique1",'
                 '"name":"Beer","state_topic": "test-topic"}},'
-                '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
+                '"o":{"name":"bla2mqtt","sw":"1.0"},'
+                '"dev":{"identifiers":["bla"],"name": "bla"}}',
                 '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+                '"unique_id": "very_unique1",'
                 '"name":"Milk","state_topic": "test-topic"}},'
                 '"o":{"name":"bla2mqtt","sw":"1.1",'
                 '"url":"https://bla2mqtt.example.com/support"},'
-                '"dev":{"identifiers":["bla"]}}',
+                '"dev":{"identifiers":["bla"],"name": "bla"}}',
             ),
             "bla bin_sens1",
         ),
@@ -392,10 +399,10 @@ async def test_discovery_integration_info(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.bla_beer")
 
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "bla Beer"
 
     assert (
         "Processing device discovery for 'bla' from external "
@@ -413,10 +420,10 @@ async def test_discovery_integration_info(
         payloads[1],
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.bla_beer")
 
     assert state is not None
-    assert state.name == "Milk"
+    assert state.name == "bla Milk"
 
     assert (
         f"Component has already been discovered: binary_sensor {discovery_id}"
@@ -727,32 +734,33 @@ async def test_discovery_migration_to_single_base(
 
 
 @pytest.mark.parametrize(
-    ("discovery_topic", "payload", "discovery_id"),
+    ("discovery_topic", "payload"),
     [
         (
             "homeassistant/binary_sensor/bla/config",
-            '{"name":"Beer","state_topic": "test-topic",'
+            '{"state_topic": "test-topic",'
+            '"name":"bla","unique_id":"very_unique1",'
             '"avty": {"topic": "avty-topic"},'
-            '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
-            "bla",
+            '"o":{"name":"bla2mqtt","sw":"1.0"},'
+            '"dev":{"identifiers":["bla"],"name":"Beer"}}',
         ),
         (
             "homeassistant/device/bla/config",
             '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
-            '"name":"Beer","state_topic": "test-topic"}},'
+            '"name":"bla","unique_id":"very_unique1",'
+            '"state_topic": "test-topic"}},'
             '"avty": {"topic": "avty-topic"},'
-            '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
-            "bin_sens1 bla",
+            '"o":{"name":"bla2mqtt","sw":"1.0"},'
+            '"dev":{"identifiers":["bla"],"name":"Beer"}}',
         ),
     ],
+    ids=["component", "device"],
 )
 async def test_discovery_availability(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     discovery_topic: str,
     payload: str,
-    discovery_id: str,
 ) -> None:
     """Test device discovery with shared availability mapping."""
     await mqtt_mock_entry()
@@ -762,9 +770,9 @@ async def test_discovery_availability(
         payload,
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.beer_bla")
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "Beer bla"
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(
@@ -773,7 +781,7 @@ async def test_discovery_availability(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.beer_bla")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -783,41 +791,40 @@ async def test_discovery_availability(
         "ON",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.beer_bla")
     assert state is not None
     assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
-    ("discovery_topic", "payload", "discovery_id"),
+    ("discovery_topic", "payload"),
     [
         (
             "homeassistant/device/bla/config",
             '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '"unique_id":"very_unique",'
             '"avty": {"topic": "avty-topic-component"},'
             '"name":"Beer","state_topic": "test-topic"}},'
             '"avty": {"topic": "avty-topic-device"},'
             '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
-            "bin_sens1 bla",
         ),
         (
             "homeassistant/device/bla/config",
             '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '"unique_id":"very_unique",'
             '"availability_topic": "avty-topic-component",'
             '"name":"Beer","state_topic": "test-topic"}},'
             '"availability_topic": "avty-topic-device",'
             '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
-            "bin_sens1 bla",
         ),
     ],
+    ids=["test1", "test2"],
 )
 async def test_discovery_component_availability_overridden(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     discovery_topic: str,
     payload: str,
-    discovery_id: str,
 ) -> None:
     """Test device discovery with overridden shared availability mapping."""
     await mqtt_mock_entry()
@@ -827,7 +834,7 @@ async def test_discovery_component_availability_overridden(
         payload,
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.none_beer")
     assert state is not None
     assert state.name == "Beer"
     assert state.state == STATE_UNAVAILABLE
@@ -838,7 +845,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.none_beer")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -848,7 +855,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.none_beer")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -858,7 +865,7 @@ async def test_discovery_component_availability_overridden(
         "ON",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.none_beer")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -868,57 +875,57 @@ async def test_discovery_component_availability_overridden(
     [
         (
             "homeassistant/binary_sensor/bla/config",
-            '{ "name": "Beer", "state_topic": "test-topic", "o": "bla2mqtt" }',
+            '{ "name": "Beer", "unique_id": "very_unique", '
+            '"state_topic": "test-topic", "o": "bla2mqtt" }',
             "Unable to parse origin information from discovery message",
         ),
         (
             "homeassistant/binary_sensor/bla/config",
-            '{ "name": "Beer", "state_topic": "test-topic", "o": 2.0 }',
+            '{ "name": "Beer", "unique_id": "very_unique", '
+            '"state_topic": "test-topic", "o": 2.0 }',
             "Unable to parse origin information from discovery message",
         ),
         (
             "homeassistant/binary_sensor/bla/config",
-            '{ "name": "Beer", "state_topic": "test-topic", "o": null }',
+            '{ "name": "Beer", "unique_id": "very_unique", '
+            '"state_topic": "test-topic", "o": null }',
             "Unable to parse origin information from discovery message",
         ),
         (
             "homeassistant/binary_sensor/bla/config",
-            '{ "name": "Beer", "state_topic": "test-topic", "o": {"sw": "bla2mqtt"} }',
+            '{ "name": "Beer", "unique_id": "very_unique", '
+            '"state_topic": "test-topic", "o": {"sw": "bla2mqtt"} }',
             "Unable to parse origin information from discovery message",
         ),
         (
             "homeassistant/device/bla/config",
             '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
-            '{"platform":"binary_sensor","name":"Beer","state_topic":"test-topic"}'
-            '},"o": "bla2mqtt"'
-            "}",
+            '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
+            '"state_topic":"test-topic"}},"o": "bla2mqtt"}',
             "Invalid MQTT device discovery payload for bla, "
             "expected a dictionary for dictionary value @ data['origin']",
         ),
         (
             "homeassistant/device/bla/config",
             '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
-            '{"platform":"binary_sensor","name":"Beer","state_topic":"test-topic"}'
-            '},"o": 2.0'
-            "}",
+            '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
+            '"state_topic":"test-topic"}},"o": 2.0}',
             "Invalid MQTT device discovery payload for bla, "
             "expected a dictionary for dictionary value @ data['origin']",
         ),
         (
             "homeassistant/device/bla/config",
             '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
-            '{"platform":"binary_sensor","name":"Beer","state_topic":"test-topic"}'
-            '},"o": null'
-            "}",
+            '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
+            '"state_topic":"test-topic"}},"o": null}',
             "Invalid MQTT device discovery payload for bla, "
             "expected a dictionary for dictionary value @ data['origin']",
         ),
         (
             "homeassistant/device/bla/config",
             '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
-            '{"platform":"binary_sensor","name":"Beer","state_topic":"test-topic"}'
-            '},"o": {"sw": "bla2mqtt"}'
-            "}",
+            '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
+            '"state_topic":"test-topic"}},"o": {"sw": "bla2mqtt"}}',
             "Invalid MQTT device discovery payload for bla, "
             "required key not provided @ data['origin']['name']",
         ),
@@ -937,7 +944,7 @@ async def test_discovery_with_invalid_integration_info(
     async_fire_mqtt_message(hass, discovery_topic, config_message)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.none_beer")
 
     assert state is None
     assert error_message in caplog.text

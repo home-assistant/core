@@ -161,7 +161,7 @@ MQTT_CONNECTION_STATE = "mqtt_connection_state"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-RELOADABLE_PLATFORMS = [
+ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
