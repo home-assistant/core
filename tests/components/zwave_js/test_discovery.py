@@ -430,7 +430,9 @@ async def test_rediscovery(
 
 
 async def test_aeotec_smart_switch_7(
-    hass: HomeAssistant, client, aeotec_smart_switch_7, integration
+    hass: HomeAssistant,
+    aeotec_smart_switch_7: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that Smart Switch 7 has a light and a switch entity."""
     state = hass.states.get("light.smart_switch_7")
