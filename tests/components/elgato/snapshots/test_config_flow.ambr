@@ -34,10 +34,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'CN11A1A00001',
       'unique_id': 'CN11A1A00001',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'CN11A1A00001',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -79,10 +83,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'CN11A1A00001',
       'unique_id': 'CN11A1A00001',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'CN11A1A00001',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -123,10 +131,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'CN11A1A00001',
       'unique_id': 'CN11A1A00001',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'CN11A1A00001',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
