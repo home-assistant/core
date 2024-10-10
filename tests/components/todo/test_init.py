@@ -1145,6 +1145,9 @@ async def test_add_item_intent(
         assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.success_results[0].name == "list 1"
+    assert response.success_results[0].type == intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].id == entity1.entity_id
 
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
