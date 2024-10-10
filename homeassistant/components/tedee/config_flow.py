@@ -123,16 +123,10 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Add reconfigure step to allow to reconfigure a config entry."""
         if not user_input:
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
                 data_schema=vol.Schema(
                     {
                         vol.Required(
