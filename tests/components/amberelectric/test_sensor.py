@@ -3,8 +3,9 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.range import Range
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.interval import Interval
+from amberelectric.models.range import Range
 import pytest
 
 from homeassistant.components.amberelectric.const import (
@@ -44,10 +45,10 @@ async def setup_general(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
-        instance.get_current_price = Mock(return_value=GENERAL_CHANNEL)
+        instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value
@@ -68,10 +69,10 @@ async def setup_general_and_controlled_load(
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
-        instance.get_current_price = Mock(
+        instance.get_current_prices = Mock(
             return_value=GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
         )
         assert await async_setup_component(hass, DOMAIN, {})
@@ -92,10 +93,10 @@ async def setup_general_and_feed_in(hass: HomeAssistant) -> AsyncGenerator[Mock]
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
-        instance.get_current_price = Mock(
+        instance.get_current_prices = Mock(
             return_value=GENERAL_CHANNEL + FEED_IN_CHANNEL
         )
         assert await async_setup_component(hass, DOMAIN, {})
@@ -122,11 +123,14 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "general"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == 0.1
+    assert attributes["advanced_price_predicted"] == 0.15
+    assert attributes["advanced_price_high"] == 0.2
     assert attributes.get("range_min") is None
     assert attributes.get("range_max") is None
 
     with_range: list[CurrentInterval] = GENERAL_CHANNEL
-    with_range[0].range = Range(7.8, 12.4)
+    with_range[0].actual_instance.range = Range(min=7.8, max=12.4)
 
     setup_general.get_current_price.return_value = with_range
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -160,6 +164,9 @@ async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> 
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == 0.1
+    assert attributes["advanced_price_predicted"] == 0.15
+    assert attributes["advanced_price_high"] == 0.2
 
 
 @pytest.mark.usefixtures("setup_general_and_feed_in")
@@ -182,6 +189,9 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == -0.1
+    assert attributes["advanced_price_predicted"] == -0.15
+    assert attributes["advanced_price_high"] == -0.2
 
 
 async def test_general_forecast_sensor(
@@ -207,12 +217,15 @@ async def test_general_forecast_sensor(
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
     assert first_forecast["descriptor"] == "very_low"
+    assert first_forecast["advanced_price_low"] == 0.1
+    assert first_forecast["advanced_price_predicted"] == 0.15
+    assert first_forecast["advanced_price_high"] == 0.2
 
     assert first_forecast.get("range_min") is None
     assert first_forecast.get("range_max") is None
 
-    with_range: list[CurrentInterval] = GENERAL_CHANNEL
-    with_range[1].range = Range(7.8, 12.4)
+    with_range: list[Interval] = GENERAL_CHANNEL
+    with_range[1].actual_instance.range = Range(min=7.8, max=12.4)
 
     setup_general.get_current_price.return_value = with_range
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -249,6 +262,9 @@ async def test_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
     assert first_forecast["descriptor"] == "very_low"
+    assert first_forecast["advanced_price_low"] == 0.1
+    assert first_forecast["advanced_price_predicted"] == 0.15
+    assert first_forecast["advanced_price_high"] == 0.2
 
 
 @pytest.mark.usefixtures("setup_general_and_feed_in")
@@ -273,6 +289,9 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
     assert first_forecast["descriptor"] == "very_low"
+    assert first_forecast["advanced_price_low"] == -0.1
+    assert first_forecast["advanced_price_predicted"] == -0.15
+    assert first_forecast["advanced_price_high"] == -0.2
 
 
 @pytest.mark.usefixtures("setup_general")
