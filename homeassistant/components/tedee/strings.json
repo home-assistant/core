@@ -22,7 +22,7 @@
           "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure Tedee",
         "description": "Update the settings of this integration.",
         "data": {
