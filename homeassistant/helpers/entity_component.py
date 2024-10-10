@@ -338,27 +338,18 @@ class EntityComponent(Generic[_EntityT]):
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(
-        self, *, skip_reset: bool = False
-    ) -> ConfigType | None:
+    async def async_prepare_reload(self, *, skip_reset: bool = False) -> ConfigType:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
         """
-        try:
-            conf = await conf_util.async_hass_config_yaml(self.hass)
-        except HomeAssistantError as err:
-            self.logger.error(err)
-            return None
+        conf = await conf_util.async_hass_config_yaml(self.hass)
 
         integration = await async_get_integration(self.hass, self.domain)
 
         processed_conf = await conf_util.async_process_component_and_handle_errors(
-            self.hass, conf, integration
+            self.hass, conf, integration, raise_on_failure=True
         )
-
-        if processed_conf is None:
-            return None
 
         if not skip_reset:
             await self._async_reset()
