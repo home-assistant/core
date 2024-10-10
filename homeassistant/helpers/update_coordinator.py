@@ -70,7 +70,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        # TODO: set default to UNDEFINED once core integrations have been updated
+        config_entry: config_entries.ConfigEntry | None | UndefinedType,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
