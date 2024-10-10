@@ -99,6 +99,12 @@
     },
     "cast_skill": {
       "service": "mdi:creation-outline"
+    },
+    "get_tasks": {
+      "service": "mdi:calendar-export",
+      "sections": {
+        "filter": "mdi:calendar-filter"
+      }
     }
   }
 }
