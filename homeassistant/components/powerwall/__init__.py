@@ -168,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Powerwall site",
         update_method=manager.async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),

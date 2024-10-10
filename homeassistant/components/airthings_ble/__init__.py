@@ -59,6 +59,7 @@ async def async_setup_entry(
     coordinator: AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=_async_update_method,
         update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
