@@ -905,9 +905,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
-        if add_config_entry is not UNDEFINED and add_config_entry_id is UNDEFINED:
-            add_config_entry_id = add_config_entry.entry_id
-
         if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
             config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
             if config_entry is None:
