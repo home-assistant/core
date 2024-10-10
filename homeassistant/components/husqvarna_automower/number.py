@@ -138,7 +138,8 @@ async def async_setup_entry(
             entity_reg, entry.entry_id
         ):
             for work_area_id in removed_work_areas:
-                if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}"):
+                if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}_"):
+                    _LOGGER.info("Deleting: %s", entity_entry.entity_id)
                     entity_reg.async_remove(entity_entry.entity_id)
 
     def _async_work_area_listener() -> None:

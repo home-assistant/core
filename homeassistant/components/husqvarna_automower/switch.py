@@ -91,12 +91,13 @@ async def async_setup_entry(
             if coordinator.data[mower_id].capabilities.stay_out_zones:
                 _stay_out_zones = coordinator.data[mower_id].stay_out_zones
                 if _stay_out_zones is not None:
+                    _current_stay_out_zones = set(current_stay_out_zones[mower_id])
                     received_stay_out_zones = set(_stay_out_zones.zones)
                     new_stay_out_zones = (
-                        received_stay_out_zones - current_stay_out_zones[mower_id]
+                        received_stay_out_zones - _current_stay_out_zones
                     )
                     removed_stay_out_zones = (
-                        current_stay_out_zones[mower_id] - received_stay_out_zones
+                        _current_stay_out_zones - received_stay_out_zones
                     )
                     if new_stay_out_zones:
                         current_stay_out_zones[mower_id].update(new_stay_out_zones)

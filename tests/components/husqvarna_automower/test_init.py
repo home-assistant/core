@@ -220,7 +220,7 @@ async def test_add_work_area(
     """Test adding a work area in runtime."""
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    current_entites = len(
+    current_entites_start = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
     values = mower_list_to_dictionary_dataclass(
@@ -248,32 +248,15 @@ async def test_add_work_area(
     )
     assert (
         current_entites_after_addition
-        == current_entites
+        == current_entites_start
         + ADDITIONAL_NUMBER_ENTITIES
         + ADDITIONAL_SENSOR_ENTITIES
         + ADDITIONAL_SWITCH_ENTITIES
     )
 
-
-async def test_remove_work_area(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test deleting a work area in runtime."""
-    await setup_integration(hass, mock_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    current_entites = len(
-        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    )
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
-    values[TEST_MOWER_ID].work_area_names.remove("Back lawn")
-    values[TEST_MOWER_ID].work_area_dict.pop(654321)
-    values[TEST_MOWER_ID].work_areas.pop(654321)
+    values[TEST_MOWER_ID].work_area_names.remove("new_work_area")
+    values[TEST_MOWER_ID].work_area_dict.pop(1)
+    values[TEST_MOWER_ID].work_areas.pop(1)
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -281,10 +264,4 @@ async def test_remove_work_area(
     current_entites_after_deletion = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    assert (
-        current_entites_after_deletion
-        == current_entites
-        - ADDITIONAL_NUMBER_ENTITIES
-        - ADDITIONAL_SENSOR_ENTITIES
-        - ADDITIONAL_SWITCH_ENTITIES
-    )
+    assert current_entites_after_deletion == current_entites_start
