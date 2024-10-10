@@ -36,7 +36,15 @@
     "tag_options_description": "Add or remove tags from a task.",
     "checklist_options_name": "Checklist",
     "checklist_options_description": "Add, remove, or update status of an item on a task's checklist.",
-    "repeat_name": "Repeat on"
+    "repeat_name": "Repeat on",
+    "reminder_name": "Add reminders",
+    "reminder_description": "Add reminders to a Habitica task.",
+    "remove_reminder_name": "Remove reminders",
+    "remove_reminder_description": "Remove specific reminders from a Habitica task.",
+    "clear_reminder_name": "Clear all reminders",
+    "clear_reminder_description": "Remove all reminders from a Habitica task.",
+    "reminder_options_name": "Reminders",
+    "reminder_options_description": "Add, remove or clear reminders of a Habitica task."
   },
   "config": {
     "abort": {
@@ -605,16 +613,16 @@
           "description": "Remove the due date from the to-do."
         },
         "reminder": {
-          "name": "Add reminders",
-          "description": "Add reminders to a to-do."
+          "name": "[%key:component::habitica::common::reminder_name%]",
+          "description": "[%key:component::habitica::common::reminder_description%]"
         },
         "remove_reminder": {
-          "name": "Remove reminders",
-          "description": "Remove specific reminders from a to-do."
+          "name": "[%key:component::habitica::common::remove_reminder_name%]",
+          "description": "[%key:component::habitica::common::remove_reminder_description%]"
         },
         "clear_reminder": {
-          "name": "Clear all reminders",
-          "description": "Remove all reminders from a to-do."
+          "name": "[%key:component::habitica::common::clear_reminder_name%]",
+          "description": "[%key:component::habitica::common::clear_reminder_description%]"
         },
         "add_checklist_item": {
           "name": "[%key:component::habitica::common::add_checklist_item_name%]",
@@ -643,8 +651,8 @@
           "description": "Set, update or remove due dates of a to-do."
         },
         "reminder_options": {
-          "name": "Reminders",
-          "description": "Add, remove or clear reminders of a to-do."
+          "name": "[%key:component::habitica::common::reminder_options_name%]",
+          "description": "[%key:component::habitica::common::reminder_options_description%]"
         },
         "tag_options": {
           "name": "[%key:component::habitica::common::tag_options_name%]",
@@ -843,6 +851,18 @@
         "streak": {
           "name": "Adjust streak",
           "description": "Adjust or reset the streak counter of the daily."
+        },
+        "reminder": {
+          "name": "[%key:component::habitica::common::reminder_name%]",
+          "description": "[%key:component::habitica::common::reminder_description%]"
+        },
+        "remove_reminder": {
+          "name": "[%key:component::habitica::common::remove_reminder_name%]",
+          "description": "[%key:component::habitica::common::remove_reminder_description%]"
+        },
+        "clear_reminder": {
+          "name": "[%key:component::habitica::common::clear_reminder_name%]",
+          "description": "[%key:component::habitica::common::clear_reminder_description%]"
         }
       },
       "sections": {
@@ -865,6 +885,10 @@
         "developer_options": {
           "name": "[%key:component::habitica::common::developer_options_name%]",
           "description": "[%key:component::habitica::common::developer_options_description%]"
+        },
+        "reminder_options": {
+          "name": "[%key:component::habitica::common::reminder_options_name%]",
+          "description": "[%key:component::habitica::common::reminder_options_description%]"
         }
       }
     }
