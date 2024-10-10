@@ -42,7 +42,7 @@
 # name: test_states[climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20,
+      'current_temperature': 20.2,
       'friendly_name': 'thermostat',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
@@ -52,7 +52,7 @@
       'max_temp': 65536,
       'min_temp': None,
       'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 22,
+      'temperature': 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
