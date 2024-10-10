@@ -4,7 +4,6 @@ from collections.abc import Generator
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from duwi_smarthome_sdk.device_control import ControlDevice
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice
 from duwi_smarthome_sdk.manager import Manager
 import pytest

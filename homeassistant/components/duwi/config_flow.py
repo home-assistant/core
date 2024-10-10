@@ -92,13 +92,12 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     self.houses = house_infos_data.get("data", {}).get("houseInfos", [])
                     return await self.async_step_select_house()
-            else:
-                if status == DuwiCode.LOGIN_ERROR.value:
-                    errors["base"] = "invalid_auth"
-                    placeholders["code"] = status
-                elif status == DuwiCode.SYS_ERROR.value:
-                    errors["base"] = "sys_error"
-                    placeholders["code"] = status
+            elif status == DuwiCode.LOGIN_ERROR.value:
+                errors["base"] = "invalid_auth"
+                placeholders["code"] = status
+            elif status == DuwiCode.SYS_ERROR.value:
+                errors["base"] = "sys_error"
+                placeholders["code"] = status
 
         # Show user input form (with error messages if any).
         return self.async_show_form(
@@ -149,26 +148,30 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             house_no = user_input.get(HOUSE_NO)
-            house_info = houses_dict.get(house_no)
-            house_name = house_info.get(HOUSE_NAME)
+            if house_no is not None:
+                house_info = houses_dict.get(house_no)
+                if house_info is not None:
+                    house_name = house_info.get(HOUSE_NAME)
 
-            # With user's house selection, create an entry for the selected house.
-            return self.async_create_entry(
-                title=house_name,
-                data={
-                    PHONE: self.phone,
-                    PASSWORD: self.password,
-                    ADDRESS: HTTP_ADDRESS,
-                    ACCESS_TOKEN: self.access_token,
-                    REFRESH_TOKEN: self.refresh_token,
-                    WS_ADDRESS: WEBSOCKET_ADDRESS,
-                    APP_KEY: self.app_key,
-                    APP_SECRET: self.app_secret,
-                    HOUSE_NO: user_input[HOUSE_NO],
-                    HOUSE_NAME: houses_dict[user_input[HOUSE_NO]].get(HOUSE_NAME),
-                    HOUSE_KEY: houses_dict[user_input[HOUSE_NO]].get(HOUSE_KEY),
-                },
-            )
+                    # With user's house selection, create an entry for the selected house.
+                    return self.async_create_entry(
+                        title=house_name if house_name else "Default House Name",
+                        data={
+                            PHONE: self.phone,
+                            PASSWORD: self.password,
+                            ADDRESS: HTTP_ADDRESS,
+                            ACCESS_TOKEN: self.access_token,
+                            REFRESH_TOKEN: self.refresh_token,
+                            WS_ADDRESS: WEBSOCKET_ADDRESS,
+                            APP_KEY: self.app_key,
+                            APP_SECRET: self.app_secret,
+                            HOUSE_NO: user_input[HOUSE_NO],
+                            HOUSE_NAME: houses_dict[user_input[HOUSE_NO]].get(
+                                HOUSE_NAME
+                            ),
+                            HOUSE_KEY: houses_dict[user_input[HOUSE_NO]].get(HOUSE_KEY),
+                        },
+                    )
 
         # If no house has been selected yet, show the selection form.
         return self.async_show_form(
