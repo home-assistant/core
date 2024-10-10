@@ -26,3 +26,8 @@ ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"
 ATTR_TASK = "task"
 SERVICE_CAST_SKILL = "cast_skill"
+
+WARRIOR = "warrior"
+ROGUE = "rogue"
+HEALER = "healer"
+MAGE = "wizard"
