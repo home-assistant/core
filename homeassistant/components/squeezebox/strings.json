@@ -110,6 +110,14 @@
       "other_player_count": {
         "name": "Player count off service"
       }
+    },
+    "update": {
+      "newversion": {
+        "name": "Lyrion Music Server"
+      },
+      "newplugins": {
+        "name": "Updated plugins"
+      }
     }
   }
 }
