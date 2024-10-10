@@ -10,6 +10,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.deprecation import deprecated_class
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
@@ -143,6 +144,10 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         )
 
 
+@deprecated_class(
+    "homeassistant.components.home_connect.select.HomeConnectProgramSelectEntity",
+    breaks_in_ha_version="2025.4",
+)
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
