@@ -34,6 +34,4 @@ as are information about units and display precision hints.
 
 In order to make the tests pass, you will also need to perform the following steps:
 1. Add feature fixture into `tests/components/tplink/fixtures/features.json`
-2. Update `homeassistant/components/tplink/strings.json` to translate the entity
-3. Execute `script/setup` to re-generate translations, and lastly,
-4. Execute `pytest tests/components/tplink --snapshot-update` to update the snapshots
+2. Execute `pytest tests/components/tplink --snapshot-update` to update the snapshots
