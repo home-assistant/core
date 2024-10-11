@@ -307,7 +307,7 @@ async def test_play_media_in_queue(
         },
         blocking=True,
     )
-    mock_spotify.return_value.add_to_queue.assert_called_with(media_id)
+    mock_spotify.return_value.add_to_queue.assert_called_with(media_id, None)
 
 
 @pytest.mark.usefixtures("setup_credentials")
