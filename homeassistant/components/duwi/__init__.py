@@ -79,7 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool
 
     # Clean up inappropriate devices
     await cleanup_device_registry(hass, entry)
-    hass.data[DOMAIN].setdefault("existing_house", []).append(entry.data[HOUSE_NO])
 
     # Start global WebSocket listener
     await hass.async_create_task(manager.ws.reconnect())
@@ -130,9 +129,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> boo
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
     ):
-        house_no = entry.data.get(HOUSE_NO)
-        if house_no in hass.data[DOMAIN].get("existing_house"):
-            hass.data[DOMAIN].get("existing_house").remove(house_no)
         await entry.runtime_data.manager.unload(True)
 
     return unload_ok

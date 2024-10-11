@@ -124,15 +124,8 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Placeholders for description placeholders.
         placeholders: dict[str, str] = {}
 
-        # Retrieve the list of pre-existing self.houses to exclude.
-        existing_house = self.hass.data[DOMAIN].get("existing_house", {})
-
         # Create a self.houses list excluding already existing ones.
-        houses_list = {
-            house["houseNo"]: house["houseName"]
-            for house in self.houses
-            if house["houseNo"] not in existing_house
-        }
+        houses_list = {house["houseNo"]: house["houseName"] for house in self.houses}
         # If no self.houses remain, handle the error.
         if len(houses_list) == 0:
             errors["base"] = "no_houses_found_error"
@@ -144,7 +137,6 @@ class DuwiConfigFlow(ConfigFlow, domain=DOMAIN):
                     HOUSE_KEY: house["lanSecretKey"],
                 }
                 for house in self.houses
-                if house["houseNo"] not in existing_house
             }
 
             house_no = user_input.get(HOUSE_NO)
