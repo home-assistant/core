@@ -8,6 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,12 +64,25 @@ async def async_setup_platform(
         CONF_UNIQUE_ID
     )
 
+    registry = er.async_get(hass)
+
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+    )
+
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
+
     async_add_entities(
         [
             TariffSelect(
                 meter,
                 discovery_info[CONF_TARIFFS],
                 conf_meter_unique_id,
+                device_info=device_info,
             )
         ]
     )

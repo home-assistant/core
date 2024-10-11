@@ -215,6 +215,8 @@ async def async_setup_platform(
         )
         return
 
+    registry = er.async_get(hass)
+
     meters = []
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
@@ -228,6 +230,14 @@ async def async_setup_platform(
         )
         conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
+
+        # Validate + resolve entity registry id to entity_id
+        source_entity_id = er.async_validate_entity_id(registry, conf_meter_source)
+
+        device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
 
         suggested_entity_id = None
         if conf_sensor_tariff:
@@ -268,6 +278,7 @@ async def async_setup_platform(
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
+            device_info=device_info,
             suggested_entity_id=suggested_entity_id,
             sensor_always_available=conf_sensor_always_available,
         )
