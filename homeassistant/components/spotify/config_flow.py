@@ -42,7 +42,6 @@ class SpotifyFlowHandler(
         try:
             current_user = await spotify.get_current_user()
         except Exception:  # noqa: BLE001
-            self.logger.exception("Failed to fetch user details")
             return self.async_abort(reason="connection_error")
 
         name = current_user.display_name

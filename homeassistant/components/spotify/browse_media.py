@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from spotifyaio import SpotifyClient
 import yarl
@@ -537,7 +537,8 @@ async def build_item_response(  # noqa: C901
         media_content_type != MediaType.ARTIST or can_play_artist
     )
 
-    assert title
+    if TYPE_CHECKING:
+        assert title
     browse_media = BrowseMedia(
         can_expand=True,
         can_play=can_play,

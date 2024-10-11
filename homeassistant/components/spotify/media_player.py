@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from spotifyaio import (
     Device,
@@ -191,13 +191,15 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
 
         item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
-            assert isinstance(item, Episode)
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
             if item.images:
                 return item.images[0].url
             if item.show and item.show.images:
                 return item.show.images[0].url
             return None
-        assert isinstance(item, Track)
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
         if not item.album.images:
             return None
         return item.album.images[0].url
@@ -217,10 +219,12 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
 
         item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
-            assert isinstance(item, Episode)
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
             return item.show.publisher
 
-        assert isinstance(item, Track)
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
         return ", ".join(artist.name for artist in item.artists)
 
     @property
@@ -231,10 +235,12 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
 
         item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
-            assert isinstance(item, Episode)
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
             return item.show.name
 
-        assert isinstance(item, Track)
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
         return item.album.name
 
     @property
@@ -246,7 +252,8 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             or self.currently_playing.item.type == ItemType.EPISODE
         ):
             return None
-        assert isinstance(self.currently_playing.item, Track)
+        if TYPE_CHECKING:
+            assert isinstance(self.currently_playing.item, Track)
         return self.currently_playing.item.track_number
 
     @property
