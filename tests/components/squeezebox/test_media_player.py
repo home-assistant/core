@@ -690,7 +690,7 @@ async def test_squeezebox_search(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "favorites", "items", "0", "1", "tags:laay", "search:searchstring"
+        "favorites", "items", "0", "1", "search:searchstring"
     )
 
     await hass.services.async_call(
