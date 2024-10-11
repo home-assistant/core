@@ -587,7 +587,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'model0 Energy consumption this year',
+      'friendly_name': 'model0 Electricity consumption this year',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -897,7 +897,7 @@
     'state': '20.8',
   })
 # ---
-# name: test_all_entities[sensor.model0_power_consumption_this_week-entry]
+# name: test_all_entities[sensor.model0_electricity_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -911,7 +911,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_power_consumption_this_week',
+    'entity_id': 'sensor.model0_electricity_consumption_this_week',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -923,7 +923,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Power consumption this week',
+    'original_name': 'Electricity consumption this week',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
