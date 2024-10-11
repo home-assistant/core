@@ -48,8 +48,8 @@ class HeatingProgram(enum.StrEnum):
         ha_preset: str, supported_heating_programs: list[str]
     ) -> str | None:
         """Return the mapped ViCare heating program for the Home Assistant preset."""
-        with suppress(ValueError):
-            for program in supported_heating_programs:
+        for program in supported_heating_programs:
+            with suppress(ValueError):
                 if (
                     VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
                     == ha_preset
