@@ -675,7 +675,7 @@ async def test_squeezebox_search(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "albums", "0", "1", "search:searchstring"
+        "albums", "0", "1", "tags:laay", "search:searchstring"
     )
 
 
