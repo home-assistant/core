@@ -14,7 +14,11 @@ import pytest
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.cover import CommandCover
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SCAN_INTERVAL
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL,
+    CoverState,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -24,7 +28,6 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
-    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -389,7 +392,7 @@ async def test_availability(
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
-    assert entity_state.state == STATE_OPEN
+    assert entity_state.state == CoverState.OPEN
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
