@@ -932,16 +932,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_power_consumption_this_week-state]
+# name: test_all_entities[sensor.model0_electricity_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'model0 Power consumption this week',
+      'friendly_name': 'model0 Electricity consumption this week',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_power_consumption_this_week',
+    'entity_id': 'sensor.model0_electricity_consumption_this_week',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
