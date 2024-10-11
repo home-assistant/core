@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     ATTR_AMBIENT,
+    ATTR_BSH_KEY,
     ATTR_DESC,
     ATTR_DEVICE,
     ATTR_KEY,
@@ -32,9 +33,16 @@ from .const import (
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
+    BSH_AMBIENT_LIGHT_ENABLED,
+    BSH_COMMON_OPTION_DURATION,
+    BSH_COMMON_OPTION_PROGRAM_PROGRESS,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    BSH_REMAINING_PROGRAM_TIME,
+    BSH_REMOTE_CONTROL_ACTIVATION_STATE,
+    BSH_REMOTE_START_ALLOWANCE_STATE,
+    COOKING_LIGHTING,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -181,21 +189,39 @@ class DeviceWithPrograms(HomeConnectDevice):
         device.
         """
         sensors = {
-            "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
-            "Duration": (UnitOfTime.SECONDS, "mdi:update", None, 1),
-            "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
+            BSH_REMAINING_PROGRAM_TIME: (
+                "Remaining Program Time",
+                None,
+                None,
+                SensorDeviceClass.TIMESTAMP,
+                1,
+            ),
+            BSH_COMMON_OPTION_DURATION: (
+                "Duration",
+                UnitOfTime.SECONDS,
+                "mdi:update",
+                None,
+                1,
+            ),
+            BSH_COMMON_OPTION_PROGRAM_PROGRESS: (
+                "Program Progress",
+                PERCENTAGE,
+                "mdi:progress-clock",
+                None,
+                1,
+            ),
         }
         return [
             {
                 ATTR_DEVICE: self,
-                ATTR_DESC: k,
+                ATTR_BSH_KEY: k,
+                ATTR_DESC: desc,
                 ATTR_UNIT: unit,
-                ATTR_KEY: f"BSH.Common.Option.{k.replace(' ', '')}",
                 ATTR_ICON: icon,
                 ATTR_DEVICE_CLASS: device_class,
                 ATTR_SIGN: sign,
             }
-            for k, (unit, icon, device_class, sign) in sensors.items()
+            for k, (desc, unit, icon, device_class, sign) in sensors.items()
         ]
 
 
@@ -208,9 +234,9 @@ class DeviceWithOpState(HomeConnectDevice):
         return [
             {
                 ATTR_DEVICE: self,
+                ATTR_BSH_KEY: BSH_OPERATION_STATE,
                 ATTR_DESC: "Operation State",
                 ATTR_UNIT: None,
-                ATTR_KEY: BSH_OPERATION_STATE,
                 ATTR_ICON: "mdi:state-machine",
                 ATTR_DEVICE_CLASS: None,
                 ATTR_SIGN: 1,
@@ -225,6 +251,7 @@ class DeviceWithDoor(HomeConnectDevice):
         """Get a dictionary with info about the door binary sensor."""
         return {
             ATTR_DEVICE: self,
+            ATTR_BSH_KEY: "Door",
             ATTR_DESC: "Door",
             ATTR_SENSOR_TYPE: "door",
             ATTR_DEVICE_CLASS: "door",
@@ -236,7 +263,12 @@ class DeviceWithLight(HomeConnectDevice):
 
     def get_light_entity(self) -> dict[str, Any]:
         """Get a dictionary with info about the lighting."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "Light", ATTR_AMBIENT: None}
+        return {
+            ATTR_DEVICE: self,
+            ATTR_BSH_KEY: COOKING_LIGHTING,
+            ATTR_DESC: "Light",
+            ATTR_AMBIENT: None,
+        }
 
 
 class DeviceWithAmbientLight(HomeConnectDevice):
@@ -244,7 +276,12 @@ class DeviceWithAmbientLight(HomeConnectDevice):
 
     def get_ambientlight_entity(self) -> dict[str, Any]:
         """Get a dictionary with info about the ambient lighting."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "AmbientLight", ATTR_AMBIENT: True}
+        return {
+            ATTR_DEVICE: self,
+            ATTR_BSH_KEY: BSH_AMBIENT_LIGHT_ENABLED,
+            ATTR_DESC: "AmbientLight",
+            ATTR_AMBIENT: True,
+        }
 
 
 class DeviceWithRemoteControl(HomeConnectDevice):
@@ -254,6 +291,7 @@ class DeviceWithRemoteControl(HomeConnectDevice):
         """Get a dictionary with info about the remote control sensor."""
         return {
             ATTR_DEVICE: self,
+            ATTR_BSH_KEY: BSH_REMOTE_CONTROL_ACTIVATION_STATE,
             ATTR_DESC: "Remote Control",
             ATTR_SENSOR_TYPE: "remote_control",
         }
@@ -266,6 +304,7 @@ class DeviceWithRemoteStart(HomeConnectDevice):
         """Get a dictionary with info about the remote start sensor."""
         return {
             ATTR_DEVICE: self,
+            ATTR_BSH_KEY: BSH_REMOTE_START_ALLOWANCE_STATE,
             ATTR_DESC: "Remote Start",
             ATTR_SENSOR_TYPE: "remote_start",
         }
