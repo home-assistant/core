@@ -831,13 +831,13 @@ class Thermostat(ClimateEntity):
         sensor_names: list[str] = []
         sensor_ids: list[str] = []
         for device_id in device_ids:
-            sensor_registry = device_registry.async_get(device_id)
-            if sensor_registry and sensor_registry.name:
+            device = device_registry.async_get(device_id)
+            if device and device.name:
                 r_sensors = self.thermostat.get("remoteSensors", [])
                 ecobee_identifier = next(
                     (
                         identifier
-                        for identifier in sensor_registry.identifiers
+                        for identifier in device.identifiers
                         if identifier[0] == "ecobee"
                     ),
                     None,
@@ -851,7 +851,7 @@ class Thermostat(ClimateEntity):
                             len(code) != 4 and r_sensor.get("type") == "thermostat"
                         ):
                             sensor_ids.append(r_sensor.get("id"))  # noqa: PERF401
-                    sensor_names.append(sensor_registry.name)
+                    sensor_names.append(device.name)
 
         # Ensure sensors provided are available for thermostat or not empty.
         if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
