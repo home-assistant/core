@@ -120,11 +120,11 @@
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
     'original_icon': None,
     'original_name': None,
-    'platform': 'linear_garage_door',
+    'platform': 'nice_go',
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'test3-GDO',
+    'unique_id': '3',
     'unit_of_measurement': None,
   })
 # ---
@@ -140,7 +140,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'closed',
   })
 # ---
 # name: test_covers[cover.test_garage_4-entry]

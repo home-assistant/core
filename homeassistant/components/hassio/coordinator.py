@@ -7,6 +7,9 @@ from collections import defaultdict
 import logging
 from typing import TYPE_CHECKING, Any
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import StoreInfo
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -330,12 +333,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass) or {}
+        store_data = get_store(self.hass)
 
-        repositories = {
-            repo[ATTR_SLUG]: repo[ATTR_NAME]
-            for repo in store_data.get("repositories", [])
-        }
+        if store_data:
+            repositories = {
+                repo[ATTR_SLUG]: repo[ATTR_NAME]
+                for repo in StoreInfo.from_dict(store_data).repositories
+            }
+        else:
+            repositories = {}
 
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
@@ -514,11 +520,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self.hassio.get_addon_info(slug)
-        except HassioAPIError as err:
+            info = await self.hassio.client.addons.addon_info(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)
-        return (slug, info)
+        # Translate to legacy hassio names for compatibility
+        info_dict = info.to_dict()
+        info_dict["hassio_api"] = info_dict.pop("supervisor_api")
+        info_dict["hassio_role"] = info_dict.pop("supervisor_role")
+        return (slug, info_dict)
 
     @callback
     def async_enable_container_updates(

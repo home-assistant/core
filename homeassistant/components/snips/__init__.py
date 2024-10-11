@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
-            slots["{}_raw".format(slot["slotName"])] = {"value": slot["rawValue"]}
+            slots[f"{slot['slotName']}_raw"] = {"value": slot["rawValue"]}
         slots["site_id"] = {"value": request.get("siteId")}
         slots["session_id"] = {"value": request.get("sessionId")}
         slots["confidenceScore"] = {"value": request["intent"]["confidenceScore"]}

@@ -9,7 +9,7 @@ from .const import API_TOKEN
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sensoterra.async_setup_entry",
@@ -19,7 +19,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_customer_api_client() -> Generator[AsyncMock, None, None]:
+def mock_customer_api_client() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
         patch(

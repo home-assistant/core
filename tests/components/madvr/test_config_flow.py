@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -135,13 +135,10 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
     assert result["errors"] == {}
 
     # define new host
@@ -176,10 +173,7 @@ async def test_reconfigure_new_device(
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
     # test reconfigure with a new device (should fail)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # define new host
     new_host = "192.168.1.100"
@@ -207,13 +201,10 @@ async def test_reconfigure_flow_errors(
     """Test error handling in reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_confirm"
 
     # Test CannotConnect error
     mock_madvr_client.open_connection.side_effect = TimeoutError

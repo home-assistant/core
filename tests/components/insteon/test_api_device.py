@@ -16,7 +16,6 @@ from homeassistant.components.insteon.api.device import (
     ID,
     INSTEON_DEVICE_NOT_FOUND,
     TYPE,
-    async_device_name,
 )
 from homeassistant.components.insteon.const import (
     CONF_OVERRIDE,
@@ -24,6 +23,7 @@ from homeassistant.components.insteon.const import (
     DOMAIN,
     MULTIPLE,
 )
+from homeassistant.components.insteon.utils import async_device_name
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -128,10 +128,6 @@ async def test_get_ha_device_name(
         # Test a real HA and Insteon device
         name = await async_device_name(device_reg, "11.11.11")
         assert name == "Device 11.11.11"
-
-        # Test no HA device but a real Insteon device
-        name = await async_device_name(device_reg, "22.22.22")
-        assert name == "Device 22.22.22 (2)"
 
         # Test no HA or Insteon device
         name = await async_device_name(device_reg, "BB.BB.BB")

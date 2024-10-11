@@ -418,6 +418,13 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aqara": {
+      "name": "Aqara",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
+    },
     "aquacell": {
       "name": "AquaCell",
       "integration_type": "device",
@@ -2240,6 +2247,13 @@
         }
       }
     },
+    "go2rtc": {
+      "name": "go2rtc",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "single_config_entry": true
+    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2272,12 +2286,6 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Cloud"
-        },
-        "google_domains": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Google Domains"
         },
         "google_generative_ai_conversation": {
           "integration_type": "service",
@@ -2462,7 +2470,8 @@
       "name": "Home Assistant Supervisor",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "havana_shade": {
       "name": "Havana Shade",
@@ -3261,12 +3270,6 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "LG Netcast"
-        },
-        "lg_thinq": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "LG ThinQ"
         },
         "lg_soundbar": {
           "integration_type": "hub",
@@ -4227,6 +4230,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "nyt_games": {
+      "name": "NYT Games",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nzbget": {
       "name": "NZBGet",
       "integration_type": "hub",
@@ -4529,11 +4538,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "panel_custom": {
-      "name": "Custom Panel",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "panel_iframe": {
       "name": "iframe Panel",
@@ -5109,7 +5113,8 @@
       "name": "Rhasspy",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "ridwell": {
       "name": "Ridwell",
@@ -5814,12 +5819,6 @@
     },
     "speedtestdotnet": {
       "name": "Speedtest.net",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "spider": {
-      "name": "Itho Daalderop Spider",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

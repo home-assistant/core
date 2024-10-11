@@ -113,10 +113,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors is not None:
             return await self._show_reauth_form(errors)
 
-        entry = await self.async_set_unique_id(self.unique_id)
-        assert entry
         self.hass.config_entries.async_update_entry(
-            entry,
+            self._get_reauth_entry(),
             data={
                 CONF_ORG: self._organization,
                 CONF_PROJECT: self._project,

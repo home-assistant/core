@@ -7,11 +7,11 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-from functools import cached_property
 import logging
 import os
 from typing import Any, Self, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,14 +29,16 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "light"
+DATA_COMPONENT: HassKey[EntityComponent[LightEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-DATA_PROFILES = "light_profiles"
+DATA_PROFILES: HassKey[Profiles] = HassKey(f"{DOMAIN}_profiles")
 
 
 class LightEntityFeature(IntFlag):
@@ -299,7 +301,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def preprocess_turn_on_alternatives(
-    hass: HomeAssistant, params: dict[str, Any] | VolDictType
+    hass: HomeAssistant, params: dict[str, Any]
 ) -> None:
     """Process extra data for turn light on request.
 
@@ -393,7 +395,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent[LightEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[LightEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -403,7 +405,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # of the light base platform.
     hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
-    def preprocess_data(data: VolDictType) -> VolDictType:
+    def preprocess_data(data: dict[str, Any]) -> VolDictType:
         """Preprocess the service data."""
         base: VolDictType = {
             entity_field: data.pop(entity_field)
@@ -670,14 +672,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def _coerce_none(value: str) -> None:

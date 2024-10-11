@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
@@ -107,7 +108,8 @@ TEMPLATE_ALARM_CONFIG = {
         },
     ],
 )
-async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
 
     for set_state in (
@@ -179,7 +181,8 @@ async def test_setup_config_entry(
         },
     ],
 )
-async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_optimistic_states(hass: HomeAssistant) -> None:
     """Test the optimistic state."""
 
     state = hass.states.get(TEMPLATE_NAME)
@@ -269,8 +272,9 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_syntax_error(
-    hass: HomeAssistant, msg, start_ha, caplog_setup_text
+    hass: HomeAssistant, msg, caplog_setup_text
 ) -> None:
     """Test templating syntax error."""
     assert len(hass.states.async_all("alarm_control_panel")) == 0
@@ -295,7 +299,8 @@ async def test_template_syntax_error(
         },
     ],
 )
-async def test_name(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_name(hass: HomeAssistant) -> None:
     """Test the accessibility of the name attribute."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state is not None
@@ -326,8 +331,9 @@ async def test_name(hass: HomeAssistant, start_ha) -> None:
         "alarm_trigger",
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_actions(
-    hass: HomeAssistant, service, start_ha, call_service_events: list[Event]
+    hass: HomeAssistant, service, call_service_events: list[Event]
 ) -> None:
     """Test alarm actions."""
     await hass.services.async_call(
@@ -363,7 +369,8 @@ async def test_actions(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one alarm control panel per id."""
     assert len(hass.states.async_all()) == 1
 
@@ -435,9 +442,8 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_code_config(
-    hass: HomeAssistant, code_format, code_arm_required, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_code_config(hass: HomeAssistant, code_format, code_arm_required) -> None:
     """Test configuration options related to alarm code."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state.attributes.get("code_format") == code_format
@@ -503,3 +509,45 @@ async def test_restore_state(
 
     state = hass.states.get("alarm_control_panel.test_template_panel")
     assert state.state == initial_state
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for button template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "value_template": "disarmed",
+            "template_type": "alarm_control_panel",
+            "code_arm_required": True,
+            "code_format": "number",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("alarm_control_panel.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id

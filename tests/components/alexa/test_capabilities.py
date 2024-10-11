@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
+from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import (
@@ -28,11 +28,9 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -392,11 +390,11 @@ async def test_api_remote_set_power_state(
 
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
-    hass.states.async_set("lock.locked", STATE_LOCKED, {})
-    hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
-    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
-    hass.states.async_set("lock.locking", STATE_LOCKING, {})
-    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
+    hass.states.async_set("lock.locked", LockState.LOCKED, {})
+    hass.states.async_set("lock.unlocked", LockState.UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", LockState.UNLOCKING, {})
+    hass.states.async_set("lock.locking", LockState.LOCKING, {})
+    hass.states.async_set("lock.jammed", LockState.JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")

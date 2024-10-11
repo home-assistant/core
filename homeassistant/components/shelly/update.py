@@ -9,6 +9,7 @@ from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -58,7 +59,7 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
 
 REST_UPDATES: Final = {
     "fwupdate": RestUpdateDescription(
-        name="Firmware update",
+        name="Firmware",
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -67,7 +68,7 @@ REST_UPDATES: Final = {
         entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RestUpdateDescription(
-        name="Beta firmware update",
+        name="Beta firmware",
         key="fwupdate",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
@@ -79,7 +80,7 @@ REST_UPDATES: Final = {
 
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
-        name="Firmware update",
+        name="Firmware",
         key="sys",
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
@@ -88,7 +89,7 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
     ),
     "fwupdate_beta": RpcUpdateDescription(
-        name="Beta firmware update",
+        name="Beta firmware",
         key="sys",
         sub_key="available_updates",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
@@ -202,6 +203,22 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if available version is newer then installed version.
+
+        Default strategy generate an exception with Shelly firmware format
+        thus making the entity state always true.
+        """
+        return AwesomeVersion(
+            latest_version,
+            find_first_match=True,
+            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+        ) > AwesomeVersion(
+            installed_version,
+            find_first_match=True,
+            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+        )
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):

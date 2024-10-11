@@ -51,8 +51,8 @@ async def _async_connect(**kwargs):
 class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
-    _device_path: str | None = None
-    _device_name: str | None = None
+    _device_path: str
+    _device_name: str
     discovered_conf: dict[str, str] = {}
 
     async def async_step_user(

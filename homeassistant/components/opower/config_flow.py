@@ -49,8 +49,12 @@ async def _validate_login(
     try:
         await api.async_login()
     except InvalidAuth:
+        _LOGGER.exception(
+            "Invalid auth when connecting to %s", login_data[CONF_UTILITY]
+        )
         errors["base"] = "invalid_auth"
     except CannotConnect:
+        _LOGGER.exception("Could not connect to %s", login_data[CONF_UTILITY])
         errors["base"] = "cannot_connect"
     return errors
 

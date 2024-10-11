@@ -9,6 +9,7 @@ import logging
 from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -101,6 +102,12 @@ async def async_setup_entry(
 
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
+
+        if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
+            # Their are new cameras/chimes connected, reload to add them.
+            hass.async_create_task(
+                hass.config_entries.async_reload(config_entry.entry_id)
+            )
 
     async def async_check_firmware_update() -> None:
         """Check for firmware updates."""

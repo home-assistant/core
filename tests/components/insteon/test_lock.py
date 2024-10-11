@@ -10,15 +10,8 @@ from homeassistant.components.insteon import (
     entity as insteon_entity,
     utils as insteon_utils,
 )
-from homeassistant.components.lock import (  # SERVICE_LOCK,; SERVICE_UNLOCK,
-    DOMAIN as LOCK_DOMAIN,
-)
-from homeassistant.const import (  # ATTR_ENTITY_ID,;
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    Platform,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -73,7 +66,7 @@ async def test_lock_lock(
     try:
         lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
-        assert state.state is STATE_UNLOCKED
+        assert state.state == LockState.UNLOCKED
 
         # lock via UI
         await hass.services.async_call(
@@ -102,7 +95,7 @@ async def test_lock_unlock(
         lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
 
-        assert state.state is STATE_LOCKED
+        assert state.state == LockState.LOCKED
 
         # lock via UI
         await hass.services.async_call(

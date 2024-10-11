@@ -53,7 +53,7 @@ class TwilioCallNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.warning("At least 1 target is required")
             return
 
         if message.startswith(("http://", "https://")):

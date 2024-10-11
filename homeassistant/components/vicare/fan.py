@@ -29,6 +29,7 @@ from homeassistant.util.percentage import (
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .utils import get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ViCareFan(device.config, device.api)
+            ViCareFan(get_device_serial(device.api), device.config, device.api)
             for device in device_list
             if isinstance(device.api, PyViCareVentilationDevice)
         ]
@@ -125,11 +126,14 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def __init__(
         self,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
     ) -> None:
         """Initialize the fan entity."""
-        super().__init__(self._attr_translation_key, device_config, device)
+        super().__init__(
+            self._attr_translation_key, device_serial, device_config, device
+        )
 
     def update(self) -> None:
         """Update state of fan."""

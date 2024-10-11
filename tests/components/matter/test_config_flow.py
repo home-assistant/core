@@ -6,6 +6,7 @@ from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
 
@@ -380,7 +381,7 @@ async def test_zeroconf_not_onboarded_installed(
     await hass.async_block_till_done()
 
     assert addon_info.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
@@ -417,8 +418,8 @@ async def test_zeroconf_not_onboarded_not_installed(
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 2
-    assert install_addon.call_args == call(hass, "core_matter_server")
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
@@ -468,7 +469,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "error"),
-    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
+    [({"config": ADDON_DISCOVERY_INFO}, SupervisorError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
     hass: HomeAssistant,
@@ -682,7 +683,7 @@ async def test_supervisor_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
@@ -732,7 +733,7 @@ async def test_supervisor_discovery_addon_not_installed(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -740,7 +741,7 @@ async def test_supervisor_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
@@ -868,7 +869,7 @@ async def test_addon_running(
             {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
             False,
             False,
@@ -954,7 +955,7 @@ async def test_addon_running_failures(
             {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
             False,
             False,
@@ -1062,7 +1063,7 @@ async def test_addon_installed(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
     assert result["data"] == {
@@ -1084,7 +1085,7 @@ async def test_addon_installed(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            SupervisorError(),
             None,
             False,
             False,
@@ -1140,7 +1141,7 @@ async def test_addon_installed_failures(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert get_addon_discovery_info.called is discovery_info_called
     assert client_connect.called is client_connect_called
     assert result["type"] is FlowResultType.ABORT
@@ -1159,7 +1160,7 @@ async def test_addon_installed_failures(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            SupervisorError(),
             None,
             False,
             False,
@@ -1205,7 +1206,7 @@ async def test_addon_installed_failures_zeroconf(
     await hass.async_block_till_done()
 
     assert addon_info.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert get_addon_discovery_info.called is discovery_info_called
     assert client_connect.called is client_connect_called
     assert result["type"] is FlowResultType.ABORT
@@ -1250,7 +1251,7 @@ async def test_addon_installed_already_configured(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"
     assert entry.data["url"] == "ws://host1:5581/ws"
@@ -1290,7 +1291,7 @@ async def test_addon_not_installed(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -1298,7 +1299,7 @@ async def test_addon_not_installed(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Matter"
     assert result["data"] == {
@@ -1337,7 +1338,7 @@ async def test_addon_not_installed_failures(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert addon_info.call_count == 0
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -1361,7 +1362,7 @@ async def test_addon_not_installed_failures_zeroconf(
     )
     await hass.async_block_till_done()
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert addon_info.call_count == 0
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -1409,7 +1410,7 @@ async def test_addon_not_installed_already_configured(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -1417,7 +1418,7 @@ async def test_addon_not_installed_already_configured(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfiguration_successful"

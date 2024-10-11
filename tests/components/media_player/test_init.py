@@ -1,11 +1,14 @@
 """Test the base functions of the media player."""
 
+from enum import Enum
 from http import HTTPStatus
+from types import ModuleType
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import media_player
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
@@ -18,6 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -26,6 +30,71 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 async def setup_homeassistant(hass: HomeAssistant):
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
+
+
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix)
+        for enum_field in enum
+        if enum_field
+        not in [
+            MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
+            MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    "module",
+    [media_player, media_player.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(media_player.MediaPlayerEntityFeature, "SUPPORT_")
+    + _create_tuples(media_player.MediaPlayerDeviceClass, "DEVICE_CLASS_"),
+)
+@pytest.mark.parametrize(
+    "module",
+    [media_player],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(media_player.MediaClass, "MEDIA_CLASS_")
+    + _create_tuples(media_player.MediaPlayerEntityFeature, "SUPPORT_")
+    + _create_tuples(media_player.MediaType, "MEDIA_TYPE_")
+    + _create_tuples(media_player.RepeatMode, "REPEAT_MODE_"),
+)
+@pytest.mark.parametrize(
+    "module",
+    [media_player.const],
+)
+def test_deprecated_constants_const(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
 
 
 async def test_get_image_http(
@@ -298,10 +367,20 @@ async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        "a/b c/d+e%2Fg{}",
+        "a/b c/d+e%2D",
+        "a/b c/d+e%2E",
+        "2012-06%20Pool%20party%20%2F%20BBQ",
+    ],
+)
 async def test_get_async_get_browse_image_quoting(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    media_content_id: str,
 ) -> None:
     """Test get browse image using media_content_id with special characters.
 
@@ -325,7 +404,6 @@ async def test_get_async_get_browse_image_quoting(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_browse_image",
     ) as mock_browse_image:
-        media_content_id = "a/b c/d+e%2Fg{}"
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
