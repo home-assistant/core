@@ -257,6 +257,10 @@ class UnknownEntry(ConfigError):
     """Unknown entry specified."""
 
 
+class UnknownSubEntry(ConfigError):
+    """Unknown subentry specified."""
+
+
 class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
@@ -2240,7 +2244,44 @@ class ConfigEntries:
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
-        subentries: Iterable[ConfigSubentry] | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        version: int | UndefinedType = UNDEFINED,
+    ) -> bool:
+        """Update a config entry.
+
+        If the entry was changed, the update_listeners are
+        fired and this function returns True
+
+        If the entry was not changed, the update_listeners are
+        not fired and this function returns False
+        """
+        return self._async_update_entry(
+            entry,
+            data=data,
+            discovery_keys=discovery_keys,
+            minor_version=minor_version,
+            options=options,
+            pref_disable_new_entities=pref_disable_new_entities,
+            pref_disable_polling=pref_disable_polling,
+            title=title,
+            unique_id=unique_id,
+            version=version,
+        )
+
+    @callback
+    def _async_update_entry(
+        self,
+        entry: ConfigEntry,
+        *,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+        | UndefinedType = UNDEFINED,
+        minor_version: int | UndefinedType = UNDEFINED,
+        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
+        pref_disable_polling: bool | UndefinedType = UNDEFINED,
+        subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         unique_id: str | None | UndefinedType = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
@@ -2313,12 +2354,9 @@ class ConfigEntries:
             _setter(entry, "options", MappingProxyType(options))
 
         if subentries is not UNDEFINED:
-            subentries_dict = MappingProxyType(
-                {subentry.subentry_id: subentry for subentry in subentries}
-            )
-            if entry.subentries != subentries_dict:
+            if entry.subentries != subentries:
                 changed = True
-                _setter(entry, "subentries", subentries_dict)
+                _setter(entry, "subentries", MappingProxyType(subentries))
 
         if not changed:
             return False
@@ -2336,6 +2374,25 @@ class ConfigEntries:
         entry.clear_storage_cache()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         return True
+
+    @callback
+    def async_add_subentry(self, entry: ConfigEntry, subentry: ConfigSubentry) -> bool:
+        """Add a subentry to a config entry."""
+        return self._async_update_entry(
+            entry,
+            subentries=entry.subentries | {subentry.subentry_id: subentry},
+        )
+
+    @callback
+    def async_remove_subentry(self, entry: ConfigEntry, subentry_id: str) -> bool:
+        """Remove a subentry from a config entry."""
+        subentries = dict(entry.subentries)
+        try:
+            subentries.pop(subentry_id)
+        except KeyError as err:
+            raise UnknownSubEntry from err
+
+        return self._async_update_entry(entry, subentries=subentries)
 
     @callback
     def _async_dispatch(
@@ -3187,16 +3244,13 @@ class ConfigSubentryFlowManager(
         ):
             raise data_entry_flow.AbortFlow("already_configured")
 
-        self.hass.config_entries.async_update_entry(
+        self.hass.config_entries.async_add_subentry(
             entry,
-            subentries=[
-                *entry.subentries.values(),
-                ConfigSubentry(
-                    data=MappingProxyType(result["data"]),
-                    title=result["title"],
-                    unique_id=unique_id,
-                ),
-            ],
+            ConfigSubentry(
+                data=MappingProxyType(result["data"]),
+                title=result["title"],
+                unique_id=unique_id,
+            ),
         )
 
         result["result"] = True

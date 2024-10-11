@@ -1553,16 +1553,24 @@ async def test_update_subentry_and_trigger_listener(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Test function."""
-        assert entry.subentries == {subentry.subentry_id: subentry}
+        assert entry.subentries == expected_subentries
         update_listener_calls.append(None)
 
     entry.add_update_listener(update_listener)
 
-    assert manager.async_update_entry(entry, subentries=[subentry]) is True
+    expected_subentries = {subentry.subentry_id: subentry}
+    assert manager.async_add_subentry(entry, subentry) is True
 
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.subentries == {subentry.subentry_id: subentry}
+    assert entry.subentries == expected_subentries
     assert len(update_listener_calls) == 1
+
+    expected_subentries = {}
+    assert manager.async_remove_subentry(entry, subentry.subentry_id) is True
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.subentries == expected_subentries
+    assert len(update_listener_calls) == 2
 
 
 async def test_setup_raise_not_ready(
@@ -4375,10 +4383,6 @@ async def test_updating_entry_with_and_without_changes(
 
     assert manager.async_update_entry(entry) is False
 
-    subentry = config_entries.ConfigSubentry(
-        data={"test": "test"}, title="Mock title", unique_id="test"
-    )
-
     for change, expected_value in (
         ({"data": {"second": True, "third": 456}}, {"second": True, "third": 456}),
         ({"data": {"second": True}}, {"second": True}),
@@ -4386,7 +4390,6 @@ async def test_updating_entry_with_and_without_changes(
         ({"options": {"hello": True}}, {"hello": True}),
         ({"pref_disable_new_entities": True}, True),
         ({"pref_disable_polling": True}, True),
-        ({"subentries": [subentry]}, {subentry.subentry_id: subentry}),
         ({"title": "sometitle"}, "sometitle"),
         ({"unique_id": "abcd1234"}, "abcd1234"),
         ({"version": 2}, 2),

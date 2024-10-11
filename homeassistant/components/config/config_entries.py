@@ -690,20 +690,12 @@ async def config_subentry_delete(
     if entry is None:
         return
 
-    subentry_id_to_delete = msg["subentry_id"]
-    if subentry_id_to_delete not in entry.subentries:
+    try:
+        hass.config_entries.async_remove_subentry(entry, msg["subentry_id"])
+    except config_entries.UnknownSubEntry:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config subentry not found"
         )
         return
-
-    hass.config_entries.async_update_entry(
-        entry,
-        subentries=[
-            subentry
-            for subentry in entry.subentries.values()
-            if subentry.subentry_id != subentry_id_to_delete
-        ],
-    )
 
     connection.send_result(msg["id"])
