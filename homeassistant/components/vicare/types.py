@@ -1,6 +1,7 @@
 """Types for the ViCare integration."""
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import enum
 from typing import Any
@@ -47,9 +48,13 @@ class HeatingProgram(enum.StrEnum):
         ha_preset: str, supported_heating_programs: list[str]
     ) -> str | None:
         """Return the mapped ViCare heating program for the Home Assistant preset."""
-        for program in supported_heating_programs:
-            if VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program)) == ha_preset:
-                return program
+        with suppress(ValueError):
+            for program in supported_heating_programs:
+                if (
+                    VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
+                    == ha_preset
+                ):
+                    return program
         return None
 
 
