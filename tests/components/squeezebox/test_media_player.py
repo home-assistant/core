@@ -668,14 +668,14 @@ async def test_squeezebox_search(
         SERVICE_SEARCH,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
+            ATTR_COMMAND: "albums",
             ATTR_RETURN_ITEMS: 1,
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
+        "albums", "0", "1", "search:searchstring"
     )
 
 
