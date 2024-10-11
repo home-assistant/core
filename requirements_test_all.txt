@@ -167,7 +167,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
-aioairzone==0.9.3
+aioairzone==0.9.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -186,7 +186,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.3
+aioautomower==2024.10.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -243,7 +243,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.1.0
+aiohasupervisor==0.2.0b0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -481,7 +481,7 @@ autarco==3.0.0
 axis==62
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.1
+ayla-iot-unofficial==1.4.2
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -946,7 +946,7 @@ hole==0.8.0
 holidays==0.58
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.2
+home-assistant-frontend==20241002.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1277,7 +1277,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.7
 
 # homeassistant.components.opower
-opower==0.8.2
+opower==0.8.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2213,7 +2213,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.7.8
+tesla-fleet-api==0.8.4
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2384,7 +2384,7 @@ xiaomi-ble==0.32.0
 xknx==3.2.0
 
 # homeassistant.components.knx
-xknxproject==3.8.0
+xknxproject==3.8.1
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
@@ -2418,7 +2418,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.09.27
+yt-dlp==2024.10.07
 
 # homeassistant.components.zamg
 zamg==0.3.6

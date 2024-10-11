@@ -835,7 +835,7 @@ async def test_system_is_not_ready(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
-@pytest.mark.usefixtures("all_setup_requests", "addon_installed")
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_detached_addon_missing(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
