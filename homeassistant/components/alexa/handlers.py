@@ -1272,6 +1272,9 @@ async def async_api_set_mode(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     mode = directive.payload["mode"]
 
+    # Ensure mode is in the expected format
+    if "." not in mode:
+        raise AlexaInvalidDirectiveError("Invalid mode format. Expected 'type.value'.")
     mode_type, mode_value = mode.split(".")
 
     # Define a mapping of instance types to their respective handlers
@@ -1297,8 +1300,8 @@ async def async_api_set_mode(
         f"{valve.DOMAIN}.state": lambda: _set_valve_position(data, mode_value),
     }
 
-    assert isinstance(instance, str), "Instance must be a string"
-
+    if instance is None:
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
     handler: Callable[[], str | None] | None = handlers.get(instance)
     service = handler() if handler is not None else None
 
