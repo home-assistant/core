@@ -23,7 +23,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, NotRequired, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, cast
 
 from async_interrupt import interrupt
 from propcache import cached_property
@@ -320,12 +320,23 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
 
 
 class ConfigSubentryData(TypedDict):
-    """Container for configuration subentry data."""
+    """Container for configuration subentry data.
+
+    Returned by integrations, a subentry_id will be assigned automatically.
+    """
 
     data: Mapping[str, Any]
-    subentry_id: NotRequired[str]
     title: str
     unique_id: str | None
+
+
+class ConfigSubentryDataWithId(ConfigSubentryData):
+    """Container for configuration subentry data.
+
+    This type is used when loading existing subentries from storage.
+    """
+
+    subentry_id: str
 
 
 class SubentryFlowResult(FlowResult, total=False):
@@ -343,7 +354,7 @@ class ConfigSubentry:
     title: str
     unique_id: str | None
 
-    def as_dict(self) -> ConfigSubentryData:
+    def as_dict(self) -> ConfigSubentryDataWithId:
         """Return dictionary version of this subentry."""
         return {
             "data": dict(self.data),
@@ -408,7 +419,7 @@ class ConfigEntry(Generic[_DataT]):
         pref_disable_polling: bool | None = None,
         source: str,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
-        subentries_data: Iterable[ConfigSubentryData] | None,
+        subentries_data: Iterable[ConfigSubentryData | ConfigSubentryDataWithId] | None,
         title: str,
         unique_id: str | None,
         version: int,
@@ -440,7 +451,8 @@ class ConfigEntry(Generic[_DataT]):
         for subentry_data in subentries_data:
             subentry_kwargs = {}
             if "subentry_id" in subentry_data:
-                subentry_kwargs["subentry_id"] = subentry_data["subentry_id"]
+                # If subentry_data has key "subentry_id", we're loading from storage
+                subentry_kwargs["subentry_id"] = subentry_data["subentry_id"]  # type: ignore[typeddict-item]
             subentry = ConfigSubentry(
                 data=MappingProxyType(subentry_data["data"]),
                 title=subentry_data["title"],
