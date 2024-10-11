@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
 import voluptuous as vol
 
+from homeassistant.const import ATTR_NAME, CONF_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -18,8 +20,30 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from .const import ATTR_CONFIG_ENTRY, ATTR_SKILL, ATTR_TASK, DOMAIN, SERVICE_CAST_SKILL
+from .const import (
+    ATTR_ARGS,
+    ATTR_CONFIG_ENTRY,
+    ATTR_DATA,
+    ATTR_PATH,
+    ATTR_SKILL,
+    ATTR_TASK,
+    DOMAIN,
+    EVENT_API_CALL_SUCCESS,
+    SERVICE_API_CALL,
+    SERVICE_CAST_SKILL,
+)
 from .types import HabiticaConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+
+SERVICE_API_CALL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_NAME): str,
+        vol.Required(ATTR_PATH): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_ARGS): dict,
+    }
+)
 
 SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
     {
@@ -32,6 +56,33 @@ SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Habitica integration."""
+
+    async def handle_api_call(call: ServiceCall) -> None:
+        name = call.data[ATTR_NAME]
+        path = call.data[ATTR_PATH]
+        entries = hass.config_entries.async_entries(DOMAIN)
+
+        api = None
+        for entry in entries:
+            if entry.data[CONF_NAME] == name:
+                api = entry.runtime_data.api
+                break
+        if api is None:
+            _LOGGER.error("API_CALL: User '%s' not configured", name)
+            return
+        try:
+            for element in path:
+                api = api[element]
+        except KeyError:
+            _LOGGER.error(
+                "API_CALL: Path %s is invalid for API on '{%s}' element", path, element
+            )
+            return
+        kwargs = call.data.get(ATTR_ARGS, {})
+        data = await api(**kwargs)
+        hass.bus.async_fire(
+            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
+        )
 
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
@@ -99,6 +150,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         else:
             await coordinator.async_request_refresh()
             return response
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_API_CALL,
+        handle_api_call,
+        schema=SERVICE_API_CALL_SCHEMA,
+    )
 
     hass.services.async_register(
         DOMAIN,
