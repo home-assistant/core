@@ -49,13 +49,6 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         """Check if this coordinator is tracking any routes."""
         return len(self._route_stops) > 0
 
-    async def async_shutdown(self) -> None:
-        """If there are no more routes, cancel any scheduled call, and ignore new runs."""
-        if self.has_routes():
-            return
-
-        await super().async_shutdown()
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
 
