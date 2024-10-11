@@ -32,7 +32,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
