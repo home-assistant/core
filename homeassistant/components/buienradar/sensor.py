@@ -59,6 +59,7 @@ from .const import (
 )
 from .util import BrData
 
+_MDI_GAUGE_ICON = "mdi:gauge"
 _LOGGER = logging.getLogger(__name__)
 
 MEASURED_LABEL = "Measured"
@@ -81,19 +82,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="barometerfc",
         translation_key="barometerfc",
-        icon="mdi:gauge",
+        icon=_MDI_GAUGE_ICON,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="barometerfcname",
         translation_key="barometerfcname",
-        icon="mdi:gauge",
+        icon=_MDI_GAUGE_ICON,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="barometerfcnamenl",
         translation_key="barometerfcnamenl",
-        icon="mdi:gauge",
+        icon=_MDI_GAUGE_ICON,
     ),
     SensorEntityDescription(
         key="condition",
@@ -175,7 +176,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
-        icon="mdi:gauge",
+        icon=_MDI_GAUGE_ICON,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
