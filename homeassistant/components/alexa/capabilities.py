@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 import logging
 from typing import Any
 
@@ -1819,131 +1819,110 @@ class AlexaRangeController(AlexaCapability):
 
         return None
 
+    # Helper methods for capability_resources
+    def _get_vacuum_fan_speed_resource(self) -> dict[str, list[dict[str, Any]]]:
+        """Return the capability resources for vacuum fan speed. Helper method."""
+        speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST, [])
+        max_value = len(speed_list) - 1
+
+        # Create AlexaPresetResource for fan speed
+        self._resource = AlexaPresetResource(
+            labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
+            min_value=0,
+            max_value=max_value,
+            precision=1,
+        )
+
+        # Add presets for each fan speed option
+        for index, speed in enumerate(speed_list):
+            labels = [speed.replace("_", " ")]
+            if index == 1:
+                labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+            if index == max_value:
+                labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+            self._resource.add_preset(value=index, labels=labels)
+
+        return self._resource.serialize_capability_resources()
+
+    def _create_percentage_resource(
+        self,
+        labels: list[str],
+        min_value: float,
+        max_value: float,
+        precision: float = 1,
+        unit: str = AlexaGlobalCatalog.UNIT_PERCENT,
+    ) -> dict[str, list[dict[str, Any]]]:
+        self._resource = AlexaPresetResource(
+            labels=labels,
+            min_value=min_value,
+            max_value=max_value,
+            precision=precision,
+            unit=unit,
+        )
+        return self._resource.serialize_capability_resources()
+
+    def _create_input_number_resource(
+        self, domain_attr: Any, entity_attr: Any
+    ) -> dict[str, list[dict[str, Any]]]:
+        min_value = float(self.entity.attributes[entity_attr.ATTR_MIN])
+        max_value = float(self.entity.attributes[entity_attr.ATTR_MAX])
+        precision = float(self.entity.attributes.get(entity_attr.ATTR_STEP, 1))
+        unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        self._resource = AlexaPresetResource(
+            ["Value", get_resource_by_unit_of_measurement(self.entity)],
+            min_value=min_value,
+            max_value=max_value,
+            precision=precision,
+            unit=unit,
+        )
+        self._resource.add_preset(
+            value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
+        )
+        self._resource.add_preset(
+            value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
+        )
+
+        return self._resource.serialize_capability_resources()
+
     def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object."""
 
-        # Fan Speed Percentage Resources
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
-            percentage_step = self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
-            self._resource = AlexaPresetResource(
-                labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
-                min_value=0,
-                max_value=100,
-                # precision must be a divider of 100 and must be an integer; set step
-                # size to 1 for a consistent behavior except for on/off fans
-                precision=1 if percentage_step else 100,
-                unit=AlexaGlobalCatalog.UNIT_PERCENT,
-            )
-            return self._resource.serialize_capability_resources()
-
-        # Humidifier Target Humidity Resources
-        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
-            self._resource = AlexaPresetResource(
-                labels=["Humidity", "Percentage", "Target humidity"],
+        resource_getters: dict[str, Callable[[], dict[str, list[dict[str, Any]]]]] = {
+            f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: self._create_percentage_resource(
+                ["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
+                0,
+                100,
+                precision=1
+                if self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
+                else 100,
+            ),
+            f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: self._create_percentage_resource(
+                ["Humidity", "Percentage", "Target humidity"],
                 min_value=self.entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10),
                 max_value=self.entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90),
-                precision=1,
-                unit=AlexaGlobalCatalog.UNIT_PERCENT,
-            )
-            return self._resource.serialize_capability_resources()
+            ),
+            f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: self._create_percentage_resource(
+                ["Position", AlexaGlobalCatalog.SETTING_OPENING], 0, 100
+            ),
+            f"{cover.DOMAIN}.tilt": lambda: self._create_percentage_resource(
+                ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION], 0, 100
+            ),
+            f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: self._create_input_number_resource(
+                input_number, input_number
+            ),
+            f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: self._create_input_number_resource(
+                number, number
+            ),
+            f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": self._get_vacuum_fan_speed_resource,
+            f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: self._create_percentage_resource(
+                ["Opening", AlexaGlobalCatalog.SETTING_OPENING], 0, 100
+            ),
+        }
 
-        # Cover Position Resources
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-            self._resource = AlexaPresetResource(
-                ["Position", AlexaGlobalCatalog.SETTING_OPENING],
-                min_value=0,
-                max_value=100,
-                precision=1,
-                unit=AlexaGlobalCatalog.UNIT_PERCENT,
-            )
-            return self._resource.serialize_capability_resources()
-
-        # Cover Tilt Resources
-        if self.instance == f"{cover.DOMAIN}.tilt":
-            self._resource = AlexaPresetResource(
-                ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION],
-                min_value=0,
-                max_value=100,
-                precision=1,
-                unit=AlexaGlobalCatalog.UNIT_PERCENT,
-            )
-            return self._resource.serialize_capability_resources()
-
-        # Input Number Value
-        if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
-            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
-            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
-            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-            self._resource = AlexaPresetResource(
-                ["Value", get_resource_by_unit_of_measurement(self.entity)],
-                min_value=min_value,
-                max_value=max_value,
-                precision=precision,
-                unit=unit,
-            )
-            self._resource.add_preset(
-                value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
-            )
-            self._resource.add_preset(
-                value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
-            )
-            return self._resource.serialize_capability_resources()
-
-        # Number Value
-        if self.instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
-            min_value = float(self.entity.attributes[number.ATTR_MIN])
-            max_value = float(self.entity.attributes[number.ATTR_MAX])
-            precision = float(self.entity.attributes.get(number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-            self._resource = AlexaPresetResource(
-                ["Value", get_resource_by_unit_of_measurement(self.entity)],
-                min_value=min_value,
-                max_value=max_value,
-                precision=precision,
-                unit=unit,
-            )
-            self._resource.add_preset(
-                value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
-            )
-            self._resource.add_preset(
-                value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
-            )
-            return self._resource.serialize_capability_resources()
-
-        # Vacuum Fan Speed Resources
-        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-            max_value = len(speed_list) - 1
-            self._resource = AlexaPresetResource(
-                labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
-                min_value=0,
-                max_value=max_value,
-                precision=1,
-            )
-            for index, speed in enumerate(speed_list):
-                labels = [speed.replace("_", " ")]
-                if index == 1:
-                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
-                if index == max_value:
-                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=index, labels=labels)
-
-            return self._resource.serialize_capability_resources()
-
-        # Valve Position Resources
-        if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
-            self._resource = AlexaPresetResource(
-                ["Opening", AlexaGlobalCatalog.SETTING_OPENING],
-                min_value=0,
-                max_value=100,
-                precision=1,
-                unit=AlexaGlobalCatalog.UNIT_PERCENT,
-            )
-            return self._resource.serialize_capability_resources()
-
+        resource_getter = resource_getters.get(self.instance or "")
+        if resource_getter:
+            return resource_getter()
         return {}
 
     def semantics(self) -> dict[str, Any] | None:
