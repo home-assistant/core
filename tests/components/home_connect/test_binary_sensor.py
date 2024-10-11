@@ -68,9 +68,9 @@ async def test_binary_sensors_door_states(
     entity_id = "binary_sensor.washer_door"
     get_appliances.return_value = [appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.status.update({BSH_DOOR_STATE: {"value": state}})
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
-    appliance.status.update({BSH_DOOR_STATE: {"value": state}})
     await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, expected)
