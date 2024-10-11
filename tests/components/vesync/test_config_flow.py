@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.vesync import DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -12,13 +13,12 @@ from tests.common import MockConfigEntry
 
 async def test_abort_already_setup(hass: HomeAssistant) -> None:
     """Test if we abort because component is already setup."""
-    flow = config_flow.VeSyncFlowHandler()
-    flow.hass = hass
     MockConfigEntry(domain=DOMAIN, title="user", data={"user": "pass"}).add_to_hass(
         hass
     )
-    result = await flow.async_step_user()
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
