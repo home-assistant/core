@@ -1,0 +1,23 @@
+{
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "hp": 50,
+      "mp": 50.89999999999998,
+      "exp": 737,
+      "gp": 0,
+      "lvl": 38,
+      "class": "wizard",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 0
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": false
+    },
+    "needsCron": false
+  }
+}
