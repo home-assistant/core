@@ -47,9 +47,6 @@
       }
     },
     "sensor": {
-      "duration": {
-        "default": "mdi:update"
-      },
       "operation_state": {
         "default": "mdi:state-machine",
         "state": {
