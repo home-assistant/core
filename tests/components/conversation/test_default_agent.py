@@ -2680,3 +2680,71 @@ async def test_config_sentences_priority(
     data = result.as_dict()
     assert data["response"]["response_type"] == "action_done"
     assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_query_same_name_different_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test asking a question about entities with the same name in different areas."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(kitchen_device.id, area_id=kitchen_area.id)
+
+    kitchen_light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+    )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, area_id=kitchen_area.id
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id,
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: "overhead light"},
+    )
+
+    bedroom_area = area_registry.async_create("bedroom")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "5678",
+    )
+    entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=bedroom_area.id
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "overhead light"},
+    )
+
+    # Should fail without a preferred area (duplicate name)
+    result = await conversation.async_converse(
+        hass, "is the overhead light on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Succeeds using area from device (kitchen)
+    result = await conversation.async_converse(
+        hass,
+        "is the overhead light on?",
+        None,
+        Context(),
+        None,
+        device_id=kitchen_device.id,
+    )
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
