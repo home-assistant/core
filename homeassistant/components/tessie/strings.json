@@ -63,9 +63,6 @@
       },
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"
-      },
-      "vehicle_state_speed_limit_mode_active": {
-        "name": "Speed limit"
       }
     },
     "media_player": {
