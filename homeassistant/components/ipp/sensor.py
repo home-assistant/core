@@ -32,7 +32,6 @@ from .const import (
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
 )
-from .coordinator import IPPDataUpdateCoordinatorType
 from .entity import IPPEntity
 
 
@@ -40,7 +39,7 @@ from .entity import IPPEntity
 class IPPSensorEntityDescription(SensorEntityDescription):
     """Describes IPP sensor entity."""
 
-    value_fn: Callable[[IPPDataUpdateCoordinatorType], StateType | datetime]
+    value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
 
 
@@ -52,8 +51,8 @@ def _get_marker_attributes_fn(
 
 def _get_marker_value_fn(
     marker_index: int, value_fn: Callable[[Marker], StateType | datetime]
-) -> Callable[[IPPDataUpdateCoordinatorType], StateType | datetime]:
-    return lambda data: value_fn(data["printer"].markers[marker_index])
+) -> Callable[[Printer], StateType | datetime]:
+    return lambda printer: value_fn(printer.markers[marker_index])
 
 
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
@@ -72,7 +71,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_COMMAND_SET: printer.info.command_set,
             ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
         },
-        value_fn=lambda data: data["printer"].state.printer_state,
+        value_fn=lambda printer: printer.state.printer_state,
     ),
     IPPSensorEntityDescription(
         key="uptime",
@@ -80,7 +79,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data["uptime"],
+        value_fn=lambda printer: printer.booted_at,
     ),
 )
 
@@ -100,7 +99,7 @@ async def async_setup_entry(
         for description in PRINTER_SENSORS
     ]
 
-    for index, marker in enumerate(coordinator.data["printer"].markers):
+    for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
             IPPSensor(
                 coordinator,
@@ -137,7 +136,7 @@ class IPPSensor(IPPEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(self.coordinator.data["printer"])
+        return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
     def native_value(self) -> StateType | datetime:

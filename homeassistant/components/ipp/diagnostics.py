@@ -22,8 +22,5 @@ async def async_get_config_entry_diagnostics(
             },
             "unique_id": config_entry.unique_id,
         },
-        "data": {
-            "printer": coordinator.data["printer"].as_dict(),
-            "uptime": coordinator.data["uptime"],
-        },
+        "data": coordinator.data.as_dict(),
     }

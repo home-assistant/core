@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
-from typing import TypedDict
 
 from pyipp import IPP, IPPError, Printer as IPPPrinter
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 
@@ -20,14 +18,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class IPPDataUpdateCoordinatorType(TypedDict):
-    """Type for IPPDataUpdateCoordinator."""
-
-    printer: IPPPrinter
-    uptime: datetime
-
-
-class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPDataUpdateCoordinatorType]):
+class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
     """Class to manage fetching IPP data from single endpoint."""
 
     def __init__(
@@ -59,16 +50,9 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPDataUpdateCoordinatorTyp
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> IPPDataUpdateCoordinatorType:
+    async def _async_update_data(self) -> IPPPrinter:
         """Fetch data from IPP."""
         try:
-            data = await self.ipp.printer()
+            return await self.ipp.printer()
         except IPPError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
-
-        if self.data is None or self.data["printer"].info.uptime > data.info.uptime:
-            uptime = utcnow() - timedelta(seconds=data.info.uptime)
-        else:
-            uptime = self.data["uptime"]
-
-        return {"printer": data, "uptime": uptime}
