@@ -1,4 +1,4 @@
-"""Test the Gardena Bluetooth config flow."""
+"""Test the Gardena Bluetooth config flow for unused snapshots."""
 
 from unittest.mock import Mock
 
