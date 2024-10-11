@@ -23,6 +23,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+<<<<<<< HEAD
+=======
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+>>>>>>> 40e866f221e (Fix when state breaks to stringify)
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
