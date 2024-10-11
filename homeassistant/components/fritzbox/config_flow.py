@@ -12,7 +12,7 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
@@ -43,8 +43,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _entry: ConfigEntry
-
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
@@ -62,16 +60,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _update_entry(self) -> None:
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            data={
-                CONF_HOST: self._host,
-                CONF_PASSWORD: self._password,
-                CONF_USERNAME: self._username,
-            },
-        )
-        await self.hass.config_entries.async_reload(self._entry.entry_id)
+    async def async_try_connect(self) -> str:
+        """Try to connect and check auth."""
+        return await self.hass.async_add_executor_job(self._try_connect)
 
     def _try_connect(self) -> str:
         """Try to connect and check auth."""
@@ -104,7 +95,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
                 return self._get_entry(self._name)
@@ -164,7 +155,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
                 assert self._name is not None
@@ -184,7 +175,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        self._entry = self._get_reauth_entry()
         self._host = entry_data[CONF_HOST]
         self._name = str(entry_data[CONF_HOST])
         self._username = entry_data[CONF_USERNAME]
@@ -201,11 +191,17 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
-                await self._update_entry()
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_PASSWORD: self._password,
+                        CONF_USERNAME: self._username,
+                    },
+                )
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
@@ -226,11 +222,11 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._entry = self._get_reconfigure_entry()
-        self._name = self._entry.data[CONF_HOST]
-        self._host = self._entry.data[CONF_HOST]
-        self._username = self._entry.data[CONF_USERNAME]
-        self._password = self._entry.data[CONF_PASSWORD]
+        entry_data = self._get_reconfigure_entry().data
+        self._name = entry_data[CONF_HOST]
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
 
         return await self.async_step_reconfigure_confirm()
 
@@ -243,11 +239,17 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
-                await self._update_entry()
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_PASSWORD: self._password,
+                        CONF_USERNAME: self._username,
+                    },
+                )
             errors["base"] = result
 
         return self.async_show_form(

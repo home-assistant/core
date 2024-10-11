@@ -83,5 +83,5 @@ MEDIA_CLASS_MAP = {
     "Season": MediaClass.SEASON,
 }
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)
