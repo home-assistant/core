@@ -60,6 +60,7 @@ from .const import (
 from .util import BrData
 
 _MDI_GAUGE_ICON = "mdi:gauge"
+_MDI_WEATHER_POURING_ICON = "mdi:weather-pouring"
 _LOGGER = logging.getLogger(__name__)
 
 MEASURED_LABEL = "Measured"
@@ -386,31 +387,31 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="rainchance_1d",
         translation_key="rainchance_1d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=_MDI_WEATHER_POURING_ICON,
     ),
     SensorEntityDescription(
         key="rainchance_2d",
         translation_key="rainchance_2d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=_MDI_WEATHER_POURING_ICON,
     ),
     SensorEntityDescription(
         key="rainchance_3d",
         translation_key="rainchance_3d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=_MDI_WEATHER_POURING_ICON,
     ),
     SensorEntityDescription(
         key="rainchance_4d",
         translation_key="rainchance_4d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=_MDI_WEATHER_POURING_ICON,
     ),
     SensorEntityDescription(
         key="rainchance_5d",
         translation_key="rainchance_5d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=_MDI_WEATHER_POURING_ICON,
     ),
     SensorEntityDescription(
         key="sunchance_1d",
