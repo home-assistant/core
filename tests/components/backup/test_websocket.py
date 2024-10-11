@@ -55,7 +55,7 @@ async def test_info(
         ),
     ):
         await client.send_json_auto_id({"type": "backup/info"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ async def test_remove(
         "homeassistant.components.backup.manager.BackupManager.remove_backup",
     ):
         await client.send_json_auto_id({"type": "backup/remove", "slug": "abc123"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ async def test_generate(
         ),
     ):
         await client.send_json_auto_id({"type": "backup/generate"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ async def test_backup_end(
         "homeassistant.components.backup.manager.BackupManager.post_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/end"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -176,7 +176,7 @@ async def test_backup_start(
         "homeassistant.components.backup.manager.BackupManager.pre_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/start"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -205,7 +205,7 @@ async def test_backup_end_excepion(
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/end"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -234,7 +234,7 @@ async def test_backup_start_excepion(
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/start"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -258,7 +258,7 @@ async def test_agents_info(
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
-    assert snapshot == await client.receive_json()
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -282,7 +282,7 @@ async def test_agents_synced(
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/synced"})
-    assert snapshot == await client.receive_json()
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -314,7 +314,7 @@ async def test_agents_download(
         }
     )
     with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
         assert download_mock.call_args[1] == {
             "id": "abc123",
             "path": Path(hass.config.path("backup"), "abc123.tar"),
@@ -343,7 +343,7 @@ async def test_agents_download_exception(
     )
     with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
         download_mock.side_effect = Exception("Boom")
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 async def test_agents_download_unknown_agent(
@@ -365,4 +365,4 @@ async def test_agents_download_unknown_agent(
             "sync_id": "abc123",
         }
     )
-    assert snapshot == await client.receive_json()
+    assert await client.receive_json() == snapshot
