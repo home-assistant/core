@@ -28,5 +28,8 @@
     "call_query": {
       "service": "mdi:database"
     }
+  },
+  "search": {
+    "service": "mdi:folder-search-outline"
   }
 }

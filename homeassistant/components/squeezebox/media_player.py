@@ -58,6 +58,7 @@ from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, SQUEEZEBOX_SOURCE_STRI
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
+SERVICE_SEARCH = "search"
 
 ATTR_QUERY_RESULT = "query_result"
 
@@ -70,6 +71,8 @@ DISCOVERY_INTERVAL = 60
 
 KNOWN_SERVERS = "known_servers"
 ATTR_PARAMETERS = "parameters"
+ATTR_RETURN_ITEMS = "return_items"
+ATTR_SEARCH_STRING = "search_string"
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -179,7 +182,15 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-
+    platform.async_register_entity_service(
+        SERVICE_SEARCH,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Required(ATTR_RETURN_ITEMS): int,
+            vol.Optional(ATTR_SEARCH_STRING): cv.string,
+        },
+        "async_search_service",
+    )
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
@@ -551,6 +562,58 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             all_params.extend(parameters)
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
+
+    async def async_search_service(
+        self, command: str, return_items: int, search_string: str | None = None
+    ) -> None:
+        """Call Squeezebox JSON/RPC method to search media library."""
+        match command:
+            case "albums":
+                _param = [
+                    "0",
+                    str(return_items),
+                    "tags:laay",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "favorites":
+                _param = [
+                    "items",
+                    "0",
+                    str(return_items),
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "artists":
+                _param = [
+                    "0",
+                    str(return_items),
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "genres":
+                _param = [
+                    "0",
+                    str(return_items),
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "tracks":
+                _param = [
+                    "0",
+                    str(return_items),
+                    "tags:aglQrTy",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "playlists":
+                _param = [
+                    "0",
+                    str(return_items),
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "players":
+                _param = ["0", str(return_items)]
+            case _:
+                _LOGGER.debug("Invalid Search Service Command")
+                return
+
+        await self.async_call_query(command, _param)
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.

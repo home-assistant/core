@@ -33,9 +33,12 @@ from homeassistant.components.media_player import (
 from homeassistant.components.squeezebox.const import DOMAIN, SENSOR_UPDATE_INTERVAL
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
+    ATTR_RETURN_ITEMS,
+    ATTR_SEARCH_STRING,
     DISCOVERY_INTERVAL,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
+    SERVICE_SEARCH,
 )
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -656,6 +659,26 @@ async def test_squeezebox_call_method(
     )
 
 
+async def test_squeezebox_search(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "test_command",
+            ATTR_RETURN_ITEMS: ["1"],
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "test_command", "param1", "param2"
+    )
+
+
 async def test_squeezebox_invalid_state(
     hass: HomeAssistant, configured_player: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -806,10 +829,7 @@ async def test_squeezebox_media_position_property(
         == 105
     )
     assert (
-        (
-            hass.states.get("media_player.test_player").attributes[
-                ATTR_MEDIA_POSITION_UPDATED_AT
-            ]
-        )
-        > last_update
-    )
+        hass.states.get("media_player.test_player").attributes[
+            ATTR_MEDIA_POSITION_UPDATED_AT
+        ]
+    ) > last_update

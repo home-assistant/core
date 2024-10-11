@@ -30,3 +30,41 @@ call_query:
       advanced: true
       selector:
         object:
+search:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      selector:
+        select:
+          multiple: false
+          options:
+            - label: Albums
+              value: albums
+            - label: Artists
+              value: artists
+            - label: Tracks
+              value: tracks
+            - label: Playlists
+              value: playlists
+            - label: Genres
+              value: genres
+            - label: Favorites
+              value: favorites
+            - label: Players
+              value: players
+    return_items:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 10000
+          mode: box
+    search_string:
+      required: false
+      example: Revolver
+      selector:
+        text:

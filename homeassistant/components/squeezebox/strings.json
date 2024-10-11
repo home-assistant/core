@@ -60,6 +60,24 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "search": {
+      "name": "Search music library & players",
+      "description": "Search for items in the music library & players.\n.",
+      "fields": {
+        "command": {
+          "name": "Items",
+          "description": "The items to search for on LMS.\n."
+        },
+        "return_items": {
+          "name": "Number of Items",
+          "description": "The number of items to return.\n."
+        },
+        "search_string": {
+          "name": "Search String",
+          "description": "Limit the search to items matching the search string.\n."
+        }
+      }
     }
   },
   "entity": {
