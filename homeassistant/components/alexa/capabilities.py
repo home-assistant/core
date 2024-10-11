@@ -1865,7 +1865,7 @@ class AlexaRangeController(AlexaCapability):
         return self._resource.serialize_capability_resources()
 
     def _create_input_number_resource(
-        self, domain_attr: Any, entity_attr: Any
+        self, entity_attr: Any
     ) -> dict[str, list[dict[str, Any]]]:
         min_value = float(self.entity.attributes[entity_attr.ATTR_MIN])
         max_value = float(self.entity.attributes[entity_attr.ATTR_MAX])
@@ -1912,10 +1912,10 @@ class AlexaRangeController(AlexaCapability):
                 ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION], 0, 100
             ),
             f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: self._create_input_number_resource(
-                input_number, input_number
+                input_number
             ),
             f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: self._create_input_number_resource(
-                number, number
+                number
             ),
             f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": self._get_vacuum_fan_speed_resource,
             f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: self._create_percentage_resource(
