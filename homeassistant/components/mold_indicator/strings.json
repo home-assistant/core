@@ -22,7 +22,8 @@
           "indoor_temp_sensor": "The entity ID of the indoor temperature sensor.",
           "outdoor_temp_sensor": "The entity ID of the outdoor temperature sensor.",
           "calibration_factor": "Needs to be calibrated to the critical point in the room."
-        }
+        },
+        "title": "[%key:component::mold_indicator::title%]"
       }
     }
   },
@@ -41,7 +42,8 @@
         },
         "data_description": {
           "calibration_factor": "[%key:component::mold_indicator::config::step::user::data_description::calibration_factor%]"
-        }
+        },
+        "title": "[%key:component::mold_indicator::config::step::user::title%]"
       }
     }
   }
