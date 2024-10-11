@@ -52,6 +52,21 @@ async def test_ha_preset_to_heating_program(
     )
 
 
+async def test_ha_preset_to_heating_program_with_error() -> None:
+    """Testing HA Preset tp ViCare HeatingProgram."""
+
+    supported_programs = [
+        "test",
+        HeatingProgram.COMFORT,
+        HeatingProgram.ECO,
+        HeatingProgram.NORMAL,
+        HeatingProgram.REDUCED,
+    ]
+    assert (
+        HeatingProgram.from_ha_preset(HeatingProgram.NORMAL, supported_programs) == ""
+    )
+
+
 @pytest.mark.parametrize(
     ("vicare_mode", "expected_result"),
     [
