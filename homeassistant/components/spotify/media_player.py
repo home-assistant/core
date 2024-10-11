@@ -167,14 +167,14 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         """Duration of current playing media in seconds."""
         if not self.currently_playing or not self.currently_playing.item:
             return None
-        return round(self.currently_playing.item.duration_ms / 1000)
+        return self.currently_playing.item.duration_ms / 1000
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if not self.currently_playing or self.currently_playing.progress_ms is None:
             return None
-        return round(self.currently_playing.progress_ms / 1000)
+        return self.currently_playing.progress_ms / 1000
 
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
