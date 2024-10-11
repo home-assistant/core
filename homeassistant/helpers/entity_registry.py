@@ -79,7 +79,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 15
+STORAGE_VERSION_MINOR = 16
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -179,6 +179,7 @@ class RegistryEntry:
     categories: dict[str, str] = attr.ib(factory=dict)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
+    config_subentry_id: str | None = attr.ib(default=None)
     created_at: datetime = attr.ib(factory=utcnow)
     device_class: str | None = attr.ib(default=None)
     device_id: str | None = attr.ib(default=None)
@@ -282,6 +283,7 @@ class RegistryEntry:
             "area_id": self.area_id,
             "categories": self.categories,
             "config_entry_id": self.config_entry_id,
+            "config_subentry_id": self.config_subentry_id,
             "created_at": self.created_at.timestamp(),
             "device_id": self.device_id,
             "disabled_by": self.disabled_by,
@@ -343,6 +345,7 @@ class RegistryEntry:
                     "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
+                    "config_subentry_id": self.config_subentry_id,
                     "created_at": self.created_at,
                     "device_class": self.device_class,
                     "device_id": self.device_id,
@@ -407,6 +410,7 @@ class DeletedRegistryEntry:
     unique_id: str = attr.ib()
     platform: str = attr.ib()
     config_entry_id: str | None = attr.ib()
+    config_subentry_id: str | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
@@ -426,6 +430,7 @@ class DeletedRegistryEntry:
             json_bytes(
                 {
                     "config_entry_id": self.config_entry_id,
+                    "config_subentry_id": self.config_subentry_id,
                     "created_at": self.created_at,
                     "entity_id": self.entity_id,
                     "id": self.id,
@@ -541,6 +546,13 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entity in data["deleted_entities"]:
                     entity["created_at"] = entity["modified_at"] = created_at
 
+            if old_minor_version < 16:
+                # Version 1.16 adds config_subentry_id
+                for entity in data["entities"]:
+                    entity["config_subentry_id"] = None
+                for entity in data["deleted_entities"]:
+                    entity["config_subentry_id"] = None
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -648,9 +660,12 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    config_entry_id: str | None | UndefinedType = None,
+    config_subentry_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
+    old_config_subentry_id: str | None = None,
     report_non_string_unique_id: bool = True,
     unique_id: str | Hashable | UndefinedType | Any,
 ) -> None:
@@ -671,6 +686,26 @@ def _validate_item(
             unique_id,
             report_issue,
         )
+    if (
+        config_entry_id
+        and config_entry_id is not UNDEFINED
+        and old_config_subentry_id
+        and config_subentry_id is UNDEFINED
+    ):
+        raise ValueError("Can't change config entry without changing subentry")
+    if (
+        config_entry_id
+        and config_entry_id is not UNDEFINED
+        and config_subentry_id
+        and config_subentry_id is not UNDEFINED
+    ):
+        if (
+            not (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+            or config_subentry_id not in config_entry.subentries
+        ):
+            raise ValueError(
+                f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
+            )
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -817,6 +852,7 @@ class EntityRegistry(BaseRegistry):
         # Data that we want entry to have
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
+        config_subentry_id: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         entity_category: EntityCategory | UndefinedType | None = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
@@ -843,6 +879,7 @@ class EntityRegistry(BaseRegistry):
                 entity_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
                 device_id=device_id,
                 entity_category=entity_category,
                 has_entity_name=has_entity_name,
@@ -859,6 +896,8 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             hidden_by=hidden_by,
@@ -896,6 +935,7 @@ class EntityRegistry(BaseRegistry):
         entry = RegistryEntry(
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
+            config_subentry_id=none_if_undefined(config_subentry_id),
             created_at=created_at,
             device_id=none_if_undefined(device_id),
             disabled_by=disabled_by,
@@ -938,6 +978,7 @@ class EntityRegistry(BaseRegistry):
         orphaned_timestamp = None if config_entry_id else time.time()
         self.deleted_entities[key] = DeletedRegistryEntry(
             config_entry_id=config_entry_id,
+            config_subentry_id=entity.config_subentry_id,
             created_at=entity.created_at,
             entity_id=entity_id,
             id=entity.id,
@@ -997,6 +1038,19 @@ class EntityRegistry(BaseRegistry):
             ):
                 self.async_remove(entity.entity_id)
 
+        # Remove entities which belong to config subentries no longer associated with the
+        # device
+        entities = async_entries_for_device(
+            self, event.data["device_id"], include_disabled_entities=True
+        )
+        for entity in entities:
+            if (
+                (entry_id := entity.config_entry_id) is not None
+                and entry_id in device.config_entries
+                and entity.config_subentry_id not in device.config_subentries[entry_id]
+            ):
+                self.async_remove(entity.entity_id)
+
         # Re-enable disabled entities if the device is no longer disabled
         if not device.disabled:
             entities = async_entries_for_device(
@@ -1030,6 +1084,7 @@ class EntityRegistry(BaseRegistry):
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
+        config_subentry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -1062,6 +1117,7 @@ class EntityRegistry(BaseRegistry):
             ("categories", categories),
             ("capabilities", capabilities),
             ("config_entry_id", config_entry_id),
+            ("config_subentry_id", config_subentry_id),
             ("device_class", device_class),
             ("device_id", device_id),
             ("disabled_by", disabled_by),
@@ -1090,9 +1146,12 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,
                 hidden_by=hidden_by,
+                old_config_subentry_id=old.config_subentry_id,
                 unique_id=new_unique_id,
             )
 
@@ -1157,6 +1216,7 @@ class EntityRegistry(BaseRegistry):
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
+        config_subentry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -1183,6 +1243,7 @@ class EntityRegistry(BaseRegistry):
             categories=categories,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
             device_class=device_class,
             device_id=device_id,
             disabled_by=disabled_by,
@@ -1209,6 +1270,7 @@ class EntityRegistry(BaseRegistry):
         new_platform: str,
         *,
         new_config_entry_id: str | UndefinedType = UNDEFINED,
+        new_config_subentry_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
         new_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
@@ -1233,6 +1295,7 @@ class EntityRegistry(BaseRegistry):
             entity_id,
             new_unique_id=new_unique_id,
             config_entry_id=new_config_entry_id,
+            config_subentry_id=new_config_subentry_id,
             device_id=new_device_id,
             platform=new_platform,
         )
@@ -1295,6 +1358,7 @@ class EntityRegistry(BaseRegistry):
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
+                    config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
@@ -1344,6 +1408,7 @@ class EntityRegistry(BaseRegistry):
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
                     config_entry_id=entity["config_entry_id"],
+                    config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     entity_id=entity["entity_id"],
                     id=entity["id"],
@@ -1399,6 +1464,30 @@ class EntityRegistry(BaseRegistry):
             # Add a time stamp when the deleted entity became orphaned
             self.deleted_entities[key] = attr.evolve(
                 deleted_entity, orphaned_timestamp=now_time, config_entry_id=None
+            )
+            self.async_schedule_save()
+
+    @callback
+    def async_clear_config_subentry(
+        self, config_entry_id: str, config_subentry_id: str
+    ) -> None:
+        """Clear config subentry from registry entries."""
+        now_time = time.time()
+        for entity_id in [
+            entry.entity_id
+            for entry in self.entities.get_entries_for_config_entry_id(config_entry_id)
+            if entry.config_subentry_id == config_subentry_id
+        ]:
+            self.async_remove(entity_id)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if config_subentry_id != deleted_entity.config_subentry_id:
+                continue
+            # Add a time stamp when the deleted entity became orphaned
+            self.deleted_entities[key] = attr.evolve(
+                deleted_entity,
+                orphaned_timestamp=now_time,
+                config_entry_id=None,
+                config_subentry_id=None,
             )
             self.async_schedule_save()
 

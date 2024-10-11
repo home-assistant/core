@@ -72,11 +72,24 @@ def test_get_or_create_suggested_object_id(entity_registry: er.EntityRegistry) -
 
 
 def test_get_or_create_updates_data(
+    hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that we update data in get_or_create."""
-    orig_config_entry = MockConfigEntry(domain="light")
+    config_subentry_id = "blabla"
+    orig_config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id=config_subentry_id,
+                title="Mock title",
+                unique_id="test",
+            )
+        ],
+    )
+    orig_config_entry.add_to_hass(hass)
     created = datetime.fromisoformat("2024-02-14T12:00:00.0+00:00")
     freezer.move_to(created)
 
@@ -86,6 +99,7 @@ def test_get_or_create_updates_data(
         "5678",
         capabilities={"max": 100},
         config_entry=orig_config_entry,
+        config_subentry_id=config_subentry_id,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
@@ -107,6 +121,7 @@ def test_get_or_create_updates_data(
         "hue",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
+        config_subentry_id=config_subentry_id,
         created_at=created,
         device_class=None,
         device_id="mock-dev-id",
@@ -136,6 +151,7 @@ def test_get_or_create_updates_data(
         "5678",
         capabilities={"new-max": 150},
         config_entry=new_config_entry,
+        config_subentry_id=None,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -157,6 +173,7 @@ def test_get_or_create_updates_data(
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
+        config_subentry_id=None,
         created_at=created,
         device_class=None,
         device_id="new-mock-dev-id",
@@ -476,6 +493,7 @@ async def test_load_bad_data(
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
                     "device_id": None,
@@ -506,6 +524,7 @@ async def test_load_bad_data(
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
                     "device_id": None,
@@ -534,6 +553,7 @@ async def test_load_bad_data(
             "deleted_entities": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "entity_id": "test.test3",
                     "id": "00003",
@@ -544,6 +564,7 @@ async def test_load_bad_data(
                 },
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "entity_id": "test.test4",
                     "id": "00004",
@@ -685,6 +706,115 @@ async def test_deleted_entity_removing_config_entry_id(
     assert entity_registry.deleted_entities[("light", "hue", "1234")] == deleted_entry2
 
 
+async def test_removing_config_subentry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that we update config subentry id in registry."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+    mock_config = MockConfigEntry(
+        domain="light",
+        entry_id="mock-id-1",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            )
+        ],
+    )
+    mock_config.add_to_hass(hass)
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=mock_config,
+        config_subentry_id="mock-subentry-id-1",
+    )
+    assert entry.config_subentry_id == "mock-subentry-id-1"
+    entity_registry.async_clear_config_subentry("mock-id-1", "mock-subentry-id-1")
+
+    assert not entity_registry.entities
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": entry.entity_id,
+    }
+
+
+async def test_deleted_entity_removing_config_subentry_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we update config subentry id in registry on deleted entity."""
+    mock_config = MockConfigEntry(
+        domain="light",
+        entry_id="mock-id-1",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    mock_config.add_to_hass(hass)
+
+    entry1 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=mock_config,
+        config_subentry_id="mock-subentry-id-1",
+    )
+    assert entry1.config_subentry_id == "mock-subentry-id-1"
+    entry2 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=mock_config,
+        config_subentry_id="mock-subentry-id-2",
+    )
+    assert entry2.config_subentry_id == "mock-subentry-id-2"
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 2
+    deleted_entry1 = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entry1.config_entry_id == "mock-id-1"
+    assert deleted_entry1.config_subentry_id == "mock-subentry-id-1"
+    assert deleted_entry1.orphaned_timestamp is None
+    deleted_entry2 = entity_registry.deleted_entities[("light", "hue", "1234")]
+    assert deleted_entry2.config_entry_id == "mock-id-1"
+    assert deleted_entry2.config_subentry_id == "mock-subentry-id-2"
+    assert deleted_entry2.orphaned_timestamp is None
+
+    entity_registry.async_clear_config_subentry("mock-id-1", "mock-subentry-id-1")
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 2
+    deleted_entry1 = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entry1.config_entry_id is None
+    assert deleted_entry1.config_subentry_id is None
+    assert deleted_entry1.orphaned_timestamp is not None
+    assert entity_registry.deleted_entities[("light", "hue", "1234")] == deleted_entry2
+
+
 async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     """Make sure we can clear area id."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
@@ -740,6 +870,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "capabilities": {},
                     "categories": {},
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_id": None,
                     "disabled_by": None,
@@ -918,6 +1049,7 @@ async def test_migration_1_11(
                     "capabilities": {},
                     "categories": {},
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_id": None,
                     "disabled_by": None,
@@ -946,6 +1078,7 @@ async def test_migration_1_11(
             "deleted_entities": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "entity_id": "test.deleted_entity",
                     "id": "23456",
@@ -1392,7 +1525,7 @@ async def test_remove_config_entry_from_device_removes_entities_2(
         config_entry_2.entry_id,
     }
 
-    # Create one entity for each config entry
+    # Create an entity without config entry
     entry_1 = entity_registry.async_get_or_create(
         "light",
         "hue",
@@ -1405,6 +1538,204 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     # Remove the first config entry from the device
     device_registry.async_update_device(
         device_entry.id, remove_config_entry_id=config_entry_1.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+
+
+async def test_remove_config_subentry_from_device_removes_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we remove entities tied to a device when config subentry is removed."""
+    config_entry_1 = MockConfigEntry(
+        domain="hue",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    config_entry_1.add_to_hass(hass)
+
+    # Create device with three config subentries
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.config_entries == {config_entry_1.entry_id}
+    assert device_entry.config_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+    }
+
+    # Create one entity for each config entry
+    entry_1 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry_1,
+        config_subentry_id="mock-subentry-id-1",
+        device_id=device_entry.id,
+    )
+
+    entry_2 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry_1,
+        config_subentry_id="mock-subentry-id-2",
+        device_id=device_entry.id,
+    )
+
+    entry_3 = entity_registry.async_get_or_create(
+        "sensor",
+        "device_tracker",
+        "6789",
+        config_entry=config_entry_1,
+        config_subentry_id=None,
+        device_id=device_entry.id,
+    )
+
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
+    assert entity_registry.async_is_registered(entry_3.entity_id)
+
+    # Remove the first config subentry from the device, the entity associated with it
+    # should be removed
+    device_registry.async_update_device(
+        device_entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id="mock-subentry-id-1",
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert not entity_registry.async_is_registered(entry_1.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
+    assert entity_registry.async_is_registered(entry_3.entity_id)
+
+    # Remove the second config subentry from the device, the entity associated with it
+    # should be removed
+    device_registry.async_update_device(
+        device_entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id=None,
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert not entity_registry.async_is_registered(entry_1.entity_id)
+    assert entity_registry.async_is_registered(entry_2.entity_id)
+    assert not entity_registry.async_is_registered(entry_3.entity_id)
+
+    # Remove the third config subentry from the device, the entity associated with it
+    # (and the device itself) should be removed
+    device_registry.async_update_device(
+        device_entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id="mock-subentry-id-2",
+    )
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)
+    assert not entity_registry.async_is_registered(entry_1.entity_id)
+    assert not entity_registry.async_is_registered(entry_2.entity_id)
+    assert not entity_registry.async_is_registered(entry_3.entity_id)
+
+
+async def test_remove_config_subentry_from_device_removes_entities_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we don't remove entities with no config entry when device is modified."""
+    config_entry_1 = MockConfigEntry(
+        domain="hue",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    config_entry_1.add_to_hass(hass)
+
+    # Create device with three config subentries
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.config_entries == {config_entry_1.entry_id}
+    assert device_entry.config_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+    }
+
+    # Create an entity without config entry or subentry
+    entry_1 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        device_id=device_entry.id,
+    )
+
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+
+    # Remove the first config subentry from the device
+    device_registry.async_update_device(
+        device_entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id=None,
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_entry.id)
+    assert entity_registry.async_is_registered(entry_1.entity_id)
+
+    # Remove the second config subentry from the device
+    device_registry.async_update_device(
+        device_entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id="mock-subentry-id-1",
     )
     await hass.async_block_till_done()
 
@@ -1813,11 +2144,45 @@ async def test_unique_id_non_string(
     )
 
 
+@pytest.mark.parametrize(
+    ("create_kwargs", "migrate_kwargs", "new_subentry_id"),
+    [
+        ({}, {}, None),
+        ({"config_subentry_id": None}, {}, None),
+        ({}, {"new_config_subentry_id": None}, None),
+        ({}, {"new_config_subentry_id": "mock-subentry-id-2"}, "mock-subentry-id-2"),
+        (
+            {"config_subentry_id": "mock-subentry-id-1"},
+            {"new_config_subentry_id": None},
+            None,
+        ),
+        (
+            {"config_subentry_id": "mock-subentry-id-1"},
+            {"new_config_subentry_id": "mock-subentry-id-2"},
+            "mock-subentry-id-2",
+        ),
+    ],
+)
 def test_migrate_entity_to_new_platform(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_kwargs: dict,
+    migrate_kwargs: dict,
+    new_subentry_id: str | None,
 ) -> None:
     """Test migrate_entity_to_new_platform."""
-    orig_config_entry = MockConfigEntry(domain="light")
+    orig_config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    orig_config_entry.add_to_hass(hass)
     orig_unique_id = "5678"
 
     orig_entry = entity_registry.async_get_or_create(
@@ -1831,6 +2196,7 @@ def test_migrate_entity_to_new_platform(
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
+        **create_kwargs,
     )
     assert entity_registry.async_get("light.light") is orig_entry
     entity_registry.async_update_entity(
@@ -1839,7 +2205,18 @@ def test_migrate_entity_to_new_platform(
         icon="new_icon",
     )
 
-    new_config_entry = MockConfigEntry(domain="light")
+    new_config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    new_config_entry.add_to_hass(hass)
     new_unique_id = "1234"
 
     assert entity_registry.async_update_entity_platform(
@@ -1847,6 +2224,7 @@ def test_migrate_entity_to_new_platform(
         "hue2",
         new_unique_id=new_unique_id,
         new_config_entry_id=new_config_entry.entry_id,
+        **migrate_kwargs,
     )
 
     assert not entity_registry.async_get_entity_id("light", "hue", orig_unique_id)
@@ -1854,6 +2232,7 @@ def test_migrate_entity_to_new_platform(
     assert (new_entry := entity_registry.async_get("light.light")) is not orig_entry
 
     assert new_entry.config_entry_id == new_config_entry.entry_id
+    assert new_entry.config_subentry_id == new_subentry_id
     assert new_entry.unique_id == new_unique_id
     assert new_entry.name == "new_name"
     assert new_entry.icon == "new_icon"
@@ -1886,6 +2265,97 @@ def test_migrate_entity_to_new_platform(
         )
 
 
+def test_migrate_entity_to_new_platform_error_handling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrate_entity_to_new_platform."""
+    orig_config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    orig_config_entry.add_to_hass(hass)
+    orig_unique_id = "5678"
+
+    orig_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        orig_unique_id,
+        suggested_object_id="light",
+        config_entry=orig_config_entry,
+        config_subentry_id="mock-subentry-id-1",
+        disabled_by=er.RegistryEntryDisabler.USER,
+        entity_category=EntityCategory.CONFIG,
+        original_device_class="mock-device-class",
+        original_icon="initial-original_icon",
+        original_name="initial-original_name",
+    )
+    assert entity_registry.async_get("light.light") is orig_entry
+
+    new_config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    new_config_entry.add_to_hass(hass)
+    new_unique_id = "1234"
+
+    # Test migrating nonexisting entity
+    with pytest.raises(KeyError, match="'light.not_a_real_light'"):
+        entity_registry.async_update_entity_platform(
+            "light.not_a_real_light",
+            "hue2",
+            new_unique_id=new_unique_id,
+            new_config_entry_id=new_config_entry.entry_id,
+        )
+
+    # Test migrate entity without new config entry ID
+    with pytest.raises(
+        ValueError,
+        match="new_config_entry_id required because light.light is already linked to a config entry",
+    ):
+        entity_registry.async_update_entity_platform(
+            "light.light",
+            "hue3",
+        )
+
+    # Test migrate entity without new config subentry ID
+    with pytest.raises(
+        ValueError,
+        match="Can't change config entry without changing subentry",
+    ):
+        entity_registry.async_update_entity_platform(
+            "light.light",
+            "hue3",
+            new_config_entry_id=new_config_entry.entry_id,
+        )
+
+    # Test entity with a state
+    hass.states.async_set("light.light", "on")
+    with pytest.raises(
+        ValueError, match="Only entities that haven't been loaded can be migrated"
+    ):
+        entity_registry.async_update_entity_platform(
+            "light.light",
+            "hue2",
+            new_unique_id=new_unique_id,
+            new_config_entry_id=new_config_entry.entry_id,
+        )
+
+
 async def test_restore_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1893,12 +2363,27 @@ async def test_restore_entity(
 ) -> None:
     """Make sure entity registry id is stable and entity_id is reused if possible."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
-    config_entry = MockConfigEntry(domain="light")
+    config_entry = MockConfigEntry(
+        domain="light",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
     entry1 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
     entry2 = entity_registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=config_entry
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        config_subentry_id="mock-subentry-id-1-1",
     )
 
     entry1 = entity_registry.async_update_entity(
@@ -1922,8 +2407,11 @@ async def test_restore_entity(
     # entity_id is not restored
     assert attr.evolve(entry1, entity_id="light.hue_1234") == entry1_restored
     assert entry2 != entry2_restored
-    # Config entry is not restored
-    assert attr.evolve(entry2, config_entry_id=None) == entry2_restored
+    # Config entry and subentry are not restored
+    assert (
+        attr.evolve(entry2, config_entry_id=None, config_subentry_id=None)
+        == entry2_restored
+    )
 
     # Remove two of the entities again, then bump time
     entity_registry.async_remove(entry1_restored.entity_id)
@@ -2230,3 +2718,129 @@ async def test_async_remove_thread_safety(
         match="Detected code that calls entity_registry.async_remove from a thread.",
     ):
         await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)
+
+
+async def test_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test subentry error handling."""
+    entry1 = MockConfigEntry(
+        domain="light",
+        entry_id="mock-id-1",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-2",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain="light",
+        entry_id="mock-id-2",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2-1",
+                title="Mock title",
+                unique_id="test",
+            )
+        ],
+    )
+    entry2.add_to_hass(hass)
+
+    with pytest.raises(
+        ValueError, match="Config entry mock-id-1 has no subentry bad-subentry-id"
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=entry1,
+            config_subentry_id="bad-subentry-id",
+        )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=entry1,
+        config_subentry_id="mock-subentry-id-1-1",
+    )
+    assert entry.config_subentry_id == "mock-subentry-id-1-1"
+
+    # Try updating subentry
+    with pytest.raises(
+        ValueError, match="Config entry mock-id-1 has no subentry bad-subentry-id"
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=entry1,
+            config_subentry_id="bad-subentry-id",
+        )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=entry1,
+        config_subentry_id="mock-subentry-id-1-2",
+    )
+    assert entry.config_subentry_id == "mock-subentry-id-1-2"
+
+    with pytest.raises(
+        ValueError, match="Can't change config entry without changing subentry"
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=entry2,
+        )
+
+    with pytest.raises(
+        ValueError, match="Config entry mock-id-2 has no subentry mock-subentry-id-1-2"
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=entry2,
+            config_subentry_id="mock-subentry-id-1-2",
+        )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=entry2,
+        config_subentry_id="mock-subentry-id-2-1",
+    )
+    assert entry.config_subentry_id == "mock-subentry-id-2-1"
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=entry1,
+        config_subentry_id=None,
+    )
+    assert entry.config_subentry_id is None
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id,
+        config_entry_id=entry2.entry_id,
+        config_subentry_id="mock-subentry-id-2-1",
+    )
+    assert entry.config_subentry_id == "mock-subentry-id-2-1"
