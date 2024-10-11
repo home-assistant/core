@@ -431,7 +431,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "options", MappingProxyType(options or {}))
 
         # Subentries
-        subentries_data = subentries_data or {}
+        subentries_data = subentries_data or ()
         subentries = {}
         for subentry_data in subentries_data:
             subentry_kwargs = {}
