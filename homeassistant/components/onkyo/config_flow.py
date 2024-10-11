@@ -104,11 +104,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
