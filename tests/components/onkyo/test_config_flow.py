@@ -2,19 +2,21 @@
 
 # from typing import Any
 # from unittest import mock
-# from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
+
+from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 
 # import eiscp
 # import pytest
-
 # from homeassistant import config_entries
-# from homeassistant.components.onkyo.const import (
-#     CONF_RECEIVER_MAX_VOLUME,
-#     DOMAIN,
-#     OPTION_MAX_VOLUME,
-#     OPTION_SOURCES,
-# )
-# from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.onkyo.const import (
+    #     CONF_RECEIVER_MAX_VOLUME,
+    DOMAIN,
+    #     OPTION_MAX_VOLUME,
+    #     OPTION_SOURCES,
+)
+from homeassistant.config_entries import SOURCE_USER
+
 # from homeassistant.const import (
 #     CONF_DEVICE,
 #     CONF_HOST,
@@ -23,204 +25,211 @@
 #     CONF_NAME,
 #     CONF_PORT,
 # )
-# from homeassistant.core import HomeAssistant
-# from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-# from . import setup_integration
+# from . import create_empty_config_entry, create_receiver_info, setup_integration
+from . import create_receiver_info
+
+from tests.common import Mock
 
 # from tests.common import MockConfigEntry
 
 
-# async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
-#     """Test no devices found."""
+async def test_user_initial_menu(hass: HomeAssistant) -> None:
+    """Test initial menu."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
-#     # eISCP discovery shows no devices discovered
-#     with patch.object(eiscp.eISCP, "discover", return_value=[]):
-#         init_result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": SOURCE_USER},
-#         )
-
-#         # Empty form triggers manual discovery
-#         configure_result = await hass.config_entries.flow.async_configure(
-#             init_result["flow_id"],
-#             {"next_step_id": "pick_device"},
-#         )
-
-#         assert configure_result["type"] is FlowResultType.ABORT
-#         assert configure_result["reason"] == "no_devices_found"
+    assert init_result["type"] is FlowResultType.MENU
+    # Check if the values are there, but ignore order
+    assert not set(init_result["menu_options"]) ^ set("manual", "eiscp_discovery")
 
 
-# async def test_manual_entry_invalid_ip(hass: HomeAssistant) -> None:
-#     """Test invalid or Nno ip entered."""
+async def test_manual_valid_host(hass: HomeAssistant) -> None:
+    """Test valid host entered."""
 
-#     menu_result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
-#     form_result = await hass.config_entries.flow.async_configure(
-#         menu_result["flow_id"],
-#         {"next_step_id": "manual"},
-#     )
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
 
-#     configure_result = await hass.config_entries.flow.async_configure(
-#         form_result["flow_id"],
-#         user_input={CONF_HOST: "xxx"},
-#     )
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+    mock_info.host = "mock_host"
+    mock_info.model_name = "mock_model"
 
-#     assert configure_result["type"] is FlowResultType.FORM
-#     assert configure_result["step_id"] == "manual"
-#     assert configure_result["errors"]["base"] == "no_ip"
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        configure_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
 
-
-# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
-# async def test_manual_entry_valid_ip_fails_connection(
-#     mock_receiver: MagicMock, hass: HomeAssistant
-# ) -> None:
-#     """Test when connection fails."""
-
-#     client = mock_receiver.return_value
-#     client.host = "fake_host"
-#     client.port = 1337
-#     client.info = None
-
-#     menu_result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
-
-#     form_result = await hass.config_entries.flow.async_configure(
-#         menu_result["flow_id"],
-#         {"next_step_id": "manual"},
-#     )
-
-#     configure_result = await hass.config_entries.flow.async_configure(
-#         form_result["flow_id"],
-#         user_input={CONF_HOST: "127.0.0.1"},
-#     )
-
-#     client.disconnect.assert_called()
-#     assert configure_result["type"] is FlowResultType.FORM
-#     assert configure_result["step_id"] == "manual"
-#     assert configure_result["errors"]["base"] == "cannot_connect"
+        assert configure_result["step_id"] == "configure_receiver"
+        assert (
+            configure_result["description_placeholders"]["name"]
+            == "mock_model (mock_host)"
+        )
 
 
-# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
-# async def test_manual_entry_valid_ip(
-#     mock_receiver: MagicMock, hass: HomeAssistant
-# ) -> None:
-#     """Test the when connection succeeds."""
+async def test_manual_invalid_host(hass: HomeAssistant) -> None:
+    """Test invalid host entered."""
 
-#     client = mock_receiver.return_value
-#     client.host = "fake_host"
-#     client.port = 1337
-#     client.info = {"identifier": "001122334455", "model_name": "fake_model"}
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
-#     menu_result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
 
-#     form_result = await hass.config_entries.flow.async_configure(
-#         menu_result["flow_id"],
-#         {"next_step_id": "manual"},
-#     )
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview", return_value=None
+    ):
+        configure_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
 
-#     configure_result = await hass.config_entries.flow.async_configure(
-#         form_result["flow_id"],
-#         user_input={CONF_HOST: "127.0.0.1"},
-#     )
-
-#     client.disconnect.assert_called()
-#     assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-#     assert configure_result["title"] == "fake_model 001122334455"
-#     assert configure_result["data"][CONF_HOST] == "fake_host"
-#     assert configure_result["data"][CONF_PORT] == 1337
-#     assert configure_result["data"][CONF_NAME] == "fake_model 001122334455"
-#     assert configure_result["data"][CONF_MODEL] == "fake_model"
-#     assert configure_result["data"][CONF_MAC] == "001122334455"
+    assert configure_result["step_id"] == "manual"
+    assert configure_result["errors"]["base"] == "cannot_connect"
 
 
-# async def test_manual_with_unexpected_error(hass: HomeAssistant) -> None:
-#     """Test the when connection succeeds."""
+async def test_manual_valid_host_unexpected_error(hass: HomeAssistant) -> None:
+    """Test valid host entered."""
 
-#     eiscp.eISCP.side_effect = Exception
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
-#     menu_result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
 
-#     form_result = await hass.config_entries.flow.async_configure(
-#         menu_result["flow_id"],
-#         {"next_step_id": "manual"},
-#     )
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        side_effect=Exception(),
+    ):
+        configure_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
 
-#     configure_result = await hass.config_entries.flow.async_configure(
-#         form_result["flow_id"],
-#         user_input={CONF_HOST: "127.0.0.1"},
-#     )
-
-#     assert configure_result["type"] is FlowResultType.FORM
-#     assert configure_result["errors"]["base"] == "unknown"
-
-
-# async def test_show_initial_menu(hass: HomeAssistant) -> None:
-#     """Test the initial selection menu."""
-
-#     init_result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_USER},
-#     )
-
-#     # Empty form triggers manual discovery
-#     configure_result = await hass.config_entries.flow.async_configure(
-#         init_result["flow_id"],
-#         user_input={},
-#     )
-
-#     assert configure_result["type"] is FlowResultType.MENU
-#     assert configure_result["menu_options"] == ["pick_device", "manual"]
+    assert configure_result["step_id"] == "manual"
+    assert configure_result["errors"]["base"] == "unknown"
 
 
-# async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
-#     """Test the full user configuration flow."""
+async def test_discovery_and_no_devices_discovered(hass: HomeAssistant) -> None:
+    """Test initial menu."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
-#     info = {"identifier": "004815162342", "model_name": "fake_model"}
-#     receiver = MagicMock()
-#     receiver.host = "fake_host"
-#     receiver.port = 12345
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_discover", return_value=[]
+    ):
+        form_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
 
-#     # Mock the dict
-#     receiver.info.__getitem__.side_effect = info.__getitem__
+        assert form_result["type"] is FlowResultType.ABORT
+        assert form_result["reason"] == "no_devices_found"
 
-#     # eISCP discovery shows 1 devices discovered
-#     with patch.object(eiscp.eISCP, "discover", return_value=[receiver]):
-#         menu_result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": SOURCE_USER},
-#         )
 
-#         form_result = await hass.config_entries.flow.async_configure(
-#             menu_result["flow_id"],
-#             {"next_step_id": "pick_device"},
-#         )
+async def test_discovery_with_exception(hass: HomeAssistant) -> None:
+    """Test discovery which throws an unexpected exception."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_discover",
+        side_effect=Exception(),
+    ):
+        form_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
 
-#         assert form_result["type"] is FlowResultType.FORM
+        assert form_result["type"] is FlowResultType.ABORT
+        assert form_result["reason"] == "unknown"
 
-#         configure_result = await hass.config_entries.flow.async_configure(
-#             form_result["flow_id"],
-#             user_input={CONF_DEVICE: "004815162342"},
-#         )
 
-#     assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-#     assert configure_result["title"] == "fake_model 004815162342"
-#     assert configure_result["data"][CONF_HOST] == "fake_host"
-#     assert configure_result["data"][CONF_PORT] == 12345
-#     assert configure_result["data"][CONF_NAME] == "fake_model 004815162342"
-#     assert configure_result["data"][CONF_MODEL] == "fake_model"
-#     assert configure_result["data"][CONF_MAC] == "004815162342"
+async def test_discovery_with_new_and_existing_found(hass: HomeAssistant) -> None:
+    """Test discovery with a new and an existing entry."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    infos = [create_receiver_info(1), create_receiver_info(2)]
+
+    with (
+        patch(
+            "homeassistant.components.onkyo.config_flow.async_discover",
+            return_value=infos,
+        ),
+        # Fake it like the first entry was already added
+        patch.object(OnkyoConfigFlow, "_async_current_ids", return_value=["id1"]),
+    ):
+        form_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
+
+        assert form_result["type"] is FlowResultType.FORM
+
+        assert form_result["data_schema"] is not None
+        schema = form_result["data_schema"].schema
+        container = schema["device"].container
+        assert container == {"id2": "type 2 (host 2)"}
+
+
+async def test_discovery_with_one_selected(hass: HomeAssistant) -> None:
+    """Test discovery after a selection."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    infos = [create_receiver_info(42), create_receiver_info(0)]
+
+    with (
+        patch(
+            "homeassistant.components.onkyo.config_flow.async_discover",
+            return_value=infos,
+        ),
+    ):
+        infos = [create_receiver_info(1), create_receiver_info(2)]
+        form_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            {"next_step_id": "eiscp_discovery"},
+        )
+
+        select_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={"device": "id42"},
+        )
+
+        assert select_result["step_id"] == "configure_receiver"
+        assert select_result["description_placeholders"]["name"] == "type 42 (host 42)"
 
 
 # @pytest.mark.parametrize(
