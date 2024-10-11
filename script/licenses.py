@@ -167,7 +167,7 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
-    # Using license-expression (with hatchling)
+    # Using License-Expression (with hatchling)
     "ftfy",  # Apache-2.0
 }
 
