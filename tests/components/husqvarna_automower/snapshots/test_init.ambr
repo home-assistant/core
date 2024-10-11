@@ -20,7 +20,7 @@
     'labels': set({
     }),
     'manufacturer': 'Husqvarna',
-    'model': 'HUSQVARNA AUTOMOWER® 450XH',
+    'model': 'AUTOMOWER® 450XH',
     'model_id': None,
     'name': 'Test Mower 1',
     'name_by_user': None,

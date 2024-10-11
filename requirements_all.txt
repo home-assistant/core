@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.2
+DoorBirdPy==3.0.4
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.1
+PyChromecast==14.0.3
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -176,7 +176,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.5
+aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
 aioairzone==0.9.3
@@ -198,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.3
+aioautomower==2024.10.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -380,7 +380,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.3.1
+aiostreammagic==2.5.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -419,7 +419,7 @@ aiowithings==3.0.3
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.9.0
+airgradient==0.9.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -532,7 +532,7 @@ autarco==3.0.0
 axis==62
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.1
+ayla-iot-unofficial==1.4.2
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -933,7 +933,7 @@ freesms==0.2.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.6.6
+fyta_cli==0.6.7
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1114,10 +1114,10 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.57
+holidays==0.58
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.2
+home-assistant-frontend==20241002.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1176,7 +1176,7 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.5
+imgw_pib==1.0.6
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.3-1
@@ -1387,7 +1387,7 @@ mopeka-iot-ble==0.8.0
 motionblinds==0.6.25
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.1.1
+motionblindsble==0.1.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1484,7 +1484,7 @@ numato-gpio==0.13.0
 numpy==1.26.4
 
 # homeassistant.components.nyt_games
-nyt_games==0.4.2
+nyt_games==0.4.3
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1544,7 +1544,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.0
+opower==0.8.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1710,7 +1710,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.9.0
+pyDuotecno==2024.10.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -1780,7 +1780,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.2
+pyblu==1.0.3
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1855,7 +1855,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.22
+pyeconet==0.1.23
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -2244,7 +2244,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.2
+pysmlight==0.1.3
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2340,10 +2340,10 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.4
+python-kasa[speedups]==0.7.5
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.12
+python-linkplay==0.0.15
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2413,7 +2413,7 @@ pytomorrowio==0.3.6
 pytouchline==0.7
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.7
+pytouchlinesl==0.1.8
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2477,7 +2477,7 @@ pywilight==0.0.74
 pywizlight==0.5.14
 
 # homeassistant.components.wmspro
-pywmspro==0.2.0
+pywmspro==0.2.1
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2676,7 +2676,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.0
+solarlog_cli==0.3.1
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -2992,7 +2992,7 @@ xiaomi-ble==0.32.0
 xknx==3.2.0
 
 # homeassistant.components.knx
-xknxproject==3.8.0
+xknxproject==3.8.1
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
