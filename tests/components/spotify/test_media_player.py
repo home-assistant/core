@@ -7,6 +7,7 @@ from spotipy import SpotifyException
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
@@ -16,6 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -391,3 +393,25 @@ async def test_play_unsupported_media(
     )
     assert mock_spotify.return_value.start_playback.call_count == 0
     assert mock_spotify.return_value.add_to_queue.call_count == 0
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_select_source(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player source select."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
+            ATTR_INPUT_SOURCE: "DESKTOP-BKC5SIK",
+        },
+        blocking=True,
+    )
+    mock_spotify.return_value.transfer_playback.assert_called_with(
+        "21dac6b0e0a1f181870fdc9749b2656466557666", True
+    )
