@@ -667,7 +667,7 @@ async def test_services_play_media_local_source(
     assert call_args[1]["videoFormat"] == "mp4"
     assert "videoName" in call_args[1]
     assert (
-        call_args[1]["videoNam÷"]
+        call_args[1]["videoName"]
         == "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
     )
 
