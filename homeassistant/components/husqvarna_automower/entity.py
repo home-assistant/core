@@ -125,7 +125,9 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
             manufacturer="Husqvarna",
-            model=self.mower_attributes.system.model,
+            model=self.mower_attributes.system.model.removeprefix(
+                "HUSQVARNA "
+            ).removeprefix("Husqvarna "),
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
