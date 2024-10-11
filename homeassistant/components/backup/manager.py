@@ -77,7 +77,7 @@ class BaseBackupManager(abc.ABC):
     async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Get backups.
 
-        return a dictionary of Backup classes keyed by their slug.
+        Return a dictionary of Backup instances keyed by their slug.
         """
 
     @abc.abstractmethod
