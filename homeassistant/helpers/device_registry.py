@@ -842,7 +842,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             device.id,
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
-            add_config_entry=config_entry,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
@@ -870,7 +869,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry: ConfigEntry | UndefinedType = UNDEFINED,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         # Temporary flag so we don't blow up when collisions are implicitly introduced
         # by calls to async_get_or_create. Must not be set by integrations.
@@ -905,13 +903,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
-        if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
-            config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
-            if config_entry is None:
+        if add_config_entry_id is not UNDEFINED:
+            if self.hass.config_entries.async_get_entry(add_config_entry_id) is None:
                 raise HomeAssistantError(
                     f"Can't link device to unknown config entry {add_config_entry_id}"
                 )
-            add_config_entry = config_entry
 
         if not new_connections and not new_identifiers:
             raise HomeAssistantError(
