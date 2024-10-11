@@ -318,15 +318,17 @@ class AssistSatelliteEntity(entity.Entity):
                 self.hass,
                 context=self._context,
                 event_callback=self._internal_on_pipeline_event,
-                stt_metadata=stt.SpeechMetadata(
-                    language="",  # set in async_pipeline_from_audio_stream
-                    format=stt.AudioFormats.WAV,
-                    codec=stt.AudioCodecs.PCM,
-                    bit_rate=stt.AudioBitRates.BITRATE_16,
-                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                    channel=stt.AudioChannels.CHANNEL_MONO,
-                ),
-                stt_stream=audio_stream,
+                stt_data={
+                    "metadata": stt.SpeechMetadata(
+                        language="",  # set in async_pipeline_from_audio_stream
+                        format=stt.AudioFormats.WAV,
+                        codec=stt.AudioCodecs.PCM,
+                        bit_rate=stt.AudioBitRates.BITRATE_16,
+                        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                        channel=stt.AudioChannels.CHANNEL_MONO,
+                    ),
+                    "stream": audio_stream,
+                },
                 pipeline_id=self._resolve_pipeline(),
                 conversation_id=self._conversation_id,
                 device_id=device_id,

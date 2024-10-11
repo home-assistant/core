@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
-from typing import Any
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
@@ -91,14 +91,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     return True
 
+class STTData(TypedDict):
+    metadata: stt.SpeechMetadata
+    stream: AsyncIterable[bytes]
 
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
     *,
     context: Context,
     event_callback: PipelineEventCallback,
-    stt_metadata: stt.SpeechMetadata,
-    stt_stream: AsyncIterable[bytes],
+    stt_data: STTData,
     wake_word_phrase: str | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
@@ -116,8 +118,8 @@ async def async_pipeline_from_audio_stream(
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
         device_id=device_id,
-        stt_metadata=stt_metadata,
-        stt_stream=stt_stream,
+        stt_metadata=stt_data["metadata"],
+        stt_stream=stt_data["stream"],
         wake_word_phrase=wake_word_phrase,
         run=PipelineRun(
             hass,
