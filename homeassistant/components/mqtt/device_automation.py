@@ -8,12 +8,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_MIGRATE_DISCOVERY
 from .entity import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
@@ -22,10 +20,7 @@ AUTOMATION_TYPES_SCHEMA = vol.In(AUTOMATION_TYPES)
 CONF_AUTOMATION_TYPE = "automation_type"
 
 DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA,
-        vol.Optional(CONF_MIGRATE_DISCOVERY): cv.boolean,
-    },
+    {vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
     extra=vol.ALLOW_EXTRA,
 )
 

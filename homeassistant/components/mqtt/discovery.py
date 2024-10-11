@@ -35,7 +35,6 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_COMPONENTS,
-    CONF_MIGRATE_DISCOVERY,
     CONF_ORIGIN,
     CONF_TOPIC,
     DOMAIN,
@@ -67,6 +66,8 @@ MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
 )
 
 TOPIC_BASE = "~"
+
+CONF_MIGRATE_DISCOVERY = "migrate_discovery"
 
 MIGRATE_DISCOVERY_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MIGRATE_DISCOVERY): True},

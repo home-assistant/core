@@ -106,8 +106,6 @@ CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
-CONF_MIGRATE_DISCOVERY = "migrate_discovery"
-
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True
