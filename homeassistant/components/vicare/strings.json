@@ -258,16 +258,16 @@
         "name": "DHW electricity consumption last seven days"
       },
       "power_consumption_today": {
-        "name": "Energy consumption today"
+        "name": "Electricity consumption today"
       },
       "power_consumption_this_week": {
-        "name": "Energy consumption this week"
+        "name": "Electricity consumption this week"
       },
       "power_consumption_this_month": {
-        "name": "Energy consumption this month"
+        "name": "Electricity consumption this month"
       },
       "power_consumption_this_year": {
-        "name": "Energy consumption this year"
+        "name": "Electricity consumption this year"
       },
       "power_production_current": {
         "name": "Power production current"
