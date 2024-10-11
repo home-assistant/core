@@ -122,8 +122,8 @@ def mock_spotify() -> Generator[AsyncMock]:
             ).items
         for fixture, method, obj in (
             (
-                "get_playback.json",
-                "playback",
+                "playback.json",
+                "get_playback",
                 PlaybackState,
             ),
             ("current_user.json", "get_current_user", UserProfile),
