@@ -99,7 +99,7 @@ def mock_spotify() -> Generator[AsyncMock]:
         # https://developer.spotify.com/documentation/web-api
         for fixture, method, obj in (
             (
-                "current_user_playlists.json",
+                "current_user_playlist.json",
                 "get_playlists_for_current_user",
                 PlaylistResponse,
             ),
