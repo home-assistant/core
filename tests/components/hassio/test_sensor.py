@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -28,7 +28,11 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
     _install_test_addon_stats_mock(aioclient_mock)
@@ -76,13 +80,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -176,15 +173,7 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
         },
     )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
     aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
-    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )

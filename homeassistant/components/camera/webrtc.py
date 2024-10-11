@@ -9,9 +9,6 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
-from mashumaro import field_options
-from mashumaro.config import BaseConfig
-from mashumaro.mixins.dict import DataClassDictMixin
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -41,19 +38,8 @@ DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]]
 )
 
 
-class _RTCBaseModel(DataClassDictMixin):
-    """Base class for RTC models."""
-
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        # Serialize to spec conform names and omit default values
-        omit_default = True
-        serialize_by_alias = True
-
-
 @dataclass
-class RTCIceServer(_RTCBaseModel):
+class RTCIceServer:
     """RTC Ice Server.
 
     See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
@@ -63,71 +49,103 @@ class RTCIceServer(_RTCBaseModel):
     username: str | None = None
     credential: str | None = None
 
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+
+        data = {
+            "urls": self.urls,
+        }
+        if self.username is not None:
+            data["username"] = self.username
+        if self.credential is not None:
+            data["credential"] = self.credential
+        return data
+
 
 @dataclass
-class RTCConfiguration(_RTCBaseModel):
+class RTCConfiguration:
     """RTC Configuration.
 
     See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
     """
 
-    ice_servers: list[RTCIceServer] = field(
-        metadata=field_options(alias="iceServers"), default_factory=list
-    )
+    ice_servers: list[RTCIceServer] = field(default_factory=list)
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        if not self.ice_servers:
+            return {}
+
+        return {
+            "iceServers": [server.to_frontend_dict() for server in self.ice_servers]
+        }
 
 
 @dataclass(kw_only=True)
-class WebRTCClientConfiguration(DataClassDictMixin):
+class WebRTCClientConfiguration:
     """WebRTC configuration for the client.
 
     Not part of the spec, but required to configure client.
     """
 
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        serialize_by_alias = True
-
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
-    data_channel: str | None = field(
-        metadata=field_options(alias="dataChannel"), default=None
-    )
-    get_candidates_upfront: bool = field(
-        metadata=field_options(alias="getCandidatesUpfront"), init=False, default=False
-    )
+    data_channel: str | None = None
+    get_candidates_upfront: bool = False
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        data: dict[str, Any] = {
+            "configuration": self.configuration.to_frontend_dict(),
+            "getCandidatesUpfront": self.get_candidates_upfront,
+        }
+        if self.data_channel is not None:
+            data["dataChannel"] = self.data_channel
+        return data
 
 
 @dataclass(frozen=True)
-class WebRTCSessionId(DataClassDictMixin):
+class WebRTCSessionId:
     """WebRTC session ID."""
 
     session_id: str
-    type: str = field(default="session_id", init=False)
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        return {"sessionId": self.session_id, "type": "session_id"}
 
 
 @dataclass(frozen=True)
-class WebRTCAnswer(DataClassDictMixin):
+class WebRTCAnswer:
     """WebRTC answer."""
 
     answer: str
-    type: str = field(default="answer", init=False)
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        return {"answer": self.answer, "type": "answer"}
 
 
 @dataclass(frozen=True)
-class WebRTCCandidate(DataClassDictMixin):
+class WebRTCCandidate:
     """WebRTC candidate."""
 
     candidate: str
-    type: str = field(default="candidate", init=False)
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        return {"candidate": self.candidate, "type": "candidate"}
 
 
 @dataclass(frozen=True)
-class WebRTCError(DataClassDictMixin):
+class WebRTCError:
     """WebRTC error."""
 
     code: str
     message: str
-    type: str = field(default="error", init=False)
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        return {"code": self.code, "message": self.message, "type": "error"}
 
 
 type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId | WebRTCError
@@ -266,7 +284,7 @@ async def ws_webrtc_offer(
     @callback
     def send_message(message: WebRTCMessages | dict[str, Any]) -> None:
         """Push a value to websocket."""
-        value = message if isinstance(message, dict) else message.to_dict()
+        value = message if isinstance(message, dict) else message.to_frontend_dict()
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
@@ -325,7 +343,7 @@ async def ws_get_client_config(
         )
         return
 
-    config = (await camera.async_get_webrtc_client_configuration()).to_dict()
+    config = (await camera.async_get_webrtc_client_configuration()).to_frontend_dict()
     connection.send_result(
         msg["id"],
         config,

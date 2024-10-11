@@ -113,7 +113,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="salinity",
         translation_key="salinity",
-        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS_PER_CM,
         device_class=SensorDeviceClass.CONDUCTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda plant: plant.salinity,
