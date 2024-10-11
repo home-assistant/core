@@ -551,6 +551,9 @@ async def test_async_config_entry_first_refresh_failure(
     a decreasing level of logging once the first message is logged.
     """
     entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
