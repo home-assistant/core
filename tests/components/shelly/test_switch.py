@@ -574,6 +574,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     assert not entry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_device_script_switch(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
