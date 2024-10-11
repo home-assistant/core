@@ -23,8 +23,8 @@ class DevoloDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         *,
         name: str,
         semaphore: Semaphore,
-        update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        update_interval: timedelta,
+        update_method: Callable[[], Awaitable[_DataT]],
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
@@ -38,7 +38,5 @@ class DevoloDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
-        if self.update_method is None:
-            raise NotImplementedError("Update method not implemented")
         async with self._semaphore:
-            return await self.update_method()
+            return await super()._async_update_data()
