@@ -1160,6 +1160,103 @@ async def async_api_disarm(
     return response
 
 
+# Helper methods for async_api_set_mode
+def _set_fan_direction(data: dict[str, Any], direction: str) -> str | None:
+    """Set the fan direction in the data dictionary."""
+    if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
+        data[fan.ATTR_DIRECTION] = direction
+        return fan.SERVICE_SET_DIRECTION
+    return None
+
+
+def _set_fan_preset_mode(
+    data: dict[str, Any], entity: ha.Entity, preset_mode: str
+) -> str | None:
+    """Set the fan preset mode in the data dictionary."""
+    if fan.ATTR_PRESET_MODES is None:
+        raise ValueError("fan.ATTR_PRESET_MODES cannot be None.")
+
+    preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
+    if preset_mode != PRESET_MODE_NA and preset_modes and preset_mode in preset_modes:
+        data[fan.ATTR_PRESET_MODE] = preset_mode
+        return fan.SERVICE_SET_PRESET_MODE
+    msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
+    raise AlexaInvalidValueError(msg)
+
+
+def _set_humidifier_mode(
+    data: dict[str, Any], entity: ha.Entity, mode: str
+) -> str | None:
+    """Set the humidifier mode in the data dictionary."""
+    if humidifier.ATTR_AVAILABLE_MODES is None:
+        raise ValueError("humidifier.ATTR_AVAILABLE_MODES cannot be None.")
+
+    modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
+    if mode != PRESET_MODE_NA and modes and mode in modes:
+        data[humidifier.ATTR_MODE] = mode
+        return humidifier.SERVICE_SET_MODE
+    msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+    raise AlexaInvalidValueError(msg)
+
+
+def _set_remote_activity(
+    data: dict[str, Any], entity: ha.Entity, activity: str
+) -> str | None:
+    """Set the remote activity in the data dictionary."""
+    if remote.ATTR_ACTIVITY_LIST is None:
+        raise ValueError("remote.ATTR_ACTIVITY_LIST cannot be None.")
+
+    activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+    if activity != PRESET_MODE_NA and activities and activity in activities:
+        data[remote.ATTR_ACTIVITY] = activity
+        return remote.SERVICE_TURN_ON
+    raise AlexaInvalidValueError(
+        f"Entity '{entity.entity_id}' does not support Mode '{activity}'"
+    )
+
+
+def _set_water_heater_mode(
+    data: dict[str, Any], entity: ha.Entity, operation_mode: str
+) -> str | None:
+    """Set the water heater operation mode in the data dictionary."""
+    if water_heater.ATTR_OPERATION_LIST is None:
+        raise ValueError("water_heater.ATTR_OPERATION_LIST cannot be None.")
+
+    operation_modes: list[str] | None = entity.attributes.get(
+        water_heater.ATTR_OPERATION_LIST
+    )
+    if (
+        operation_mode != PRESET_MODE_NA
+        and operation_modes
+        and operation_mode in operation_modes
+    ):
+        data[water_heater.ATTR_OPERATION_MODE] = operation_mode
+        return water_heater.SERVICE_SET_OPERATION_MODE
+    raise AlexaInvalidValueError(
+        f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
+    )
+
+
+def _set_cover_position(data: dict[str, Any], position: str) -> str | None:
+    """Set the cover position in the data dictionary."""
+    if position == cover.STATE_CLOSED:
+        return cover.SERVICE_CLOSE_COVER
+    if position == cover.STATE_OPEN:
+        return cover.SERVICE_OPEN_COVER
+    if position == "custom":
+        return cover.SERVICE_STOP_COVER
+    return None
+
+
+def _set_valve_position(data: dict[str, Any], position: str) -> str | None:
+    """Set the valve position in the data dictionary."""
+    if position == valve.STATE_CLOSED:
+        return valve.SERVICE_CLOSE_VALVE
+    if position == valve.STATE_OPEN:
+        return valve.SERVICE_OPEN_VALVE
+    return None
+
+
 @HANDLERS.register(("Alexa.ModeController", "SetMode"))
 async def async_api_set_mode(
     hass: ha.HomeAssistant,
@@ -1175,86 +1272,35 @@ async def async_api_set_mode(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     mode = directive.payload["mode"]
 
-    # Fan Direction
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        direction = mode.split(".")[1]
-        if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
-            service = fan.SERVICE_SET_DIRECTION
-            data[fan.ATTR_DIRECTION] = direction
+    mode_type, mode_value = mode.split(".")
 
-    # Fan preset_mode
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
-        preset_mode = mode.split(".")[1]
-        preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
-        if (
-            preset_mode != PRESET_MODE_NA
-            and preset_modes
-            and preset_mode in preset_modes
-        ):
-            service = fan.SERVICE_SET_PRESET_MODE
-            data[fan.ATTR_PRESET_MODE] = preset_mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
-            raise AlexaInvalidValueError(msg)
+    # Define a mapping of instance types to their respective handlers
+    handlers: dict[str, Callable[[], str | None]] = {
+        f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}": lambda: _set_fan_direction(
+            data, mode_value
+        ),
+        f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}": lambda: _set_fan_preset_mode(
+            data, entity, mode_value
+        ),
+        f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}": lambda: _set_humidifier_mode(
+            data, entity, mode_value
+        ),
+        f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}": lambda: _set_remote_activity(
+            data, entity, mode_value
+        ),
+        f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}": lambda: _set_water_heater_mode(
+            data, entity, mode_value
+        ),
+        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _set_cover_position(
+            data, mode_value
+        ),
+        f"{valve.DOMAIN}.state": lambda: _set_valve_position(data, mode_value),
+    }
 
-    # Humidifier mode
-    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
-        mode = mode.split(".")[1]
-        modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
-        if mode != PRESET_MODE_NA and modes and mode in modes:
-            service = humidifier.SERVICE_SET_MODE
-            data[humidifier.ATTR_MODE] = mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
-            raise AlexaInvalidValueError(msg)
+    assert isinstance(instance, str), "Instance must be a string"
 
-    # Remote Activity
-    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
-        activity = mode.split(".")[1]
-        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
-        if activity != PRESET_MODE_NA and activities and activity in activities:
-            service = remote.SERVICE_TURN_ON
-            data[remote.ATTR_ACTIVITY] = activity
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Water heater operation mode
-    elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
-        operation_mode = mode.split(".")[1]
-        operation_modes: list[str] | None = entity.attributes.get(
-            water_heater.ATTR_OPERATION_LIST
-        )
-        if (
-            operation_mode != PRESET_MODE_NA
-            and operation_modes
-            and operation_mode in operation_modes
-        ):
-            service = water_heater.SERVICE_SET_OPERATION_MODE
-            data[water_heater.ATTR_OPERATION_MODE] = operation_mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Cover Position
-    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        position = mode.split(".")[1]
-
-        if position == cover.STATE_CLOSED:
-            service = cover.SERVICE_CLOSE_COVER
-        elif position == cover.STATE_OPEN:
-            service = cover.SERVICE_OPEN_COVER
-        elif position == "custom":
-            service = cover.SERVICE_STOP_COVER
-
-    # Valve position state
-    elif instance == f"{valve.DOMAIN}.state":
-        position = mode.split(".")[1]
-
-        if position == valve.STATE_CLOSED:
-            service = valve.SERVICE_CLOSE_VALVE
-        elif position == valve.STATE_OPEN:
-            service = valve.SERVICE_OPEN_VALVE
+    handler: Callable[[], str | None] | None = handlers.get(instance)
+    service = handler() if handler is not None else None
 
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
