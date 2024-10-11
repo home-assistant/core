@@ -49,6 +49,19 @@ TEST_DOMAIN = "fake_integration"
 
 
 @pytest.fixture
+def ignore_translations() -> list[str]:
+    """Ignore specific translations.
+
+    Override or parametrize this fixture with a fixture that returns,
+    a list of translation that should be ignored.
+    """
+    return [
+        "component.fake_integration.config.abort.missing_configuration",
+        "component.fake_integration.config.abort.missing_credentials",
+    ]
+
+
+@pytest.fixture
 async def authorization_server() -> AuthorizationServer:
     """Fixture AuthorizationServer for mock application_credentials integration."""
     return AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
