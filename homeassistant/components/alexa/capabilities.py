@@ -1141,32 +1141,35 @@ class AlexaThermostatController(AlexaCapability):
         """Return True if properties can be retrieved."""
         return True
 
+    def _handle_thermostat_mode(self, name: str) -> str | None:
+        if self.entity.domain == water_heater.DOMAIN:
+            return None
+        preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
+
+        mode: dict[str, str] | str | None
+        if preset in API_THERMOSTAT_PRESETS:
+            mode = API_THERMOSTAT_PRESETS[preset]
+        elif self.entity.state == STATE_UNKNOWN:
+            return None
+        else:
+            if self.entity.state not in API_THERMOSTAT_MODES:
+                _LOGGER.error(
+                    "%s (%s) has unsupported state value '%s'",
+                    self.entity.entity_id,
+                    type(self.entity),
+                    self.entity.state,
+                )
+                raise UnsupportedProperty(name)
+            mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
+        return mode
+
     def get_property(self, name: str) -> Any:
         """Read and return a property."""
         if self.entity.state == STATE_UNAVAILABLE:
             return None
 
         if name == "thermostatMode":
-            if self.entity.domain == water_heater.DOMAIN:
-                return None
-            preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
-
-            mode: dict[str, str] | str | None
-            if preset in API_THERMOSTAT_PRESETS:
-                mode = API_THERMOSTAT_PRESETS[preset]
-            elif self.entity.state == STATE_UNKNOWN:
-                return None
-            else:
-                if self.entity.state not in API_THERMOSTAT_MODES:
-                    _LOGGER.error(
-                        "%s (%s) has unsupported state value '%s'",
-                        self.entity.entity_id,
-                        type(self.entity),
-                        self.entity.state,
-                    )
-                    raise UnsupportedProperty(name)
-                mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
-            return mode
+            return self._handle_thermostat_mode(name)
 
         unit = self.hass.config.units.temperature_unit
         if name == "targetSetpoint":
