@@ -659,7 +659,7 @@ async def test_squeezebox_call_method(
     )
 
 
-async def test_squeezebox_search(
+async def test_squeezebox_search_albums(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test query service call."""
@@ -678,6 +678,12 @@ async def test_squeezebox_search(
         "albums", "0", "1", "tags:laay", "search:searchstring"
     )
 
+
+async def test_squeezebox_search_favorites(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
@@ -692,6 +698,12 @@ async def test_squeezebox_search(
     configured_player.async_query.assert_called_once_with(
         "favorites", "items", "0", "1", "search:searchstring"
     )
+
+
+async def test_squeezebox_search_artists(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
 
     await hass.services.async_call(
         DOMAIN,
@@ -708,6 +720,12 @@ async def test_squeezebox_search(
         "artists", "0", "1", "search:searchstring"
     )
 
+
+async def test_squeezebox_search_genres(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
@@ -722,6 +740,12 @@ async def test_squeezebox_search(
     configured_player.async_query.assert_called_once_with(
         "genres", "0", "1", "search:searchstring"
     )
+
+
+async def test_squeezebox_search_tracks(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
 
     await hass.services.async_call(
         DOMAIN,
@@ -738,6 +762,12 @@ async def test_squeezebox_search(
         "tracks", "0", "1", "tags:aglQrTy", "search:searchstring"
     )
 
+
+async def test_squeezebox_search_playlists(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
@@ -752,6 +782,12 @@ async def test_squeezebox_search(
     configured_player.async_query.assert_called_once_with(
         "playlists", "0", "1", "search:searchstring"
     )
+
+
+async def test_squeezebox_search_players(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
 
     await hass.services.async_call(
         DOMAIN,
