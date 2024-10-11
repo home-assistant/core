@@ -84,6 +84,17 @@
         "name": "Blessing"
       }
     },
+    "calendar": {
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      },
+      "reminders": {
+        "name": "Reminders"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"

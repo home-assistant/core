@@ -5,6 +5,21 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Any
 
+from dateutil.rrule import (
+    DAILY,
+    FR,
+    MO,
+    MONTHLY,
+    SA,
+    SU,
+    TH,
+    TU,
+    WE,
+    WEEKLY,
+    YEARLY,
+    rrule,
+)
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -62,3 +77,35 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
     used_in = automations_with_entity(hass, entity_id)
     used_in += scripts_with_entity(hass, entity_id)
     return used_in
+
+
+frequency_map = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+weekday_map = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
+
+
+def build_rrule(task: dict[str, Any]) -> rrule:
+    """Build rrule string."""
+
+    rrule_frequency = frequency_map.get(task["frequency"], DAILY)
+    weekdays = [
+        weekday_map[day] for day, is_active in task["repeat"].items() if is_active
+    ]
+    bymonthday = (
+        task["daysOfMonth"]
+        if rrule_frequency == MONTHLY and task["daysOfMonth"]
+        else None
+    )
+
+    bysetpos = None
+    if rrule_frequency == MONTHLY and task["weeksOfMonth"]:
+        bysetpos = task["weeksOfMonth"]
+        weekdays = weekdays if weekdays else [MO]
+
+    return rrule(
+        freq=rrule_frequency,
+        interval=task["everyX"],
+        dtstart=dt_util.as_local(datetime.datetime.fromisoformat(task["startDate"])),
+        byweekday=weekdays if rrule_frequency in [WEEKLY, MONTHLY] else None,
+        bymonthday=bymonthday,
+        bysetpos=bysetpos,
+    )

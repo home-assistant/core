@@ -58,6 +58,17 @@
         "default": "mdi:hand-heart-outline"
       }
     },
+    "calendar": {
+      "todos": {
+        "default": "mdi:calendar-check"
+      },
+      "dailys": {
+        "default": "mdi:calendar-multiple"
+      },
+      "reminders": {
+        "default": "mdi:reminder"
+      }
+    },
     "sensor": {
       "display_name": {
         "default": "mdi:account-circle"
