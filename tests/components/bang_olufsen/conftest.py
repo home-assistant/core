@@ -298,7 +298,10 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             id=123,
         )
         client.get_settings_queue = AsyncMock()
-        client.get_settings_queue.return_value = PlayQueueSettings()
+        client.get_settings_queue.return_value = PlayQueueSettings(
+            repeat="none",
+            shuffle=False,
+        )
 
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()

@@ -113,10 +113,7 @@ async def async_setup_entry(
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add MediaPlayer entity
-    async_add_entities(
-        new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)],
-        update_before_add=True,
-    )
+    async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
 
 
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
@@ -155,7 +152,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
-        self._queue_settings = PlayQueueSettings()
 
         # Beolink compatible sources
         self._beolink_sources: dict[str, bool] = {}
@@ -238,9 +234,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # The WebSocket event listener is the main handler for connection state.
         # The polling updates do therefore not set the device as available or unavailable
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
-            self._queue_settings = await self._client.get_settings_queue(
-                _request_timeout=5
-            )
+            queue_settings = await self._client.get_settings_queue(_request_timeout=5)
+
+            if queue_settings.repeat is not None:
+                self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
 
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
@@ -485,13 +482,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._attr_sound_mode_list = list(self._sound_modes)
 
         self.async_write_ha_state()
-
-    @property
-    def repeat(self) -> RepeatMode | None:
-        """Return current repeat setting for queues."""
-        if self._queue_settings.repeat:
-            return BANG_OLUFSEN_REPEAT_TO_HA[self._queue_settings.repeat]
-        return None
 
     @property
     def state(self) -> MediaPlayerState:
