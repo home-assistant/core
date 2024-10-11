@@ -24,7 +24,6 @@ class DuwiEntity(Entity):
         self.device = device
         self.entity_id = f"{DOMAIN}.{device.device_no}"
         self.device_manager = device_manager
-        self.is_control = True
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -49,10 +48,7 @@ class DuwiEntity(Entity):
 
     async def handle_signal(self) -> None:
         """Handle the signal and invoke the appropriate method based on is_control."""
-        if self.is_control:
-            self.async_write_ha_state()
-        else:
-            self.is_control = True
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:

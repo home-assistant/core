@@ -15,8 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DuwiConfigEntry
-from .base import DuwiEntity
 from .const import _LOGGER, DUWI_DISCOVERY_NEW, DPCode
+from .entity import DuwiEntity
 
 # List of Duwi switch types, each represented by a unique ID.
 DUWI_SWITCH_TYPES = [

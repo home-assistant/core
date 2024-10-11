@@ -198,18 +198,6 @@ async def test_device_info(mock_switch):
     )
 
 
-async def test_handle_signal(mock_switch):
-    """Test handle_signal method."""
-    mock_switch.is_control = True
-    with patch.object(mock_switch, "async_write_ha_state") as mock_write_ha_state:
-        await mock_switch.handle_signal()
-        mock_write_ha_state.assert_called_once()
-
-    mock_switch.is_control = False
-    await mock_switch.handle_signal()
-    assert mock_switch.is_control is True
-
-
 async def test_available(mock_switch):
     """Test available property."""
     mock_switch.device.value = {"online": True}

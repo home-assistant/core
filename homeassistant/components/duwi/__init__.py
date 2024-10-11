@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
@@ -37,11 +37,9 @@ from .const import (
 
 type DuwiConfigEntry = ConfigEntry[HomeAssistantDuwiData]
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(domain=DOMAIN)
-
 
 class HomeAssistantDuwiData(NamedTuple):
-    """Duwi data stored in the Home Assistant data object."""
+    """Store Duwi data in the Home Assistant data object."""
 
     manager: Manager
     listener: SharingDeviceListener
@@ -77,15 +75,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
 
-    ids = []
-    if hasattr(entry, "runtime_data") and entry.runtime_data is not None:
-        old_manager = entry.runtime_data.manager
-        ids = await compare_manager(old_manager, manager)
-
     entry.runtime_data = HomeAssistantDuwiData(manager=manager, listener=listener)
 
     # Clean up inappropriate devices
-    await cleanup_device_registry(hass, entry, ids)
+    await cleanup_device_registry(hass, entry)
     hass.data[DOMAIN].setdefault("existing_house", []).append(entry.data[HOUSE_NO])
 
     # Start global WebSocket listener
@@ -119,9 +112,7 @@ async def compare_manager(old_manager: Manager, new_manager: Manager) -> list:
     return ids
 
 
-async def cleanup_device_registry(
-    hass: HomeAssistant, entry: DuwiConfigEntry, device_ids: list
-) -> None:
+async def cleanup_device_registry(hass: HomeAssistant, entry: DuwiConfigEntry) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
 
     device_registry = dr.async_get(hass)
@@ -130,7 +121,6 @@ async def cleanup_device_registry(
         for item in device_entry.identifiers:
             if item[0] == DOMAIN and (
                 item[1] not in entry.runtime_data.manager.device_map
-                or dev_id in device_ids
             ):
                 device_registry.async_remove_device(dev_id)
 
