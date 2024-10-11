@@ -109,7 +109,7 @@ ENTITY_ID_STATES = {
         "run",
         "ready",
     ),
-    "sensor.dishwasher_finish_program_time": (
+    "sensor.dishwasher_program_finish_time": (
         "unavailable",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
@@ -200,7 +200,7 @@ async def test_remaining_prog_time_edge_cases(
 ) -> None:
     """Run program sequence to test edge cases for the remaining_prog_time entity."""
     get_appliances.return_value = [appliance]
-    entity_id = "sensor.dishwasher_finish_program_time"
+    entity_id = "sensor.dishwasher_program_finish_time"
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 
