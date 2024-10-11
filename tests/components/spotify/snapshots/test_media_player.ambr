@@ -5,6 +5,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -51,6 +54,9 @@
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
       'source': 'Master Bathroom Speaker',
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
       'supported_features': <MediaPlayerEntityFeature: 444983>,
       'volume_level': 0.25,
     }),
@@ -68,6 +74,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -112,6 +121,9 @@
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
       'source': 'Sonos Roam SL',
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
       'supported_features': <MediaPlayerEntityFeature: 2048>,
       'volume_level': 0.46,
     }),
