@@ -307,9 +307,7 @@ async def test_play_media_in_queue(
         },
         blocking=True,
     )
-    mock_spotify.return_value.add_to_queue.assert_called_with(
-        media_id, "21dac6b0e0a1f181870fdc9749b2656466557666"
-    )
+    mock_spotify.return_value.add_to_queue.assert_called_with(media_id)
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -373,9 +371,7 @@ async def test_play_media(
         },
         blocking=True,
     )
-    mock_spotify.return_value.start_playback.assert_called_with(
-        **{"device_id": "21dac6b0e0a1f181870fdc9749b2656466557666", **called_with}
-    )
+    mock_spotify.return_value.start_playback.assert_called_with(**called_with)
 
 
 @pytest.mark.usefixtures("setup_credentials")

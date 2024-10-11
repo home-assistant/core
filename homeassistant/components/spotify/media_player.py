@@ -332,7 +332,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             _LOGGER.error("Media type %s is not supported", media_type)
             return
 
-        if self.currently_playing and self.devices.data:
+        if not self.currently_playing and self.devices.data:
             kwargs["device_id"] = self.devices.data[0].device_id
 
         if enqueue == MediaPlayerEnqueue.ADD:
