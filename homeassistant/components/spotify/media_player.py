@@ -252,10 +252,10 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     @property
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
+        if self.coordinator.data.dj_playlist:
+            return "DJ"
         if self.coordinator.data.playlist is None:
             return None
-        if self.coordinator.data.dj_playlist:
-            return "Spotify DJ"
         return self.coordinator.data.playlist.name
 
     @property

@@ -12,6 +12,7 @@ from spotifyaio.models import (
     CategoriesResponse,
     Category,
     CategoryPlaylistResponse,
+    Devices,
     FeaturedPlaylistResponse,
     NewReleasesResponse,
     PlaybackState,
@@ -150,5 +151,8 @@ def mock_spotify() -> Generator[AsyncMock]:
         client.get_artist.return_value = Artist.from_json(
             load_fixture("artist.json", DOMAIN)
         )
+        client.get_devices.return_value = Devices.from_json(
+            load_fixture("devices.json", DOMAIN)
+        ).devices
         client.get_show.return_value = Show.from_json(load_fixture("show.json", DOMAIN))
         yield spotify_mock
