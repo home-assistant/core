@@ -295,9 +295,11 @@ async def build_item_response(  # noqa: C901
                     "name": saved_album.album.name,
                     "type": MediaType.ALBUM,
                     "uri": saved_album.album.uri,
-                    "thumbnail": saved_album.album.images[0].url
-                    if saved_album.album.images
-                    else None,
+                    "thumbnail": (
+                        saved_album.album.images[0].url
+                        if saved_album.album.images
+                        else None
+                    ),
                 }
                 for saved_album in saved_albums
             ]
@@ -455,7 +457,7 @@ async def build_item_response(  # noqa: C901
                     "name": track.name,
                     "type": MediaType.TRACK,
                     "uri": track.uri,
-                    "thumbnail": media.images[0].url if media.images else None,
+                    "thumbnail": None,
                 }
                 for track in media.tracks
             ]

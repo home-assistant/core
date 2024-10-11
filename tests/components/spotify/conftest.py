@@ -15,6 +15,7 @@ from spotifyaio.models import (
     Devices,
     FeaturedPlaylistResponse,
     NewReleasesResponse,
+    NewReleasesResponseInner,
     PlaybackState,
     PlayedTrackResponse,
     Playlist,
@@ -114,6 +115,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             ("top_artists.json", "get_top_artists", TopArtistsResponse),
             ("top_tracks.json", "get_top_tracks", TopTracksResponse),
             ("show_episodes.json", "get_show_episodes", ShowEpisodesResponse),
+            ("artist_albums.json", "get_artist_albums", NewReleasesResponseInner),
         ):
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
