@@ -21,7 +21,6 @@
     "abort": {
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
       "read_hw_settings_error": "Failed to read hardware settings",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "write_hw_settings_error": "Failed to write hardware settings"
     }
   }
