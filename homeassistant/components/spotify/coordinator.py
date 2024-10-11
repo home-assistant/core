@@ -81,7 +81,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:
-                        self._playlist = self.client.get_playlist(context.uri)
+                        self._playlist = await self.client.get_playlist(context.uri)
                     except SpotifyConnectionError:
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "

@@ -5,7 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 import pytest
-from spotifyaio import SpotifyConnectionError, UserProfile
+from spotifyaio import SpotifyConnectionError
 
 from homeassistant.components import zeroconf
 from homeassistant.components.spotify.const import DOMAIN
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -108,13 +108,7 @@ async def test_full_flow(
 
     with (
         patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
-        patch(
-            "homeassistant.components.spotify.config_flow.SpotifyClient", autospec=True
-        ) as spotify_mock,
     ):
-        spotify_mock.return_value.get_current_user.return_value = UserProfile.from_json(
-            load_fixture("current_user.json", DOMAIN)
-        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -129,7 +123,7 @@ async def test_full_flow(
         "type": "Bearer",
         "expires_in": 60,
     }
-    assert result["result"].unique_id == "1112261111"
+    assert result["result"].unique_id == "1112264111"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -165,11 +159,9 @@ async def test_abort_if_spotify_error(
         },
     )
 
-    with patch(
-        "homeassistant.components.spotify.config_flow.SpotifyClient.get_current_user",
-        side_effect=SpotifyConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_spotify.return_value.get_current_user.side_effect = SpotifyConnectionError
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_error"
@@ -185,13 +177,7 @@ async def test_reauthentication(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Spotify reauthentication."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1112261111",
-        version=1,
-        data={"id": "frenck", "auth_implementation": "cred"},
-    )
-    old_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -214,7 +200,7 @@ async def test_reauthentication(
         "https://accounts.spotify.com/api/token",
         json={
             "refresh_token": "new-refresh-token",
-            "access_token": "mew-access-token",
+            "access_token": "new-access-token",
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -222,23 +208,16 @@ async def test_reauthentication(
 
     with (
         patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
-        patch(
-            "homeassistant.components.spotify.config_flow.SpotifyClient", autospec=True
-        ) as spotify_mock,
     ):
-        spotify_mock.return_value.get_current_user.return_value = UserProfile.from_json(
-            load_fixture("current_user.json", DOMAIN)
-        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    updated_data = old_entry.data.copy()
-    assert updated_data["auth_implementation"] == "cred"
+    updated_data = mock_config_entry.data.copy()
     updated_data["token"].pop("expires_at")
     assert updated_data["token"] == {
-        "refresh_token": "mock-refresh-token",
-        "access_token": "mock-access-token",
+        "refresh_token": "new-refresh-token",
+        "access_token": "new-access-token",
         "type": "Bearer",
         "expires_in": 60,
     }
@@ -251,16 +230,25 @@ async def test_reauth_account_mismatch(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_spotify: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Spotify reauthentication with different account."""
-    old_entry = MockConfigEntry(
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1112261112",
-        version=1,
-        data={"id": "frenck", "auth_implementation": "cred"},
+        title="spotify_1",
+        unique_id="1112264121",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+            },
+            "id": "1112264121",
+            "name": "spotify_account_1",
+        },
+        entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
     )
-    old_entry.add_to_hass(hass)
+
+    mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -288,13 +276,7 @@ async def test_reauth_account_mismatch(
 
     with (
         patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
-        patch(
-            "homeassistant.components.spotify.config_flow.SpotifyClient", autospec=True
-        ) as spotify_mock,
     ):
-        spotify_mock.return_value.get_current_user.return_value = UserProfile.from_json(
-            load_fixture("current_user.json", DOMAIN)
-        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
