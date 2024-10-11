@@ -299,7 +299,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ):
             report(
                 "uses `async_config_entry_first_refresh`, which is only supported "
-                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}. "
+                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
+                f"but it is in state {self.config_entry.state}, "
                 "This will stop working in Home Assistant 2025.11",
                 error_if_core=True,
                 error_if_integration=True,
