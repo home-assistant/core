@@ -48,9 +48,7 @@ BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
 }
 # Dict used for translating device repeat settings to Home Assistant settings.
 BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
-    "all": RepeatMode.ALL,
-    "track": RepeatMode.ONE,
-    "none": RepeatMode.OFF,
+    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
 }
 
 
