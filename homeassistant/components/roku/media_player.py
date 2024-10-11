@@ -447,7 +447,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
             params = {"t": "a", **params}
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                media_id,
+                params,
+            )
         elif media_type in {MediaType.URL, MediaType.VIDEO}:
             params = {
                 param: extra[attr]
@@ -455,7 +459,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            await self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                media_id,
+                params,
+            )
         else:
             _LOGGER.error("Media type %s is not supported", original_media_type)
             return

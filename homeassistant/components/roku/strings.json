@@ -24,6 +24,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "play_media_app_id": "Play Media Roku Application ID"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "headphones_connected": {
