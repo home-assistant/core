@@ -6,7 +6,7 @@
           "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "title": "[%key:component::random::config::step::binary_sensor::title%]" 
+        "title": "Random binary sensor"
       },
       "sensor": {
         "data": {
@@ -16,7 +16,7 @@
           "maximum": "Maximum",
           "unit_of_measurement": "Unit of measurement"
         },
-        "title": "[%key:component::random::config::step::sensor::title%]"
+        "title": "Random sensor"
       },
       "user": {
         "description": "This helper allows you to create a helper that emits a random value.",
@@ -24,7 +24,7 @@
           "binary_sensor": "Random binary sensor",
           "sensor": "Random sensor"
         },
-        "title": "[%key:component::random::config::step::user::title%]"
+        "title": "Random helper"
       }
     }
   },
