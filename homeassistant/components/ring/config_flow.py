@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 
 from . import get_auth_user_agent
-from .const import CONF_2FA, DOMAIN
+from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ring."""
 
     VERSION = 1
+    MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
 
     user_pass: dict[str, Any] = {}
     hardware_id: str | None = None
@@ -165,8 +166,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             # authorised device.
             if not self.hardware_id:
                 self.hardware_id = self.reauth_entry.data[CONF_DEVICE_ID]
-            try:
                 assert self.hardware_id
+            try:
                 token = await validate_input(self.hass, self.hardware_id, user_input)
             except Require2FA:
                 self.user_pass = user_input
