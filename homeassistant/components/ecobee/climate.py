@@ -42,6 +42,8 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from . import EcobeeData
 from .const import (
     _LOGGER,
+    ATTR_ACTIVE_SENSORS,
+    ATTR_AVAILABLE_SENSORS,
     DOMAIN,
     ECOBEE_AUX_HEAT_ONLY,
     ECOBEE_MODEL_TO_NAME,
@@ -574,6 +576,8 @@ class Thermostat(ClimateEntity):
 
         return HVACAction.IDLE
 
+    _unrecorded_attributes = frozenset({ATTR_AVAILABLE_SENSORS, ATTR_ACTIVE_SENSORS})
+
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
@@ -585,8 +589,8 @@ class Thermostat(ClimateEntity):
             ),
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
-            "available_sensors": self.remote_sensor_devices,
-            "active_sensors": self.active_sensor_devices_in_preset_mode,
+            ATTR_AVAILABLE_SENSORS: self.remote_sensor_devices,
+            ATTR_ACTIVE_SENSORS: self.active_sensor_devices_in_preset_mode,
         }
 
     @property
