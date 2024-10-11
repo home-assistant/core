@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from spotifyaio import (
     PlaybackState,
@@ -49,16 +50,17 @@ from . import setup_integration
 from tests.common import MockConfigEntry, load_fixture, snapshot_platform
 
 
-@pytest.mark.freeze_time("2023-10-21")
 @pytest.mark.usefixtures("setup_credentials")
 async def test_entities(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Spotify entities."""
+    freezer.move_to("2023-10-21")
     with patch("secrets.token_hex", return_value="mock-token"):
         await setup_integration(hass, mock_config_entry)
 
@@ -67,16 +69,17 @@ async def test_entities(
         )
 
 
-@pytest.mark.freeze_time("2023-10-21")
 @pytest.mark.usefixtures("setup_credentials")
 async def test_podcast(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Spotify entities while listening a podcast."""
+    freezer.move_to("2023-10-21")
     mock_spotify.return_value.get_playback.return_value = PlaybackState.from_json(
         load_fixture("playback_episode.json", DOMAIN)
     )
