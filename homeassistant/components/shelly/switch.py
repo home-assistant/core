@@ -69,6 +69,7 @@ RPC_VIRTUAL_SWITCH = RpcSwitchDescription(
 RPC_SCRIPT_SWITCH = RpcSwitchDescription(
     key="script",
     sub_key="running",
+    entity_registry_enabled_default=False,
 )
 
 
@@ -345,8 +346,8 @@ class RpcScriptSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.call_rpc("Script.Set", {"id": self._id, "on": True})
+        await self.call_rpc("Script.Start", {"id": self._id})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.call_rpc("Script.Set", {"id": self._id, "on": False})
+        await self.call_rpc("Script.Stop", {"id": self._id})
