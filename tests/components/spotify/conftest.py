@@ -73,10 +73,34 @@ def mock_spotify() -> Generator[MagicMock]:
         ),
     ):
         client = spotify_mock.return_value
-        client.current_user_playlists.return_value = load_json_value_fixture(
-            "current_user_playlist.json", DOMAIN
-        )
-        client.current_user.return_value = load_json_value_fixture(
-            "current_user.json", DOMAIN
-        )
+        # All these fixtures can be retrieved using the Web API client at
+        # https://developer.spotify.com/documentation/web-api
+        current_user = load_json_value_fixture("current_user.json", DOMAIN)
+        client.current_user.return_value = current_user
+        client.me.return_value = current_user
+        for fixture, method in (
+            ("current_user_playlist.json", "current_user_playlists"),
+            ("playback.json", "current_playback"),
+            ("followed_artists.json", "current_user_followed_artists"),
+            ("saved_albums.json", "current_user_saved_albums"),
+            ("saved_tracks.json", "current_user_saved_tracks"),
+            ("saved_shows.json", "current_user_saved_shows"),
+            ("recently_played_tracks.json", "current_user_recently_played"),
+            ("top_artists.json", "current_user_top_artists"),
+            ("top_tracks.json", "current_user_top_tracks"),
+            ("featured_playlists.json", "featured_playlists"),
+            ("categories.json", "categories"),
+            ("category_playlists.json", "category_playlists"),
+            ("category.json", "category"),
+            ("new_releases.json", "new_releases"),
+            ("playlist.json", "playlist"),
+            ("album.json", "album"),
+            ("artist.json", "artist"),
+            ("artist_albums.json", "artist_albums"),
+            ("show_episodes.json", "show_episodes"),
+            ("show.json", "show"),
+        ):
+            getattr(client, method).return_value = load_json_value_fixture(
+                fixture, DOMAIN
+            )
         yield spotify_mock
