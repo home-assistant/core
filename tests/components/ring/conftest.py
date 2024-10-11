@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, Mock, create_autospec, patch
 import pytest
 import ring_doorbell
 
-from homeassistant.components.ring import CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
+from homeassistant.components.ring import DOMAIN
+from homeassistant.components.ring.const import CONF_CONFIG_ENTRY_MINOR_VERSION
 from homeassistant.const import CONF_DEVICE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

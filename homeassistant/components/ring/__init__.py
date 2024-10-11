@@ -15,12 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_CONFIG_ENTRY_MINOR_VERSION,
-    CONF_LISTEN_CREDENTIALS,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
 from .coordinator import RingDataCoordinator, RingListenCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,10 +136,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_minor_version = entry.minor_version
 
     new_minor_version = 2
-    if (
-        entry_version == 1
-        and entry_minor_version < new_minor_version <= CONF_CONFIG_ENTRY_MINOR_VERSION
-    ):
+    if entry_version == 1 and entry_minor_version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s", entry_version, entry_minor_version
         )
