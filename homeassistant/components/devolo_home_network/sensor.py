@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from . import DevoloHomeNetworkConfigEntry
@@ -32,9 +31,8 @@ from .const import (
     PLC_RX_RATE,
     PLC_TX_RATE,
 )
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
-
-PARALLEL_UPDATES = 1
 
 
 def _last_restart(runtime: int) -> datetime:
@@ -210,7 +208,7 @@ class BaseDevoloSensorEntity(
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[_CoordinatorDataT],
+        coordinator: DevoloDataUpdateCoordinator[_CoordinatorDataT],
         description: DevoloSensorEntityDescription[_ValueDataT, _SensorDataT],
     ) -> None:
         """Initialize entity."""
@@ -241,7 +239,7 @@ class DevoloPlcDataRateSensorEntity(
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[LogicalNetwork],
+        coordinator: DevoloDataUpdateCoordinator[LogicalNetwork],
         description: DevoloSensorEntityDescription[DataRate, float],
         peer: str,
     ) -> None:
