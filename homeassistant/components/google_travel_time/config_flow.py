@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -208,8 +207,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _context_entry: ConfigEntry
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -238,10 +235,9 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._context_entry = self._get_reconfigure_entry()
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
@@ -253,15 +249,13 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._context_entry,
-                    data=user_input,
-                    reason="reconfigure_successful",
+                    self._get_reconfigure_entry(), data=user_input
                 )
 
         return self.async_show_form(
             step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, self._context_entry.data.copy()
+                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

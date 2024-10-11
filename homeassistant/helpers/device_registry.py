@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -45,9 +45,14 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+else:
+    from propcache import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +282,7 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -305,6 +310,7 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
     def disabled(self) -> bool:
@@ -341,7 +347,7 @@ class DeviceEntry:
             "via_device_id": self.via_device_id,
         }
 
-    @cached_property
+    @under_cached_property
     def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
@@ -357,7 +363,7 @@ class DeviceEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -389,7 +395,7 @@ class DeviceEntry:
         )
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
@@ -400,6 +406,7 @@ class DeletedDeviceEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
         self,
@@ -418,7 +425,7 @@ class DeletedDeviceEntry:
             is_new=True,
         )
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -835,7 +842,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             device.id,
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
-            add_config_entry=config_entry,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
@@ -863,7 +869,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry: ConfigEntry | UndefinedType = UNDEFINED,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         # Temporary flag so we don't blow up when collisions are implicitly introduced
         # by calls to async_get_or_create. Must not be set by integrations.
@@ -898,13 +903,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
-        if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
-            config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
-            if config_entry is None:
+        if add_config_entry_id is not UNDEFINED:
+            if self.hass.config_entries.async_get_entry(add_config_entry_id) is None:
                 raise HomeAssistantError(
                     f"Can't link device to unknown config entry {add_config_entry_id}"
                 )
-            add_config_entry = config_entry
 
         if not new_connections and not new_identifiers:
             raise HomeAssistantError(
@@ -948,11 +951,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if add_config_entry is not UNDEFINED:
+        if add_config_entry_id is not UNDEFINED:
             primary_entry_id = old.primary_config_entry
             if (
                 device_info_type == "primary"
-                and add_config_entry.entry_id != primary_entry_id
+                and add_config_entry_id != primary_entry_id
             ):
                 if (
                     primary_entry_id is None
@@ -963,11 +966,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     )
                     or primary_entry.domain in LOW_PRIO_CONFIG_ENTRY_DOMAINS
                 ):
-                    new_values["primary_config_entry"] = add_config_entry.entry_id
-                    old_values["primary_config_entry"] = old.primary_config_entry
+                    new_values["primary_config_entry"] = add_config_entry_id
+                    old_values["primary_config_entry"] = primary_entry_id
 
-            if add_config_entry.entry_id not in old.config_entries:
-                config_entries = old.config_entries | {add_config_entry.entry_id}
+            if add_config_entry_id not in old.config_entries:
+                config_entries = old.config_entries | {add_config_entry_id}
 
         if (
             remove_config_entry_id is not UNDEFINED

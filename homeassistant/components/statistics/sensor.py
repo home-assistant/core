@@ -385,7 +385,7 @@ class StatisticsSensor(SensorEntity):
         if not self._source_entity_id or (
             self._samples_max_buffer_size is None and self._samples_max_age is None
         ):
-            self._attr_available = False
+            self._available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
             return self._call_on_remove_callbacks

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.util import slugify
 
-from . import SolarlogConfigEntry
 from .const import CONF_HAS_PWD, DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for solarlog."""
 
-    _entry: SolarlogConfigEntry | None = None
     VERSION = 1
     MINOR_VERSION = 3
 
@@ -138,38 +136,31 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         return await self.async_step_reconfigure_confirm()
 
     async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        if TYPE_CHECKING:
-            assert self._entry is not None
-
+        reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             if not user_input[CONF_HAS_PWD] or user_input.get(CONF_PASSWORD, "") == "":
                 user_input[CONF_PASSWORD] = ""
                 user_input[CONF_HAS_PWD] = False
                 return self.async_update_reload_and_abort(
-                    self._entry,
-                    reason="reconfigure_successful",
-                    data={**self._entry.data, **user_input},
+                    reconfigure_entry, data_updates=user_input
                 )
 
             if await self._test_extended_data(
-                self._entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
+                reconfigure_entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
             ):
                 # if password has been provided, only save if extended data is available
                 return self.async_update_reload_and_abort(
-                    self._entry,
-                    reason="reconfigure_successful",
-                    data={**self._entry.data, **user_input},
+                    reconfigure_entry,
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(
@@ -177,7 +168,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_HAS_PWD, default=self._entry.data[CONF_HAS_PWD]
+                        CONF_HAS_PWD, default=reconfigure_entry.data[CONF_HAS_PWD]
                     ): bool,
                     vol.Optional(CONF_PASSWORD): str,
                 }
@@ -188,27 +179,24 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle flow upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
-
-        assert self._entry is not None
-
+        reauth_entry = self._get_reauth_entry()
         if user_input and await self._test_extended_data(
-            self._entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
+            reauth_entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
         ):
             return self.async_update_reload_and_abort(
-                self._entry, data={**self._entry.data, **user_input}
+                reauth_entry, data_updates=user_input
             )
 
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_HAS_PWD, default=self._entry.data[CONF_HAS_PWD]
+                    CONF_HAS_PWD, default=reauth_entry.data[CONF_HAS_PWD]
                 ): bool,
                 vol.Optional(CONF_PASSWORD): str,
             }
