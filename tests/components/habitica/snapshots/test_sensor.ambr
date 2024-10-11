@@ -311,6 +311,56 @@
     'state': '737',
   })
 # ---
+# name: test_sensors[sensor.test_user_gems-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gems',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gems',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.GEMS: 'gems'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_gems',
+    'unit_of_measurement': 'gems',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gems-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Gems',
+      'unit_of_measurement': 'gems',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gems',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.test_user_gold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -705,6 +755,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '166',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mystic hourglasses',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.TRINKETS: 'trinkets'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_trinkets',
+    'unit_of_measurement': '⧖',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Mystic hourglasses',
+      'unit_of_measurement': '⧖',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_user_next_level-entry]
