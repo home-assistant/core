@@ -445,11 +445,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            params = {"t": "a", **params}
+            params = {"u": media_id, "t": "a", **params}
 
-            self.coordinator.roku.launch(
+            await self.coordinator.roku.launch(
                 self.coordinator.play_media_app_id,
-                media_id,
                 params,
             )
         elif media_type in {MediaType.URL, MediaType.VIDEO}:
@@ -458,10 +457,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 for (attr, param) in ATTRS_TO_PLAY_ON_ROKU_PARAMS.items()
                 if attr in extra
             }
+            params["u"] = media_id
 
             await self.coordinator.roku.launch(
                 self.coordinator.play_media_app_id,
-                media_id,
                 params,
             )
         else:
