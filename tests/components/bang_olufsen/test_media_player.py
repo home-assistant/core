@@ -14,6 +14,8 @@ from mozart_api.models import (
     WebsocketNotificationTag,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
@@ -78,6 +80,7 @@ from .const import (
     TEST_JID_1,
     TEST_JID_2,
     TEST_JID_3,
+    TEST_JID_4,
     TEST_LISTENING_MODE_REF,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID_2,
@@ -510,6 +513,7 @@ async def test_async_update_beolink_line_in(
 
 async def test_async_update_beolink_listener(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_config_entry_2: MockConfigEntry,
@@ -548,12 +552,20 @@ async def test_async_update_beolink_listener(
     # once more during _async_update_beolink for the entity that has the callback associated with it.
     assert mock_mozart_client.get_beolink_peers.call_count == 3
 
+    # Main entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
+    # Secondary entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID_2))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 async def test_async_update_name_and_beolink(
     hass: HomeAssistant,
+    device_registry: DeviceRegistry,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: DeviceRegistry,
 ) -> None:
     """Test _async_update_name_and_beolink."""
     # Change response to ensure device name is changed
@@ -1357,6 +1369,7 @@ async def test_async_browse_media(
 )
 async def test_async_join_players(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_config_entry_2: MockConfigEntry,
@@ -1393,6 +1406,14 @@ async def test_async_join_players(
     assert mock_mozart_client.post_beolink_expand.call_count == expand_count
     assert mock_mozart_client.join_latest_beolink_experience.call_count == join_count
 
+    # Main entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
+    # Secondary entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID_2))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 @pytest.mark.parametrize(
     ("source", "group_members", "expected_result", "error_type"),
@@ -1415,6 +1436,7 @@ async def test_async_join_players(
 )
 async def test_async_join_players_invalid(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_config_entry_2: MockConfigEntry,
@@ -1455,9 +1477,18 @@ async def test_async_join_players_invalid(
     assert mock_mozart_client.post_beolink_expand.call_count == 0
     assert mock_mozart_client.join_latest_beolink_experience.call_count == 0
 
+    # Main entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
+    # Secondary entity
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID_2))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 async def test_async_unjoin_player(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -1475,9 +1506,13 @@ async def test_async_unjoin_player(
 
     mock_mozart_client.post_beolink_leave.assert_called_once()
 
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 async def test_async_beolink_join(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -1498,6 +1533,9 @@ async def test_async_beolink_join(
 
     mock_mozart_client.join_beolink_peer.assert_called_once_with(jid=TEST_JID_2)
 
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 @pytest.mark.parametrize(
     (
@@ -1516,20 +1554,20 @@ async def test_async_beolink_join(
             "all_discovered",
             True,
             NotFoundException(),
-            [f"Unable to expand to {TEST_JID_2}", f"Unable to expand to {TEST_JID_3}"],
+            [f"Unable to expand to {TEST_JID_3}", f"Unable to expand to {TEST_JID_4}"],
             2,
         ),
         # Beolink JIDs
         # Valid peer
-        ("beolink_jids", [TEST_JID_2, TEST_JID_3], None, [], 1),
+        ("beolink_jids", [TEST_JID_3, TEST_JID_4], None, [], 1),
         # Invalid peer
         (
             "beolink_jids",
-            [TEST_JID_2, TEST_JID_3],
+            [TEST_JID_3, TEST_JID_4],
             NotFoundException(),
             [
-                f"Unable to expand to {TEST_JID_2}. Is the device available on the network?",
                 f"Unable to expand to {TEST_JID_3}. Is the device available on the network?",
+                f"Unable to expand to {TEST_JID_4}. Is the device available on the network?",
             ],
             1,
         ),
@@ -1538,6 +1576,7 @@ async def test_async_beolink_join(
 async def test_async_beolink_expand(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     parameter: str,
@@ -1580,9 +1619,13 @@ async def test_async_beolink_expand(
         await mock_mozart_client.get_beolink_peers()
     )
 
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 async def test_async_beolink_unexpand(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -1596,16 +1639,20 @@ async def test_async_beolink_unexpand(
         "beolink_unexpand",
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "beolink_jids": [TEST_JID_2, TEST_JID_3],
+            "beolink_jids": [TEST_JID_3, TEST_JID_4],
         },
         blocking=True,
     )
 
     assert mock_mozart_client.post_beolink_unexpand.call_count == 2
 
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
 
 async def test_async_beolink_allstandby(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -1622,3 +1669,6 @@ async def test_async_beolink_allstandby(
     )
 
     mock_mozart_client.post_beolink_allstandby.assert_called_once()
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
