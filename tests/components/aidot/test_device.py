@@ -111,3 +111,69 @@ async def test_turn_on_not_logged_in(aidot_light, mock_lan_ctrl) -> None:
     mock_lan_ctrl.connectAndLogin = False
     with pytest.raises(HomeAssistantError):
         await aidot_light.async_turn_on()
+
+
+@pytest.mark.asyncio
+async def test_is_on(aidot_light) -> None:
+    """Test if the light is on."""
+    assert aidot_light.is_on is True
+    aidot_light.lanCtrl.is_on = False
+    assert aidot_light.is_on is False
+
+
+@pytest.mark.asyncio
+async def test_brightness(aidot_light) -> None:
+    """Test the brightness of the light."""
+    assert aidot_light.brightness == 255
+    aidot_light.lanCtrl.brightness = 128
+    assert aidot_light.brightness == 128
+
+
+@pytest.mark.asyncio
+async def test_min_color_temp_kelvin(aidot_light) -> None:
+    """Test the minimum color temperature supported."""
+    aidot_light._cct_min = 2700
+    assert aidot_light.min_color_temp_kelvin == 2700
+
+
+@pytest.mark.asyncio
+async def test_max_color_temp_kelvin(aidot_light) -> None:
+    """Test the maximum color temperature supported."""
+    aidot_light._cct_max = 6500
+    assert aidot_light.max_color_temp_kelvin == 6500
+
+
+@pytest.mark.asyncio
+async def test_color_temp_kelvin(aidot_light) -> None:
+    """Test the current color temperature in Kelvin."""
+    assert aidot_light.color_temp_kelvin == 3000
+
+
+@pytest.mark.asyncio
+async def test_rgbw_color(aidot_light) -> None:
+    """Test the RGBW color value."""
+    assert aidot_light.rgbw_color == (255, 255, 255, 255)
+    aidot_light.lanCtrl.rgdb = 0x00FF00FF
+    assert aidot_light.rgbw_color == (0, 255, 0, 255)
+
+
+@pytest.mark.asyncio
+async def test_release(aidot_light) -> None:
+    """Test releasing resources."""
+    aidot_light.pingtask = asyncio.Future()
+    aidot_light.recvtask = asyncio.Future()
+    aidot_light.pingtask.cancel = AsyncMock()
+    aidot_light.recvtask.cancel = AsyncMock()
+
+    await aidot_light.release(None)
+
+    aidot_light.pingtask.cancel.assert_called_once()
+    aidot_light.recvtask.cancel.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_color_mode(aidot_light) -> None:
+    """Test the current color mode of the light."""
+    assert aidot_light.color_mode == "rgbw"
+    aidot_light.lanCtrl.colorMode = "cct"
+    assert aidot_light.color_mode == "color_temp"

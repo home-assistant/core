@@ -1,11 +1,16 @@
 """Test the aidot config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.aidot.config_flow import CannotConnect, ConfigFlow
+from homeassistant.components.aidot.config_flow import (
+    CannotConnect,
+    ConfigFlow,
+    InvalidHost,
+    validate_input,
+)
 from homeassistant.components.aidot.const import (
     CONF_CHOOSE_HOUSE,
     CONF_PASSWORD,
@@ -13,6 +18,32 @@ from homeassistant.components.aidot.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+
+
+@pytest.mark.asyncio
+async def test_validate_input_valid():
+    """Mock the HomeAssistant object (if needed)."""
+    hass = MagicMock()
+
+    # Test with valid data
+    data = {"host": "valid_host"}
+
+    # Call the function and assert it returns the correct output
+    result = await validate_input(hass, data)
+    assert result == {"title": "valid_host"}
+
+
+@pytest.mark.asyncio
+async def test_validate_input_invalid():
+    """Mock the HomeAssistant object (if needed)."""
+    hass = MagicMock()
+
+    # Test with invalid data (host length < 3)
+    data = {"host": "ab"}
+
+    # Assert that it raises the InvalidHost exception
+    with pytest.raises(InvalidHost):
+        await validate_input(hass, data)
 
 
 @pytest.fixture
@@ -166,3 +197,32 @@ async def test_flow_choose_house(mock_login_control) -> None:
 
     mock_login_control.async_get_devices.assert_called_once()
     mock_login_control.async_get_products.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_async_show_form_called_correctly(mock_login_control) -> None:
+    """Test that async_show_form is called with correct parameters in user step."""
+    flow = ConfigFlow()
+    flow.hass = hass
+
+    # Mock the async_show_form method
+    flow.async_show_form = MagicMock()
+
+    # Mock CLOUD_SERVERS
+    with patch(
+        "homeassistant.components.aidot.config_flow.CLOUD_SERVERS",
+        [{"name": "United States"}, {"name": "Canada"}],
+    ):
+        user_input = None
+
+        await flow.async_step_user(user_input)
+
+        # Ensure async_show_form was called
+        flow.async_show_form.assert_called_once()
+
+        # Check the parameters passed to async_show_form
+        flow.async_show_form.assert_called_with(
+            step_id="user",
+            data_schema=ANY,  # data_schema can be matched using ANY since it's dynamically generated
+            errors={},  # Initially, there are no errors
+        )
