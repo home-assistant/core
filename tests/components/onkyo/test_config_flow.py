@@ -46,7 +46,7 @@ async def test_user_initial_menu(hass: HomeAssistant) -> None:
 
     assert init_result["type"] is FlowResultType.MENU
     # Check if the values are there, but ignore order
-    assert not set(init_result["menu_options"]) ^ set("manual", "eiscp_discovery")
+    assert not set(init_result["menu_options"]) ^ {"manual", "eiscp_discovery"}
 
 
 async def test_manual_valid_host(hass: HomeAssistant) -> None:
