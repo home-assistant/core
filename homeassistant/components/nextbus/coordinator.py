@@ -24,6 +24,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,  # It is shared between multiple entries
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

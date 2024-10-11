@@ -27,7 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator.add_stop_route(entry_stop, entry.data[CONF_ROUTE])
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
