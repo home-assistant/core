@@ -548,7 +548,7 @@
     'state': '7.843',
   })
 # ---
-# name: test_all_entities[sensor.model0_energy_consumption_this_year-entry]
+# name: test_all_entities[sensor.model0_electricity_consumption_this_year-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -562,7 +562,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_energy_consumption_this_year',
+    'entity_id': 'sensor.model0_electricity_consumption_this_year',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -574,7 +574,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy consumption this year',
+    'original_name': 'Electricity consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -583,7 +583,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_energy_consumption_this_year-state]
+# name: test_all_entities[sensor.model0_electricity_consumption_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -592,14 +592,14 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_energy_consumption_this_year',
+    'entity_id': 'sensor.model0_electricity_consumption_this_year',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '207.106',
   })
 # ---
-# name: test_all_entities[sensor.model0_energy_consumption_today-entry]
+# name: test_all_entities[sensor.model0_electricity_consumption_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -613,7 +613,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_energy_consumption_today',
+    'entity_id': 'sensor.model0_electricity_consumption_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -625,7 +625,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy consumption today',
+    'original_name': 'Electricity consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -634,16 +634,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_energy_consumption_today-state]
+# name: test_all_entities[sensor.model0_electricity_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'model0 Energy consumption today',
+      'friendly_name': 'model0 Electricity consumption today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_energy_consumption_today',
+    'entity_id': 'sensor.model0_electricity_consumption_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
