@@ -189,9 +189,6 @@
       }
     },
     "sensor": {
-      "duration": {
-        "name": "Duration"
-      },
       "program_progress": {
         "name": "Program progress"
       },
