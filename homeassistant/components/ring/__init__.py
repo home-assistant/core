@@ -12,11 +12,7 @@ from ring_doorbell import Auth, Ring, RingDevices
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_DEVICE_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    instance_id,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
@@ -46,13 +42,6 @@ def get_auth_user_agent() -> str:
     return f"{APPLICATION_NAME}/{DOMAIN}-integration"
 
 
-async def _get_legacy_hardware_id(hass: HomeAssistant) -> str:
-    """Return the legacy hardware id used before reconfigure workflow."""
-    # Generate a new uuid from the instance_uuid to keep the HA one private
-    instance_uuid = uuid.UUID(hex=await instance_id.async_get(hass))
-    return str(uuid.uuid5(instance_uuid, get_auth_user_agent()))
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
     """Set up a config entry."""
 
@@ -71,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
         )
 
     if CONF_DEVICE_ID not in entry.data:
-        hardware_id = await _get_legacy_hardware_id(hass)
+        hardware_id = str(uuid.uuid4())
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_DEVICE_ID: hardware_id},
