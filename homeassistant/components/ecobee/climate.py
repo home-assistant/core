@@ -615,6 +615,24 @@ class Thermostat(ClimateEntity):
         )
 
     @property
+    def remote_sensor_ids_names(self) -> list:
+        """Return the remote sensor device id and name_by_user for the thermostat."""
+        sensors_info = self.thermostat.get("remoteSensors", [])
+        device_registry = dr.async_get(self._hass)
+
+        return [
+            {
+                "id": device.id,
+                "name_by_user": device.name_by_user
+                if device.name_by_user
+                else device.name,
+            }
+            for device in device_registry.devices.values()
+            for sensor_info in sensors_info
+            if device.name == sensor_info["name"]
+        ]
+
+    @property
     def active_sensors_in_preset_mode(self) -> list:
         """Return the currently active/participating sensors."""
         # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
@@ -859,7 +877,12 @@ class Thermostat(ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="invalid_sensor",
                 translation_placeholders={
-                    "options": ", ".join(self.remote_sensor_devices)
+                    "options": ", ".join(
+                        [
+                            f'{item["name_by_user"]} ({item["id"]})'
+                            for item in self.remote_sensor_ids_names
+                        ]
+                    )
                 },
             )
 
