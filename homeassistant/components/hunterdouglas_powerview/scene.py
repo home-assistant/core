@@ -10,7 +10,6 @@ from aiopvapi.resources.scene import Scene as PvScene
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
@@ -56,7 +55,6 @@ class PowerViewScene(HDEntity, Scene):
         self._scene: PvScene = scene
         self._attr_name = scene.name
         self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
-        self._attr_unique_id = f"{format_mac(device_info.mac_address)}_{scene.id}"
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""

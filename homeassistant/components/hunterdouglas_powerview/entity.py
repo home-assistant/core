@@ -31,7 +31,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._room_name = room_name
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{device_info.serial_number}_{unique_id}"
         self._device_info = device_info
         self._configuration_url = self.coordinator.hub.url
 
