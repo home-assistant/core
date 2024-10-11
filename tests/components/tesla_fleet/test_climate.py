@@ -436,7 +436,8 @@ async def test_climate_notemp(
     await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
 
     with pytest.raises(
-        ServiceValidationError, match="Temperature is required for this action"
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

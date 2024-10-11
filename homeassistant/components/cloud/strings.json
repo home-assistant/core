@@ -25,7 +25,7 @@
   },
   "issues": {
     "deprecated_gender": {
-      "title": "The `{deprecated_option}` text-to-speech option is deprecated",
+      "title": "The {deprecated_option} text-to-speech option is deprecated",
       "fix_flow": {
         "step": {
           "confirm": {

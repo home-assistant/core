@@ -52,7 +52,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     updated_once: bool
-    pre2021: bool
     last_active: datetime
 
     def __init__(

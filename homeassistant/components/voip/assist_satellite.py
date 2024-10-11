@@ -21,6 +21,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -79,7 +80,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
-    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_name = None
 
     def __init__(

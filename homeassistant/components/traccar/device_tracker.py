@@ -116,52 +116,23 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
 
     def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
         """Set up Traccar entity."""
-        self._accuracy = accuracy
-        self._attributes = attributes
-        self._name = device
+        self._attr_location_accuracy = accuracy
+        self._attr_extra_state_attributes = attributes
+        self._device = device
         self._battery = battery
-        self._latitude = latitude
-        self._longitude = longitude
+        self._attr_latitude = latitude
+        self._attr_longitude = longitude
         self._unsub_dispatcher = None
-        self._unique_id = device
+        self._attr_unique_id = device
+        self._attr_device_info = DeviceInfo(
+            name=device,
+            identifiers={(DOMAIN, device)},
+        )
 
     @property
     def battery_level(self):
         """Return battery value of the device."""
         return self._battery
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific attributes."""
-        return self._attributes
-
-    @property
-    def latitude(self):
-        """Return latitude value of the device."""
-        return self._latitude
-
-    @property
-    def longitude(self):
-        """Return longitude value of the device."""
-        return self._longitude
-
-    @property
-    def location_accuracy(self):
-        """Return the gps accuracy of the device."""
-        return self._accuracy
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            name=self._name,
-            identifiers={(DOMAIN, self._unique_id)},
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
@@ -171,14 +142,14 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         )
 
         # don't restore if we got created with data
-        if self._latitude is not None or self._longitude is not None:
+        if self.latitude is not None or self.longitude is not None:
             return
 
         if (state := await self.async_get_last_state()) is None:
-            self._latitude = None
-            self._longitude = None
-            self._accuracy = None
-            self._attributes = {
+            self._attr_latitude = None
+            self._attr_longitude = None
+            self._attr_location_accuracy = 0
+            self._attr_extra_state_attributes = {
                 ATTR_ALTITUDE: None,
                 ATTR_BEARING: None,
                 ATTR_SPEED: None,
@@ -187,10 +158,10 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._latitude = attr.get(ATTR_LATITUDE)
-        self._longitude = attr.get(ATTR_LONGITUDE)
-        self._accuracy = attr.get(ATTR_ACCURACY)
-        self._attributes = {
+        self._attr_latitude = attr.get(ATTR_LATITUDE)
+        self._attr_longitude = attr.get(ATTR_LONGITUDE)
+        self._attr_location_accuracy = attr.get(ATTR_ACCURACY, 0)
+        self._attr_extra_state_attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
             ATTR_BEARING: attr.get(ATTR_BEARING),
             ATTR_SPEED: attr.get(ATTR_SPEED),
@@ -207,12 +178,12 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self, device, latitude, longitude, battery, accuracy, attributes
     ):
         """Mark the device as seen."""
-        if device != self._name:
+        if device != self._device:
             return
 
-        self._latitude = latitude
-        self._longitude = longitude
+        self._attr_latitude = latitude
+        self._attr_longitude = longitude
         self._battery = battery
-        self._accuracy = accuracy
-        self._attributes.update(attributes)
+        self._attr_location_accuracy = accuracy
+        self._attr_extra_state_attributes.update(attributes)
         self.async_write_ha_state()

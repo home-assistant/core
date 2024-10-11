@@ -23,12 +23,12 @@
   "options": {
     "step": {
       "init": {
-        "description": "The `substring` inputs will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
+        "description": "Some options will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
         "data": {
           "units": "Units",
           "vehicle_type": "Vehicle Type",
-          "incl_filter": "Streetname which must be part of the Selected Route",
-          "excl_filter": "Streetname which must NOT be part of the Selected Route",
+          "incl_filter": "Exact streetname which must be part of the selected route",
+          "excl_filter": "Exact streetname which must NOT be part of the selected route",
           "realtime": "Realtime Travel Time?",
           "avoid_toll_roads": "Avoid Toll Roads?",
           "avoid_ferries": "Avoid Ferries?",

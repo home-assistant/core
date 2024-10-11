@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, WEBRTC_ANSWER, mock_turbo_jpeg
 
 from tests.common import (
     async_fire_time_changed,
@@ -36,17 +36,8 @@ from tests.common import (
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
 WEBRTC_OFFER = "v=0\r\n"
-
-
-@pytest.fixture(name="mock_stream")
-def mock_stream_fixture(hass: HomeAssistant) -> None:
-    """Initialize a demo camera platform with streaming."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "stream", {"stream": {}})
-    )
 
 
 @pytest.fixture(name="image_mock_url")
@@ -56,16 +47,6 @@ async def image_mock_url_fixture(hass: HomeAssistant) -> None:
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="mock_stream_source")
-def mock_stream_source_fixture() -> Generator[AsyncMock]:
-    """Fixture to create an RTSP stream source."""
-    with patch(
-        "homeassistant.components.camera.Camera.stream_source",
-        return_value=STREAM_SOURCE,
-    ) as mock_stream_source:
-        yield mock_stream_source
 
 
 @pytest.fixture(name="mock_hls_stream_source")

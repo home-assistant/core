@@ -57,7 +57,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self._last_statistics_data_update: float | None = None
         self._local_client = local_client
 
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Set up the coordinator."""
         if self._local_client is not None:
             _LOGGER.debug("Init WebSocket in background task")

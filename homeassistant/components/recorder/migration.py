@@ -95,6 +95,7 @@ from .queries import (
     has_event_type_to_migrate,
     has_events_context_ids_to_migrate,
     has_states_context_ids_to_migrate,
+    has_used_states_entity_ids,
     has_used_states_event_ids,
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
@@ -105,7 +106,6 @@ from .util import (
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
     get_index_by_name,
-    retryable_database_job,
     retryable_database_job_method,
     session_scope,
 )
@@ -2107,7 +2107,6 @@ def _generate_ulid_bytes_at_time(timestamp: float | None) -> bytes:
     return ulid_to_bytes(ulid_at_time(timestamp or time()))
 
 
-@retryable_database_job("post migrate states entity_ids to states_meta")
 def post_migrate_entity_ids(instance: Recorder) -> bool:
     """Remove old entity_id strings from states.
 
@@ -2121,10 +2120,6 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
         is_done = not cursor_result or cursor_result.rowcount == 0
         # If there is more work to do return False
         # so that we can be called again
-
-    if is_done:
-        # Drop the old indexes since they are no longer needed
-        _drop_index(session_maker, "states", LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
@@ -2546,17 +2541,8 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
         _LOGGER.debug("Activating states_meta manager as all data is migrated")
         instance.states_meta_manager.active = True
         with contextlib.suppress(SQLAlchemyError):
-            # If ix_states_entity_id_last_updated_ts still exists
-            # on the states table it means the entity id migration
-            # finished by the EntityIDPostMigrationTask did not
-            # complete because they restarted in the middle of it. We need
-            # to pick back up where we left off.
-            if get_index_by_name(
-                session,
-                TABLE_STATES,
-                LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
-            ):
-                instance.queue_task(EntityIDPostMigrationTask())
+            migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
+            migrate.do_migrate(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2645,15 +2631,21 @@ class EventIDPostMigration(BaseRunTimeMigration):
         return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-@dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
+class EntityIDPostMigration(BaseRunTimeMigrationWithQuery):
+    """Migration to remove old entity_id strings from states."""
 
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if not post_migrate_entity_ids(instance):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
+    migration_id = "entity_id_post_migration"
+    task = MigrationTask
+    index_to_drop = (TABLE_STATES, LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
+
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
+        """Migrate some data, returns True if migration is completed."""
+        is_done = post_migrate_entity_ids(instance)
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_used_states_entity_ids()
 
 
 def _mark_migration_done(

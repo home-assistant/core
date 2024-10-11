@@ -155,8 +155,8 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
         return super().available and _check_error_free(self.mower_attributes)
 
 
-class WorkAreaControlEntity(AutomowerControlEntity):
-    """Base entity work work areas with control function."""
+class WorkAreaAvailableEntity(AutomowerAvailableEntity):
+    """Base entity for work work areas."""
 
     def __init__(
         self,
@@ -184,3 +184,7 @@ class WorkAreaControlEntity(AutomowerControlEntity):
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
         return super().available and self.work_area_id in self.work_areas
+
+
+class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
+    """Base entity work work areas with control function."""

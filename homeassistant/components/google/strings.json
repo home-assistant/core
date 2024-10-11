@@ -123,5 +123,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "calendar": {
+      "working_location": {
+        "name": "Working location"
+      }
+    }
   }
 }

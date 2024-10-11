@@ -110,7 +110,7 @@
   "services": {
     "get_mealplan": {
       "name": "Get mealplan",
-      "description": "Get meaplan from Mealie",
+      "description": "Get mealplan from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "Mealie instance",

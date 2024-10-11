@@ -12,7 +12,7 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import API, DEFAULT_PORT, DOMAIN, PW_TYPE
+from homeassistant.components.plugwise.const import DEFAULT_PORT, DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -123,7 +123,6 @@ async def test_form(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -168,7 +167,6 @@ async def test_zeroconf_flow(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -204,7 +202,6 @@ async def test_zeroconf_flow_stretch(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME2,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -308,7 +305,6 @@ async def test_flow_errors(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME,
-        PW_TYPE: API,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -340,9 +336,9 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    flows_in_progress = hass.config_entries.flow.async_progress()
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
     assert len(flows_in_progress) == 1
-    assert flows_in_progress[0]["context"]["product"] == "smile_thermo"
+    assert list(flows_in_progress)[0].product == "smile_thermo"
 
     # Discover Adam, Anna should be aborted and no longer present
     result2 = await hass.config_entries.flow.async_init(
@@ -354,9 +350,9 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
 
-    flows_in_progress = hass.config_entries.flow.async_progress()
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
     assert len(flows_in_progress) == 1
-    assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"
+    assert list(flows_in_progress)[0].product == "smile_open_therm"
 
     # Discover Anna again, Anna should be aborted directly
     result3 = await hass.config_entries.flow.async_init(
@@ -368,6 +364,6 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result3.get("reason") == "anna_with_adam"
 
     # Adam should still be there
-    flows_in_progress = hass.config_entries.flow.async_progress()
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
     assert len(flows_in_progress) == 1
-    assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"
+    assert list(flows_in_progress)[0].product == "smile_open_therm"

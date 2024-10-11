@@ -83,6 +83,10 @@
     "hdr_switch_deprecated": {
       "title": "Reolink HDR switch deprecated",
       "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
+    },
+    "hub_switch_deprecated": {
+      "title": "Reolink Home Hub switches deprecated",
+      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are depricated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
     }
   },
   "services": {

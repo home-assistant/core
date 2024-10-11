@@ -884,7 +884,7 @@ async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) 
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EntityIDMigration(None, None)
+    migrator = migration.EntityIDMigration(old_db_schema.SCHEMA_VERSION, {})
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 
@@ -963,7 +963,8 @@ async def test_post_migrate_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(migration.EntityIDPostMigrationTask())
+    migrator = migration.EntityIDPostMigration(None, None)
+    recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
@@ -1020,7 +1021,7 @@ async def test_migrate_null_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EntityIDMigration(None, None)
+    migrator = migration.EntityIDMigration(old_db_schema.SCHEMA_VERSION, {})
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 

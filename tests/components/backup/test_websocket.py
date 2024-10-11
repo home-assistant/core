@@ -45,7 +45,7 @@ async def test_info(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.get_backups",
+        "homeassistant.components.backup.manager.BackupManager.get_backups",
         return_value={TEST_BACKUP.slug: TEST_BACKUP},
     ):
         await client.send_json_auto_id({"type": "backup/info"})
@@ -72,7 +72,7 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.remove_backup",
+        "homeassistant.components.backup.manager.BackupManager.remove_backup",
     ):
         await client.send_json_auto_id({"type": "backup/remove", "slug": "abc123"})
         assert snapshot == await client.receive_json()
@@ -98,7 +98,7 @@ async def test_generate(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.generate_backup",
+        "homeassistant.components.backup.manager.BackupManager.generate_backup",
         return_value=TEST_BACKUP,
     ):
         await client.send_json_auto_id({"type": "backup/generate"})
@@ -132,7 +132,7 @@ async def test_backup_end(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.post_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.post_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/end"})
         assert snapshot == await client.receive_json()
@@ -165,7 +165,7 @@ async def test_backup_start(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.pre_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.pre_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/start"})
         assert snapshot == await client.receive_json()
@@ -193,7 +193,7 @@ async def test_backup_end_excepion(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.post_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.post_backup_actions",
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/end"})
@@ -222,7 +222,7 @@ async def test_backup_start_excepion(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.pre_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.pre_backup_actions",
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/start"})

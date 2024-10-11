@@ -6,10 +6,11 @@ import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from datetime import timedelta
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any, Final, Generic, Literal, Required, TypedDict, cast, final
 
+from propcache import cached_property
 from typing_extensions import TypeVar
 import voluptuous as vol
 

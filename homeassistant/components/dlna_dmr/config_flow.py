@@ -7,7 +7,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -138,6 +138,9 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
+        if TYPE_CHECKING:
+            # _async_set_info_from_discovery unconditionally sets self._name
+            assert self._name is not None
 
         if _is_ignored_device(discovery_info):
             return self.async_abort(reason="alternative_integration")

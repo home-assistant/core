@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -896,6 +897,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
+    NAUTICAL_MILES = "nmi"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(
@@ -1176,20 +1178,35 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 """Deprecated: please use UnitOfMass.POUNDS"""
 
 
-# Conductivity units
-class UnitOfConductivity(StrEnum):
+class UnitOfConductivity(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+    },
+):
     """Conductivity units."""
 
+    SIEMENS_PER_CM = "S/cm"
+    MICROSIEMENS_PER_CM = "µS/cm"
+    MILLISIEMENS_PER_CM = "mS/cm"
+
+    # Deprecated aliases
     SIEMENS = "S/cm"
+    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
     MICROSIEMENS = "µS/cm"
+    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
+    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
 
 
 _DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS,
-    "2025.6",
+    UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "2025.11",
 )
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
