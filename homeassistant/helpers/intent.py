@@ -647,6 +647,12 @@ def async_match_targets(  # noqa: C901
                     False, MatchFailedReason.AREA, areas=targeted_areas
                 )
 
+    if constraints.assistant:
+        # Check exposure
+        candidates = [c for c in candidates if c.is_exposed]
+        if not candidates:
+            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
     if constraints.name and (not constraints.allow_duplicate_names):
         # Check for duplicates
         if not areas_added:
@@ -691,13 +697,6 @@ def async_match_targets(  # noqa: C901
                     final_candidates.extend(group_candidates)
                     continue
 
-            # Try to disambiguate by exposure
-            exposed_candidates = [c for c in group_candidates if c.is_exposed]
-            if len(exposed_candidates) < 2:
-                # Only one candidate was exposed
-                final_candidates.extend(exposed_candidates)
-                continue
-
             # Couldn't disambiguate duplicate names
             return MatchTargetsResult(
                 False,
@@ -716,12 +715,6 @@ def async_match_targets(  # noqa: C901
             )
 
         candidates = final_candidates
-
-    if constraints.assistant:
-        # Check exposure
-        candidates = [c for c in candidates if c.is_exposed]
-        if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
 
     return MatchTargetsResult(
         True,
