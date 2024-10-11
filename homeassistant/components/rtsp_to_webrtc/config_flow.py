@@ -36,9 +36,6 @@ class RTSPToWebRTCConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the RTSPtoWebRTC server url."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
@@ -81,9 +78,6 @@ class RTSPToWebRTCConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for the RTSPtoWebRTC server add-on discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         self._hassio_discovery = discovery_info.config
         return await self.async_step_hassio_confirm()
 

@@ -10,9 +10,6 @@
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "invalid_discovery_topic": "Invalid discovery topic prefix."
     }

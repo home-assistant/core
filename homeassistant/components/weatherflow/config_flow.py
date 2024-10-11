@@ -51,12 +51,6 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
-        # Only allow a single instance of integration since the listener
-        # will pick up all devices on the network and we don't want to
-        # create multiple entries.
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         found = False
         errors = {}
         try:

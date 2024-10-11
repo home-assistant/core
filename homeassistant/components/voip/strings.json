@@ -4,9 +4,6 @@
       "user": {
         "description": "Receive Voice over IP calls to interact with Assist."
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {

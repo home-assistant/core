@@ -56,9 +56,6 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Invoke when a user initiates a flow via the user interface."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -126,8 +123,5 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(formatted_mac)
         self._abort_if_unique_id_configured()
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()

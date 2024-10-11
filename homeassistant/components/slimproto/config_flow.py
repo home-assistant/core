@@ -18,8 +18,5 @@ class SlimProtoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         # we have nothing to configure so simply create the entry
         return self.async_create_entry(title=DEFAULT_NAME, data={})

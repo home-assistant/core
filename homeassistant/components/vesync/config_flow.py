@@ -38,9 +38,6 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if not user_input:
             return self._show_form()
 

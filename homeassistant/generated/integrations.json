@@ -5225,7 +5225,8 @@
       "name": "RTSPtoWebRTC",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "ruckus_unleashed": {
       "name": "Ruckus",
@@ -5421,7 +5422,8 @@
       "name": "Sentry",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "senz": {
       "name": "nVent RAYCHEM SENZ",
@@ -5604,7 +5606,8 @@
       "name": "SlimProto (Squeezebox players)",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "sma": {
       "name": "SMA Solar",
@@ -5673,7 +5676,8 @@
       "name": "SMS notifications via GSM-modem",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "smtp": {
       "name": "SMTP",
@@ -5819,7 +5823,8 @@
       "name": "Speedtest.net",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "splunk": {
       "name": "Splunk",
@@ -6105,7 +6110,8 @@
       "name": "Tasmota",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "tautulli": {
       "name": "Tautulli",
@@ -6328,7 +6334,8 @@
       "name": "Todoist",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "tolo": {
       "name": "TOLO Sauna",
@@ -6713,7 +6720,8 @@
       "name": "VeSync",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "viaggiatreno": {
       "name": "Trenitalia ViaggiaTreno",
@@ -6725,7 +6733,8 @@
       "name": "Viessmann ViCare",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "vilfo": {
       "name": "Vilfo Router",
@@ -6778,7 +6787,8 @@
       "name": "Voice over IP",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "volkszaehler": {
       "name": "Volkszaehler",
@@ -7218,7 +7228,8 @@
     "zodiac": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "zondergas": {
       "name": "ZonderGas",
