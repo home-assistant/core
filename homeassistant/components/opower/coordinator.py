@@ -156,16 +156,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
-                if end is None:
-                    # If there was no statistic at the start of the cost reads,
-                    # ignore cost reads past the last_stats_time.
-                    cost_reads = [
-                        cost_read
-                        for cost_read in cost_reads
-                        if cost_read.start_time.timestamp() >= last_stats_time
-                    ]
-                    start = cost_reads[0].start_time
-                assert last_stats_time == start.timestamp()
 
             cost_statistics = []
             consumption_statistics = []
