@@ -52,12 +52,11 @@ TEST_DOMAIN = "fake_integration"
 def ignore_translations() -> list[str]:
     """Ignore specific translations.
 
-    Override or parametrize this fixture with a fixture that returns,
-    a list of translation that should be ignored.
+    We can ignore translations for the fake_integration we are testing with.
     """
     return [
-        "component.fake_integration.config.abort.missing_configuration",
-        "component.fake_integration.config.abort.missing_credentials",
+        f"component.{TEST_DOMAIN}.config.abort.missing_configuration",
+        f"component.{TEST_DOMAIN}.config.abort.missing_credentials",
     ]
 
 
