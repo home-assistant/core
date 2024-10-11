@@ -213,9 +213,8 @@ async def test_reauthentication(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    updated_data = mock_config_entry.data.copy()
-    updated_data["token"].pop("expires_at")
-    assert updated_data["token"] == {
+    mock_config_entry.data["token"].pop("expires_at")
+    assert mock_config_entry.data["token"] == {
         "refresh_token": "new-refresh-token",
         "access_token": "new-access-token",
         "type": "Bearer",
@@ -230,24 +229,9 @@ async def test_reauth_account_mismatch(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Spotify reauthentication with different account."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="spotify_1",
-        unique_id="1112264121",
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-            },
-            "id": "1112264121",
-            "name": "spotify_account_1",
-        },
-        entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
-    )
-
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -274,9 +258,10 @@ async def test_reauth_account_mismatch(
         },
     )
 
-    with (
-        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_spotify.return_value.get_current_user.return_value.user_id = (
+        "different_user_id"
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
