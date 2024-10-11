@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.3
+RestrictedPython==7.4
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -469,7 +469,7 @@ asyncarve==0.1.1
 asyncsleepiq==1.5.2
 
 # homeassistant.components.aurora
-auroranoaa==0.0.3
+auroranoaa==0.0.5
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
@@ -946,7 +946,7 @@ hole==0.8.0
 holidays==0.58
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.2
+home-assistant-frontend==20241002.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1159,7 +1159,7 @@ mopeka-iot-ble==0.8.0
 motionblinds==0.6.25
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.1.1
+motionblindsble==0.1.2
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1399,7 +1399,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.9.0
+pyDuotecno==2024.10.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -1983,7 +1983,7 @@ pywilight==0.0.74
 pywizlight==0.5.14
 
 # homeassistant.components.wmspro
-pywmspro==0.2.0
+pywmspro==0.2.1
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2213,7 +2213,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.7.8
+tesla-fleet-api==0.8.4
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2

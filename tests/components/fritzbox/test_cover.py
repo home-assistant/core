@@ -7,7 +7,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    STATE_OPEN,
+    CoverState,
 )
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.const import (
@@ -44,7 +44,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
 
