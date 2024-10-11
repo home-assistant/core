@@ -829,7 +829,10 @@ async def test_squeezebox_media_position_property(
         == 105
     )
     assert (
-        hass.states.get("media_player.test_player").attributes[
-            ATTR_MEDIA_POSITION_UPDATED_AT
-        ]
-    ) > last_update
+        (
+            hass.states.get("media_player.test_player").attributes[
+                ATTR_MEDIA_POSITION_UPDATED_AT
+            ]
+        )
+        > last_update
+    )
