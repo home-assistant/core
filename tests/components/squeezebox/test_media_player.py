@@ -669,7 +669,7 @@ async def test_squeezebox_search(
         {
             ATTR_ENTITY_ID: "media_player.test_player",
             ATTR_COMMAND: "test_command",
-            ATTR_RETURN_ITEMS: [1],
+            ATTR_RETURN_ITEMS: 1,
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
