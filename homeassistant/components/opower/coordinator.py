@@ -130,19 +130,40 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     continue
                 start = cost_reads[0].start_time
                 _LOGGER.debug("Getting statistics at: %s", start)
-                stats = await get_instance(self.hass).async_add_executor_job(
-                    statistics_during_period,
-                    self.hass,
-                    start,
-                    start + timedelta(seconds=1),
-                    {cost_statistic_id, consumption_statistic_id},
-                    "hour",
-                    None,
-                    {"sum"},
-                )
+                # In the common case there should be a previous statistic at start time
+                # so we only need to fetch one statistic. If there isn't any, fetch all.
+                for end in (start + timedelta(seconds=1), None):
+                    stats = await get_instance(self.hass).async_add_executor_job(
+                        statistics_during_period,
+                        self.hass,
+                        start,
+                        end,
+                        {cost_statistic_id, consumption_statistic_id},
+                        "hour",
+                        None,
+                        {"sum"},
+                    )
+                    if end and not stats:
+                        _LOGGER.debug(
+                            "Not found. Trying to find the oldest statistic after %s",
+                            start,
+                        )
+                        break
+                # We are in this code path only if get_last_statistics found a stat
+                # so statistics_during_period should also have found at least one.
+                assert stats
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
+                if end is None:
+                    # If there was no statistic at the start of the cost reads,
+                    # ignore cost reads past the last_stats_time.
+                    cost_reads = [
+                        cost_read
+                        for cost_read in cost_reads
+                        if cost_read.start_time.timestamp() >= last_stats_time
+                    ]
+                    start = cost_reads[0].start_time
                 assert last_stats_time == start.timestamp()
 
             cost_statistics = []
