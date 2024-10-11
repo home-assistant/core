@@ -955,11 +955,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if add_config_entry is not UNDEFINED:
+        if add_config_entry_id is not UNDEFINED:
             primary_entry_id = old.primary_config_entry
             if (
                 device_info_type == "primary"
-                and add_config_entry.entry_id != primary_entry_id
+                and add_config_entry_id != primary_entry_id
             ):
                 if (
                     primary_entry_id is None
@@ -970,11 +970,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     )
                     or primary_entry.domain in LOW_PRIO_CONFIG_ENTRY_DOMAINS
                 ):
-                    new_values["primary_config_entry"] = add_config_entry.entry_id
-                    old_values["primary_config_entry"] = old.primary_config_entry
+                    new_values["primary_config_entry"] = add_config_entry_id
+                    old_values["primary_config_entry"] = primary_entry_id
 
-            if add_config_entry.entry_id not in old.config_entries:
-                config_entries = old.config_entries | {add_config_entry.entry_id}
+            if add_config_entry_id not in old.config_entries:
+                config_entries = old.config_entries | {add_config_entry_id}
 
         if (
             remove_config_entry_id is not UNDEFINED
