@@ -3,6 +3,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_STOP, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from .coordinator import NextBusDataUpdateCoordinator
@@ -29,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
-        return False
+        raise ConfigEntryNotReady from coordinator.last_exception
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
