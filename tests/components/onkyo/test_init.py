@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import create_empty_config_entry, create_empty_receiver_info, setup_integration
+from . import create_empty_config_entry, create_receiver_info, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ async def test_load_unload_entry(
     """Test load and unload entry."""
 
     config_entry = create_empty_config_entry()
-    receiver_info = create_empty_receiver_info()
+    receiver_info = create_receiver_info(1)
     await setup_integration(hass, config_entry, receiver_info)
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -41,7 +41,7 @@ async def test_update_entry(
 
     with patch.object(hass.config_entries, "async_reload", return_value=True):
         config_entry = create_empty_config_entry()
-        receiver_info = create_empty_receiver_info()
+        receiver_info = create_receiver_info(1)
         await setup_integration(hass, config_entry, receiver_info)
 
         # Force option change

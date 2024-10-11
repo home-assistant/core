@@ -10,13 +10,13 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def create_empty_receiver_info() -> ReceiverInfo:
+def create_receiver_info(id: int) -> ReceiverInfo:
     """Create an empty receiver info object for testing."""
     return ReceiverInfo(
-        host="",
-        port=0,
-        model_name="",
-        identifier="",
+        host=f"host {id}",
+        port=id,
+        model_name=f"type {id}",
+        identifier=f"id{id}",
     )
 
 
