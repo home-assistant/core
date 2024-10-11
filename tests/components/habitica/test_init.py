@@ -241,5 +241,6 @@ async def test_coordinator_rate_limited(
     with caplog.at_level(logging.DEBUG):
         freezer.tick(datetime.timedelta(seconds=60))
         async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
         assert "Currently rate limited, skipping update" in caplog.text
