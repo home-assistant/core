@@ -120,12 +120,22 @@ def mock_spotify() -> Generator[AsyncMock]:
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
             ).items
-        client.get_playback.return_value = PlaybackState.from_json(
-            load_fixture("playback.json", DOMAIN)
-        )
-        client.get_current_user.return_value = UserProfile.from_json(
-            load_fixture("current_user.json", DOMAIN)
-        )
+        for fixture, method, obj in (
+            (
+                "get_playback.json",
+                "playback",
+                PlaybackState,
+            ),
+            ("current_user.json", "get_current_user", UserProfile),
+            ("category.json", "get_category", Category),
+            ("playlist.json", "get_playlist", Playlist),
+            ("album.json", "get_album", Album),
+            ("artist.json", "get_artist", Artist),
+            ("show.json", "get_show", Show),
+        ):
+            getattr(client, method).return_value = obj.from_json(
+                load_fixture(fixture, DOMAIN)
+            )
         client.get_followed_artists.return_value = ArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
@@ -138,23 +148,10 @@ def mock_spotify() -> Generator[AsyncMock]:
         client.get_category_playlists.return_value = CategoryPlaylistResponse.from_json(
             load_fixture("category_playlists.json", DOMAIN)
         ).playlists.items
-        client.get_category.return_value = Category.from_json(
-            load_fixture("category.json", DOMAIN)
-        )
         client.get_new_releases.return_value = NewReleasesResponse.from_json(
             load_fixture("new_releases.json", DOMAIN)
         ).albums.items
-        client.get_playlist.return_value = Playlist.from_json(
-            load_fixture("playlist.json", DOMAIN)
-        )
-        client.get_album.return_value = Album.from_json(
-            load_fixture("album.json", DOMAIN)
-        )
-        client.get_artist.return_value = Artist.from_json(
-            load_fixture("artist.json", DOMAIN)
-        )
         client.get_devices.return_value = Devices.from_json(
             load_fixture("devices.json", DOMAIN)
         ).devices
-        client.get_show.return_value = Show.from_json(load_fixture("show.json", DOMAIN))
         yield spotify_mock
