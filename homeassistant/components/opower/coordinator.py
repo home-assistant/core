@@ -143,12 +143,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                         None,
                         {"sum"},
                     )
+                    if stats:
+                        break
                     if end and not stats:
                         _LOGGER.debug(
                             "Not found. Trying to find the oldest statistic after %s",
                             start,
                         )
-                        break
                 # We are in this code path only if get_last_statistics found a stat
                 # so statistics_during_period should also have found at least one.
                 assert stats
