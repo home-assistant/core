@@ -527,10 +527,22 @@ class ConfigEntry(Generic[_DataT]):
         integration: loader.Integration | None = None,
     ) -> None:
         """Set up an entry."""
-        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
+        current_entry.set(self)
+        try:
+            await self.__async_setup_with_context(hass, integration=integration)
+        finally:
+            current_entry.set(None)
+
+    async def __async_setup_with_context(
+        self,
+        hass: HomeAssistant,
+        *,
+        integration: loader.Integration | None,
+    ) -> None:
+        """Set up an entry, with current_entry set."""
         if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
