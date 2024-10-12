@@ -1,10 +1,13 @@
 """Test Onkyo config flow."""
 
 # from typing import Any
-# from unittest import mock
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow, ReceiverInfo
 
 # import eiscp
 # import pytest
@@ -27,9 +30,8 @@ from homeassistant.config_entries import SOURCE_USER
 # )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-# from . import create_empty_config_entry, create_receiver_info, setup_integration
 from . import create_receiver_info
 
 from tests.common import Mock
@@ -71,14 +73,14 @@ async def test_manual_valid_host(hass: HomeAssistant) -> None:
         "homeassistant.components.onkyo.config_flow.async_interview",
         return_value=mock_info,
     ):
-        configure_result = await hass.config_entries.flow.async_configure(
+        select_result = await hass.config_entries.flow.async_configure(
             form_result["flow_id"],
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-        assert configure_result["step_id"] == "configure_receiver"
+        assert select_result["step_id"] == "configure_receiver"
         assert (
-            configure_result["description_placeholders"]["name"]
+            select_result["description_placeholders"]["name"]
             == "mock_model (mock_host)"
         )
 
@@ -99,13 +101,13 @@ async def test_manual_invalid_host(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onkyo.config_flow.async_interview", return_value=None
     ):
-        configure_result = await hass.config_entries.flow.async_configure(
+        host_result = await hass.config_entries.flow.async_configure(
             form_result["flow_id"],
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-    assert configure_result["step_id"] == "manual"
-    assert configure_result["errors"]["base"] == "cannot_connect"
+    assert host_result["step_id"] == "manual"
+    assert host_result["errors"]["base"] == "cannot_connect"
 
 
 async def test_manual_valid_host_unexpected_error(hass: HomeAssistant) -> None:
@@ -125,13 +127,13 @@ async def test_manual_valid_host_unexpected_error(hass: HomeAssistant) -> None:
         "homeassistant.components.onkyo.config_flow.async_interview",
         side_effect=Exception(),
     ):
-        configure_result = await hass.config_entries.flow.async_configure(
+        host_result = await hass.config_entries.flow.async_configure(
             form_result["flow_id"],
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-    assert configure_result["step_id"] == "manual"
-    assert configure_result["errors"]["base"] == "unknown"
+    assert host_result["step_id"] == "manual"
+    assert host_result["errors"]["base"] == "unknown"
 
 
 async def test_discovery_and_no_devices_discovered(hass: HomeAssistant) -> None:
@@ -232,6 +234,235 @@ async def test_discovery_with_one_selected(hass: HomeAssistant) -> None:
         assert select_result["description_placeholders"]["name"] == "type 42 (host 42)"
 
 
+async def test_configure_empty_source_list(hass: HomeAssistant) -> None:
+    """Test receiver configuration with no sources set."""
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        select_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
+
+        configure_result = await hass.config_entries.flow.async_configure(
+            select_result["flow_id"],
+            user_input={"input_sources": []},
+        )
+
+        assert configure_result["errors"] == {
+            "input_sources": "empty_input_source_list"
+        }
+
+
+async def test_configure_no_resolution(hass: HomeAssistant) -> None:
+    """Test receiver configure with no resolution set."""
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        select_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
+
+        configure_result = await hass.config_entries.flow.async_configure(
+            select_result["flow_id"],
+            user_input={"input_sources": ["TV"]},
+        )
+
+        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
+        assert configure_result["data"]["volume_resolution"] == 50
+
+
+async def test_configure_resolution_set(hass: HomeAssistant) -> None:
+    """Test receiver configure with specified resolution."""
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        select_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
+
+        configure_result = await hass.config_entries.flow.async_configure(
+            select_result["flow_id"],
+            user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+        )
+
+        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
+        assert configure_result["data"]["volume_resolution"] == 200
+
+
+async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
+    """Test receiver configure with invalid resolution."""
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    form_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
+    mock_info = Mock()
+    mock_info.identifier = "mock_id"
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.async_interview",
+        return_value=mock_info,
+    ):
+        select_result = await hass.config_entries.flow.async_configure(
+            form_result["flow_id"],
+            user_input={CONF_HOST: "sample-host-name"},
+        )
+
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                select_result["flow_id"],
+                user_input={"volume_resolution": 42, "input_sources": ["TV"]},
+            )
+
+
+@pytest.mark.parametrize(
+    ("user_input", "info", "exception", "error"),
+    [
+        (
+            # No host, and thus no host reachable
+            {
+                CONF_HOST: None,
+                "receiver_max_volume": 100,
+                "max_volume": 100,
+                "sources": {},
+            },
+            None,
+            None,
+            "cannot_connect",
+        ),
+        (
+            # No host, and connection exception
+            {
+                CONF_HOST: None,
+                "receiver_max_volume": 100,
+                "max_volume": 100,
+                "sources": {},
+            },
+            None,
+            Exception(),
+            "cannot_connect",
+        ),
+    ],
+)
+async def test_import_fail(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    info: ReceiverInfo,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test import flow."""
+    with (
+        patch("homeassistant.components.onkyo.config_flow"),
+        patch(
+            "homeassistant.components.onkyo.config_flow.async_interview",
+            return_value=info,
+            side_effect=exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error
+
+
+# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
+# async def test_import_success(
+#     mock_receiver: MagicMock,
+#     mock_setup_entry: AsyncMock,
+#     hass: HomeAssistant,
+# ) -> None:
+#     """Test import flow."""
+
+#     client = mock_receiver.return_value
+#     client.info = {"identifier": "001122334455", "model_name": "Test model"}
+
+#     with patch("homeassistant.components.onkyo.config_flow"):
+#         result = await hass.config_entries.flow.async_init(
+#             DOMAIN,
+#             context={"source": config_entries.SOURCE_IMPORT},
+#             data={
+#                 CONF_HOST: "127.0.0.1",
+#                 CONF_NAME: "Receiver test name",
+#                 OPTION_MAX_VOLUME: 42,
+#                 CONF_RECEIVER_MAX_VOLUME: 69,
+#                 OPTION_SOURCES: {
+#                     "Key_one": "Value-A",
+#                     "Key_two": "Value-B",
+#                 },
+#             },
+#         )
+#         await hass.async_block_till_done()
+
+#     assert len(mock_setup_entry.mock_calls) == 1
+#     assert result["type"] is FlowResultType.CREATE_ENTRY
+#     assert result["title"] == "Test model 001122334455"
+#     assert result["result"].unique_id == "001122334455"
+#     assert result["data"] == {"model": "Test model", "mac": "001122334455"}
+#     assert result["options"] == {
+#         "maximum_volume": 42,
+#         "receiver_max_volume": 69,
+#         "sources": {"Key_one": "Value-A", "Key_two": "Value-B"},
+#     }
+
+
 # @pytest.mark.parametrize(
 #     ("user_input", "error"),
 #     [
@@ -289,79 +520,4 @@ async def test_discovery_with_one_selected(hass: HomeAssistant) -> None:
 #         "receiver_max_volume": 200,
 #         "maximum_volume": 42,
 #         "sources": {},
-#     }
-
-
-# @pytest.mark.parametrize(
-#     ("user_input", "error"),
-#     [
-#         (
-#             {CONF_HOST: None},
-#             "no_host_defined",
-#         ),
-#         (
-#             {CONF_HOST: "127.0.0.1"},
-#             "cannot_connect",
-#         ),
-#     ],
-# )
-# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
-# async def test_import_fail(
-#     mock_receiver: MagicMock,
-#     hass: HomeAssistant,
-#     user_input: dict[str, Any],
-#     error: str,
-# ) -> None:
-#     """Test import flow."""
-
-#     client = mock_receiver.return_value
-#     client.info = None
-
-#     with patch("homeassistant.components.onkyo.config_flow"):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
-#         )
-#         await hass.async_block_till_done()
-
-#     assert result["type"] is FlowResultType.ABORT
-#     assert result["reason"] == error
-
-
-# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
-# async def test_import_success(
-#     mock_receiver: MagicMock,
-#     mock_setup_entry: AsyncMock,
-#     hass: HomeAssistant,
-# ) -> None:
-#     """Test import flow."""
-
-#     client = mock_receiver.return_value
-#     client.info = {"identifier": "001122334455", "model_name": "Test model"}
-
-#     with patch("homeassistant.components.onkyo.config_flow"):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": config_entries.SOURCE_IMPORT},
-#             data={
-#                 CONF_HOST: "127.0.0.1",
-#                 CONF_NAME: "Receiver test name",
-#                 OPTION_MAX_VOLUME: 42,
-#                 CONF_RECEIVER_MAX_VOLUME: 69,
-#                 OPTION_SOURCES: {
-#                     "Key_one": "Value-A",
-#                     "Key_two": "Value-B",
-#                 },
-#             },
-#         )
-#         await hass.async_block_till_done()
-
-#     assert len(mock_setup_entry.mock_calls) == 1
-#     assert result["type"] is FlowResultType.CREATE_ENTRY
-#     assert result["title"] == "Test model 001122334455"
-#     assert result["result"].unique_id == "001122334455"
-#     assert result["data"] == {"model": "Test model", "mac": "001122334455"}
-#     assert result["options"] == {
-#         "maximum_volume": 42,
-#         "receiver_max_volume": 69,
-#         "sources": {"Key_one": "Value-A", "Key_two": "Value-B"},
 #     }
