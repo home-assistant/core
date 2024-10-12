@@ -239,11 +239,7 @@ class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
 
         return [
             CalendarEvent(
-                start=(
-                    start := datetime.fromisoformat(reminder["time"]).replace(
-                        tzinfo=dt_util.DEFAULT_TIME_ZONE
-                    )
-                ),
+                start=start,
                 end=start + timedelta(hours=1),
                 summary=task["text"],
                 description=task["notes"],
@@ -253,4 +249,13 @@ class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
             if task["type"] in (HabiticaTaskType.DAILY, HabiticaTaskType.TODO)
             and not task["completed"]
             for reminder in task.get("reminders", [])
+            if (
+                start_date
+                <= (
+                    start := datetime.fromisoformat(reminder["time"]).replace(
+                        tzinfo=dt_util.DEFAULT_TIME_ZONE
+                    )
+                )
+                <= end_date
+            )
         ]

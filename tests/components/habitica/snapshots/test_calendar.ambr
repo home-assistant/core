@@ -568,7 +568,7 @@
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
       'end': dict({
-        'dateTime': '2024-09-22T02:00:00+02:00',
+        'dateTime': '2024-09-22T03:00:00+02:00',
       }),
       'location': None,
       'recurrence_id': None,
