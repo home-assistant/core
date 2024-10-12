@@ -72,4 +72,5 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[PalazzettiData]):
             PELLET_QUANTITY: api_data[API_PELLET_QUANTITY],
             FAN_MODE: api_data[API_FAN_MODE],
         }
+
         return data

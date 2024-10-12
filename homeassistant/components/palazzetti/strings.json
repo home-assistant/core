@@ -15,5 +15,10 @@
     "error": {
       "invalid_host": "The host is not responding or is not a Palazzetti CBox"
     }
+  },
+  "exceptions": {
+    "action_not_available": {
+      "message": "This action is currently not available. Try again later."
+    }
   }
 }
