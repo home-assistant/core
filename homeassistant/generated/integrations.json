@@ -4515,6 +4515,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "palazzetti": {
+      "name": "Palazzetti",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "panasonic": {
       "name": "Panasonic",
       "integrations": {

@@ -1,17 +1,13 @@
 {
   "domain": "palazzetti",
   "name": "Palazzetti",
-  "codeowners": [
-    "@dotvav"
-  ],
+  "codeowners": ["@dotvav"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/palazzetti",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": [
-    "palazzetti-sdk-local-api==1.0.14"
-  ],
+  "requirements": ["palazzetti-sdk-local-api==1.0.14"],
   "ssdp": [],
   "zeroconf": []
 }
