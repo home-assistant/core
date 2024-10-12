@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -46,14 +46,12 @@ DEVICE_STATUS_CATEGORY_MAP = {
 }
 
 
-def _map_device_status(device: OmadaListDevice) -> str:
+def _map_device_status(device: OmadaListDevice) -> str | None:
     """Map the API device status to the best available descriptive device status."""
-    return DEVICE_STATUS_MAP.get(
-        device.status,
-        DEVICE_STATUS_CATEGORY_MAP.get(
-            device.status_category, OmadaDeviceStatus.ERROR
-        ).value,
-    )
+    display_status = DEVICE_STATUS_MAP.get(
+        device.status
+    ) or DEVICE_STATUS_CATEGORY_MAP.get(device.status_category)
+    return display_status.value if display_status else None
 
 
 async def async_setup_entry(
@@ -66,15 +64,12 @@ async def async_setup_entry(
 
     devices_coordinator = controller.devices_coordinator
 
-    entities: list[OmadaDeviceEntity] = []
-    for device in devices_coordinator.data.values():
-        entities.extend(
-            OmadaDeviceSensor(devices_coordinator, device, desc)
-            for desc in OMADA_DEVICE_SENSORS
-            if desc.exists_func(device)
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OmadaDeviceSensor(devices_coordinator, device, desc)
+        for device in devices_coordinator.data.values()
+        for desc in OMADA_DEVICE_SENSORS
+        if desc.exists_func(device)
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +78,6 @@ class OmadaDeviceSensorEntityDescription(SensorEntityDescription):
 
     exists_func: Callable[[OmadaListDevice], bool] = lambda _: True
     update_func: Callable[[OmadaListDevice], StateType]
-    has_entity_name: bool = True
 
 
 OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
@@ -100,7 +94,7 @@ OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
         translation_key="cpu_usage",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         update_func=lambda device: device.cpu_usage,
     ),
     OmadaDeviceSensorEntityDescription(
@@ -108,7 +102,7 @@ OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
         translation_key="mem_usage",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         update_func=lambda device: device.mem_usage,
     ),
 ]

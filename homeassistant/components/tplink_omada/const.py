@@ -8,7 +8,6 @@ DOMAIN = "tplink_omada"
 class OmadaDeviceStatus(StrEnum):
     """Possible composite status values for Omada devices."""
 
-    ERROR = "error"
     DISCONNECTED = "disconnected"
     CONNECTED = "connected"
     PENDING = "pending"

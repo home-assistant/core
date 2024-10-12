@@ -5,7 +5,6 @@
       'device_class': 'enum',
       'friendly_name': 'Test PoE Switch Device status',
       'options': list([
-        'error',
         'disconnected',
         'connected',
         'pending',
