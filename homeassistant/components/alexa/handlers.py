@@ -1273,7 +1273,7 @@ async def async_api_set_mode(
     # Ensure mode is in the expected format
     if "." not in mode:
         raise AlexaInvalidDirectiveError("Invalid mode format. Expected 'type.value'.")
-    mode_type, mode_value = mode.split(".")
+    _, mode_value = mode.split(".")
 
     # Define a mapping of instance types to their respective handlers
     handlers: dict[str, Callable[[], str | None]] = {
