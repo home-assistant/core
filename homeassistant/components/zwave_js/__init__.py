@@ -283,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Re-attach trigger listeners.
     # Schedule this call to make sure the config entry is loaded first.
-    hass.async_add_job(
+    hass.loop.call_soon(
         async_dispatcher_send,
         hass,
         f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
