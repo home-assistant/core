@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 import re
+from typing import Any
 
 from pysqueezebox import Player, Server
 
@@ -76,7 +77,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         return data
 
 
-class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
+class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Squeezebox players."""
 
     def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
@@ -93,8 +94,8 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
         self._remove_dispatcher: Callable | None = None
         self.server_uuid = server_uuid
 
-    async def _async_update_data(self) -> dict:
-        """Update the Player() object."""
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update Player if available, or listen for rediscovery if not."""
         if self.available:
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()
