@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,6 +22,7 @@ from .const import (
     API_HW_VERSION,
     API_NAME,
     API_SW_VERSION,
+    AVAILABLE,
     DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
@@ -45,8 +46,9 @@ async def async_setup_entry(
     coordinator: PalazzettiDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[PalazzettiClimateEntity] = []
     await coordinator.async_config_entry_first_refresh()
-    entities.append(PalazzettiClimateEntity(coordinator=coordinator))
-    async_add_entities(entities)
+    if coordinator.data[AVAILABLE]:
+        entities.append(PalazzettiClimateEntity(coordinator=coordinator))
+        async_add_entities(entities)
 
 
 class PalazzettiClimateEntity(
@@ -74,7 +76,7 @@ class PalazzettiClimateEntity(
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         )
-        coordinator.async_add_listener(self._update_modes_and_features)
+        coordinator.async_add_listener(self._coordinator_update)
 
         name = self.hub.product.response_json[API_NAME]
         self._attr_unique_id = coordinator.entry.data[MAC]
@@ -88,17 +90,26 @@ class PalazzettiClimateEntity(
         self._attr_name = name
 
     @callback
-    def _update_modes_and_features(self) -> None:
-        if self.hub.product.get_data_config_object().flag_has_switch_on_off:
-            self._attr_supported_features |= (
-                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-            )
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-        else:
-            self._attr_supported_features &= ~(
-                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-            )
-            self._attr_hvac_modes = [self.hvac_mode]
+    def _coordinator_update(self) -> None:
+        available = (
+            self.coordinator.data["available"]
+            and self.hub
+            and self.hub.hub_online
+            and self.hub.product
+            and self.hub.product_online
+        )
+        self._attr_available = available
+        if available:
+            if self.hub.product.get_data_config_object().flag_has_switch_on_off:
+                self._attr_supported_features |= (
+                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+                )
+                self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+            else:
+                self._attr_supported_features &= ~(
+                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+                )
+                self._attr_hvac_modes = [self.hvac_mode]
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -114,7 +125,7 @@ class PalazzettiClimateEntity(
             else:
                 self.hass.async_add_executor_job(self.hub.product.power_on)
         except InvalidStateTransitionError as err:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 err, translation_domain=DOMAIN, translation_key=ACTION_NOT_UNAVAILABLE
             ) from err
 

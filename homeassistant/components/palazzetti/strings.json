@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter the host name or the ip address of the Palazzetti CBox",
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       }
     },
