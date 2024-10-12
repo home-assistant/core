@@ -197,7 +197,7 @@ class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
         events = [
             CalendarEvent(
                 start=start,
-                end=start,
+                end=start + timedelta(hours=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=f"{task["id"]}_{reminder["id"]}",
@@ -244,7 +244,7 @@ class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
                         tzinfo=dt_util.DEFAULT_TIME_ZONE
                     )
                 ),
-                end=start,
+                end=start + timedelta(hours=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=f"{task["id"]}_{reminder["id"]}",
