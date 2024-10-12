@@ -1542,17 +1542,17 @@ async def async_api_set_range(
     supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     handlers: dict[str, Callable[[], str | None]] = {
-        f"{cover.DOMAIN}.{cover.ATTR.POSITION}": lambda: _set_cover_position_RC(
-            data, range_value, supported
+        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _set_cover_position_RC(
+            data, int(range_value), supported
         ),
         f"{cover.DOMAIN}.tilt": lambda: _set_cover_tilt_RC(
-            data, range_value, supported
+            data, int(range_value), supported
         ),
         f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: _set_fan_speed_RC(
-            data, range_value, supported
+            data, int(range_value), supported
         ),
         f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: _set_humidifier_humidity_RC(
-            data, range_value
+            data, int(range_value)
         ),
         f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: _set_input_number_value_RC(
             data, float(range_value), entity
@@ -1564,7 +1564,7 @@ async def async_api_set_range(
             data, int(range_value), entity
         ),
         f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: _set_valve_position_RC(
-            data, range_value, supported
+            data, int(range_value), supported
         ),
     }
 
@@ -1572,8 +1572,10 @@ async def async_api_set_range(
     if instance is None:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
     handler: Callable[[], str | None] | None = handlers.get(instance)
-    service = handler() if handler is not None else None
+    if handler is None:
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
+    service = handler()
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
@@ -1747,7 +1749,7 @@ def _adjust_vacuum_fan_speed_RC(
             f"Unable to determine new fan speed for {entity.entity_id}"
         )
     data[vacuum.ATTR_FAN_SPEED] = response_value = speed
-    return service, int(response_value)
+    return service, response_value
 
 
 def _adjust_valve_position_RC(
