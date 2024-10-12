@@ -1,0 +1,6 @@
+projectKey=Ha-core
+serverUrl=http://localhost:9000
+serverVersion=10.6.0.92116
+dashboardUrl=http://localhost:9000/dashboard?id=Ha-core
+ceTaskId=d25d6e3a-8e20-4b1f-80dc-5de8bdc39d4b
+ceTaskUrl=http://localhost:9000/api/ce/task?id=d25d6e3a-8e20-4b1f-80dc-5de8bdc39d4b
