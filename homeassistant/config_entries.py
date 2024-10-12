@@ -532,14 +532,13 @@ class ConfigEntry(Generic[_DataT]):
 
         current_entry.set(self)
         try:
-            await self.__async_setup_with_context(hass, integration=integration)
+            await self.__async_setup_with_context(hass, integration)
         finally:
             current_entry.set(None)
 
     async def __async_setup_with_context(
         self,
         hass: HomeAssistant,
-        *,
         integration: loader.Integration | None,
     ) -> None:
         """Set up an entry, with current_entry set."""
