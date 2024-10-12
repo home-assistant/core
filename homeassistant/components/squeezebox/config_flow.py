@@ -261,15 +261,7 @@ class OptionsFlowHandler(OptionsFlow):
         async def _validate_input(data: dict[str, Any]) -> str | None:
             """Validate the user input allows us to connect."""
 
-            if (
-                not isinstance(data[CONF_BROWSE_LIMIT], int)
-                or not data[CONF_BROWSE_LIMIT] > 0
-            ):
-                raise ValueError
-            if (
-                not isinstance(data[CONF_VOLUME_STEP], int)
-                or not data[CONF_VOLUME_STEP] > 0
-            ):
+            if data[CONF_BROWSE_LIMIT] < 1 or data[CONF_VOLUME_STEP] < 1:
                 raise ValueError
 
             return None
