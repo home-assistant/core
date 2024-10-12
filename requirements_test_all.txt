@@ -1294,6 +1294,9 @@ p1monitor==3.1.0
 # homeassistant.components.mqtt
 paho-mqtt==1.6.1
 
+# homeassistant.components.palazzetti
+palazzetti-sdk-local-api==1.0.14
+
 # homeassistant.components.panasonic_viera
 panasonic-viera==0.4.2
 
