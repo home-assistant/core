@@ -61,6 +61,12 @@ from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
 
+MDI_GAUGE = "mdi:gauge"
+MDI_WEATHER_WINDY = "mdi:weather-windy"
+MDI_COMPASS_OUTLINE = "mdi:compass-outline"
+MDI_WEATHER_POURING = "mdi:weather-pouring"
+MDI_WEATHER_PARTLY_CLOUDY = "mdi:weather-partly-cloudy"
+
 MEASURED_LABEL = "Measured"
 TIMEFRAME_LABEL = "Timeframe"
 SYMBOL = "symbol"
@@ -696,6 +702,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+WARNING_NO_FORCAST = "No forecast for fcday=%s"
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -725,7 +732,7 @@ async def async_setup_entry(
 
     # create weather entities:
     entities = [
-        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        BrSensor(coordinates, description)
         for description in SENSOR_TYPES
     ]
 
@@ -745,7 +752,7 @@ class BrSensor(SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, client_name, coordinates, description: SensorEntityDescription
+        self, coordinates, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
