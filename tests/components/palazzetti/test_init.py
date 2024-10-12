@@ -1,4 +1,4 @@
-"""Tests for the Oalazzetti integration."""
+"""Tests for the Palazzetti integration."""
 
 from unittest.mock import AsyncMock
 
