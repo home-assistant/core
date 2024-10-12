@@ -263,12 +263,12 @@ class OptionsFlowHandler(OptionsFlow):
 
             if (
                 not isinstance(data[CONF_BROWSE_LIMIT], int)
-                or not data[CONF_BROWSE_LIMIT] > 1
+                or not data[CONF_BROWSE_LIMIT] > 0
             ):
                 raise ValueError
             if (
                 not isinstance(data[CONF_VOLUME_STEP], int)
-                or not data[CONF_VOLUME_STEP] > 1
+                or not data[CONF_VOLUME_STEP] > 0
             ):
                 raise ValueError
 
