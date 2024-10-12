@@ -334,20 +334,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfigure flow ."""
-        entry_data = self._get_reconfigure_entry().data
-        self._host = entry_data[CONF_HOST]
-        self._port = entry_data[CONF_PORT]
-        self._username = entry_data[CONF_USERNAME]
-        self._password = entry_data[CONF_PASSWORD]
-        self._use_tls = entry_data.get(CONF_SSL, DEFAULT_SSL)
-
-        return await self.async_step_reconfigure_confirm()
-
-    def _show_setup_form_reconfigure_confirm(
+    def _show_setup_form_reconfigure(
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the reconfigure form to the user."""
@@ -358,7 +345,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             }
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
@@ -366,20 +353,21 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_SSL, default=user_input[CONF_SSL]): bool,
                 }
             ),
-            description_placeholders={"host": self._host},
+            description_placeholders={"host": user_input[CONF_HOST]},
             errors=errors or {},
         )
 
-    async def async_step_reconfigure_confirm(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfigure flow."""
         if user_input is None:
-            return self._show_setup_form_reconfigure_confirm(
+            reconfigure_entry_data = self._get_reconfigure_entry().data
+            return self._show_setup_form_reconfigure(
                 {
-                    CONF_HOST: self._host,
-                    CONF_PORT: self._port,
-                    CONF_SSL: self._use_tls,
+                    CONF_HOST: reconfigure_entry_data[CONF_HOST],
+                    CONF_PORT: reconfigure_entry_data[CONF_PORT],
+                    CONF_SSL: reconfigure_entry_data.get(CONF_SSL, DEFAULT_SSL),
                 }
             )
 
@@ -387,18 +375,19 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._use_tls = user_input[CONF_SSL]
         self._port = self._determine_port(user_input)
 
+        reconfigure_entry = self._get_reconfigure_entry()
+        self._username = reconfigure_entry.data[CONF_USERNAME]
+        self._password = reconfigure_entry.data[CONF_PASSWORD]
         if error := await self.async_fritz_tools_init():
-            return self._show_setup_form_reconfigure_confirm(
+            return self._show_setup_form_reconfigure(
                 user_input={**user_input, CONF_PORT: self._port}, errors={"base": error}
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reconfigure_entry(),
-            data={
+            reconfigure_entry,
+            data_updates={
                 CONF_HOST: self._host,
-                CONF_PASSWORD: self._password,
                 CONF_PORT: self._port,
-                CONF_USERNAME: self._username,
                 CONF_SSL: self._use_tls,
             },
         )
