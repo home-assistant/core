@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urljoin
 
 from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -45,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 def base_url_from_url(url: str) -> str:
     """Return the base url from a url."""
-    return urljoin(url, "/").rstrip("/")
+    return str(URL(url).origin())
 
 
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
