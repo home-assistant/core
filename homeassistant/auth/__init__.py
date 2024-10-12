@@ -468,17 +468,50 @@ class AuthManager:
                 "to a client."
             )
 
+        token_type = self._determine_token_type(user, token_type)
+
+        expire_at = self._calculate_expiration(token_type)
+
+        self._validate_token_parameters(user, token_type, client_id, client_name)
+
+        self._check_existing_long_lived_token(user, token_type, client_name)
+
+        return await self._store.async_create_refresh_token(
+            user,
+            client_id,
+            client_name,
+            client_icon,
+            token_type,
+            access_token_expiration,
+            expire_at,
+            credential,
+        )
+
+    @callback
+    def _determine_token_type(self, user: models.User, token_type: str | None) -> str:
+        """Determine the appropriate token type."""
         if token_type is None:
             if user.system_generated:
-                token_type = models.TOKEN_TYPE_SYSTEM
-            else:
-                token_type = models.TOKEN_TYPE_NORMAL
+                return models.TOKEN_TYPE_SYSTEM
+            return models.TOKEN_TYPE_NORMAL
+        return token_type
 
-        if token_type is models.TOKEN_TYPE_NORMAL:
-            expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
-        else:
-            expire_at = None
+    @callback
+    def _calculate_expiration(self, token_type: str) -> int | None:
+        """Calculate the expiration time based on the token type."""
+        if token_type == models.TOKEN_TYPE_NORMAL:
+            return int(time.time() + REFRESH_TOKEN_EXPIRATION)
+        return None
 
+    @callback
+    def _validate_token_parameters(
+        self,
+        user: models.User,
+        token_type: str,
+        client_id: str | None,
+        client_name: str | None,
+    ) -> None:
+        """Ensure token type-specific parameters (like client_id and client_name) are valid."""
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
                 "System generated users can only have system type refresh tokens"
@@ -493,26 +526,18 @@ class AuthManager:
         ):
             raise ValueError("Client_name is required for long-lived access token")
 
+    @callback
+    def _check_existing_long_lived_token(
+        self, user: models.User, token_type: str, client_name: str | None
+    ) -> None:
+        """Ensure only one long-lived access token exists for each client."""
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             for token in user.refresh_tokens.values():
                 if (
                     token.client_name == client_name
                     and token.token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
                 ):
-                    # Each client_name can only have one
-                    # long_lived_access_token type of refresh token
                     raise ValueError(f"{client_name} already exists")
-
-        return await self._store.async_create_refresh_token(
-            user,
-            client_id,
-            client_name,
-            client_icon,
-            token_type,
-            access_token_expiration,
-            expire_at,
-            credential,
-        )
 
     @callback
     def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
