@@ -221,15 +221,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     driver_ready_task = hass.async_create_task(driver_ready.wait())
-    try:
-        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
-            done, _ = await asyncio.wait(
-                (driver_ready_task, listen_task), return_when=asyncio.FIRST_COMPLETED
-            )
-    except asyncio.TimeoutError as err:
+    done, not_done = await asyncio.wait(
+        (driver_ready_task, listen_task),
+        return_when=asyncio.FIRST_COMPLETED,
+        timeout=LISTEN_READY_TIMEOUT,
+    )
+    if driver_ready_task in not_done:
         driver_ready_task.cancel()
         listen_task.cancel()
-        raise ConfigEntryNotReady("Driver ready timed out") from err
+        raise ConfigEntryNotReady("Driver ready timed out")
 
     if listen_task in done:
         # If the listen task is already done, we need to raise ConfigEntryNotReady
