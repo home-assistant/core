@@ -3107,7 +3107,8 @@
       "name": "Everything but the Kitchen Sink",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "kiwi": {
       "name": "KIWI",
@@ -3221,7 +3222,8 @@
       "name": "Launch Library",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "laundrify": {
       "name": "laundrify",
@@ -3363,7 +3365,8 @@
       "name": "LiteJet",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "litterrobot": {
       "name": "Litter-Robot",
@@ -3397,7 +3400,8 @@
     "local_ip": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "local_todo": {
       "integration_type": "hub",
@@ -4248,7 +4252,8 @@
       "name": "NZBGet",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "oasa_telematics": {
       "name": "OASA Telematics",
@@ -4296,7 +4301,8 @@
       "name": "Hayward Omnilogic",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "oncue": {
       "name": "Oncue by Kohler",
@@ -4308,7 +4314,8 @@
       "name": "Ondilo ICO",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "onewire": {
       "name": "1-Wire",
@@ -4516,7 +4523,8 @@
       "name": "OwnTracks",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "p1_monitor": {
       "name": "P1 Monitor",
@@ -4731,7 +4739,8 @@
     "profiler": {
       "name": "Profiler",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "progettihwsw": {
       "name": "ProgettiHWSW Automation",
@@ -4946,7 +4955,8 @@
       "name": "Radio Browser",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "radiotherm": {
       "name": "Radio Thermostat",
