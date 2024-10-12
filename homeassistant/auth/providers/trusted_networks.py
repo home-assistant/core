@@ -71,6 +71,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
     """
 
     DEFAULT_TITLE = "Trusted Networks"
+    support_mfa = False  # Trusted Networks do not support MFA, To refactoring the issue it always return(false)
 
     @property
     def trusted_networks(self) -> list[IPNetwork]:
@@ -92,11 +93,6 @@ class TrustedNetworksAuthProvider(AuthProvider):
             ip_network(trusted_proxy)
             for trusted_proxy in self.hass.http.trusted_proxies
         ]
-
-    @property
-    def support_mfa(self) -> bool:
-        """Trusted Networks auth provider does not support MFA."""
-        return False
 
     async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
