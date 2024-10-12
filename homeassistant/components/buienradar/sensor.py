@@ -72,6 +72,8 @@ SCHEDULE_NOK = 2
 
 STATIONNAME_LABEL = "Stationname"
 
+MDI_COMPASS_OUTLINE_ICON = "mdi:compass-outline"
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="stationname",
@@ -163,13 +165,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="winddirection",
         translation_key="winddirection",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth",
         translation_key="windazimuth",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="pressure",
@@ -504,57 +506,57 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="winddirection_1d",
         translation_key="winddirection_1d",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_2d",
         translation_key="winddirection_2d",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_3d",
         translation_key="winddirection_3d",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_4d",
         translation_key="winddirection_4d",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_5d",
         translation_key="winddirection_5d",
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_1d",
         translation_key="windazimuth_1d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_2d",
         translation_key="windazimuth_2d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_3d",
         translation_key="windazimuth_3d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_4d",
         translation_key="windazimuth_4d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_5d",
         translation_key="windazimuth_5d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="condition_1d",
