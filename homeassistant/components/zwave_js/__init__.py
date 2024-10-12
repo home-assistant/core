@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Coroutine
 import contextlib
 import logging
 from typing import Any
@@ -150,6 +149,24 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
@@ -249,6 +266,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # When the driver is ready we know it's set on the client.
     assert driver is not None
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     with contextlib.suppress(NotConnected):
         # If the client isn't connected the listen task will have an exception
         # and we'll handle the clean up below.
@@ -256,14 +275,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        tasks: list[Coroutine] = [
-            hass.config_entries.async_forward_entry_unload(entry, platform)
-            for platform, task in driver_events.platform_setup_tasks.items()
-            if not task.cancel()
-        ]
-        if tasks:
-            await asyncio.gather(*tasks)
-        hass.data[DOMAIN].pop(entry.entry_id)
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
         try:
             await client.disconnect()
         finally:
@@ -290,7 +302,6 @@ class DriverEvents:
         self.config_entry = entry
         self.dev_reg = dr.async_get(hass)
         self.hass = hass
-        self.platform_setup_tasks: dict[str, asyncio.Task] = {}
         # Make sure to not pass self to ControllerEvents until all attributes are set.
         self.controller_events = ControllerEvents(hass, self)
 
@@ -373,16 +384,6 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-    async def async_setup_platform(self, platform: Platform) -> None:
-        """Set up platform if needed."""
-        if platform not in self.platform_setup_tasks:
-            self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setups(
-                    self.config_entry, [platform]
-                )
-            )
-        await self.platform_setup_tasks[platform]
-
 
 class ControllerEvents:
     """Represent controller events.
@@ -414,9 +415,6 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
-        # Every node including the controller will have at least one sensor
-        await self.driver_events.async_setup_platform(Platform.SENSOR)
-
         # Remove stale entities that may exist from a previous interview when an
         # interview is started.
         base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
@@ -445,7 +443,6 @@ class ControllerEvents:
             )
 
             # Create a ping button for each device
-            await self.driver_events.async_setup_platform(Platform.BUTTON)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_ping_button_entity",
@@ -702,9 +699,6 @@ class NodeEvents:
             cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
             for cc in node.command_classes
         ):
-            await self.controller_events.driver_events.async_setup_platform(
-                Platform.UPDATE
-            )
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_firmware_update_entity",
@@ -735,20 +729,18 @@ class NodeEvents:
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
+        platform = disc_info.platform
         # This migration logic was added in 2021.3 to handle a breaking change to
         # the value_id format. Some time in the future, this call (as well as the
         # helper functions) can be removed.
         async_migrate_discovered_value(
             self.hass,
             self.ent_reg,
-            self.controller_events.registered_unique_ids[device.id][disc_info.platform],
+            self.controller_events.registered_unique_ids[device.id][platform],
             device,
             self.controller_events.driver_events.driver,
             disc_info,
         )
-
-        platform = disc_info.platform
-        await self.controller_events.driver_events.async_setup_platform(platform)
 
         LOGGER.debug("Discovered entity: %s", disc_info)
         async_dispatcher_send(
@@ -986,23 +978,10 @@ async def client_listen(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     entry_runtime_data = entry.runtime_data
     client: ZwaveClient = entry_runtime_data[DATA_CLIENT]
-    driver_events: DriverEvents = entry_runtime_data[DATA_DRIVER_EVENTS]
-
-    setup_tasks: list[Awaitable] = []
-    unload_tasks: list[Awaitable] = []
-
-    for platform, task in driver_events.platform_setup_tasks.items():
-        if not task.cancel():
-            unload_tasks.append(
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-            )
-        else:
-            setup_tasks.append(task)
-
-    unload_ok = all(await asyncio.gather(*unload_tasks)) if unload_tasks else True
-    await asyncio.gather(*setup_tasks)
 
     if client.connected and (driver := client.driver):
         await async_disable_server_logging_if_needed(hass, entry, driver)
