@@ -23,7 +23,7 @@ from .const import (
 from .coordinator import WallboxCoordinator, WallboxEvent
 from .entity import WallboxEntity
 
-CALENDAR_TYPE = EntityDescription(
+CALENDAR_TYPE = CalendarEntityDescription(
     key="calendar",
     name=None,
 )
