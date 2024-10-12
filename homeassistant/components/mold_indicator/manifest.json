@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mold_indicator",
   "integration_type": "helper",
   "iot_class": "calculated",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "strings": "strings.json"
 }
