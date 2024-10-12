@@ -27,8 +27,7 @@
         "title": "Caminizi arayın",
         "description": "Anahtar kelime girerek cami arayın:",
         "data": {
-          "Keyword": "Ara",
-          "uuid": "Cami"
+          "Keyword": "Ara"
         }
       },
       "search_method": {
@@ -39,7 +38,8 @@
       },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Etrafınızda birçok cami mevcut, birini seçin:"
+          "mosques": "Etrafınızda birçok cami mevcut, birini seçin:",
+          "uuid": "Cami"
         },
         "title": "Favori caminiz"
       }

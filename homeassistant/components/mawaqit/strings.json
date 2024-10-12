@@ -22,8 +22,7 @@
         "title": "Search for your mosque",
         "description": "Search for a mosque by entering a keyword :",
         "data": {
-          "Keyword": "Search",
-          "uuid": "Mosque"
+          "Keyword": "Search"
         }
       },
       "search_method": {
@@ -34,7 +33,8 @@
       },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Multiple mosques are available around you, select one :"
+          "mosques": "Multiple mosques are available around you, select one :",
+          "uuid": "Mosque"
         },
         "title": "Your favourite mosque"
       },

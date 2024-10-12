@@ -27,8 +27,7 @@
         "title": "Zoek naar uw moskee",
         "description": "Zoek naar een moskee door een trefwoord in te voeren:",
         "data": {
-          "Keyword": "Zoeken",
-          "uuid": "Moskee"
+          "Keyword": "Zoeken"
         }
       },
       "search_method": {
@@ -39,7 +38,8 @@
       },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Er zijn meerdere moskeeën beschikbaar rondom u, selecteer er een:"
+          "mosques": "Er zijn meerdere moskeeën beschikbaar rondom u, selecteer er een:",
+          "uuid": "Moskee"
         },
         "title": "Uw favoriete moskee"
       }

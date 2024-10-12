@@ -22,8 +22,7 @@
         "title": "Recherchez votre mosquée",
         "description": "Recherchez une mosquée en entrant un mot-clé :",
         "data": {
-          "Keyword": "Rechercher",
-          "uuid": "Mosquée"
+          "Keyword": "Rechercher"
         }
       },
       "search_method": {
@@ -34,7 +33,8 @@
       },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Plusieurs mosquées sont disponibles autour de vous, sélectionnez-en une :"
+          "mosques": "Plusieurs mosquées sont disponibles autour de vous, sélectionnez-en une :",
+          "uuid": "Mosquée"
         },
         "title": "Votre mosquée préférée"
       },

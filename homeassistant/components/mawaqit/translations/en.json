@@ -20,15 +20,15 @@
             },
             "keyword_search": {
                 "data": {
-                    "Keyword": "Search",
-                    "uuid": "Mosque"
+                    "Keyword": "Search"
                 },
                 "description": "Search for a mosque by entering a keyword :",
                 "title": "Search for your mosque"
             },
             "mosques_coordinates": {
                 "data": {
-                    "mosques": "Multiple mosques are available around you, select one :"
+                    "mosques": "Multiple mosques are available around you, select one :",
+                    "uuid": "Mosque"
                 },
                 "title": "Your favourite mosque"
             },
