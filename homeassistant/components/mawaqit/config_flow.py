@@ -338,9 +338,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         self.store: Store | None = None
         self.config_entry = config_entry
 
-    async def async_step_mosque_coordinates(
-        self, user_input=None
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
 
         self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
@@ -391,6 +389,4 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             ): vol.In(name_servers)
         }
 
-        return self.async_show_form(
-            step_id="mosque_coordinates", data_schema=vol.Schema(options)
-        )
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
