@@ -458,6 +458,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
             params["u"] = media_id
+            params["t"] = "v"
 
             await self.coordinator.roku.launch(
                 self.coordinator.play_media_app_id,

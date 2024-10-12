@@ -597,6 +597,7 @@ async def test_services_play_media_video(
         DEFAULT_PLAY_MEDIA_APP_ID,
         {
             "u": content_id,
+            "t": "v",
             "videoName": resolved_name,
             "videoFormat": resolved_format,
         },
@@ -625,6 +626,7 @@ async def test_services_camera_play_stream(
         DEFAULT_PLAY_MEDIA_APP_ID,
         {
             "u": "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            "t": "v",
             "videoName": "Camera Stream",
             "videoFormat": "hls",
         },
@@ -663,6 +665,8 @@ async def test_services_play_media_local_source(
     assert call_args[0] == DEFAULT_PLAY_MEDIA_APP_ID
     assert "u" in call_args[1]
     assert "/local/Epic%20Sax%20Guy%2010%20Hours.mp4?authSig=" in call_args[1]["u"]
+    assert "t" in call_args[1]
+    assert call_args[1]["t"] == "v"
     assert "videoFormat" in call_args[1]
     assert call_args[1]["videoFormat"] == "mp4"
     assert "videoName" in call_args[1]
