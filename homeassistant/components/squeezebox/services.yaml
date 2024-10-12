@@ -40,22 +40,16 @@ search:
       required: true
       selector:
         select:
+          translation_key: "search_command_selector"
           multiple: false
           options:
-            - label: Albums
-              value: albums
-            - label: Artists
-              value: artists
-            - label: Tracks
-              value: tracks
-            - label: Playlists
-              value: playlists
-            - label: Genres
-              value: genres
-            - label: Favorites
-              value: favorites
-            - label: Players
-              value: players
+            - albums
+            - artists
+            - tracks
+            - playlists
+            - genres
+            - favorites
+            - players
     return_items:
       required: true
       selector:
