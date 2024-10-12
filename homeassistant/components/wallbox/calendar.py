@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEntityDescription,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
@@ -39,7 +43,7 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
     """A Wallbox calendar entity."""
 
     def __init__(
-        self, coordinator: WallboxCoordinator, description: EntityDescription
+        self, coordinator: WallboxCoordinator, description: CalendarEntityDescription
     ) -> None:
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
