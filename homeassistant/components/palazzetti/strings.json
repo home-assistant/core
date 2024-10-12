@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter the host name or the ip address of the Palazzetti CBox",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "invalid_host": "The host is not responding or is not a Palazzetti CBox"
+    }
+  },
+  "exceptions": {
+    "action_not_available": {
+      "message": "This action is currently not available. Try again later."
+    }
+  }
+}
