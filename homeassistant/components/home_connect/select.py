@@ -9,11 +9,11 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import APPLIANCES_WITH_PROGRAMS, ATTR_VALUE, BSH_ACTIVE_PROGRAM, DOMAIN
 from .entity import HomeConnectEntity
-from .utils import bsh_key_to_translation_key, translation_key_to_bsh_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +54,14 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key="program",
             ),
         )
-        self._attr_options = [
-            bsh_key_to_translation_key(program) for program in programs
-        ]
+        self.options_map = {
+            self.format_program(program): program for program in programs
+        }
+        self._attr_options = [key for key in self.options_map if key is not None]
 
     async def async_update(self) -> None:
         """Update the program selection status."""
-        self._attr_current_option = bsh_key_to_translation_key(
+        self._attr_current_option = self.format_program(
             self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {}).get(
                 ATTR_VALUE, None
             )
@@ -69,7 +70,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
-        bsh_key = translation_key_to_bsh_key(option)
+        bsh_key = self.options_map[option]
         _LOGGER.debug("Tried to select program: %s", bsh_key)
         try:
             await self.hass.async_add_executor_job(
@@ -78,3 +79,9 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to select program %s: %s", bsh_key, err)
         self.async_entity_update()
+
+    def format_program(self, program: str | None) -> str | None:
+        """Format the program for display."""
+        if not program:
+            return program
+        return slugify(program.split("program")[-1])
