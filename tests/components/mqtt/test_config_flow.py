@@ -420,7 +420,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
