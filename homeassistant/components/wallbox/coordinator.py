@@ -215,7 +215,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
-        _LOGGER.warning(data)
         tzone = dt_util.get_default_time_zone()
         events: list[WallboxEvent] = [
             WallboxEvent(
