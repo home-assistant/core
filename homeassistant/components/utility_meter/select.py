@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -62,11 +62,12 @@ async def async_setup_platform(
     conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
         CONF_UNIQUE_ID
     )
+    conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
 
     async_add_entities(
         [
             TariffSelect(
-                meter,
+                conf_meter_name,
                 discovery_info[CONF_TARIFFS],
                 conf_meter_unique_id,
             )

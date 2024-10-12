@@ -1,10 +1,78 @@
 """The tests for the utility_meter select platform."""
 
+import pytest
+
 from homeassistant.components.utility_meter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_config"),
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "name": "Energy bill",
+                        "source": "sensor.energy",
+                        "always_available": True,
+                        "tariffs": ["peak", "offpeak"],
+                    }
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            {
+                "cycle": "none",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 0,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": ["peak", "offpeak"],
+                "always_available": True,
+            },
+        ),
+    ],
+)
+async def test_select(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    yaml_config: dict,
+    config_entry_config: dict,
+) -> None:
+    """Test for Utility Meter select platform."""
+    if config_entry_config:
+        source_config_entry = MockConfigEntry()
+        source_config_entry.add_to_hass(hass)
+        utility_meter_config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options=config_entry_config,
+            title="Energy bill",
+        )
+
+        utility_meter_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(
+            utility_meter_config_entry.entry_id
+        )
+
+    else:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.energy_bill")
+
+    assert state.attributes.get("friendly_name") == "Energy bill"
 
 
 async def test_device_id(
