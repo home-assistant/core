@@ -57,6 +57,21 @@ RUN \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
+# Needs to be redefined inside the FROM statement to be set for RUN commands
+ARG BUILD_ARCH
+# Get go2rtc binary
+RUN \
+    case "${{BUILD_ARCH}}" in \
+        "aarch64") go2rtc_suffix='arm64' ;; \
+        "armhf") go2rtc_suffix='armv6' ;; \
+        "armv7") go2rtc_suffix='arm' ;; \
+        *) go2rtc_suffix=${{BUILD_ARCH}} ;; \
+    esac \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v{go2rtc}/go2rtc_linux_${{go2rtc_suffix}} --output /bin/go2rtc \
+    && chmod +x /bin/go2rtc \
+    # Verify go2rtc can be executed
+    && go2rtc --version
+
 WORKDIR /config
 """
 
@@ -95,6 +110,8 @@ LABEL "com.github.actions.description"="Run hassfest to validate standalone inte
 LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
+
+_GO2RTC_VERSION = "1.9.4"
 
 
 def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
@@ -176,7 +193,11 @@ def _generate_files(config: Config) -> list[File]:
 
     return [
         File(
-            DOCKERFILE_TEMPLATE.format(timeout=timeout, **package_versions),
+            DOCKERFILE_TEMPLATE.format(
+                timeout=timeout,
+                **package_versions,
+                go2rtc=_GO2RTC_VERSION,
+            ),
             config.root / "Dockerfile",
         ),
         _generate_hassfest_dockerimage(config, timeout, package_versions),

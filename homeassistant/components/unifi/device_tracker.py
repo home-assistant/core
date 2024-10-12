@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any
 
@@ -17,6 +16,7 @@ from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
+from propcache import cached_property
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,

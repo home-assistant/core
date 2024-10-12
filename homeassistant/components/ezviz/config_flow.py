@@ -369,14 +369,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
 
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     entry,
                     data=auth_data,
                 )
-
-                await self.hass.config_entries.async_reload(entry.entry_id)
-
-                return self.async_abort(reason="reauth_successful")
 
         data_schema = vol.Schema(
             {

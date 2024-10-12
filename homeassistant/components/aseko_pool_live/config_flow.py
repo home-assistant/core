@@ -9,7 +9,7 @@ from typing import Any
 from aioaseko import Aseko, AsekoAPIError, AsekoInvalidCredentials
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 
 from .const import DOMAIN
@@ -29,8 +29,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         }
     )
 
-    reauth_entry: ConfigEntry | None = None
-
     async def get_account_info(self, email: str, password: str) -> dict:
         """Get account info from the mobile API and the web API."""
         aseko = Aseko(email, password)
@@ -46,7 +44,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        self.reauth_entry = None
         errors = {}
 
         if user_input is not None:
@@ -73,17 +70,15 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Store validated credentials."""
 
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(
-                self.reauth_entry,
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
                 title=info[CONF_EMAIL],
                 data={
                     CONF_EMAIL: info[CONF_EMAIL],
                     CONF_PASSWORD: info[CONF_PASSWORD],
                 },
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         self._abort_if_unique_id_configured()
@@ -100,11 +95,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

@@ -17,6 +17,17 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "Bitmap": DPType.RAW,
+    "bitmap": DPType.RAW,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
+
 
 @dataclass
 class IntegerTypeData:
@@ -256,7 +267,13 @@ class TuyaEntity(Entity):
             order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return DPType(getattr(self.device, key)[dpcode].type)
+                current_type = getattr(self.device, key)[dpcode].type
+                try:
+                    return DPType(current_type)
+                except ValueError:
+                    # Sometimes, we get ill-formed DPTypes from the cloud,
+                    # this fixes them and maps them to the correct DPType.
+                    return _DPTYPE_MAPPING.get(current_type)
 
         return None
 

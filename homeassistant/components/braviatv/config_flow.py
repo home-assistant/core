@@ -11,7 +11,7 @@ from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSuppor
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -37,7 +37,6 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.client: BraviaClient | None = None
         self.device_config: dict[str, Any] = {}
-        self.entry: ConfigEntry | None = None
 
     def create_client(self) -> None:
         """Create Bravia TV client from config."""
@@ -86,13 +85,12 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_reauth_device(self) -> ConfigFlowResult:
         """Reauthorize Bravia TV device from config."""
-        assert self.entry
         assert self.client
         await self.async_connect_device()
 
-        self.hass.config_entries.async_update_entry(self.entry, data=self.device_config)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data=self.device_config
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -147,7 +145,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_config[CONF_CLIENT_ID] = client_id
             self.device_config[CONF_NICKNAME] = nickname
             try:
-                if self.entry:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
             except BraviaAuthError:
@@ -183,7 +181,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.device_config[CONF_PIN] = user_input[CONF_PIN]
             try:
-                if self.entry:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
             except BraviaAuthError:
@@ -247,6 +245,5 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self.device_config = {**entry_data}
         return await self.async_step_authorize()
