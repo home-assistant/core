@@ -13,15 +13,10 @@ from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumEntityFeature,
+    VacuumEntityState,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
@@ -123,22 +118,22 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def vacuum_state(self) -> VacuumEntityState | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
-            return STATE_ERROR
+            return VacuumEntityState.ERROR
 
         if self.device.is_cleaning:
-            return STATE_CLEANING
+            return VacuumEntityState.CLEANING
 
         if self.device.is_charging:
-            return STATE_DOCKED
+            return VacuumEntityState.DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return STATE_IDLE
+            return VacuumEntityState.IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
-            return STATE_RETURNING
+            return VacuumEntityState.RETURNING
 
         return None
 
@@ -202,7 +197,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumEntityState.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
@@ -225,12 +220,12 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
 
 _STATE_TO_VACUUM_STATE = {
-    State.IDLE: STATE_IDLE,
-    State.CLEANING: STATE_CLEANING,
-    State.RETURNING: STATE_RETURNING,
-    State.DOCKED: STATE_DOCKED,
-    State.ERROR: STATE_ERROR,
-    State.PAUSED: STATE_PAUSED,
+    State.IDLE: VacuumEntityState.IDLE,
+    State.CLEANING: VacuumEntityState.CLEANING,
+    State.RETURNING: VacuumEntityState.RETURNING,
+    State.DOCKED: VacuumEntityState.DOCKED,
+    State.ERROR: VacuumEntityState.ERROR,
+    State.PAUSED: VacuumEntityState.PAUSED,
 }
 
 _ATTR_ROOMS = "rooms"

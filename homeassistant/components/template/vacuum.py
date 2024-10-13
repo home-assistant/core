@@ -17,14 +17,9 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
+    VacuumEntityState,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -58,12 +53,12 @@ CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
+    VacuumEntityState.CLEANING,
+    VacuumEntityState.DOCKED,
+    VacuumEntityState.PAUSED,
+    VacuumEntityState.IDLE,
+    VacuumEntityState.RETURNING,
+    VacuumEntityState.ERROR,
 ]
 
 VACUUM_SCHEMA = vol.All(
@@ -202,7 +197,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
-    def state(self) -> str | None:
+    def vacuum_state(self) -> VacuumEntityState | None:
         """Return the status of the vacuum cleaner."""
         return self._state
 
