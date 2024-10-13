@@ -13,8 +13,9 @@ from PyViCare.PyViCareUtils import (
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -46,8 +47,19 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 )
 
 
-class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ViCare."""
+# class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
+#     """Handle a config flow for ViCare."""
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
+    """Config flow to handle Viessmann ViCare OAuth2 authentication."""
+
+    DOMAIN = DOMAIN
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     VERSION = 1
     entry: ConfigEntry | None
