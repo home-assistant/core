@@ -134,7 +134,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         events = [
             CalendarEvent(
                 start=(start := next_recurrence.date()),
-                end=start,
+                end=start + timedelta(days=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
@@ -167,7 +167,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         return [
             CalendarEvent(
                 start=start,
-                end=start,
+                end=start + timedelta(days=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
@@ -192,7 +192,6 @@ class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        events_sorted = None
         now = dt_util.now()
         events = [
             CalendarEvent(
