@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from homeassistant.components.calendar import (
@@ -126,9 +126,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
 
-        today = datetime.combine(
-            dt_util.now().date(), time(), dt_util.DEFAULT_TIME_ZONE
-        )
+        today = dt_util.start_of_local_day()
         events = [
             CalendarEvent(
                 start=(start := next_recurrence.date()),
@@ -138,10 +136,12 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
                 uid=task["id"],
             )
             for task in self.coordinator.data.tasks
-            if task["type"] == HabiticaTaskType.DAILY
-            and not task["completed"]
-            and task["everyX"]
-            if (next_recurrence := build_rrule(task).after(today, inc=True))
+            if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
+            if (
+                next_recurrence := today
+                if not task["completed"]
+                else build_rrule(task).after(today, inc=True)
+            )
         ]
         events_sorted = sorted(
             events,
