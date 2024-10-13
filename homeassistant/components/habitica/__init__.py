@@ -1,6 +1,6 @@
 """The habitica integration."""
 
-from datetime import date, datetime, time
+from datetime import UTC, date, datetime, time
 from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
@@ -50,8 +50,10 @@ from .const import (
     ATTR_FREQUENCY,
     ATTR_PRIORITY,
     ATTR_REMINDER,
+    ATTR_REMINDER_TIME,
     ATTR_REMOVE_CHECKLIST_ITEM,
     ATTR_REMOVE_REMINDER,
+    ATTR_REMOVE_REMINDER_TIME,
     ATTR_REMOVE_TAG,
     ATTR_REPEAT,
     ATTR_REPEAT_MONTHLY,
@@ -117,40 +119,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if priority := call.data.get(ATTR_PRIORITY):
             data.update({"priority": PRIORITIES[priority]})
-
-        if reminder := call.data.get(ATTR_REMINDER):
-            existing_reminder_times = {
-                datetime.fromisoformat(r["time"]).replace(tzinfo=None)
-                for r in current_task.get("reminders", [])
-            }
-
-            data.update(
-                {
-                    "reminders": (
-                        [
-                            {
-                                "id": str(uuid.uuid4()),
-                                "time": r.isoformat(),
-                            }
-                            for r in reminder
-                            if r not in existing_reminder_times
-                        ]
-                        + current_task.get("reminders", [])
-                    )
-                }
-            )
-        if remove_reminder := call.data.get(ATTR_REMOVE_REMINDER):
-            reminders = list(
-                filter(
-                    lambda r: datetime.fromisoformat(r["time"]).replace(tzinfo=None)
-                    not in remove_reminder,
-                    current_task.get("reminders", []),
-                )
-            )
-            data.update({"reminders": reminders})
-
-        if call.data.get(ATTR_CLEAR_REMINDER):
-            data.update({"reminders": []})
 
         if due_date := call.data.get(ATTR_DATE):
             data.update({"date": (datetime.combine(due_date, time()).isoformat())})
@@ -310,6 +278,78 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             else:
                 data.update({"daysOfMonth": current_start_date.day, "weeksOfMonth": []})
+
+        if reminder := call.data.get(ATTR_REMINDER):
+            existing_reminder_datetimes = {
+                datetime.fromisoformat(r["time"]).replace(tzinfo=None)
+                for r in current_task.get("reminders", [])
+            }
+
+            data.update(
+                {
+                    "reminders": (
+                        [
+                            {
+                                "id": str(uuid.uuid4()),
+                                "time": r.isoformat(),
+                            }
+                            for r in reminder
+                            if r not in existing_reminder_datetimes
+                        ]
+                        + current_task.get("reminders", [])
+                    )
+                }
+            )
+        if reminder_time := call.data.get(ATTR_REMINDER_TIME):
+            existing_reminder_times = {
+                datetime.fromisoformat(r["time"])
+                .time()
+                .replace(microsecond=0, second=0)
+                for r in current_task.get("reminders", [])
+            }
+
+            data.update(
+                {
+                    "reminders": (
+                        [
+                            {
+                                "id": str(uuid.uuid4()),
+                                "startDate": "",
+                                "time": datetime.combine(
+                                    date.today(), r, tzinfo=UTC
+                                ).isoformat(),
+                            }
+                            for r in reminder_time
+                            if r not in existing_reminder_times
+                        ]
+                        + current_task.get("reminders", [])
+                    )
+                }
+            )
+        if remove_reminder := call.data.get(ATTR_REMOVE_REMINDER):
+            reminders = list(
+                filter(
+                    lambda r: datetime.fromisoformat(r["time"]).replace(tzinfo=None)
+                    not in remove_reminder,
+                    current_task.get("reminders", []),
+                )
+            )
+            data.update({"reminders": reminders})
+        if remove_reminder_time := call.data.get(ATTR_REMOVE_REMINDER_TIME):
+            reminders = list(
+                filter(
+                    lambda r: datetime.fromisoformat(r["time"])
+                    .time()
+                    .replace(second=0, microsecond=0)
+                    not in remove_reminder_time,
+                    current_task.get("reminders", []),
+                )
+            )
+            data.update({"reminders": reminders})
+
+        if call.data.get(ATTR_CLEAR_REMINDER):
+            data.update({"reminders": []})
+
         if streak := call.data.get(ATTR_STREAK):
             data.update({"streak": streak})
         if counter_up := call.data.get(ATTR_COUNTER_UP):
