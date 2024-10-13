@@ -72,6 +72,11 @@ BSH_PROGRAM_SENSORS = (
         sign=1,
         translation_key="program_progress",
     ),
+    HomeConnectSensorEntityDescription(
+        key="BSH.Common.Root.ActiveProgram",
+        sign=1,
+        translation_key="active_program",
+    ),
 )
 
 SENSORS = (
@@ -276,7 +281,9 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             or ATTR_VALUE not in appliance_status[self.bsh_key]
         ):
             self._attr_native_value = self.entity_description.default_value
-            _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
+            _LOGGER.debug(
+                "Updated %s, new state: %s", self.entity_id, self._attr_native_value
+            )
             return
         status = appliance_status[self.bsh_key]
         match self.device_class:
