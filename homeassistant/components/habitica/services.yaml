@@ -151,7 +151,9 @@ update_todo:
         clear_date:
           required: false
           selector:
-            boolean:
+            constant:
+              value: true
+              label: ""
     reminder_options:
       collapsed: true
       fields:
@@ -167,10 +169,12 @@ update_todo:
             text:
               type: datetime-local
               multiple: true
-        clear_reminder:
-          required: false
-          selector:
-            boolean:
+    clear_reminder: &clear_reminder
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     tag_options: &tag_options
       collapsed: true
       fields:
@@ -284,7 +288,7 @@ update_daily:
         number:
           min: 0
           step: 1
-          unit_of_measurement: "Day/Week/Month/Year"
+          unit_of_measurement: "🔃"
           mode: box
     repeat_weekly_options:
       collapsed: true
@@ -319,22 +323,19 @@ update_daily:
     reminder_options:
       collapsed: true
       fields:
-        reminder:
+        reminder_time:
           required: false
           selector:
             text:
-              type: datetime-local
+              type: time
               multiple: true
-        remove_reminder:
+        remove_reminder_time:
           required: false
           selector:
             text:
-              type: datetime-local
+              type: time
               multiple: true
-        clear_reminder:
-          required: false
-          selector:
-            boolean:
+    clear_reminder: *clear_reminder
     tag_options: *tag_options
     developer_options:
       collapsed: true
