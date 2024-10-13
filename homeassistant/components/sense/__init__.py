@@ -135,6 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    async_dispatcher_send(hass, f"{SENSE_DEVICE_UPDATE}-{gateway.sense_monitor_id}")
 
     async def async_sense_update(_):
         """Retrieve latest state."""

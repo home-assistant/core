@@ -93,10 +93,14 @@ async def async_setup_entry(
 
     sense_monitor_id = data.sense_monitor_id
 
-    entities: list[SensorEntity] = [
-        SenseDevicePowerSensor(device, sense_monitor_id)
-        for device in config_entry.runtime_data.data.devices
-    ]
+    entities: list[SensorEntity] = []
+
+    for device in config_entry.runtime_data.data.devices:
+        entities.append(SenseDevicePowerSensor(device, sense_monitor_id))
+        entities += [
+            SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
+            for scale in Scale
+        ]
 
     for variant_id, variant_name in SENSOR_VARIANTS:
         entities.append(
@@ -153,6 +157,13 @@ class SensePowerSensor(SensorEntity):
         self._sense_monitor_id = sense_monitor_id
         self._variant_id = variant_id
         self._variant_name = variant_name
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -202,6 +213,13 @@ class SenseVoltageSensor(SensorEntity):
         self._data = data
         self._sense_monitor_id = sense_monitor_id
         self._voltage_index = index
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -292,11 +310,17 @@ class SenseDevicePowerSensor(SensorEntity):
     def __init__(self, device: SenseDevice, sense_monitor_id: str) -> None:
         """Initialize the Sense binary sensor."""
         self._attr_name = f"{device.name} {CONSUMPTION_NAME}"
-        self._id = device.id
         self._sense_monitor_id = sense_monitor_id
-        self._attr_unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_ID}"
+        self._attr_unique_id = f"{sense_monitor_id}-{device.id}-{CONSUMPTION_ID}"
         self._attr_icon = sense_to_mdi(device.icon)
         self._device = device
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id} - {device.name}",
+            identifiers={(DOMAIN, f"{sense_monitor_id}:{device.id}")},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -317,3 +341,43 @@ class SenseDevicePowerSensor(SensorEntity):
         self._attr_native_value = new_state
         self._attr_available = True
         self.async_write_ha_state()
+
+
+class SenseDeviceEnergySensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a Sense device energy sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        device: SenseDevice,
+        scale: Scale,
+        trends_coordinator: DataUpdateCoordinator[Any],
+        sense_monitor_id: str,
+    ) -> None:
+        """Initialize the Sense sensor."""
+        super().__init__(trends_coordinator)
+        self._attr_name = f"{device.name} {TRENDS_SENSOR_TYPES[scale]} Energy"
+        self._attr_unique_id = (
+            f"{sense_monitor_id}-{device.id}-{TRENDS_SENSOR_TYPES[scale].lower()}"
+        )
+        self._scale = scale
+        self._had_any_update = False
+        self._attr_icon = sense_to_mdi(device.icon)
+        self._device = device
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense - {device.name}",
+            identifiers={(DOMAIN, f"{sense_monitor_id}:{device.id}")},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
+
+    @property
+    def native_value(self) -> float:
+        """Return the state of the sensor."""
+        return round(self._device.energy_kwh[self._scale], 2)
