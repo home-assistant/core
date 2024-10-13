@@ -72,7 +72,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
         events = [
             CalendarEvent(
                 start=start,
-                end=start,
+                end=start + timedelta(days=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
@@ -102,7 +102,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
         return [
             CalendarEvent(
                 start=start,
-                end=start,
+                end=start + timedelta(days=1),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
