@@ -132,9 +132,7 @@ def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    stt_engine = None
     stt_language = None
-    tts_engine = None
     tts_language = None
     tts_voice = None
     wake_word_entity = None
@@ -153,56 +151,13 @@ def _async_resolve_default_pipeline_settings(
         pipeline_language = hass.config.language
         conversation_language = conversation_languages[0]
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
+    stt_engine_id, stt_language = _resolve_stt_settings(
+        hass, stt_engine_id, pipeline_language
+    )
 
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
-
-    if stt_engine:
-        stt_languages = language_util.matches(
-            pipeline_language,
-            stt_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if stt_languages:
-            stt_language = stt_languages[0]
-        else:
-            _LOGGER.debug(
-                "Speech-to-text engine '%s' does not support language '%s'",
-                stt_engine_id,
-                pipeline_language,
-            )
-            stt_engine_id = None
-
-    if tts_engine_id is None:
-        tts_engine_id = tts.async_default_engine(hass)
-
-    if tts_engine_id is not None:
-        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
-        if tts_engine is None:
-            tts_engine_id = None
-
-    if tts_engine:
-        tts_languages = language_util.matches(
-            pipeline_language,
-            tts_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if tts_languages:
-            tts_language = tts_languages[0]
-            tts_voices = tts_engine.async_get_supported_voices(tts_language)
-            if tts_voices:
-                tts_voice = tts_voices[0].voice_id
-        else:
-            _LOGGER.debug(
-                "Text-to-speech engine '%s' does not support language '%s'",
-                tts_engine_id,
-                pipeline_language,
-            )
-            tts_engine_id = None
+    tts_engine_id, tts_language, tts_voice = _resolve_tts_settings(
+        hass, tts_engine_id, pipeline_language
+    )
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -217,6 +172,63 @@ def _async_resolve_default_pipeline_settings(
         "wake_word_entity": wake_word_entity,
         "wake_word_id": wake_word_id,
     }
+
+
+def _resolve_stt_settings(
+    hass: HomeAssistant, stt_engine_id: str | None, pipeline_language: str
+) -> tuple[str | None, str | None]:
+    """Resolve the speech-to-text engine and language settings."""
+    stt_engine_id = stt_engine_id or stt.async_default_engine(hass)
+    if stt_engine_id:
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+        if not stt_engine:
+            _LOGGER.debug("STT engine '%s' could not be retrieved", stt_engine_id)
+            return None, None
+
+        stt_languages = language_util.matches(
+            pipeline_language,
+            stt_engine.supported_languages,
+            country=hass.config.country,
+        )
+        if stt_languages:
+            return stt_engine_id, stt_languages[0]
+
+        _LOGGER.debug(
+            "STT engine '%s' does not support language '%s'",
+            stt_engine_id,
+            pipeline_language,
+        )
+    return None, None
+
+
+def _resolve_tts_settings(
+    hass: HomeAssistant, tts_engine_id: str | None, pipeline_language: str
+) -> tuple[str | None, str | None, str | None]:
+    """Resolve the text-to-speech engine, language, and voice settings."""
+    tts_engine_id = tts_engine_id or tts.async_default_engine(hass)
+    if tts_engine_id:
+        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+        if not tts_engine:
+            _LOGGER.debug("TTS engine '%s' could not be retrieved", tts_engine_id)
+            return None, None, None
+
+        tts_languages = language_util.matches(
+            pipeline_language,
+            tts_engine.supported_languages,
+            country=hass.config.country,
+        )
+        if tts_languages:
+            tts_language = tts_languages[0]
+            tts_voices = tts_engine.async_get_supported_voices(tts_language)
+            tts_voice = tts_voices[0].voice_id if tts_voices else None
+            return tts_engine_id, tts_language, tts_voice
+
+        _LOGGER.debug(
+            "TTS engine '%s' does not support language '%s'",
+            tts_engine_id,
+            pipeline_language,
+        )
+    return None, None, None
 
 
 async def _async_create_default_pipeline(
@@ -535,7 +547,7 @@ class PipelineRun:
     start_stage: PipelineStage
     end_stage: PipelineStage
     event_callback: PipelineEventCallback
-    language: str = None  # type: ignore[assignment]
+    language: str
     runner_data: Any | None = None
     intent_agent: str | None = None
     tts_audio_output: str | dict[str, Any] | None = None
@@ -673,6 +685,40 @@ class PipelineRun:
         audio_chunks_for_stt: list[EnhancedAudioChunk],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
+
+        # Prepare metadata
+        metadata_dict = self._prepare_metadata()
+
+        # Start wake-word event
+        self._process_start_event(metadata_dict)
+
+        wake_word_vad = self._initialize_vad()
+        stt_audio_buffer = self._initialize_audio_buffer()
+
+        try:
+            # Detect wake word(s)
+            result = await self._detect_wake_word(
+                stream, stt_audio_buffer, wake_word_vad
+            )
+
+            if stt_audio_buffer is not None:
+                audio_chunks_for_stt.extend(stt_audio_buffer)
+        except WakeWordDetectionAborted:
+            raise
+        except WakeWordTimeoutError:
+            _LOGGER.debug("Timeout during wake word detection")
+            raise
+        except Exception as src_error:
+            _LOGGER.exception("Unexpected error during wake-word-detection")
+            raise WakeWordDetectionError(
+                code="wake-stream-failed",
+                message="Unexpected error during wake-word-detection",
+            ) from src_error
+
+        return self._process_wake_word_result(result, audio_chunks_for_stt)
+
+    def _prepare_metadata(self) -> dict:
+        """Prepare metadata dictionary for wake-word detection."""
         metadata_dict = asdict(
             stt.SpeechMetadata(
                 language="",
@@ -683,12 +729,12 @@ class PipelineRun:
                 channel=stt.AudioChannels.CHANNEL_MONO,
             )
         )
-
-        wake_word_settings = self.wake_word_settings or WakeWordSettings()
-
-        # Remove language since it doesn't apply to wake words yet
         metadata_dict.pop("language", None)
+        return metadata_dict
 
+    def _process_start_event(self, metadata_dict: dict) -> None:
+        """Process wake-word start event."""
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
         self.process_event(
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_START,
@@ -703,91 +749,60 @@ class PipelineRun:
         if self.debug_recording_queue is not None:
             self.debug_recording_queue.put_nowait(f"00_wake-{self.wake_word_entity_id}")
 
-        wake_word_vad: VoiceActivityTimeout | None = None
+    def _initialize_vad(self) -> VoiceActivityTimeout | None:
+        """Initialize Voice Activity Detection (VAD) if required."""
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
         if (wake_word_settings.timeout is not None) and (
             wake_word_settings.timeout > 0
         ):
-            # Use VAD to determine timeout
-            wake_word_vad = VoiceActivityTimeout(wake_word_settings.timeout)
+            return VoiceActivityTimeout(wake_word_settings.timeout)
+        return None
 
-        # Audio chunk buffer. This audio will be forwarded to speech-to-text
-        # after wake-word-detection.
+    def _initialize_audio_buffer(self) -> deque[EnhancedAudioChunk] | None:
+        """Initialize STT audio buffer for wake-word detection."""
+        wake_word_settings = self.wake_word_settings or WakeWordSettings()
         num_audio_chunks_to_buffer = int(
             (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE)
             / SAMPLES_PER_CHUNK
         )
-
-        stt_audio_buffer: deque[EnhancedAudioChunk] | None = None
         if num_audio_chunks_to_buffer > 0:
-            stt_audio_buffer = deque(maxlen=num_audio_chunks_to_buffer)
+            return deque(maxlen=num_audio_chunks_to_buffer)
+        return None
 
-        try:
-            # Detect wake word(s)
-            result = await self.wake_word_entity.async_process_audio_stream(
-                self._wake_word_audio_stream(
-                    audio_stream=stream,
-                    stt_audio_buffer=stt_audio_buffer,
-                    wake_word_vad=wake_word_vad,
-                ),
-                self.pipeline.wake_word_id,
-            )
+    async def _detect_wake_word(
+        self,
+        stream: AsyncIterable[EnhancedAudioChunk],
+        stt_audio_buffer: deque[EnhancedAudioChunk] | None,
+        wake_word_vad: VoiceActivityTimeout | None,
+    ) -> wake_word.DetectionResult | None:
+        """Handle the wake-word detection logic."""
+        return await self.wake_word_entity.async_process_audio_stream(
+            self._wake_word_audio_stream(
+                audio_stream=stream,
+                stt_audio_buffer=stt_audio_buffer,
+                wake_word_vad=wake_word_vad,
+            ),
+            self.pipeline.wake_word_id,
+        )
 
-            if stt_audio_buffer is not None:
-                # All audio kept from right before the wake word was detected as
-                # a single chunk.
-                audio_chunks_for_stt.extend(stt_audio_buffer)
-        except WakeWordDetectionAborted:
-            raise
-        except WakeWordTimeoutError:
-            _LOGGER.debug("Timeout during wake word detection")
-            raise
-        except Exception as src_error:
-            _LOGGER.exception("Unexpected error during wake-word-detection")
-            raise WakeWordDetectionError(
-                code="wake-stream-failed",
-                message="Unexpected error during wake-word-detection",
-            ) from src_error
-
+    def _process_wake_word_result(
+        self,
+        result: wake_word.DetectionResult | None,
+        audio_chunks_for_stt: list[EnhancedAudioChunk],
+    ) -> wake_word.DetectionResult | None:
+        """Process wake-word detection result."""
         _LOGGER.debug("wake-word-detection result %s", result)
 
         if result is None:
             wake_word_output: dict[str, Any] = {}
         else:
-            # Avoid duplicate detections by checking cooldown
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
-                result.wake_word_phrase
-            )
-            if last_wake_up is not None:
-                sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                    _LOGGER.debug(
-                        "Duplicate wake word detection occurred for %s",
-                        result.wake_word_phrase,
-                    )
-                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
+            if self._is_duplicate_detection(result):
+                raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
-            # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
-                time.monotonic()
-            )
-
-            if result.queued_audio:
-                # Add audio that was pending at detection.
-                #
-                # Because detection occurs *after* the wake word was actually
-                # spoken, we need to make sure pending audio is forwarded to
-                # speech-to-text so the user does not have to pause before
-                # speaking the voice command.
-                audio_chunks_for_stt.extend(
-                    EnhancedAudioChunk(
-                        audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
-                    )
-                    for chunk_ts in result.queued_audio
-                )
+            self._record_last_wake_up(result)
+            self._process_queued_audio(result, audio_chunks_for_stt)
 
             wake_word_output = asdict(result)
-
-            # Remove non-JSON fields
             wake_word_output.pop("queued_audio", None)
 
         self.process_event(
@@ -796,8 +811,38 @@ class PipelineRun:
                 {"wake_word_output": wake_word_output},
             )
         )
-
         return result
+
+    def _is_duplicate_detection(self, result: wake_word.DetectionResult) -> bool:
+        """Check if the current wake-word detection is a duplicate."""
+        last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(result.wake_word_phrase)
+        if last_wake_up is not None:
+            sec_since_last_wake_up = time.monotonic() - last_wake_up
+            if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                _LOGGER.debug(
+                    "Duplicate wake word detection occurred for %s",
+                    result.wake_word_phrase,
+                )
+                return True
+        return False
+
+    def _record_last_wake_up(self, result: wake_word.DetectionResult) -> None:
+        """Record the last wake-up time to prevent duplicate detections."""
+        self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
+
+    def _process_queued_audio(
+        self,
+        result: wake_word.DetectionResult,
+        audio_chunks_for_stt: list[EnhancedAudioChunk],
+    ) -> None:
+        """Process queued audio after wake-word detection."""
+        if result.queued_audio:
+            audio_chunks_for_stt.extend(
+                EnhancedAudioChunk(
+                    audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
+                )
+                for chunk_ts in result.queued_audio
+            )
 
     async def _wake_word_audio_stream(
         self,
@@ -847,7 +892,7 @@ class PipelineRun:
                 message=f"No speech-to-text provider for: {engine}",
             )
 
-        metadata.language = self.pipeline.stt_language or self.language
+        metadata.language = self.pipeline.stt_language or self.language or ""
 
         if not stt_provider.check_metadata(metadata):
             raise SpeechToTextError(
