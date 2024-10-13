@@ -167,7 +167,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
-aioairzone==0.9.4
+aioairzone==0.9.5
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -798,7 +798,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.5
+gcal-sync==6.1.6
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1481,7 +1481,7 @@ pydaikin==2.13.7
 pydeako==0.4.0
 
 # homeassistant.components.deconz
-pydeconz==116
+pydeconz==118
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -2128,7 +2128,7 @@ snapcast==2.3.6
 soco==0.30.4
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.1
+solarlog_cli==0.3.2
 
 # homeassistant.components.solax
 solax==3.1.1
