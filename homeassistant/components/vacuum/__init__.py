@@ -19,9 +19,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_IDLE,
     STATE_ON,
-    STATE_PAUSED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -75,6 +73,11 @@ SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
+
+# These STATE_* constants are deprecated as of Home Assistant 2024.11.
+# Please use the VacuumEntityState enum instead.
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumEntityState.IDLE, "2025.11")
+_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumEntityState.PAUSED, "2025.11")
 
 
 class VacuumEntityFeature(IntFlag):
