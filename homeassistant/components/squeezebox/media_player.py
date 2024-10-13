@@ -55,6 +55,7 @@ from .const import (
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
+    KNOWN_SERVERS,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -71,7 +72,6 @@ ATTR_QUERY_RESULT = "query_result"
 _LOGGER = logging.getLogger(__name__)
 
 
-KNOWN_SERVERS = "known_servers"
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
@@ -253,7 +253,9 @@ class SqueezeBoxMediaPlayerEntity(
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self.coordinator)
+        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
+        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
+        known_players.remove(self.coordinator.player.player_id)
 
     @property
     def volume_level(self) -> float | None:

@@ -33,6 +33,7 @@ from .const import (
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
+    KNOWN_SERVERS,
     MANUFACTURER,
     SERVER_MODEL,
     SIGNAL_PLAYER_DISCOVERED,
@@ -135,14 +136,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
 
     # set up player discovery
-    known_players = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_PLAYERS, [])
+    known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
+    known_players = known_servers.setdefault(lms.uuid, {}).setdefault(KNOWN_PLAYERS, [])
 
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
-            if player.player_id in [p.player.player_id for p in known_players]:
+            if player.player_id in known_players:
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
                 )
@@ -151,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
                     hass, player, lms.uuid
                 )
-                known_players.append(player_coordinator)
+                known_players.append(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator
                 )
