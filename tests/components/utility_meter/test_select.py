@@ -21,6 +21,7 @@ from tests.common import MockConfigEntry
                         "source": "sensor.energy",
                         "always_available": True,
                         "tariffs": ["peak", "offpeak"],
+                        "unique_id": "1234abcd",
                     }
                 }
             },

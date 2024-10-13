@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
 
@@ -36,9 +37,10 @@ async def async_setup_entry(
     )
 
     tariff_select = TariffSelect(
-        name,
-        tariffs,
-        unique_id,
+        name=name,
+        suggested_entity_id=f"select.{slugify(name)}",
+        tariffs=tariffs,
+        unique_id=unique_id,
         device_info=device_info,
     )
     async_add_entities([tariff_select])
@@ -67,9 +69,10 @@ async def async_setup_platform(
     async_add_entities(
         [
             TariffSelect(
-                conf_meter_name,
-                discovery_info[CONF_TARIFFS],
-                conf_meter_unique_id,
+                name=conf_meter_name,
+                suggested_entity_id=f"select.{meter}",
+                tariffs=discovery_info[CONF_TARIFFS],
+                unique_id=conf_meter_unique_id,
             )
         ]
     )
@@ -83,12 +86,15 @@ class TariffSelect(SelectEntity, RestoreEntity):
     def __init__(
         self,
         name,
-        tariffs,
-        unique_id,
+        suggested_entity_id,
+        tariffs: list[str],
+        *,
+        unique_id: str | None = None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize a tariff selector."""
         self._attr_name = name
+        self.entity_id = suggested_entity_id
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._current_tariff: str | None = None
