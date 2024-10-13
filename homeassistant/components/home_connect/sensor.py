@@ -94,7 +94,6 @@ SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=BSH_DOOR_STATE,
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "closed",
