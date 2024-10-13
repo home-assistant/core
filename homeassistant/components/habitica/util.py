@@ -109,3 +109,33 @@ def build_rrule(task: dict[str, Any]) -> rrule:
         bymonthday=bymonthday,
         bysetpos=bysetpos,
     )
+
+
+def get_recurrence_rule(task: dict[str, Any]) -> str:
+    r"""Return the recurrence rules of an RRULE object from a task.
+
+    This function takes a task dictionary, builds the RRULE string using
+    the `build_rrule` function, and returns the recurrence rule part. The
+    string representation of the RRULE has the following format:
+
+    'DTSTART:YYYYMMDDTHHMMSS\nRRULE:FREQ=YEARLY;INTERVAL=2'
+
+    Parameters
+    ----------
+    task : dict of {str : Any}
+        A dictionary containing task details.
+
+    Returns
+    -------
+    str
+        The recurrence rule portion of the RRULE string, starting with 'FREQ='.
+
+    Example
+    -------
+    >>> rule = get_recurrence_rule(task)
+    >>> print(rule)
+    'FREQ=YEARLY;INTERVAL=2'
+
+    """
+    recurrence = build_rrule(task)
+    return str(recurrence).split("RRULE:")[1]

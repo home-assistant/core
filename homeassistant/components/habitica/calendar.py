@@ -18,7 +18,7 @@ from . import HabiticaConfigEntry
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaTaskType
-from .util import build_rrule, to_date
+from .util import build_rrule, get_recurrence_rule, to_date
 
 
 class HabiticaCalendar(StrEnum):
@@ -169,7 +169,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
-                rrule=str(build_rrule(task))[30:],
+                rrule=get_recurrence_rule(task),
             )
             for task in self.coordinator.data.tasks
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
