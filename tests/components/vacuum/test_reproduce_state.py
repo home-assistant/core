@@ -9,18 +9,9 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_RETURNING,
+    VacuumEntityState,
 )
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-)
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -39,11 +30,11 @@ async def test_reproducing_states(
     hass.states.async_set(
         "vacuum.entity_on_fan", STATE_ON, {ATTR_FAN_SPEED: FAN_SPEED_LOW}
     )
-    hass.states.async_set("vacuum.entity_cleaning", STATE_CLEANING, {})
-    hass.states.async_set("vacuum.entity_docked", STATE_DOCKED, {})
-    hass.states.async_set("vacuum.entity_idle", STATE_IDLE, {})
-    hass.states.async_set("vacuum.entity_returning", STATE_RETURNING, {})
-    hass.states.async_set("vacuum.entity_paused", STATE_PAUSED, {})
+    hass.states.async_set("vacuum.entity_cleaning", VacuumEntityState.CLEANING, {})
+    hass.states.async_set("vacuum.entity_docked", VacuumEntityState.DOCKED, {})
+    hass.states.async_set("vacuum.entity_idle", VacuumEntityState.IDLE, {})
+    hass.states.async_set("vacuum.entity_returning", VacuumEntityState.RETURNING, {})
+    hass.states.async_set("vacuum.entity_paused", VacuumEntityState.PAUSED, {})
 
     turn_on_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_OFF)
@@ -60,11 +51,11 @@ async def test_reproducing_states(
             State("vacuum.entity_off", STATE_OFF),
             State("vacuum.entity_on", STATE_ON),
             State("vacuum.entity_on_fan", STATE_ON, {ATTR_FAN_SPEED: FAN_SPEED_LOW}),
-            State("vacuum.entity_cleaning", STATE_CLEANING),
-            State("vacuum.entity_docked", STATE_DOCKED),
-            State("vacuum.entity_idle", STATE_IDLE),
-            State("vacuum.entity_returning", STATE_RETURNING),
-            State("vacuum.entity_paused", STATE_PAUSED),
+            State("vacuum.entity_cleaning", VacuumEntityState.CLEANING),
+            State("vacuum.entity_docked", VacuumEntityState.DOCKED),
+            State("vacuum.entity_idle", VacuumEntityState.IDLE),
+            State("vacuum.entity_returning", VacuumEntityState.RETURNING),
+            State("vacuum.entity_paused", VacuumEntityState.PAUSED),
         ],
     )
 
@@ -95,11 +86,11 @@ async def test_reproducing_states(
             State("vacuum.entity_off", STATE_ON),
             State("vacuum.entity_on", STATE_OFF),
             State("vacuum.entity_on_fan", STATE_ON, {ATTR_FAN_SPEED: FAN_SPEED_HIGH}),
-            State("vacuum.entity_cleaning", STATE_PAUSED),
-            State("vacuum.entity_docked", STATE_CLEANING),
-            State("vacuum.entity_idle", STATE_DOCKED),
-            State("vacuum.entity_returning", STATE_CLEANING),
-            State("vacuum.entity_paused", STATE_IDLE),
+            State("vacuum.entity_cleaning", VacuumEntityState.PAUSED),
+            State("vacuum.entity_docked", VacuumEntityState.CLEANING),
+            State("vacuum.entity_idle", VacuumEntityState.DOCKED),
+            State("vacuum.entity_returning", VacuumEntityState.CLEANING),
+            State("vacuum.entity_paused", VacuumEntityState.IDLE),
             # Should not raise
             State("vacuum.non_existing", STATE_ON),
         ],

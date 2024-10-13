@@ -19,12 +19,9 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
+    VacuumEntityState,
 )
 from homeassistant.core import HomeAssistant
 
@@ -75,11 +72,11 @@ def test_deprecated_constants(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_CLEAN_SPOT, STATE_CLEANING),
-        (SERVICE_PAUSE, STATE_PAUSED),
-        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        (SERVICE_START, STATE_CLEANING),
-        (SERVICE_STOP, STATE_IDLE),
+        (SERVICE_CLEAN_SPOT, VacuumEntityState.CLEANING),
+        (SERVICE_PAUSE, VacuumEntityState.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumEntityState.RETURNING),
+        (SERVICE_START, VacuumEntityState.CLEANING),
+        (SERVICE_STOP, VacuumEntityState.IDLE),
     ],
 )
 async def test_state_services(
