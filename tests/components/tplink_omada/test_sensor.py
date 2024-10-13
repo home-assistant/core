@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaGatewayPortStatus, OmadaListDevice
@@ -11,15 +13,32 @@ from tplink_omada_client.devices import OmadaGatewayPortStatus, OmadaListDevice
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, load_fixture, snapshot_platform
 
-POLL_INTERVAL = timedelta(seconds=POLL_DEVICES + 10)
+POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> MockConfigEntry:
+    """Set up the TP-Link Omada integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
 
 
 async def test_device_connected_status(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -27,10 +46,12 @@ async def test_device_connected_status(
     entity = hass.states.get("sensor.test_poe_switch_device_status")
     assert entity is not None
     assert entity == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_device_cpu_usage(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -38,11 +59,12 @@ async def test_device_cpu_usage(
     entity = hass.states.get("sensor.test_router_cpu_usage")
     assert entity is not None
     assert entity.state == "16"
-    assert entity == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_device_mem_usage(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -50,13 +72,14 @@ async def test_device_mem_usage(
     entity = hass.states.get("sensor.test_poe_switch_memory_usage")
     assert entity is not None
     assert entity.state == "20"
-    assert entity == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_device_specific_status(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a connection status is reported from known detailed status."""
     entity_id = "sensor.test_poe_switch_device_status"
@@ -70,7 +93,7 @@ async def test_device_specific_status(
         DeviceStatusCategory.CONNECTED.value,
     )
 
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
@@ -81,6 +104,7 @@ async def test_device_category_status(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a connection status is reported, with fallback to status category."""
     entity_id = "sensor.test_poe_switch_device_status"
@@ -94,7 +118,7 @@ async def test_device_category_status(
         DeviceStatusCategory.PENDING.value,
     )
 
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
