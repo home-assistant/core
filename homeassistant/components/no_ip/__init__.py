@@ -94,7 +94,7 @@ async def _update_no_ip(
 
     params = {"hostname": domain}
 
-    headers = {
+    headers: dict[str, str] = {
         AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
@@ -104,7 +104,7 @@ async def _update_no_ip(
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
-            if body.startswith("good") or body.startswith("nochg"):
+            if body.startswith(("good", "nochg")):
                 _LOGGER.debug("Updating NO-IP success: %s", domain)
                 return True
 

@@ -1,6 +1,6 @@
 """TOLO Sauna Button controls."""
 
-from tololib.const import LampMode
+from tololib import LampMode
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -8,8 +8,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(

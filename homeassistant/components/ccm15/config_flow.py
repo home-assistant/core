@@ -42,7 +42,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await ccm15.async_test_connection():
                     errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

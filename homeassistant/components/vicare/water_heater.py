@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice
-from .utils import get_circuits
+from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,10 +69,10 @@ def _build_entities(
 
     return [
         ViCareWater(
+            get_device_serial(device.api),
+            device.config,
             device.api,
             circuit,
-            device.config,
-            "domestic_hot_water",
         )
         for device in device_list
         for circuit in get_circuits(device.api)
@@ -104,20 +104,20 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
+    _attr_translation_key = "domestic_hot_water"
+    _current_mode: str | None = None
 
     def __init__(
         self,
-        api: PyViCareDevice,
-        circuit: PyViCareHeatingCircuit,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
-        translation_key: str,
+        device: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, api, circuit.id)
+        super().__init__(circuit.id, device_serial, device_config, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
-        self._current_mode = None
-        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
@@ -151,6 +151,8 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             self._attr_target_temperature = temp
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
-        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+        if self._current_mode is None:
+            return None
+        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode, None)

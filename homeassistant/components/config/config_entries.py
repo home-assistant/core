@@ -311,9 +311,7 @@ def send_entry_not_found(
     connection: websocket_api.ActiveConnection, msg_id: int
 ) -> None:
     """Send Config entry not found error."""
-    connection.send_error(
-        msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-    )
+    connection.send_error(msg_id, websocket_api.ERR_NOT_FOUND, "Config entry not found")
 
 
 def get_entry(
@@ -465,9 +463,12 @@ async def ignore_config_flow(
         )
         return
 
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_IGNORE)
+    if "discovery_key" in flow["context"]:
+        context["discovery_key"] = flow["context"]["discovery_key"]
     await hass.config_entries.flow.async_init(
         flow["handler"],
-        context={"source": config_entries.SOURCE_IGNORE},
+        context=context,
         data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])

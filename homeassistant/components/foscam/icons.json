@@ -1,6 +1,10 @@
 {
   "services": {
-    "ptz": "mdi:pan",
-    "ptz_preset": "mdi:target-variant"
+    "ptz": {
+      "service": "mdi:pan"
+    },
+    "ptz_preset": {
+      "service": "mdi:target-variant"
+    }
   }
 }

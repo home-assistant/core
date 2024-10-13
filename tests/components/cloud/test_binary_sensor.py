@@ -12,7 +12,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def mock_wait_until() -> Generator[None, None, None]:
+def mock_wait_until() -> Generator[None]:
     """Mock WAIT_UNTIL_CHANGE to execute callback immediately."""
     with patch("homeassistant.components.cloud.binary_sensor.WAIT_UNTIL_CHANGE", 0):
         yield

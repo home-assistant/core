@@ -8,7 +8,6 @@ from xiaomi_ble.parser import (
     SensorUpdate,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -22,12 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .const import DOMAIN
-from .coordinator import (
-    XiaomiActiveBluetoothProcessorCoordinator,
-    XiaomiPassiveBluetoothDataProcessor,
-)
+from .coordinator import XiaomiPassiveBluetoothDataProcessor
 from .device import device_key_to_bluetooth_entity_key
+from .types import XiaomiBLEConfigEntry
 
 BINARY_SENSOR_DESCRIPTIONS = {
     XiaomiBinarySensorDeviceClass.BATTERY: BinarySensorEntityDescription(
@@ -42,6 +38,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.LIGHT,
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    XiaomiBinarySensorDeviceClass.LOCK: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.LOCK,
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
     XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.MOISTURE,
         device_class=BinarySensorDeviceClass.MOISTURE,
@@ -49,6 +49,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
     XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    XiaomiBinarySensorDeviceClass.OCCUPANCY: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     XiaomiBinarySensorDeviceClass.OPENING: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.OPENING,
@@ -62,6 +66,16 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    ExtendedBinarySensorDeviceClass.ANTILOCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.ANTILOCK,
+    ),
+    ExtendedBinarySensorDeviceClass.ARMED: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.ARMED,
+        icon="mdi:shield-check",
+    ),
+    ExtendedBinarySensorDeviceClass.CHILDLOCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.CHILDLOCK,
+    ),
     ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -73,6 +87,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ExtendedBinarySensorDeviceClass.DOOR_STUCK: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.DOOR_STUCK,
         device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ExtendedBinarySensorDeviceClass.FINGERPRINT: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.FINGERPRINT,
+        icon="mdi:fingerprint",
     ),
     ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR,
@@ -89,7 +107,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[bool | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -116,13 +134,11 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: XiaomiBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
-    coordinator: XiaomiActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     processor = XiaomiPassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
@@ -137,7 +153,7 @@ async def async_setup_entry(
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a Xiaomi binary sensor."""

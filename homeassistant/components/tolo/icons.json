@@ -42,6 +42,11 @@
       "fan_timer_remaining": {
         "default": "mdi:fan-auto"
       }
+    },
+    "switch": {
+      "aroma_therapy_on": {
+        "default": "mdi:scent"
+      }
     }
   }
 }

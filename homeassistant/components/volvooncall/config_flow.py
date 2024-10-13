@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import VolvoData
 from .const import (
     CONF_MUTABLE,
     DOMAIN,
@@ -27,6 +26,7 @@ from .const import (
     UNIT_SYSTEM_SCANDINAVIAN_MILES,
 )
 from .errors import InvalidAuth
+from .models import VolvoData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.is_valid(user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
@@ -107,7 +107,7 @@ class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

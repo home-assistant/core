@@ -16,7 +16,7 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEFAULT_NAME
     assert result.get("data") == {}
 
@@ -35,5 +35,5 @@ async def test_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

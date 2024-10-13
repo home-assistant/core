@@ -38,18 +38,18 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def _get_connection_form(
     hass: HomeAssistant, connection_type: str
-) -> FlowResultType:
+) -> config_entries.ConfigFlowResult:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": connection_type}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     return result
 
@@ -67,7 +67,7 @@ async def test_nibegw_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "F1155 at 127.0.0.1"
     assert result2["data"] == {
         "model": "F1155",
@@ -94,7 +94,7 @@ async def test_modbus_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "S1155 at 127.0.0.1"
     assert result2["data"] == {
         "model": "S1155",
@@ -116,7 +116,7 @@ async def test_modbus_invalid_url(
         result["flow_id"], {**MOCK_FLOW_MODBUS_USERDATA, "modbus_url": "invalid://url"}
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"modbus_url": "url"}
 
 
@@ -131,7 +131,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
         result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"listening_port": "address_in_use"}
 
     mock_connection.start.side_effect = Exception()
@@ -140,16 +140,16 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
         result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_read_timeout(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -161,16 +161,16 @@ async def test_read_timeout(
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "read"}
 
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_write_timeout(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -182,16 +182,16 @@ async def test_write_timeout(
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "write"}
 
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_unexpected_exception(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -203,16 +203,16 @@ async def test_unexpected_exception(
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_nibegw_invalid_host(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -224,7 +224,7 @@ async def test_nibegw_invalid_host(
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     if connection_type == "nibegw":
         assert result2["errors"] == {"ip_address": "address"}
     else:
@@ -233,10 +233,10 @@ async def test_nibegw_invalid_host(
 
 @pytest.mark.parametrize(
     ("connection_type", "data"),
-    (
+    [
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
-    ),
+    ],
 )
 async def test_model_missing_coil(
     hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
@@ -248,5 +248,5 @@ async def test_model_missing_coil(
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "model"}

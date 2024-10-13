@@ -9,8 +9,9 @@ from datetime import timedelta
 from enum import IntFlag, StrEnum
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Self, cast, final
+from typing import Any, Self, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,27 +24,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "light"
-SCAN_INTERVAL = timedelta(seconds=30)
-DATA_PROFILES = "light_profiles"
-
+DATA_COMPONENT: HassKey[EntityComponent[LightEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
+
+DATA_PROFILES: HassKey[Profiles] = HassKey(f"{DOMAIN}_profiles")
 
 
 class LightEntityFeature(IntFlag):
@@ -251,7 +246,7 @@ VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
 VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
-LIGHT_TURN_ON_SCHEMA = {
+LIGHT_TURN_ON_SCHEMA: VolDictType = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
@@ -290,7 +285,10 @@ LIGHT_TURN_ON_SCHEMA = {
     ATTR_EFFECT: cv.string,
 }
 
-LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
+LIGHT_TURN_OFF_SCHEMA: VolDictType = {
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: VALID_FLASH,
+}
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -372,7 +370,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
         params.pop(ATTR_TRANSITION, None)
 
     supported_color_modes = (
-        light._light_internal_supported_color_modes  # pylint:disable=protected-access
+        light._light_internal_supported_color_modes  # noqa: SLF001
     )
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
@@ -397,17 +395,19 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent[LightEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[LightEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
 
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
-    await profiles.async_initialize()
+    # Profiles are loaded in a separate task to avoid delaying the setup
+    # of the light base platform.
+    hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
-    def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
+    def preprocess_data(data: dict[str, Any]) -> VolDictType:
         """Preprocess the service data."""
-        base: dict[str | vol.Optional, Any] = {
+        base: VolDictType = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -447,8 +447,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        # pylint: disable-next=protected-access
-        legacy_supported_color_modes = light._light_internal_supported_color_modes
+        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light
@@ -519,13 +518,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     params[ATTR_COLOR_TEMP_KELVIN]
                 )
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
+            rgb_color = params.pop(ATTR_RGB_COLOR)
+            assert rgb_color is not None
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                # https://github.com/python/mypy/issues/13673
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color,  # type: ignore[call-arg]
+                    *rgb_color,
                     light.min_color_temp_kelvin,
                     light.max_color_temp_kelvin,
                 )
@@ -586,9 +585,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
-            assert (rgbww_color := params.pop(ATTR_RGBWW_COLOR)) is not None
-            # https://github.com/python/mypy/issues/13673
-            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+            assert rgbww_color is not None
+            rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
             )
             if ColorMode.RGB in supported_color_modes:
@@ -673,14 +672,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def _coerce_none(value: str) -> None:
@@ -867,6 +864,16 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MAX_MIREDS,
             ATTR_MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN,
+            ATTR_BRIGHTNESS,
+            ATTR_COLOR_MODE,
+            ATTR_COLOR_TEMP,
+            ATTR_COLOR_TEMP_KELVIN,
+            ATTR_EFFECT,
+            ATTR_HS_COLOR,
+            ATTR_RGB_COLOR,
+            ATTR_RGBW_COLOR,
+            ATTR_RGBWW_COLOR,
+            ATTR_XY_COLOR,
         }
     )
 
@@ -959,8 +966,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        rgbw_color = self.rgbw_color
-        return rgbw_color
+        return self.rgbw_color
 
     @cached_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
@@ -1216,9 +1222,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:
@@ -1231,9 +1237,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[
-                        ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    data[ATTR_COLOR_TEMP] = (
+                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                    )
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:

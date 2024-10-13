@@ -5,21 +5,22 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DelugeEntity
-from .const import DOMAIN
+from . import DelugeConfigEntry
 from .coordinator import DelugeDataUpdateCoordinator
+from .entity import DelugeEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DelugeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Deluge switch."""
-    async_add_entities([DelugeSwitch(hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([DelugeSwitch(entry.runtime_data)])
 
 
 class DelugeSwitch(DelugeEntity, SwitchEntity):

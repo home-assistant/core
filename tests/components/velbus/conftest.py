@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
-def mock_controller() -> Generator[MagicMock, None, None]:
+def mock_controller() -> Generator[MagicMock]:
     """Mock a successful velbus controller."""
     with patch("homeassistant.components.velbus.Velbus", autospec=True) as controller:
         yield controller

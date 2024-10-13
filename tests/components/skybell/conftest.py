@@ -36,10 +36,13 @@ def skybell_mock():
     mocked_skybell.async_send_request.return_value = {"id": USER_ID}
     mocked_skybell.user_id = USER_ID
 
-    with patch(
-        "homeassistant.components.skybell.config_flow.Skybell",
-        return_value=mocked_skybell,
-    ), patch("homeassistant.components.skybell.Skybell", return_value=mocked_skybell):
+    with (
+        patch(
+            "homeassistant.components.skybell.config_flow.Skybell",
+            return_value=mocked_skybell,
+        ),
+        patch("homeassistant.components.skybell.Skybell", return_value=mocked_skybell),
+    ):
         yield mocked_skybell
 
 

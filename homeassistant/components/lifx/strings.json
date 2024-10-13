@@ -220,6 +220,36 @@
         }
       }
     },
+    "effect_sky": {
+      "name": "Sky effect",
+      "description": "Starts the firmware-based Sky effect on LIFX Ceiling.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Cloud sky type, it is the speed of the clouds across the device."
+        },
+        "sky_type": {
+          "name": "Sky type",
+          "description": "The style of sky that will be animated by the effect."
+        },
+        "cloud_saturation_min": {
+          "name": "Cloud saturation Minimum",
+          "description": "Minimum cloud saturation."
+        },
+        "cloud_saturation_max": {
+          "name": "Cloud Saturation maximum",
+          "description": "Maximum cloud saturation."
+        },
+        "palette": {
+          "name": "Palette",
+          "description": "List of 1 to 6 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to use for this effect."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
+        }
+      }
+    },
     "effect_stop": {
       "name": "Stop effect",
       "description": "Stops a running effect."

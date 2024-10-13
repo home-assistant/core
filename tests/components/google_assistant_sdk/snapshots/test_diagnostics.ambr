@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'auth_implementation': 'google_assistant_sdk',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1717074000.0,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/assistant-sdk-prototype',
+      }),
+    }),
+    'options': dict({
+      'language_code': 'en-US',
+    }),
+  })
+# ---

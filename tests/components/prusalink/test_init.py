@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from httpx import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
@@ -25,37 +26,45 @@ async def test_unloading(
 ) -> None:
     """Test unloading prusalink."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.async_entity_ids_count() > 0
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
     for state in hass.states.async_all():
         assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("exception", [InvalidAuth, PrusaLinkError])
+@pytest.mark.parametrize(
+    "exception",
+    [InvalidAuth, PrusaLinkError, ConnectError("All connection attempts failed")],
+)
 async def test_failed_update(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, exception
 ) -> None:
     """Test failed update marks prusalink unavailable."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.prusalink.PrusaLink.get_version",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_status",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_legacy_printer",
-        side_effect=exception,
-    ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_job",
-        side_effect=exception,
+    with (
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_version",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_status",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_legacy_printer",
+            side_effect=exception,
+        ),
+        patch(
+            "homeassistant.components.prusalink.PrusaLink.get_job",
+            side_effect=exception,
+        ),
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30), fire_all=True)
         await hass.async_block_till_done()
@@ -116,7 +125,7 @@ async def test_migration_from_1_1_to_1_2_outdated_firmware(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.minor_version == 1
     assert (DOMAIN, "firmware_5_1_required") in issue_registry.issues
 
@@ -125,7 +134,7 @@ async def test_migration_from_1_1_to_1_2_outdated_firmware(
     await hass.async_block_till_done()
 
     # Integration should be running now, the issue should be gone
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 2
     assert (DOMAIN, "firmware_5_1_required") not in issue_registry.issues
 
@@ -144,4 +153,4 @@ async def test_migration_fails_on_future_version(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

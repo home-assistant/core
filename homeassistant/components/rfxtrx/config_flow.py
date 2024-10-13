@@ -30,14 +30,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import VolDictType
 
 from . import (
     DOMAIN,
@@ -74,7 +75,7 @@ class DeviceData(TypedDict):
 
 
 def none_or_int(value: str | None, base: int) -> int | None:
-    """Check if strin is one otherwise convert to int."""
+    """Check if string is one otherwise convert to int."""
     if value is None:
         return None
     return int(value, base)
@@ -245,9 +246,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {}
+        data_schema: VolDictType = {}
 
         if binary_supported(self._selected_device_object):
+            off_delay_schema: VolDictType
             if device_data.get(CONF_OFF_DELAY):
                 off_delay_schema = {
                     vol.Optional(
@@ -353,10 +355,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
                 entity_migration_map[new_entity_id] = entry
 
         @callback
-        def _handle_state_removed(
-            entity_id: str, old_state: State | None, new_state: State | None
-        ) -> None:
+        def _handle_state_removed(event: Event[EventStateChangedData]) -> None:
             # Wait for entities to finish cleanup
+            new_state = event.data["new_state"]
+            entity_id = event.data["entity_id"]
             if new_state is None and entity_id in entities_to_be_removed:
                 entities_to_be_removed.remove(entity_id)
             if not entities_to_be_removed:
@@ -370,7 +372,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
             if not self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
-        remove_track_state_changes = async_track_state_change(
+        remove_track_state_changes = async_track_state_change_event(
             self.hass, entities_to_be_removed, _handle_state_removed
         )
 
@@ -384,10 +386,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
         remove_track_state_changes()
 
         @callback
-        def _handle_state_added(
-            entity_id: str, old_state: State | None, new_state: State | None
-        ) -> None:
+        def _handle_state_added(event: Event[EventStateChangedData]) -> None:
             # Wait for entities to be added
+            old_state = event.data["old_state"]
+            entity_id = event.data["entity_id"]
             if old_state is None and entity_id in entities_to_be_added:
                 entities_to_be_added.remove(entity_id)
             if not entities_to_be_added:
@@ -400,7 +402,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
             if self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
-        remove_track_state_changes = async_track_state_change(
+        remove_track_state_changes = async_track_state_change_event(
             self.hass, entities_to_be_added, _handle_state_added
         )
 
@@ -486,7 +488,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if devices:
             for event_code, options in devices.items():
                 if options is None:
-                    entry_data[CONF_DEVICES].pop(event_code)
+                    # If the config entry is setup, the device registry
+                    # listener will remove the device from the config
+                    # entry before we get here
+                    entry_data[CONF_DEVICES].pop(event_code, None)
                 else:
                     entry_data[CONF_DEVICES][event_code] = options
         self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)

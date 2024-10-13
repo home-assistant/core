@@ -22,6 +22,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
@@ -49,9 +50,7 @@ def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
 
-def options_schema(
-    options: Mapping[str, Any] | None = None,
-) -> dict[vol.Optional, type[str]]:
+def options_schema(options: Mapping[str, Any] | None = None) -> VolDictType:
     """Return options schema."""
     options = options or {}
     return {
@@ -116,19 +115,19 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     **user_input,
                     **options_data(user_input),
-                    **{CONF_SOURCE: SOURCE_USER},
-                    **{CONF_LEGACY_UNIQUE_ID: False},
+                    CONF_SOURCE: SOURCE_USER,
+                    CONF_LEGACY_UNIQUE_ID: False,
                 }
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {**{vol.Required(CONF_CONTROLLER): str}, **options_schema()}
+                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
 
         # If there are entities with the legacy unique_id, then this imported config
@@ -147,9 +146,9 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_finish(
             {
-                **config,
-                **{CONF_SOURCE: SOURCE_IMPORT},
-                **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
+                **import_data,
+                CONF_SOURCE: SOURCE_IMPORT,
+                CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id,
             }
         )
 

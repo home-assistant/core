@@ -34,6 +34,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
     _channel: VelbusBlind
+    _assumed_closed: bool
 
     def __init__(self, channel: VelbusBlind) -> None:
         """Initialize the cover."""
@@ -51,21 +52,30 @@ class VelbusCover(VelbusEntity, CoverEntity):
                 | CoverEntityFeature.CLOSE
                 | CoverEntityFeature.STOP
             )
+            self._attr_assumed_state = True
+            # guess the state to get the open/closed icons somewhat working
+            self._assumed_closed = False
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._channel.is_closed()
+        if self._channel.support_position():
+            return self._channel.is_closed()
+        return self._assumed_closed
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        return self._channel.is_opening()
+        if opening := self._channel.is_opening():
+            self._assumed_closed = False
+        return opening
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._channel.is_closing()
+        if closing := self._channel.is_closing():
+            self._assumed_closed = True
+        return closing
 
     @property
     def current_cover_position(self) -> int | None:

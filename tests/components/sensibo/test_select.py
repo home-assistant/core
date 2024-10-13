@@ -84,14 +84,18 @@ async def test_select_set_option(
     state1 = hass.states.get("select.hallway_horizontal_swing")
     assert state1.state == "stopped"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "failed"}},
-    ), pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+            return_value={"result": {"status": "failed"}},
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -127,13 +131,19 @@ async def test_select_set_option(
         )
         await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Failed", "failureReason": "No connection"}},
-    ), pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+            return_value={
+                "result": {"status": "Failed", "failureReason": "No connection"}
+            },
+        ),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -146,12 +156,15 @@ async def test_select_set_option(
     state2 = hass.states.get("select.hallway_horizontal_swing")
     assert state2.state == "stopped"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Success"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+            return_value={"result": {"status": "Success"}},
+        ),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

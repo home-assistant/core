@@ -29,9 +29,8 @@ from . import (
 )
 
 
-async def test_wrapped_bleak_scanner(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_wrapped_bleak_scanner(hass: HomeAssistant) -> None:
     """Test wrapped bleak scanner dispatches calls as expected."""
     scanner = HaBleakScannerWrapper()
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
@@ -43,9 +42,8 @@ async def test_wrapped_bleak_scanner(
     assert await scanner.discover() == [switchbot_device]
 
 
-async def test_wrapped_bleak_client_raises_device_missing(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_wrapped_bleak_client_raises_device_missing(hass: HomeAssistant) -> None:
     """Test wrapped bleak client dispatches calls as expected."""
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     client = HaBleakClientWrapper(switchbot_device)
@@ -57,8 +55,9 @@ async def test_wrapped_bleak_client_raises_device_missing(
     assert await client.clear_cache() is False
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_wrapped_bleak_client_set_disconnected_callback_before_connected(
-    hass: HomeAssistant, enable_bluetooth: None
+    hass: HomeAssistant,
 ) -> None:
     """Test wrapped bleak client can set a disconnected callback before connected."""
     switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
@@ -66,9 +65,8 @@ async def test_wrapped_bleak_client_set_disconnected_callback_before_connected(
     client.set_disconnected_callback(lambda client: None)
 
 
-async def test_wrapped_bleak_client_local_adapter_only(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> None:
     """Test wrapped bleak client with only a local adapter."""
     manager = _get_manager()
 
@@ -109,6 +107,7 @@ async def test_wrapped_bleak_client_local_adapter_only(
         "00:00:00:00:00:01",
         "hci0",
     )
+    # pylint: disable-next=attribute-defined-outside-init
     scanner.connectable = True
     cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
@@ -116,10 +115,15 @@ async def test_wrapped_bleak_client_local_adapter_only(
     )
 
     client = HaBleakClientWrapper(switchbot_device)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -127,8 +131,9 @@ async def test_wrapped_bleak_client_local_adapter_only(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test wrapped bleak client can set a disconnected callback after connected."""
     manager = _get_manager()
@@ -201,10 +206,15 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         "esp32_has_connection_slot",
     )
     client = HaBleakClientWrapper(switchbot_proxy_device_has_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -212,8 +222,9 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test we switch to the next available proxy when one runs out of connections with no scanners."""
     manager = _get_manager()
@@ -240,17 +251,19 @@ async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test handling all scanners are out of connection slots."""
     manager = _get_manager()
@@ -304,9 +317,10 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)
@@ -314,9 +328,8 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     cancel()
 
 
-async def test_ble_device_with_proxy_clear_cache(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+async def test_ble_device_with_proxy_clear_cache(hass: HomeAssistant) -> None:
     """Test we can clear cache on the proxy."""
     manager = _get_manager()
 
@@ -376,8 +389,9 @@ async def test_ble_device_with_proxy_clear_cache(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available(
-    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test we switch to the next available proxy when one runs out of connections."""
     manager = _get_manager()
@@ -483,8 +497,9 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available_macos(
-    hass: HomeAssistant, enable_bluetooth: None, macos_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test we switch to the next available proxy when one runs out of connections on MacOS."""
     manager = _get_manager()

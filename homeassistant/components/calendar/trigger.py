@@ -23,7 +23,8 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, CalendarEntity, CalendarEvent
+from . import CalendarEntity, CalendarEvent
+from .const import DATA_COMPONENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,13 +89,13 @@ class Timespan:
         return f"[{self.start}, {self.end})"
 
 
-EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
-QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
+type EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
+type QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
 
 
 def get_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
     """Get the calendar entity for the provided entity_id."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DATA_COMPONENT]
     if not (entity := component.get_entity(entity_id)) or not isinstance(
         entity, CalendarEntity
     ):
@@ -137,7 +138,7 @@ def queued_event_fetcher(
         # time span, but need to be triggered later when the end happens.
         results = []
         for trigger_time, event in zip(
-            map(get_trigger_time, active_events), active_events
+            map(get_trigger_time, active_events), active_events, strict=False
         ):
             if trigger_time not in offset_timespan:
                 continue

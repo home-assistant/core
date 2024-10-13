@@ -237,13 +237,15 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
                     step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
 
-            miio_cloud = MiCloud(cloud_username, cloud_password)
+            miio_cloud = await self.hass.async_add_executor_job(
+                MiCloud, cloud_username, cloud_password
+            )
             try:
                 if not await self.hass.async_add_executor_job(miio_cloud.login):
                     errors["base"] = "cloud_login_error"
             except MiCloudAccessDenied:
                 errors["base"] = "cloud_login_error"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception in Miio cloud login")
                 return self.async_abort(reason="unknown")
 
@@ -256,7 +258,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
                 devices_raw = await self.hass.async_add_executor_job(
                     miio_cloud.get_devices, cloud_country
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception in Miio cloud get devices")
                 return self.async_abort(reason="unknown")
 
@@ -353,7 +355,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         except SetupException:
             if self.model is None:
                 errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception in connect Xiaomi device")
             return self.async_abort(reason="unknown")
 

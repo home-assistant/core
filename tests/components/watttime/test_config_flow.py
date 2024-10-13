@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
     LOCATION_TYPE_HOME,
@@ -25,6 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     ("exc", "error"),
@@ -41,7 +43,7 @@ async def test_auth_errors(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error}
 
 
@@ -76,7 +78,7 @@ async def test_coordinate_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_coordinates
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
 
 
@@ -93,7 +95,7 @@ async def test_duplicate_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_location_type
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -104,13 +106,13 @@ async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_SHOW_ON_MAP: False}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
@@ -128,7 +130,7 @@ async def test_show_form_coordinates(
         result["flow_id"], user_input=config_location_type
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "coordinates"
     assert result["errors"] is None
 
@@ -138,33 +140,28 @@ async def test_show_form_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config_auth, config_coordinates, config_entry, setup_watttime
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_watttime,
 ) -> None:
     """Test a full reauth flow."""
+    result = await config_entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data={
-                **config_auth,
-                **config_coordinates,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "password"},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -186,7 +183,7 @@ async def test_step_user_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_coordinates
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "32.87336, -117.22743"
     assert result["data"] == {
         CONF_USERNAME: "user",
@@ -211,7 +208,7 @@ async def test_step_user_home(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_location_type
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "32.87336, -117.22743"
     assert result["data"] == {
         CONF_USERNAME: "user",

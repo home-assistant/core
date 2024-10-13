@@ -20,7 +20,7 @@ async def test_coordinator_error(
 ) -> None:
     """Test error on coordinator update."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 

@@ -10,11 +10,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type GoalZeroConfigEntry = ConfigEntry[GoalZeroDataUpdateCoordinator]
+
 
 class GoalZeroDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Goal zero integration."""
 
-    config_entry: ConfigEntry
+    config_entry: GoalZeroConfigEntry
 
     def __init__(self, hass: HomeAssistant, api: Yeti) -> None:
         """Initialize the coordinator."""

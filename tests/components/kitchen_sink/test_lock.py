@@ -11,10 +11,7 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
+    LockState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
@@ -53,7 +50,7 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
 async def test_locking(hass: HomeAssistant) -> None:
     """Test the locking of a lock."""
     state = hass.states.get(UNLOCKED_LOCK)
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     await hass.async_block_till_done()
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
@@ -63,16 +60,16 @@ async def test_locking(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == UNLOCKED_LOCK
-    assert state_changes[0].data["new_state"].state == STATE_LOCKING
+    assert state_changes[0].data["new_state"].state == LockState.LOCKING
 
     assert state_changes[1].data["entity_id"] == UNLOCKED_LOCK
-    assert state_changes[1].data["new_state"].state == STATE_LOCKED
+    assert state_changes[1].data["new_state"].state == LockState.LOCKED
 
 
 async def test_unlocking(hass: HomeAssistant) -> None:
     """Test the unlocking of a lock."""
     state = hass.states.get(LOCKED_LOCK)
-    assert state.state == STATE_LOCKED
+    assert state.state == LockState.LOCKED
     await hass.async_block_till_done()
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
@@ -82,10 +79,10 @@ async def test_unlocking(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == LOCKED_LOCK
-    assert state_changes[0].data["new_state"].state == STATE_UNLOCKING
+    assert state_changes[0].data["new_state"].state == LockState.UNLOCKING
 
     assert state_changes[1].data["entity_id"] == LOCKED_LOCK
-    assert state_changes[1].data["new_state"].state == STATE_UNLOCKED
+    assert state_changes[1].data["new_state"].state == LockState.UNLOCKED
 
 
 async def test_opening_mocked(hass: HomeAssistant) -> None:
@@ -103,4 +100,4 @@ async def test_opening(hass: HomeAssistant) -> None:
         LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     state = hass.states.get(OPENABLE_LOCK)
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.OPEN

@@ -64,6 +64,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX A21": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -73,6 +77,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Candle": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Ceiling": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -108,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Indoor Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Lightstrip": {
         "always_discover": True,
         "domain": "lifx",
@@ -124,11 +136,23 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Square": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -243,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -251,6 +280,11 @@ ZEROCONF = {
     "_aicu-http._tcp.local.": [
         {
             "domain": "romy",
+        },
+    ],
+    "_airgradient._tcp.local.": [
+        {
+            "domain": "airgradient",
         },
     ],
     "_airplay._tcp.local.": [
@@ -343,6 +377,12 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
@@ -369,9 +409,20 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
+        },
+    ],
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd",
+        },
+    ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
         },
     ],
     "_devialet-http._tcp.local.": [
@@ -474,6 +525,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "lektrico",
+            "name": "lektrico*",
+        },
+        {
             "domain": "loqed",
             "name": "loqed*",
         },
@@ -548,6 +603,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
@@ -573,6 +633,16 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -593,6 +663,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -623,11 +698,6 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
-        },
-    ],
-    "_powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [
@@ -687,8 +757,16 @@ ZEROCONF = {
     ],
     "_slzb-06._tcp.local.": [
         {
+            "domain": "smlight",
+        },
+        {
             "domain": "zha",
             "name": "slzb-06*",
+        },
+    ],
+    "_smoip._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_sonos._tcp.local.": [
@@ -718,6 +796,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee50*",
+        },
+    ],
+    "_stream-magic._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_system-bridge._tcp.local.": [
@@ -764,6 +847,12 @@ ZEROCONF = {
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi",
+        },
+    ],
+    "_xzg._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "xzg*",
         },
     ],
     "_zigate-zigbee-gateway._tcp.local.": [

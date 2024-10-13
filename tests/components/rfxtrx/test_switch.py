@@ -4,8 +4,8 @@ from unittest.mock import call
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
@@ -286,4 +286,4 @@ async def test_unknown_event_code(hass: HomeAssistant, rfxtrx) -> None:
     assert len(conf_entries) == 1
 
     entry = conf_entries[0]
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED

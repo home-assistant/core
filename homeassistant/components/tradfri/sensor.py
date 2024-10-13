@@ -26,7 +26,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import (
     CONF_GATEWAY_ID,
     COORDINATOR,
@@ -36,21 +35,14 @@ from .const import (
     LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
-@dataclass(frozen=True)
-class TradfriSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TradfriSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tradfri sensor entities."""
 
     value: Callable[[Device], Any | None]
-
-
-@dataclass(frozen=True)
-class TradfriSensorEntityDescription(
-    SensorEntityDescription,
-    TradfriSensorEntityDescriptionMixin,
-):
-    """Class describing Tradfri sensor entities."""
 
 
 def _get_air_quality(device: Device) -> int | None:

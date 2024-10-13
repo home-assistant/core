@@ -8,8 +8,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import EvilGeniusUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import EvilGeniusUpdateCoordinator
 
 TO_REDACT = {"wiFiSsidDefault", "wiFiSSID"}
 

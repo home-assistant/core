@@ -20,7 +20,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-async def temp_dir(hass: HomeAssistant) -> AsyncGenerator[str, None]:
+async def temp_dir(hass: HomeAssistant) -> AsyncGenerator[str]:
     """Return a temp dir."""
     with TemporaryDirectory() as tmpdirname:
         target_dir = Path(tmpdirname) / "another_subdir"

@@ -1,10 +1,10 @@
 {
   "domain": "habitica",
   "name": "Habitica",
-  "codeowners": ["@ASMfreaK", "@leikoilja"],
+  "codeowners": ["@ASMfreaK", "@leikoilja", "@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/habitica",
   "iot_class": "cloud_polling",
   "loggers": ["habitipy", "plumbum"],
-  "requirements": ["habitipy==0.2.0"]
+  "requirements": ["habitipy==0.3.1"]
 }

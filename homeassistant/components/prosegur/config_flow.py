@@ -35,11 +35,11 @@ async def validate_input(hass: HomeAssistant, data):
     auth = Auth(session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY])
     try:
         contracts = await Installation.list(auth)
-        return auth, contracts
     except ConnectionRefusedError:
         raise InvalidAuth from ConnectionRefusedError
     except ConnectionError:
         raise CannotConnect from ConnectionError
+    return auth, contracts
 
 
 class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -51,7 +51,9 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
     user_input: dict
     contracts: list[dict[str, str]]
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -62,8 +64,8 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 self.user_input = user_input
@@ -114,9 +116,11 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Prosegur."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             try:
@@ -127,7 +131,7 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

@@ -89,8 +89,8 @@ async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo |
         return "invalid_auth", None
     except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound):
         return "cannot_connect", None
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception: %s", ex)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         return "unknown", None
     await discord_bot.close()
     return None, info

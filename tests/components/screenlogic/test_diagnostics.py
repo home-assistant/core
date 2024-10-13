@@ -4,6 +4,7 @@ from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,29 +24,31 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
     mock_config_entry.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
-
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MOCK_ADAPTER_MAC)},
     )
-    with patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=lambda *args, **kwargs: stub_async_connect(
-            DATA_FULL_CHEM, *args, **kwargs
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
         ),
-        is_connected=True,
-        _async_connected_request=DEFAULT,
-        get_debug=lambda self: {},
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=lambda *args, **kwargs: stub_async_connect(
+                DATA_FULL_CHEM, *args, **kwargs
+            ),
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+            get_debug=lambda self: {},
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -54,4 +57,4 @@ async def test_diagnostics(
             hass, hass_client, mock_config_entry
         )
 
-    assert diag == snapshot
+    assert diag == snapshot(exclude=props("created_at", "modified_at"))

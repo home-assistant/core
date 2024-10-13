@@ -6,8 +6,7 @@ from dataclasses import dataclass
 import datetime
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
 

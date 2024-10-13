@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
@@ -22,9 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_EXPIRES_AT = "expires_at"
-
-
-_T = TypeVar("_T")
 
 
 class FitbitApi(ABC):
@@ -129,7 +126,7 @@ class FitbitApi(ABC):
         dated_results: list[dict[str, Any]] = response[key]
         return dated_results[-1]
 
-    async def _run(self, func: Callable[[], _T]) -> _T:
+    async def _run[_T](self, func: Callable[[], _T]) -> _T:
         """Run client command."""
         try:
             return await self._hass.async_add_executor_job(func)

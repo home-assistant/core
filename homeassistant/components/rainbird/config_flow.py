@@ -120,12 +120,12 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         except TimeoutError as err:
             raise ConfigFlowError(
-                f"Timeout connecting to Rain Bird controller: {str(err)}",
+                f"Timeout connecting to Rain Bird controller: {err!s}",
                 "timeout_connect",
             ) from err
         except RainbirdApiException as err:
             raise ConfigFlowError(
-                f"Error connecting to Rain Bird controller: {str(err)}",
+                f"Error connecting to Rain Bird controller: {err!s}",
                 "cannot_connect",
             ) from err
         finally:

@@ -80,7 +80,7 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import AuthFlowResult, Credentials
+from homeassistant.auth.models import AuthFlowContext, AuthFlowResult, Credentials
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
@@ -91,7 +91,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.util.network import is_local
 
@@ -105,7 +105,8 @@ if TYPE_CHECKING:
     from . import StoreResultType
 
 
-async def async_setup(
+@callback
+def async_setup(
     hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
 ) -> None:
     """Component to allow users to login."""
@@ -214,7 +215,7 @@ def _prepare_result_json(
     data = result.copy()
 
     if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []
+        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 
@@ -321,11 +322,11 @@ class LoginFlowIndexView(LoginFlowBaseView):
         try:
             result = await self._flow_mgr.async_init(
                 handler,
-                context={
-                    "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
-                    "credential_only": data.get("type") == "link_user",
-                    "redirect_uri": redirect_uri,
-                },
+                context=AuthFlowContext(
+                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+                    credential_only=data.get("type") == "link_user",
+                    redirect_uri=redirect_uri,
+                ),
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)

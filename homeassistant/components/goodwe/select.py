@@ -89,6 +89,11 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
 
+    async def async_update(self) -> None:
+        """Get the current value from inverter."""
+        value = await self._inverter.get_operation_mode()
+        self._attr_current_option = _MODE_TO_OPTION[value]
+
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._inverter.set_operation_mode(_OPTION_TO_MODE[option])

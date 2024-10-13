@@ -1,0 +1,10 @@
+{
+  "services": {
+    "create_task": {
+      "service": "mdi:check"
+    },
+    "complete_task": {
+      "service": "mdi:check-all"
+    }
+  }
+}

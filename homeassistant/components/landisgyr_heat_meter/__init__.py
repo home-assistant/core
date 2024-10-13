@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import ultraheat_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import async_migrate_entries
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .const import DOMAIN
 from .coordinator import UltraheatCoordinator
@@ -55,7 +56,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         device_number = config_entry.data["device_number"]
 
         @callback
-        def update_entity_unique_id(entity_entry):
+        def update_entity_unique_id(
+            entity_entry: RegistryEntry,
+        ) -> dict[str, Any] | None:
             """Update unique ID of entity entry."""
             if entity_entry.platform in entity_entry.unique_id:
                 return {
@@ -64,11 +67,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         f"{device_number}",
                     )
                 }
+            return None
 
         await async_migrate_entries(
             hass, config_entry.entry_id, update_entity_unique_id
         )
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True

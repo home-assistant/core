@@ -3,7 +3,7 @@
 from homeassistant.components.cloudflare.helpers import get_zone_id
 
 
-def test_get_zone_id():
+def test_get_zone_id() -> None:
     """Test get_zone_id."""
     zones = [
         {"id": "1", "name": "example.com"},

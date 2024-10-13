@@ -8,8 +8,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import mikrotik
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, mikrotik
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -32,9 +31,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
 
 @pytest.fixture
-def mock_device_registry_devices(hass: HomeAssistant) -> None:
+def mock_device_registry_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Create device registry devices so the device tracker entities are enabled."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 
@@ -46,7 +46,7 @@ def mock_device_registry_devices(hass: HomeAssistant) -> None:
             "00:00:00:00:00:04",
         )
     ):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device)},
@@ -83,12 +83,12 @@ async def test_device_trackers(
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2 is None
 
-    with patch.object(mikrotik.hub.MikrotikData, "command", new=mock_command):
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command):
         # test device_2 is added after connecting to wireless network
         WIRELESS_DATA.append(DEVICE_2_WIRELESS)
 
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -101,7 +101,7 @@ async def test_device_trackers(
         del WIRELESS_DATA[1]  # device 2 is removed from wireless list
         with freeze_time(utcnow() + timedelta(minutes=4)):
             async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -110,7 +110,7 @@ async def test_device_trackers(
         # test state changes to away if last_seen past consider_home_interval
         with freeze_time(utcnow() + timedelta(minutes=6)):
             async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -151,7 +151,9 @@ async def test_arp_ping_success(
 ) -> None:
     """Test arp ping devices to confirm they are connected."""
 
-    with patch.object(mikrotik.hub.MikrotikData, "do_arp_ping", return_value=True):
+    with patch.object(
+        mikrotik.coordinator.MikrotikData, "do_arp_ping", return_value=True
+    ):
         await setup_mikrotik_entry(hass, arp_ping=True, force_dhcp=True)
 
         # test wired device_2 show as home if arp ping returns True
@@ -164,7 +166,9 @@ async def test_arp_ping_timeout(
     hass: HomeAssistant, mock_device_registry_devices
 ) -> None:
     """Test arp ping timeout so devices are shown away."""
-    with patch.object(mikrotik.hub.MikrotikData, "do_arp_ping", return_value=False):
+    with patch.object(
+        mikrotik.coordinator.MikrotikData, "do_arp_ping", return_value=False
+    ):
         await setup_mikrotik_entry(hass, arp_ping=True, force_dhcp=True)
 
         # test wired device_2 show as not_home if arp ping times out
@@ -263,10 +267,12 @@ async def test_update_failed(hass: HomeAssistant, mock_device_registry_devices) 
     await setup_mikrotik_entry(hass)
 
     with patch.object(
-        mikrotik.hub.MikrotikData, "command", side_effect=mikrotik.errors.CannotConnect
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        side_effect=mikrotik.errors.CannotConnect,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1

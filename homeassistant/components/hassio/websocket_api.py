@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +22,6 @@ from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
-    ATTR_RESULT,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
@@ -47,7 +46,7 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
     r"|/ingress/(session|validate_session)"
     r"|/addons/[^/]+/info"
-    r")$" # noqa: ISC001
+    r")$"
 )
 # fmt: on
 
@@ -113,7 +112,7 @@ async def websocket_supervisor_api(
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
         msg[ATTR_ENDPOINT]
     ):
-        raise Unauthorized()
+        raise Unauthorized
     supervisor: HassIO = hass.data[DOMAIN]
 
     command = msg[ATTR_ENDPOINT]
@@ -132,9 +131,6 @@ async def websocket_supervisor_api(
             payload=payload,
             source="core.websocket_api",
         )
-
-        if result.get(ATTR_RESULT) == "error":
-            raise HassioAPIError(result.get("message"))
     except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(

@@ -37,17 +37,29 @@ class SensorData:
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
+        disk_usage = None
+        if self.disk_usage:
+            disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
+        io_counters = None
+        if self.io_counters:
+            io_counters = {k: str(v) for k, v in self.io_counters.items()}
+        addresses = None
+        if self.addresses:
+            addresses = {k: str(v) for k, v in self.addresses.items()}
+        temperatures = None
+        if self.temperatures:
+            temperatures = {k: str(v) for k, v in self.temperatures.items()}
         return {
-            "disk_usage": {k: str(v) for k, v in self.disk_usage.items()},
+            "disk_usage": disk_usage,
             "swap": str(self.swap),
             "memory": str(self.memory),
-            "io_counters": {k: str(v) for k, v in self.io_counters.items()},
-            "addresses": {k: str(v) for k, v in self.addresses.items()},
+            "io_counters": io_counters,
+            "addresses": addresses,
             "load": str(self.load),
             "cpu_percent": str(self.cpu_percent),
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
-            "temperatures": {k: str(v) for k, v in self.temperatures.items()},
+            "temperatures": temperatures,
         }
 
 
@@ -87,9 +99,9 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
-        self.update_subscribers: dict[
-            tuple[str, str], set[str]
-        ] = self.set_subscribers_tuples(arguments)
+        self.update_subscribers: dict[tuple[str, str], set[str]] = (
+            self.set_subscribers_tuples(arguments)
+        )
 
     def set_subscribers_tuples(
         self, arguments: list[str]

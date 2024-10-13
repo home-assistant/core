@@ -1,10 +1,12 @@
 """Test fixtures for the config integration."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from copy import deepcopy
 import json
 import logging
 from os.path import basename
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
-def mock_config_store(data=None):
+def mock_config_store(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]]:
     """Mock config yaml store.
 
     Data is a dict {'key': {'version': version, 'data': data}}
@@ -51,24 +53,28 @@ def mock_config_store(data=None):
         _LOGGER.info("Reading data from configuration.yaml: %s", result)
         return result
 
-    with patch(
-        "homeassistant.components.config.view._read",
-        side_effect=mock_read,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.config.view._write",
-        side_effect=mock_write,
-        autospec=True,
-    ), patch(
-        "homeassistant.config.async_hass_config_yaml",
-        side_effect=mock_async_hass_config_yaml,
-        autospec=True,
+    with (
+        patch(
+            "homeassistant.components.config.view._read",
+            side_effect=mock_read,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.config.view._write",
+            side_effect=mock_write,
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.config.async_hass_config_yaml",
+            side_effect=mock_async_hass_config_yaml,
+            autospec=True,
+        ),
     ):
         yield data
 
 
 @pytest.fixture
-def hass_config_store():
+def hass_config_store() -> Generator[dict[str, Any]]:
     """Fixture to mock config yaml store."""
     with mock_config_store() as stored_data:
         yield stored_data

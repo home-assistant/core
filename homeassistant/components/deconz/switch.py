@@ -7,14 +7,14 @@ from typing import Any
 from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import POWER_PLUGS
-from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .entity import DeconzDevice
+from .hub import DeconzHub
 
 
 async def async_setup_entry(
@@ -26,27 +26,27 @@ async def async_setup_entry(
 
     Switches are based on the same device class as lights in deCONZ.
     """
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[SWITCH_DOMAIN] = set()
 
     @callback
     def async_add_switch(_: EventType, switch_id: str) -> None:
         """Add switch from deCONZ."""
-        switch = gateway.api.lights.lights[switch_id]
+        switch = hub.api.lights.lights[switch_id]
         if switch.type not in POWER_PLUGS:
             return
-        async_add_entities([DeconzPowerPlug(switch, gateway)])
+        async_add_entities([DeconzPowerPlug(switch, hub)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_switch,
-        gateway.api.lights.lights,
+        hub.api.lights.lights,
     )
 
 
 class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
     """Representation of a deCONZ power plug."""
 
-    TYPE = DOMAIN
+    TYPE = SWITCH_DOMAIN
 
     @property
     def is_on(self) -> bool:
@@ -55,14 +55,14 @@ class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.gateway.api.lights.lights.set_state(
+        await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             on=True,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.gateway.api.lights.lights.set_state(
+        await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             on=False,
         )

@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime]]):
     """Filesize coordinator."""
 
+    path: pathlib.Path
+
     def __init__(self, hass: HomeAssistant, unresolved_path: str) -> None:
         """Initialize filesize coordinator."""
         super().__init__(
@@ -29,7 +31,6 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
             always_update=False,
         )
         self._unresolved_path = unresolved_path
-        self._path: pathlib.Path | None = None
 
     def _get_full_path(self) -> pathlib.Path:
         """Check if path is valid, allowed and return full path."""
@@ -45,13 +46,14 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
 
     def _update(self) -> os.stat_result:
         """Fetch file information."""
-        if not self._path:
-            self._path = self._get_full_path()
-
         try:
-            return self._path.stat()
+            return self.path.stat()
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
+
+    async def _async_setup(self) -> None:
+        """Set up path."""
+        self.path = await self.hass.async_add_executor_job(self._get_full_path)
 
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""

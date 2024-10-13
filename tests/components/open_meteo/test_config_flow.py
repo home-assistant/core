@@ -19,7 +19,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -27,6 +27,6 @@ async def test_full_user_flow(
         user_input={CONF_ZONE: ENTITY_ID_HOME},
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "test home"
     assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}

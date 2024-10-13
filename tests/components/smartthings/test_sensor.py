@@ -87,7 +87,10 @@ async def test_entity_three_axis_invalid_state(
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -102,8 +105,6 @@ async def test_entity_and_device_attributes(
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -123,7 +124,10 @@ async def test_entity_and_device_attributes(
 
 
 async def test_energy_sensors_for_switch_device(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -140,8 +144,6 @@ async def test_energy_sensors_for_switch_device(
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -180,7 +182,12 @@ async def test_energy_sensors_for_switch_device(
     assert entry.sw_version == "v7.89"
 
 
-async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> None:
+async def test_power_consumption_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -203,8 +210,6 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -253,8 +258,6 @@ async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> 
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert

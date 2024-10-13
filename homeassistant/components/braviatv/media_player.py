@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.media_player import (
     BrowseError,
+    BrowseMedia,
     MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -14,23 +15,22 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SourceType
+from . import BraviaTVConfigEntry
+from .const import SourceType
 from .entity import BraviaTVEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BraviaTVConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bravia TV Media Player from a config_entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     unique_id = config_entry.unique_id
     assert unique_id is not None
 

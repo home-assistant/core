@@ -43,25 +43,28 @@ async def test_form_single_site(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow._validate_input",
-        return_value=HubInfo(
-            "omada_id", "OC200", [OmadaSite("Display Name", "SiteId")]
-        ),
-    ) as mocked_validate, patch(
-        "homeassistant.components.tplink_omada.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.config_flow._validate_input",
+            return_value=HubInfo(
+                "omada_id", "OC200", [OmadaSite("Display Name", "SiteId")]
+            ),
+        ) as mocked_validate,
+        patch(
+            "homeassistant.components.tplink_omada.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "OC200 (Display Name)"
     assert result2["data"] == MOCK_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -73,28 +76,31 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow._validate_input",
-        return_value=HubInfo(
-            "omada_id",
-            "OC200",
-            [OmadaSite("Site 1", "first"), OmadaSite("Site 2", "second")],
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.config_flow._validate_input",
+            return_value=HubInfo(
+                "omada_id",
+                "OC200",
+                [OmadaSite("Site 1", "first"), OmadaSite("Site 2", "second")],
+            ),
         ),
-    ), patch(
-        "homeassistant.components.tplink_omada.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+        patch(
+            "homeassistant.components.tplink_omada.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "site"
 
     with patch(
@@ -109,7 +115,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "OC200 (Site 2)"
     assert result3["data"] == {
         "host": "https://fake.omada.host",
@@ -136,7 +142,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -155,7 +161,7 @@ async def test_form_api_error(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -174,7 +180,7 @@ async def test_form_generic_exception(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -193,7 +199,7 @@ async def test_form_unsupported_controller(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unsupported_controller"}
 
 
@@ -212,7 +218,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -231,7 +237,7 @@ async def test_form_no_sites(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_sites_found"}
 
 
@@ -245,16 +251,9 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -268,7 +267,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     mocked_validate.assert_called_once_with(
         hass,
@@ -292,16 +291,9 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -313,7 +305,7 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -321,12 +313,15 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
 async def test_validate_input(hass: HomeAssistant) -> None:
     """Test validate returns HubInfo."""
 
-    with patch(
-        "tplink_omada_client.omadaclient.OmadaClient", autospec=True
-    ) as mock_client, patch(
-        "homeassistant.components.tplink_omada.config_flow.create_omada_client",
-        return_value=mock_client,
-    ) as create_mock:
+    with (
+        patch(
+            "tplink_omada_client.omadaclient.OmadaClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.create_omada_client",
+            return_value=mock_client,
+        ) as create_mock,
+    ):
         mock_client.login.return_value = "Id"
         mock_client.get_controller_name.return_value = "Name"
         mock_client.get_sites.return_value = [OmadaSite("x", "y")]
@@ -344,12 +339,16 @@ async def test_validate_input(hass: HomeAssistant) -> None:
 async def test_create_omada_client_parses_args(hass: HomeAssistant) -> None:
     """Test config arguments are passed to Omada client."""
 
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
-    ) as mock_client, patch(
-        "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
-        return_value="ws",
-    ) as mock_clientsession:
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.OmadaClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
+            return_value="ws",
+        ) as mock_clientsession,
+    ):
         result = await create_omada_client(hass, MOCK_USER_DATA)
 
     assert result is not None
@@ -362,12 +361,16 @@ async def test_create_omada_client_parses_args(hass: HomeAssistant) -> None:
 async def test_create_omada_client_adds_missing_scheme(hass: HomeAssistant) -> None:
     """Test config arguments are passed to Omada client."""
 
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
-    ) as mock_client, patch(
-        "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
-        return_value="ws",
-    ) as mock_clientsession:
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.OmadaClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
+            return_value="ws",
+        ) as mock_clientsession,
+    ):
         result = await create_omada_client(
             hass,
             {
@@ -390,14 +393,19 @@ async def test_create_omada_client_with_ip_creates_clientsession(
 ) -> None:
     """Test config arguments are passed to Omada client."""
 
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
-    ) as mock_client, patch(
-        "homeassistant.components.tplink_omada.config_flow.CookieJar", autospec=True
-    ) as mock_jar, patch(
-        "homeassistant.components.tplink_omada.config_flow.async_create_clientsession",
-        return_value="ws",
-    ) as mock_create_clientsession:
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.OmadaClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.CookieJar", autospec=True
+        ) as mock_jar,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.async_create_clientsession",
+            return_value="ws",
+        ) as mock_create_clientsession,
+    ):
         result = await create_omada_client(
             hass,
             {

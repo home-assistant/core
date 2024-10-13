@@ -1,7 +1,10 @@
 """Tests for the Area Registry."""
 
+from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -10,6 +13,7 @@ from homeassistant.helpers import (
     floor_registry as fr,
     label_registry as lr,
 )
+from homeassistant.util.dt import utcnow
 
 from tests.common import ANY, async_capture_events, flush_store
 
@@ -23,7 +27,11 @@ async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
     assert len(areas) == len(area_registry.areas)
 
 
-async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+async def test_create_area(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can create an area."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
 
@@ -37,10 +45,13 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         id=ANY,
         labels=set(),
         name="mock",
-        normalized_name=ANY,
         picture=None,
+        created_at=utcnow(),
+        modified_at=utcnow(),
     )
     assert len(area_registry.areas) == 1
+
+    freezer.tick(timedelta(minutes=5))
 
     await hass.async_block_till_done()
 
@@ -51,31 +62,34 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
     }
 
     # Create area with all parameters
-    area = area_registry.async_create(
+    area2 = area_registry.async_create(
         "mock 2",
         aliases={"alias_1", "alias_2"},
         labels={"label1", "label2"},
         picture="/image/example.png",
     )
 
-    assert area == ar.AreaEntry(
+    assert area2 == ar.AreaEntry(
         aliases={"alias_1", "alias_2"},
         floor_id=None,
         icon=None,
         id=ANY,
         labels={"label1", "label2"},
         name="mock 2",
-        normalized_name=ANY,
         picture="/image/example.png",
+        created_at=utcnow(),
+        modified_at=utcnow(),
     )
     assert len(area_registry.areas) == 2
+    assert area.created_at != area2.created_at
+    assert area.modified_at != area2.modified_at
 
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
     assert update_events[-1].data == {
         "action": "create",
-        "area_id": area.id,
+        "area_id": area2.id,
     }
 
 
@@ -84,12 +98,11 @@ async def test_create_area_with_name_already_in_use(
 ) -> None:
     """Make sure that we can't create an area with a name already in use."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
-    area1 = area_registry.async_create("mock")
+    area_registry.async_create("mock")
 
     with pytest.raises(ValueError) as e_info:
-        area2 = area_registry.async_create("mock")
-        assert area1 != area2
-        assert e_info == "The name mock 2 (mock2) is already in use"
+        area_registry.async_create("mock")
+    assert str(e_info.value) == "The name mock (mock) is already in use"
 
     await hass.async_block_till_done()
 
@@ -150,11 +163,18 @@ async def test_update_area(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
     label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can read areas."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
     floor_registry.async_create("first")
     area = area_registry.async_create("mock")
+    assert area.modified_at == created_at
+
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
 
     updated_area = area_registry.async_update(
         area.id,
@@ -174,8 +194,9 @@ async def test_update_area(
         id=ANY,
         labels={"label1", "label2"},
         name="mock1",
-        normalized_name=ANY,
         picture="/image/example.png",
+        created_at=created_at,
+        modified_at=modified_at,
     )
     assert len(area_registry.areas) == 1
 
@@ -218,18 +239,23 @@ async def test_update_area_with_same_name_change_case(
 
 async def test_update_area_with_name_already_in_use(
     area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can't update an area with a name already in use."""
-    area1 = area_registry.async_create("mock1")
+    floor = floor_registry.async_create("mock")
+    floor_id = floor.floor_id
+    area1 = area_registry.async_create("mock1", floor_id=floor_id)
     area2 = area_registry.async_create("mock2")
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area1.id, name="mock2")
-        assert e_info == "The name mock 2 (mock2) is already in use"
+    assert str(e_info.value) == "The name mock2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "mock2"
     assert len(area_registry.areas) == 2
+
+    assert area_registry.areas.get_areas_for_floor(floor_id) == [area1]
 
 
 async def test_update_area_with_normalized_name_already_in_use(
@@ -241,7 +267,7 @@ async def test_update_area_with_normalized_name_already_in_use(
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area1.id, name="mock2")
-        assert e_info == "The name mock 2 (mock2) is already in use"
+    assert str(e_info.value) == "The name mock2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "Moc k2"
@@ -285,6 +311,8 @@ async def test_loading_area_from_storage(
                     "labels": ["mock-label1", "mock-label2"],
                     "name": "mock",
                     "picture": "blah",
+                    "created_at": utcnow().isoformat(),
+                    "modified_at": utcnow().isoformat(),
                 }
             ]
         },
@@ -329,6 +357,8 @@ async def test_migration_from_1_1(
                     "labels": [],
                     "name": "mock",
                     "picture": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                 }
             ]
         },
@@ -491,3 +521,40 @@ async def test_entries_for_label(
 
     assert not ar.async_entries_for_label(area_registry, "unknown")
     assert not ar.async_entries_for_label(area_registry, "")
+
+
+async def test_async_get_or_create_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to create in the wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(area_registry.async_create, "Mock1")
+
+
+async def test_async_update_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to update in the wrong thread."""
+    area = area_registry.async_create("Mock1")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(area_registry.async_update, area.id, name="Mock2")
+        )
+
+
+async def test_async_delete_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to delete in the wrong thread."""
+    area = area_registry.async_create("Mock1")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(area_registry.async_delete, area.id)

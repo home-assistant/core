@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -21,6 +22,8 @@ RETRY_CONNECTION_INTERVAL = 10
 WAIT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
+
+type AprilaireConfigEntry = ConfigEntry[AprilaireCoordinator]
 
 
 class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
@@ -112,7 +115,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.client.stop_listen()
 
     async def wait_for_ready(
-        self, ready_callback: Callable[[bool], Awaitable[bool]]
+        self, ready_callback: Callable[[bool], Awaitable[None]]
     ) -> bool:
         """Wait for the client to be ready."""
 
@@ -155,7 +158,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         return self.create_device_name(self.data)
 
-    def create_device_name(self, data: Optional[dict[str, Any]]) -> str:
+    def create_device_name(self, data: dict[str, Any] | None) -> str:
         """Create the name of the thermostat."""
 
         name = data.get(Attribute.NAME) if data else None

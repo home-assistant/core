@@ -33,9 +33,7 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
             if error is None:
                 entry = await self.async_set_unique_id(hid)
                 if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_update_reload_and_abort(entry, data=user_input)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -61,14 +59,18 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, api_key: str) -> tuple[str | None, str | None]:
         """Try connecting to Efergy servers."""
-        api = Efergy(api_key, session=async_get_clientsession(self.hass))
+        api = Efergy(
+            api_key,
+            session=async_get_clientsession(self.hass),
+            utc_offset=self.hass.config.time_zone,
+        )
         try:
             await api.async_status()
         except exceptions.ConnectError:
             return None, "cannot_connect"
         except exceptions.InvalidAuth:
             return None, "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return api.info["hid"], None

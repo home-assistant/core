@@ -5,12 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from bring_api.bring import Bring
-from bring_api.exceptions import BringParseException, BringRequestException
-from bring_api.types import BringList, BringPurchase
+from bring_api import (
+    Bring,
+    BringAuthException,
+    BringParseException,
+    BringRequestException,
+)
+from bring_api.types import BringItemsResponse, BringList, BringUserSettingsResponse
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -18,17 +24,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BringData(BringList):
+class BringData(BringList, BringItemsResponse):
     """Coordinator data class."""
-
-    purchase_items: list[BringPurchase]
-    recently_items: list[BringPurchase]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     """A Bring Data Update Coordinator."""
 
     config_entry: ConfigEntry
+    user_settings: BringUserSettingsResponse
 
     def __init__(self, hass: HomeAssistant, bring: Bring) -> None:
         """Initialize the Bring data coordinator."""
@@ -47,8 +51,24 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
+        except BringAuthException as e:
+            # try to recover by refreshing access token, otherwise
+            # initiate reauth flow
+            try:
+                await self.bring.retrieve_new_access_token()
+            except (BringRequestException, BringParseException) as exc:
+                raise UpdateFailed("Refreshing authentication token failed") from exc
+            except BringAuthException as exc:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_authentication_exception",
+                    translation_placeholders={CONF_EMAIL: self.bring.mail},
+                ) from exc
+            raise UpdateFailed(
+                "Authentication failed but re-authentication was successful, trying again later"
+            ) from e
 
-        list_dict = {}
+        list_dict: dict[str, BringData] = {}
         for lst in lists_response["lists"]:
             try:
                 items = await self.bring.get_list(lst["listUuid"])
@@ -58,8 +78,21 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            lst["purchase_items"] = items["purchase"]
-            lst["recently_items"] = items["recently"]
-            list_dict[lst["listUuid"]] = lst
+            else:
+                list_dict[lst["listUuid"]] = BringData(**lst, **items)
 
         return list_dict
+
+    async def _async_setup(self) -> None:
+        """Set up coordinator."""
+
+        await self.async_refresh_user_settings()
+
+    async def async_refresh_user_settings(self) -> None:
+        """Refresh user settings."""
+        try:
+            self.user_settings = await self.bring.get_all_user_settings()
+        except (BringAuthException, BringRequestException, BringParseException) as e:
+            raise UpdateFailed(
+                "Unable to connect and retrieve user settings from bring"
+            ) from e

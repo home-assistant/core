@@ -4,6 +4,9 @@
       "aqi": {
         "default": "mdi:blur"
       },
+      "pm10": {
+        "default": "mdi:blur"
+      },
       "pm25": {
         "default": "mdi:blur"
       },

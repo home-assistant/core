@@ -1,13 +1,15 @@
 """The tests for the InfluxDB component."""
 
+from collections.abc import Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
 
-import homeassistant.components.influxdb as influxdb
+from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
@@ -41,7 +43,7 @@ class FilterTest:
 
 
 @pytest.fixture(autouse=True)
-def mock_batch_timeout(hass, monkeypatch):
+def mock_batch_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and the batch timeout for tests."""
     monkeypatch.setattr(
         f"{INFLUX_PATH}.InfluxThread.batch_timeout",
@@ -50,7 +52,9 @@ def mock_batch_timeout(hass, monkeypatch):
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -62,7 +66,7 @@ def mock_client_fixture(request):
 
 
 @pytest.fixture(name="get_mock_call")
-def get_mock_call_fixture(request):
+def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
 
     def v2_call(body, precision):
@@ -75,7 +79,6 @@ def get_mock_call_fixture(request):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 
@@ -258,8 +261,9 @@ async def test_setup_config_ssl(
     config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
 
-    with patch("os.access", return_value=True), patch(
-        "os.path.isfile", return_value=True
+    with (
+        patch("os.access", return_value=True),
+        patch("os.path.isfile", return_value=True),
     ):
         assert await async_setup_component(hass, influxdb.DOMAIN, config)
         await hass.async_block_till_done()
@@ -330,7 +334,9 @@ async def test_invalid_config(
     assert not await async_setup_component(hass, influxdb.DOMAIN, config)
 
 
-async def _setup(hass, mock_influx_client, config_ext, get_write_api):
+async def _setup(
+    hass: HomeAssistant, mock_influx_client, config_ext, get_write_api
+) -> None:
     """Prepare client for next test and return event handler method."""
     config = {
         "influxdb": {
@@ -1573,10 +1579,23 @@ async def test_invalid_inputs_error(
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
-    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+    log_emit_done = hass.loop.create_future()
+
+    original_emit = caplog.handler.emit
+
+    def wait_for_emit(record: logging.LogRecord) -> None:
+        original_emit(record)
+        if record.levelname == "ERROR":
+            hass.loop.call_soon_threadsafe(log_emit_done.set_result, None)
+
+    with (
+        patch(f"{INFLUX_PATH}.time.sleep") as sleep,
+        patch.object(caplog.handler, "emit", wait_for_emit),
+    ):
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         await async_wait_for_queue_to_process(hass)
+        await log_emit_done
         await hass.async_block_till_done()
 
         write_api.assert_called_once()

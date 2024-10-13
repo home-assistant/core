@@ -1,30 +1,31 @@
 """Managers for each table."""
 
-from typing import TYPE_CHECKING, Generic, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from lru import LRU
+
+from homeassistant.util.event_type import EventType
 
 if TYPE_CHECKING:
     from ..core import Recorder
 
-_DataT = TypeVar("_DataT")
 
-
-class BaseTableManager(Generic[_DataT]):
+class BaseTableManager[_DataT]:
     """Base class for table managers."""
 
-    _id_map: "LRU[str, int]"
+    _id_map: LRU[EventType[Any] | str, int]
 
-    def __init__(self, recorder: "Recorder") -> None:
+    def __init__(self, recorder: Recorder) -> None:
         """Initialize the table manager.
 
         The table manager is responsible for managing the id mappings
         for a table. When data is committed to the database, the
         manager will move the data from the pending to the id map.
         """
-        self.active = False
         self.recorder = recorder
-        self._pending: dict[str, _DataT] = {}
+        self._pending: dict[EventType[Any] | str, _DataT] = {}
 
     def get_from_cache(self, data: str) -> int | None:
         """Resolve data to the id without accessing the underlying database.
@@ -34,7 +35,7 @@ class BaseTableManager(Generic[_DataT]):
         """
         return self._id_map.get(data)
 
-    def get_pending(self, shared_data: str) -> _DataT | None:
+    def get_pending(self, shared_data: EventType[Any] | str) -> _DataT | None:
         """Get pending data that have not be assigned ids yet.
 
         This call is not thread-safe and must be called from the
@@ -52,10 +53,10 @@ class BaseTableManager(Generic[_DataT]):
         self._pending.clear()
 
 
-class BaseLRUTableManager(BaseTableManager[_DataT]):
+class BaseLRUTableManager[_DataT](BaseTableManager[_DataT]):
     """Base class for LRU table managers."""
 
-    def __init__(self, recorder: "Recorder", lru_size: int) -> None:
+    def __init__(self, recorder: Recorder, lru_size: int) -> None:
         """Initialize the LRU table manager.
 
         We keep track of the most recently used items

@@ -17,7 +17,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     host = "1.1.1.1"
@@ -34,7 +34,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == host
     assert result2["data"] == {
         "host": host,
@@ -59,5 +59,5 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

@@ -25,7 +25,7 @@ from aioqsw.const import (
     QSD_TEMP_MAX,
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
-    QSD_UPTIME,
+    QSD_UPTIME_SECONDS,
 )
 
 from homeassistant.components.sensor import (
@@ -145,7 +145,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        subkey=QSD_UPTIME,
+        subkey=QSD_UPTIME_SECONDS,
     ),
 )
 
@@ -288,14 +288,14 @@ async def async_setup_entry(
     """Add QNAP QSW sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
 
-    entities: list[QswSensor] = []
-
-    for description in SENSOR_TYPES:
+    entities: list[QswSensor] = [
+        QswSensor(coordinator, description, entry)
+        for description in SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            entities.append(QswSensor(coordinator, description, entry))
+        )
+    ]
 
     for description in LACP_PORT_SENSOR_TYPES:
         if (

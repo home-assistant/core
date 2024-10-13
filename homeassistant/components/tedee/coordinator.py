@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 from pytedee_async import (
     TedeeClient,
@@ -11,6 +12,7 @@ from pytedee_async import (
     TedeeDataUpdateException,
     TedeeLocalAuthException,
     TedeeLock,
+    TedeeWebhookException,
 )
 from pytedee_async.bridge import TedeeBridge
 
@@ -24,7 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=20)
+SCAN_INTERVAL = timedelta(seconds=30)
 GET_LOCKS_INTERVAL_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +36,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
     config_entry: ConfigEntry
+    bridge: TedeeBridge
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
@@ -44,7 +47,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._bridge: TedeeBridge | None = None
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
@@ -54,22 +56,19 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self._next_get_locks = time.time()
         self._locks_last_update: set[int] = set()
         self.new_lock_callbacks: list[Callable[[int], None]] = []
+        self.tedee_webhook_id: int | None = None
 
-    @property
-    def bridge(self) -> TedeeBridge:
-        """Return bridge."""
-        assert self._bridge
-        return self._bridge
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        async def _async_get_bridge() -> None:
+            self.bridge = await self.tedee_client.get_local_bridge()
+
+        _LOGGER.debug("Update coordinator: Getting bridge from API")
+        await self._async_update(_async_get_bridge)
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
-        if self._bridge is None:
-
-            async def _async_get_bridge() -> None:
-                self._bridge = await self.tedee_client.get_local_bridge()
-
-            _LOGGER.debug("Update coordinator: Getting bridge from API")
-            await self._async_update(_async_get_bridge)
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
@@ -100,9 +99,28 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Error while updating data: {ex!s}") from ex
         except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex!s}") from ex
+
+    def webhook_received(self, message: dict[str, Any]) -> None:
+        """Handle webhook message."""
+        self.tedee_client.parse_webhook_message(message)
+        self.async_set_updated_data(self.tedee_client.locks_dict)
+
+    async def async_register_webhook(self, webhook_url: str) -> None:
+        """Register the webhook at the Tedee bridge."""
+        self.tedee_webhook_id = await self.tedee_client.register_webhook(webhook_url)
+
+    async def async_unregister_webhook(self) -> None:
+        """Unregister the webhook at the Tedee bridge."""
+        if self.tedee_webhook_id is not None:
+            try:
+                await self.tedee_client.delete_webhook(self.tedee_webhook_id)
+            except TedeeWebhookException:
+                _LOGGER.exception("Failed to unregister Tedee webhook from bridge")
+            else:
+                _LOGGER.debug("Unregistered Tedee webhook")
 
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""

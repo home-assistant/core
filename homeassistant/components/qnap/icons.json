@@ -36,6 +36,18 @@
       },
       "volume_percentage_used": {
         "default": "mdi:chart-pie"
+      },
+      "volume_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "memory_size": {
+        "default": "mdi:memory"
+      },
+      "network_err": {
+        "default": "mdi:alert"
+      },
+      "network_max_speed": {
+        "default": "mdi:speedometer"
       }
     }
   }

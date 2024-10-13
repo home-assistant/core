@@ -41,5 +41,34 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion",
+        "state": {
+          "off": "Stopped",
+          "on": "Moving"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "Offline",
+          "on": "Online"
+        }
+      }
+    },
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "geofence": {
+        "name": "Geofence"
+      }
+    }
   }
 }

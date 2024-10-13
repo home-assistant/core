@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_button[button.fake_profile_clear_logs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.fake_profile_clear_logs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear logs',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'clear_logs',
+    'unique_id': 'xyz12_clear_logs',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[button.fake_profile_clear_logs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Clear logs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.fake_profile_clear_logs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

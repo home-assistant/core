@@ -6,15 +6,19 @@ from flexit_bacnet import DecodingError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-from tests.components.flexit_bacnet import setup_with_selected_platforms
+from . import setup_with_selected_platforms
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.device_name_fireplace_supply_fan_setpoint"
 
@@ -29,15 +33,8 @@ async def test_numbers(
     """Test number states are correctly collected from library."""
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
 
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_numbers_implementation(

@@ -40,14 +40,17 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
             device: Device = await self._validate_device(host=host)
         except (aiohttp.ClientError, NoUsableService):
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         self._name = device.name
         self._host = host
         self._set_confirm_only()
-        self.context["title_placeholders"] = {"name": self._name, "host": host}
+        self.context["title_placeholders"] = {
+            "name": self._name or "LOOKin",
+            "host": host,
+        }
         return await self.async_step_discovery_confirm()
 
     async def async_step_user(
@@ -62,7 +65,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = await self._validate_device(host=host)
             except (aiohttp.ClientError, NoUsableService):
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -92,10 +95,6 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm the discover flow."""
         assert self._host is not None
         if user_input is None:
-            self.context["title_placeholders"] = {
-                "name": self._name,
-                "host": self._host,
-            }
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self._name, "host": self._host},

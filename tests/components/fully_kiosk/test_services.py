@@ -72,6 +72,22 @@ async def test_services(
     mock_fully_kiosk.setConfigurationString.assert_called_once_with(key, value)
 
     key = "test_key"
+    value = 1234
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG,
+        {
+            ATTR_DEVICE_ID: [device_entry.id],
+            ATTR_KEY: key,
+            ATTR_VALUE: value,
+        },
+        blocking=True,
+    )
+
+    mock_fully_kiosk.setConfigurationString.assert_called_with(key, str(value))
+
+    key = "test_key"
     value = "true"
     await hass.services.async_call(
         DOMAIN,
@@ -109,7 +125,7 @@ async def test_service_unloaded_entry(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test service not called when config entry unloaded."""
-    await init_integration.async_unload(hass)
+    await hass.config_entries.async_unload(init_integration.entry_id)
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdef-123456")}

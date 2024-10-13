@@ -75,6 +75,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
@@ -133,16 +134,27 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
             )
         return None
 
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await self._cleanup_device()
+        await super().async_shutdown()
+
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             device = await self._get_device()
             async with asyncio.timeout(5):
                 return await _get_all_data(device, self.entry.data[CONF_MAC])
         except RAVEnConnectionError as err:
-            if self._raven_device:
-                await self._raven_device.close()
-                self._raven_device = None
+            await self._cleanup_device()
             raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
+        except TimeoutError:
+            await self._cleanup_device()
+            raise
+
+    async def _cleanup_device(self) -> None:
+        device, self._raven_device = self._raven_device, None
+        if device is not None:
+            await device.close()
 
     async def _get_device(self) -> RAVEnSerialDevice:
         if self._raven_device is not None:
@@ -150,15 +162,14 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
 
         device = RAVEnSerialDevice(self.entry.data[CONF_DEVICE])
 
-        async with asyncio.timeout(5):
-            await device.open()
-
-            try:
+        try:
+            async with asyncio.timeout(5):
+                await device.open()
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
-            except Exception:
-                await device.close()
-                raise
+        except:
+            await device.abort()
+            raise
 
         self._raven_device = device
         return device

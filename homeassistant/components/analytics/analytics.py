@@ -193,7 +193,7 @@ class Analytics:
         system_info = await async_get_system_info(hass)
         integrations = []
         custom_integrations = []
-        addons = []
+        addons: list[dict[str, Any]] = []
         payload: dict = {
             ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
@@ -261,21 +261,22 @@ class Analytics:
                 integrations.append(integration.domain)
 
             if supervisor_info is not None:
+                supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
                     *(
-                        hassio.async_get_addon_info(hass, addon[ATTR_SLUG])
+                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
                     )
                 )
-                for addon in installed_addons:
-                    addons.append(
-                        {
-                            ATTR_SLUG: addon[ATTR_SLUG],
-                            ATTR_PROTECTED: addon[ATTR_PROTECTED],
-                            ATTR_VERSION: addon[ATTR_VERSION],
-                            ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
-                        }
-                    )
+                addons.extend(
+                    {
+                        ATTR_SLUG: addon.slug,
+                        ATTR_PROTECTED: addon.protected,
+                        ATTR_VERSION: addon.version,
+                        ATTR_AUTO_UPDATE: addon.auto_update,
+                    }
+                    for addon in installed_addons
+                )
 
         if self.preferences.get(ATTR_USAGE, False):
             payload[ATTR_CERTIFICATE] = hass.http.ssl_certificate is not None

@@ -67,7 +67,7 @@ def wsdiscovery() -> list[Service]:
     finally:
         discovery.stop()
         # Stop the threads started by WSDiscovery since otherwise there is a leak.
-        discovery._stopThreads()  # pylint: disable=protected-access
+        discovery._stopThreads()  # noqa: SLF001
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
@@ -112,13 +112,15 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
         self.device_id = None
-        self.devices = []
-        self.onvif_config = {}
+        self.devices: list[dict[str, Any]] = []
+        self.onvif_config: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user flow."""
         if user_input:
             if user_input["auto"]:
@@ -196,7 +198,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
         return self.async_abort(reason="already_configured")
 
-    async def async_step_device(self, user_input=None):
+    async def async_step_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle WS-Discovery.
 
         Let user choose between discovered devices and manual configuration.
@@ -311,7 +315,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
-                        raise fault
+                        raise
                     LOGGER.debug(
                         "%s: Could not get network interfaces: %s",
                         self.onvif_config[CONF_NAME],
@@ -393,11 +397,13 @@ class OnvifOptionsFlowHandler(OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the ONVIF options."""
         return await self.async_step_onvif_devices()
 
-    async def async_step_onvif_devices(self, user_input=None):
+    async def async_step_onvif_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the ONVIF devices options."""
         if user_input is not None:
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]

@@ -4,19 +4,6 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-
-async def test_sensor_device_registry(
-    hass: HomeAssistant, mock_added_config_entry: ConfigEntry
-) -> None:
-    """Test sensor is added to device registry."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={("schlage", "test")})
-    assert device.model == "<model-name>"
-    assert device.sw_version == "1.0"
-    assert device.name == "Vault Door"
-    assert device.manufacturer == "Schlage"
 
 
 async def test_battery_sensor(

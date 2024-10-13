@@ -2,49 +2,46 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 
 from govee_ble import GoveeBluetoothDeviceData
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothProcessorCoordinator,
-)
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .coordinator import (
+    GoveeBLEBluetoothProcessorCoordinator,
+    GoveeBLEConfigEntry,
+    process_service_info,
+)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> bool:
     """Set up Govee BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
     data = GoveeBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
+    entry.runtime_data = coordinator = GoveeBLEBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
         mode=BluetoothScanningMode.ACTIVE,
-        update_method=data.update,
+        update_method=partial(process_service_info, hass, entry),
+        device_data=data,
+        entry=entry,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(
-        coordinator.async_start()
-    )  # only start after all platforms have had a chance to subscribe
+    # only start after all platforms have had a chance to subscribe
+    entry.async_on_unload(coordinator.async_start())
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

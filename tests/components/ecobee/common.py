@@ -4,14 +4,18 @@ from unittest.mock import patch
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_API_KEY
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass, platform) -> MockConfigEntry:
+async def setup_platform(
+    hass: HomeAssistant,
+    platform: str,
+) -> MockConfigEntry:
     """Set up the ecobee platform."""
     mock_entry = MockConfigEntry(
+        title=DOMAIN,
         domain=DOMAIN,
         data={
             CONF_API_KEY: "ABC123",
@@ -20,9 +24,7 @@ async def setup_platform(hass, platform) -> MockConfigEntry:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.ecobee.const.PLATFORMS", [platform]):
-        assert await async_setup_component(hass, DOMAIN, {})
-
-    await hass.async_block_till_done()
-
+    with patch("homeassistant.components.ecobee.PLATFORMS", [platform]):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
     return mock_entry

@@ -8,8 +8,20 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+
+
+async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
+    """Test unload an entry."""
+
+    assert loaded_entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    assert loaded_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_send_magic_packet(hass: HomeAssistant) -> None:

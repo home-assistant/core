@@ -42,6 +42,12 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     },
     "button": {
@@ -95,12 +101,30 @@
         "default": "mdi:spotlight-beam"
       },
       "volume": {
-        "default": "mdi:volume-high"
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "alarm_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "message_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
       },
       "guard_return_time": {
         "default": "mdi:crosshairs-gps"
       },
       "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
       "ai_face_sensitivity": {
@@ -194,14 +218,68 @@
       },
       "status_led": {
         "default": "mdi:lightning-bolt-circle"
+      },
+      "hdr": {
+        "default": "mdi:hdr"
+      },
+      "hub_alarm_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
+      "hub_visitor_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
+      "motion_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
+      },
+      "people_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
+      },
+      "visitor_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
+      },
+      "package_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
       }
     },
     "sensor": {
       "ptz_pan_position": {
         "default": "mdi:pan"
       },
+      "battery_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "battery_state": {
+        "default": "mdi:battery-charging"
+      },
       "wifi_signal": {
         "default": "mdi:wifi"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "hdd_storage": {
+        "default": "mdi:harddisk"
+      },
+      "sd_storage": {
+        "default": "mdi:micro-sd"
       }
     },
     "siren": {
@@ -243,18 +321,35 @@
       "record": {
         "default": "mdi:record-rec"
       },
-      "buzzer": {
-        "default": "mdi:room-service"
+      "manual_record": {
+        "default": "mdi:record-rec"
+      },
+      "hub_ringtone_on_event": {
+        "default": "mdi:music-note"
       },
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
       },
       "hdr": {
         "default": "mdi:hdr"
+      },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor"
+      },
+      "pir_reduce_alarm": {
+        "default": "mdi:motion-sensor"
+      },
+      "led": {
+        "default": "mdi:lightning-bolt-circle"
       }
     }
   },
   "services": {
-    "ptz_move": "mdi:pan"
+    "ptz_move": {
+      "service": "mdi:pan"
+    },
+    "play_chime": {
+      "service": "mdi:music"
+    }
   }
 }

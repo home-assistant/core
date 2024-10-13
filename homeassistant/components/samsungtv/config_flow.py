@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from functools import partial
 import socket
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 import getmac
@@ -101,6 +101,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -184,13 +185,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._model:
             updates[CONF_MODEL] = self._model
         if self._ssdp_rendering_control_location:
-            updates[
-                CONF_SSDP_RENDERING_CONTROL_LOCATION
-            ] = self._ssdp_rendering_control_location
+            updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                self._ssdp_rendering_control_location
+            )
         if self._ssdp_main_tv_agent_location:
-            updates[
-                CONF_SSDP_MAIN_TV_AGENT_LOCATION
-            ] = self._ssdp_main_tv_agent_location
+            updates[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                self._ssdp_main_tv_agent_location
+            )
         self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
     async def _async_create_bridge(self) -> None:
@@ -388,13 +389,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             or update_model
         ):
             if update_ssdp_rendering_control_location:
-                data[
-                    CONF_SSDP_RENDERING_CONTROL_LOCATION
-                ] = self._ssdp_rendering_control_location
+                data[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                    self._ssdp_rendering_control_location
+                )
             if update_ssdp_main_tv_agent_location:
-                data[
-                    CONF_SSDP_MAIN_TV_AGENT_LOCATION
-                ] = self._ssdp_main_tv_agent_location
+                data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                    self._ssdp_main_tv_agent_location
+                )
             if update_mac:
                 data[CONF_MAC] = self._mac
             if update_model:
@@ -424,10 +425,12 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_abort_if_host_already_in_progress(self) -> None:
-        self.context[CONF_HOST] = self._host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._host:
-                raise AbortFlow("already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            raise AbortFlow("already_in_progress")
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     @callback
     def _abort_if_manufacturer_is_not_samsung(self) -> None:

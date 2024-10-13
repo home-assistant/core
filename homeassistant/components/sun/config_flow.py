@@ -18,14 +18,11 @@ class SunConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)

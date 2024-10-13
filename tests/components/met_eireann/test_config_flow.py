@@ -4,10 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.met_eireann.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture(name="met_eireann_setup", autouse=True)
@@ -25,7 +26,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
 
@@ -43,7 +44,7 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     default_data = result["data_schema"]({})
@@ -66,7 +67,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data.get("name")
     assert result["data"] == test_data
 
@@ -87,11 +88,11 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result1["type"] is FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

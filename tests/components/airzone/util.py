@@ -1,5 +1,6 @@
 """Tests for the Airzone integration."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 from aioairzone.const import (
@@ -55,7 +56,7 @@ from aioairzone.const import (
     API_ZONE_ID,
 )
 
-from homeassistant.components.airzone import DOMAIN
+from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -271,6 +272,47 @@ HVAC_MOCK = {
                 },
             ]
         },
+        {
+            API_DATA: [
+                {
+                    API_SYSTEM_ID: 4,
+                    API_ZONE_ID: 1,
+                    API_NAME: "Aux Heat",
+                    API_ON: 1,
+                    API_COOL_SET_POINT: 20,
+                    API_COOL_MAX_TEMP: 30,
+                    API_COOL_MIN_TEMP: 15,
+                    API_HEAT_SET_POINT: 20,
+                    API_HEAT_MAX_TEMP: 30,
+                    API_HEAT_MIN_TEMP: 15,
+                    API_MAX_TEMP: 30,
+                    API_MIN_TEMP: 15,
+                    API_SET_POINT: 20,
+                    API_ROOM_TEMP: 22,
+                    API_MODES: [1, 2, 3, 4, 5, 6],
+                    API_MODE: 6,
+                    API_COLD_STAGES: 0,
+                    API_COLD_STAGE: 0,
+                    API_HEAT_STAGES: 0,
+                    API_HEAT_STAGE: 0,
+                    API_HUMIDITY: 0,
+                    API_UNITS: 0,
+                    API_ERRORS: [],
+                    API_AIR_DEMAND: 0,
+                    API_FLOOR_DEMAND: 0,
+                },
+            ]
+        },
+    ]
+}
+
+HVAC_MOCK_NEW_ZONES = {
+    API_SYSTEMS: [
+        {
+            API_DATA: [
+                deepcopy(HVAC_MOCK[API_SYSTEMS][0][API_DATA][0]),
+            ]
+        }
     ]
 }
 
@@ -322,21 +364,27 @@ async def async_init_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
-        return_value=HVAC_DHW_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        return_value=HVAC_SYSTEMS_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
-        return_value=HVAC_VERSION_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        return_value=HVAC_WEBSERVER_MOCK,
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            return_value=HVAC_DHW_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WEBSERVER_MOCK,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

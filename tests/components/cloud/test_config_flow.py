@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -11,16 +12,19 @@ from tests.common import MockConfigEntry
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test create cloud entry."""
 
-    with patch(
-        "homeassistant.components.cloud.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.cloud.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.cloud.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.cloud.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
         )
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Home Assistant Cloud"
         assert result["data"] == {}
         await hass.async_block_till_done()
@@ -37,5 +41,5 @@ async def test_multiple_entries(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "system"}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

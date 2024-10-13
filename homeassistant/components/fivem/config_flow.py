@@ -59,7 +59,7 @@ class FiveMConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidGameNameError:
             errors["base"] = "invalid_game_name"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

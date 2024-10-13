@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -46,6 +47,10 @@ _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
+# Energy conversion constants
+_WH_TO_J = 3600  # 1 Wh = 3600 J
+_WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+
 # Mass conversion constants
 _POUND_TO_G = 453.59237
 _OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
@@ -67,7 +72,6 @@ class BaseUnitConverter:
     """Define the format of a conversion utility."""
 
     UNIT_CLASS: str
-    NORMALIZED_UNIT: str | None
     VALID_UNITS: set[str | None]
 
     _UNIT_CONVERSION: dict[str | None, float]
@@ -124,7 +128,6 @@ class DataRateConverter(BaseUnitConverter):
     """Utility to convert data rate values."""
 
     UNIT_CLASS = "data_rate"
-    NORMALIZED_UNIT = UnitOfDataRate.BITS_PER_SECOND
     # Units in terms of bits
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfDataRate.BITS_PER_SECOND: 1,
@@ -146,7 +149,6 @@ class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
     UNIT_CLASS = "distance"
-    NORMALIZED_UNIT = UnitOfLength.METERS
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfLength.METERS: 1,
         UnitOfLength.MILLIMETERS: 1 / _MM_TO_M,
@@ -156,10 +158,12 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.FEET: 1 / _FOOT_TO_M,
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
+        UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.MILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.FEET,
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
@@ -169,11 +173,22 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class ConductivityConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "conductivity"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
+    }
+    VALID_UNITS = set(UnitOfConductivity)
+
+
 class ElectricCurrentConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "electric_current"
-    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricCurrent.AMPERE: 1,
         UnitOfElectricCurrent.MILLIAMPERE: 1e3,
@@ -185,7 +200,6 @@ class ElectricPotentialConverter(BaseUnitConverter):
     """Utility to convert electric potential values."""
 
     UNIT_CLASS = "voltage"
-    NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
@@ -200,28 +214,26 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
-    NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.JOULE: _WH_TO_J * 1e3,
+        UnitOfEnergy.KILO_JOULE: _WH_TO_J,
+        UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
+        UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.MEGA_JOULE: 3.6,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
+        UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
+        UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
+        UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
-    VALID_UNITS = {
-        UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.GIGA_JOULE,
-    }
+    VALID_UNITS = set(UnitOfEnergy)
 
 
 class InformationConverter(BaseUnitConverter):
     """Utility to convert information values."""
 
     UNIT_CLASS = "information"
-    NORMALIZED_UNIT = UnitOfInformation.BITS
     # Units in terms of bits
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfInformation.BITS: 1,
@@ -253,7 +265,6 @@ class MassConverter(BaseUnitConverter):
     """Utility to convert mass values."""
 
     UNIT_CLASS = "mass"
-    NORMALIZED_UNIT = UnitOfMass.GRAMS
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfMass.MICROGRAMS: 1 * 1000 * 1000,
         UnitOfMass.MILLIGRAMS: 1 * 1000,
@@ -278,7 +289,6 @@ class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
     UNIT_CLASS = "power"
-    NORMALIZED_UNIT = UnitOfPower.WATT
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
@@ -293,7 +303,6 @@ class PressureConverter(BaseUnitConverter):
     """Utility to convert pressure values."""
 
     UNIT_CLASS = "pressure"
-    NORMALIZED_UNIT = UnitOfPressure.PA
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPressure.PA: 1,
         UnitOfPressure.HPA: 1 / 100,
@@ -324,16 +333,17 @@ class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
     UNIT_CLASS = "speed"
-    NORMALIZED_UNIT = UnitOfSpeed.METERS_PER_SECOND
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumetricFlux.INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
         UnitOfSpeed.FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: 1,
     }
@@ -342,11 +352,13 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        UnitOfSpeed.INCHES_PER_SECOND,
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfSpeed.BEAUFORT,
     }
 
@@ -419,7 +431,6 @@ class TemperatureConverter(BaseUnitConverter):
     """Utility to convert temperature values."""
 
     UNIT_CLASS = "temperature"
-    NORMALIZED_UNIT = UnitOfTemperature.CELSIUS
     VALID_UNITS = {
         UnitOfTemperature.CELSIUS,
         UnitOfTemperature.FAHRENHEIT,
@@ -550,7 +561,6 @@ class UnitlessRatioConverter(BaseUnitConverter):
     """Utility to convert unitless ratios."""
 
     UNIT_CLASS = "unitless"
-    NORMALIZED_UNIT = None
     _UNIT_CONVERSION: dict[str | None, float] = {
         None: 1,
         CONCENTRATION_PARTS_PER_BILLION: 1000000000,
@@ -567,7 +577,6 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
@@ -593,7 +602,6 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume_flow_rate"
-    NORMALIZED_UNIT = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
@@ -616,7 +624,6 @@ class DurationConverter(BaseUnitConverter):
     """Utility to convert duration values."""
 
     UNIT_CLASS = "duration"
-    NORMALIZED_UNIT = UnitOfTime.SECONDS
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfTime.MICROSECONDS: 1000000,
         UnitOfTime.MILLISECONDS: 1000,

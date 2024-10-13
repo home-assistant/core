@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from gotailwind import TailwindDeviceStatus
 import pytest
@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.tailwind.async_setup_entry", return_value=True
@@ -45,13 +45,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_tailwind(device_fixture: str) -> Generator[MagicMock, None, None]:
+def mock_tailwind(device_fixture: str) -> Generator[MagicMock]:
     """Return a mocked Tailwind client."""
-    with patch(
-        "homeassistant.components.tailwind.coordinator.Tailwind", autospec=True
-    ) as tailwind_mock, patch(
-        "homeassistant.components.tailwind.config_flow.Tailwind",
-        new=tailwind_mock,
+    with (
+        patch(
+            "homeassistant.components.tailwind.coordinator.Tailwind", autospec=True
+        ) as tailwind_mock,
+        patch(
+            "homeassistant.components.tailwind.config_flow.Tailwind",
+            new=tailwind_mock,
+        ),
     ):
         tailwind = tailwind_mock.return_value
         tailwind.status.return_value = TailwindDeviceStatus.from_json(

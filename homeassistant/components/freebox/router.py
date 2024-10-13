@@ -43,7 +43,6 @@ def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
-        return True
     except (ValueError, TypeError) as err:
         _LOGGER.error(
             "Failed to parse JSON '%s', error '%s'",
@@ -51,6 +50,7 @@ def is_json(json_str: str) -> bool:
             err,
         )
         return False
+    return True
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -87,7 +87,7 @@ async def get_hosts_list_if_supported(
             )
 
         else:
-            raise err
+            raise
 
     return supports_hosts, fbx_devices
 
@@ -225,7 +225,7 @@ class FreeboxRouter:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
         except HttpRequestError:
             self.supports_raid = False
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Router %s API does not support RAID",
                 self.name,
             )

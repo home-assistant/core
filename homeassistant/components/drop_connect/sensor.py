@@ -20,12 +20,14 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
+    DEV_ALERT,
     DEV_FILTER,
     DEV_HUB,
     DEV_LEAK_DETECTOR,
@@ -70,7 +72,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CURRENT_FLOW_RATE,
         translation_key=CURRENT_FLOW_RATE,
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.current_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -78,7 +81,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=PEAK_FLOW_RATE,
         translation_key=PEAK_FLOW_RATE,
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.peak_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -219,6 +223,7 @@ DEVICE_SENSORS: dict[str, list[str]] = {
     ],
     DEV_FILTER: [BATTERY, CURRENT_FLOW_RATE, CURRENT_SYSTEM_PRESSURE],
     DEV_LEAK_DETECTOR: [BATTERY, TEMPERATURE],
+    DEV_ALERT: [BATTERY, TEMPERATURE],
     DEV_PROTECTION_VALVE: [
         BATTERY,
         CURRENT_FLOW_RATE,

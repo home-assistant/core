@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
   "iot_class": "local_push",
   "loggers": ["RFXtrx"],
-  "requirements": ["pyRFXtrx==0.31.0"]
+  "requirements": ["pyRFXtrx==0.31.1"]
 }

@@ -8,14 +8,14 @@ class NumatoModuleMock:
 
     NumatoGpioError = NumatoGpioError
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the numato_gpio module mockup class."""
         self.devices = {}
 
     class NumatoDeviceMock:
         """Mockup for the numato_gpio.NumatoUsbGpio class."""
 
-        def __init__(self, device):
+        def __init__(self, device) -> None:
             """Initialize numato device mockup."""
             self.device = device
             self.callbacks = {}
@@ -62,7 +62,8 @@ class NumatoModuleMock:
 
         Ignore the device list argument, mock discovers /dev/ttyACM0.
         """
-        self.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
+        if not self.devices:
+            self.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
 
     def cleanup(self):
         """Mockup for the numato device cleanup."""

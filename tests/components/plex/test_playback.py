@@ -28,7 +28,7 @@ class MockPlexMedia:
     viewOffset = 333
     _server = Mock(_baseurl=PLEX_DIRECT_URL)
 
-    def __init__(self, title, mediatype):
+    def __init__(self, title, mediatype) -> None:
         """Initialize the instance."""
         self.listType = mediatype
         self.title = title
@@ -65,11 +65,14 @@ async def test_media_player_playback(
 
     # Test media lookup failure
     payload = '{"library_name": "Movies", "title": "Movie 1" }'
-    with patch(
-        "plexapi.library.LibrarySection.search",
-        return_value=None,
-        __qualname__="search",
-    ), pytest.raises(HomeAssistantError) as excinfo:
+    with (
+        patch(
+            "plexapi.library.LibrarySection.search",
+            return_value=None,
+            __qualname__="search",
+        ),
+        pytest.raises(HomeAssistantError) as excinfo,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -80,7 +83,7 @@ async def test_media_player_playback(
             },
             True,
         )
-        assert not playmedia_mock.called
+    assert not playmedia_mock.called
     assert f"No {MediaType.MOVIE} results in 'Movies' for" in str(excinfo.value)
 
     movie1 = MockPlexMedia("Movie", "movie")
@@ -194,35 +197,39 @@ async def test_media_player_playback(
     # Test multiple choices without exact match
     playmedia_mock.reset()
     movies = [movie2, movie3]
-    with pytest.raises(HomeAssistantError) as excinfo:
-        payload = '{"library_name": "Movies", "title": "Movie" }'
-        with patch(
+    with (
+        pytest.raises(HomeAssistantError) as excinfo,
+        patch(
             "plexapi.library.LibrarySection.search",
             return_value=movies,
             __qualname__="search",
-        ):
-            await hass.services.async_call(
-                MP_DOMAIN,
-                SERVICE_PLAY_MEDIA,
-                {
-                    ATTR_ENTITY_ID: media_player,
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                    ATTR_MEDIA_CONTENT_ID: payload,
-                },
-                True,
-            )
-            assert not playmedia_mock.called
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie" }',
+            },
+            True,
+        )
+    assert not playmedia_mock.called
     assert "Multiple matches, make content_id more specific" in str(excinfo.value)
 
     # Test multiple choices with allow_multiple
     movies = [movie1, movie2, movie3]
-    with patch(
-        "plexapi.library.LibrarySection.search",
-        return_value=movies,
-        __qualname__="search",
-    ), patch(
-        "homeassistant.components.plex.server.PlexServer.create_playqueue"
-    ) as mock_create_playqueue:
+    with (
+        patch(
+            "plexapi.library.LibrarySection.search",
+            return_value=movies,
+            __qualname__="search",
+        ),
+        patch(
+            "homeassistant.components.plex.server.PlexServer.create_playqueue"
+        ) as mock_create_playqueue,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,

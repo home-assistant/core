@@ -92,7 +92,7 @@ class BAFFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = await async_try_connect(ip_address)
             except CannotConnect:
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Unknown exception during connection test to %s", ip_address
                 )

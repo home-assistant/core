@@ -74,8 +74,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
             except FSConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return await self._async_step_device_config_if_needed()
@@ -101,14 +101,15 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
+        if speaker_name := discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME):
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": speaker_name}
 
         try:
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
+        except Exception as exception:  # noqa: BLE001
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
@@ -172,9 +173,11 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"name": self._name}
         )
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._webfsapi_url = config[CONF_WEBFSAPI_URL]
+        self._webfsapi_url = entry_data[CONF_WEBFSAPI_URL]
 
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -206,8 +209,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidPinException:
             errors["base"] = "invalid_auth"
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             if self._reauth_entry:

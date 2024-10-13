@@ -11,6 +11,12 @@
       },
       "confirm_discovery": {
         "description": "Do you want to add {device} to Home Assistant?"
+      },
+      "reconfigure": {
+        "description": "Update your configuration information for {device}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       }
     },
     "error": {
@@ -19,7 +25,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier"
     }
   },
   "entity": {
@@ -234,11 +242,29 @@
       "power_battery": {
         "name": "Power battery"
       },
+      "power_battery_discharge": {
+        "name": "Power battery discharge"
+      },
+      "power_battery_charge": {
+        "name": "Power battery charge"
+      },
       "power_grid": {
         "name": "Power grid"
       },
+      "power_grid_import": {
+        "name": "Power grid import"
+      },
+      "power_grid_export": {
+        "name": "Power grid export"
+      },
       "power_load": {
         "name": "Power load"
+      },
+      "power_load_generated": {
+        "name": "Power load generated"
+      },
+      "power_load_consumed": {
+        "name": "Power load consumed"
       },
       "power_photovoltaics": {
         "name": "Power photovoltaics"
@@ -250,7 +276,7 @@
         "name": "Relative self consumption"
       },
       "capacity_maximum": {
-        "name": "Maximum capacity "
+        "name": "Maximum capacity"
       },
       "capacity_designed": {
         "name": "Designed capacity"

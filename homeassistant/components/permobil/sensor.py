@@ -41,19 +41,12 @@ from .entity import PermobilEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PermobilRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PermobilSensorEntityDescription(SensorEntityDescription):
+    """Describes Permobil sensor entity."""
 
     value_fn: Callable[[Any], float | int]
     available_fn: Callable[[Any], bool]
-
-
-@dataclass(frozen=True)
-class PermobilSensorEntityDescription(
-    SensorEntityDescription, PermobilRequiredKeysMixin
-):
-    """Describes Permobil sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (

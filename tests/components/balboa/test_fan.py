@@ -2,24 +2,27 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pybalboa import SpaControl
 from pybalboa.enums import OffLowHighState, UnknownState
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.fan import ATTR_PERCENTAGE
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import client_update, init_integration
 
+from tests.common import snapshot_platform
 from tests.components.fan import common
 
 ENTITY_FAN = "fan.fakespa_pump_1"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_pump(client: MagicMock):
     """Return a mock pump."""
     pump = MagicMock(SpaControl)
@@ -28,6 +31,7 @@ def mock_pump(client: MagicMock):
         pump.state = state
 
     pump.client = client
+    pump.name = "Pump 1"
     pump.index = 0
     pump.state = OffLowHighState.OFF
     pump.set_state = set_state
@@ -35,6 +39,19 @@ def mock_pump(client: MagicMock):
     client.pumps.append(pump)
 
     return pump
+
+
+async def test_fan(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test spa fans."""
+    with patch("homeassistant.components.balboa.PLATFORMS", [Platform.FAN]):
+        entry = await init_integration(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_pump(hass: HomeAssistant, client: MagicMock, mock_pump) -> None:

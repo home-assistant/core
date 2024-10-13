@@ -6,9 +6,10 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import TYPE_CHECKING, Any, Final, final
+from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -17,14 +18,11 @@ from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, Entity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_AUTO_UPDATE,
@@ -43,16 +41,13 @@ from .const import (
     UpdateEntityFeature,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-SCAN_INTERVAL = timedelta(minutes=15)
-
-ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
 _LOGGER = logging.getLogger(__name__)
+
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 class UpdateDeviceClass(StrEnum):
@@ -86,7 +81,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN] = EntityComponent[UpdateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -103,12 +98,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SKIP,
-        {},
+        None,
         async_skip,
     )
     component.async_register_entity_service(
         "clear_skipped",
-        {},
+        None,
         async_clear_skipped,
     )
 
@@ -119,14 +114,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
@@ -189,7 +182,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 @lru_cache(maxsize=256)
 def _version_is_newer(latest_version: str, installed_version: str) -> bool:
-    """Return True if version is newer."""
+    """Return True if latest_version is newer than installed_version."""
     return AwesomeVersion(latest_version) > installed_version
 
 
@@ -374,7 +367,7 @@ class UpdateEntity(
         The backup parameter indicates a backup should be taken before
         installing the update.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
@@ -390,7 +383,12 @@ class UpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if latest_version is newer than installed_version."""
+        # We don't inline the `_version_is_newer` function because of caching
+        return _version_is_newer(latest_version, installed_version)
 
     @property
     @final
@@ -407,11 +405,11 @@ class UpdateEntity(
             return STATE_OFF
 
         try:
-            newer = _version_is_newer(latest_version, installed_version)
-            return STATE_ON if newer else STATE_OFF
+            newer = self.version_is_newer(latest_version, installed_version)
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
+        return STATE_ON if newer else STATE_OFF
 
     @final
     @property
@@ -495,19 +493,18 @@ async def websocket_release_notes(
     msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
-    entity = component.get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 
     if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features_compat:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             "Entity does not support release notes",
         )
         return

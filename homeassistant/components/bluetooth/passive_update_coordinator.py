@@ -48,6 +48,11 @@ class PassiveBluetoothDataUpdateCoordinator(
         super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return self._available
+
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
@@ -76,7 +81,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         self._listeners[remove_listener] = (update_callback, context)
         return remove_listener
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -93,7 +98,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity(
+class PassiveBluetoothCoordinatorEntity(  # pylint: disable=hass-enforce-class-module
     BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
 ):
     """A class for entities using DataUpdateCoordinator."""

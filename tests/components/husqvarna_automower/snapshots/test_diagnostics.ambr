@@ -1,0 +1,192 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'battery': dict({
+      'battery_percent': 100,
+    }),
+    'calendar': dict({
+      'tasks': list([
+        dict({
+          'duration': 300,
+          'friday': True,
+          'monday': True,
+          'saturday': False,
+          'start': 1140,
+          'sunday': False,
+          'thursday': False,
+          'tuesday': False,
+          'wednesday': True,
+          'workAreaId': 123456,
+        }),
+        dict({
+          'duration': 480,
+          'friday': False,
+          'monday': False,
+          'saturday': True,
+          'start': 0,
+          'sunday': False,
+          'thursday': True,
+          'tuesday': True,
+          'wednesday': False,
+          'workAreaId': 123456,
+        }),
+        dict({
+          'duration': 480,
+          'friday': False,
+          'monday': False,
+          'saturday': True,
+          'start': 0,
+          'sunday': False,
+          'thursday': True,
+          'tuesday': True,
+          'wednesday': False,
+          'workAreaId': 654321,
+        }),
+        dict({
+          'duration': 480,
+          'friday': False,
+          'monday': True,
+          'saturday': True,
+          'start': 60,
+          'sunday': False,
+          'thursday': True,
+          'tuesday': True,
+          'wednesday': False,
+          'workAreaId': 654321,
+        }),
+      ]),
+    }),
+    'capabilities': dict({
+      'can_confirm_error': True,
+      'headlights': True,
+      'position': True,
+      'stay_out_zones': True,
+      'work_areas': True,
+    }),
+    'metadata': dict({
+      'connected': True,
+      'status_dateteime': '2023-06-05T00:00:00+00:00',
+    }),
+    'mower': dict({
+      'activity': 'PARKED_IN_CS',
+      'error_code': 0,
+      'error_datetime_naive': None,
+      'error_key': None,
+      'error_timestamp': 0,
+      'inactive_reason': 'NONE',
+      'is_error_confirmable': False,
+      'mode': 'MAIN_AREA',
+      'state': 'RESTRICTED',
+      'work_area_id': 123456,
+      'work_area_name': 'Front lawn',
+    }),
+    'planner': dict({
+      'next_start': 1685991600000,
+      'next_start_datetime_naive': '2023-06-05T19:00:00',
+      'override': dict({
+        'action': 'NOT_ACTIVE',
+      }),
+      'restricted_reason': 'WEEK_SCHEDULE',
+    }),
+    'positions': '**REDACTED**',
+    'settings': dict({
+      'cutting_height': 4,
+      'headlight': dict({
+        'mode': 'EVENING_ONLY',
+      }),
+    }),
+    'statistics': dict({
+      'cutting_blade_usage_time': 123,
+      'number_of_charging_cycles': 1380,
+      'number_of_collisions': 11396,
+      'total_charging_time': 4334400,
+      'total_cutting_time': 4194000,
+      'total_drive_distance': 1780272,
+      'total_running_time': 4564800,
+      'total_searching_time': 370800,
+    }),
+    'stay_out_zones': dict({
+      'dirty': False,
+      'zones': dict({
+        '81C6EEA2-D139-4FEA-B134-F22A6B3EA403': dict({
+          'enabled': True,
+          'name': 'Springflowers',
+        }),
+        'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+          'enabled': False,
+          'name': 'Danger Zone',
+        }),
+      }),
+    }),
+    'system': dict({
+      'model': 'HUSQVARNA AUTOMOWER® 450XH',
+      'name': 'Test Mower 1',
+      'serial_number': 123,
+    }),
+    'work_area_dict': dict({
+      '0': 'my_lawn',
+      '123456': 'Front lawn',
+      '654321': 'Back lawn',
+    }),
+    'work_area_names': list([
+      'Front lawn',
+      'Back lawn',
+      'my_lawn',
+      'no_work_area_active',
+    ]),
+    'work_areas': dict({
+      '0': dict({
+        'cutting_height': 50,
+        'enabled': False,
+        'last_time_completed_naive': '2024-08-12T05:07:49',
+        'name': 'my_lawn',
+        'progress': 20,
+      }),
+      '123456': dict({
+        'cutting_height': 50,
+        'enabled': True,
+        'last_time_completed_naive': '2024-08-12T07:54:29',
+        'name': 'Front lawn',
+        'progress': 40,
+      }),
+      '654321': dict({
+        'cutting_height': 25,
+        'enabled': True,
+        'last_time_completed_naive': None,
+        'name': 'Back lawn',
+        'progress': None,
+      }),
+    }),
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'auth_implementation': 'husqvarna_automower',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1685926800.0,
+        'expires_in': 86399,
+        'provider': 'husqvarna',
+        'refresh_token': '**REDACTED**',
+        'scope': 'iam:read amc:api',
+        'token_type': 'Bearer',
+        'user_id': '123',
+      }),
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'husqvarna_automower',
+    'entry_id': 'automower_test',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'Husqvarna Automower of Erika Mustermann',
+    'unique_id': '123',
+    'version': 1,
+  })
+# ---

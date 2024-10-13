@@ -47,13 +47,13 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        SwitchBotCloudAirConditionner(data.api, device, coordinator)
+        SwitchBotCloudAirConditioner(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
 
 
-class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot air conditionner.
+class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
+    """Representation of a SwitchBot air conditioner.
 
     As it is an IR device, we don't know the actual state.
     """
@@ -95,7 +95,7 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
         new_fan_speed = _SWITCHBOT_FAN_MODES.get(
             fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
         )
-        await self.send_command(
+        await self.send_api_command(
             AirConditionerCommands.SET_ALL,
             parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
         )

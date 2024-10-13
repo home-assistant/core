@@ -53,8 +53,9 @@ def controller_fixture(
     mock_heos.create_group.return_value = None
     mock = Mock(return_value=mock_heos)
 
-    with patch("homeassistant.components.heos.Heos", new=mock), patch(
-        "homeassistant.components.heos.config_flow.Heos", new=mock
+    with (
+        patch("homeassistant.components.heos.Heos", new=mock),
+        patch("homeassistant.components.heos.config_flow.Heos", new=mock),
     ):
         yield mock_heos
 

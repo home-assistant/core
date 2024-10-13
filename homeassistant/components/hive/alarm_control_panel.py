@@ -18,8 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity
 from .const import DOMAIN
+from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -51,6 +51,7 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.TRIGGER
     )
+    _attr_code_arm_required = False
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

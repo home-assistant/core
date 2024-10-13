@@ -8,7 +8,10 @@ import logging
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,7 +25,7 @@ CONF_ALLOW_UNREACHABLE = "allow_unreachable"
 
 DEFAULT_TIMEOUT = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PIN): vol.All(vol.Coerce(str), vol.Match(r"\d{4}")),

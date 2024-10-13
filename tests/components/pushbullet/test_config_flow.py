@@ -35,7 +35,7 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "pushbullet"
     assert result["data"] == MOCK_CONFIG
 
@@ -60,7 +60,7 @@ async def test_flow_user_already_configured(
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -85,7 +85,7 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=new_config,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -101,7 +101,7 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -118,6 +118,6 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}

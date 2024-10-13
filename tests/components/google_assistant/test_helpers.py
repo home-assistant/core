@@ -14,7 +14,7 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.components.matter.models import MatterDeviceInfo
+from homeassistant.components.matter import MatterDeviceInfo
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -344,7 +344,10 @@ def test_supported_features_string(caplog: pytest.LogCaptureFixture) -> None:
         State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
-    assert "Entity test.entity_id contains invalid supported_features value invalid"
+    assert (
+        "Entity test.entity_id contains invalid supported_features value invalid"
+        in caplog.text
+    )
 
 
 def test_request_data() -> None:
@@ -404,7 +407,7 @@ async def test_config_local_sdk_allow_min_version(
     ) not in caplog.text
 
 
-@pytest.mark.parametrize("version", (None, "2.1.4"))
+@pytest.mark.parametrize("version", [None, "2.1.4"])
 async def test_config_local_sdk_warn_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

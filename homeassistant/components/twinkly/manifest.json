@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/twinkly",
   "iot_class": "local_polling",
   "loggers": ["ttls"],
-  "requirements": ["ttls==1.5.1"]
+  "requirements": ["ttls==1.8.3"]
 }

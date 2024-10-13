@@ -7,28 +7,24 @@ from typing import Any
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER,
     ScannerEntity,
-    SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
-from .hub import Device, MikrotikDataUpdateCoordinator
+from . import MikrotikConfigEntry
+from .coordinator import Device, MikrotikDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MikrotikConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for Mikrotik component."""
-    coordinator: MikrotikDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
@@ -96,11 +92,6 @@ class MikrotikDataUpdateCoordinatorTracker(
         ):
             return True
         return False
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the client."""
-        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str:

@@ -78,7 +78,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
             return self._show_form(errors)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 

@@ -119,7 +119,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             aftv, error_message = await async_connect_androidtv(self.hass, user_input)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Android device at %s",
                 user_input[CONF_HOST],
@@ -131,7 +131,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        _LOGGER.info(
+        _LOGGER.debug(
             "Android device at %s: %s = %r, %s = %r",
             user_input[CONF_HOST],
             PROP_ETHMAC,
@@ -235,7 +235,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
         apps = [SelectOptionDict(value=APPS_NEW_ID, label="Add new")] + [
             SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
         ]
-        rules = [RULES_NEW_ID] + list(self._state_det_rules)
+        rules = [RULES_NEW_ID, *self._state_det_rules]
         options = self.options
 
         data_schema = vol.Schema(

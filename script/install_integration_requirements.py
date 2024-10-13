@@ -18,9 +18,7 @@ def get_arguments() -> argparse.Namespace:
         "integration", type=valid_integration, help="Integration to target."
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def main() -> int | None:
@@ -34,8 +32,7 @@ def main() -> int | None:
     requirements = gather_recursive_requirements(args.integration)
 
     cmd = [
-        sys.executable,
-        "-m",
+        "uv",
         "pip",
         "install",
         "-c",
@@ -48,6 +45,7 @@ def main() -> int | None:
         cmd,
         check=True,
     )
+    return None
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
     "flow_title": "La Marzocco Espresso {host}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
@@ -19,6 +20,12 @@
         "data_description": {
           "username": "Your username from the La Marzocco app",
           "password": "Your password from the La Marzocco app"
+        }
+      },
+      "bluetooth_selection": {
+        "description": "Select your device from available Bluetooth devices.",
+        "data": {
+          "mac": "Bluetooth device"
         }
       },
       "machine_selection": {
@@ -39,11 +46,34 @@
         "data_description": {
           "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
         }
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::lamarzocco::config::step::user::data_description::username%]",
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "use_bluetooth": "Use Bluetooth"
+        }
       }
     }
   },
   "entity": {
     "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
@@ -58,7 +88,7 @@
     },
     "calendar": {
       "auto_on_off_schedule": {
-        "name": "Auto on/off schedule"
+        "name": "Auto on/off schedule ({id})"
       }
     },
     "number": {
@@ -130,7 +160,7 @@
     },
     "switch": {
       "auto_on_off": {
-        "name": "Auto on/off"
+        "name": "Auto on/off ({id})"
       },
       "steam_boiler": {
         "name": "Steam boiler"
@@ -143,6 +173,38 @@
       "gateway_firmware": {
         "name": "Gateway firmware"
       }
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "title": "Unsupported gateway firmware",
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
+    }
+  },
+  "exceptions": {
+    "auto_on_off_error": {
+      "message": "Error while setting auto on/off to {state} for {id}"
+    },
+    "button_error": {
+      "message": "Error while executing button {key}"
+    },
+    "number_exception": {
+      "message": "Error while setting value {value} for number {key}"
+    },
+    "number_exception_key": {
+      "message": "Error while setting value {value} for number {key}, key {physical_key}"
+    },
+    "select_option_error": {
+      "message": "Error while setting select option {option} for {key}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on switch {key}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off switch {key}"
+    },
+    "update_failed": {
+      "message": "Error while updating {key}"
     }
   }
 }

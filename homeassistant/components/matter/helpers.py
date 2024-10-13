@@ -59,12 +59,12 @@ def get_device_id(
 ) -> str:
     """Return HA device_id for the given MatterEndpoint."""
     operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
-    # Append endpoint ID if this endpoint is a bridged or composed device
-    if endpoint.is_composed_device:
-        compose_parent = endpoint.node.get_compose_parent(endpoint.endpoint_id)
-        assert compose_parent is not None
-        postfix = str(compose_parent.endpoint_id)
-    elif endpoint.is_bridged_device:
+    # if this is a composed device we need to get the compose parent
+    # example: Philips Hue motion sensor on Hue Hub (bridged to Matter)
+    if compose_parent := endpoint.node.get_compose_parent(endpoint.endpoint_id):
+        endpoint = compose_parent
+    if endpoint.is_bridged_device:
+        # Append endpoint ID if this endpoint is a bridged device
         postfix = str(endpoint.endpoint_id)
     else:
         # this should be compatible with previous versions
@@ -109,7 +109,7 @@ def get_node_from_device_entry(
     if server_info is None:
         raise RuntimeError("Matter server information is not available")
 
-    node = next(
+    return next(
         (
             node
             for node in matter_client.get_nodes()
@@ -118,5 +118,3 @@ def get_node_from_device_entry(
         ),
         None,
     )
-
-    return node

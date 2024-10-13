@@ -157,14 +157,15 @@ class EventManager:
             # tns1:RuleEngine/CellMotionDetector/Motion//.
             # tns1:RuleEngine/CellMotionDetector/Motion
             # tns1:RuleEngine/CellMotionDetector/Motion/
+            # tns1:UserAlarm/IVA/HumanShapeDetect
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
-            topic = msg.Topic._value_1.rstrip("/.")  # pylint: disable=protected-access
+            topic = msg.Topic._value_1.rstrip("/.")  # noqa: SLF001
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
-                    LOGGER.info(
+                    LOGGER.warning(
                         "%s: No registered handler for event from %s: %s",
                         self.name,
                         unique_id,
@@ -176,7 +177,7 @@ class EventManager:
             event = await parser(unique_id, msg)
 
             if not event:
-                LOGGER.info(
+                LOGGER.warning(
                     "%s: Unable to parse event from %s: %s", self.name, unique_id, msg
                 )
                 return

@@ -10,10 +10,10 @@ from aiowithings import AuthScope
 
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONF_USE_WEBHOOK, DEFAULT_TITLE, DOMAIN
+from .const import DEFAULT_TITLE, DOMAIN
 
 
 class WithingsFlowHandler(
@@ -34,14 +34,8 @@ class WithingsFlowHandler(
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": ",".join(
-                [
-                    AuthScope.USER_INFO,
-                    AuthScope.USER_METRICS,
-                    AuthScope.USER_ACTIVITY,
-                    AuthScope.USER_SLEEP_EVENTS,
-                ]
-            )
+            "scope": f"{AuthScope.USER_INFO},{AuthScope.USER_METRICS},"
+            f"{AuthScope.USER_ACTIVITY},{AuthScope.USER_SLEEP_EVENTS}"
         }
 
     async def async_step_reauth(
@@ -58,7 +52,11 @@ class WithingsFlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            assert self.reauth_entry
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self.reauth_entry.title},
+            )
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
@@ -71,14 +69,11 @@ class WithingsFlowHandler(
             return self.async_create_entry(
                 title=DEFAULT_TITLE,
                 data={**data, CONF_WEBHOOK_ID: async_generate_id()},
-                options={CONF_USE_WEBHOOK: False},
             )
 
         if self.reauth_entry.unique_id == user_id:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")

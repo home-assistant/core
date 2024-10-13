@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
-from tests.common import async_capture_events, async_mock_service, mock_device_registry
+from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -122,7 +122,7 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild"},
+        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
         channel="0",
         motion=0,
         temp=22.1,
@@ -166,9 +166,26 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
-    "input:1": {"id": 1, "type": "analog", "enable": True},
-    "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
+    "input:1": {
+        "id": 1,
+        "type": "analog",
+        "enable": True,
+        "xpercent": {"expr": None, "unit": None},
+    },
+    "input:2": {
+        "id": 2,
+        "name": "Gas",
+        "type": "count",
+        "enable": True,
+        "xcounts": {"expr": None, "unit": None},
+        "xfreq": {"expr": None, "unit": None},
+    },
     "light:0": {"name": "test light_0"},
+    "light:1": {"name": "test light_1"},
+    "light:2": {"name": "test light_2"},
+    "light:3": {"name": "test light_3"},
+    "rgb:0": {"name": "test rgb_0"},
+    "rgbw:0": {"name": "test rgbw_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
     "thermostat:0": {
@@ -181,6 +198,7 @@ MOCK_CONFIG = {
         "device": {"name": "Test name"},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
+    "ws": {"enable": False, "server": None},
 }
 
 MOCK_SHELLY_COAP = {
@@ -208,9 +226,9 @@ MOCK_STATUS_COAP = {
     "update": {
         "status": "pending",
         "has_update": True,
-        "beta_version": "some_beta_version",
-        "new_version": "some_new_version",
-        "old_version": "some_old_version",
+        "beta_version": "20231107-162609/v1.14.1-rc1-g0617c15",
+        "new_version": "20230913-111730/v1.14.0-gcb84623",
+        "old_version": "20230913-111730/v1.14.0-gcb84623",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
     "wifi_sta": {"rssi": -64},
@@ -221,8 +239,18 @@ MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
-    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
+    "input:2": {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+        "xfreq": 6.11,
+    },
     "light:0": {"output": True, "brightness": 53.0},
+    "light:1": {"output": True, "brightness": 53.0},
+    "light:2": {"output": True, "brightness": 53.0},
+    "light:3": {"output": True, "brightness": 53.0},
+    "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
+    "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
@@ -244,6 +272,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -277,18 +306,6 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-@pytest.fixture
 def events(hass: HomeAssistant):
     """Yield caught shelly_click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
@@ -309,6 +326,11 @@ async def mock_block_device():
                 {}, BlockUpdateType.COAP_REPLY
             )
 
+        def online():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.ONLINE
+            )
+
         device = Mock(
             spec=BlockDevice,
             blocks=MOCK_BLOCKS,
@@ -327,6 +349,7 @@ async def mock_block_device():
         block_device_mock.return_value.mock_update_reply = Mock(
             side_effect=update_reply
         )
+        block_device_mock.return_value.mock_online = Mock(side_effect=online)
 
         yield block_device_mock.return_value
 
@@ -343,6 +366,7 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -351,8 +375,9 @@ def _mock_rpc_device(version: str | None = None):
 @pytest.fixture
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
 
         def update():
@@ -365,9 +390,19 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.EVENT
             )
 
+        def online():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.ONLINE
+            )
+
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
                 {}, RpcUpdateType.DISCONNECTED
+            )
+
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
             )
 
         device = _mock_rpc_device()
@@ -375,10 +410,12 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""

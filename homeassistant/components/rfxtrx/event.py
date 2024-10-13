@@ -14,7 +14,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry
+from .const import DEVICE_PACKET_TYPE_LIGHTING4
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +29,10 @@ async def async_setup_entry(
     """Set up config entry."""
 
     def _supported(event: RFXtrxEvent) -> bool:
-        return isinstance(event, (ControlEvent, SensorEvent))
+        return (
+            isinstance(event, (ControlEvent, SensorEvent))
+            and event.device.packettype != DEVICE_PACKET_TYPE_LIGHTING4
+        )
 
     def _constructor(
         event: RFXtrxEvent,

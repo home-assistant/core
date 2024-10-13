@@ -20,6 +20,7 @@ from .const import (
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
+    ATTR_TOTAL_VIEWS,
     ATTR_VIDEO_ID,
     COORDINATOR,
     DOMAIN,
@@ -27,19 +28,14 @@ from .const import (
 from .entity import YouTubeChannelEntity
 
 
-@dataclass(frozen=True)
-class YouTubeMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class YouTubeSensorEntityDescription(SensorEntityDescription):
+    """Describes YouTube sensor entity."""
 
     available_fn: Callable[[Any], bool]
     value_fn: Callable[[Any], StateType]
     entity_picture_fn: Callable[[Any], str | None]
     attributes_fn: Callable[[Any], dict[str, Any] | None] | None
-
-
-@dataclass(frozen=True)
-class YouTubeSensorEntityDescription(SensorEntityDescription, YouTubeMixin):
-    """Describes YouTube sensor entity."""
 
 
 SENSOR_TYPES = [
@@ -60,6 +56,15 @@ SENSOR_TYPES = [
         native_unit_of_measurement="subscribers",
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
+        entity_picture_fn=lambda channel: channel[ATTR_ICON],
+        attributes_fn=None,
+    ),
+    YouTubeSensorEntityDescription(
+        key="views",
+        translation_key="views",
+        native_unit_of_measurement="views",
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
     ),

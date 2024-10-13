@@ -6,7 +6,6 @@ from typing import Any
 
 from aiobafi6 import Device, OffOnAuto
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -20,21 +19,20 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF lights."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_light:
-        klass = BAFFanLight if data.device.has_fan else BAFStandaloneLight
-        async_add_entities([klass(data.device)])
+    device = entry.runtime_data
+    if device.has_light:
+        klass = BAFFanLight if device.has_fan else BAFStandaloneLight
+        async_add_entities([klass(device)])
 
 
 class BAFLight(BAFEntity, LightEntity):

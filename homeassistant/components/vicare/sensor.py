@@ -10,7 +10,7 @@ import logging
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -51,7 +51,13 @@ from .const import (
 )
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixin
-from .utils import get_burners, get_circuits, get_compressors, is_supported
+from .utils import (
+    get_burners,
+    get_circuits,
+    get_compressors,
+    get_device_serial,
+    is_supported,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,6 +176,30 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_temperature",
+        translation_key="dhw_storage_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterStorageTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_top_temperature",
+        translation_key="dhw_storage_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHotWaterStorageTemperatureTop(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_bottom_temperature",
+        translation_key="dhw_storage_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHotWaterStorageTemperatureBottom(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="hotwater_gas_consumption_today",
@@ -621,6 +651,45 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
     ),
     ViCareSensorEntityDescription(
+        key="ess_discharge_today",
+        translation_key="ess_discharge_today",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_week",
+        translation_key="ess_discharge_this_week",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentWeek(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_month",
+        translation_key="ess_discharge_this_month",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentMonth(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_this_year",
+        translation_key="ess_discharge_this_year",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentYear(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_discharge_total",
+        translation_key="ess_discharge_total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedLifeCycle(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="pcc_transfer_power_exchange",
         translation_key="pcc_transfer_power_exchange",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -655,8 +724,48 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="photovoltaic_energy_production_today",
         translation_key="photovoltaic_energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_week",
+        translation_key="photovoltaic_energy_production_this_week",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentWeek(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_month",
+        translation_key="photovoltaic_energy_production_this_month",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentMonth(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_year",
+        translation_key="photovoltaic_energy_production_this_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentYear(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_total",
+        translation_key="photovoltaic_energy_production_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedLifeCycle(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
     ),
     ViCareSensorEntityDescription(
@@ -666,8 +775,21 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         options=["ready", "production"],
         value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
     ),
+    ViCareSensorEntityDescription(
+        key="room_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getTemperature(),
+    ),
+    ViCareSensorEntityDescription(
+        key="room_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getHumidity(),
+    ),
 )
-
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
@@ -786,59 +908,36 @@ def _build_entities(
 
     entities: list[ViCareSensor] = []
     for device in device_list:
-        entities.extend(_build_entities_for_device(device.api, device.config))
+        # add device entities
         entities.extend(
-            _build_entities_for_component(
-                get_circuits(device.api), device.config, CIRCUIT_SENSORS
+            ViCareSensor(
+                description,
+                get_device_serial(device.api),
+                device.config,
+                device.api,
             )
+            for description in GLOBAL_SENSORS
+            if is_supported(description.key, description, device.api)
         )
-        entities.extend(
-            _build_entities_for_component(
-                get_burners(device.api), device.config, BURNER_SENSORS
+        # add component entities
+        for component_list, entity_description_list in (
+            (get_circuits(device.api), CIRCUIT_SENSORS),
+            (get_burners(device.api), BURNER_SENSORS),
+            (get_compressors(device.api), COMPRESSOR_SENSORS),
+        ):
+            entities.extend(
+                ViCareSensor(
+                    description,
+                    get_device_serial(device.api),
+                    device.config,
+                    device.api,
+                    component,
+                )
+                for component in component_list
+                for description in entity_description_list
+                if is_supported(description.key, description, component)
             )
-        )
-        entities.extend(
-            _build_entities_for_component(
-                get_compressors(device.api), device.config, COMPRESSOR_SENSORS
-            )
-        )
     return entities
-
-
-def _build_entities_for_device(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
-) -> list[ViCareSensor]:
-    """Create device specific ViCare sensor entities."""
-
-    return [
-        ViCareSensor(
-            device,
-            device_config,
-            description,
-        )
-        for description in GLOBAL_SENSORS
-        if is_supported(description.key, description, device)
-    ]
-
-
-def _build_entities_for_component(
-    components: list[PyViCareHeatingDeviceWithComponent],
-    device_config: PyViCareDeviceConfig,
-    entity_descriptions: tuple[ViCareSensorEntityDescription, ...],
-) -> list[ViCareSensor]:
-    """Create component specific ViCare sensor entities."""
-
-    return [
-        ViCareSensor(
-            component,
-            device_config,
-            description,
-        )
-        for component in components
-        for description in entity_descriptions
-        if is_supported(description.key, description, component)
-    ]
 
 
 async def async_setup_entry(
@@ -853,7 +952,9 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             device_list,
-        )
+        ),
+        # run update to have device_class set depending on unit_of_measurement
+        True,
     )
 
 
@@ -864,12 +965,16 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def __init__(
         self,
-        api,
-        device_config: PyViCareDeviceConfig,
         description: ViCareSensorEntityDescription,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(
+            description.key, device_serial, device_config, device, component
+        )
         self.entity_description = description
 
     @property

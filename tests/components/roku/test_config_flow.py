@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from rokuecp import RokuConnectionError
 
-from homeassistant.components.roku.const import DOMAIN
+from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ async def test_duplicate_error(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     user_input = {CONF_HOST: mock_config_entry.data[CONF_HOST]}
@@ -45,7 +45,7 @@ async def test_duplicate_error(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
@@ -53,7 +53,7 @@ async def test_duplicate_error(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -66,7 +66,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     user_input = {CONF_HOST: HOST}
@@ -75,7 +75,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Roku 3"
 
     assert "data" in result
@@ -99,7 +99,7 @@ async def test_form_cannot_connect(
         flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -118,7 +118,7 @@ async def test_form_unknown_error(
         flow_id=result["flow_id"], user_input=user_input
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -135,7 +135,7 @@ async def test_homekit_cannot_connect(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -152,7 +152,7 @@ async def test_homekit_unknown_error(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -168,7 +168,7 @@ async def test_homekit_discovery(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"] == {CONF_NAME: NAME_ROKUTV}
 
@@ -177,7 +177,7 @@ async def test_homekit_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME_ROKUTV
 
     assert "data" in result
@@ -190,7 +190,7 @@ async def test_homekit_discovery(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -207,7 +207,7 @@ async def test_ssdp_cannot_connect(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -224,7 +224,7 @@ async def test_ssdp_unknown_error(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -239,7 +239,7 @@ async def test_ssdp_discovery(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"] == {CONF_NAME: UPNP_FRIENDLY_NAME}
 
@@ -248,9 +248,31 @@ async def test_ssdp_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_PLAY_MEDIA_APP_ID: "782875"},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {
+        CONF_PLAY_MEDIA_APP_ID: "782875",
+    }

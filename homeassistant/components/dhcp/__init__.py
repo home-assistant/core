@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -38,18 +37,23 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import config_validation as cv, discovery_flow
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceRegistry,
-    async_get,
-    format_mac,
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
 )
+from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_added_domain,
     async_track_time_interval,
 )
@@ -60,7 +64,6 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-FILTER = "udp and (port 67 or 68)"
 HOSTNAME: Final = "hostname"
 MAC_ADDRESS: Final = "macaddress"
 IP_ADDRESS: Final = "ip"
@@ -132,18 +135,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # For the passive classes we need to start listening
     # for state changes and connect the dispatchers before
     # everything else starts up or we will miss events
-    for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
-        passive_watcher = passive_cls(hass, address_data, integration_matchers)
-        passive_watcher.async_start()
-        watchers.append(passive_watcher)
+    device_watcher = DeviceTrackerWatcher(hass, address_data, integration_matchers)
+    device_watcher.async_start()
+    watchers.append(device_watcher)
+
+    device_tracker_registered_watcher = DeviceTrackerRegisteredWatcher(
+        hass, address_data, integration_matchers
+    )
+    device_tracker_registered_watcher.async_start()
+    watchers.append(device_tracker_registered_watcher)
 
     async def _async_initialize(event: Event) -> None:
         await aiodhcpwatcher.async_init()
 
-        for active_cls in (DHCPWatcher, NetworkWatcher):
-            active_watcher = active_cls(hass, address_data, integration_matchers)
-            active_watcher.async_start()
-            watchers.append(active_watcher)
+        network_watcher = NetworkWatcher(hass, address_data, integration_matchers)
+        network_watcher.async_start()
+        watchers.append(network_watcher)
+
+        dhcp_watcher = DHCPWatcher(hass, address_data, integration_matchers)
+        await dhcp_watcher.async_start()
+        watchers.append(dhcp_watcher)
+
+        rediscovery_watcher = RediscoveryWatcher(
+            hass, address_data, integration_matchers
+        )
+        rediscovery_watcher.async_start()
+        watchers.append(rediscovery_watcher)
 
         @callback
         def _async_stop(event: Event) -> None:
@@ -156,7 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class WatcherBase(ABC):
+class WatcherBase:
     """Base class for dhcp and device tracker watching."""
 
     def __init__(
@@ -180,14 +197,13 @@ class WatcherBase(ABC):
             self._unsub()
             self._unsub = None
 
-    @abstractmethod
-    @callback
-    def async_start(self) -> None:
-        """Start the watcher."""
-
     @callback
     def async_process_client(
-        self, ip_address: str, hostname: str, unformatted_mac_address: str
+        self,
+        ip_address: str,
+        hostname: str,
+        unformatted_mac_address: str,
+        force: bool = False,
     ) -> None:
         """Process a client."""
         if (made_ip_address := cached_ip_addresses(ip_address)) is None:
@@ -208,19 +224,21 @@ class WatcherBase(ABC):
         # and since all consumers of this data are expecting it to be
         # formatted without colons we will continue to do so
         mac_address = formatted_mac.replace(":", "")
+        compressed_ip_address = made_ip_address.compressed
 
-        data = self._address_data.get(ip_address)
+        data = self._address_data.get(mac_address)
         if (
-            data
-            and data[MAC_ADDRESS] == mac_address
+            not force
+            and data
+            and data[IP_ADDRESS] == compressed_ip_address
             and data[HOSTNAME].startswith(hostname)
         ):
             # If the address data is the same no need
             # to process it
             return
 
-        data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
-        self._address_data[ip_address] = data
+        data = {IP_ADDRESS: compressed_ip_address, HOSTNAME: hostname}
+        self._address_data[mac_address] = data
 
         lowercase_hostname = hostname.lower()
         uppercase_mac = mac_address.upper()
@@ -236,7 +254,7 @@ class WatcherBase(ABC):
         matchers = self._integration_matchers
         registered_devices_domains = matchers.registered_devices_domains
 
-        dev_reg: DeviceRegistry = async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         if device := dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
         ):
@@ -265,6 +283,14 @@ class WatcherBase(ABC):
             _LOGGER.debug("Matched %s against %s", data, matcher)
             matched_domains.add(domain)
 
+        if not matched_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
+
+        discovery_key = DiscoveryKey(
+            domain=DOMAIN,
+            key=mac_address,
+            version=1,
+        )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
@@ -275,6 +301,7 @@ class WatcherBase(ABC):
                     hostname=lowercase_hostname,
                     macaddress=mac_address,
                 ),
+                discovery_key=discovery_key,
             )
 
 
@@ -403,10 +430,41 @@ class DHCPWatcher(WatcherBase):
             response.ip_address, response.hostname, response.mac_address
         )
 
+    async def async_start(self) -> None:
+        """Start watching for dhcp packets."""
+        self._unsub = await aiodhcpwatcher.async_start(self._async_process_dhcp_request)
+
+
+class RediscoveryWatcher(WatcherBase):
+    """Class to trigger rediscovery on config entry removal."""
+
+    @callback
+    def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+                continue
+            mac_address = discovery_key.key
+            _LOGGER.debug("Rediscover service %s", mac_address)
+            if data := self._address_data.get(mac_address):
+                self.async_process_client(
+                    data[IP_ADDRESS],
+                    data[HOSTNAME],
+                    mac_address,
+                    True,  # Force rediscovery
+                )
+
     @callback
     def async_start(self) -> None:
-        """Start watching for dhcp packets."""
-        self._unsub = aiodhcpwatcher.start(self._async_process_dhcp_request)
+        """Start watching for config entry removals."""
+        self._unsub = async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
+        )
 
 
 @lru_cache(maxsize=4096, typed=True)

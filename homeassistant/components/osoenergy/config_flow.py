@@ -64,14 +64,14 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             websession = aiohttp_client.async_get_clientsession(self.hass)
             client = OSOEnergy(subscription_key, websession)
             return await client.get_user_email()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error occurred")
         return None
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Re Authenticate a user."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+        data = {CONF_API_KEY: entry_data[CONF_API_KEY]}
         return await self.async_step_user(data)

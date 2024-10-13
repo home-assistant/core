@@ -75,18 +75,16 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in NUMBER_TYPE_CONF_SUPPORT_DEVICES
     ]
-    entities = []
-    for config_device_coordinator in config_device_coordinators:
-        for description in DEVICE_CONFIG_DESCRIPTIONS:
-            if description.exists_fn(config_device_coordinator.device):
-                entities.append(
-                    YoLinkNumberTypeConfigEntity(
-                        config_entry,
-                        config_device_coordinator,
-                        description,
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkNumberTypeConfigEntity(
+            config_entry,
+            config_device_coordinator,
+            description,
+        )
+        for config_device_coordinator in config_device_coordinators
+        for description in DEVICE_CONFIG_DESCRIPTIONS
+        if description.exists_fn(config_device_coordinator.device)
+    )
 
 
 class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):

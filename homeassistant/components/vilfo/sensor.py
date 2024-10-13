@@ -25,16 +25,11 @@ from .const import (
 )
 
 
-@dataclass(frozen=True)
-class VilfoRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VilfoSensorEntityDescription(SensorEntityDescription):
+    """Describes Vilfo sensor entity."""
 
     api_key: str
-
-
-@dataclass(frozen=True)
-class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMixin):
-    """Describes Vilfo sensor entity."""
 
 
 SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (

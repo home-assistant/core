@@ -1,4 +1,4 @@
-"""A entity class for mobile_app."""
+"""An entity class for mobile_app."""
 
 from __future__ import annotations
 
@@ -17,13 +17,14 @@ from .const import (
     ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
+    ATTR_SENSOR_STATE_CLASS,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import device_info
 
 
 class MobileAppEntity(RestoreEntity):
-    """Representation of an mobile app entity."""
+    """Representation of a mobile app entity."""
 
     _attr_should_poll = False
 
@@ -44,6 +45,7 @@ class MobileAppEntity(RestoreEntity):
         """Update the entity from the config."""
         config = self._config
         self._attr_device_class = config.get(ATTR_SENSOR_DEVICE_CLASS)
+        self._attr_state_class = config.get(ATTR_SENSOR_STATE_CLASS)
         self._attr_extra_state_attributes = config[ATTR_SENSOR_ATTRIBUTES]
         self._attr_icon = config[ATTR_SENSOR_ICON]
         self._attr_entity_category = config.get(ATTR_SENSOR_ENTITY_CATEGORY)

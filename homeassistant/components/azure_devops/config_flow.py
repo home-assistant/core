@@ -10,6 +10,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
@@ -56,7 +57,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Check the setup of the flow."""
         errors: dict[str, str] = {}
 
-        client = DevOpsClient()
+        aiohttp_session = async_get_clientsession(self.hass)
+        client = DevOpsClient(session=aiohttp_session)
 
         try:
             if self._pat is not None:
@@ -111,10 +113,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors is not None:
             return await self._show_reauth_form(errors)
 
-        entry = await self.async_set_unique_id(self.unique_id)
-        assert entry
         self.hass.config_entries.async_update_entry(
-            entry,
+            self._get_reauth_entry(),
             data={
                 CONF_ORG: self._organization,
                 CONF_PROJECT: self._project,

@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -93,8 +93,8 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             },
             name=device.sku,
             manufacturer=MANUFACTURER,
-            model=device.sku,
-            connections={(CONNECTION_NETWORK_MAC, device.fingerprint)},
+            model_id=device.sku,
+            serial_number=device.fingerprint,
         )
 
     @property

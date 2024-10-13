@@ -20,9 +20,9 @@ from .conftest import MockProcess
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     entity_registry: er.EntityRegistry,
@@ -62,9 +62,9 @@ async def test_binary_sensor(
             assert state.attributes == snapshot(name=f"{state.name} - attributes")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_icon(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -97,7 +97,7 @@ async def test_sensor_process_fails(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
     assert process_sensor is not None

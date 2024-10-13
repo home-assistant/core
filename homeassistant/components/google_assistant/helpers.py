@@ -165,7 +165,7 @@ class AbstractConfig(ABC):
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
 
         Return None if no user id is found for the webhook_id.
@@ -521,7 +521,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    __slots__ = ("hass", "config", "state", "_traits")
+    __slots__ = ("hass", "config", "state", "entity_id", "_traits")
 
     def __init__(
         self, hass: HomeAssistant, config: AbstractConfig, state: State
@@ -530,16 +530,12 @@ class GoogleEntity:
         self.hass = hass
         self.config = config
         self.state = state
+        self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
-
-    @property
-    def entity_id(self):
-        """Return entity ID."""
-        return self.state.entity_id
 
     @callback
     def traits(self) -> list[trait._Trait]:
@@ -625,7 +621,7 @@ class GoogleEntity:
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
         ):
-            device["name"]["nicknames"] = [name] + config_aliases
+            device["name"]["nicknames"] = [name, *config_aliases]
             if entity_entry:
                 device["name"]["nicknames"].extend(entity_entry.aliases)
 

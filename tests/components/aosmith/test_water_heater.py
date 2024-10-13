@@ -1,6 +1,7 @@
 """Tests for the water heater platform of the A. O. Smith integration."""
 
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock, patch
 
 from py_aosmith.models import OperationMode
 import pytest
@@ -19,53 +20,33 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_setup(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test the setup of the water heater entity."""
-    entry = entity_registry.async_get("water_heater.my_water_heater")
-    assert entry
-    assert entry.unique_id == "junctionId"
-
-    state = hass.states.get("water_heater.my_water_heater")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My water heater"
-
-
-async def test_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
-) -> None:
-    """Test the state of the water heater entity."""
-    state = hass.states.get("water_heater.my_water_heater")
-    assert state == snapshot
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.aosmith.PLATFORMS", [Platform.WATER_HEATER]):
+        yield
 
 
 @pytest.mark.parametrize(
     ("get_devices_fixture_heat_pump"),
-    [
-        False,
-    ],
+    [False, True],
 )
-async def test_state_non_heat_pump(
-    hass: HomeAssistant, init_integration: MockConfigEntry, snapshot: SnapshotAssertion
+async def test_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the state of the water heater entity for a non heat pump device."""
-    state = hass.states.get("water_heater.my_water_heater")
-    assert state == snapshot
+    """Test the state of the water heater entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 @pytest.mark.parametrize(

@@ -15,12 +15,26 @@
     }
   },
   "services": {
-    "alarm_arm_away": "mdi:shield-lock",
-    "alarm_arm_home": "mdi:shield-home",
-    "alarm_arm_night": "mdi:shield-moon",
-    "alarm_custom_bypass": "mdi:security",
-    "alarm_disarm": "mdi:shield-off",
-    "alarm_trigger": "mdi:bell-ring",
-    "arlam_arm_vacation": "mdi:shield-airplane"
+    "alarm_arm_away": {
+      "service": "mdi:shield-lock"
+    },
+    "alarm_arm_home": {
+      "service": "mdi:shield-home"
+    },
+    "alarm_arm_night": {
+      "service": "mdi:shield-moon"
+    },
+    "alarm_arm_custom_bypass": {
+      "service": "mdi:security"
+    },
+    "alarm_disarm": {
+      "service": "mdi:shield-off"
+    },
+    "alarm_trigger": {
+      "service": "mdi:bell-ring"
+    },
+    "alarm_arm_vacation": {
+      "service": "mdi:shield-airplane"
+    }
   }
 }

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,11 +14,14 @@ from homeassistant.components.hassio import (
     HassioAPIError,
 )
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -27,7 +30,11 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker, request):
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
     _install_test_addon_stats_mock(aioclient_mock)
@@ -75,13 +82,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -175,15 +175,7 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
         },
     )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
     aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
-    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
@@ -201,8 +193,21 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
+            },
+        },
+    )
 
 
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
 @pytest.mark.parametrize(
     ("entity_id", "expected"),
     [
@@ -262,6 +267,9 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
     ("entity_id", "expected"),
     [
         ("sensor.test_cpu_percent", "0.99"),
@@ -317,7 +325,7 @@ async def test_stats_addon_sensor(
     freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     # Verify the entity is still enabled
     assert entity_registry.async_get(entity_id).disabled_by is None
 

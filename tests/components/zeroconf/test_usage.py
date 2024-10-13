@@ -15,11 +15,9 @@ from tests.common import extract_stack_to_frame
 DOMAIN = "zeroconf"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_zeroconf")
 async def test_multiple_zeroconf_instances(
-    hass: HomeAssistant,
-    mock_async_zeroconf: None,
-    mock_zeroconf: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test creating multiple zeroconf throws without an integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -34,11 +32,9 @@ async def test_multiple_zeroconf_instances(
     assert "Zeroconf" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_zeroconf")
 async def test_multiple_zeroconf_instances_gives_shared(
-    hass: HomeAssistant,
-    mock_async_zeroconf: None,
-    mock_zeroconf: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test creating multiple zeroconf gives the shared instance to an integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -52,29 +48,33 @@ async def test_multiple_zeroconf_instances_gives_shared(
         lineno="23",
         line="self.light.is_on",
     )
-    with patch(
-        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
-    ), patch(
-        "homeassistant.helpers.frame.get_current_frame",
-        return_value=extract_stack_to_frame(
-            [
-                Mock(
-                    filename="/home/dev/homeassistant/core.py",
-                    lineno="23",
-                    line="do_something()",
-                ),
-                correct_frame,
-                Mock(
-                    filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                    lineno="23",
-                    line="self.light.is_on",
-                ),
-                Mock(
-                    filename="/home/dev/mdns/lights.py",
-                    lineno="2",
-                    line="something()",
-                ),
-            ]
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=correct_frame.line,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/dev/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    correct_frame,
+                    Mock(
+                        filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                        lineno="23",
+                        line="self.light.is_on",
+                    ),
+                    Mock(
+                        filename="/home/dev/mdns/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
         ),
     ):
         assert zeroconf.Zeroconf() == zeroconf_instance

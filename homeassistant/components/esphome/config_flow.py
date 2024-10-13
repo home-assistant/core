@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -23,14 +23,17 @@ import voluptuous as vol
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -55,15 +58,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
         self._noise_required: bool | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
-        self._reauth_entry: ConfigEntry | None = None
         # The ESPHome name as per its config
         self._device_name: str | None = None
 
@@ -100,14 +105,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._reauth_entry = entry
-        self._host = entry.data[CONF_HOST]
-        self._port = entry.data[CONF_PORT]
-        self._password = entry.data[CONF_PASSWORD]
-        self._name = entry.title
-        self._device_name = entry.data.get(CONF_DEVICE_NAME)
+        self._reauth_entry = self._get_reauth_entry()
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._password = entry_data[CONF_PASSWORD]
+        self._name = self._reauth_entry.title
+        self._device_name = entry_data.get(CONF_DEVICE_NAME)
 
         # Device without encryption allows fetching device info. We can then check
         # if the device is no longer using a password. If we did try with a password,
@@ -150,12 +153,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @property
-    def _name(self) -> str | None:
-        return self.context.get(CONF_NAME)
+    def _name(self) -> str:
+        return self.__name or "ESPHome"
 
     @_name.setter
     def _name(self, value: str) -> None:
-        self.context[CONF_NAME] = value
+        self.__name = value
         self.context["title_placeholders"] = {"name": self._name}
 
     async def _async_try_fetch_device_info(self) -> ConfigFlowResult:
@@ -250,6 +253,42 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle MQTT discovery."""
+        device_info = json_loads_object(discovery_info.payload)
+        if "mac" not in device_info:
+            return self.async_abort(reason="mqtt_missing_mac")
+
+        # there will be no port if the API is not enabled
+        if "port" not in device_info:
+            return self.async_abort(reason="mqtt_missing_api")
+
+        if "ip" not in device_info:
+            return self.async_abort(reason="mqtt_missing_ip")
+
+        # mac address is lowercase and without :, normalize it
+        unformatted_mac = cast(str, device_info["mac"])
+        mac_address = format_mac(unformatted_mac)
+
+        device_name = cast(str, device_info["name"])
+
+        self._device_name = device_name
+        self._name = cast(str, device_info.get("friendly_name", device_name))
+        self._host = cast(str, device_info["ip"])
+        self._port = cast(int, device_info["port"])
+
+        self._noise_required = "api_encryption" in device_info
+
+        # Check if already configured
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._host, CONF_PORT: self._port}
+        )
+
+        return await self.async_step_discovery_confirm()
+
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -285,7 +324,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_options = {
             CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
-        if self._reauth_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._reauth_entry, data=self._reauth_entry.data | config_data
             )
@@ -372,7 +411,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_name = self._device_info.name
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
-        if not self._reauth_entry:
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
             )
@@ -430,8 +469,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
-        except json.JSONDecodeError as err:
-            _LOGGER.exception("Error parsing response from dashboard: %s", err)
+        except json.JSONDecodeError:
+            _LOGGER.exception("Error parsing response from dashboard")
             return False
 
         self._noise_psk = noise_psk

@@ -73,5 +73,4 @@ class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):
 
         resp = await session.post(self.token_url, data=data, headers=headers)
         resp.raise_for_status()
-        resp_json = cast(dict, await resp.json())
-        return resp_json
+        return cast(dict, await resp.json())

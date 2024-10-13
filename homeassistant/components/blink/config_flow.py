@@ -69,7 +69,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -96,7 +96,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

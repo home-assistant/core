@@ -24,13 +24,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
+from .entity import BasePlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,10 +93,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             name=name,
         )
 
-        slaves: list[SlaveSensor] = []
-        for idx in range(0, slave_count):
-            slaves.append(SlaveSensor(self._coordinator, idx, entry))
-        return slaves
+        return [
+            SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

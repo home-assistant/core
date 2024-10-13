@@ -12,6 +12,9 @@
     "action_type": {
       "clean": "Let {entity_name} clean",
       "dock": "Let {entity_name} return to the dock"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {

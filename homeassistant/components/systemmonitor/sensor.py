@@ -3,33 +3,26 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+import ipaddress
 import logging
 import socket
 import sys
 import time
 from typing import Any, Literal
 
-from psutil import NoSuchProcess
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_RESOURCES,
-    CONF_TYPE,
     PERCENTAGE,
-    STATE_OFF,
-    STATE_ON,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
@@ -37,15 +30,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATOR, NET_IO_TYPES
+from . import SystemMonitorConfigEntry
+from .const import DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -69,31 +61,6 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     if sys.maxsize > 2**32:
         return "mdi:cpu-64-bit"
     return "mdi:cpu-32-bit"
-
-
-def get_processor_temperature(
-    entity: SystemMonitorSensor,
-) -> float | None:
-    """Return processor temperature."""
-    return read_cpu_temperature(entity.hass, entity.coordinator.data.temperatures)
-
-
-def get_process(entity: SystemMonitorSensor) -> str:
-    """Return process."""
-    state = STATE_OFF
-    for proc in entity.coordinator.data.processes:
-        try:
-            _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
-            if entity.argument == proc.name():
-                state = STATE_ON
-                break
-        except NoSuchProcess as err:
-            _LOGGER.warning(
-                "Failed to load process with ID: %s, old name: %s",
-                err.pid,
-                err.name,
-            )
-    return state
 
 
 def get_network(entity: SystemMonitorSensor) -> float | None:
@@ -142,6 +109,11 @@ def get_ip_address(
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
+                address = ipaddress.ip_address(addr.address)
+                if address.version == 6 and (
+                    address.is_link_local or address.is_loopback
+                ):
+                    continue
                 return addr.address
     return None
 
@@ -346,15 +318,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=get_throughput,
         add_to_update=lambda entity: ("io_counters", ""),
     ),
-    "process": SysMonitorSensorEntityDescription(
-        key="process",
-        translation_key="process",
-        placeholder="process",
-        icon=get_cpu_icon(),
-        mandatory_arg=True,
-        value_fn=get_process,
-        add_to_update=lambda entity: ("processes", ""),
-    ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
         translation_key="processor_use",
@@ -374,7 +337,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=get_processor_temperature,
+        value_fn=lambda entity: read_cpu_temperature(
+            entity.coordinator.data.temperatures
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("temperatures", ""),
     ),
@@ -407,20 +372,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
 }
 
 
-def check_required_arg(value: Any) -> Any:
-    """Validate that the required "arg" for the sensor types that need it are set."""
-    for sensor in value:
-        sensor_type = sensor[CONF_TYPE]
-        sensor_arg = sensor.get(CONF_ARG)
-
-        if sensor_arg is None and SENSOR_TYPES[sensor_type].mandatory_arg:
-            raise vol.RequiredFieldInvalid(
-                f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
-            )
-
-    return value
-
-
 def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     """Return True if legacy resource was configured."""
     # This function to check legacy resources can be removed
@@ -431,23 +382,6 @@ def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     _LOGGER.debug("Checking %s in %s returns False", resource, ", ".join(resources))
     return False
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_RESOURCES, default={CONF_TYPE: "disk_use"}): vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-                        vol.Optional(CONF_ARG): cv.string,
-                    }
-                )
-            ],
-            check_required_arg,
-        )
-    }
-)
 
 IO_COUNTER = {
     "network_out": 0,
@@ -460,68 +394,32 @@ IO_COUNTER = {
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: SystemMonitorConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the system monitor sensors."""
-    processes = [
-        resource[CONF_ARG]
-        for resource in config[CONF_RESOURCES]
-        if resource[CONF_TYPE] == "process"
-    ]
-    legacy_config: list[dict[str, str]] = config[CONF_RESOURCES]
-    resources = []
-    for resource_conf in legacy_config:
-        if (_type := resource_conf[CONF_TYPE]).startswith("disk_"):
-            if (arg := resource_conf.get(CONF_ARG)) is None:
-                resources.append(f"{_type}_/")
-                continue
-            resources.append(f"{_type}_{arg}")
-            continue
-        resources.append(f"{_type}_{resource_conf.get(CONF_ARG, '')}")
-    _LOGGER.debug(
-        "Importing config with processes: %s, resources: %s", processes, resources
-    )
-
-    # With removal of the import also cleanup legacy_resources logic in setup_entry
-    # Also cleanup entry.options["resources"] which is only imported for legacy reasons
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"processes": processes, "legacy_resources": resources},
-        )
-    )
-
-
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up System Montor sensors based on a config entry."""
+    """Set up System Monitor sensors based on a config entry."""
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
-    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    coordinator = entry.runtime_data.coordinator
+    psutil_wrapper = entry.runtime_data.psutil_wrapper
+    sensor_data = coordinator.data
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
-        disk_arguments = get_all_disk_mounts(hass)
-        network_arguments = get_all_network_interfaces(hass)
-        try:
-            cpu_temperature = read_cpu_temperature(hass)
-        except AttributeError:
-            cpu_temperature = 0.0
         return {
-            "disk_arguments": disk_arguments,
-            "network_arguments": network_arguments,
-            "cpu_temperature": cpu_temperature,
+            "disk_arguments": get_all_disk_mounts(hass, psutil_wrapper),
+            "network_arguments": get_all_network_interfaces(hass, psutil_wrapper),
         }
 
+    cpu_temperature: float | None = None
+    with contextlib.suppress(AttributeError):
+        cpu_temperature = read_cpu_temperature(sensor_data.temperatures)
+
     startup_arguments = await hass.async_add_executor_job(get_arguments)
+    startup_arguments["cpu_temperature"] = cpu_temperature
 
     _LOGGER.debug("Setup from options %s", entry.options)
 
@@ -618,35 +516,6 @@ async def async_setup_entry(  # noqa: C901
                         argument,
                         is_enabled,
                     )
-                )
-            continue
-
-        if _type == "process":
-            _entry = entry.options.get(SENSOR_DOMAIN, {})
-            for argument in _entry.get(CONF_PROCESS, []):
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        True,
-                    )
-                )
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "process_sensor",
-                    breaks_in_ha_version="2024.9.0",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="process_sensor",
-                    data={
-                        "entry_id": entry.entry_id,
-                        "processes": _entry[CONF_PROCESS],
-                    },
                 )
             continue
 
@@ -781,6 +650,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.argument = argument
         self.value: int | None = None
         self.update_time: float | None = None
+        self._attr_native_value = self.entity_description.value_fn(self)
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
@@ -796,16 +666,19 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         ].remove(self.entity_id)
         return await super().async_will_remove_from_hass()
 
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state."""
-        return self.entity_description.value_fn(self)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Set the native value here so we can use it in available property
+        # without having to recalculate it
+        self._attr_native_value = self.entity_description.value_fn(self)
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:
-            return bool(
+            return (
                 self.coordinator.last_update_success is True
                 and self.native_value is not None
             )

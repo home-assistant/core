@@ -774,13 +774,7 @@ class BrSensor(SensorEntity):
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
-        if (
-            sensor_type.endswith("_1d")
-            or sensor_type.endswith("_2d")
-            or sensor_type.endswith("_3d")
-            or sensor_type.endswith("_4d")
-            or sensor_type.endswith("_5d")
-        ):
+        if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
@@ -793,7 +787,7 @@ class BrSensor(SensorEntity):
                 fcday = 4
 
             # update weather symbol & status text
-            if sensor_type.startswith(SYMBOL) or sensor_type.startswith(CONDITION):
+            if sensor_type.startswith((SYMBOL, CONDITION)):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
@@ -825,22 +819,23 @@ class BrSensor(SensorEntity):
                     self._attr_native_value = data.get(FORECAST)[fcday].get(
                         sensor_type[:-3]
                     )
-                    if self.state is not None:
-                        self._attr_native_value = round(self.state * 3.6, 1)
-                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
+
+                if self.state is not None:
+                    self._attr_native_value = round(self.state * 3.6, 1)
+                return True
 
             # update all other sensors
             try:
                 self._attr_native_value = data.get(FORECAST)[fcday].get(
                     sensor_type[:-3]
                 )
-                return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
+            return True
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text
@@ -893,7 +888,7 @@ class BrSensor(SensorEntity):
         if sensor_type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
-                result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
+                result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 

@@ -109,3 +109,57 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(step_id="province", data_schema=province_schema)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the re-configuration of a province."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the re-configuration of a province."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            combined_input: dict[str, Any] = {**reconfigure_entry.data, **user_input}
+
+            country = combined_input[CONF_COUNTRY]
+            province = combined_input.get(CONF_PROVINCE)
+
+            self._async_abort_entries_match(
+                {
+                    CONF_COUNTRY: country,
+                    CONF_PROVINCE: province,
+                }
+            )
+
+            try:
+                locale = Locale.parse(self.hass.config.language, sep="-")
+            except UnknownLocaleError:
+                # Default to (US) English if language not recognized by babel
+                # Mainly an issue with English flavors such as "en-GB"
+                locale = Locale("en")
+            province_str = f", {province}" if province else ""
+            name = f"{locale.territories[country]}{province_str}"
+
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, title=name, data=combined_input
+            )
+
+        province_schema = vol.Schema(
+            {
+                vol.Optional(CONF_PROVINCE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=SUPPORTED_COUNTRIES[
+                            reconfigure_entry.data[CONF_COUNTRY]
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm", data_schema=province_schema
+        )

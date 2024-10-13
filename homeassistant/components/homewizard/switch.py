@@ -13,12 +13,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, DeviceResponseEntry
+from . import HomeWizardConfigEntry
+from .const import DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
@@ -57,7 +57,7 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        create_fn=lambda coordinator: coordinator.supports_system(),
+        create_fn=lambda _: True,
         available_fn=lambda data: data.system is not None,
         is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
         set_fn=lambda api, active: api.system_set(cloud_enabled=active),
@@ -67,16 +67,14 @@ SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HomeWizardConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        HomeWizardSwitchEntity(coordinator, description)
+        HomeWizardSwitchEntity(entry.runtime_data, description)
         for description in SWITCHES
-        if description.create_fn(coordinator)
+        if description.create_fn(entry.runtime_data)
     )
 
 

@@ -66,7 +66,7 @@ class HomeAssistantSnapcast:
         self.server.set_on_connect_callback(None)
         self.server.set_on_disconnect_callback(None)
         self.server.set_new_client_callback(None)
-        await self.server.stop()
+        self.server.stop()
 
     def on_update(self) -> None:
         """Update all entities.
@@ -100,8 +100,8 @@ class HomeAssistantSnapcast:
         ]
         del_entities.extend([x for x in self.clients if x not in clients])
 
-        _LOGGER.debug("New clients: %s", str(new_clients))
-        _LOGGER.debug("New groups: %s", str(new_groups))
+        _LOGGER.debug("New clients: %s", str([c.name for c in new_clients]))
+        _LOGGER.debug("New groups: %s", str([g.name for g in new_groups]))
         _LOGGER.debug("Delete: %s", str(del_entities))
 
         ent_reg = er.async_get(self.hass)
@@ -115,7 +115,7 @@ class HomeAssistantSnapcast:
             client.set_availability(True)
         for group in self.groups:
             group.set_availability(True)
-        _LOGGER.info("Server connected: %s", self.hpid)
+        _LOGGER.debug("Server connected: %s", self.hpid)
         self.on_update()
 
     def on_disconnect(self, ex: Exception | None) -> None:

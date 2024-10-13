@@ -17,6 +17,6 @@ async def test_update_states(
     """Test update state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("update.f730_cu_3x400v_firmware")
+    state = hass.states.get("update.gotham_city_firmware")
     assert state is not None
     assert state.state == "off"

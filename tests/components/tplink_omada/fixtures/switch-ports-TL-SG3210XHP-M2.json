@@ -108,7 +108,7 @@
     "switchId": "640934810000000000000000",
     "switchMac": "54-AF-97-00-00-01",
     "site": "000000000000000000000000",
-    "name": "Port2",
+    "name": "Renamed Port",
     "disable": false,
     "type": 1,
     "maxSpeed": 4,

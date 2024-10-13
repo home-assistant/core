@@ -8,9 +8,7 @@ from devolo_plc_api.device_api import ConnectedStationInfo
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -20,17 +18,22 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[
-        str, DataUpdateCoordinator[list[ConnectedStationInfo]]
-    ] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
+    device = entry.runtime_data.device
+    coordinators: dict[str, DataUpdateCoordinator[list[ConnectedStationInfo]]] = (
+        entry.runtime_data.coordinators
+    )
     registry = er.async_get(hass)
     tracked = set()
 
@@ -94,7 +97,7 @@ class DevoloScannerEntity(
         """Initialize entity."""
         super().__init__(coordinator)
         self._device = device
-        self._mac = mac
+        self._attr_mac_address = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -137,16 +140,6 @@ class DevoloScannerEntity(
         )
 
     @property
-    def mac_address(self) -> str:
-        """Return mac_address."""
-        return self._mac
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.ROUTER
-
-    @property
     def unique_id(self) -> str:
         """Return unique ID of the entity."""
-        return f"{self._device.serial_number}_{self._mac}"
+        return f"{self._device.serial_number}_{self.mac_address}"

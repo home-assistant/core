@@ -82,9 +82,9 @@ async def async_setup_entry(
     async_add_entities(
         EzvizButtonEntity(coordinator, camera, entity_description)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
+        for capability, value in coordinator.data[camera]["supportExt"].items()
         for entity_description in BUTTON_ENTITIES
-        if capibility == entity_description.supported_ext
+        if capability == entity_description.supported_ext
         if value == "1"
     )
 

@@ -17,9 +17,9 @@ from tests.common import MockConfigEntry
         (OSError("OS error"), "was excluded because of: OS error"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_setup_failure(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -40,9 +40,9 @@ async def test_disk_setup_failure(
     assert error_text in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_util(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -50,21 +50,19 @@ async def test_disk_util(
     """Test the disk failures."""
 
     mock_psutil.psutil.disk_partitions.return_value = [
-        sdiskpart("test", "/", "ext4", "", 1, 1),  # Should be ok
-        sdiskpart("test2", "/media/share", "ext4", "", 1, 1),  # Should be ok
-        sdiskpart("test3", "/incorrect", "", "", 1, 1),  # Should be skipped as no type
+        sdiskpart("test", "/", "ext4", ""),  # Should be ok
+        sdiskpart("test2", "/media/share", "ext4", ""),  # Should be ok
+        sdiskpart("test3", "/incorrect", "", ""),  # Should be skipped as no type
         sdiskpart(
-            "proc", "/proc/run", "proc", "", 1, 1
+            "proc", "/proc/run", "proc", ""
         ),  # Should be skipped as in skipped disk types
         sdiskpart(
             "test4",
             "/tmpfs/",  # noqa: S108
             "tmpfs",
             "",
-            1,
-            1,
         ),  # Should be skipped as in skipped disk types
-        sdiskpart("test5", "E:", "cd", "cdrom", 1, 1),  # Should be skipped as cdrom
+        sdiskpart("test5", "E:", "cd", "cdrom"),  # Should be skipped as cdrom
     ]
 
     mock_config_entry.add_to_hass(hass)

@@ -25,9 +25,7 @@ def get_arguments() -> argparse.Namespace:
         "--integration", type=valid_integration, help="Integration to target."
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def main():

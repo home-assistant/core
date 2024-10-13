@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api
-import pytest
 
-from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2, async_setup_entry
+from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
@@ -15,7 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -92,8 +90,13 @@ async def test_api_failure_on_startup(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.gogogate2.common.ISmartGateApi.async_info",
-        side_effect=TimeoutError,
-    ), pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, config_entry)
+    with (
+        patch(
+            "homeassistant.components.gogogate2.common.ISmartGateApi.async_info",
+            side_effect=TimeoutError,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 
 async def async_setup_entry(
@@ -41,12 +41,12 @@ async def async_setup_entry(
             [TasmotaCover(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(COVER_DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(COVER_DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(COVER_DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(COVER_DOMAIN),
+            async_discover,
+        )
     )
 
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 from pysnooz.commands import SnoozCommandData
-from pysnooz.device import DisconnectionReason
+from pysnooz.device import DisconnectionReason, SnoozConnectionStatus
 from pysnooz.testing import MockSnoozDevice as ParentMockSnoozDevice
 
 from homeassistant.components.snooz.const import DOMAIN
@@ -70,13 +70,31 @@ class SnoozFixture:
 class MockSnoozDevice(ParentMockSnoozDevice):
     """Used for testing integration with Bleak.
 
-    Adjusted for https://github.com/AustinBrunkhorst/pysnooz/issues/6
+    Adjusted for https://github.com/AustinBrunkhorst/pysnooz/pull/19
     """
 
-    def _on_device_disconnected(self, e) -> None:
-        if self._is_manually_disconnecting:
-            e.kwargs.set("reason", DisconnectionReason.USER)
-        return super()._on_device_disconnected(e)
+    async def async_disconnect(self) -> None:
+        """Disconnect from the device."""
+        self._is_manually_disconnecting = True
+        try:
+            self._cancel_current_command()
+            if (
+                self._reconnection_task is not None
+                and not self._reconnection_task.done()
+            ):
+                self._reconnection_task.cancel()
+
+            if self._connection_task is not None and not self._connection_task.done():
+                self._connection_task.cancel()
+
+            if self._api is not None:
+                await self._api.async_disconnect()
+
+            if self.connection_status != SnoozConnectionStatus.DISCONNECTED:
+                self._machine.device_disconnected(reason=DisconnectionReason.USER)
+
+        finally:
+            self._is_manually_disconnecting = False
 
 
 async def create_mock_snooz(
@@ -100,11 +118,12 @@ async def create_mock_snooz_config_entry(
 ) -> MockConfigEntry:
     """Create a mock config entry."""
 
-    with patch(
-        "homeassistant.components.snooz.SnoozDevice", return_value=device
-    ), patch(
-        "homeassistant.components.snooz.async_ble_device_from_address",
-        return_value=generate_ble_device(device.address, device.name),
+    with (
+        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
+        patch(
+            "homeassistant.components.snooz.async_ble_device_from_address",
+            return_value=generate_ble_device(device.address, device.name),
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

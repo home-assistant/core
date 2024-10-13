@@ -8,9 +8,9 @@ from typing import Any
 from switchbot import (
     SwitchbotAccountConnectionError,
     SwitchBotAdvertisement,
+    SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
-    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -33,16 +33,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
+    CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    SUPPORTED_LOCK_MODELS,
     SUPPORTED_MODEL_TYPES,
+    SupportedModels,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +112,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if model_name == SwitchbotModel.LOCK:
+        if model_name in SUPPORTED_LOCK_MODELS:
             return await self.async_step_lock_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
@@ -175,14 +180,19 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
         if user_input is not None:
             try:
-                key_details = await self.hass.async_add_executor_job(
-                    SwitchbotLock.retrieve_encryption_key,
+                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                    async_get_clientsession(self.hass),
                     self._discovered_adv.address,
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
-            except SwitchbotAccountConnectionError as ex:
-                raise AbortFlow("cannot_connect") from ex
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
             except SwitchbotAuthenticationError as ex:
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
@@ -233,6 +243,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
+                model=self._discovered_adv.data["modelName"],
             ):
                 errors = {
                     "base": "encryption_key_invalid",
@@ -298,7 +309,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
@@ -310,7 +321,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
@@ -347,7 +358,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
+        options: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
@@ -355,5 +366,16 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
+        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_LOCK_NIGHTLATCH,
+                        default=self.config_entry.options.get(
+                            CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

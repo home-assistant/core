@@ -90,6 +90,27 @@
       "state.node_status": "Node status changed",
       "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
       "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
+    },
+    "extra_fields": {
+      "code_slot": "Code slot",
+      "command_class": "Command class",
+      "data_type": "Data type",
+      "endpoint": "Endpoint",
+      "event": "Event",
+      "event_label": "Event label",
+      "event_type": "Event type",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "from": "From",
+      "label": "Label",
+      "property": "Property",
+      "property_key": "Property key",
+      "refresh_all_values": "Refresh all values",
+      "status": "Status",
+      "to": "[%key:common::device_automation::extra_fields::to%]",
+      "type.": "Type",
+      "usercode": "Usercode",
+      "value": "Value",
+      "wait_for_result": "Wait for result"
     }
   },
   "entity": {
@@ -244,9 +265,21 @@
     "bulk_set_partial_config_parameters": {
       "description": "Allows for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.",
       "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
         "endpoint": {
           "description": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::description%]",
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
         "parameter": {
           "description": "[%key:component::zwave_js::services::set_config_parameter::fields::parameter::description%]",
@@ -270,15 +303,27 @@
       "name": "Clear lock user code"
     },
     "invoke_cc_api": {
-      "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` service and require direct calls to the Command Class API.",
+      "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
       "fields": {
+        "area_id": {
+          "description": "The area(s) to target for this service. If an area is specified, all zwave_js devices and entities in that area will be targeted for this service.",
+          "name": "Area ID(s)"
+        },
         "command_class": {
           "description": "The ID of the command class that you want to issue a command to.",
           "name": "[%key:component::zwave_js::services::set_value::fields::command_class::name%]"
         },
+        "device_id": {
+          "description": "The device(s) to target for this service.",
+          "name": "Device ID(s)"
+        },
         "endpoint": {
           "description": "The endpoint to call the API on. If an endpoint is specified, that endpoint will be targeted for all nodes associated with the target areas, devices, and/or entities. If an endpoint is not specified, the root endpoint (0) will be targeted for nodes associated with target areas and devices, and the endpoint for the primary value of each entity will be targeted.",
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
+        },
+        "entity_id": {
+          "description": "The entity ID(s) to target for this service.",
+          "name": "Entity ID(s)"
         },
         "method_name": {
           "description": "The name of the API method to call. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
@@ -292,8 +337,12 @@
       "name": "Invoke a Command Class API on a node (advanced)"
     },
     "multicast_set_value": {
-      "description": "Changes any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This service has minimal validation so only use this service if you know what you are doing.",
+      "description": "Changes any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
         "broadcast": {
           "description": "Whether command should be broadcast to all devices on the network.",
           "name": "Broadcast?"
@@ -302,9 +351,17 @@
           "description": "[%key:component::zwave_js::services::set_value::fields::command_class::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::command_class::name%]"
         },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
         "endpoint": {
           "description": "[%key:component::zwave_js::services::set_value::fields::endpoint::description%]",
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
         "options": {
           "description": "[%key:component::zwave_js::services::set_value::fields::options::description%]",
@@ -327,11 +384,37 @@
     },
     "ping": {
       "description": "Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.",
+      "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
+        }
+      },
       "name": "Ping a node"
     },
     "refresh_notifications": {
       "description": "Refreshes notifications on a node based on notification type and optionally notification event.",
       "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
+        },
         "notification_event": {
           "description": "The Notification Event number as defined in the Z-Wave specs.",
           "name": "Notification Event"
@@ -360,6 +443,18 @@
     "reset_meter": {
       "description": "Resets the meters on a node.",
       "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
+        },
         "meter_type": {
           "description": "The type of meter to reset. Not all meters support the ability to pick a meter type to reset.",
           "name": "Meter type"
@@ -374,13 +469,25 @@
     "set_config_parameter": {
       "description": "Changes the configuration parameters of your Z-Wave devices.",
       "fields": {
+        "area_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::area_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
+        },
         "bitmask": {
           "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format.",
           "name": "Bitmask"
         },
+        "device_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::device_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::device_id::name%]"
+        },
         "endpoint": {
           "description": "The configuration parameter's endpoint.",
           "name": "Endpoint"
+        },
+        "entity_id": {
+          "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
+          "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
         "parameter": {
           "description": "The name (or ID) of the configuration parameter you want to configure.",
@@ -454,15 +561,27 @@
       "name": "Set lock user code"
     },
     "set_value": {
-      "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This service has minimal validation so only use this service if you know what you are doing.",
+      "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
+        "area_id": {
+          "description": "The area(s) to target for this service. If an area is specified, all zwave_js devices and entities in that area will be targeted for this service.",
+          "name": "Area ID(s)"
+        },
         "command_class": {
           "description": "The ID of the command class for the value.",
           "name": "Command class"
         },
+        "device_id": {
+          "description": "The device(s) to target for this service.",
+          "name": "Device ID(s)"
+        },
         "endpoint": {
           "description": "The endpoint for the value.",
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
+        },
+        "entity_id": {
+          "description": "The entity ID(s) to target for this service.",
+          "name": "Entity ID(s)"
         },
         "options": {
           "description": "Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.",
@@ -481,7 +600,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         },
         "wait_for_result": {
-          "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.",
+          "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the action can take a while if setting a value on an asleep battery device.",
           "name": "Wait for result?"
         }
       },

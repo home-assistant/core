@@ -9,15 +9,14 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import IntegerTypeData, TuyaEntity
+from . import TuyaConfigEntry
 from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import IntegerTypeData, TuyaEntity
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -88,12 +87,19 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.NEAR_DETECTION,
             translation_key="near_detection",
+            device_class=NumberDeviceClass.DISTANCE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.FAR_DETECTION,
             translation_key="far_detection",
+            device_class=NumberDeviceClass.DISTANCE,
             entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TARGET_DIS_CLOSEST,
+            translation_key="target_dis_closest",
+            device_class=NumberDeviceClass.DISTANCE,
         ),
     ),
     # Coffee maker
@@ -278,14 +284,22 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
+    # Pool HeatPump
+    "znrb": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            translation_key="temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya number dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -294,11 +308,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaNumberEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaNumberEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 

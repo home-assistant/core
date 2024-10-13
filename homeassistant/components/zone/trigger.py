@@ -13,17 +13,21 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
     entity_registry as er,
     location,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 

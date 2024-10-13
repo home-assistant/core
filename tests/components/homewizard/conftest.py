@@ -25,12 +25,15 @@ def mock_homewizardenergy(
     device_fixture: str,
 ) -> MagicMock:
     """Return a mock bridge."""
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-        autospec=True,
-    ) as homewizard, patch(
-        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
-        new=homewizard,
+    with (
+        patch(
+            "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+            autospec=True,
+        ) as homewizard,
+        patch(
+            "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+            new=homewizard,
+        ),
     ):
         client = homewizard.return_value
 
@@ -59,7 +62,7 @@ def mock_homewizardenergy(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.homewizard.async_setup_entry", return_value=True
@@ -99,7 +102,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[MagicMock, None, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",

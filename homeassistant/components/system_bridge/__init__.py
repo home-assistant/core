@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import asdict
 import logging
+from typing import Any
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -14,6 +15,7 @@ from systembridgeconnector.exceptions import (
 from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.modules.processes import Process
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
@@ -24,6 +26,7 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
@@ -37,7 +40,12 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,7 +55,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .config_flow import SystemBridgeConfigFlow
-from .const import DOMAIN, MODULES
+from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +72,8 @@ CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
 
+SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
+SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
@@ -95,18 +105,35 @@ async def async_setup_entry(
     )
     supported = False
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
-        raise ConfigEntryAuthFailed from exception
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
     except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
-            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
     except TimeoutError as exception:
         raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
 
     # If not supported, create an issue and raise ConfigEntryNotReady
@@ -121,7 +148,12 @@ async def async_setup_entry(
             is_fixable=False,
         )
         raise ConfigEntryNotReady(
-            "You are not running a supported version of System Bridge. Please update to the latest version."
+            translation_domain=DOMAIN,
+            translation_key="unsupported_version",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         )
 
     coordinator = SystemBridgeDataUpdateCoordinator(
@@ -129,38 +161,41 @@ async def async_setup_entry(
         _LOGGER,
         entry=entry,
     )
+
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
-        raise ConfigEntryAuthFailed from exception
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
     except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
-            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
     except TimeoutError as exception:
         raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-
-    try:
-        # Wait for initial data
-        async with asyncio.timeout(10):
-            while not coordinator.is_ready:
-                _LOGGER.debug(
-                    "Waiting for initial data from %s (%s)",
-                    entry.title,
-                    entry.data[CONF_HOST],
-                )
-                await asyncio.sleep(1)
-    except TimeoutError as exception:
-        raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
-        ) from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -199,8 +234,62 @@ async def async_setup_entry(
                     if entry.entry_id in device_entry.config_entries
                 )
             except StopIteration as exception:
-                raise vol.Invalid(f"Could not find device {device}") from exception
-        raise vol.Invalid(f"Device {device} does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_found",
+                    translation_placeholders={"device": device},
+                ) from exception
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device": device},
+        )
+
+    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the get process by id service call."""
+        _LOGGER.debug("Get process by id: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes
+
+        # Find process.id from list, raise ServiceValidationError if not found
+        try:
+            return asdict(
+                next(
+                    process
+                    for process in processes
+                    if process.id == service_call.data[CONF_ID]
+                )
+            )
+        except StopIteration as exception:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="process_not_found",
+                translation_placeholders={"id": service_call.data[CONF_ID]},
+            ) from exception
+
+    async def handle_get_processes_by_name(
+        service_call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the get process by name service call."""
+        _LOGGER.debug("Get process by name: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+
+        # Find processes from list
+        items: list[dict[str, Any]] = [
+            asdict(process)
+            for process in coordinator.data.processes
+            if process.name is not None
+            and service_call.data[CONF_NAME].lower() in process.name.lower()
+        ]
+
+        return {
+            "count": len(items),
+            "processes": list(items),
+        }
 
     async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
@@ -255,6 +344,32 @@ async def async_setup_entry(
             KeyboardText(text=service_call.data[CONF_TEXT])
         )
         return asdict(response)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESS_BY_ID,
+        handle_get_process_by_id,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_ID): cv.positive_int,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESSES_BY_NAME,
+        handle_get_processes_by_name,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,

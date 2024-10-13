@@ -1,8 +1,10 @@
 """Test config flow."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
@@ -11,14 +13,23 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mock_mqtt")
-async def mock_mqtt_fixture(hass):
+def mock_mqtt_fixture(
+    hass: HomeAssistant,
+) -> Generator[type[config_entries.ConfigFlow]]:
     """Mock the MQTT integration's config flow."""
     mock_integration(hass, MockModule(MQTT_DOMAIN))
     mock_platform(hass, f"{MQTT_DOMAIN}.config_flow", None)
@@ -34,8 +45,12 @@ async def mock_mqtt_fixture(hass):
         yield MqttFlow
 
 
+@pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test startup and discovery after event."""
     aioclient_mock.get(
@@ -60,10 +75,7 @@ async def test_hassio_discovery_startup(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
     assert aioclient_mock.call_count == 0
 
@@ -71,7 +83,7 @@ async def test_hassio_discovery_startup(
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
     assert mock_mqtt.async_step_hassio.called
     mock_mqtt.async_step_hassio.assert_called_with(
         HassioServiceInfo(
@@ -90,8 +102,12 @@ async def test_hassio_discovery_startup(
     )
 
 
+@pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup_done(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test startup and discovery with hass discovery."""
     aioclient_mock.post(
@@ -120,23 +136,23 @@ async def test_hassio_discovery_startup_done(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
-        return_value={"result": "ok"},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        Mock(side_effect=HassioAPIError()),
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
     ):
         await hass.async_start()
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 2
+        assert aioclient_mock.call_count == 1
         assert mock_mqtt.async_step_hassio.called
         mock_mqtt.async_step_hassio.assert_called_with(
             HassioServiceInfo(
@@ -156,7 +172,11 @@ async def test_hassio_discovery_startup_done(
 
 
 async def test_hassio_discovery_webhook(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hassio_client: TestClient,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
 ) -> None:
     """Test discovery webhook."""
     aioclient_mock.get(
@@ -177,10 +197,7 @@ async def test_hassio_discovery_webhook(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/mosquitto/info",
-        json={"result": "ok", "data": {"name": "Mosquitto Test"}},
-    )
+    addon_installed.return_value.name = "Mosquitto Test"
 
     resp = await hassio_client.post(
         "/api/hassio_push/discovery/testuuid",
@@ -191,7 +208,7 @@ async def test_hassio_discovery_webhook(
     await hass.async_block_till_done()
 
     assert resp.status == HTTPStatus.OK
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
     assert mock_mqtt.async_step_hassio.called
     mock_mqtt.async_step_hassio.assert_called_with(
         HassioServiceInfo(
@@ -208,3 +225,154 @@ async def test_hassio_discovery_webhook(
             uuid="test",
         )
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "entry_domain",
+        "entry_discovery_keys",
+    ),
+    [
+        # Matching discovery key
+        (
+            "mock-domain",
+            {"hassio": (DiscoveryKey(domain="hassio", key="test", version=1),)},
+        ),
+        # Matching discovery key
+        (
+            "mock-domain",
+            {
+                "hassio": (DiscoveryKey(domain="hassio", key="test", version=1),),
+                "other": (DiscoveryKey(domain="other", key="blah", version=1),),
+            },
+        ),
+        # Matching discovery key, other domain
+        # Note: Rediscovery is not currently restricted to the domain of the removed
+        # entry. Such a check can be added if needed.
+        (
+            "comp",
+            {"hassio": (DiscoveryKey(domain="hassio", key="test", version=1),)},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "entry_source",
+    [
+        config_entries.SOURCE_HASSIO,
+        config_entries.SOURCE_IGNORE,
+        config_entries.SOURCE_USER,
+    ],
+)
+async def test_hassio_rediscover(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hassio_client: TestClient,
+    addon_installed: AsyncMock,
+    entry_domain: str,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
+    entry_source: str,
+) -> None:
+    """Test we reinitiate flows when an ignored config entry is removed."""
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=entry_domain,
+        discovery_keys=entry_discovery_keys,
+        unique_id="mock-unique-id",
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get(
+        "http://127.0.0.1/discovery/test",
+        json={
+            "result": "ok",
+            "data": {
+                "service": "mqtt",
+                "uuid": "test",
+                "addon": "mosquitto",
+                "config": {
+                    "broker": "mock-broker",
+                    "port": 1883,
+                    "username": "mock-user",
+                    "password": "mock-pass",
+                    "protocol": "3.1.1",
+                },
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/discovery", json={"result": "ok", "data": {"discovery": []}}
+    )
+
+    expected_context = {
+        "discovery_key": DiscoveryKey(domain="hassio", key="test", version=1),
+        "source": config_entries.SOURCE_HASSIO,
+    }
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert len(mock_init.mock_calls) == 1
+        assert mock_init.mock_calls[0][1][0] == "mqtt"
+        assert mock_init.mock_calls[0][2]["context"] == expected_context
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    (
+        "entry_domain",
+        "entry_discovery_keys",
+        "entry_source",
+        "entry_unique_id",
+    ),
+    [
+        # Discovery key from other domain
+        (
+            "mock-domain",
+            {"bluetooth": (DiscoveryKey(domain="bluetooth", key="test", version=1),)},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+        ),
+        # Discovery key from the future
+        (
+            "mock-domain",
+            {"hassio": (DiscoveryKey(domain="hassio", key="test", version=2),)},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+        ),
+    ],
+)
+async def test_hassio_rediscover_no_match(
+    hass: HomeAssistant,
+    hassio_client: TestClient,
+    entry_domain: str,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
+    entry_source: str,
+    entry_unique_id: str,
+) -> None:
+    """Test we don't reinitiate flows when a non matching config entry is removed."""
+
+    mock_integration(hass, MockModule(entry_domain))
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=entry_domain,
+        discovery_keys=entry_discovery_keys,
+        unique_id=entry_unique_id,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert len(mock_init.mock_calls) == 0

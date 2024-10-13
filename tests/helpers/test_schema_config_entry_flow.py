@@ -68,7 +68,9 @@ def manager_fixture():
             return result
 
     mgr = FlowManager(None)
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_created_entries = entries
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_reg_handler = handlers.register
     return mgr
 
@@ -104,7 +106,7 @@ async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> 
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_config_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
@@ -199,7 +201,7 @@ async def test_config_flow_advanced_option(
         assert isinstance(option, str)
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_options_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:

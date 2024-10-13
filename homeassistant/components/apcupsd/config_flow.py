@@ -61,9 +61,6 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=_SCHEMA, errors=errors
             )
 
-        if not data:
-            return self.async_abort(reason="no_status")
-
         # We _try_ to use the serial number of the UPS as the unique id since this field
         # is not guaranteed to exist on all APC UPS models.
         await self.async_set_unique_id(data.serial_no)

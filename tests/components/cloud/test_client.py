@@ -1,6 +1,7 @@
 """Test the cloud.iot module."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
@@ -8,25 +9,26 @@ from aiohttp import web
 from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
     VALID_REPAIR_TRANSLATION_KEYS,
     CloudClient,
 )
 from homeassistant.components.cloud.const import (
+    DATA_CLOUD,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
 )
+from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
 )
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -37,7 +39,7 @@ from tests.components.alexa import test_smart_home as test_alexa
 
 
 @pytest.fixture
-def mock_cloud_inst():
+def mock_cloud_inst() -> MagicMock:
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
 
@@ -64,7 +66,7 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
     )
 
     mock_cloud_prefs(hass, {PREF_ALEXA_REPORT_STATE: False})
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     resp = await cloud.client.async_alexa_message(
         test_alexa.get_new_request("Alexa.Discovery", "Discover")
@@ -81,10 +83,12 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
     assert device["manufacturerName"] == "Home Assistant"
 
 
-async def test_handler_alexa_disabled(hass: HomeAssistant, mock_cloud_fixture) -> None:
+async def test_handler_alexa_disabled(
+    hass: HomeAssistant, mock_cloud_fixture: CloudPreferences
+) -> None:
     """Test handler Alexa when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     resp = await cloud.client.async_alexa_message(
         test_alexa.get_new_request("Alexa.Discovery", "Discover")
@@ -117,8 +121,8 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
         },
     )
 
-    mock_cloud_prefs(hass)
-    cloud = hass.data["cloud"]
+    mock_cloud_prefs(hass, {})
+    cloud = hass.data[DATA_CLOUD]
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -154,7 +158,10 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     ],
 )
 async def test_handler_google_actions_disabled(
-    hass: HomeAssistant, mock_cloud_fixture, intent, response_payload
+    hass: HomeAssistant,
+    mock_cloud_fixture: CloudPreferences,
+    intent: str,
+    response_payload: dict[str, Any],
 ) -> None:
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
@@ -165,7 +172,7 @@ async def test_handler_google_actions_disabled(
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": intent}]}
 
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
     with patch(
         "hass_nabucasa.Cloud._decode_claims",
         return_value={"cognito:username": "myUserName"},
@@ -183,7 +190,7 @@ async def test_webhook_msg(
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     await cloud.client.prefs.async_initialize()
     await cloud.client.prefs.async_update(
@@ -201,12 +208,14 @@ async def test_webhook_msg(
 
     received = []
 
-    async def handler(hass, webhook_id, request):
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
         """Handle a webhook."""
         received.append(request)
         return web.json_response({"from": "handler"})
 
-    hass.components.webhook.async_register("test", "Test", "mock-webhook-id", handler)
+    webhook.async_register(hass, "test", "Test", "mock-webhook-id", handler)
 
     response = await cloud.client.async_webhook_message(
         {
@@ -253,16 +262,15 @@ async def test_webhook_msg(
     assert '{"nonexisting": "payload"}' in caplog.text
 
 
+@pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
 async def test_google_config_expose_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_cloud_setup,
-    mock_cloud_login,
 ) -> None:
     """Test Google config exposing entity method uses latest config."""
 
     # Enable exposing new entities to Google
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", True)
 
     # Register a light entity
@@ -270,7 +278,7 @@ async def test_google_config_expose_entity(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
 
-    cloud_client = hass.data[DOMAIN].client
+    cloud_client = hass.data[DATA_CLOUD].client
     state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
@@ -281,11 +289,10 @@ async def test_google_config_expose_entity(
     assert not gconf.should_expose(state)
 
 
+@pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
 async def test_google_config_should_2fa(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_cloud_setup,
-    mock_cloud_login,
 ) -> None:
     """Test Google config disabling 2FA method uses latest config."""
 
@@ -294,7 +301,7 @@ async def test_google_config_should_2fa(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
 
-    cloud_client = hass.data[DOMAIN].client
+    cloud_client = hass.data[DATA_CLOUD].client
     gconf = await cloud_client.get_google_config()
     state = State(entity_entry.entity_id, "on")
 
@@ -351,7 +358,7 @@ async def test_system_msg(hass: HomeAssistant) -> None:
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     assert cloud.client.relayer_region is None
 
@@ -367,13 +374,14 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
-    with patch("hass_nabucasa.Cloud.initialize"), patch(
-        "uuid.UUID.hex", new_callable=PropertyMock
-    ) as hexmock:
+    with (
+        patch("hass_nabucasa.Cloud.initialize"),
+        patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
+    ):
         hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     response = await cloud.client.async_cloud_connection_info({})
 
@@ -397,7 +405,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 async def test_async_create_repair_issue_known(
     cloud: MagicMock,
     mock_cloud_setup: None,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     translation_key: str,
 ) -> None:
     """Test create repair issue for known repairs."""
@@ -415,7 +423,7 @@ async def test_async_create_repair_issue_known(
 async def test_async_create_repair_issue_unknown(
     cloud: MagicMock,
     mock_cloud_setup: None,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test not creating repair issue for unknown repairs."""
     identifier = "abc123"

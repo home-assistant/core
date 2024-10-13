@@ -9,7 +9,10 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +30,7 @@ STATE_CURRENT_BANS = "current_bans"
 STATE_ALL_BANS = "total_bans"
 SCAN_INTERVAL = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
         vol.Optional(CONF_FILE_PATH): cv.isfile,
@@ -47,12 +50,9 @@ async def async_setup_platform(
     jails = config[CONF_JAILS]
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
-    device_list = []
     log_parser = BanLogParser(log_file)
-    for jail in jails:
-        device_list.append(BanSensor(name, jail, log_parser))
 
-    async_add_entities(device_list, True)
+    async_add_entities((BanSensor(name, jail, log_parser) for jail in jails), True)
 
 
 class BanSensor(SensorEntity):

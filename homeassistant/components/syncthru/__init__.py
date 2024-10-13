@@ -37,12 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await printer.update()
         except SyncThruAPINotSupported as api_error:
             # if an exception is thrown, printer does not support syncthru
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Configured printer at %s does not provide SyncThru JSON API",
                 printer.url,
                 exc_info=api_error,
             )
-            raise api_error
+            raise
 
         # if the printer is offline, we raise an UpdateFailed
         if printer.is_unknown_state():

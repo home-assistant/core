@@ -9,6 +9,7 @@ from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
+    SwitcherThermostat,
     ThermostatFanLevel,
     ThermostatMode,
     ThermostatSwing,
@@ -25,18 +26,16 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
+from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
@@ -61,16 +60,17 @@ HA_TO_DEVICE_FAN = {value: key for key, value in DEVICE_FAN_TO_HA.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SwitcherConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
 
     async def async_add_climate(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add climate from Switcher device."""
+        data = cast(SwitcherThermostat, coordinator.data)
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
-                get_breeze_remote_manager(hass).get_remote, coordinator.data.remote_id
+                get_breeze_remote_manager(hass).get_remote, data.remote_id
             )
             async_add_entities([SwitcherClimateEntity(coordinator, remote)])
 
@@ -79,12 +79,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherClimateEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], ClimateEntity
-):
+class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     """Representation of a Switcher climate entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -96,9 +93,6 @@ class SwitcherClimateEntity(
         self._remote = remote
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        )
 
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
@@ -133,13 +127,13 @@ class SwitcherClimateEntity(
 
     def _update_data(self, force_update: bool = False) -> None:
         """Update data from device."""
-        data = self.coordinator.data
+        data = cast(SwitcherThermostat, self.coordinator.data)
         features = self._remote.modes_features[data.mode]
 
         if data.target_temperature == 0 and not force_update:
             return
 
-        self._attr_current_temperature = cast(float, data.temperature)
+        self._attr_current_temperature = data.temperature
         self._attr_target_temperature = float(data.target_temperature)
 
         self._attr_hvac_mode = HVACMode.OFF
@@ -162,11 +156,12 @@ class SwitcherClimateEntity(
 
     async def _async_control_breeze_device(self, **kwargs: Any) -> None:
         """Call Switcher Control Breeze API."""
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,
@@ -185,9 +180,8 @@ class SwitcherClimateEntity(
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if not self._remote.modes_features[self.coordinator.data.mode][
-            "temperature_control"
-        ]:
+        data = cast(SwitcherThermostat, self.coordinator.data)
+        if not self._remote.modes_features[data.mode]["temperature_control"]:
             raise HomeAssistantError(
                 "Current mode doesn't support setting Target Temperature"
             )
@@ -199,7 +193,8 @@ class SwitcherClimateEntity(
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not self._remote.modes_features[self.coordinator.data.mode]["fan_levels"]:
+        data = cast(SwitcherThermostat, self.coordinator.data)
+        if not self._remote.modes_features[data.mode]["fan_levels"]:
             raise HomeAssistantError("Current mode doesn't support setting Fan Mode")
 
         await self._async_control_breeze_device(fan_level=HA_TO_DEVICE_FAN[fan_mode])
@@ -215,7 +210,8 @@ class SwitcherClimateEntity(
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        if not self._remote.modes_features[self.coordinator.data.mode]["swing"]:
+        data = cast(SwitcherThermostat, self.coordinator.data)
+        if not self._remote.modes_features[data.mode]["swing"]:
             raise HomeAssistantError("Current mode doesn't support setting Swing Mode")
 
         if swing_mode == SWING_VERTICAL:

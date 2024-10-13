@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
@@ -16,11 +15,12 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, TypedDict, final
+from typing import Any, Final, TypedDict, final
 
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
@@ -58,6 +58,7 @@ from .const import (
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
+    DATA_COMPONENT,
     DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
@@ -78,6 +79,7 @@ __all__ = [
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_RATE",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_PREFERRED_SAMPLE_BYTES",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
@@ -96,8 +98,17 @@ ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
+
+_DEFAULT_FORMAT = "mp3"
+_PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
+    ATTR_PREFERRED_FORMAT,
+    ATTR_PREFERRED_SAMPLE_RATE,
+    ATTR_PREFERRED_SAMPLE_CHANNELS,
+    ATTR_PREFERRED_SAMPLE_BYTES,
+}
 
 CONF_LANG = "language"
 
@@ -128,18 +139,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
 
     Returns None if no engines found.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+    default_entity_id: str | None = None
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    for entity in hass.data[DATA_COMPONENT].entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    entity = next(iter(component.entities), None)
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(hass.data[DATA_TTS_MANAGER].providers), None)
 
 
 @callback
@@ -148,11 +157,11 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
 
     Returns None if no engines found or invalid engine passed in.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     if engine is not None:
-        if not component.get_entity(engine) and engine not in manager.providers:
+        if (
+            not hass.data[DATA_COMPONENT].get_entity(engine)
+            and engine not in hass.data[DATA_TTS_MANAGER].providers
+        ):
             return None
         return engine
 
@@ -169,10 +178,8 @@ async def async_support_options(
     if (engine_instance := get_engine_instance(hass, engine)) is None:
         raise HomeAssistantError(f"Provider {engine} not found")
 
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     try:
-        manager.process_options(engine_instance, language, options)
+        hass.data[DATA_TTS_MANAGER].process_options(engine_instance, language, options)
     except HomeAssistantError:
         return False
 
@@ -184,8 +191,7 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-    return await manager.async_get_tts_audio(
+    return await hass.data[DATA_TTS_MANAGER].async_get_tts_audio(
         **media_source_id_to_kwargs(media_source_id),
     )
 
@@ -195,14 +201,11 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by tts engines."""
     languages = set()
 
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
-    for tts_engine in manager.providers.values():
+    for tts_engine in hass.data[DATA_TTS_MANAGER].providers.values():
         for language_tag in tts_engine.supported_languages:
             languages.add(language_tag)
 
@@ -216,6 +219,7 @@ async def async_convert_audio(
     to_extension: str,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
+    to_sample_bytes: int | None = None,
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
@@ -227,6 +231,7 @@ async def async_convert_audio(
             to_extension,
             to_sample_rate=to_sample_rate,
             to_sample_channels=to_sample_channels,
+            to_sample_bytes=to_sample_bytes,
         )
     )
 
@@ -238,6 +243,7 @@ def _convert_audio(
     to_extension: str,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
+    to_sample_bytes: int | None = None,
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
 
@@ -269,6 +275,10 @@ def _convert_audio(
         if to_extension == "mp3":
             # Max quality for MP3
             command.extend(["-q:a", "0"])
+
+        if to_sample_bytes == 2:
+            # 16-bit samples
+            command.extend(["-sample_fmt", "s16"])
 
         command.append(output_file.name)
 
@@ -308,7 +318,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_TTS_MANAGER] = tts
-    component = hass.data[DOMAIN] = EntityComponent[TextToSpeechEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextToSpeechEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -318,9 +328,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(TextToSpeechUrlView(tts))
 
     platform_setups = await async_setup_legacy(hass, config)
-
-    if platform_setups:
-        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
 
     component.async_register_entity_service(
         "speak",
@@ -345,26 +352,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SCHEMA_SERVICE_CLEAR_CACHE,
     )
 
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use tts as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class TextToSpeechEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "default_language",
+    "default_options",
+    "supported_languages",
+    "supported_options",
+}
+
+
+class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
+
+    _attr_default_language: str
+    _attr_default_options: Mapping[str, Any] | None = None
+    _attr_supported_languages: list[str]
+    _attr_supported_options: list[str] | None = None
 
     @property
     @final
@@ -374,25 +401,25 @@ class TextToSpeechEntity(RestoreEntity):
             return None
         return self.__last_tts_loaded
 
-    @property
-    @abstractmethod
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
+        return self._attr_supported_languages
 
-    @property
-    @abstractmethod
+    @cached_property
     def default_language(self) -> str:
         """Return the default language."""
+        return self._attr_default_language
 
-    @property
+    @cached_property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
-        return None
+        return self._attr_supported_options
 
-    @property
+    @cached_property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return None
+        return self._attr_default_options
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -402,6 +429,18 @@ class TextToSpeechEntity(RestoreEntity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
+        try:
+            _ = self.default_language
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+            ) from err
+        try:
+            _ = self.supported_languages
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+            ) from err
         state = await self.async_get_last_state()
         if (
             state is not None
@@ -457,7 +496,7 @@ class TextToSpeechEntity(RestoreEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -501,24 +540,21 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
-    async def async_init_cache(self) -> None:
-        """Init config folder and load file cache."""
+    def _init_cache(self) -> dict[str, str]:
+        """Init cache folder and fetch files."""
         try:
-            self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, self.cache_dir
-            )
+            self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
-            cache_files = await self.hass.async_add_executor_job(
-                _get_cache_files, self.cache_dir
-            )
+            return _get_cache_files(self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
-        if cache_files:
-            self.file_cache.update(cache_files)
+    async def async_init_cache(self) -> None:
+        """Init config folder and load file cache."""
+        self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""
@@ -566,25 +602,23 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
+        options = options or {}
+        supported_options = engine_instance.supported_options or []
+
         # Update default options with provided options
+        invalid_opts: list[str] = []
         merged_options = dict(engine_instance.default_options or {})
-        merged_options.update(options or {})
+        for option_name, option_value in options.items():
+            # Only count an option as invalid if it's not a "preferred format"
+            # option. These are used as hints to the TTS system if supported,
+            # and otherwise as parameters to ffmpeg conversion.
+            if (option_name in supported_options) or (
+                option_name in _PREFFERED_FORMAT_OPTIONS
+            ):
+                merged_options[option_name] = option_value
+            else:
+                invalid_opts.append(option_name)
 
-        supported_options = list(engine_instance.supported_options or [])
-
-        # ATTR_PREFERRED_* options are always "supported" since they're used to
-        # convert audio after the TTS has run (if necessary).
-        supported_options.extend(
-            (
-                ATTR_PREFERRED_FORMAT,
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-            )
-        )
-
-        invalid_opts = [
-            opt_name for opt_name in merged_options if opt_name not in supported_options
-        ]
         if invalid_opts:
             raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
@@ -684,10 +718,45 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        options = options or {}
+        options = dict(options or {})
+        supported_options = engine_instance.supported_options or []
 
-        # Default to MP3 unless a different format is preferred
-        final_extension = options.get(ATTR_PREFERRED_FORMAT, "mp3")
+        # Extract preferred format options.
+        #
+        # These options are used by Assist pipelines, etc. to get a format that
+        # the voice satellite will support.
+        #
+        # The TTS system ideally supports options directly so we won't have
+        # to convert with ffmpeg later. If not, we pop the options here and
+        # perform the conversation after receiving the audio.
+        if ATTR_PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        else:
+            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        else:
+            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+
+        if sample_rate is not None:
+            sample_rate = int(sample_rate)
+
+        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        else:
+            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+
+        if sample_channels is not None:
+            sample_channels = int(sample_channels)
+
+        if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
+            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        else:
+            sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
+
+        if sample_bytes is not None:
+            sample_bytes = int(sample_bytes)
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -713,8 +782,9 @@ class SpeechManager:
             # rate/format/channel count is requested.
             needs_conversion = (
                 (final_extension != extension)
-                or (ATTR_PREFERRED_SAMPLE_RATE in options)
-                or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
+                or (sample_rate is not None)
+                or (sample_channels is not None)
+                or (sample_bytes is not None)
             )
 
             if needs_conversion:
@@ -723,8 +793,9 @@ class SpeechManager:
                     extension,
                     data,
                     to_extension=final_extension,
-                    to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-                    to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+                    to_sample_rate=sample_rate,
+                    to_sample_channels=sample_channels,
+                    to_sample_bytes=sample_bytes,
                 )
 
             # Create file infos
@@ -753,7 +824,7 @@ class SpeechManager:
 
             return filename
 
-        audio_task = self.hass.async_create_task(get_tts_data())
+        audio_task = self.hass.async_create_task(get_tts_data(), eager_start=False)
 
         def handle_error(_future: asyncio.Future) -> None:
             """Handle error."""
@@ -1025,15 +1096,13 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List text to speech engines and, optionally, if they support a given language."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
@@ -1043,15 +1112,20 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-    for engine_id, provider in manager.providers.items():
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
+    for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
@@ -1070,22 +1144,24 @@ def websocket_get_engine(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get text to speech engine info."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     engine_id = msg["engine_id"]
     provider_info: dict[str, Any]
 
     provider: TextToSpeechEntity | Provider | None = next(
-        (entity for entity in component.entities if entity.entity_id == engine_id), None
+        (
+            entity
+            for entity in hass.data[DATA_COMPONENT].entities
+            if entity.entity_id == engine_id
+        ),
+        None,
     )
     if not provider:
-        provider = manager.providers.get(engine_id)
+        provider = hass.data[DATA_TTS_MANAGER].providers.get(engine_id)
 
     if not provider:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
@@ -1094,6 +1170,8 @@ def websocket_get_engine(
         "engine_id": engine_id,
         "supported_languages": provider.supported_languages,
     }
+    if isinstance(provider, Provider):
+        provider_info["name"] = provider.name
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})
@@ -1120,7 +1198,7 @@ def websocket_list_engine_voices(
     if not engine_instance:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return

@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["ovoenergy"],
-  "requirements": ["ovoenergy==1.2.0"]
+  "requirements": ["ovoenergy==2.0.0"]
 }

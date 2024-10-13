@@ -36,6 +36,8 @@
     }
   },
   "services": {
-    "disable": "mdi:server-off"
+    "disable": {
+      "service": "mdi:server-off"
+    }
   }
 }

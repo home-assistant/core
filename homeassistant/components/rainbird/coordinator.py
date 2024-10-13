@@ -5,11 +5,10 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
-from functools import cached_property
 import logging
-from typing import TypeVar
 
 import aiohttp
+from propcache import cached_property
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -38,8 +37,6 @@ DEBOUNCER_COOLDOWN = 5
 CONECTION_LIMIT = 1
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 
 @dataclass

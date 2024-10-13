@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -18,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AnalyticsInsightsData
+from . import AnalyticsInsightsConfigEntry
 from .const import DOMAIN
 from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
 
@@ -58,14 +57,34 @@ def get_custom_integration_entity_description(
     )
 
 
+GENERAL_SENSORS = [
+    AnalyticsSensorEntityDescription(
+        key="total_active_installations",
+        translation_key="total_active_installations",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.active_installations,
+    ),
+    AnalyticsSensorEntityDescription(
+        key="total_reports_integrations",
+        translation_key="total_reports_integrations",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.reports_integrations,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AnalyticsInsightsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
 
-    analytics_data: AnalyticsInsightsData = hass.data[DOMAIN][entry.entry_id]
+    analytics_data = entry.runtime_data
     coordinator: HomeassistantAnalyticsDataUpdateCoordinator = (
         analytics_data.coordinator
     )
@@ -86,6 +105,12 @@ async def async_setup_entry(
         )
         for integration_domain in coordinator.data.custom_integrations
     )
+
+    entities.extend(
+        HomeassistantAnalyticsSensor(coordinator, entity_description)
+        for entity_description in GENERAL_SENSORS
+    )
+
     async_add_entities(entities)
 
 

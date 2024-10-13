@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_config_flow[create_entry]
+  FlowResultSnapshot({
+    'result': ConfigEntrySnapshot({
+      'title': 'My thermostat',
+    }),
+    'title': 'My thermostat',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_config_flow[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_config_flow[presets]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[create_entry]
+  FlowResultSnapshot({
+    'result': True,
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_options[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[presets]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[with_away]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.0,
+      'friendly_name': 'My thermostat',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'away',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.1,
+      'temperature': 7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[without_away]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.0,
+      'friendly_name': 'My thermostat',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.1,
+      'temperature': 7.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

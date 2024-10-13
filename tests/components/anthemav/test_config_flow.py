@@ -19,7 +19,7 @@ async def test_form_with_valid_connection(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -36,7 +36,7 @@ async def test_form_with_valid_connection(
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Anthem AV"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -67,7 +67,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
 
@@ -91,7 +91,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -112,5 +112,5 @@ async def test_device_already_configured(
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

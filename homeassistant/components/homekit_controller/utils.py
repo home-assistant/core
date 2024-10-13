@@ -12,7 +12,7 @@ from homeassistant.core import Event, HomeAssistant
 from .const import CONTROLLER
 from .storage import async_get_entity_storage
 
-IidTuple = tuple[int, int | None, int | None]
+type IidTuple = tuple[int, int | None, int | None]
 
 
 def unique_id_to_iids(unique_id: str) -> IidTuple | None:

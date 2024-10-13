@@ -67,14 +67,14 @@ async def async_setup_entry(
         ),
     ]
 
-    for addon in coordinator.data[DATA_KEY_ADDONS].values():
-        entities.append(
-            SupervisorAddonUpdateEntity(
-                addon=addon,
-                coordinator=coordinator,
-                entity_description=ENTITY_DESCRIPTION,
-            )
+    entities.extend(
+        SupervisorAddonUpdateEntity(
+            addon=addon,
+            coordinator=coordinator,
+            entity_description=ENTITY_DESCRIPTION,
         )
+        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+    )
 
     if coordinator.is_hass_os:
         entities.append(
@@ -304,5 +304,5 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
             await async_update_core(self.hass, version=version, backup=backup)
         except HassioAPIError as err:
             raise HomeAssistantError(
-                f"Error updating Home Assistant Core {err}"
+                f"Error updating Home Assistant Core: {err}"
             ) from err

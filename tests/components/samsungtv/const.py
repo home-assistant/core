@@ -3,7 +3,11 @@
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 
 from homeassistant.components import ssdp
-from homeassistant.components.samsungtv.const import CONF_SESSION_ID, METHOD_WEBSOCKET
+from homeassistant.components.samsungtv.const import (
+    CONF_SESSION_ID,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
+)
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
@@ -21,6 +25,12 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 
+MOCK_CONFIG = {
+    CONF_HOST: "fake_host",
+    CONF_NAME: "fake",
+    CONF_PORT: 55000,
+    CONF_METHOD: METHOD_LEGACY,
+}
 MOCK_CONFIG_ENCRYPTED_WS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -40,6 +50,15 @@ MOCK_ENTRYDATA_WS = {
     CONF_PORT: 8002,
     CONF_MODEL: "any",
     CONF_NAME: "any",
+}
+MOCK_ENTRY_WS_WITH_MAC = {
+    CONF_IP_ADDRESS: "test",
+    CONF_HOST: "fake_host",
+    CONF_METHOD: "websocket",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    CONF_NAME: "fake",
+    CONF_PORT: 8002,
+    CONF_TOKEN: "123456789",
 }
 
 MOCK_SSDP_DATA_RENDERING_CONTROL_ST = ssdp.SsdpServiceInfo(

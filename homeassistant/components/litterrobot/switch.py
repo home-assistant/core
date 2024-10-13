@@ -9,14 +9,12 @@ from typing import Any, Generic
 from pylitterbot import FeederRobot, LitterRobot
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
-from .hub import LitterRobotHub
 
 
 @dataclass(frozen=True)
@@ -68,11 +66,11 @@ class RobotSwitchEntity(LitterRobotEntity[_RobotT], SwitchEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LitterRobotConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     entities = [
         RobotSwitchEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SWITCHES

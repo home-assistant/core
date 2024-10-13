@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_attributes[alarm_control_panel.test-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_attributes[alarm_control_panel.test-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'ac_loss': False,
+      'changed_by': None,
+      'code_arm_required': False,
+      'code_format': None,
+      'cover_tampered': False,
+      'friendly_name': 'test',
+      'location_id': 123456,
+      'location_name': 'test',
+      'low_battery': False,
+      'partition': 1,
+      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+      'triggered_source': None,
+      'triggered_zone': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.test',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---
+# name: test_attributes[alarm_control_panel.test_partition_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.test_partition_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Partition 2',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 7>,
+    'translation_key': 'partition',
+    'unique_id': '123456_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_attributes[alarm_control_panel.test_partition_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'ac_loss': False,
+      'changed_by': None,
+      'code_arm_required': False,
+      'code_format': None,
+      'cover_tampered': False,
+      'friendly_name': 'test Partition 2',
+      'location_id': 123456,
+      'location_name': 'test partition 2',
+      'low_battery': False,
+      'partition': 2,
+      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+      'triggered_source': None,
+      'triggered_zone': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.test_partition_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---

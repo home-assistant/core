@@ -13,6 +13,7 @@ from .db_schema import (
     EventData,
     Events,
     EventTypes,
+    MigrationChanges,
     RecorderRuns,
     StateAttributes,
     States,
@@ -593,7 +594,7 @@ def delete_statistics_short_term_rows(
 def delete_event_rows(
     event_ids: Iterable[int],
 ) -> StatementLambdaElement:
-    """Delete statistics_short_term rows."""
+    """Delete event rows."""
     return lambda_stmt(
         lambda: delete(Events)
         .where(Events.event_id.in_(event_ids))
@@ -762,6 +763,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
     )
 
 
+def has_used_states_entity_ids() -> StatementLambdaElement:
+    """Check if there are used entity_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.entity_id.isnot(None)).limit(1)
+    )
+
+
 def has_used_states_event_ids() -> StatementLambdaElement:
     """Check if there are used event_ids in the states table."""
     return lambda_stmt(
@@ -809,6 +817,13 @@ def find_states_context_ids_to_migrate(max_bind_vars: int) -> StatementLambdaEle
         )
         .filter(States.context_id_bin.is_(None))
         .limit(max_bind_vars)
+    )
+
+
+def get_migration_changes() -> StatementLambdaElement:
+    """Query the database for previous migration changes."""
+    return lambda_stmt(
+        lambda: select(MigrationChanges.migration_id, MigrationChanges.version)
     )
 
 

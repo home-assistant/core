@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -28,11 +27,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQCoordinator
+from . import AirQConfigEntry, AirQCoordinator
 from .const import (
     ACTIVITY_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -400,12 +398,12 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    entry: AirQConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities based on a config entry."""
 
-    coordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[AirQSensor] = []
 

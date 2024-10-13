@@ -12,7 +12,6 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,9 +20,9 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
@@ -35,10 +34,10 @@ TUYA_SUPPORT_TYPE = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -67,6 +66,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _speeds: EnumTypeData | None = None
     _switch: DPCode | None = None
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -117,6 +117,10 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        if self._switch is not None:
+            self._attr_supported_features |= (
+                FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+            )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""

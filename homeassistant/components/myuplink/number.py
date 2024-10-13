@@ -4,21 +4,19 @@ from aiohttp import ClientError
 from myuplink import DevicePoint
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, skip_entity
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
     "DM": NumberEntityDescription(
         key="degree_minutes",
-        icon="mdi:thermometer-lines",
+        translation_key="degree_minutes",
         native_unit_of_measurement="DM",
     ),
 }
@@ -27,7 +25,7 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, NumberEntityDescription]] = {
     "NIBEF": {
         "40940": NumberEntityDescription(
             key="degree_minutes",
-            icon="mdi:thermometer-lines",
+            translation_key="degree_minutes",
             native_unit_of_measurement="DM",
         ),
     },
@@ -55,16 +53,18 @@ def get_description(device_point: DevicePoint) -> NumberEntityDescription | None
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink number."""
     entities: list[NumberEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Setup device point number entities
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             description = get_description(device_point)
             if find_matching_platform(device_point, description) == Platform.NUMBER:
                 entities.append(

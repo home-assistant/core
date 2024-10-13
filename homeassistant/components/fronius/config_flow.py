@@ -22,12 +22,6 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 DHCP_REQUEST_DELAY: Final = 60
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-    }
-)
-
 
 def create_title(info: FroniusConfigEntryData) -> str:
     """Return the title of the config flow."""
@@ -40,10 +34,7 @@ def create_title(info: FroniusConfigEntryData) -> str:
 async def validate_host(
     hass: HomeAssistant, host: str
 ) -> tuple[str, FroniusConfigEntryData]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     fronius = Fronius(async_get_clientsession(hass), host)
 
     try:
@@ -86,28 +77,26 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured(updates=dict(info))
+        if user_input is not None:
+            try:
+                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(unique_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(updates=dict(info))
 
-            return self.async_create_entry(title=create_title(info), data=info)
+                return self.async_create_entry(title=create_title(info), data=info)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors,
         )
 
     async def async_step_dhcp(
@@ -115,7 +104,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].lstrip("http://").rstrip("/").lower() in (
+            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
                 discovery_info.ip,
                 discovery_info.hostname,
             ):
@@ -148,6 +137,35 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "device": title,
             },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to reconfigure a config entry."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+
+                return self.async_update_reload_and_abort(reconfigure_entry, data=info)
+
+        host = reconfigure_entry.data[CONF_HOST]
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            description_placeholders={"device": reconfigure_entry.title},
+            errors=errors,
         )
 
 

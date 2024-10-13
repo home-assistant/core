@@ -1,0 +1,94 @@
+[
+  {
+    "id": "1",
+    "type": "WallStation",
+    "controlLevel": "Owner",
+    "attr": [
+      {
+        "key": "organization",
+        "value": "test_organization"
+      }
+    ],
+    "state": {
+      "deviceId": "1",
+      "desired": { "key": "value" },
+      "reported": {
+        "displayName": "Test Garage 1",
+        "autoDisabled": false,
+        "migrationStatus": "DONE",
+        "deviceId": "1",
+        "lightStatus": "1,100",
+        "vcnMode": false,
+        "deviceFwVersion": "1.2.3.4.5.6",
+        "barrierStatus": "0,0,0,0,-1,0,3,0"
+      },
+      "timestamp": null,
+      "version": null
+    },
+    "connectionState": {
+      "connected": true,
+      "updatedTimestamp": "123"
+    }
+  },
+  {
+    "id": "2",
+    "type": "WallStation",
+    "controlLevel": "Owner",
+    "attr": [
+      {
+        "key": "organization",
+        "value": "test_organization"
+      }
+    ],
+    "state": {
+      "deviceId": "2",
+      "desired": { "key": "value" },
+      "reported": {
+        "displayName": "Test Garage 2",
+        "autoDisabled": false,
+        "migrationStatus": "DONE",
+        "deviceId": "2",
+        "lightStatus": "0,100",
+        "vcnMode": true,
+        "deviceFwVersion": "1.2.3.4.5.6",
+        "barrierStatus": "1,100,0,0,-1,0,3,0"
+      },
+      "timestamp": null,
+      "version": null
+    },
+    "connectionState": {
+      "connected": true,
+      "updatedTimestamp": "123"
+    }
+  },
+  {
+    "id": "3",
+    "type": "WallStation",
+    "controlLevel": "Owner",
+    "attr": [
+      {
+        "key": "organization",
+        "value": "test_organization"
+      }
+    ],
+    "state": {
+      "deviceId": "3",
+      "desired": { "key": "value" },
+      "reported": {
+        "displayName": "Test Garage 3",
+        "autoDisabled": false,
+        "migrationStatus": "DONE",
+        "deviceId": "3",
+        "vcnMode": false,
+        "deviceFwVersion": "1.2.3.4.5.6",
+        "barrierStatus": "2,100,0,0,-1,0,3,0"
+      },
+      "timestamp": null,
+      "version": null
+    },
+    "connectionState": {
+      "connected": true,
+      "updatedTimestamp": "123"
+    }
+  }
+]

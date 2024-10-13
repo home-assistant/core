@@ -1,0 +1,17 @@
+{
+  "charger_state": "available",
+  "charging_time": 0,
+  "instant_power": 0,
+  "session_energy": 0.0,
+  "temperature": 34.5,
+  "total_charged_energy": 0,
+  "install_current": 6,
+  "current_limit_reason": "installation_current",
+  "voltage_l1": 220.0,
+  "current_l1": 0.0,
+  "fw_version": "1.44",
+  "led_max_brightness": 20,
+  "dynamic_current": 32,
+  "user_current": 32,
+  "lb_mode": 0
+}

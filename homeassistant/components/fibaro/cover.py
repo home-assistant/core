@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -18,8 +18,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -35,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroCover(FibaroDevice, CoverEntity):
+class FibaroCover(FibaroEntity, CoverEntity):
     """Representation a Fibaro Cover."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
@@ -80,11 +81,11 @@ class FibaroCover(FibaroDevice, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level(kwargs.get(ATTR_POSITION))
+        self.set_level(cast(int, kwargs.get(ATTR_POSITION)))
 
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
+        self.set_level2(cast(int, kwargs.get(ATTR_TILT_POSITION)))
 
     @property
     def is_closed(self) -> bool | None:

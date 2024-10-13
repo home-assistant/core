@@ -17,8 +17,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-UnavailableCallback = Callable[[bluetooth.BluetoothServiceInfoBleak], None]
-Cancellable = Callable[[], None]
+type UnavailableCallback = Callable[[bluetooth.BluetoothServiceInfoBleak], None]
+type Cancellable = Callable[[], None]
 
 
 def async_last_service_info(

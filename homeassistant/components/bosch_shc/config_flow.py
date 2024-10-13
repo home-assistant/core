@@ -124,7 +124,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._get_info(self.host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -161,7 +161,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             except SHCRegistrationError as err:
                 _LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -175,12 +175,10 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 existing_entry = await self.async_set_unique_id(self.info["unique_id"])
                 if existing_entry:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         existing_entry,
                         data=entry_data,
                     )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=cast(str, self.info["title"]),

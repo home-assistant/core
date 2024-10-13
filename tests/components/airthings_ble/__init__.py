@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsDevice,
+    AirthingsDeviceType,
+)
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 
 from tests.common import MockConfigEntry, MockEntity
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -92,6 +98,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -136,6 +143,7 @@ VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -156,14 +164,14 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 WAVE_DEVICE_INFO = AirthingsDevice(
     manufacturer="Airthings AS",
     hw_version="REV A",
     sw_version="G-BLE-1.5.3-master+0",
-    model="Wave Plus",
-    model_raw="2930",
+    model=AirthingsDeviceType.WAVE_PLUS,
     name="Airthings Wave+",
     identifier="123456",
     sensors={
@@ -218,7 +226,7 @@ VOC_V3 = MockEntity(
 )
 
 
-def create_entry(hass):
+def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -229,14 +237,12 @@ def create_entry(hass):
     return entry
 
 
-def create_device(hass, entry):
+def create_device(entry: ConfigEntry, device_registry: DeviceRegistry):
     """Create a device for the given entry."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    device = device_registry.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, WAVE_SERVICE_INFO.address)},
         manufacturer="Airthings AS",
         name="Airthings Wave Plus (123456)",
         model="Wave Plus",
     )
-    return device

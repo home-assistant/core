@@ -23,16 +23,11 @@ from .coordinator import QswDataCoordinator
 from .entity import QswDataEntity
 
 
-@dataclass(frozen=True)
-class QswButtonDescriptionMixin:
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class QswButtonDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[QnapQswApi], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
-    """Class to describe a Button entity."""
 
 
 BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (

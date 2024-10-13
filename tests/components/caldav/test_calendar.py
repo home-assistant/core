@@ -315,10 +315,10 @@ def mock_tz() -> str | None:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant, tz: str | None) -> None:
+async def set_tz(hass: HomeAssistant, tz: str | None) -> None:
     """Fixture to set the default TZ to the one requested."""
     if tz is not None:
-        hass.config.set_time_zone(tz)
+        await hass.config.async_set_time_zone(tz)
 
 
 @pytest.fixture(autouse=True)
@@ -721,7 +721,7 @@ async def test_all_day_event(
     target_datetime: datetime.datetime,
 ) -> None:
     """Test that the event lasting the whole day is returned, if it's early in the local day."""
-    freezer.move_to(target_datetime.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE))
+    freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
         "calendar",
@@ -895,7 +895,7 @@ async def test_event_rrule_all_day_early(
     target_datetime: datetime.datetime,
 ) -> None:
     """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
-    freezer.move_to(target_datetime.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE))
+    freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
         "calendar",
