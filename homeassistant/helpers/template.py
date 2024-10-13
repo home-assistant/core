@@ -63,6 +63,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import (
+    color,
     convert,
     dt as dt_util,
     location as loc_util,
@@ -2226,7 +2227,7 @@ def fail_when_undefined(value):
     return value
 
 
-def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
+def min_max_from_filter(builtin_filter: Callable, name: str) -> Callable:
     """Convert a built-in min/max Jinja filter to a global function.
 
     The parameters may be passed as an iterable or as separate arguments.
@@ -2676,6 +2677,68 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
     return dt_util.get_time_remaining(value, precision)
 
 
+def color_name_to_rgb(color_name: str) -> color.RGBColor | None:
+    """Convert color name to RGB color.
+
+    Returns `None` if an unrecognized color name is specified.
+    """
+    try:
+        return color.color_name_to_rgb(color_name)
+    except ValueError:
+        return None
+
+
+def color_rgb_to_hex(r: int, g: int, b: int) -> str:
+    """Convert RGB color to web hex color."""
+    return "#" + color.color_rgb_to_hex(r, g, b).upper()
+
+
+def color_hex_to_rgb(hex_string: str) -> tuple[int, int, int]:
+    """Convert web hex color to RGB color."""
+    hex_val = hex_string
+    if hex_val.startswith("#"):
+        hex_val = hex_val[1:]
+    if len(hex_val) != 6:
+        raise ValueError(f"Invalid hex color string '{hex_string}'")
+    rgb = color.rgb_hex_to_rgb_list(hex_val)
+    return (rgb[0], rgb[1], rgb[2])
+
+
+def color_rgbcw_to_temp(
+    r: int, g: int, b: int, c: int, w: int, min_kelvin: int, max_kelvin: int
+) -> tuple[int, int]:
+    """Convert RGBCW to Kelvin color temperature.
+
+    Returns a tuple (temp, brightness).
+    """
+    return color.rgbww_to_color_temperature((r, g, b, c, w), min_kelvin, max_kelvin)
+
+
+def color_gamut(
+    r: tuple[float, float], g: tuple[float, float], b: tuple[float, float]
+) -> color.GamutType:
+    """Create a Color Gamut object, for use with color conversion functions."""
+    return color.GamutType(color.XYPoint(*r), color.XYPoint(*g), color.XYPoint(*b))
+
+
+def _iterable_args(wrapped: Callable) -> Callable:
+    """Wrap any existing function to accept arguments in an iterable.
+
+    Parameters may be passed either as an iterable or as separate arguments.
+
+    This may be used to convert a generic multi-parameter function to a filter,
+    assuming the function does not itself accept a single iterable argument.
+    """
+
+    @wraps(wrapped)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        if len(args) == 1 and isinstance(args[0], Iterable):
+            return wrapped(*(args[0]), **kwargs)
+        return wrapped(*args, **kwargs)
+
+    return wrapper
+
+
 def urlencode(value):
     """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
@@ -2901,6 +2964,42 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
+        self.filters["color_name_to_rgb"] = color_name_to_rgb
+        self.filters["color_rgb_to_hex"] = _iterable_args(color_rgb_to_hex)
+        self.filters["color_hex_to_rgb"] = color_hex_to_rgb
+        self.filters["color_rgb_to_hs"] = _iterable_args(color.color_RGB_to_hs)
+        self.filters["color_hs_to_rgb"] = _iterable_args(color.color_hs_to_RGB)
+        self.filters["color_rgb_to_hsv"] = _iterable_args(color.color_RGB_to_hsv)
+        self.filters["color_hsv_to_rgb"] = _iterable_args(color.color_hsv_to_RGB)
+        self.filters["color_hsb_to_rgb"] = _iterable_args(color.color_hsb_to_RGB)
+        self.filters["color_rgb_to_xy"] = _iterable_args(color.color_RGB_to_xy)
+        self.filters["color_xy_to_rgb"] = _iterable_args(color.color_xy_to_RGB)
+        self.filters["color_rgb_to_xyb"] = _iterable_args(
+            color.color_RGB_to_xy_brightness
+        )
+        self.filters["color_xyb_to_rgb"] = _iterable_args(
+            color.color_xy_brightness_to_RGB
+        )
+        self.filters["color_hs_to_xy"] = _iterable_args(color.color_hs_to_xy)
+        self.filters["color_xy_to_hs"] = _iterable_args(color.color_xy_to_hs)
+        self.filters["color_rgb_to_rgbw"] = _iterable_args(color.color_rgb_to_rgbw)
+        self.filters["color_rgbw_to_rgb"] = _iterable_args(color.color_rgbw_to_rgb)
+        self.filters["color_rgb_to_rgbcw"] = _iterable_args(color.color_rgb_to_rgbww)
+        self.filters["color_rgbcw_to_rgb"] = _iterable_args(color.color_rgbww_to_rgb)
+        self.filters["color_temp_to_rgb"] = color.color_temperature_to_rgb
+        self.filters["color_temp_to_rgbcw"] = _iterable_args(
+            color.color_temperature_to_rgbww
+        )
+        self.filters["color_rgbcw_to_temp"] = _iterable_args(color_rgbcw_to_temp)
+        self.filters["color_temp_to_hs"] = color.color_temperature_to_hs
+        self.filters["color_xy_to_temp"] = _iterable_args(color.color_xy_to_temperature)
+        self.filters["color_temp_kelvin_to_mired"] = (
+            color.color_temperature_kelvin_to_mired
+        )
+        self.filters["color_temp_mired_to_kelvin"] = (
+            color.color_temperature_mired_to_kelvin
+        )
+        self.filters["color_gamut"] = _iterable_args(color_gamut)
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
@@ -2938,6 +3037,40 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
+        self.globals["color_name_to_rgb"] = color_name_to_rgb
+        self.globals["color_rgb_to_hex"] = _iterable_args(color_rgb_to_hex)
+        self.globals["color_hex_to_rgb"] = color_hex_to_rgb
+        self.globals["color_rgb_to_hs"] = _iterable_args(color.color_RGB_to_hs)
+        self.globals["color_hs_to_rgb"] = _iterable_args(color.color_hs_to_RGB)
+        self.globals["color_rgb_to_hsv"] = _iterable_args(color.color_RGB_to_hsv)
+        self.globals["color_hsv_to_rgb"] = _iterable_args(color.color_hsv_to_RGB)
+        self.globals["color_hsb_to_rgb"] = _iterable_args(color.color_hsb_to_RGB)
+        self.globals["color_rgb_to_xy"] = _iterable_args(color.color_RGB_to_xy)
+        self.globals["color_xy_to_rgb"] = _iterable_args(color.color_xy_to_RGB)
+        self.globals["color_rgb_to_xyb"] = _iterable_args(
+            color.color_RGB_to_xy_brightness
+        )
+        self.globals["color_xyb_to_rgb"] = _iterable_args(
+            color.color_xy_brightness_to_RGB
+        )
+        self.globals["color_hs_to_xy"] = _iterable_args(color.color_hs_to_xy)
+        self.globals["color_xy_to_hs"] = _iterable_args(color.color_xy_to_hs)
+        self.globals["color_rgb_to_rgbw"] = _iterable_args(color.color_rgb_to_rgbw)
+        self.globals["color_rgbw_to_rgb"] = _iterable_args(color.color_rgbw_to_rgb)
+        self.globals["color_rgb_to_rgbcw"] = _iterable_args(color.color_rgb_to_rgbww)
+        self.globals["color_rgbcw_to_rgb"] = _iterable_args(color.color_rgbww_to_rgb)
+        self.globals["color_temp_to_rgb"] = color.color_temperature_to_rgb
+        self.globals["color_temp_to_rgbcw"] = color.color_temperature_to_rgbww
+        self.globals["color_rgbcw_to_temp"] = _iterable_args(color_rgbcw_to_temp)
+        self.globals["color_temp_to_hs"] = color.color_temperature_to_hs
+        self.globals["color_xy_to_temp"] = _iterable_args(color.color_xy_to_temperature)
+        self.globals["color_temp_kelvin_to_mired"] = (
+            color.color_temperature_kelvin_to_mired
+        )
+        self.globals["color_temp_mired_to_kelvin"] = (
+            color.color_temperature_mired_to_kelvin
+        )
+        self.globals["color_gamut"] = _iterable_args(color_gamut)
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean

@@ -8,6 +8,7 @@ import json
 import logging
 import math
 import random
+import re
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -1655,6 +1656,128 @@ def test_base64_decode(hass: HomeAssistant) -> None:
             '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("ascii") }}', hass
         ).async_render()
         == "homeassistant"
+    )
+
+
+def test_color(hass: HomeAssistant) -> None:
+    """Test the color functions/filters.
+
+    Note that the underlying functions are tested in tests/util/test_color.py so
+    only the template function/filter names, parameters, and return types need
+    to be tested here.
+    """
+
+    def test(tmpl: str, expected_regex: str) -> None:
+        rendered = template.Template(tmpl, hass).async_render()
+        assert re.search(expected_regex, str(rendered))
+
+    def test_fail(tmpl: str) -> None:
+        with pytest.raises(TemplateError):
+            template.Template(tmpl, hass).async_render()
+
+    # Test non-iterable parameters and color_name_to_rgb
+    test('{{ color_name_to_rgb("red") }}', r"^RGBColor\(.+\)$")
+    test('{{ "red" | color_name_to_rgb }}', r"^RGBColor\(.+\)$")
+    test('{{ color_name_to_rgb("invalid_color") }}', r"^None$")
+    test('{{ "invalid_color" | color_name_to_rgb }}', r"^None$")
+    test_fail("{{ color_name_to_rgb() }}")
+    test_fail('{{ color_name_to_rgb("red", "green") }}')
+    test_fail('{{ color_name_to_rgb(["red"]) }}')
+
+    # Test iterable parameters and color_rgb_to_hex
+    test("{{ color_rgb_to_hex(255, 128, 0) }}", r"^#FF8000$")
+    test("{% set rgb = (255, 128, 0) %}{{ color_rgb_to_hex(rgb) }}", r"^#FF8000$")
+    test("{% set rgb = [255, 128, 0] %}{{ color_rgb_to_hex(rgb) }}", r"^#FF8000$")
+    test("{{ (255, 128, 0) | color_rgb_to_hex }}", r"^#FF8000$")
+    test("{{ [255, 128, 0] | color_rgb_to_hex }}", r"^#FF8000$")
+    test("{{ color_rgb_to_hex(color_name_to_rgb('red')) }}", r"^#FF0000$")
+    test("{{ 'red' | color_name_to_rgb | color_rgb_to_hex }}", r"^#FF0000$")
+    test_fail("{{ color_rgb_to_hex() }}")
+    test_fail("{% set rgb = () %}{{ color_rgb_to_hex(rgb) }}")
+    test_fail("{{ color_rgb_to_hex(1, 2) }}")
+    test_fail("{% rgb = (1, 2) %}{{ color_rgb_to_hex(rgb) }}")
+    test_fail("{{ (1, 2) | color_rgb_to_hex }}")
+    test_fail("{{ color_rgb_to_hex(1, 2, 3, 4) }}")
+    test_fail("{% rgb = (1, 2, 3, 4) %}{{ color_rgb_to_hex(rgb) }}")
+    test_fail("{{ (1, 2, 3, 4) | color_rgb_to_hex }}")
+
+    # Test other functions/filters (without re-testing parameters)
+    test('{{ color_hex_to_rgb("#FF8000") }}', r"^\(255, 128, 0\)$")
+    test('{{ "#FF8000" | color_hex_to_rgb }}', r"^\(255, 128, 0\)$")
+    test("{{ color_rgb_to_hs(255, 128, 0) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0) | color_rgb_to_hs }}", r"^\(.+\)$")
+    test("{{ color_hs_to_rgb(180, 50) }}", r"^\(.+\)$")
+    test("{{ (180, 50) | color_hs_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_rgb_to_hsv(255, 128, 0) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0) | color_rgb_to_hsv }}", r"^\(.+\)$")
+    test("{{ color_hsv_to_rgb(180, 50, 50) }}", r"^\(.+\)$")
+    test("{{ (180, 50, 50) | color_hsv_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_hsb_to_rgb(180, 50, 0.5) }}", r"^\(.+\)$")
+    test("{{ (180, 50, 0.5) | color_hsb_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_rgb_to_xy(255, 128, 0) }}", r"^\(.+\)$")
+    test(
+        "{{ color_rgb_to_xy(255, 128, 0, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (255, 128, 0) | color_rgb_to_xy }}", r"^\(.+\)$")
+    test("{{ color_xy_to_rgb(0.5, 0.5) }}", r"^\(.+\)$")
+    test(
+        "{{ color_xy_to_rgb(0.5, 0.5, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (0.5, 0.5) | color_xy_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_rgb_to_xyb(255, 128, 0) }}", r"^\(.+\)$")
+    test(
+        "{{ color_rgb_to_xyb(255, 128, 0, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (255, 128, 0) | color_rgb_to_xyb }}", r"^\(.+\)$")
+    test("{{ color_xyb_to_rgb(0.5, 0.5, 128) }}", r"^\(.+\)$")
+    test(
+        "{{ color_xyb_to_rgb(0.5, 0.5, 128, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (0.5, 0.5, 128) | color_xyb_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_hs_to_xy(180, 50) }}", r"^\(.+\)$")
+    test(
+        "{{ color_hs_to_xy(180, 50, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (180, 50) | color_hs_to_xy }}", r"^\(.+\)$")
+    test("{{ color_xy_to_hs(0.5, 0.5) }}", r"^\(.+\)$")
+    test(
+        "{{ color_xy_to_hs(0.5, 0.5, color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08))) }}",
+        r"^\(.+\)$",
+    )
+    test("{{ (0.5, 0.5) | color_xy_to_hs }}", r"^\(.+\)$")
+    test("{{ color_rgb_to_rgbw(255, 128, 0) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0) | color_rgb_to_rgbw }}", r"^\(.+\)$")
+    test("{{ color_rgbw_to_rgb(255, 128, 0, 128) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0, 128) | color_rgbw_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_rgb_to_rgbcw(255, 128, 0, 1000, 10000) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0, 1000, 10000) | color_rgb_to_rgbcw }}", r"^\(.+\)$")
+    test("{{ color_rgbcw_to_rgb(255, 128, 0, 128, 128, 1000, 10000) }}", r"^\(.+\)$")
+    test("{{ (255, 128, 0, 128, 128, 1000, 10000) | color_rgbcw_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_temp_to_rgb(6000) }}", r"^\(.+\)$")
+    test("{{ 6000 | color_temp_to_rgb }}", r"^\(.+\)$")
+    test("{{ color_temp_to_rgbcw(6000, 255, 1000, 10000) }}", r"^\(.+\)$")
+    test("{{ (6000, 255, 1000, 10000) | color_temp_to_rgbcw }}", r"^\(.+\)$")
+    test("{{ color_rgbcw_to_temp(255, 128, 0, 128, 128, 1000, 10000) }}", r"^\(.+\)$")
+    test(
+        "{{ (255, 128, 0, 128, 128, 1000, 10000) | color_rgbcw_to_temp }}",
+        r"^\(.+\)$",
+    )
+    test("{{ color_temp_to_hs(6000) }}", r"^\(.+\)$")
+    test("{{ 6000 | color_temp_to_hs }}", r"^\(.+\)$")
+    test("{{ color_xy_to_temp(0.5, 0.5) }}", r"^\d+$")
+    test("{{ (0.5, 0.5) | color_xy_to_temp }}", r"^\d+$")
+    test("{{ color_temp_kelvin_to_mired(6000) }}", r"^\d+$")
+    test("{{ 6000 | color_temp_kelvin_to_mired }}", r"^\d+$")
+    test("{{ color_temp_mired_to_kelvin(150) }}", r"^\d+$")
+    test("{{ 150 | color_temp_mired_to_kelvin }}", r"^\d+$")
+    test(
+        "{{ color_gamut((0.704, 0.296), (0.2151, 0.7106), (0.138, 0.08)) }}",
+        r"^GamutType\(.+\)$",
     )
 
 
