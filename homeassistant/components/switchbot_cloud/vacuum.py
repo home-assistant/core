@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, str] = {
+VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, VacuumEntityState] = {
     "StandBy": VacuumEntityState.IDLE,
     "Clearing": VacuumEntityState.CLEANING,
     "Paused": VacuumEntityState.PAUSED,
@@ -109,7 +109,9 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
-        self._attr_state = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
+        self._attr_vacuum_state = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(
+            switchbot_state
+        )
 
         self.async_write_ha_state()
 

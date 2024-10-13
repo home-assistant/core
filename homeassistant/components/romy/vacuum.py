@@ -6,7 +6,11 @@ https://home-assistant.io/components/vacuum.romy/.
 
 from typing import Any
 
-from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.vacuum import (
+    StateVacuumEntity,
+    VacuumEntityFeature,
+    VacuumEntityState,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,7 +79,11 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
-        self._attr_state = self.romy.status
+        try:
+            assert self.romy.status is not None
+            self._attr_vacuum_state = VacuumEntityState(self.romy.status)
+        except (AssertionError, ValueError):
+            self._attr_vacuum_state = None
 
         self.async_write_ha_state()
 

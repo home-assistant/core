@@ -279,7 +279,7 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         async def on_status(event: StateEvent) -> None:
-            self._attr_state = _STATE_TO_VACUUM_STATE[event.state]
+            self._attr_vacuum_state = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)

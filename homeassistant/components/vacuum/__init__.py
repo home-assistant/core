@@ -243,7 +243,6 @@ class StateVacuumEntity(
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_state: str | None = None
     _attr_vacuum_state: VacuumEntityState | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 

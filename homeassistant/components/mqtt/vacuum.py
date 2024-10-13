@@ -276,7 +276,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_vacuum_state"},
         )
 
     async def _subscribe_topics(self) -> None:
