@@ -224,7 +224,7 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
                 {
                     vol.Required(
                         CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
-                    ): selector({"select": dropdown})
+                    ): selector({"select": dropdown}),
                 }
             ),
             errors=errors,

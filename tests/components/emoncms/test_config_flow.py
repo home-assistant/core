@@ -79,7 +79,7 @@ USER_INPUT = {
     CONF_API_KEY: "my_api_key",
 }
 
-USER_INPUT_AUTO_MODE = {**USER_INPUT, "sync_mode": "auto"}
+USER_INPUT_AUTO_MODE = {**USER_INPUT, SYNC_MODE: SYNC_MODE_AUTO}
 
 
 @pytest.mark.parametrize(
