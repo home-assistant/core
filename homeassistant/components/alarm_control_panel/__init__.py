@@ -197,10 +197,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         if self.__alarm_legacy_state and not self.__alarm_legacy_state_reported:
             self._report_deprecated_alarm_state_handling()
 
-    async def _async_report_deprecated_alarm_state_handling(self) -> None:
-        """Async version of _report_deprecated_alarm_state_handling."""
-        self.hass.async_add_executor_job(self._report_deprecated_alarm_state_handling)
-
     @callback
     def _report_deprecated_alarm_state_handling(self) -> None:
         """Report on deprecated handling of alarm state.

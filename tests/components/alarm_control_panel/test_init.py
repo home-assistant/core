@@ -478,3 +478,14 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         )
 
     assert "Entities should implement the 'alarm_state' property and" in caplog.text
+    caplog.clear()
+    with patch.object(
+        MockLegacyAlarmControlPanel,
+        "__module__",
+        "tests.custom_components.test.alarm_control_panel",
+    ):
+        await help_test_async_alarm_control_panel_service(
+            hass, entity.entity_id, SERVICE_ALARM_DISARM
+        )
+    # Test we only log once
+    assert "Entities should implement the 'alarm_state' property and" not in caplog.text
