@@ -1971,6 +1971,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "fluss": {
+      "name": "Fluss +",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "flux": {
       "name": "Flux",
       "integration_type": "hub",
