@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "sync_mode": "Synchronization mode :"
         },
         "data_description": {
           "url": "Server url starting with the protocol (http or https)",
@@ -18,12 +19,19 @@
       }
     }
   },
+  "selector": {
+    "sync_mode": {
+      "options": {
+        "auto": "synchronize all available feeds automatically",
+        "manual": "choose manually the feeds to synchronize"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
-          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]",
-          "sync_all_feeds": "Synchronise all feeds once"
+          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]"
         }
       }
     }

@@ -6,8 +6,9 @@ import pytest
 
 from homeassistant.components.emoncms.const import (
     CONF_ONLY_INCLUDE_FEEDID,
-    CONF_SYNC_ALL_FEEDS,
     DOMAIN,
+    SYNC_MODE,
+    SYNC_MODE_AUTO,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -78,11 +79,22 @@ USER_INPUT = {
     CONF_API_KEY: "my_api_key",
 }
 
+USER_INPUT_AUTO_MODE = {**USER_INPUT, "sync_mode": "auto"}
 
+
+@pytest.mark.parametrize(
+    ("input", "feed_numbers"),
+    [
+        (USER_INPUT, ["1"]),
+        (USER_INPUT_AUTO_MODE, FLOW_RESULT[CONF_ONLY_INCLUDE_FEEDID]),
+    ],
+)
 async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
+    input: dict,
+    feed_numbers: list,
 ) -> None:
     """Test we get the user form."""
     result = await hass.config_entries.flow.async_init(
@@ -93,19 +105,18 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        input,
     )
-
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ONLY_INCLUDE_FEEDID: ["1"]},
-    )
+    if input.get(SYNC_MODE) != SYNC_MODE_AUTO:
+        assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ONLY_INCLUDE_FEEDID: feed_numbers},
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
-    assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: ["1"]}
+    assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: feed_numbers}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -119,20 +130,12 @@ CONFIG_ENTRY = {
     CONF_URL: "http://1.1.1.1",
 }
 
-USER_OPTIONS_ALL_FEEDS = {CONF_ONLY_INCLUDE_FEEDID: [], CONF_SYNC_ALL_FEEDS: True}
 
-
-@pytest.mark.parametrize(
-    ("input", "output"),
-    [(USER_OPTIONS, CONFIG_ENTRY), (USER_OPTIONS_ALL_FEEDS, FLOW_RESULT)],
-)
 async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
-    input: dict,
-    output: dict,
 ) -> None:
     """Options flow - success test."""
     await setup_integration(hass, config_entry)
@@ -140,11 +143,11 @@ async def test_options_flow(
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=input,
+        user_input=USER_OPTIONS,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == output
-    assert config_entry.options == output
+    assert result["data"] == CONFIG_ENTRY
+    assert config_entry.options == CONFIG_ENTRY
 
 
 async def test_options_flow_failure(
