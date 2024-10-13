@@ -1834,7 +1834,7 @@ pydanfossair==0.1.0
 pydeako==0.4.0
 
 # homeassistant.components.deconz
-pydeconz==116
+pydeconz==118
 
 # homeassistant.components.delijn
 pydelijn==1.1.0
