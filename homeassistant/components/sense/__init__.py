@@ -40,30 +40,12 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type SenseConfigEntry = ConfigEntry[SenseData]
 
 
-class SenseDevicesData:
-    """Data for each sense device."""
-
-    def __init__(self):
-        """Create."""
-        self._data_by_device = {}
-
-    def set_devices_data(self, devices):
-        """Store a device update."""
-        self._data_by_device = {device["id"]: device for device in devices}
-
-    def get_device_by_id(self, sense_device_id):
-        """Get the latest device data."""
-        return self._data_by_device.get(sense_device_id)
-
-
 @dataclass(kw_only=True, slots=True)
 class SenseData:
     """Sense data type."""
 
     data: ASyncSenseable
-    device_data: SenseDevicesData
-    trends: DataUpdateCoordinator[None]
-    discovered: list[dict[str, Any]]
+    trends: DataUpdateCoordinator[Any]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
@@ -108,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         raise ConfigEntryNotReady(str(err)) from err
 
     try:
-        sense_discovered_devices = await gateway.get_discovered_device_data()
+        await gateway.fetch_devices()
         await gateway.update_realtime()
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -149,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
 
     entry.runtime_data = SenseData(
         data=gateway,
-        device_data=SenseDevicesData(),
         trends=trends_coordinator,
-        discovered=sense_discovered_devices,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -165,9 +145,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
             _LOGGER.error("Failed to update data: %s", ex)
 
-        data = gateway.get_realtime()
-        if "devices" in data:
-            entry.runtime_data.device_data.set_devices_data(data["devices"])
         async_dispatcher_send(hass, f"{SENSE_DEVICE_UPDATE}-{gateway.sense_monitor_id}")
 
     remove_update_callback = async_track_time_interval(

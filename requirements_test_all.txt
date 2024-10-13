@@ -2074,7 +2074,7 @@ securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.12.4
+sense-energy==0.13.2
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
