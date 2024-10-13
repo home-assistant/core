@@ -1,33 +1,15 @@
 """Test Onkyo config flow."""
 
-# from typing import Any
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow, ReceiverInfo
-
-# import eiscp
-# import pytest
-# from homeassistant import config_entries
-from homeassistant.components.onkyo.const import (
-    #     CONF_RECEIVER_MAX_VOLUME,
-    DOMAIN,
-    #     OPTION_MAX_VOLUME,
-    #     OPTION_SOURCES,
-)
+from homeassistant.components.onkyo import InputSource
+from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
+from homeassistant.components.onkyo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-
-# from homeassistant.const import (
-#     CONF_DEVICE,
-#     CONF_HOST,
-#     CONF_MAC,
-#     CONF_MODEL,
-#     CONF_NAME,
-#     CONF_PORT,
-# )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -35,8 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from . import create_receiver_info
 
 from tests.common import Mock
-
-# from tests.common import MockConfigEntry
 
 
 async def test_user_initial_menu(hass: HomeAssistant) -> None:
@@ -370,7 +350,7 @@ async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("user_input", "info", "exception", "error"),
+    ("user_input", "exception", "error"),
     [
         (
             # No host, and thus no host reachable
@@ -380,7 +360,6 @@ async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
                 "max_volume": 100,
                 "sources": {},
             },
-            None,
             None,
             "cannot_connect",
         ),
@@ -392,7 +371,6 @@ async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
                 "max_volume": 100,
                 "sources": {},
             },
-            None,
             Exception(),
             "cannot_connect",
         ),
@@ -401,16 +379,15 @@ async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
 async def test_import_fail(
     hass: HomeAssistant,
     user_input: dict[str, Any],
-    info: ReceiverInfo,
     exception: Exception,
     error: str,
 ) -> None:
-    """Test import flow."""
+    """Test import flow failed."""
     with (
         patch("homeassistant.components.onkyo.config_flow"),
         patch(
             "homeassistant.components.onkyo.config_flow.async_interview",
-            return_value=info,
+            return_value=None,
             side_effect=exception,
         ),
     ):
@@ -423,44 +400,39 @@ async def test_import_fail(
     assert result["reason"] == error
 
 
-# @mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
-# async def test_import_success(
-#     mock_receiver: MagicMock,
-#     mock_setup_entry: AsyncMock,
-#     hass: HomeAssistant,
-# ) -> None:
-#     """Test import flow."""
+async def test_import_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test import flow succeeded."""
+    info = create_receiver_info(1)
 
-#     client = mock_receiver.return_value
-#     client.info = {"identifier": "001122334455", "model_name": "Test model"}
+    user_input = {
+        CONF_HOST: info.host,
+        "receiver_max_volume": 80,
+        "max_volume": 110,
+        "sources": {
+            InputSource("00"): "Auxiliary",
+            InputSource("01"): "Video",
+        },
+        "info": info,
+    }
 
-#     with patch("homeassistant.components.onkyo.config_flow"):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": config_entries.SOURCE_IMPORT},
-#             data={
-#                 CONF_HOST: "127.0.0.1",
-#                 CONF_NAME: "Receiver test name",
-#                 OPTION_MAX_VOLUME: 42,
-#                 CONF_RECEIVER_MAX_VOLUME: 69,
-#                 OPTION_SOURCES: {
-#                     "Key_one": "Value-A",
-#                     "Key_two": "Value-B",
-#                 },
-#             },
-#         )
-#         await hass.async_block_till_done()
+    with (
+        patch("homeassistant.components.onkyo.config_flow"),
+    ):
+        import_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
+        )
+        await hass.async_block_till_done()
 
-#     assert len(mock_setup_entry.mock_calls) == 1
-#     assert result["type"] is FlowResultType.CREATE_ENTRY
-#     assert result["title"] == "Test model 001122334455"
-#     assert result["result"].unique_id == "001122334455"
-#     assert result["data"] == {"model": "Test model", "mac": "001122334455"}
-#     assert result["options"] == {
-#         "maximum_volume": 42,
-#         "receiver_max_volume": 69,
-#         "sources": {"Key_one": "Value-A", "Key_two": "Value-B"},
-#     }
+        assert import_result["type"] is FlowResultType.CREATE_ENTRY
+        assert import_result["data"]["host"] == "host 1"
+        assert import_result["data"]["volume_resolution"] == 80
+        assert import_result["options"]["max_volume"] == 100
+        assert import_result["options"]["input_sources"] == {
+            "00": "Auxiliary",
+            "01": "Video",
+        }
 
 
 # @pytest.mark.parametrize(
