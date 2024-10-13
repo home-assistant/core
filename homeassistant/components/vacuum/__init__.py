@@ -348,7 +348,7 @@ class StateVacuumEntity(
         return data
 
     @final
-    @cached_property
+    @property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         if (vacuum_state := self.vacuum_state) is None:
