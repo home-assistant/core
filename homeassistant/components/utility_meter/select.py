@@ -13,7 +13,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 
 from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
 
@@ -38,7 +37,6 @@ async def async_setup_entry(
 
     tariff_select = TariffSelect(
         name=name,
-        suggested_entity_id=f"select.{slugify(name)}",
         tariffs=tariffs,
         unique_id=unique_id,
         device_info=device_info,
@@ -70,8 +68,8 @@ async def async_setup_platform(
         [
             TariffSelect(
                 name=conf_meter_name,
-                suggested_entity_id=f"select.{meter}",
                 tariffs=discovery_info[CONF_TARIFFS],
+                yaml_slug=meter,
                 unique_id=conf_meter_unique_id,
             )
         ]
@@ -86,15 +84,20 @@ class TariffSelect(SelectEntity, RestoreEntity):
     def __init__(
         self,
         name,
-        suggested_entity_id,
         tariffs: list[str],
         *,
+        yaml_slug: str | None = None,
         unique_id: str | None = None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize a tariff selector."""
         self._attr_name = name
-        self.entity_id = suggested_entity_id
+        if yaml_slug:  # Backwards compatibility with YAML configuration entries
+            self.entity_id = f"select.{yaml_slug}"
+            if (
+                unique_id is None
+            ):  # Provide a unique_id if not provided based on the unique yaml_slug property
+                unique_id = f"utility_meter_{yaml_slug}_unique_id"
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._current_tariff: str | None = None
