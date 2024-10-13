@@ -7308,7 +7308,6 @@
       "iot_class": "calculated"
     },
     "history_stats": {
-      "name": "History Stats",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7370,7 +7369,6 @@
       "config_flow": false
     },
     "statistics": {
-      "name": "Statistics",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7431,6 +7429,7 @@
     "google_travel_time",
     "group",
     "growatt_server",
+    "history_stats",
     "holiday",
     "homekit_controller",
     "input_boolean",
@@ -7456,6 +7455,7 @@
     "schedule",
     "season",
     "shopping_list",
+    "statistics",
     "sun",
     "switch_as_x",
     "threshold",
