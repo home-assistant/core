@@ -102,7 +102,7 @@ async def test_vacuum_with_error(
         ({"displayCode": "DC_CAT_DETECT"}, VacuumEntityState.DOCKED),
         ({"isDFIFull": True}, VacuumEntityState.ERROR),
         (
-            {"robotCycleState": "CYCLE_VacuumEntityState.CAT_DETECT"},
+            {"robotCycleState": "CYCLE_STATE_CAT_DETECT"},
             VacuumEntityState.PAUSED,
         ),
     ],
