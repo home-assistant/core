@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Home Connect switch."""
+    """Set up the Home Connect select entities."""
 
     def get_entities() -> list[HomeConnectProgramSelectEntity]:
         """Get a list of entities."""
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
-    "Select class for Home Connect."
+    """Select class for Home Connect programs."""
 
     def __init__(self, device: HomeConnectDevice, programs: list[str]) -> None:
         """Initialize the entity."""

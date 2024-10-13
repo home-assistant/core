@@ -7,9 +7,9 @@ from homeconnect.api import HomeConnectError
 import pytest
 
 from homeassistant.components.home_connect.const import BSH_ACTIVE_PROGRAM
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_SELECT_OPTION, Platform
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import get_all_appliances
@@ -85,7 +85,7 @@ async def test_select_functionality(
     await hass.services.async_call(
         SELECT_DOMAIN,
         service,
-        {"entity_id": entity_id, "option": program_to_set},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
         blocking=True,
     )
     assert hass.states.is_state(entity_id, program_to_set)
