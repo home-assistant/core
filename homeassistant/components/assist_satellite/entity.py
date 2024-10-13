@@ -20,7 +20,7 @@ from homeassistant.components.assist_pipeline import (
     async_get_pipeline,
     async_get_pipelines,
     async_pipeline_from_audio_stream,
-    vad,
+    vad, StageSettings,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.tts import (
@@ -335,8 +335,7 @@ class AssistSatelliteEntity(entity.Entity):
                 audio_settings=AudioSettings(
                     silence_seconds=self._resolve_vad_sensitivity()
                 ),
-                start_stage=start_stage,
-                end_stage=end_stage,
+                stage_settings=StageSettings(start_stage, end_stage),
             ),
             f"{self.entity_id}_pipeline",
         )
