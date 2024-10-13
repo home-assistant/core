@@ -65,7 +65,6 @@ class DaikinZoneSwitch(DaikinEntity, SwitchEntity):
         await self.device.set_zone(self._zone_id, "zone_onoff", "1")
         await self.coordinator.async_refresh()
 
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "0")
