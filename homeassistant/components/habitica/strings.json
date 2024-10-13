@@ -852,11 +852,11 @@
           "name": "Adjust streak",
           "description": "Adjust or reset the streak counter of the daily."
         },
-        "reminder": {
+        "reminder_time": {
           "name": "[%key:component::habitica::common::reminder_name%]",
           "description": "[%key:component::habitica::common::reminder_description%]"
         },
-        "remove_reminder": {
+        "remove_reminder_time": {
           "name": "[%key:component::habitica::common::remove_reminder_name%]",
           "description": "[%key:component::habitica::common::remove_reminder_description%]"
         },
