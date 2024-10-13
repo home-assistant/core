@@ -15,9 +15,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_PAUSED,
+    VacuumEntityState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -53,7 +51,7 @@ async def test_vacuum(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumEntityState.DOCKED
     assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
@@ -95,15 +93,18 @@ async def test_vacuum_with_error(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_ERROR
+    assert vacuum.state == VacuumEntityState.ERROR
 
 
 @pytest.mark.parametrize(
     ("robot_data", "expected_state"),
     [
-        ({"displayCode": "DC_CAT_DETECT"}, STATE_DOCKED),
-        ({"isDFIFull": True}, STATE_ERROR),
-        ({"robotCycleState": "CYCLE_STATE_CAT_DETECT"}, STATE_PAUSED),
+        ({"displayCode": "DC_CAT_DETECT"}, VacuumEntityState.DOCKED),
+        ({"isDFIFull": True}, VacuumEntityState.ERROR),
+        (
+            {"robotCycleState": "CYCLE_VacuumEntityState.CAT_DETECT"},
+            VacuumEntityState.PAUSED,
+        ),
     ],
 )
 async def test_vacuum_states(
@@ -150,7 +151,7 @@ async def test_commands(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumEntityState.DOCKED
 
     extra = extra or {}
     data = {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, **extra.get("data", {})}
