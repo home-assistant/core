@@ -663,7 +663,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="TemperatureSensor",
+            key="ThermostatLocalTemperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             measurement_to_ha=lambda x: x / 100,
@@ -672,6 +672,4 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
     ),
-    
-    
 ]
