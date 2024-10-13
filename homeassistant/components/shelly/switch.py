@@ -70,6 +70,7 @@ RPC_SCRIPT_SWITCH = RpcSwitchDescription(
     key="script",
     sub_key="running",
     entity_registry_enabled_default=False,
+    entity_category=EntityCategory.CONFIG,
 )
 
 
@@ -202,6 +203,17 @@ def async_setup_rpc_entry(
         SWITCH_PLATFORM,
         virtual_switch_ids,
         "boolean",
+    )
+
+    # if the script is removed, from the device configuration, we need
+    # to remove orphaned entities
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        SWITCH_PLATFORM,
+        coordinator.device.status,
+        "script",
     )
 
     if not switch_ids:
