@@ -57,7 +57,7 @@ async def test_select(
             data={},
             domain=DOMAIN,
             options=config_entry_config,
-            title="Energy bill",
+            title=config_entry_config["name"],
         )
 
         utility_meter_config_entry.add_to_hass(hass)
@@ -72,7 +72,7 @@ async def test_select(
     await hass.async_block_till_done()
 
     state = hass.states.get("select.energy_bill")
-
+    assert state is not None
     assert state.attributes.get("friendly_name") == "Energy bill"
 
 
