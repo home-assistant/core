@@ -6,7 +6,6 @@ import asyncio
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
-import inspect
 import logging
 from typing import Any, final
 
@@ -25,7 +24,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_PAUSED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -224,7 +223,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "battery_icon",
     "fan_speed",
     "fan_speed_list",
-    "state",
+    "vacuum_state",
 }
 
 
@@ -252,7 +251,7 @@ class StateVacuumEntity(
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         if any(method in cls.__dict__ for method in ("_attr_state", "state")):
-            # Integrations should use the 'vacuum_state' property instead of
+            # Integrations should use the 'alarm_state' property instead of
             # setting the state directly.
             cls.__vacuum_legacy_state = True
 
@@ -289,33 +288,17 @@ class StateVacuumEntity(
         if self.__vacuum_legacy_state_reported is True:
             return
         self.__vacuum_legacy_state_reported = True
-        module = inspect.getmodule(self)
-        if module and module.__file__ and "custom_components" in module.__file__:
-            # Do not report on core integrations as they will be fixed.
+        if "custom_components" in type(self).__module__:
+            # Do not report on core integrations as they have been fixed.
             report_issue = "report it to the custom integration author."
             _LOGGER.warning(
                 "Entity %s (%s) is setting state directly"
-                " which will stop working in HA Core 2025.10."
+                " which will stop working in HA Core 2025.11."
                 " Entities should implement the 'vacuum_state' property and"
                 " return it's state using the VacuumEntityState enum, please %s",
                 self.entity_id,
                 type(self),
                 report_issue,
-            )
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_vacuum_state_{self.platform.platform_name}",
-                breaks_in_ha_version="2025.10.0",
-                is_fixable=False,
-                is_persistent=False,
-                issue_domain=self.platform.platform_name,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_vacuum_state",
-                translation_placeholders={
-                    "platform": self.platform.platform_name,
-                    "report_issue": report_issue,
-                },
             )
 
     @cached_property
