@@ -26,7 +26,6 @@ class HabiticaCalendar(StrEnum):
 
     DAILIES = "dailys"
     TODOS = "todos"
-    REMINDERS = "reminders"
 
 
 async def async_setup_entry(
@@ -41,7 +40,6 @@ async def async_setup_entry(
         [
             HabiticaTodosCalendarEntity(coordinator),
             HabiticaDailiesCalendarEntity(coordinator),
-            HabiticaRemindersCalendarEntity(coordinator),
         ]
     )
 
@@ -178,83 +176,4 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             for recurrence in build_rrule(task).between(start_date, end_date, inc=True)
             if (start := recurrence.date()) > today
             or (start == today and not task["completed"])
-        ]
-
-
-class HabiticaRemindersCalendarEntity(HabiticaCalendarEntity):
-    """Habitica reminders calendar entity."""
-
-    entity_description = CalendarEntityDescription(
-        key=HabiticaCalendar.REMINDERS,
-        translation_key=HabiticaCalendar.REMINDERS,
-    )
-
-    @property
-    def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-        now = dt_util.now()
-        events = [
-            CalendarEvent(
-                start=start,
-                end=start + timedelta(hours=1),
-                summary=task["text"],
-                description=task["notes"],
-                uid=f"{task["id"]}_{reminder["id"]}",
-            )
-            for task in self.coordinator.data.tasks
-            if task["type"] in (HabiticaTaskType.DAILY, HabiticaTaskType.TODO)
-            and not task["completed"]
-            for reminder in task.get("reminders", [])
-            if (
-                start := datetime.fromisoformat(reminder["time"]).replace(
-                    tzinfo=dt_util.DEFAULT_TIME_ZONE
-                )
-            )
-            >= (now - timedelta(hours=1))
-        ]
-
-        events_sorted = sorted(
-            events,
-            key=lambda event: event.start,
-        )
-
-        # return the last reminder that went off in the last hour
-        if past_events := [
-            event
-            for event in events_sorted
-            if now >= event.start >= (now - timedelta(hours=1))
-        ]:
-            return past_events[-1]
-
-        # if there is no active reminder, move on to the next upcoming event
-        if upcoming_events := [event for event in events_sorted if event.start > now]:
-            return upcoming_events[0]
-        return None
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        return [
-            CalendarEvent(
-                start=start,
-                end=start + timedelta(hours=1),
-                summary=task["text"],
-                description=task["notes"],
-                uid=f"{task["id"]}_{reminder["id"]}",
-            )
-            for task in self.coordinator.data.tasks
-            if task["type"] in (HabiticaTaskType.DAILY, HabiticaTaskType.TODO)
-            and not task["completed"]
-            for reminder in task.get("reminders", [])
-            if (
-                start_date
-                <= (
-                    start := datetime.fromisoformat(reminder["time"]).replace(
-                        tzinfo=dt_util.DEFAULT_TIME_ZONE
-                    )
-                )
-                <= end_date
-            )
         ]

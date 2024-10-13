@@ -64,9 +64,6 @@
       },
       "dailys": {
         "default": "mdi:calendar-multiple"
-      },
-      "reminders": {
-        "default": "mdi:reminder"
       }
     },
     "sensor": {

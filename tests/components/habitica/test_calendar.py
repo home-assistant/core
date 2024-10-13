@@ -45,7 +45,6 @@ async def test_calendar_platform(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # assert dt_util.now().isoformat() is False
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
@@ -56,7 +55,6 @@ async def test_calendar_platform(
     [
         "calendar.test_user_to_do_s",
         "calendar.test_user_dailies",
-        "calendar.test_user_reminders",
     ],
 )
 @pytest.mark.freeze_time("2024-09-22 00:00:00")

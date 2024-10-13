@@ -90,9 +90,6 @@
       },
       "dailys": {
         "name": "Dailies"
-      },
-      "reminders": {
-        "name": "Reminders"
       }
     },
     "sensor": {
