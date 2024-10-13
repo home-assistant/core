@@ -731,6 +731,61 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+def _map_fcday(sensor_type: str) -> int:
+    fcday = 0
+    if sensor_type.endswith("_2d"):
+        fcday = 1
+    if sensor_type.endswith("_3d"):
+        fcday = 2
+    if sensor_type.endswith("_4d"):
+        fcday = 3
+    if sensor_type.endswith("_5d"):
+        fcday = 4
+
+    return fcday
+
+
+def _get_forecast_state(data, sensor_type: str, fcday: int):
+    try:
+        condition = data.get(FORECAST)[fcday].get(CONDITION)
+    except IndexError:
+        return None, None
+
+    if condition:
+        new_state = condition.get(CONDITION)
+        if sensor_type.startswith(SYMBOL):
+            new_state = condition.get(EXACTNL)
+        if sensor_type.startswith("conditioncode"):
+            new_state = condition.get(CONDCODE)
+        if sensor_type.startswith("conditiondetailed"):
+            new_state = condition.get(DETAILED)
+        if sensor_type.startswith("conditionexact"):
+            new_state = condition.get(EXACT)
+
+        img = condition.get(IMAGE)
+
+        return new_state, img
+
+
+def _get_weather_state(data, sensor_type: str):
+    if condition := data.get(CONDITION):
+        new_state = None
+        if sensor_type == SYMBOL:
+            new_state = condition.get(EXACTNL)
+        if sensor_type == CONDITION:
+            new_state = condition.get(CONDITION)
+        if sensor_type == "conditioncode":
+            new_state = condition.get(CONDCODE)
+        if sensor_type == "conditiondetailed":
+            new_state = condition.get(DETAILED)
+        if sensor_type == "conditionexact":
+            new_state = condition.get(EXACT)
+
+        img = condition.get(IMAGE)
+
+        return new_state, img
+
+
 class BrSensor(SensorEntity):
     """Representation of a Buienradar sensor."""
 
@@ -763,6 +818,59 @@ class BrSensor(SensorEntity):
         if self._load_data(data.data) and self.hass:
             self.async_write_ha_state()
 
+    def update_forecast_state(self, data, sensor_type: str):
+        # update forecasting sensors:
+        fcday = _map_fcday(sensor_type)
+
+        # update weather symbol & status text
+        if sensor_type.startswith((SYMBOL, CONDITION)):
+            new_state, img = _get_forecast_state(data, sensor_type, fcday)
+
+            if new_state is None:
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                return False
+
+            if new_state != self.state or img != self.entity_picture:
+                self._attr_native_value = new_state
+                self._attr_entity_picture = img
+                return True
+            return False
+
+        if sensor_type.startswith(WINDSPEED):
+            # hass wants windspeeds in km/h not m/s, so convert:
+            try:
+                self._attr_native_value = data.get(FORECAST)[fcday].get(
+                    sensor_type[:-3]
+                )
+            except IndexError:
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                return False
+
+            if self.state is not None:
+                self._attr_native_value = round(self.state * 3.6, 1)
+            return True
+
+        # update all other sensors
+        try:
+            self._attr_native_value = data.get(FORECAST)[fcday].get(
+                sensor_type[:-3]
+            )
+        except IndexError:
+            _LOGGER.warning("No forecast for fcday=%s", fcday)
+            return False
+        return True
+
+    def update_weather_state(self, data, sensor_type):
+        # update weather symbol & status text
+        new_state, img = _get_weather_state(data, sensor_type)
+
+        if new_state != self.state or img != self.entity_picture:
+            self._attr_native_value = new_state
+            self._attr_entity_picture = img
+            return True
+
+        return False
+
     @callback
     def _load_data(self, data):  # noqa: C901
         """Load the sensor with relevant data."""
@@ -777,90 +885,10 @@ class BrSensor(SensorEntity):
         sensor_type = self.entity_description.key
 
         if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
-            # update forecasting sensors:
-            fcday = 0
-            if sensor_type.endswith("_2d"):
-                fcday = 1
-            if sensor_type.endswith("_3d"):
-                fcday = 2
-            if sensor_type.endswith("_4d"):
-                fcday = 3
-            if sensor_type.endswith("_5d"):
-                fcday = 4
-
-            # update weather symbol & status text
-            if sensor_type.startswith((SYMBOL, CONDITION)):
-                try:
-                    condition = data.get(FORECAST)[fcday].get(CONDITION)
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
-                    return False
-
-                if condition:
-                    new_state = condition.get(CONDITION)
-                    if sensor_type.startswith(SYMBOL):
-                        new_state = condition.get(EXACTNL)
-                    if sensor_type.startswith("conditioncode"):
-                        new_state = condition.get(CONDCODE)
-                    if sensor_type.startswith("conditiondetailed"):
-                        new_state = condition.get(DETAILED)
-                    if sensor_type.startswith("conditionexact"):
-                        new_state = condition.get(EXACT)
-
-                    img = condition.get(IMAGE)
-
-                    if new_state != self.state or img != self.entity_picture:
-                        self._attr_native_value = new_state
-                        self._attr_entity_picture = img
-                        return True
-                return False
-
-            if sensor_type.startswith(WINDSPEED):
-                # hass wants windspeeds in km/h not m/s, so convert:
-                try:
-                    self._attr_native_value = data.get(FORECAST)[fcday].get(
-                        sensor_type[:-3]
-                    )
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
-                    return False
-
-                if self.state is not None:
-                    self._attr_native_value = round(self.state * 3.6, 1)
-                return True
-
-            # update all other sensors
-            try:
-                self._attr_native_value = data.get(FORECAST)[fcday].get(
-                    sensor_type[:-3]
-                )
-            except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s", fcday)
-                return False
-            return True
+            return self.update_forecast_state(data, sensor_type)
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
-            # update weather symbol & status text
-            if condition := data.get(CONDITION):
-                if sensor_type == SYMBOL:
-                    new_state = condition.get(EXACTNL)
-                if sensor_type == CONDITION:
-                    new_state = condition.get(CONDITION)
-                if sensor_type == "conditioncode":
-                    new_state = condition.get(CONDCODE)
-                if sensor_type == "conditiondetailed":
-                    new_state = condition.get(DETAILED)
-                if sensor_type == "conditionexact":
-                    new_state = condition.get(EXACT)
-
-                img = condition.get(IMAGE)
-
-                if new_state != self.state or img != self.entity_picture:
-                    self._attr_native_value = new_state
-                    self._attr_entity_picture = img
-                    return True
-
-            return False
+            return self.update_weather_state(data, sensor_type)
 
         if sensor_type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors

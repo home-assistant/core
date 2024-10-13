@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
+from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol
@@ -10,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
@@ -53,6 +53,7 @@ __all__ = (
     "async_pipeline_from_audio_stream",
     "async_update_pipeline",
     "AudioSettings",
+    "StageSettings",
     "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
@@ -92,6 +93,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class StageSettings:
+    start_stage: PipelineStage
+    end_stage: PipelineStage
+
+    def __post_init__(self):
+        self.start_stage = self.start_stage or PipelineStage.STT
+        self.end_stage = self.end_stage or PipelineStage.TTS
+
+
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
     *,
@@ -106,8 +117,7 @@ async def async_pipeline_from_audio_stream(
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
-    start_stage: PipelineStage = PipelineStage.STT,
-    end_stage: PipelineStage = PipelineStage.TTS,
+    stage_settings: StageSettings = StageSettings(PipelineStage.STT, PipelineStage.TTS),
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
@@ -123,8 +133,8 @@ async def async_pipeline_from_audio_stream(
             hass,
             context=context,
             pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
-            start_stage=start_stage,
-            end_stage=end_stage,
+            start_stage=stage_settings.start_stage,
+            end_stage=stage_settings.end_stage,
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
             wake_word_settings=wake_word_settings,

@@ -1939,13 +1939,7 @@ class AlexaRangeController(AlexaCapability):
                 max_value=max_value,
                 precision=1,
             )
-            for index, speed in enumerate(speed_list):
-                labels = [speed.replace("_", " ")]
-                if index == 1:
-                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
-                if index == max_value:
-                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=index, labels=labels)
+            self._populate_speed_resource(speed_list, max_value)
 
             return self._resource.serialize_capability_resources()
 
@@ -1961,6 +1955,15 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         return {}
+
+    def _populate_speed_resource(self, speed_list, max_value):
+        for index, speed in enumerate(speed_list):
+            labels = [speed.replace("_", " ")]
+            if index == 1:
+                labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+            if index == max_value:
+                labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+            self._resource.add_preset(value=index, labels=labels)
 
     def semantics(self) -> dict[str, Any] | None:
         """Build and return semantics object."""

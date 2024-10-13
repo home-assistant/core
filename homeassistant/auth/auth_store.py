@@ -6,7 +6,7 @@ from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
-from typing import Any
+from typing import Any, Optional
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -58,7 +58,7 @@ class AuthStore:
         self._loaded = False
         self._users: dict[str, models.User] = None  # type: ignore[assignment]
         self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
-        self._perm_lookup: PermissionLookup = None  # type: ignore[assignment]
+        self._perm_lookup: Optional[PermissionLookup] = None  # type: ignore[assignment]
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
