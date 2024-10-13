@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CLIENT, CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES, SESSION
+from .const import CLIENT, DOMAIN, LOGGER, OAUTH_SCOPES, SESSION
 
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
@@ -41,6 +41,25 @@ def chunk_list(lst: list, chunk_size: int) -> list[list]:
     return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
+async def _async_get_followed_channels(client: Twitch) -> list[str]:
+    channels = []
+    user = await first(client.get_users())
+    assert user
+
+    followed_channels = await client.get_followed_channels(user_id=user.id)
+    channels = [channel.broadcaster_login for channel in followed_channels.data]
+
+    while followed_channels.current_cursor():
+        followed_channels = await client.get_followed_channels(
+            user_id=user.id, after=followed_channels.current_cursor()
+        )
+        channels.extend(
+            [channel.broadcaster_login for channel in followed_channels.data]
+        )
+
+    return channels
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -50,8 +69,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     session = hass.data[DOMAIN][entry.entry_id][SESSION]
 
-    channels = entry.options[CONF_CHANNELS]
-
+    channels = await _async_get_followed_channels(client)
     entities: list[TwitchSensor] = []
 
     # Split channels into chunks of 100 to avoid hitting the rate limit
