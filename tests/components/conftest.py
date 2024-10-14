@@ -11,8 +11,16 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from aiohasupervisor.models import Repository, StoreAddon, StoreInfo
 import pytest
 
+from homeassistant.config_entries import (
+    DISCOVERY_SOURCES,
+    SOURCE_SYSTEM,
+    ConfigEntriesFlowManager,
+    FlowResult,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -456,3 +464,87 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
     ):
         yield supervisor_client
+
+
+async def _ensure_translation_exists(
+    hass: HomeAssistant,
+    ignore_translations: list[str],
+    category: str,
+    component: str,
+    key: str,
+) -> None:
+    """Raise if translation doesn't exist."""
+    full_key = f"component.{component}.{category}.{key}"
+    if full_key in ignore_translations:
+        return
+
+    translations = await async_get_translations(hass, "en", category, [component])
+    if full_key in translations:
+        return
+
+    key_parts = key.split(".")
+    # Ignore step data translations if title or description exists
+    if (
+        len(key_parts) >= 3
+        and key_parts[0] == "step"
+        and key_parts[2] == "data"
+        and (
+            f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.description"
+            in translations
+            or f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.title"
+            in translations
+        )
+    ):
+        return
+
+    raise ValueError(
+        f"Translation not found for {component}: `{category}.{key}`. "
+        f"Please add to homeassistant/components/{component}/strings.json"
+    )
+
+
+@pytest.fixture
+def ignore_translations() -> list[str]:
+    """Ignore specific translations.
+
+    Override or parametrize this fixture with a fixture that returns,
+    a list of translation that should be ignored.
+    """
+    return []
+
+
+@pytest.fixture(autouse=True)
+def check_config_translations(ignore_translations: list[str]) -> Generator[None]:
+    """Ensure config_flow translations are available."""
+    _original = FlowManager._async_handle_step
+
+    async def _async_handle_step(
+        self: FlowManager, flow: FlowHandler, *args
+    ) -> FlowResult:
+        result = await _original(self, flow, *args)
+        if isinstance(self, ConfigEntriesFlowManager):
+            category = "config"
+            component = flow.handler
+        else:
+            return result
+
+        if (
+            result["type"] is FlowResultType.ABORT
+            and flow.source != SOURCE_SYSTEM
+            and flow.source not in DISCOVERY_SOURCES
+        ):
+            await _ensure_translation_exists(
+                flow.hass,
+                ignore_translations,
+                category,
+                component,
+                f"abort.{result["reason"]}",
+            )
+
+        return result
+
+    with patch(
+        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+        _async_handle_step,
+    ):
+        yield
