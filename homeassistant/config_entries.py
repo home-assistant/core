@@ -1647,9 +1647,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self.check_unique_id(entry)
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
-            self._domain_unique_id_index.setdefault(entry.domain, {})[
-                entry.unique_id
-            ] = entry
+            self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
+                entry.unique_id, []
+            ).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
         """Unindex an entry."""
@@ -1659,7 +1659,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
-            del self._domain_unique_id_index[domain][unique_id]
+            self._domain_unique_id_index[domain][unique_id].remove(entry)
+            if not self._domain_unique_id_index[domain][unique_id]:
+                del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
@@ -1695,7 +1697,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             raise HomeAssistantError(
                 f"The entry unique id {unique_id} is not a string."
             )
-        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        entries = self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        if not entries:
+            return None
+        return entries[0]
 
 
 class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
@@ -2125,7 +2130,7 @@ class ConfigEntries:
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
-                report_issue = loader.async_suggest_report_issue(
+                report_issue = async_suggest_report_issue(
                     self.hass, integration_domain=entry.domain
                 )
                 _LOGGER.error(
@@ -2751,7 +2756,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            report_issue = loader.async_suggest_report_issue(
+            report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=self.handler
             )
             _LOGGER.warning(

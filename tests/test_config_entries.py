@@ -5360,6 +5360,7 @@ async def test_unhashable_unique_id_fails_on_update(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys={},
         domain="test",
         entry_id="mock_id",
         minor_version=1,
@@ -5389,6 +5390,7 @@ async def test_string_unique_id_no_warning(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys={},
         domain="test",
         entry_id="mock_id",
         minor_version=1,
@@ -5429,6 +5431,7 @@ async def test_hashable_unique_id(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys={},
         domain="test",
         entry_id="mock_id",
         minor_version=1,
@@ -5461,6 +5464,7 @@ async def test_no_unique_id_no_warning(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys={},
         domain="test",
         entry_id="mock_id",
         minor_version=1,
