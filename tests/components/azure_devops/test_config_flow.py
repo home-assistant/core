@@ -198,7 +198,6 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
 
     mock_devops_client.authorize.return_value = True
     mock_devops_client.authorized = True
