@@ -8,10 +8,7 @@ from unittest.mock import patch
 
 import aiodhcpwatcher
 import pytest
-from scapy import (
-    arch,  # noqa: F401
-    interfaces,
-)
+from scapy import interfaces
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether

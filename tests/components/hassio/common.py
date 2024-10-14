@@ -9,7 +9,13 @@ from types import MethodType
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
-from aiohasupervisor.models import InstalledAddonComplete, StoreAddonComplete
+from aiohasupervisor.models import (
+    AddonStage,
+    InstalledAddonComplete,
+    Repository,
+    StoreAddon,
+    StoreAddonComplete,
+)
 
 from homeassistant.components.hassio.addon_manager import AddonManager
 from homeassistant.core import HomeAssistant
@@ -17,6 +23,39 @@ from homeassistant.core import HomeAssistant
 LOGGER = logging.getLogger(__name__)
 INSTALLED_ADDON_FIELDS = [field.name for field in fields(InstalledAddonComplete)]
 STORE_ADDON_FIELDS = [field.name for field in fields(StoreAddonComplete)]
+
+MOCK_STORE_ADDONS = [
+    StoreAddon(
+        name="test",
+        arch=[],
+        documentation=False,
+        advanced=False,
+        available=True,
+        build=False,
+        description="Test add-on service",
+        homeassistant=None,
+        icon=False,
+        logo=False,
+        repository="core",
+        slug="core_test",
+        stage=AddonStage.EXPERIMENTAL,
+        update_available=False,
+        url="https://example.com/addons/tree/master/test",
+        version_latest="1.0.0",
+        version="1.0.0",
+        installed=True,
+    )
+]
+
+MOCK_REPOSITORIES = [
+    Repository(
+        slug="core",
+        name="Official add-ons",
+        source="core",
+        url="https://home-assistant.io/addons",
+        maintainer="Home Assistant",
+    )
+]
 
 
 def mock_to_dict(obj: Mock, fields: list[str]) -> dict[str, Any]:
