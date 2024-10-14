@@ -40,7 +40,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if ":" in host:
             host, port = host.split(":")
         else:
-            port = config_entry.data.get(CONF_PORT, 80)
+            port = 80
 
         new_data = {
             **config_entry.data,
