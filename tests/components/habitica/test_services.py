@@ -1133,7 +1133,7 @@ async def test_cast_skill(
             },
             HTTPStatus.OK,
             ServiceValidationError,
-            "Unable to cast skill, could not find the task 'task-not-found",
+            "Unable to complete action, could not find the task 'task-not-found'",
         ),
         (
             {
@@ -1528,12 +1528,6 @@ async def test_update_daily(
         json={"success": True, "data": {}},
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_DAILY,
@@ -1604,12 +1598,6 @@ async def test_update_todo(
         json={"success": True, "data": {}},
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_TODO,
@@ -1667,12 +1655,6 @@ async def test_update_habit(
         json={"success": True, "data": {}},
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_HABIT,
@@ -1706,12 +1688,6 @@ async def test_update_reward(
         json={"success": True, "data": {}},
     )
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_REWARD,
@@ -1730,7 +1706,7 @@ async def test_update_reward(
         f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
     )
     assert mock_call
-    assert mock_call[2] == '{"value": 100}'
+    assert mock_call[2] == '{"value": 100.0}'
 
 
 async def test_tags(
@@ -1744,12 +1720,6 @@ async def test_tags(
         f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
         json={"success": True, "data": {}},
     )
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         DOMAIN,
@@ -1790,12 +1760,6 @@ async def test_remove_tags(
         f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
         json={"success": True, "data": {}},
     )
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         DOMAIN,
