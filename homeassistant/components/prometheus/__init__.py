@@ -85,6 +85,8 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
+IGNORED_STATES = frozenset({STATE_UNAVAILABLE, STATE_UNKNOWN})
+
 
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
@@ -219,14 +221,6 @@ class PrometheusMetrics:
         """Add/update a state in Prometheus."""
         entity_id = state.entity_id
         _LOGGER.debug("Handling state update for %s", entity_id)
-        domain, _ = hacore.split_entity_id(entity_id)
-
-        ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
-
-        handler = f"_handle_{domain}"
-
-        if hasattr(self, handler) and state.state not in ignored_states:
-            getattr(self, handler)(state)
 
         labels = self._labels(state)
         state_change = self._metric(
@@ -239,7 +233,7 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "Entity is available (not in the unavailable or unknown state)",
         )
-        entity_available.labels(**labels).set(float(state.state not in ignored_states))
+        entity_available.labels(**labels).set(float(state.state not in IGNORED_STATES))
 
         last_updated_time_seconds = self._metric(
             "last_updated_time_seconds",
@@ -247,6 +241,24 @@ class PrometheusMetrics:
             "The last_updated timestamp",
         )
         last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
+
+        if state.state in IGNORED_STATES:
+            ignored_metric_names = set()
+            for metric in (state_change, entity_available, last_updated_time_seconds):
+                for sample in cast(list[prometheus_client.Metric], metric.collect())[
+                    0
+                ].samples:
+                    ignored_metric_names.add(sample.name)
+            self._remove_labelsets(
+                entity_id,
+                None,
+                ignored_metric_names,
+            )
+        else:
+            domain, _ = hacore.split_entity_id(entity_id)
+            handler = f"_handle_{domain}"
+            if hasattr(self, handler) and state.state:
+                getattr(self, handler)(state)
 
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
@@ -274,15 +286,25 @@ class PrometheusMetrics:
             self._remove_labelsets(metrics_entity_id)
 
     def _remove_labelsets(
-        self, entity_id: str, friendly_name: str | None = None
+        self,
+        entity_id: str,
+        friendly_name: str | None = None,
+        ignored_metric_names: set[str] | None = None,
     ) -> None:
         """Remove labelsets matching the given entity id from all metrics."""
+        if ignored_metric_names is None:
+            ignored_metric_names = set()
         for metric in list(self._metrics.values()):
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:
-                if sample.labels["entity"] == entity_id and (
-                    not friendly_name or sample.labels["friendly_name"] == friendly_name
+                if (
+                    sample.name not in ignored_metric_names
+                    and sample.labels["entity"] == entity_id
+                    and (
+                        not friendly_name
+                        or sample.labels["friendly_name"] == friendly_name
+                    )
                 ):
                     _LOGGER.debug(
                         "Removing labelset from %s for entity_id: %s",
@@ -687,7 +709,7 @@ class PrometheusMetrics:
     def _sensor_override_component_metric(
         self, state: State, unit: str | None
     ) -> str | None:
-        """Get metric from override in component confioguration."""
+        """Get metric from override in component configuration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
