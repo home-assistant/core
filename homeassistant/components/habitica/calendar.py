@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from enum import StrEnum
 
 from homeassistant.components.calendar import (
@@ -123,14 +123,25 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     )
 
     @property
+    def today(self) -> datetime:
+        """Habitica daystart."""
+        return datetime.fromisoformat(self.coordinator.data.user["lastCron"])
+
+    def calculate_end_date(self, next_recurrence) -> date:
+        """Calculate the end date for a yesterdaily."""
+
+        if next_recurrence == self.today:
+            return dt_util.start_of_local_day().date()
+        return next_recurrence.date() + timedelta(days=1)
+
+    @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
 
-        today = datetime.fromisoformat(self.coordinator.data.user["lastCron"])
         events = [
             CalendarEvent(
-                start=(start := next_recurrence.date()),
-                end=start + timedelta(days=1),
+                start=next_recurrence.date(),
+                end=self.calculate_end_date(next_recurrence),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
@@ -138,9 +149,9 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             for task in self.coordinator.data.tasks
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
             if (
-                next_recurrence := today
+                next_recurrence := self.today
                 if not task["completed"] and task["isDue"]
-                else build_rrule(task).after(today, inc=True)
+                else build_rrule(task).after(self.today, inc=True)
             )
         ]
         events_sorted = sorted(
@@ -158,7 +169,6 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
 
-        today = datetime.fromisoformat(self.coordinator.data.user["lastCron"]).date()
         # returns only todays and future dailies.
         # If a daily is completed it will not be shown for today but still future recurrences
         # If the cron hasn't run, not completed dailies are yesterdailies and displayed yesterday
@@ -174,6 +184,6 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             for task in self.coordinator.data.tasks
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
             for recurrence in build_rrule(task).between(start_date, end_date, inc=True)
-            if (start := recurrence.date()) > today
-            or (start == today and not task["completed"] and task["isDue"])
+            if (start := recurrence.date()) > self.today
+            or (start == self.today and not task["completed"] and task["isDue"])
         ]
