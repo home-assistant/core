@@ -1,0 +1,86 @@
+# serializer version: 1
+# name: test_all_entities[climate.test_air_conditioner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'low',
+        'high',
+        'mid',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 18,
+      'preset_modes': list([
+        'air_clean',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_air_conditioner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 409>,
+    'translation_key': <ExtendedProperty.CLIMATE_AIR_CONDITIONER: 'climate_air_conditioner'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_climate_air_conditioner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.test_air_conditioner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 40,
+      'current_temperature': 25,
+      'fan_mode': 'mid',
+      'fan_modes': list([
+        'low',
+        'high',
+        'mid',
+      ]),
+      'friendly_name': 'Test air conditioner',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 18,
+      'preset_mode': None,
+      'preset_modes': list([
+        'air_clean',
+      ]),
+      'supported_features': <ClimateEntityFeature: 409>,
+      'target_temp_step': 1,
+      'temperature': 19,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_air_conditioner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
