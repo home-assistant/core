@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -44,7 +44,7 @@ def filepaths() -> dict[str, Path]:
 
 
 @pytest.fixture
-def default_config(filepaths) -> YamlFile:
+def default_config(filepaths: dict[str, Path]) -> YamlFile:
     """Return the default config file for testing."""
     return YamlFile(
         path=filepaths["config"] / YAML_CONFIG_FILE,
@@ -60,7 +60,7 @@ def default_config(filepaths) -> YamlFile:
 
 
 @pytest.fixture
-def default_secrets(filepaths) -> YamlFile:
+def default_secrets(filepaths: dict[str, Path]) -> YamlFile:
     """Return the default secrets file for testing."""
     return YamlFile(
         path=filepaths["config"] / yaml.SECRET_YAML,
@@ -74,7 +74,7 @@ def default_secrets(filepaths) -> YamlFile:
     )
 
 
-def test_secrets_from_yaml(default_config, default_secrets) -> None:
+def test_secrets_from_yaml(default_config: YamlFile, default_secrets: YamlFile) -> None:
     """Did secrets load ok."""
     loaded_file = load_config_file(
         default_config.path, [default_config, default_secrets]
@@ -86,7 +86,11 @@ def test_secrets_from_yaml(default_config, default_secrets) -> None:
     assert expected == loaded_file["component"]
 
 
-def test_secrets_from_parent_folder(filepaths, default_config, default_secrets) -> None:
+def test_secrets_from_parent_folder(
+    filepaths: dict[str, Path],
+    default_config: YamlFile,
+    default_secrets: YamlFile,
+) -> None:
     """Test loading secrets from parent folder."""
     config_file = YamlFile(
         path=filepaths["sub_folder"] / "sub.yaml",
@@ -98,7 +102,11 @@ def test_secrets_from_parent_folder(filepaths, default_config, default_secrets) 
     assert expected == loaded_file["http"]
 
 
-def test_secret_overrides_parent(filepaths, default_config, default_secrets) -> None:
+def test_secret_overrides_parent(
+    filepaths: dict[str, Path],
+    default_config: YamlFile,
+    default_secrets: YamlFile,
+) -> None:
     """Test loading current directory secret overrides the parent."""
     config_file = YamlFile(
         path=filepaths["sub_folder"] / "sub.yaml", contents=default_config.contents
@@ -115,7 +123,10 @@ def test_secret_overrides_parent(filepaths, default_config, default_secrets) -> 
     assert loaded_file["http"] == expected
 
 
-def test_secrets_from_unrelated_fails(filepaths, default_secrets) -> None:
+def test_secrets_from_unrelated_fails(
+    filepaths: dict[str, Path],
+    default_secrets: YamlFile,
+) -> None:
     """Test loading secrets from unrelated folder fails."""
     config_file = YamlFile(
         path=filepaths["sub_folder"] / "sub.yaml",
@@ -130,7 +141,10 @@ def test_secrets_from_unrelated_fails(filepaths, default_secrets) -> None:
         )
 
 
-def test_secrets_logger_removed(filepaths, default_secrets) -> None:
+def test_secrets_logger_removed(
+    filepaths: dict[str, Path],
+    default_secrets: YamlFile,
+) -> None:
     """Ensure logger: debug was removed."""
     config_file = YamlFile(
         path=filepaths["config"] / YAML_CONFIG_FILE,
@@ -141,7 +155,7 @@ def test_secrets_logger_removed(filepaths, default_secrets) -> None:
 
 
 @patch("homeassistant.util.yaml.loader._LOGGER.error")
-def test_bad_logger_value(mock_error, filepaths) -> None:
+def test_bad_logger_value(mock_error: MagicMock, filepaths: dict[str, Path]) -> None:
     """Ensure logger: debug was removed."""
     config_file = YamlFile(
         path=filepaths["config"] / YAML_CONFIG_FILE, contents="api_password: !secret pw"
@@ -153,7 +167,10 @@ def test_bad_logger_value(mock_error, filepaths) -> None:
     assert mock_error.call_count == 1, "Expected an error about logger: value"
 
 
-def test_secrets_are_not_dict(filepaths, default_config) -> None:
+def test_secrets_are_not_dict(
+    filepaths: dict[str, Path],
+    default_config: YamlFile,
+) -> None:
     """Did secrets handle non-dict file."""
     non_dict_secrets = YamlFile(
         path=filepaths["config"] / yaml.SECRET_YAML,
