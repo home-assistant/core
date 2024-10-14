@@ -6,7 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import template
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -107,15 +107,15 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
 
     for set_state in (
-        AlarmControlPanelEntityState.ARMED_HOME,
-        AlarmControlPanelEntityState.ARMED_AWAY,
-        AlarmControlPanelEntityState.ARMED_NIGHT,
-        AlarmControlPanelEntityState.ARMED_VACATION,
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-        AlarmControlPanelEntityState.ARMING,
-        AlarmControlPanelEntityState.DISARMED,
-        AlarmControlPanelEntityState.PENDING,
-        AlarmControlPanelEntityState.TRIGGERED,
+        AlarmControlPanelState.ARMED_HOME,
+        AlarmControlPanelState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_NIGHT,
+        AlarmControlPanelState.ARMED_VACATION,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMING,
+        AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.PENDING,
+        AlarmControlPanelState.TRIGGERED,
     ):
         hass.states.async_set(PANEL_NAME, set_state)
         await hass.async_block_till_done()
@@ -160,7 +160,7 @@ async def test_setup_config_entry(
     hass.states.async_set("alarm_control_panel.one", "disarmed", {})
     await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.my_template")
-    assert state.state == AlarmControlPanelEntityState.DISARMED
+    assert state.state == AlarmControlPanelState.DISARMED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
@@ -184,13 +184,13 @@ async def test_optimistic_states(hass: HomeAssistant) -> None:
     assert state.state == "unknown"
 
     for service, set_state in (
-        ("alarm_arm_away", AlarmControlPanelEntityState.ARMED_AWAY),
-        ("alarm_arm_home", AlarmControlPanelEntityState.ARMED_HOME),
-        ("alarm_arm_night", AlarmControlPanelEntityState.ARMED_NIGHT),
-        ("alarm_arm_vacation", AlarmControlPanelEntityState.ARMED_VACATION),
-        ("alarm_arm_custom_bypass", AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS),
-        ("alarm_disarm", AlarmControlPanelEntityState.DISARMED),
-        ("alarm_trigger", AlarmControlPanelEntityState.TRIGGERED),
+        ("alarm_arm_away", AlarmControlPanelState.ARMED_AWAY),
+        ("alarm_arm_home", AlarmControlPanelState.ARMED_HOME),
+        ("alarm_arm_night", AlarmControlPanelState.ARMED_NIGHT),
+        ("alarm_arm_vacation", AlarmControlPanelState.ARMED_VACATION),
+        ("alarm_arm_custom_bypass", AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+        ("alarm_disarm", AlarmControlPanelState.DISARMED),
+        ("alarm_trigger", AlarmControlPanelState.TRIGGERED),
     ):
         await hass.services.async_call(
             ALARM_DOMAIN,
@@ -460,31 +460,31 @@ async def test_code_config(hass: HomeAssistant, code_format, code_arm_required) 
     ("restored_state", "initial_state"),
     [
         (
-            AlarmControlPanelEntityState.ARMED_AWAY,
-            AlarmControlPanelEntityState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
         ),
         (
-            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
         (
-            AlarmControlPanelEntityState.ARMED_HOME,
-            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
         ),
         (
-            AlarmControlPanelEntityState.ARMED_NIGHT,
-            AlarmControlPanelEntityState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_NIGHT,
         ),
         (
-            AlarmControlPanelEntityState.ARMED_VACATION,
-            AlarmControlPanelEntityState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_VACATION,
         ),
-        (AlarmControlPanelEntityState.ARMING, AlarmControlPanelEntityState.ARMING),
-        (AlarmControlPanelEntityState.DISARMED, AlarmControlPanelEntityState.DISARMED),
-        (AlarmControlPanelEntityState.PENDING, AlarmControlPanelEntityState.PENDING),
+        (AlarmControlPanelState.ARMING, AlarmControlPanelState.ARMING),
+        (AlarmControlPanelState.DISARMED, AlarmControlPanelState.DISARMED),
+        (AlarmControlPanelState.PENDING, AlarmControlPanelState.PENDING),
         (
-            AlarmControlPanelEntityState.TRIGGERED,
-            AlarmControlPanelEntityState.TRIGGERED,
+            AlarmControlPanelState.TRIGGERED,
+            AlarmControlPanelState.TRIGGERED,
         ),
         (STATE_UNAVAILABLE, STATE_UNKNOWN),
         (STATE_UNKNOWN, STATE_UNKNOWN),

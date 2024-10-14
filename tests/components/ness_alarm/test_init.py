@@ -6,7 +6,7 @@ from nessclient import ArmingMode, ArmingState
 import pytest
 
 from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.ness_alarm import (
     ATTR_CODE,
     ATTR_OUTPUT_ID,
@@ -85,7 +85,7 @@ async def test_dispatch_state_change(hass: HomeAssistant, mock_nessclient) -> No
 
     await hass.async_block_till_done()
     assert hass.states.is_state(
-        "alarm_control_panel.alarm_panel", AlarmControlPanelEntityState.ARMING
+        "alarm_control_panel.alarm_panel", AlarmControlPanelState.ARMING
     )
 
 
@@ -174,27 +174,27 @@ async def test_arming_state_change(hass: HomeAssistant, mock_nessclient) -> None
     """Test arming state change handing."""
     states = [
         (ArmingState.UNKNOWN, None, STATE_UNKNOWN),
-        (ArmingState.DISARMED, None, AlarmControlPanelEntityState.DISARMED),
-        (ArmingState.ARMING, None, AlarmControlPanelEntityState.ARMING),
-        (ArmingState.EXIT_DELAY, None, AlarmControlPanelEntityState.ARMING),
-        (ArmingState.ARMED, None, AlarmControlPanelEntityState.ARMED_AWAY),
+        (ArmingState.DISARMED, None, AlarmControlPanelState.DISARMED),
+        (ArmingState.ARMING, None, AlarmControlPanelState.ARMING),
+        (ArmingState.EXIT_DELAY, None, AlarmControlPanelState.ARMING),
+        (ArmingState.ARMED, None, AlarmControlPanelState.ARMED_AWAY),
         (
             ArmingState.ARMED,
             ArmingMode.ARMED_AWAY,
-            AlarmControlPanelEntityState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
         ),
         (
             ArmingState.ARMED,
             ArmingMode.ARMED_HOME,
-            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
         ),
         (
             ArmingState.ARMED,
             ArmingMode.ARMED_NIGHT,
-            AlarmControlPanelEntityState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_NIGHT,
         ),
-        (ArmingState.ENTRY_DELAY, None, AlarmControlPanelEntityState.PENDING),
-        (ArmingState.TRIGGERED, None, AlarmControlPanelEntityState.TRIGGERED),
+        (ArmingState.ENTRY_DELAY, None, AlarmControlPanelState.PENDING),
+        (ArmingState.TRIGGERED, None, AlarmControlPanelState.TRIGGERED),
     ]
 
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)

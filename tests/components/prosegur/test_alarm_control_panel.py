@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -93,13 +93,13 @@ async def test_connection_error(
 @pytest.mark.parametrize(
     ("code", "alarm_service", "alarm_state"),
     [
-        (Status.ARMED, SERVICE_ALARM_ARM_AWAY, AlarmControlPanelEntityState.ARMED_AWAY),
+        (Status.ARMED, SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
             Status.PARTIALLY,
             SERVICE_ALARM_ARM_HOME,
-            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
         ),
-        (Status.DISARMED, SERVICE_ALARM_DISARM, AlarmControlPanelEntityState.DISARMED),
+        (Status.DISARMED, SERVICE_ALARM_DISARM, AlarmControlPanelState.DISARMED),
     ],
 )
 async def test_arm(
