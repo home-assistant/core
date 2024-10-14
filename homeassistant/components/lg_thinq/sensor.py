@@ -208,6 +208,7 @@ RUN_STATE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.WIND_VOLUME: SensorEntityDescription(
         key=ThinQProperty.WIND_VOLUME,
+        device_class=SensorDeviceClass.WIND_SPEED,
         translation_key=ThinQProperty.WIND_VOLUME,
     ),
 }

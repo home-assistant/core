@@ -327,9 +327,6 @@
           "ext_expert": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_expert%]"
         }
       },
-      "wind_volume": {
-        "name": "Wind speed"
-      },
       "wind_volume_for_location": {
         "name": "{location} wind speed"
       },
