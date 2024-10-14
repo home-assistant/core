@@ -23,7 +23,7 @@ from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
 from .helper import unique_id_from_config
 from .services import setup_services
-from .types import SwissPublicTransportConfigEntry, SwissPublicTransportRuntimeData
+from .types import SwissPublicTransportConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ async def async_setup_entry(
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = SwissPublicTransportRuntimeData(coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

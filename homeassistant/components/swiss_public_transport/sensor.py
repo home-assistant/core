@@ -92,9 +92,7 @@ async def async_setup_entry(
         assert unique_id
 
     async_add_entities(
-        SwissPublicTransportSensor(
-            config_entry.runtime_data.coordinator, description, unique_id
-        )
+        SwissPublicTransportSensor(config_entry.runtime_data, description, unique_id)
         for description in SENSORS
     )
 
