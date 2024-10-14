@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import dataclasses
+import logging
 from typing import Any
 
 import voluptuous as vol
-from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData
+from xiaomi_ble import (
+    XiaomiBluetoothDeviceData as DeviceData,
+    XiaomiCloudException,
+    XiaomiCloudInvalidAuthenticationException,
+    XiaomiCloudTokenFetch,
+)
 from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant.components import onboarding
@@ -18,12 +24,16 @@ from homeassistant.components.bluetooth import (
     async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 # How long to wait for additional advertisement packets if we don't have the right ones
 ADDITIONAL_DISCOVERY_TIMEOUT = 60
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -173,6 +183,67 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
             data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
             errors=errors,
+        )
+
+    async def async_step_cloud_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the cloud auth step."""
+        assert self._discovery_info
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            fetcher = XiaomiCloudTokenFetch(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+            )
+            try:
+                key_details = await fetcher.get_device_info(
+                    self._discovery_info.address
+                )
+            except XiaomiCloudInvalidAuthenticationException as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            except XiaomiCloudException as ex:
+                _LOGGER.debug("Failed to connect to MI API: %s", ex, exc_info=True)
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
+            else:
+                if key_details is None:
+                    raise AbortFlow("api_device_not_found")
+                return await self.async_step_get_encryption_key_4_5(
+                    {"bindkey": key_details["token"]}
+                )
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="lock_auth",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={
+                **self.context["title_placeholders"],
+                **description_placeholders,
+            },
+        )
+
+    async def async_step_get_encryption_key_4_5_choose_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose method to get the bind key for a version 4/5 device."""
+        return self.async_show_menu(
+            step_id="get_encryption_key_4_5_choose_method",
+            menu_options=["cloud_auth", "get_encryption_key_4_5"],
+            description_placeholders=self.context["title_placeholders"],
         )
 
     async def async_step_bluetooth_confirm(
