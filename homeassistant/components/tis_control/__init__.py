@@ -49,8 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     try:
         await tis_api.connect()
         hass.http.register_view(TISEndPoint(tis_api))
-        hass.http.register_view(ScanDevicesEndPoint(tis_api))
-        hass.http.register_view(GetKeyEndpoint(tis_api))
     except ConnectionError as e:
         logging.error("error connecting to TIS api %s", e)
         return False
@@ -97,63 +95,3 @@ class TISEndPoint(HomeAssistantView):
         # Reload the platforms
         for entry in self.api.hass.config_entries.async_entries(self.api.domain):
             await self.api.hass.config_entries.async_reload(entry.entry_id)
-
-
-class ScanDevicesEndPoint(HomeAssistantView):
-    """Scan Devices API endpoint."""
-
-    url = "/api/scan_devices"
-    name = "api:scan_devices"
-    requires_auth = False
-
-    def __init__(self, tis_api: TISApi) -> None:
-        """Initialize the API endpoint."""
-        self.api = tis_api
-        self.discovery_packet: TISPacket = protocol_handler.generate_discovery_packet()
-
-    async def get(self, request):
-        """Handle the get request."""
-        # Discover network devices
-        devices = await self.discover_network_devices()
-        devices = [
-            {
-                "device_id": device["device_id"],
-                "device_type_code": device["device_type"],
-                "device_type_name": self.api.devices_dict.get(
-                    tuple(device["device_type"]), tuple(device["device_type"])
-                ),
-                "gateway": device["source_ip"],
-            }
-            for device in devices
-        ]
-        return web.json_response(devices)
-
-    async def discover_network_devices(self, prodcast_attempts=10) -> list:
-        """Discover TIS devices on network."""
-        # empty current discovered devices list
-        self.api.hass.data[self.api.domain]["discovered_devices"] = []
-        for _ in range(prodcast_attempts):
-            await self.api.protocol.sender.broadcast_packet(self.discovery_packet)
-            await asyncio.sleep(1)
-
-        return self.api.hass.data[self.api.domain]["discovered_devices"]
-
-
-class GetKeyEndpoint(HomeAssistantView):
-    """Get Key API endpoint."""
-
-    url = "/api/get_key"
-    name = "api:get_key"
-    requires_auth = False
-
-    def __init__(self, tis_api: TISApi) -> None:
-        """Initialize the API endpoint."""
-        self.api = tis_api
-
-    async def get(self, request):
-        """Handle the get key request."""
-        # Get the MAC address
-        mac = uuid.getnode()
-        mac_address = ":".join(f"{mac:012X}"[i : i + 2] for i in range(0, 12, 2))
-        # Return the MAC address
-        return web.json_response({"key": mac_address})
