@@ -15,7 +15,7 @@ type SubCatLookupType = dict[str, LookupFunc]
 
 
 def lookup_all(
-     lookup_dict: SubCategoryDict, object_id: str
+     lookup_dict: SubCategoryDict
 ) -> ValueType:
     """Look up permission for all."""
     # In case of ALL category, lookup_dict IS the schema.
