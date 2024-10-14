@@ -222,16 +222,9 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.host = self._get_reconfigure_entry().data[CONF_HOST]
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        self.host = reconfigure_entry.data[CONF_HOST]
 
         if user_input is not None:
             try:
@@ -247,7 +240,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
