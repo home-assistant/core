@@ -195,21 +195,6 @@ def get_attributes_total(
     )
 
 
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
-    """Return config entry or raise if not found or not loaded."""
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-        )
-    return entry
-
-
 def lookup_task(
     tasks: list[dict], search: str, service: str = "unknown"
 ) -> dict[str, Any]:
