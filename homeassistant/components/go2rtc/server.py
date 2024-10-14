@@ -1,64 +1,71 @@
 """Go2rtc server."""
 
-from __future__ import annotations
-
+import asyncio
 import logging
-import subprocess
 from tempfile import NamedTemporaryFile
-from threading import Event, Thread
 
-from .const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
+_TERMINATE_TIMEOUT = 5
 
 
-class Server(Thread):
-    """Server thread."""
+def _create_temp_file() -> str:
+    """Create temporary config file."""
+    # Set delete=False to prevent the file from being deleted when the file is closed
+    # Linux is clearing tmp folder on reboot, so no need to delete it manually
+    with NamedTemporaryFile(prefix="go2rtc", suffix=".yaml", delete=False) as file:
+        return file.name
 
-    def __init__(self, binary: str) -> None:
+
+async def _log_output(process: asyncio.subprocess.Process) -> None:
+    """Log the output of the process."""
+    if process.stdout is None:
+        return
+
+    async for line in process.stdout:
+        _LOGGER.debug(line[:-1].decode().strip())
+
+
+class Server:
+    """Go2rtc server."""
+
+    def __init__(self, hass: HomeAssistant, binary: str) -> None:
         """Initialize the server."""
-        super().__init__(name=DOMAIN, daemon=True)
+        self._hass = hass
         self._binary = binary
-        self._process: subprocess.Popen | None = None
-        self._stop_event = Event()
+        self._process: asyncio.subprocess.Process | None = None
 
-    def run(self) -> None:
-        """Run the server."""
+    async def start(self) -> None:
+        """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
-        self._stop_event.clear()
-        with (
-            NamedTemporaryFile(prefix="go2rtc", suffix=".yaml") as file,
-            subprocess.Popen(
-                [self._binary, "-c", "webrtc.ice_servers=[]", "-c", file.name],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            ) as process,
-        ):
-            self._process = process
-            while process.poll() is None and not self._stop_event.is_set():
-                assert process.stdout
-                for line in process.stdout:
-                    _LOGGER.debug(line[:-1].decode())
-        self._process = None
-        _LOGGER.debug("Go2rtc server has been stopped")
+        config_file = await self._hass.async_add_executor_job(_create_temp_file)
 
-    def _terminate_process(self):
-        """Terminate the subprocess, ensuring cleanup."""
-        self._stop_event.set()
+        self._process = await asyncio.create_subprocess_exec(
+            self._binary,
+            "-c",
+            "webrtc.ice_servers=[]",
+            "-c",
+            config_file,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
 
-        if not self._process:
-            return
+        self._hass.async_create_background_task(
+            _log_output(self._process), "Go2rtc log output"
+        )
 
-        _LOGGER.debug("Terminating go2rtc server")
-        self._process.terminate()
-        try:
-            self._process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            _LOGGER.warning("Go2rtc server didn't terminate gracefully. Killing it.")
-            self._process.kill()
-
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop the server."""
-        self._terminate_process()
-        if self.is_alive():
-            self.join()
+        if self._process:
+            _LOGGER.debug("Stopping go2rtc server")
+            process = self._process
+            self._process = None
+            process.terminate()
+            try:
+                await asyncio.wait_for(process.wait(), timeout=_TERMINATE_TIMEOUT)
+            except TimeoutError:
+                _LOGGER.warning("Go2rtc server didn't terminate gracefully. Killing it")
+                process.kill()
+            else:
+                _LOGGER.debug("Go2rtc server has been stopped")
