@@ -133,7 +133,6 @@ async def async_attach_trigger(
     @callback
     def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
-        print("\033[96m  state_automation_listener", event, "\033[0m")
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]
         to_s = event.data["new_state"]
