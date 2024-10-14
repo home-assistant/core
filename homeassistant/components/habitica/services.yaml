@@ -148,12 +148,12 @@ update_todo:
           required: false
           selector:
             date:
-        clear_date:
-          required: false
-          selector:
-            constant:
-              value: true
-              label: ""
+    clear_date:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     reminder_options:
       collapsed: true
       fields:
