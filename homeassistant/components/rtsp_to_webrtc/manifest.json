@@ -7,6 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rtsp_to_webrtc",
   "iot_class": "local_push",
   "loggers": ["rtsp_to_webrtc"],
-  "requirements": ["rtsp-to-webrtc==0.5.1"],
-  "single_config_entry": true
+  "requirements": ["rtsp-to-webrtc==0.5.1"]
 }

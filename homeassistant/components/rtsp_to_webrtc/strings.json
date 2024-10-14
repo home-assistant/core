@@ -19,6 +19,7 @@
       "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
     },
     "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "server_failure": "[%key:component::rtsp_to_webrtc::config::error::server_failure%]",
       "server_unreachable": "[%key:component::rtsp_to_webrtc::config::error::server_unreachable%]"
     }
