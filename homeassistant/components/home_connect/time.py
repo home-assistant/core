@@ -45,18 +45,20 @@ async def async_setup_entry(
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
+def seconds_to_time(seconds: int) -> time:
+    """Convert seconds to a time object."""
+    minutes, sec = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return time(hour=hours, minute=minutes, second=sec)
+
+
+def time_to_seconds(t: time) -> int:
+    """Convert a time object to seconds."""
+    return t.hour * 3600 + t.minute * 60 + t.second
+
+
 class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
     """Time setting class for Home Connect."""
-
-    def seconds_to_time(self, seconds: int) -> time:
-        """Convert seconds to a time object."""
-        minutes, sec = divmod(seconds, 60)
-        hours, minutes = divmod(minutes, 60)
-        return time(hour=hours, minute=minutes, second=sec)
-
-    def time_to_seconds(self, t: time) -> int:
-        """Convert a time object to seconds."""
-        return t.hour * 3600 + t.minute * 60 + t.second
 
     async def async_set_value(self, value: time) -> None:
         """Set the native value of the entity."""
@@ -70,7 +72,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
             await self.hass.async_add_executor_job(
                 self.device.appliance.set_setting,
                 self.bsh_key,
-                self.time_to_seconds(value),
+                time_to_seconds(value),
             )
         except HomeConnectError as err:
             _LOGGER.error(
@@ -90,7 +92,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
             return
         seconds = data.get(ATTR_VALUE, None)
         if seconds is not None:
-            self._attr_native_value = self.seconds_to_time(seconds)
+            self._attr_native_value = seconds_to_time(seconds)
         else:
             self._attr_native_value = None
         _LOGGER.debug("Updated, new value: %s", self._attr_native_value)
