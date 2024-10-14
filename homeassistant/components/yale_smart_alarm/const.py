@@ -9,7 +9,7 @@ from yalesmartalarmclient.client import (
 )
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import Platform
 
 CONF_AREA_ID = "area_id"
@@ -41,9 +41,9 @@ PLATFORMS = [
 ]
 
 STATE_MAP = {
-    YALE_STATE_DISARM: AlarmControlPanelEntityState.DISARMED,
-    YALE_STATE_ARM_PARTIAL: AlarmControlPanelEntityState.ARMED_HOME,
-    YALE_STATE_ARM_FULL: AlarmControlPanelEntityState.ARMED_AWAY,
+    YALE_STATE_DISARM: AlarmControlPanelState.DISARMED,
+    YALE_STATE_ARM_PARTIAL: AlarmControlPanelState.ARMED_HOME,
+    YALE_STATE_ARM_FULL: AlarmControlPanelState.ARMED_AWAY,
 }
 
 YALE_BASE_ERRORS = (

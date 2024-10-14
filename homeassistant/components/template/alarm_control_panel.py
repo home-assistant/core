@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -43,15 +43,15 @@ from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_con
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
-    AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-    AlarmControlPanelEntityState.ARMED_HOME,
-    AlarmControlPanelEntityState.ARMED_NIGHT,
-    AlarmControlPanelEntityState.ARMED_VACATION,
-    AlarmControlPanelEntityState.ARMING,
-    AlarmControlPanelEntityState.DISARMED,
-    AlarmControlPanelEntityState.PENDING,
-    AlarmControlPanelEntityState.TRIGGERED,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_HOME,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION,
+    AlarmControlPanelState.ARMING,
+    AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.PENDING,
+    AlarmControlPanelState.TRIGGERED,
     STATE_UNAVAILABLE,
 ]
 
@@ -225,7 +225,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         if (trigger_action := config.get(CONF_TRIGGER_ACTION)) is not None:
             self._trigger_script = Script(hass, trigger_action, name, DOMAIN)
 
-        self._state: AlarmControlPanelEntityState | None = None
+        self._state: AlarmControlPanelState | None = None
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),
@@ -273,10 +273,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             # then we should not restore state
             and self._state is None
         ):
-            self._state = AlarmControlPanelEntityState(last_state.state)
+            self._state = AlarmControlPanelState(last_state.state)
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return self._state
 
@@ -327,7 +327,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             script=self._arm_away_script,
             code=code,
         )
@@ -335,7 +335,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
             script=self._arm_home_script,
             code=code,
         )
@@ -343,7 +343,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_NIGHT,
             script=self._arm_night_script,
             code=code,
         )
@@ -351,7 +351,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_VACATION,
             script=self._arm_vacation_script,
             code=code,
         )
@@ -359,7 +359,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
             script=self._arm_custom_bypass_script,
             code=code,
         )
@@ -367,13 +367,13 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.DISARMED, script=self._disarm_script, code=code
+            AlarmControlPanelState.DISARMED, script=self._disarm_script, code=code
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
-            AlarmControlPanelEntityState.TRIGGERED,
+            AlarmControlPanelState.TRIGGERED,
             script=self._trigger_script,
             code=code,
         )

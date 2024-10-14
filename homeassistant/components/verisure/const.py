@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
 DOMAIN = "verisure"
 
@@ -38,8 +38,8 @@ DEVICE_TYPE_NAME = {
 }
 
 ALARM_STATE_TO_HA = {
-    "DISARMED": AlarmControlPanelEntityState.DISARMED,
-    "ARMED_HOME": AlarmControlPanelEntityState.ARMED_HOME,
-    "ARMED_AWAY": AlarmControlPanelEntityState.ARMED_AWAY,
-    "PENDING": AlarmControlPanelEntityState.PENDING,
+    "DISARMED": AlarmControlPanelState.DISARMED,
+    "ARMED_HOME": AlarmControlPanelState.ARMED_HOME,
+    "ARMED_AWAY": AlarmControlPanelState.ARMED_AWAY,
+    "PENDING": AlarmControlPanelState.PENDING,
 }

@@ -10,7 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,11 +30,11 @@ class Mode(StrEnum):
     SOS = "sos"
 
 
-STATE_MAPPING: dict[str, AlarmControlPanelEntityState] = {
-    Mode.DISARMED: AlarmControlPanelEntityState.DISARMED,
-    Mode.ARM: AlarmControlPanelEntityState.ARMED_AWAY,
-    Mode.HOME: AlarmControlPanelEntityState.ARMED_HOME,
-    Mode.SOS: AlarmControlPanelEntityState.TRIGGERED,
+STATE_MAPPING: dict[str, AlarmControlPanelState] = {
+    Mode.DISARMED: AlarmControlPanelState.DISARMED,
+    Mode.ARM: AlarmControlPanelState.ARMED_AWAY,
+    Mode.HOME: AlarmControlPanelState.ARMED_HOME,
+    Mode.SOS: AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -110,7 +110,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if not (status := self.device.status.get(self.entity_description.key)):
             return None

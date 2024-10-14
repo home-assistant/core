@@ -10,7 +10,7 @@ from miio import DeviceException
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -102,11 +102,11 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_available = True
 
         if state == XIAOMI_STATE_ARMED_VALUE:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         elif state == XIAOMI_STATE_DISARMED_VALUE:
-            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif state == XIAOMI_STATE_ARMING_VALUE:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMING
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
         else:
             _LOGGER.warning(
                 "New state (%s) doesn't match expected values: %s/%s/%s",
