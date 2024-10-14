@@ -21,12 +21,15 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
 )
 from homeassistant.core import (
     Context,
+    Event,
+    EventStateChangedData,
     HassJobType,
     HomeAssistant,
     ReleaseChannel,
@@ -44,6 +47,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    async_capture_events,
     mock_integration,
     mock_registry,
 )
@@ -2654,28 +2658,74 @@ async def test_async_write_ha_state_thread_safety_always(
     assert not hass.states.get(ent2.entity_id)
 
 
+@pytest.mark.xfail(reason="Fails because 1 == True")
 async def test_write_state_bool_to_int(
     hass: HomeAssistant,
 ) -> None:
     """Test changing a bool to an int in attributes."""
     platform = MockEntityPlatform(hass)
+    events: list[Event[EventStateChangedData]] = async_capture_events(
+        hass, EVENT_STATE_CHANGED
+    )
     extra_attrs = {"attr": False}
 
-    class MockEntityAttrChanges(MockEntity):
+    class MockEntityAttrChanges(entity.Entity):
         @property
         def extra_state_attributes(self):
             return extra_attrs
 
-    ent = MockEntityAttrChanges(unique_id="qwer")
+    ent = MockEntityAttrChanges()
     await platform.async_add_entities([ent])
 
     assert hass.states.get(ent.entity_id).attributes["attr"] is False
+    assert len(events) == 1
+    assert events[0].data["new_state"].attributes["attr"] is False
 
     extra_attrs["attr"] = True
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id).attributes["attr"] is True
+    assert len(events) == 2
+    assert events[1].data["new_state"].attributes["attr"] is True
 
     one = 1
     extra_attrs["attr"] = one
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id).attributes["attr"] is one
+    assert len(events) == 3
+    assert events[2].data["new_state"].attributes["attr"] is True
+
+
+@pytest.mark.xfail(reason="Fails because 1 == True")
+async def test_write_state_bool_to_int_using_attrs(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing a bool to an int in attributes using _attrs."""
+    platform = MockEntityPlatform(hass)
+    events: list[Event[EventStateChangedData]] = async_capture_events(
+        hass, EVENT_STATE_CHANGED
+    )
+
+    class MockEntityAttrChanges(entity.Entity):
+        def set_extra_state_attributes(self, attrs):
+            self._attr_extra_state_attributes = attrs
+
+    ent = MockEntityAttrChanges()
+    ent.set_extra_state_attributes({"attr": False})
+    await platform.async_add_entities([ent])
+
+    assert hass.states.get(ent.entity_id).attributes["attr"] is False
+    assert len(events) == 1
+    assert events[0].data["new_state"].attributes["attr"] is False
+
+    ent.set_extra_state_attributes({"attr": True})
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id).attributes["attr"] is True
+    assert len(events) == 2
+    assert events[1].data["new_state"].attributes["attr"] is True
+
+    one = 1
+    ent.set_extra_state_attributes({"attr": one})
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id).attributes["attr"] is one
+    assert len(events) == 3
+    assert events[2].data["new_state"].attributes["attr"] is True
