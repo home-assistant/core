@@ -502,11 +502,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
-            stats = await self.hassio.get_addon_stats(slug)
-        except HassioAPIError as err:
+            stats = await self.hassio.client.addons.addon_stats(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
             return (slug, None)
-        return (slug, stats)
+        return (slug, stats.to_dict())
 
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
