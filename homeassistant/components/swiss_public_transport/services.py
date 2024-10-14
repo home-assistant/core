@@ -1,5 +1,7 @@
 """Define services for the Swiss public transport integration."""
 
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
