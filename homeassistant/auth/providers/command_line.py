@@ -66,19 +66,7 @@ class CommandLineAuthProvider(AuthProvider):
     async def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
         env = {"username": username, "password": password}
-        try:
-            process = await asyncio.create_subprocess_exec(
-                self.config[CONF_COMMAND],
-                *self.config[CONF_ARGS],
-                env=env,
-                stdout=asyncio.subprocess.PIPE if self.config[CONF_META] else None,
-                close_fds=False,  # required for posix_spawn
-            )
-            stdout, _ = await process.communicate()
-        except OSError as err:
-            # happens when command doesn't exist or permission is denied
-            _LOGGER.error("Error while authenticating %r: %s", username, err)
-            raise InvalidAuthError from err
+        process, stdout = await self.start_the_process(username, env)
 
         if process.returncode != 0:
             _LOGGER.error(
@@ -88,6 +76,9 @@ class CommandLineAuthProvider(AuthProvider):
             )
             raise InvalidAuthError
 
+        self.extract_user_meta(username, stdout)
+
+    def extract_user_meta(self, username, stdout):
         if self.config[CONF_META]:
             meta: dict[str, str] = {}
             for _line in stdout.splitlines():
@@ -104,6 +95,22 @@ class CommandLineAuthProvider(AuthProvider):
                 if key in self.ALLOWED_META_KEYS:
                     meta[key] = value
             self._user_meta[username] = meta
+
+    async def start_the_process(self, username, env):
+        try:
+            process = await asyncio.create_subprocess_exec(
+                self.config[CONF_COMMAND],
+                *self.config[CONF_ARGS],
+                env=env,
+                stdout=asyncio.subprocess.PIPE if self.config[CONF_META] else None,
+                close_fds=False,  # required for posix_spawn
+            )
+            stdout, _ = await process.communicate()
+        except OSError as err:
+            # happens when command doesn't exist or permission is denied
+            _LOGGER.error("Error while authenticating %r: %s", username, err)
+            raise InvalidAuthError from err
+        return process,stdout
 
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
