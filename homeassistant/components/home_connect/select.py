@@ -84,4 +84,4 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Format the program for display."""
         if not program:
             return None
-        return slugify(program.split("program")[-1])
+        return slugify(program.split(".Program.")[-1])

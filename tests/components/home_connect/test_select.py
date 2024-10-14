@@ -55,7 +55,7 @@ async def test_select(
             "select.washer_program",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
             SERVICE_SELECT_OPTION,
-            "dishcare_dishwasher_program_eco50",
+            "eco50",
         ),
     ],
 )
@@ -98,7 +98,7 @@ async def test_select_functionality(
             "select.washer_program",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
             SERVICE_SELECT_OPTION,
-            "dishcare_dishwasher_program_eco50",
+            "eco50",
             "start_program",
         )
     ],
