@@ -1324,7 +1324,7 @@ lxml==5.1.0
 matrix-nio==0.25.1
 
 # homeassistant.components.mawaqit
-mawaqit==0.0.1
+mawaqit==1.0.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
