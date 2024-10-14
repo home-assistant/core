@@ -600,13 +600,12 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         await self.async_set_unique_id(self.device_identifier, raise_on_progress=False)
-
-        # If an existing config entry is updated, then this was a re-auth
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data, unique_id=self.unique_id
             )
 
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=self.atv.name, data=data)
 
 
