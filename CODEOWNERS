@@ -1389,8 +1389,8 @@ build.json @home-assistant/supervisor
 /tests/components/spotify/ @frenck @joostlek
 /homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
 /tests/components/sql/ @gjohansson-ST @dougiteixeira
-/homeassistant/components/squeezebox/ @rajlaud
-/tests/components/squeezebox/ @rajlaud
+/homeassistant/components/squeezebox/ @rajlaud @pssc @peteS-UK
+/tests/components/squeezebox/ @rajlaud @pssc @peteS-UK
 /homeassistant/components/srp_energy/ @briglx
 /tests/components/srp_energy/ @briglx
 /homeassistant/components/starline/ @anonym-tsk
