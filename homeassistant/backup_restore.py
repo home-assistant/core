@@ -85,9 +85,10 @@ def restore_backup(config_dir: str) -> bool:
 
     Returns True if a restore backup file was found and restored, False otherwise.
     """
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     if not (restore_content := restore_backup_file_content(config_dir)):
         return False
+
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     backup_file_path = restore_content["backup_file_path"]
     _LOGGER.info("Restoring %s", backup_file_path)
     _extract_backup(config_dir, backup_file_path)
