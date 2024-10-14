@@ -225,7 +225,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Return the current state."""
         if (alarm_state := self.alarm_state) is None:
             return None
-        return str(alarm_state)
+        return alarm_state
 
     @cached_property
     def alarm_state(self) -> AlarmControlPanelState | None:
