@@ -222,43 +222,32 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry_data = self._get_reconfigure_entry().data
-        self._name = entry_data[CONF_HOST]
-        self._host = entry_data[CONF_HOST]
-        self._username = entry_data[CONF_USERNAME]
-        self._password = entry_data[CONF_PASSWORD]
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
 
+            reconfigure_entry = self._get_reconfigure_entry()
+            self._username = reconfigure_entry.data[CONF_USERNAME]
+            self._password = reconfigure_entry.data[CONF_PASSWORD]
+
             result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data={
-                        CONF_HOST: self._host,
-                        CONF_PASSWORD: self._password,
-                        CONF_USERNAME: self._username,
-                    },
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: self._host},
                 )
             errors["base"] = result
 
+        host = self._get_reconfigure_entry().data[CONF_HOST]
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._host): str,
+                    vol.Required(CONF_HOST, default=host): str,
                 }
             ),
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": host},
             errors=errors,
         )
