@@ -10,7 +10,7 @@ from pyprosegur.installation import Installation, Status
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -22,10 +22,10 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STATE_MAPPING = {
-    Status.DISARMED: AlarmControlPanelEntityState.DISARMED,
-    Status.ARMED: AlarmControlPanelEntityState.ARMED_AWAY,
-    Status.PARTIALLY: AlarmControlPanelEntityState.ARMED_HOME,
-    Status.ERROR_PARTIALLY: AlarmControlPanelEntityState.ARMED_HOME,
+    Status.DISARMED: AlarmControlPanelState.DISARMED,
+    Status.ARMED: AlarmControlPanelState.ARMED_AWAY,
+    Status.PARTIALLY: AlarmControlPanelState.ARMED_HOME,
+    Status.ERROR_PARTIALLY: AlarmControlPanelState.ARMED_HOME,
 }
 
 

@@ -14,7 +14,7 @@ from prometheus_client.metrics import MetricWrapperBase
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -820,16 +820,16 @@ class PrometheusMetrics:
             )
 
             alarm_states = [
-                AlarmControlPanelEntityState.ARMED_AWAY,
-                AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-                AlarmControlPanelEntityState.ARMED_HOME,
-                AlarmControlPanelEntityState.ARMED_NIGHT,
-                AlarmControlPanelEntityState.ARMED_VACATION,
-                AlarmControlPanelEntityState.DISARMED,
-                AlarmControlPanelEntityState.TRIGGERED,
-                AlarmControlPanelEntityState.PENDING,
-                AlarmControlPanelEntityState.ARMING,
-                AlarmControlPanelEntityState.DISARMING,
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.TRIGGERED,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMING,
             ]
 
             for alarm_state in alarm_states:

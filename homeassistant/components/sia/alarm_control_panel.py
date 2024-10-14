@@ -11,7 +11,7 @@ from pysiaalarm import SIAEvent
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -35,32 +35,32 @@ class SIAAlarmControlPanelEntityDescription(
 ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
     key=KEY_ALARM,
     code_consequences={
-        "PA": AlarmControlPanelEntityState.TRIGGERED,
-        "JA": AlarmControlPanelEntityState.TRIGGERED,
-        "TA": AlarmControlPanelEntityState.TRIGGERED,
-        "BA": AlarmControlPanelEntityState.TRIGGERED,
-        "HA": AlarmControlPanelEntityState.TRIGGERED,
-        "CA": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CB": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CG": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CL": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CP": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CQ": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CS": AlarmControlPanelEntityState.ARMED_AWAY,
-        "CF": AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-        "NP": AlarmControlPanelEntityState.DISARMED,
-        "NO": AlarmControlPanelEntityState.DISARMED,
-        "OA": AlarmControlPanelEntityState.DISARMED,
-        "OB": AlarmControlPanelEntityState.DISARMED,
-        "OG": AlarmControlPanelEntityState.DISARMED,
-        "OP": AlarmControlPanelEntityState.DISARMED,
-        "OQ": AlarmControlPanelEntityState.DISARMED,
-        "OR": AlarmControlPanelEntityState.DISARMED,
-        "OS": AlarmControlPanelEntityState.DISARMED,
-        "NC": AlarmControlPanelEntityState.ARMED_NIGHT,
-        "NL": AlarmControlPanelEntityState.ARMED_NIGHT,
-        "NE": AlarmControlPanelEntityState.ARMED_NIGHT,
-        "NF": AlarmControlPanelEntityState.ARMED_NIGHT,
+        "PA": AlarmControlPanelState.TRIGGERED,
+        "JA": AlarmControlPanelState.TRIGGERED,
+        "TA": AlarmControlPanelState.TRIGGERED,
+        "BA": AlarmControlPanelState.TRIGGERED,
+        "HA": AlarmControlPanelState.TRIGGERED,
+        "CA": AlarmControlPanelState.ARMED_AWAY,
+        "CB": AlarmControlPanelState.ARMED_AWAY,
+        "CG": AlarmControlPanelState.ARMED_AWAY,
+        "CL": AlarmControlPanelState.ARMED_AWAY,
+        "CP": AlarmControlPanelState.ARMED_AWAY,
+        "CQ": AlarmControlPanelState.ARMED_AWAY,
+        "CS": AlarmControlPanelState.ARMED_AWAY,
+        "CF": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        "NP": AlarmControlPanelState.DISARMED,
+        "NO": AlarmControlPanelState.DISARMED,
+        "OA": AlarmControlPanelState.DISARMED,
+        "OB": AlarmControlPanelState.DISARMED,
+        "OG": AlarmControlPanelState.DISARMED,
+        "OP": AlarmControlPanelState.DISARMED,
+        "OQ": AlarmControlPanelState.DISARMED,
+        "OR": AlarmControlPanelState.DISARMED,
+        "OS": AlarmControlPanelState.DISARMED,
+        "NC": AlarmControlPanelState.ARMED_NIGHT,
+        "NL": AlarmControlPanelState.ARMED_NIGHT,
+        "NE": AlarmControlPanelState.ARMED_NIGHT,
+        "NF": AlarmControlPanelState.ARMED_NIGHT,
         "BR": PREVIOUS_STATE,
     },
 )
@@ -104,8 +104,8 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             entity_description,
         )
 
-        self._attr_alarm_state: AlarmControlPanelEntityState | None = None
-        self._old_state: AlarmControlPanelEntityState | None = None
+        self._attr_alarm_state: AlarmControlPanelState | None = None
+        self._old_state: AlarmControlPanelState | None = None
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
@@ -114,7 +114,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            self._attr_alarm_state = AlarmControlPanelEntityState(last_state.state)
+            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
 
@@ -132,6 +132,6 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         if new_state == PREVIOUS_STATE:
             new_state = self._old_state
         if TYPE_CHECKING:
-            assert isinstance(new_state, AlarmControlPanelEntityState)
+            assert isinstance(new_state, AlarmControlPanelState)
         self._attr_alarm_state, self._old_state = new_state, self._attr_alarm_state
         return True

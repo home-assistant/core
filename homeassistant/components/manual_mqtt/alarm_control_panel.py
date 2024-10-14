@@ -12,7 +12,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import (
@@ -69,25 +69,21 @@ DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 
 SUPPORTED_STATES = [
-    AlarmControlPanelEntityState.DISARMED,
-    AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmControlPanelEntityState.ARMED_HOME,
-    AlarmControlPanelEntityState.ARMED_NIGHT,
-    AlarmControlPanelEntityState.ARMED_VACATION,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-    AlarmControlPanelEntityState.TRIGGERED,
+    AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_HOME,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelState.TRIGGERED,
 ]
 
 SUPPORTED_PRETRIGGER_STATES = [
-    state
-    for state in SUPPORTED_STATES
-    if state != AlarmControlPanelEntityState.TRIGGERED
+    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.TRIGGERED
 ]
 
 SUPPORTED_PENDING_STATES = [
-    state
-    for state in SUPPORTED_STATES
-    if state != AlarmControlPanelEntityState.DISARMED
+    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.DISARMED
 ]
 
 ATTR_PRE_PENDING_STATE = "pre_pending_state"
@@ -150,25 +146,25 @@ PLATFORM_SCHEMA = vol.Schema(
                     CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
                 ): cv.boolean,
                 vol.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_AWAY
+                    AlarmControlPanelState.ARMED_AWAY
                 ),
                 vol.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_HOME
+                    AlarmControlPanelState.ARMED_HOME
                 ),
                 vol.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_NIGHT
+                    AlarmControlPanelState.ARMED_NIGHT
                 ),
                 vol.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_VACATION
+                    AlarmControlPanelState.ARMED_VACATION
                 ),
                 vol.Optional(CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
+                    AlarmControlPanelState.ARMED_CUSTOM_BYPASS
                 ),
                 vol.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
-                    AlarmControlPanelEntityState.DISARMED
+                    AlarmControlPanelState.DISARMED
                 ),
                 vol.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
-                    AlarmControlPanelEntityState.TRIGGERED
+                    AlarmControlPanelState.TRIGGERED
                 ),
                 vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
                 vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -274,7 +270,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         config,
     ):
         """Init the manual MQTT alarm panel."""
-        self._state = AlarmControlPanelEntityState.DISARMED
+        self._state = AlarmControlPanelState.DISARMED
         self._hass = hass
         self._attr_name = name
         if code_template:
@@ -310,38 +306,38 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._payload_arm_custom_bypass = payload_arm_custom_bypass
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        if self._state == AlarmControlPanelEntityState.TRIGGERED:
+        if self._state == AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
-                return AlarmControlPanelEntityState.PENDING
+                return AlarmControlPanelState.PENDING
             trigger_time = self._trigger_time_by_state[self._previous_state]
             if (
                 self._state_ts + self._pending_time(self._state) + trigger_time
             ) < dt_util.utcnow():
                 if self._disarm_after_trigger:
-                    return AlarmControlPanelEntityState.DISARMED
+                    return AlarmControlPanelState.DISARMED
                 self._state = self._previous_state
                 return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and self._within_pending_time(
             self._state
         ):
-            return AlarmControlPanelEntityState.PENDING
+            return AlarmControlPanelState.PENDING
 
         return self._state
 
     @property
     def _active_state(self):
         """Get the current state."""
-        if self.state == AlarmControlPanelEntityState.PENDING:
+        if self.state == AlarmControlPanelState.PENDING:
             return self._previous_state
         return self._state
 
     def _pending_time(self, state):
         """Get the pending time."""
         pending_time = self._pending_time_by_state[state]
-        if state == AlarmControlPanelEntityState.TRIGGERED:
+        if state == AlarmControlPanelState.TRIGGERED:
             pending_time += self._delay_time_by_state[self._previous_state]
         return pending_time
 
@@ -360,37 +356,35 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.DISARMED)
-        self._state = AlarmControlPanelEntityState.DISARMED
+        self._async_validate_code(code, AlarmControlPanelState.DISARMED)
+        self._state = AlarmControlPanelState.DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_HOME)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_HOME)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_HOME)
+        self._async_update_state(AlarmControlPanelState.ARMED_HOME)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_AWAY)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_AWAY)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_AWAY)
+        self._async_update_state(AlarmControlPanelState.ARMED_AWAY)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_NIGHT)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_NIGHT)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_NIGHT)
+        self._async_update_state(AlarmControlPanelState.ARMED_NIGHT)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_VACATION)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_VACATION)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_VACATION)
+        self._async_update_state(AlarmControlPanelState.ARMED_VACATION)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        self._async_validate_code(
-            code, AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
-        )
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
+        self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
@@ -400,7 +394,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
-        self._async_update_state(AlarmControlPanelEntityState.TRIGGERED)
+        self._async_update_state(AlarmControlPanelState.TRIGGERED)
 
     def _async_update_state(self, state: str) -> None:
         """Update the state."""
@@ -413,7 +407,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
         pending_time = self._pending_time(state)
-        if state == AlarmControlPanelEntityState.TRIGGERED:
+        if state == AlarmControlPanelState.TRIGGERED:
             async_track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
@@ -432,8 +426,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     def _async_validate_code(self, code, state):
         """Validate given code."""
         if (
-            state != AlarmControlPanelEntityState.DISARMED
-            and not self.code_arm_required
+            state != AlarmControlPanelState.DISARMED and not self.code_arm_required
         ) or self._code is None:
             return
 
@@ -452,7 +445,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.state != AlarmControlPanelEntityState.PENDING:
+        if self.state != AlarmControlPanelState.PENDING:
             return {}
         return {
             ATTR_PRE_PENDING_STATE: self._previous_state,

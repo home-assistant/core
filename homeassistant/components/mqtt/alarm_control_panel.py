@@ -9,7 +9,7 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
@@ -174,20 +174,20 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._attr_alarm_state = None
             return
         if payload not in (
-            AlarmControlPanelEntityState.DISARMED,
-            AlarmControlPanelEntityState.ARMED_HOME,
-            AlarmControlPanelEntityState.ARMED_AWAY,
-            AlarmControlPanelEntityState.ARMED_NIGHT,
-            AlarmControlPanelEntityState.ARMED_VACATION,
-            AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-            AlarmControlPanelEntityState.PENDING,
-            AlarmControlPanelEntityState.ARMING,
-            AlarmControlPanelEntityState.DISARMING,
-            AlarmControlPanelEntityState.TRIGGERED,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
+            AlarmControlPanelState.DISARMING,
+            AlarmControlPanelState.TRIGGERED,
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
-        self._attr_alarm_state = AlarmControlPanelEntityState(payload)
+        self._attr_alarm_state = AlarmControlPanelState(payload)
 
     @callback
     def _prepare_subscribe_topics(self) -> None:

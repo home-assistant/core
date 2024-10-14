@@ -9,7 +9,7 @@ from typing import Any
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -61,10 +61,10 @@ LOCAL_SCHEMA = vol.Schema(
     }
 )
 HA_STATES = [
-    AlarmControlPanelEntityState.ARMED_AWAY.value,
-    AlarmControlPanelEntityState.ARMED_HOME.value,
-    AlarmControlPanelEntityState.ARMED_NIGHT.value,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS.value,
+    AlarmControlPanelState.ARMED_AWAY.value,
+    AlarmControlPanelState.ARMED_HOME.value,
+    AlarmControlPanelState.ARMED_NIGHT.value,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS.value,
 ]
 
 

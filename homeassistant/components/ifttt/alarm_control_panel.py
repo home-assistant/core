@@ -10,7 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import (
@@ -30,10 +30,10 @@ from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
 _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_STATES = [
-    AlarmControlPanelEntityState.DISARMED,
-    AlarmControlPanelEntityState.ARMED_NIGHT,
-    AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmControlPanelEntityState.ARMED_HOME,
+    AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_HOME,
 ]
 
 DATA_IFTTT_ALARM = "ifttt_alarm"
@@ -165,29 +165,27 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         """Send disarm command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(self._event_disarm, AlarmControlPanelEntityState.DISARMED)
+        self.set_alarm_state(self._event_disarm, AlarmControlPanelState.DISARMED)
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
-        self.set_alarm_state(self._event_away, AlarmControlPanelEntityState.ARMED_AWAY)
+        self.set_alarm_state(self._event_away, AlarmControlPanelState.ARMED_AWAY)
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
-        self.set_alarm_state(self._event_home, AlarmControlPanelEntityState.ARMED_HOME)
+        self.set_alarm_state(self._event_home, AlarmControlPanelState.ARMED_HOME)
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):
             return
-        self.set_alarm_state(
-            self._event_night, AlarmControlPanelEntityState.ARMED_NIGHT
-        )
+        self.set_alarm_state(self._event_night, AlarmControlPanelState.ARMED_NIGHT)
 
-    def set_alarm_state(self, event: str, state: AlarmControlPanelEntityState) -> None:
+    def set_alarm_state(self, event: str, state: AlarmControlPanelState) -> None:
         """Call the IFTTT trigger service to change the alarm state."""
         data = {ATTR_EVENT: event}
 

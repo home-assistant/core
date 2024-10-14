@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -24,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 EVENT_MAP = {
-    "off": AlarmControlPanelEntityState.DISARMED,
-    "alarm_silenced": AlarmControlPanelEntityState.DISARMED,
-    "alarm_grace_period_expired": AlarmControlPanelEntityState.TRIGGERED,
+    "off": AlarmControlPanelState.DISARMED,
+    "alarm_silenced": AlarmControlPanelState.DISARMED,
+    "alarm_grace_period_expired": AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -99,10 +99,10 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return state of the device."""
         return EVENT_MAP.get(
-            self._home["alarm_status"], AlarmControlPanelEntityState.ARMED_AWAY
+            self._home["alarm_status"], AlarmControlPanelState.ARMED_AWAY
         )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

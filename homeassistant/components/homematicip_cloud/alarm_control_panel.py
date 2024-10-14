@@ -9,7 +9,7 @@ from homematicip.functionalHomes import SecurityAndAlarmHome
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -60,21 +60,21 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         )
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the alarm control panel."""
         # check for triggered alarm
         if self._security_and_alarm.alarmActive:
-            return AlarmControlPanelEntityState.TRIGGERED
+            return AlarmControlPanelState.TRIGGERED
 
         activation_state = self._home.get_security_zones_activation()
         # check arm_away
         if activation_state == (True, True):
-            return AlarmControlPanelEntityState.ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
         # check arm_home
         if activation_state == (False, True):
-            return AlarmControlPanelEntityState.ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
 
-        return AlarmControlPanelEntityState.DISARMED
+        return AlarmControlPanelState.DISARMED
 
     @property
     def _security_and_alarm(self) -> SecurityAndAlarmHome:

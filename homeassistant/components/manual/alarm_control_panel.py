@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import (
@@ -56,19 +56,17 @@ DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_STATES = [
-    AlarmControlPanelEntityState.DISARMED,
-    AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmControlPanelEntityState.ARMED_HOME,
-    AlarmControlPanelEntityState.ARMED_NIGHT,
-    AlarmControlPanelEntityState.ARMED_VACATION,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-    AlarmControlPanelEntityState.TRIGGERED,
+    AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_HOME,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelState.TRIGGERED,
 ]
 
 SUPPORTED_PRETRIGGER_STATES = [
-    state
-    for state in SUPPORTED_STATES
-    if state != AlarmControlPanelEntityState.TRIGGERED
+    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.TRIGGERED
 ]
 
 SUPPORTED_ARMING_STATES = [
@@ -76,17 +74,17 @@ SUPPORTED_ARMING_STATES = [
     for state in SUPPORTED_STATES
     if state
     not in (
-        AlarmControlPanelEntityState.DISARMED,
-        AlarmControlPanelEntityState.TRIGGERED,
+        AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.TRIGGERED,
     )
 ]
 
 SUPPORTED_ARMING_STATE_TO_FEATURE = {
-    AlarmControlPanelEntityState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    AlarmControlPanelEntityState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-    AlarmControlPanelEntityState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
-    AlarmControlPanelEntityState.ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
-    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
 }
 
 ATTR_PREVIOUS_STATE = "previous_state"
@@ -94,10 +92,10 @@ ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(
-    config: dict[AlarmControlPanelEntityState | str, Any],
+    config: dict[AlarmControlPanelState | str, Any],
 ) -> dict[str, Any]:
     """Validate the state."""
-    state: AlarmControlPanelEntityState
+    state: AlarmControlPanelState
     for state in SUPPORTED_PRETRIGGER_STATES:
         if CONF_DELAY_TIME not in config[state]:
             config[state] = config[state] | {CONF_DELAY_TIME: config[CONF_DELAY_TIME]}
@@ -154,25 +152,25 @@ PLATFORM_SCHEMA = vol.Schema(
                     CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES
                 ): vol.All(cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]),
                 vol.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_AWAY
+                    AlarmControlPanelState.ARMED_AWAY
                 ),
                 vol.Optional(CONF_ALARM_ARMED_HOME, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_HOME
+                    AlarmControlPanelState.ARMED_HOME
                 ),
                 vol.Optional(CONF_ALARM_ARMED_NIGHT, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_NIGHT
+                    AlarmControlPanelState.ARMED_NIGHT
                 ),
                 vol.Optional(CONF_ALARM_ARMED_VACATION, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_VACATION
+                    AlarmControlPanelState.ARMED_VACATION
                 ),
                 vol.Optional(CONF_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
-                    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
+                    AlarmControlPanelState.ARMED_CUSTOM_BYPASS
                 ),
                 vol.Optional(CONF_ALARM_DISARMED, default={}): _state_schema(
-                    AlarmControlPanelEntityState.DISARMED
+                    AlarmControlPanelState.DISARMED
                 ),
                 vol.Optional(CONF_ALARM_TRIGGERED, default={}): _state_schema(
-                    AlarmControlPanelEntityState.TRIGGERED
+                    AlarmControlPanelState.TRIGGERED
                 ),
             },
         ),
@@ -228,27 +226,25 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         config: dict[str, Any],
     ) -> None:
         """Init the manual alarm panel."""
-        self._state: AlarmControlPanelEntityState = (
-            AlarmControlPanelEntityState.DISARMED
-        )
+        self._state: AlarmControlPanelState = AlarmControlPanelState.DISARMED
         self._hass = hass
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._code = code_template or code or None
         self._attr_code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
-        self._previous_state: AlarmControlPanelEntityState = self._state
+        self._previous_state: AlarmControlPanelState = self._state
         self._state_ts: datetime.datetime = dt_util.utcnow()
 
-        self._delay_time_by_state: dict[AlarmControlPanelEntityState, Any] = {
+        self._delay_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_DELAY_TIME]
             for state in SUPPORTED_PRETRIGGER_STATES
         }
-        self._trigger_time_by_state: dict[AlarmControlPanelEntityState, Any] = {
+        self._trigger_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_TRIGGER_TIME]
             for state in SUPPORTED_PRETRIGGER_STATES
         }
-        self._arming_time_by_state: dict[AlarmControlPanelEntityState, Any] = {
+        self._arming_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_ARMING_TIME] for state in SUPPORTED_ARMING_STATES
         }
 
@@ -259,11 +255,11 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             ]
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        if self._state == AlarmControlPanelEntityState.TRIGGERED:
+        if self._state == AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
-                return AlarmControlPanelEntityState.PENDING
+                return AlarmControlPanelState.PENDING
             trigger_time: datetime.timedelta = self._trigger_time_by_state[
                 self._previous_state
             ]
@@ -271,42 +267,42 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
                 self._state_ts + self._pending_time(self._state) + trigger_time
             ) < dt_util.utcnow():
                 if self._disarm_after_trigger:
-                    return AlarmControlPanelEntityState.DISARMED
+                    return AlarmControlPanelState.DISARMED
                 self._state = self._previous_state
                 return self._state
 
         if self._state in SUPPORTED_ARMING_STATES and self._within_arming_time(
             self._state
         ):
-            return AlarmControlPanelEntityState.ARMING
+            return AlarmControlPanelState.ARMING
 
         return self._state
 
     @property
-    def _active_state(self) -> AlarmControlPanelEntityState:
+    def _active_state(self) -> AlarmControlPanelState:
         """Get the current state."""
         if self.state in (
-            AlarmControlPanelEntityState.PENDING,
-            AlarmControlPanelEntityState.ARMING,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
         ):
             return self._previous_state
         return self._state
 
-    def _arming_time(self, state: AlarmControlPanelEntityState) -> datetime.timedelta:
+    def _arming_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
         """Get the arming time."""
         arming_time: datetime.timedelta = self._arming_time_by_state[state]
         return arming_time
 
-    def _pending_time(self, state: AlarmControlPanelEntityState) -> datetime.timedelta:
+    def _pending_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
         """Get the pending time."""
         delay_time: datetime.timedelta = self._delay_time_by_state[self._previous_state]
         return delay_time
 
-    def _within_arming_time(self, state: AlarmControlPanelEntityState) -> bool:
+    def _within_arming_time(self, state: AlarmControlPanelState) -> bool:
         """Get if the action is in the arming time window."""
         return self._state_ts + self._arming_time(state) > dt_util.utcnow()
 
-    def _within_pending_time(self, state: AlarmControlPanelEntityState) -> bool:
+    def _within_pending_time(self, state: AlarmControlPanelState) -> bool:
         """Get if the action is in the pending time window."""
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
@@ -321,37 +317,35 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.DISARMED)
-        self._state = AlarmControlPanelEntityState.DISARMED
+        self._async_validate_code(code, AlarmControlPanelState.DISARMED)
+        self._state = AlarmControlPanelState.DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_HOME)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_HOME)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_HOME)
+        self._async_update_state(AlarmControlPanelState.ARMED_HOME)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_AWAY)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_AWAY)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_AWAY)
+        self._async_update_state(AlarmControlPanelState.ARMED_AWAY)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_NIGHT)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_NIGHT)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_NIGHT)
+        self._async_update_state(AlarmControlPanelState.ARMED_NIGHT)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        self._async_validate_code(code, AlarmControlPanelEntityState.ARMED_VACATION)
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_VACATION)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_VACATION)
+        self._async_update_state(AlarmControlPanelState.ARMED_VACATION)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        self._async_validate_code(
-            code, AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
-        )
-        self._async_update_state(AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS)
+        self._async_validate_code(code, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
+        self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
@@ -361,9 +355,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
-        self._async_update_state(AlarmControlPanelEntityState.TRIGGERED)
+        self._async_update_state(AlarmControlPanelState.TRIGGERED)
 
-    def _async_update_state(self, state: AlarmControlPanelEntityState) -> None:
+    def _async_update_state(self, state: AlarmControlPanelState) -> None:
         """Update the state."""
         if self._state == state:
             return
@@ -376,7 +370,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     def _async_set_state_update_events(self) -> None:
         state = self._state
-        if state == AlarmControlPanelEntityState.TRIGGERED:
+        if state == AlarmControlPanelState.TRIGGERED:
             pending_time = self._pending_time(state)
             async_track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time
@@ -400,8 +394,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     def _async_validate_code(self, code: str | None, state: str) -> None:
         """Validate given code."""
         if (
-            state != AlarmControlPanelEntityState.DISARMED
-            and not self.code_arm_required
+            state != AlarmControlPanelState.DISARMED and not self.code_arm_required
         ) or self._code is None:
             return
 
@@ -425,12 +418,12 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.state in (
-            AlarmControlPanelEntityState.PENDING,
-            AlarmControlPanelEntityState.ARMING,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
         ):
             prev_state: str | None = self._previous_state
             state: str | None = self._state
-        elif self.state == AlarmControlPanelEntityState.TRIGGERED:
+        elif self.state == AlarmControlPanelState.TRIGGERED:
             prev_state = self._previous_state
             state = None
         else:
@@ -451,9 +444,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             if next_state := state.attributes.get(ATTR_NEXT_STATE):
                 # If in arming or pending state we record the transition,
                 # not the current state
-                self._state = AlarmControlPanelEntityState(next_state)
+                self._state = AlarmControlPanelState(next_state)
             else:
-                self._state = AlarmControlPanelEntityState(state.state)
+                self._state = AlarmControlPanelState(state.state)
 
             if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
                 self._previous_state = prev_state
