@@ -76,8 +76,7 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    manager: BackupManager = hass.data[DOMAIN]
-    await manager.restore_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].restore_backup(msg["slug"])
     connection.send_result(msg["id"])
 
 
