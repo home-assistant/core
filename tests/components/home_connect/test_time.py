@@ -41,11 +41,25 @@ async def test_time(
 
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 @pytest.mark.parametrize(
-    ("entity_id", "setting_key"),
+    ("entity_id", "setting_key", "setting_value", "expected_state"),
     [
         (
-            f"{TIME_DOMAIN.lower()}.oven_alarm_clock",
+            f"{TIME_DOMAIN}.oven_alarm_clock",
             "BSH.Common.Setting.AlarmClock",
+            {ATTR_VALUE: 59},
+            str(time(second=59)),
+        ),
+        (
+            f"{TIME_DOMAIN}.oven_alarm_clock",
+            "BSH.Common.Setting.AlarmClock",
+            {ATTR_VALUE: None},
+            "unknown",
+        ),
+        (
+            f"{TIME_DOMAIN}.oven_alarm_clock",
+            "BSH.Common.Setting.AlarmClock",
+            None,
+            "unknown",
         ),
     ],
 )
@@ -54,6 +68,8 @@ async def test_time_entity_functionality(
     appliance: Mock,
     entity_id: str,
     setting_key: str,
+    setting_value: dict,
+    expected_state: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -63,15 +79,15 @@ async def test_time_entity_functionality(
 ) -> None:
     """Test time entity functionality."""
     get_appliances.return_value = [appliance]
-    current_value = 59
-    appliance.status.update({setting_key: {ATTR_VALUE: current_value}})
+    appliance.status.update({setting_key: setting_value})
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
-    assert hass.states.is_state(entity_id, str(time(second=current_value)))
+    assert hass.states.is_state(entity_id, expected_state)
 
     new_value = 30
+    assert hass.states.get(entity_id).state != new_value
     await hass.services.async_call(
         TIME_DOMAIN,
         SERVICE_SET_VALUE,
@@ -89,7 +105,7 @@ async def test_time_entity_functionality(
     ("entity_id", "setting_key", "mock_attr"),
     [
         (
-            f"{TIME_DOMAIN.lower()}.oven_alarm_clock",
+            f"{TIME_DOMAIN}.oven_alarm_clock",
             "BSH.Common.Setting.AlarmClock",
             "set_setting",
         ),
