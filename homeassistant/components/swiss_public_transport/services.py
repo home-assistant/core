@@ -1,5 +1,7 @@
 """Define services for the Swiss public transport integration."""
 
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,6 +28,7 @@ from .const import (
     DOMAIN,
     SERVICE_FETCH_CONNECTIONS,
 )
+from .types import SwissPublicTransportConfigEntry
 
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
@@ -65,11 +68,15 @@ def setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> ServiceResponse:
         """Fetch a set of connections."""
-        config_entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        config_entry = cast(
+            SwissPublicTransportConfigEntry,
+            async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID]),
+        )
         limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
-        coordinator = hass.data[DOMAIN][config_entry.entry_id]
         try:
-            connections = await coordinator.fetch_connections_as_json(limit=int(limit))
+            connections = await config_entry.coordinator.fetch_connections(
+                limit=int(limit)
+            )
         except UpdateFailed as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

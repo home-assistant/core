@@ -23,6 +23,7 @@ from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
 from .helper import unique_id_from_config
 from .services import setup_services
+from .types import SwissPublicTransportConfigEntry, SwissPublicTransportRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Set up Swiss public transport from a config entry."""
     config = entry.data
@@ -74,20 +75,10 @@ async def async_setup_entry(
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = SwissPublicTransportRuntimeData(coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
 
 
 async def async_migrate_entry(
