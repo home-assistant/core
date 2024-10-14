@@ -2692,7 +2692,7 @@ async def test_write_state_bool_to_int(
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id).attributes["attr"] is one
     assert len(events) == 3
-    assert events[2].data["new_state"].attributes["attr"] is True
+    assert events[2].data["new_state"].attributes["attr"] is one
 
 
 @pytest.mark.xfail(reason="Fails because 1 == True")
@@ -2728,4 +2728,4 @@ async def test_write_state_bool_to_int_using_attrs(
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id).attributes["attr"] is one
     assert len(events) == 3
-    assert events[2].data["new_state"].attributes["attr"] is True
+    assert events[2].data["new_state"].attributes["attr"] is one
