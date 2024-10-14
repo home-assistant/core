@@ -37,10 +37,6 @@
     }
   },
   "device_automation": {
-    "trigger_type": {
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
-    },
     "condition_type": {
       "is_same_game_as_primary": "Is playing same game as primary"
     }
