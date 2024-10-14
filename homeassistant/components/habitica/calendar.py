@@ -126,7 +126,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
 
-        today = dt_util.start_of_local_day()
+        today = datetime.fromisoformat(self.coordinator.data.user["lastCron"])
         events = [
             CalendarEvent(
                 start=(start := next_recurrence.date()),
@@ -139,7 +139,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
             if (
                 next_recurrence := today
-                if not task["completed"]
+                if not task["completed"] and task["isDue"]
                 else build_rrule(task).after(today, inc=True)
             )
         ]
@@ -158,7 +158,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
 
-        today = to_date(self.coordinator.data.user["lastCron"])
+        today = datetime.fromisoformat(self.coordinator.data.user["lastCron"]).date()
         # returns only todays and future dailies.
         # If a daily is completed it will not be shown for today but still future recurrences
         # If the cron hasn't run, not completed dailies are yesterdailies and displayed yesterday
@@ -175,5 +175,5 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
             for recurrence in build_rrule(task).between(start_date, end_date, inc=True)
             if (start := recurrence.date()) > today
-            or (start == today and not task["completed"])
+            or (start == today and not task["completed"] and task["isDue"])
         ]
