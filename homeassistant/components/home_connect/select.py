@@ -83,5 +83,5 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     def format_program(self, program: str | None) -> str | None:
         """Format the program for display."""
         if not program:
-            return program
+            return None
         return slugify(program.split("program")[-1])
