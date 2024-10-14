@@ -256,9 +256,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
-            entity = _create_entry(
-                entity_registry, updated_config[CONF_ID], updated_config.get(CONF_NAME)
-            )
+            entity = _create_entry(entity_registry, updated_config[CONF_ID], None)
             if TYPE_CHECKING:
                 assert entity.original_name
             await component.async_add_entities(
