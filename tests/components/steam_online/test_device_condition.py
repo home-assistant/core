@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.steam_online.const import DOMAIN, STATE_ONLINE
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import pytest
+
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
