@@ -3,11 +3,11 @@
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our
-community a harassment-free experience for everyone, regardless of age, body
+community a harassment-free experience for everyone, regardless of <i> age, body
 size, visible or invisible disability, ethnicity, sex characteristics, gender
 identity and expression, level of experience, education, socioeconomic status,
 nationality, personal appearance, race, religion, or sexual identity
-and orientation.
+and orientation </i>.
 
 We pledge to act and interact in ways that contribute to an open, welcoming,
 diverse, inclusive, and healthy community.
