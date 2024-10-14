@@ -10,7 +10,7 @@ from aiocomelit.const import ALARM_AREAS, AlarmAreaState
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -103,7 +103,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         return super().available
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
 
         _LOGGER.debug(
@@ -114,16 +114,16 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         )
         if self._area.human_status == AlarmAreaState.ARMED:
             if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
-                return AlarmControlPanelEntityState.ARMED_AWAY
+                return AlarmControlPanelState.ARMED_AWAY
             if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:
-                return AlarmControlPanelEntityState.ARMED_NIGHT
-            return AlarmControlPanelEntityState.ARMED_HOME
+                return AlarmControlPanelState.ARMED_NIGHT
+            return AlarmControlPanelState.ARMED_HOME
 
         return {
-            AlarmAreaState.DISARMED: AlarmControlPanelEntityState.DISARMED,
-            AlarmAreaState.ENTRY_DELAY: AlarmControlPanelEntityState.DISARMING,
-            AlarmAreaState.EXIT_DELAY: AlarmControlPanelEntityState.ARMING,
-            AlarmAreaState.TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
+            AlarmAreaState.DISARMED: AlarmControlPanelState.DISARMED,
+            AlarmAreaState.ENTRY_DELAY: AlarmControlPanelState.DISARMING,
+            AlarmAreaState.EXIT_DELAY: AlarmControlPanelState.ARMING,
+            AlarmAreaState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
         }.get(self._area.human_status)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

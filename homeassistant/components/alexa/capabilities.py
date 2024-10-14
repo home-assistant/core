@@ -26,7 +26,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.components.climate import HVACMode
@@ -1314,13 +1314,13 @@ class AlexaSecurityPanelController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         arm_state = self.entity.state
-        if arm_state == AlarmControlPanelEntityState.ARMED_HOME:
+        if arm_state == AlarmControlPanelState.ARMED_HOME:
             return "ARMED_STAY"
-        if arm_state == AlarmControlPanelEntityState.ARMED_AWAY:
+        if arm_state == AlarmControlPanelState.ARMED_AWAY:
             return "ARMED_AWAY"
-        if arm_state == AlarmControlPanelEntityState.ARMED_NIGHT:
+        if arm_state == AlarmControlPanelState.ARMED_NIGHT:
             return "ARMED_NIGHT"
-        if arm_state == AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS:
+        if arm_state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
             return "ARMED_STAY"
         return "DISARMED"
 

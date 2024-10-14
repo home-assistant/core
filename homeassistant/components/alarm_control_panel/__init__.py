@@ -51,7 +51,7 @@ from .const import (  # noqa: F401
     ATTR_CODE_ARM_REQUIRED,
     DOMAIN,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 
@@ -153,7 +153,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     """An abstract class for alarm control entities."""
 
     entity_description: AlarmControlPanelEntityDescription
-    _attr_alarm_state: AlarmControlPanelEntityState | None = None
+    _attr_alarm_state: AlarmControlPanelState | None = None
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
     _attr_code_format: CodeFormat | None = None
@@ -213,7 +213,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 "Entity %s (%s) is setting state directly"
                 " which will stop working in HA Core 2025.11."
                 " Entities should implement the 'alarm_state' property and"
-                " return it's state using the AlarmControlPanelEntityState enum, please %s",
+                " return it's state using the AlarmControlPanelState enum, please %s",
                 self.entity_id,
                 type(self),
                 report_issue,
@@ -228,11 +228,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         return str(alarm_state)
 
     @cached_property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current alarm control panel entity state.
 
         Integrations should overwrite this or use the 'attr_alarm_state'
-        attribute to set the alarm status using the 'AlarmControlPanelEntityState' enum.
+        attribute to set the alarm status using the 'AlarmControlPanelState' enum.
         """
         return self._attr_alarm_state
 

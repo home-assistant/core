@@ -17,7 +17,7 @@ ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
 
 
-class AlarmControlPanelEntityState(StrEnum):
+class AlarmControlPanelState(StrEnum):
     """Alarm control panel entity states."""
 
     DISARMED = "disarmed"

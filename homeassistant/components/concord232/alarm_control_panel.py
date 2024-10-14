@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
@@ -98,21 +98,21 @@ class Concord232Alarm(AlarmControlPanelEntity):
             return
 
         if part["arming_level"] == "Off":
-            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif "Home" in part["arming_level"]:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         else:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._validate_code(code, AlarmControlPanelEntityState.DISARMED):
+        if not self._validate_code(code, AlarmControlPanelState.DISARMED):
             return
         self._alarm.disarm(code)
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if not self._validate_code(code, AlarmControlPanelEntityState.ARMED_HOME):
+        if not self._validate_code(code, AlarmControlPanelState.ARMED_HOME):
             return
         if self._mode == "silent":
             self._alarm.arm("stay", "silent")
@@ -121,7 +121,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if not self._validate_code(code, AlarmControlPanelEntityState.ARMED_AWAY):
+        if not self._validate_code(code, AlarmControlPanelState.ARMED_AWAY):
             return
         self._alarm.arm("away")
 

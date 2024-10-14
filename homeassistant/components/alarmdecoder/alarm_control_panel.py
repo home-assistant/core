@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import ATTR_CODE
@@ -100,15 +100,15 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
     def _message_callback(self, message):
         """Handle received messages."""
         if message.alarm_sounding or message.fire_alarm:
-            self._attr_alarm_state = AlarmControlPanelEntityState.TRIGGERED
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         elif message.armed_away:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         elif message.armed_home and (message.entry_delay_off or message.perimeter_only):
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_NIGHT
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_NIGHT
         elif message.armed_home:
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         else:
-            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
         self._attr_extra_state_attributes = {
             "ac_power": message.ac_power,

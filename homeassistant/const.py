@@ -514,55 +514,55 @@ _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
 
 # #### ALARM CONTROL PANEL STATES ####
 # STATE_ALARM_* below are deprecated as of 2024.11
-# use the AlarmControlPanelEntityState enum instead.
+# use the AlarmControlPanelState enum instead.
 _DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
     "disarmed",
-    "AlarmControlPanelEntityState.DISARMED",
+    "AlarmControlPanelState.DISARMED",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
     "armed_home",
-    "AlarmControlPanelEntityState.ARMED_HOME",
+    "AlarmControlPanelState.ARMED_HOME",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
     "armed_away",
-    "AlarmControlPanelEntityState.ARMED_AWAY",
+    "AlarmControlPanelState.ARMED_AWAY",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
     "armed_night",
-    "AlarmControlPanelEntityState.ARMED_NIGHT",
+    "AlarmControlPanelState.ARMED_NIGHT",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
     "armed_vacation",
-    "AlarmControlPanelEntityState.ARMED_VACATION",
+    "AlarmControlPanelState.ARMED_VACATION",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
     "armed_custom_bypass",
-    "AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS",
+    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
     "pending",
-    "AlarmControlPanelEntityState.PENDING",
+    "AlarmControlPanelState.PENDING",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
     "arming",
-    "AlarmControlPanelEntityState.ARMING",
+    "AlarmControlPanelState.ARMING",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
     "disarming",
-    "AlarmControlPanelEntityState.DISARMING",
+    "AlarmControlPanelState.DISARMING",
     "2025.11",
 )
 _DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
     "triggered",
-    "AlarmControlPanelEntityState.TRIGGERED",
+    "AlarmControlPanelState.TRIGGERED",
     "2025.11",
 )
 

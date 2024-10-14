@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, AlarmControlPanelEntityState
+from . import DOMAIN, AlarmControlPanelState
 from .const import AlarmControlPanelEntityFeature
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
@@ -122,19 +122,19 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "triggered":
-        to_state = AlarmControlPanelEntityState.TRIGGERED
+        to_state = AlarmControlPanelState.TRIGGERED
     elif config[CONF_TYPE] == "disarmed":
-        to_state = AlarmControlPanelEntityState.DISARMED
+        to_state = AlarmControlPanelState.DISARMED
     elif config[CONF_TYPE] == "arming":
-        to_state = AlarmControlPanelEntityState.ARMING
+        to_state = AlarmControlPanelState.ARMING
     elif config[CONF_TYPE] == "armed_home":
-        to_state = AlarmControlPanelEntityState.ARMED_HOME
+        to_state = AlarmControlPanelState.ARMED_HOME
     elif config[CONF_TYPE] == "armed_away":
-        to_state = AlarmControlPanelEntityState.ARMED_AWAY
+        to_state = AlarmControlPanelState.ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
-        to_state = AlarmControlPanelEntityState.ARMED_NIGHT
+        to_state = AlarmControlPanelState.ARMED_NIGHT
     elif config[CONF_TYPE] == "armed_vacation":
-        to_state = AlarmControlPanelEntityState.ARMED_VACATION
+        to_state = AlarmControlPanelState.ARMED_VACATION
 
     state_config = {
         state_trigger.CONF_PLATFORM: "state",

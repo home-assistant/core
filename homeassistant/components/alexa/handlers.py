@@ -1083,7 +1083,7 @@ async def async_api_arm(
     arm_state = directive.payload["armState"]
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.state != alarm_control_panel.AlarmControlPanelEntityState.DISARMED:
+    if entity.state != alarm_control_panel.AlarmControlPanelState.DISARMED:
         msg = "You must disarm the system before you can set the requested arm state."
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 
@@ -1133,7 +1133,7 @@ async def async_api_disarm(
     # Per Alexa Documentation: If you receive a Disarm directive, and the
     # system is already disarmed, respond with a success response,
     # not an error response.
-    if entity.state == alarm_control_panel.AlarmControlPanelEntityState.DISARMED:
+    if entity.state == alarm_control_panel.AlarmControlPanelState.DISARMED:
         return response
 
     payload = directive.payload

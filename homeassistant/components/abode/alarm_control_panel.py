@@ -7,7 +7,7 @@ from jaraco.abode.devices.alarm import Alarm
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,14 +40,14 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     _device: Alarm
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._device.is_standby:
-            return AlarmControlPanelEntityState.DISARMED
+            return AlarmControlPanelState.DISARMED
         if self._device.is_away:
-            return AlarmControlPanelEntityState.ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
         if self._device.is_home:
-            return AlarmControlPanelEntityState.ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:

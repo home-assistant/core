@@ -24,7 +24,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, AlarmControlPanelEntityState
+from . import DOMAIN, AlarmControlPanelState
 from .const import (
     CONDITION_ARMED_AWAY,
     CONDITION_ARMED_CUSTOM_BYPASS,
@@ -102,19 +102,19 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == CONDITION_TRIGGERED:
-        state = AlarmControlPanelEntityState.TRIGGERED
+        state = AlarmControlPanelState.TRIGGERED
     elif config[CONF_TYPE] == CONDITION_DISARMED:
-        state = AlarmControlPanelEntityState.DISARMED
+        state = AlarmControlPanelState.DISARMED
     elif config[CONF_TYPE] == CONDITION_ARMED_HOME:
-        state = AlarmControlPanelEntityState.ARMED_HOME
+        state = AlarmControlPanelState.ARMED_HOME
     elif config[CONF_TYPE] == CONDITION_ARMED_AWAY:
-        state = AlarmControlPanelEntityState.ARMED_AWAY
+        state = AlarmControlPanelState.ARMED_AWAY
     elif config[CONF_TYPE] == CONDITION_ARMED_NIGHT:
-        state = AlarmControlPanelEntityState.ARMED_NIGHT
+        state = AlarmControlPanelState.ARMED_NIGHT
     elif config[CONF_TYPE] == CONDITION_ARMED_VACATION:
-        state = AlarmControlPanelEntityState.ARMED_VACATION
+        state = AlarmControlPanelState.ARMED_VACATION
     elif config[CONF_TYPE] == CONDITION_ARMED_CUSTOM_BYPASS:
-        state = AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS
+        state = AlarmControlPanelState.ARMED_CUSTOM_BYPASS
 
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[ATTR_ENTITY_ID])

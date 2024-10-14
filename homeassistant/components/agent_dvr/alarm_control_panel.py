@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -64,33 +64,33 @@ class AgentBaseStation(AlarmControlPanelEntity):
             return
         if armed:
             prof = (await self._client.get_active_profile()).lower()
-            self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
             if prof == CONF_HOME_MODE_NAME:
-                self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+                self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
             elif prof == CONF_NIGHT_MODE_NAME:
-                self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_NIGHT
+                self._attr_alarm_state = AlarmControlPanelState.ARMED_NIGHT
         else:
-            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm()
-        self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+        self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_AWAY_MODE_NAME)
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_HOME_MODE_NAME)
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_NIGHT_MODE_NAME)
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_NIGHT
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_NIGHT
