@@ -141,7 +141,7 @@ SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_REMOVE_REMINDER): vol.All(cv.ensure_list, [cv.datetime]),
         vol.Optional(ATTR_REMOVE_REMINDER_TIME): vol.All(cv.ensure_list, [cv.time]),
         vol.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
-        vol.Optional(ATTR_COST): vol.All(int, float),
+        vol.Optional(ATTR_COST): vol.Coerce(float),
         vol.Optional(ATTR_ADD_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),

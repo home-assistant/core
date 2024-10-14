@@ -428,7 +428,10 @@
       "type": "todo",
       "text": "Buch zu Ende lesen",
       "notes": "Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.",
-      "tags": [],
+      "tags": [
+        "20409521-c096-447f-9a90-23e8da615710",
+        "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd"
+      ],
       "value": 0,
       "priority": 1,
       "attribute": "str",
@@ -464,8 +467,8 @@
       },
       "reminders": [
         {
-          "id": "91c09432-10ac-4a49-bd20-823081ec29ed",
-          "time": "2024-09-22T02:00:00.0000Z"
+          "id": "30224d1d-705b-4817-9d65-50f0481607f4",
+          "time": "2024-12-20T22:30:00"
         }
       ],
       "byHabitica": false,
