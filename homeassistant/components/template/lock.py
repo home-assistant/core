@@ -13,14 +13,17 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import (
     ATTR_CODE,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
+from homeassistant.helpers import selector, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -28,11 +31,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
+    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 
+CONF_CODE_FORMAT = "code_format"
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -40,7 +46,27 @@ CONF_UNLOCK = "unlock"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
+LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+    CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+}
+
+LOCK_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+        vol.Optional(CONF_CODE_FORMAT): cv.template,
+        vol.Optional(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+    }
+).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+
+LOCK_CONFIG_SCHEMA = LOCK_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+)
+
+LEGACY_LOCK_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
@@ -53,10 +79,26 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
+def rewrite_legacy_to_modern_conf(hass: HomeAssistant, cfg: dict[str, dict]) -> dict:
+    """Rewrite legacy lock definitions to modern ones."""
+    entity_cfg = rewrite_common_legacy_to_modern_conf(hass, cfg, LEGACY_FIELDS)
+
+    unique_id = entity_cfg.get(CONF_UNIQUE_ID)
+
+    if CONF_NAME not in entity_cfg and unique_id is not None:
+        entity_cfg[CONF_NAME] = template.Template(unique_id, hass)
+
+    return entity_cfg
+
+
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(LEGACY_LOCK_SCHEMA.schema)
+
+
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
-    config = rewrite_common_legacy_to_modern_conf(hass, config)
-    return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
+    config = rewrite_legacy_to_modern_conf(hass, config)
+    lock_entity = TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))
+    return [lock_entity]
 
 
 async def async_setup_platform(
@@ -86,10 +128,10 @@ class TemplateLock(TemplateEntity, LockEntity):
         )
         self._state = None
         name = self._attr_name
-        self._state_template = config.get(CONF_VALUE_TEMPLATE)
+        self._state_template = config.get(CONF_STATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
-        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
+        self._code_format_template = config.get(CONF_CODE_FORMAT)
         self._code_format = None
         self._code_format_template_error = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
