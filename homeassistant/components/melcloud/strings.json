@@ -17,7 +17,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure your MelCloud",
         "description": "Reconfigure the entry to obtain a new token, for your account: `{username}`.",
         "data": {

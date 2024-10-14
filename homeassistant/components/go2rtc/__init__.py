@@ -67,9 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WebRTC from a config entry."""
     if binary := entry.data.get(CONF_BINARY):
         # HA will manage the binary
-        server = Server(binary)
+        server = Server(hass, binary)
+
         entry.async_on_unload(server.stop)
-        server.start()
+        await server.start()
 
     provider = WebRTCProvider(hass, entry.data[CONF_HOST])
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
