@@ -18,7 +18,18 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
 
-SCOPES = ["IoT User"]
+
+def _generateCodeChallengePair() -> tuple:
+    # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
+    code_verifier = base64.urlsafe_b64encode(os.urandom(128)).decode("utf-8")
+    code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
+
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode("utf-8")).digest()
+    ).decode("utf-8")
+    code_challenge = code_challenge.replace("=", "")
+
+    return (code_verifier, code_challenge)
 
 
 async def async_get_auth_implementation(
@@ -34,19 +45,6 @@ async def async_get_auth_implementation(
             token_url=TOKEN_URL,
         ),
     )
-
-
-def _generateCodeChallengePair() -> tuple:
-    # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
-    code_verifier = base64.urlsafe_b64encode(os.urandom(128)).decode("utf-8")
-    code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
-
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode("utf-8")).digest()
-    ).decode("utf-8")
-    code_challenge = code_challenge.replace("=", "")
-
-    return (code_verifier, code_challenge)
 
 
 class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -80,7 +78,6 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": " ".join(SCOPES),
             "code_challenge_method": "S256",
             "code_challenge": self.code_challenge,  # PKCE
         }
