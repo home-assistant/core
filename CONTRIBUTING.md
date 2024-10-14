@@ -2,7 +2,7 @@
 
 Everybody is invited and welcome to contribute to Home Assistant. There is a lot to do...if you are not a developer perhaps you would like to help with the documentation on [home-assistant.io](https://home-assistant.io/)? If you are a developer and have devices in your home which aren't working with Home Assistant yet, why not spend a couple of hours and help to integrate them?
 
-<b>The process is straight-forward.</b>
+<b><i>The process is straight-forward.</i></b>
 
  - Read [How to get faster PR reviews](https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md#best-practices-for-faster-reviews) by Kubernetes (but skip step 0 and 1)
  - Fork the Home Assistant [git repository](https://github.com/home-assistant/core).
