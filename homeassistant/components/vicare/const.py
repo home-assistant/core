@@ -6,9 +6,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "vicare"
 
-OAUTH2_AUTHORIZE = "https://iam.viessmann.com/idp/v3/authorize"
-OAUTH2_TOKEN = "https://iam.viessmann.com/idp/v3/token"
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
