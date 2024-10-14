@@ -70,17 +70,18 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Store validated credentials."""
 
+        await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 title=info[CONF_EMAIL],
+                unique_id=info[CONF_UNIQUE_ID],
                 data={
                     CONF_EMAIL: info[CONF_EMAIL],
                     CONF_PASSWORD: info[CONF_PASSWORD],
                 },
             )
 
-        await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
