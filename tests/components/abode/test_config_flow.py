@@ -170,7 +170,6 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
 
     with (
         patch("homeassistant.components.abode.config_flow.Abode"),
-        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
