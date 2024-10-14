@@ -4,6 +4,20 @@
     dict({
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': 'Zahnseide benutzen',
+      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Änderungen zu machen!',
+      'end': dict({
         'date': '2024-09-24',
       }),
       'location': None,
@@ -224,6 +238,20 @@
       }),
       'summary': 'Zahnseide benutzen',
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'date': '2024-09-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
+      'start': dict({
+        'date': '2024-09-21',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -646,12 +674,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'all_day': True,
-      'description': 'Klicke um Änderungen zu machen!',
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end_time': '2024-09-23 00:00:00',
       'friendly_name': 'test-user Dailies',
       'location': '',
-      'message': 'Zahnseide benutzen',
-      'start_time': '2024-09-22 00:00:00',
+      'message': '5 Minuten ruhig durchatmen',
+      'start_time': '2024-09-21 00:00:00',
+      'yesterdaily': True,
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_dailies',
