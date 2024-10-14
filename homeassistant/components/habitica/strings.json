@@ -89,7 +89,16 @@
         "name": "To-Do's"
       },
       "dailys": {
-        "name": "Dailies"
+        "name": "Dailies",
+        "state_attributes": {
+          "yesterdaily": {
+            "name": "Yester-Daily",
+            "state": {
+              "true": "[%key:common::state::yes%]",
+              "false": "[%key:common::state::no%]"
+            }
+          }
+        }
       }
     },
     "sensor": {

@@ -129,10 +129,11 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
 
     def calculate_end_date(self, next_recurrence) -> date:
         """Calculate the end date for a yesterdaily."""
-
-        if next_recurrence == self.today:
-            return dt_util.start_of_local_day().date()
-        return next_recurrence.date() + timedelta(days=1)
+        return (
+            dt_util.start_of_local_day()
+            if next_recurrence == self.today
+            else next_recurrence
+        ).date() + timedelta(days=1)
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -184,6 +185,13 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             for task in self.coordinator.data.tasks
             if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
             for recurrence in build_rrule(task).between(start_date, end_date, inc=True)
-            if (start := recurrence.date()) > self.today
-            or (start == self.today and not task["completed"] and task["isDue"])
+            if (start := recurrence.date()) > self.today.date()
+            or (start == self.today.date() and not task["completed"] and task["isDue"])
         ]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, bool] | None:
+        """Return entity specific state attributes."""
+        if event := self.event:
+            return {"yesterdaily": event.start < date.today()}
+        return None
