@@ -20,8 +20,7 @@ def _create_temp_file() -> str:
 
 async def _log_output(process: asyncio.subprocess.Process) -> None:
     """Log the output of the process."""
-    if process.stdout is None:
-        return
+    assert process.stdout is not None
 
     async for line in process.stdout:
         _LOGGER.debug(line[:-1].decode().strip())
