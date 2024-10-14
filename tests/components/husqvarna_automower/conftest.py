@@ -84,9 +84,10 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_automower_client() -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
-    mower_dict = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
+    mower_aware = load_json_value_fixture("mower.json", DOMAIN)
+    # mower_aware["data"][0]["attributes"]["mower_tz"] = "Europe/Berlin"
+    # mower_aware["data"][1]["attributes"]["mower_tz"] = "Europe/Berlin"
+    mower_dict = mower_list_to_dictionary_dataclass(mower_aware)
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)

@@ -14,7 +14,6 @@ from aioautomower.model import (
     RestrictedReasons,
     WorkArea,
 )
-from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -370,10 +369,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: naive_to_aware(
-            data.planner.next_start_datetime_naive,
-            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
-        ),
+        value_fn=lambda data: data.planner.next_start_datetime_aware,
     ),
     AutomowerSensorEntityDescription(
         key="error",
@@ -422,12 +418,9 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.last_time_completed_naive is not None,
+        exists_fn=lambda data: data.last_time_completed_aware is not None,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: naive_to_aware(
-            data.last_time_completed_naive,
-            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
-        ),
+        value_fn=lambda data: data.last_time_completed_aware,
     ),
 )
 
