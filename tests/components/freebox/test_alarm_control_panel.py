@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.const import (
@@ -55,7 +55,7 @@ async def test_alarm_changed_from_external(
     # Initial state
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.ARMING
+        == AlarmControlPanelState.ARMING
     )
 
     # Now simulate a changed status
@@ -69,7 +69,7 @@ async def test_alarm_changed_from_external(
 
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.ARMED_AWAY
+        == AlarmControlPanelState.ARMED_AWAY
     )
 
 
@@ -94,7 +94,7 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     # Initial state: arm_away
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.ARMED_AWAY
+        == AlarmControlPanelState.ARMED_AWAY
     )
 
     # Now call for a change -> disarmed
@@ -109,7 +109,7 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
 
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.DISARMED
+        == AlarmControlPanelState.DISARMED
     )
 
     # Now call for a change -> arm_away
@@ -124,7 +124,7 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
 
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.ARMING
+        == AlarmControlPanelState.ARMING
     )
 
     # Now call for a change -> arm_home
@@ -140,7 +140,7 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
 
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.ARMED_HOME
+        == AlarmControlPanelState.ARMED_HOME
     )
 
     # Now call for a change -> trigger
@@ -155,7 +155,7 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
 
     assert (
         hass.states.get("alarm_control_panel.systeme_d_alarme").state
-        == AlarmControlPanelEntityState.TRIGGERED
+        == AlarmControlPanelState.TRIGGERED
     )
 
 

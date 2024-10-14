@@ -7,7 +7,7 @@ from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, EntityCategory
@@ -534,42 +534,41 @@ async def test_action(
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.ARMED_AWAY
+        == AlarmControlPanelState.ARMED_AWAY
     )
 
     hass.bus.async_fire("test_event_arm_home")
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.ARMED_HOME
+        == AlarmControlPanelState.ARMED_HOME
     )
 
     hass.bus.async_fire("test_event_arm_vacation")
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.ARMED_VACATION
+        == AlarmControlPanelState.ARMED_VACATION
     )
 
     hass.bus.async_fire("test_event_arm_night")
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.ARMED_NIGHT
+        == AlarmControlPanelState.ARMED_NIGHT
     )
 
     hass.bus.async_fire("test_event_disarm")
     await hass.async_block_till_done()
     assert (
-        hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.DISARMED
+        hass.states.get(entity_entry.entity_id).state == AlarmControlPanelState.DISARMED
     )
 
     hass.bus.async_fire("test_event_trigger")
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.TRIGGERED
+        == AlarmControlPanelState.TRIGGERED
     )
 
 
@@ -626,5 +625,5 @@ async def test_action_legacy(
     await hass.async_block_till_done()
     assert (
         hass.states.get(entity_entry.entity_id).state
-        == AlarmControlPanelEntityState.ARMED_AWAY
+        == AlarmControlPanelState.ARMED_AWAY
     )

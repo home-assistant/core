@@ -6,7 +6,7 @@ from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_N
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.components.canary import DOMAIN
 from homeassistant.const import (
@@ -66,7 +66,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == AlarmControlPanelEntityState.DISARMED
+    assert state.state == AlarmControlPanelState.DISARMED
     assert state.attributes["private"]
 
     type(mocked_location).is_private = PropertyMock(return_value=False)
@@ -81,7 +81,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == AlarmControlPanelEntityState.ARMED_HOME
+    assert state.state == AlarmControlPanelState.ARMED_HOME
 
     # test armed away
     type(mocked_location).mode = PropertyMock(
@@ -93,7 +93,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == AlarmControlPanelEntityState.ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     # test armed night
     type(mocked_location).mode = PropertyMock(
@@ -105,7 +105,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == AlarmControlPanelEntityState.ARMED_NIGHT
+    assert state.state == AlarmControlPanelState.ARMED_NIGHT
 
 
 async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None:

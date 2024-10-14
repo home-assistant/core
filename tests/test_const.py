@@ -235,7 +235,7 @@ def _create_tuples_alarm_states(
 @pytest.mark.parametrize(
     ("enum", "constant_prefix", "remove_in_version"),
     _create_tuples_lock_states(
-        alarm_control_panel.AlarmControlPanelEntityState, "STATE_ALARM_", "2025.11"
+        alarm_control_panel.AlarmControlPanelState, "STATE_ALARM_", "2025.11"
     ),
 )
 def test_deprecated_constants_alarm(

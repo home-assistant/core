@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -1348,21 +1348,21 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
 async def test_report_alarm_control_panel_state(hass: HomeAssistant) -> None:
     """Test SecurityPanelController implements armState property."""
     hass.states.async_set(
-        "alarm_control_panel.armed_away", AlarmControlPanelEntityState.ARMED_AWAY, {}
+        "alarm_control_panel.armed_away", AlarmControlPanelState.ARMED_AWAY, {}
     )
     hass.states.async_set(
         "alarm_control_panel.armed_custom_bypass",
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         {},
     )
     hass.states.async_set(
-        "alarm_control_panel.armed_home", AlarmControlPanelEntityState.ARMED_HOME, {}
+        "alarm_control_panel.armed_home", AlarmControlPanelState.ARMED_HOME, {}
     )
     hass.states.async_set(
-        "alarm_control_panel.armed_night", AlarmControlPanelEntityState.ARMED_NIGHT, {}
+        "alarm_control_panel.armed_night", AlarmControlPanelState.ARMED_NIGHT, {}
     )
     hass.states.async_set(
-        "alarm_control_panel.disarmed", AlarmControlPanelEntityState.DISARMED, {}
+        "alarm_control_panel.disarmed", AlarmControlPanelState.DISARMED, {}
     )
 
     properties = await reported_properties(hass, "alarm_control_panel.armed_away")

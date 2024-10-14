@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.components.mqtt.alarm_control_panel import (
     MQTT_ALARM_ATTRIBUTES_BLOCKED,
@@ -206,23 +206,23 @@ async def test_update_state_via_state_topic(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     for state in (
-        AlarmControlPanelEntityState.DISARMED,
-        AlarmControlPanelEntityState.ARMED_HOME,
-        AlarmControlPanelEntityState.ARMED_AWAY,
-        AlarmControlPanelEntityState.ARMED_NIGHT,
-        AlarmControlPanelEntityState.ARMED_VACATION,
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
-        AlarmControlPanelEntityState.PENDING,
-        AlarmControlPanelEntityState.ARMING,
-        AlarmControlPanelEntityState.DISARMING,
-        AlarmControlPanelEntityState.TRIGGERED,
+        AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.ARMED_HOME,
+        AlarmControlPanelState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_NIGHT,
+        AlarmControlPanelState.ARMED_VACATION,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.PENDING,
+        AlarmControlPanelState.ARMING,
+        AlarmControlPanelState.DISARMING,
+        AlarmControlPanelState.TRIGGERED,
     ):
         async_fire_mqtt_message(hass, "alarm/state", state)
         assert hass.states.get(entity_id).state == state
 
-    # Ignore empty payload (last state is AlarmControlPanelEntityState.TRIGGERED)
+    # Ignore empty payload (last state is AlarmControlPanelState.TRIGGERED)
     async_fire_mqtt_message(hass, "alarm/state", "")
-    assert hass.states.get(entity_id).state == AlarmControlPanelEntityState.TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
 
     # Reset state on `None` payload
     async_fire_mqtt_message(hass, "alarm/state", "None")
@@ -762,7 +762,7 @@ async def test_update_state_via_state_topic_template(
     async_fire_mqtt_message(hass, "test-topic", "100")
 
     state = hass.states.get("alarm_control_panel.test")
-    assert state.state == AlarmControlPanelEntityState.ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
 
 @pytest.mark.parametrize(
@@ -1301,8 +1301,8 @@ async def test_entity_name(
     [
         (
             "test-topic",
-            AlarmControlPanelEntityState.DISARMED,
-            AlarmControlPanelEntityState.ARMED_HOME,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_HOME,
         ),
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),

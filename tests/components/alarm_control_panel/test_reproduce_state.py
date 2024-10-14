@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -24,35 +24,35 @@ async def test_reproducing_states(
     """Test reproducing Alarm control panel states."""
     hass.states.async_set(
         "alarm_control_panel.entity_armed_away",
-        AlarmControlPanelEntityState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_AWAY,
         {},
     )
     hass.states.async_set(
         "alarm_control_panel.entity_armed_custom_bypass",
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         {},
     )
     hass.states.async_set(
         "alarm_control_panel.entity_armed_home",
-        AlarmControlPanelEntityState.ARMED_HOME,
+        AlarmControlPanelState.ARMED_HOME,
         {},
     )
     hass.states.async_set(
         "alarm_control_panel.entity_armed_night",
-        AlarmControlPanelEntityState.ARMED_NIGHT,
+        AlarmControlPanelState.ARMED_NIGHT,
         {},
     )
     hass.states.async_set(
         "alarm_control_panel.entity_armed_vacation",
-        AlarmControlPanelEntityState.ARMED_VACATION,
+        AlarmControlPanelState.ARMED_VACATION,
         {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_disarmed", AlarmControlPanelEntityState.DISARMED, {}
+        "alarm_control_panel.entity_disarmed", AlarmControlPanelState.DISARMED, {}
     )
     hass.states.async_set(
         "alarm_control_panel.entity_triggered",
-        AlarmControlPanelEntityState.TRIGGERED,
+        AlarmControlPanelState.TRIGGERED,
         {},
     )
 
@@ -82,31 +82,31 @@ async def test_reproducing_states(
         [
             State(
                 "alarm_control_panel.entity_armed_away",
-                AlarmControlPanelEntityState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_AWAY,
             ),
             State(
                 "alarm_control_panel.entity_armed_custom_bypass",
-                AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
             ),
             State(
                 "alarm_control_panel.entity_armed_home",
-                AlarmControlPanelEntityState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_HOME,
             ),
             State(
                 "alarm_control_panel.entity_armed_night",
-                AlarmControlPanelEntityState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_NIGHT,
             ),
             State(
                 "alarm_control_panel.entity_armed_vacation",
-                AlarmControlPanelEntityState.ARMED_VACATION,
+                AlarmControlPanelState.ARMED_VACATION,
             ),
             State(
                 "alarm_control_panel.entity_disarmed",
-                AlarmControlPanelEntityState.DISARMED,
+                AlarmControlPanelState.DISARMED,
             ),
             State(
                 "alarm_control_panel.entity_triggered",
-                AlarmControlPanelEntityState.TRIGGERED,
+                AlarmControlPanelState.TRIGGERED,
             ),
         ],
     )
@@ -139,31 +139,31 @@ async def test_reproducing_states(
         [
             State(
                 "alarm_control_panel.entity_armed_away",
-                AlarmControlPanelEntityState.TRIGGERED,
+                AlarmControlPanelState.TRIGGERED,
             ),
             State(
                 "alarm_control_panel.entity_armed_custom_bypass",
-                AlarmControlPanelEntityState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_AWAY,
             ),
             State(
                 "alarm_control_panel.entity_armed_home",
-                AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
             ),
             State(
                 "alarm_control_panel.entity_armed_night",
-                AlarmControlPanelEntityState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_HOME,
             ),
             State(
                 "alarm_control_panel.entity_armed_vacation",
-                AlarmControlPanelEntityState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_NIGHT,
             ),
             State(
                 "alarm_control_panel.entity_disarmed",
-                AlarmControlPanelEntityState.ARMED_VACATION,
+                AlarmControlPanelState.ARMED_VACATION,
             ),
             State(
                 "alarm_control_panel.entity_triggered",
-                AlarmControlPanelEntityState.DISARMED,
+                AlarmControlPanelState.DISARMED,
             ),
             # Should not raise
             State("alarm_control_panel.non_existing", "on"),

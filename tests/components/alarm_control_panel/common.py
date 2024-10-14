@@ -8,7 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -140,31 +140,31 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         self.schedule_update_ha_state()
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_NIGHT
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_NIGHT
         self.schedule_update_ha_state()
 
     def alarm_arm_vacation(self, code=None):
         """Send arm night command."""
-        self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_VACATION
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_VACATION
         self.schedule_update_ha_state()
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code == "1234":
-            self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
             self.schedule_update_ha_state()
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
-        self._attr_alarm_state = AlarmControlPanelEntityState.TRIGGERED
+        self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         self.schedule_update_ha_state()
