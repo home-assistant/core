@@ -1113,7 +1113,13 @@ async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
             "datetime": str(
                 dt_util.now()
                 .replace(
-                    year=2021, month=5, day=1, hour=18, minute=0, second=0, microsecond=0
+                    year=2021,
+                    month=5,
+                    day=1,
+                    hour=18,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
                 )
                 .replace(tzinfo=None)
             ),
@@ -1128,7 +1134,7 @@ async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
         assert not condition.date(
             hass, after="input_datetime.am", before="input_datetime.pm"
         )
-        assert not condition.date(
+        assert condition.date(
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
@@ -1161,7 +1167,7 @@ async def test_date_using_input_datetime(hass: HomeAssistant) -> None:
         assert not condition.date(
             hass, after="input_datetime.am", before="input_datetime.pm"
         )
-        assert not condition.date(
+        assert condition.date(
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
@@ -1199,7 +1205,7 @@ async def test_date_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(year=2020, month=6, day=1),
     ):
         assert not condition.date(hass, after="sensor.am", before="sensor.pm")
-        assert not condition.date(hass, after="sensor.pm", before="sensor.am")
+        assert condition.date(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
@@ -1213,14 +1219,14 @@ async def test_date_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(year=2020, month=5, day=15),
     ):
         assert not condition.date(hass, after="sensor.am", before="sensor.pm")
-        assert not condition.date(hass, after="sensor.pm", before="sensor.am")
+        assert condition.date(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(year=2022, month=6, day=1),
     ):
         assert not condition.date(hass, after="sensor.am", before="sensor.pm")
-        assert not condition.date(hass, after="sensor.pm", before="sensor.am")
+        assert condition.date(hass, after="sensor.pm", before="sensor.am")
 
     assert not condition.date(hass, after="sensor.invalid_timestamp")
     assert not condition.date(hass, before="sensor.invalid_timestamp")
@@ -1276,7 +1282,7 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
                     hour=18,
                     minute=0,
                     second=0,
-                    microsecond=0
+                    microsecond=0,
                 )
                 .replace(tzinfo=None)
             ),
@@ -1292,7 +1298,13 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
             "datetime": str(
                 dt_util.now()
                 .replace(
-                    year=2021, month=6, day=1, hour=15, minute=0, second=0, microsecond=0
+                    year=2021,
+                    month=6,
+                    day=1,
+                    hour=15,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
                 )
                 .replace(tzinfo=None)
             ),
@@ -1304,7 +1316,7 @@ async def test_datetime_using_input_datetime(hass: HomeAssistant) -> None:
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt_util.now().replace(year=2020, month=4, day=1, hour=3),
     ):
-        assert not condition.datetime(
+        assert condition.datetime(
             hass, after="input_datetime.am", before="input_datetime.later"
         )
         assert not condition.datetime(
@@ -1440,7 +1452,7 @@ async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(year=2021, month=6, day=15, hour=1),
     ):
         assert not condition.datetime(hass, after="sensor.am", before="sensor.later")
-        assert not condition.datetime(hass, after="sensor.later", before="sensor.am")
+        assert condition.datetime(hass, after="sensor.later", before="sensor.am")
 
     # Trigger on PM time
     with patch(
@@ -1450,8 +1462,8 @@ async def test_datetime_using_sensor(hass: HomeAssistant) -> None:
         ),
     ):
         assert not condition.datetime(hass, after="sensor.pm", before="sensor.am")
-        assert not condition.datetime(hass, after="sensor.am", before="sensor.pm")
-        assert condition.datetime(hass, after="sensor.am")
+        assert condition.datetime(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.datetime(hass, after="sensor.am")
         assert not condition.datetime(hass, before="sensor.am")
         assert condition.datetime(hass, after="sensor.pm")
         assert not condition.datetime(hass, before="sensor.pm")

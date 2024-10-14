@@ -7,6 +7,7 @@ from collections import deque
 from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime as dt_datetime
+from datetime import date as dt_date
 from datetime import time as dt_time
 from datetime import timedelta as dt_timedelta
 import functools as ft
@@ -899,8 +900,8 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def date(
     hass: HomeAssistant,
-    before: dt_datetime | str | None = None,
-    after: dt_datetime | str | None = None,
+    before: dt_date | str | None = None,
+    after: dt_date | str | None = None,
     weekday: str | Container[str] | None = None,
 ) -> bool:
     """Test if date condition matches."""
@@ -908,12 +909,12 @@ def date(
     now_date = now.date()
 
     if after is None:
-        after = dt_datetime(0)
+        after = dt_date(1, 1, 1)
     elif isinstance(after, str):
         if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("date", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
-            after = dt_datetime(
+            after = dt_date(
                 after_entity.attributes.get("year", 9999),
                 after_entity.attributes.get("month", 12),
                 after_entity.attributes.get("day", 31),
@@ -927,17 +928,17 @@ def date(
             after_datetime = dt_util.parse_datetime(after_entity.state)
             if after_datetime is None:
                 return False
-            after = dt_util.as_local(after_datetime).time()
+            after = dt_util.as_local(after_datetime).date()
         else:
             return False
 
     if before is None:
-        before = dt_timedelta(9999, 12, 31)
+        before = dt_date(9999, 12, 31)
     elif isinstance(before, str):
         if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("date", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
-            before = dt_timedelta(
+            before = dt_date(
                 before_entity.attributes.get("year", 9999),
                 before_entity.attributes.get("month", 12),
                 before_entity.attributes.get("day", 31),
@@ -951,17 +952,17 @@ def date(
             before_datetime = dt_util.parse_datetime(before_entity.state)
             if before_datetime is None:
                 return False
-            before = dt_util.as_local(before_datetime).time()
+            before = dt_util.as_local(before_datetime).date()
         else:
             return False
 
     if after < before:
         condition_trace_update_result(after=after, now_date=now_date, before=before)
-        if not after.date() <= now_date < before.date():
+        if not after <= now_date < before:
             return False
     else:
         condition_trace_update_result(after=after, now_date=now_date, before=before)
-        if before.date() <= now_date.date() < after.date():
+        if before <= now_date < after:
             return False
 
     if weekday is not None:
@@ -1020,6 +1021,7 @@ def datetime(
                 after_entity.attributes.get("hour", 23),
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
+                after_entity.attributes.get("tzinfo"),
             )
         elif after_entity.attributes.get(
             ATTR_DEVICE_CLASS
@@ -1030,7 +1032,7 @@ def datetime(
             after_datetime = dt_util.parse_datetime(after_entity.state)
             if after_datetime is None:
                 return False
-            after = dt_util.as_local(after_datetime).time()
+            after = dt_util.as_local(after_datetime)
         else:
             return False
 
@@ -1047,6 +1049,7 @@ def datetime(
                 before_entity.attributes.get("hour", 23),
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
+                after_entity.attributes.get("tzinfo"),
             )
         elif before_entity.attributes.get(
             ATTR_DEVICE_CLASS
@@ -1057,7 +1060,7 @@ def datetime(
             before_datetime = dt_util.parse_datetime(before_entity.state)
             if before_datetime is None:
                 return False
-            before = dt_util.as_local(before_datetime).time()
+            before = dt_util.as_local(before_datetime)
         else:
             return False
 
