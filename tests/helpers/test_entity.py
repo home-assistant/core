@@ -2652,3 +2652,30 @@ async def test_async_write_ha_state_thread_safety_always(
     ):
         await hass.async_add_executor_job(ent2.async_write_ha_state)
     assert not hass.states.get(ent2.entity_id)
+
+
+async def test_write_state_bool_to_int(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing a bool to an int in attributes."""
+    platform = MockEntityPlatform(hass)
+    extra_attrs = {"attr": False}
+
+    class MockEntityAttrChanges(MockEntity):
+        @property
+        def extra_state_attributes(self):
+            return extra_attrs
+
+    ent = MockEntityAttrChanges(unique_id="qwer")
+    await platform.async_add_entities([ent])
+
+    assert hass.states.get(ent.entity_id).attributes["attr"] is False
+
+    extra_attrs["attr"] = True
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id).attributes["attr"] is True
+
+    one = 1
+    extra_attrs["attr"] = one
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id).attributes["attr"] is one
