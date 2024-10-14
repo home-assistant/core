@@ -382,13 +382,12 @@ def set_addon_options_side_effect_fixture(
 
 @pytest.fixture(name="set_addon_options")
 def set_addon_options_fixture(
+    supervisor_client: AsyncMock,
     set_addon_options_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock set add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options
-
-    yield from mock_set_addon_options(set_addon_options_side_effect)
+    supervisor_client.addons.addon_options.side_effect = set_addon_options_side_effect
+    return supervisor_client.addons.addon_options
 
 
 @pytest.fixture(name="uninstall_addon")
@@ -407,12 +406,9 @@ def create_backup_fixture() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="update_addon")
-def update_addon_fixture() -> Generator[AsyncMock]:
+def update_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock update add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_update_addon
-
-    yield from mock_update_addon()
+    return supervisor_client.store.update_addon
 
 
 @pytest.fixture(name="store_addons")

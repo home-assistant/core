@@ -541,7 +541,7 @@ async def test_update_addon_error(
 ) -> None:
     """Test update addon raises error."""
     addon_info.return_value.update_available = True
-    update_addon.side_effect = HassioAPIError("Boom")
+    update_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
@@ -620,7 +620,7 @@ async def test_schedule_update_addon(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to update the Test add-on: Boom",
         ),
@@ -670,7 +670,7 @@ async def test_schedule_update_addon_error(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to update the Test add-on: Boom",
         ),

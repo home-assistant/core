@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 from aiohasupervisor.models import (
+    AddonsOptions,
     AddonStage,
     InstalledAddonComplete,
     Repository,
@@ -210,22 +211,11 @@ def mock_addon_options(addon_info: AsyncMock) -> dict[str, Any]:
 def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | None:
     """Return the set add-on options side effect."""
 
-    async def set_addon_options(hass: HomeAssistant, slug: str, options: dict) -> None:
+    async def set_addon_options(slug: str, options: AddonsOptions) -> None:
         """Mock set add-on options."""
-        addon_options.update(options["options"])
+        addon_options.update(options.config)
 
     return set_addon_options
-
-
-def mock_set_addon_options(
-    set_addon_options_side_effect: Any | None,
-) -> Generator[AsyncMock]:
-    """Mock set add-on options."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_set_addon_options",
-        side_effect=set_addon_options_side_effect,
-    ) as set_options:
-        yield set_options
 
 
 def mock_create_backup() -> Generator[AsyncMock]:
@@ -234,11 +224,3 @@ def mock_create_backup() -> Generator[AsyncMock]:
         "homeassistant.components.hassio.addon_manager.async_create_backup"
     ) as create_backup:
         yield create_backup
-
-
-def mock_update_addon() -> Generator[AsyncMock]:
-    """Mock update add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_update_addon"
-    ) as update_addon:
-        yield update_addon
