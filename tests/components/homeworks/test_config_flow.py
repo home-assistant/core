@@ -235,6 +235,10 @@ async def test_user_flow_cannot_connect(
     assert result["step_id"] == "user"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.homeworks.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
 ) -> None:
@@ -322,6 +326,10 @@ async def test_reconfigure_flow_flow_duplicate(
     assert result["errors"] == {"base": "duplicated_host_port"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.homeworks.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure_flow_flow_no_change(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
 ) -> None:
