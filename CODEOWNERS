@@ -842,6 +842,7 @@ build.json @home-assistant/supervisor
 /tests/components/local_ip/ @issacg
 /homeassistant/components/local_todo/ @allenporter
 /tests/components/local_todo/ @allenporter
+/homeassistant/components/location/ @joostlek
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
 /homeassistant/components/logbook/ @home-assistant/core
