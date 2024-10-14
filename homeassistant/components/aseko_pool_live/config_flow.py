@@ -29,7 +29,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         }
     )
 
-    async def get_account_info(self, email: str, password: str) -> dict:
+    async def get_account_info(self, email: str, password: str) -> dict[str, Any]:
         """Get account info from the mobile API and the web API."""
         aseko = Aseko(email, password)
         user = await aseko.login()

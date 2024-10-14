@@ -129,7 +129,8 @@ async def test_async_step_reauth_success(hass: HomeAssistant, user: User) -> Non
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="UID",
-        data={CONF_EMAIL: "aseko@example.com"},
+        data={CONF_EMAIL: "aseko@example.com", CONF_PASSWORD: "passw0rd"},
+        version=2,
     )
     mock_entry.add_to_hass(hass)
 
@@ -151,13 +152,18 @@ async def test_async_step_reauth_success(hass: HomeAssistant, user: User) -> Non
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_EMAIL: "aseko@example.com", CONF_PASSWORD: "passw0rd"},
+            {CONF_EMAIL: "aseko@example.com", CONF_PASSWORD: "new_password"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_entry.unique_id == "a_user_id"
+    assert dict(mock_entry.data) == {
+        CONF_EMAIL: "aseko@example.com",
+        CONF_PASSWORD: "new_password",
+    }
 
 
 @pytest.mark.parametrize(
