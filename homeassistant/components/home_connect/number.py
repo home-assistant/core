@@ -5,6 +5,8 @@ import logging
 from homeconnect.api import HomeConnectError
 
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -14,15 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
-from .const import (
-    ATTR_CONSTRAINTS,
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEPSIZE,
-    ATTR_UNIT,
-    ATTR_VALUE,
-    DOMAIN,
-)
+from .const import ATTR_CONSTRAINTS, ATTR_STEPSIZE, ATTR_UNIT, ATTR_VALUE, DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)

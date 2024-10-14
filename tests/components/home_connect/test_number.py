@@ -9,13 +9,13 @@ import pytest
 
 from homeassistant.components.home_connect.const import (
     ATTR_CONSTRAINTS,
-    ATTR_MAX,
-    ATTR_MIN,
     ATTR_STEPSIZE,
     ATTR_UNIT,
     ATTR_VALUE,
 )
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
     ATTR_VALUE as SERVICE_ATTR_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
