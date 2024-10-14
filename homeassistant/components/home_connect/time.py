@@ -48,8 +48,6 @@ async def async_setup_entry(
 class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
     """Time setting class for Home Connect."""
 
-    entity_description: TimeEntityDescription
-
     async def async_set_value(self, value: time) -> None:
         """Set the native value of the entity."""
         _LOGGER.debug(
