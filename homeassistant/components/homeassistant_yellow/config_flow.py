@@ -77,9 +77,6 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
         await self._probe_firmware_type()
 
