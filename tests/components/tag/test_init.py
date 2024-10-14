@@ -294,6 +294,10 @@ async def test_entity_created_and_removed(
     assert item["id"] == "1234567890"
     assert item["name"] == "Kitchen tag"
 
+    await hass.async_block_till_done()
+    er_entity = entity_registry.async_get("tag.kitchen_tag")
+    assert er_entity.name == "Kitchen tag"
+
     entity = hass.states.get("tag.kitchen_tag")
     assert entity
     assert entity.state == STATE_UNKNOWN
