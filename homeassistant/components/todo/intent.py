@@ -46,16 +46,13 @@ class ListAddItemIntent(intent.IntentHandler):
             name=list_name, domains=[DOMAIN], assistant=intent_obj.assistant
         )
         match_result = intent.async_match_targets(hass, match_constraints)
-        if not match_result.is_match:
-            raise intent.MatchFailedError(
-                result=match_result, constraints=match_constraints
-            )
-
         target_list = hass.data[DATA_COMPONENT].get_entity(
             match_result.states[0].entity_id
         )
-        if target_list is None:
-            raise intent.IntentHandleError(f"No to-do list: {list_name}")
+        if not match_result.is_match or target_list is None:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
         # Add to list
         await target_list.async_create_todo_item(

@@ -8,6 +8,7 @@ from homeassistant.components.todo import (
     DOMAIN,
     TodoItem,
     TodoItemStatus,
+    TodoListEntity,
     intent as todo_intent,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -65,17 +66,11 @@ async def test_complete_item_intent(
 
 async def test_complete_item_intent_errors(
     hass: HomeAssistant,
+    test_entity: TodoListEntity,
 ) -> None:
     """Test errors with the complete item intent."""
-    # Try to complete item that does not exist
-    with pytest.raises(intent.MatchFailedError):
-        await intent.async_handle(
-            hass,
-            "test",
-            todo_intent.INTENT_LIST_COMPLETE_ITEM,
-            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
-            assistant=conversation.DOMAIN,
-        )
+    test_entity._attr_name = "List 1"
+    await create_mock_platform(hass, [test_entity])
 
     # Try to complete item in list that does not exist
     with pytest.raises(intent.MatchFailedError):
@@ -87,5 +82,15 @@ async def test_complete_item_intent_errors(
                 ATTR_ITEM: {"value": "wine"},
                 ATTR_NAME: {"value": "This list does not exist"},
             },
+            assistant=conversation.DOMAIN,
+        )
+
+    # Try to complete item that does not exist
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_COMPLETE_ITEM,
+            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
