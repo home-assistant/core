@@ -199,7 +199,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
             )
             try:
-                key_details = await fetcher.get_device_info(
+                device_details = await fetcher.get_device_info(
                     self._discovery_info.address
                 )
             except XiaomiCloudInvalidAuthenticationException as ex:
@@ -212,15 +212,15 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                     "api_error", description_placeholders={"error_detail": str(ex)}
                 ) from ex
             else:
-                if key_details is None:
+                if device_details is None:
                     raise AbortFlow("api_device_not_found")
                 return await self.async_step_get_encryption_key_4_5(
-                    {"bindkey": key_details["token"]}
+                    {"bindkey": device_details.bindkey}
                 )
 
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="lock_auth",
+            step_id="cloud_auth",
             errors=errors,
             data_schema=vol.Schema(
                 {
