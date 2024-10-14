@@ -1,9 +1,9 @@
 """Test the Teslemetry lock platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.lock import (
@@ -34,7 +34,7 @@ async def test_lock(
 
 async def test_lock_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the lock entities are correct when offline."""
 

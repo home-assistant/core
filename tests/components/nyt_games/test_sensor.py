@@ -4,17 +4,23 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from nyt_games import NYTGamesError
+from nyt_games import NYTGamesError, WordleStats
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -55,3 +61,17 @@ async def test_updating_exception(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wordle_played").state != STATE_UNAVAILABLE
+
+
+async def test_new_account(
+    hass: HomeAssistant,
+    mock_nyt_games_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling an exception during update."""
+    mock_nyt_games_client.get_latest_stats.return_value = WordleStats.from_json(
+        load_fixture("new_account.json", DOMAIN)
+    ).player.stats
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.spelling_bee_played") is None

@@ -22,8 +22,8 @@ class NYTGamesData:
     """Class for NYT Games data."""
 
     wordle: Wordle
-    spelling_bee: SpellingBee
-    connections: Connections
+    spelling_bee: SpellingBee | None
+    connections: Connections | None
 
 
 class NYTGamesCoordinator(DataUpdateCoordinator[NYTGamesData]):

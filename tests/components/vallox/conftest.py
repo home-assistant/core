@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from vallox_websocket_api import MetricData
 
-from homeassistant import config_entries
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -79,13 +78,7 @@ async def init_reconfigure_flow(
     hass: HomeAssistant, mock_entry, setup_vallox_entry
 ) -> tuple[MockConfigEntry, ConfigFlowResult]:
     """Initialize a config entry and a reconfigure flow for it."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_entry.entry_id,
-        },
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"

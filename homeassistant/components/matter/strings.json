@@ -250,6 +250,11 @@
       "power": {
         "name": "Power"
       }
+    },
+    "valve": {
+      "valve": {
+        "name": "[%key:component::valve::title%]"
+      }
     }
   },
   "issues": {

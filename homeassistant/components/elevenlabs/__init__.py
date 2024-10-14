@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
 
@@ -41,7 +42,10 @@ type EleventLabsConfigEntry = ConfigEntry[ElevenLabsData]
 async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) -> bool:
     """Set up ElevenLabs text-to-speech from a config entry."""
     entry.add_update_listener(update_listener)
-    client = AsyncElevenLabs(api_key=entry.data[CONF_API_KEY])
+    httpx_client = get_async_client(hass)
+    client = AsyncElevenLabs(
+        api_key=entry.data[CONF_API_KEY], httpx_client=httpx_client
+    )
     model_id = entry.options[CONF_MODEL]
     try:
         model = await get_model_by_id(client, model_id)

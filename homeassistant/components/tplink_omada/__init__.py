@@ -29,10 +29,11 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up TP-Link Omada from a config entry."""
+type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 
-    hass.data.setdefault(DOMAIN, {})
+
+async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+    """Set up TP-Link Omada from a config entry."""
 
     try:
         client = await create_omada_client(hass, entry.data)
@@ -56,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller = OmadaSiteController(hass, site_client)
     await controller.initialize_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = controller
+    entry.runtime_data = controller
 
     _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
@@ -65,16 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def _remove_old_devices(
-    hass: HomeAssistant, entry: ConfigEntry, omada_devices: dict[str, OmadaListDevice]
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+    omada_devices: dict[str, OmadaListDevice],
 ) -> None:
     device_registry = dr.async_get(hass)
 

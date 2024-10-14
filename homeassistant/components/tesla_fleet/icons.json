@@ -7,6 +7,12 @@
           "on": "mdi:hvac"
         }
       },
+      "storm_mode_active": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "on": "mdi:weather-lightning-rainy"
+        }
+      },
       "vehicle_state_is_user_present": {
         "state": {
           "off": "mdi:account-remove-outline",
@@ -216,6 +222,16 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      },
+      "island_status": {
+        "default": "mdi:help-circle",
+        "state": {
+          "on_grid": "mdi:transmission-tower",
+          "off_grid": "mdi:transmission-tower-off",
+          "off_grid_unintentional": "mdi:transmission-tower-off",
+          "island_status_unknown": "mdi:help-circle",
+          "off_grid_intentional": "mdi:account-cancel"
+        }
       }
     },
     "switch": {

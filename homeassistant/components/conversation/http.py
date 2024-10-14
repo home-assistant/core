@@ -27,7 +27,7 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import DATA_DEFAULT_ENTITY, DOMAIN_DATA
+from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY
 from .default_agent import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
@@ -114,7 +114,7 @@ async def websocket_list_agents(
     language = msg.get("language")
     agents = []
 
-    for entity in hass.data[DOMAIN_DATA].entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         supported_languages = entity.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(

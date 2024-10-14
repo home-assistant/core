@@ -11,7 +11,7 @@ blueprint:
         number:
           mode: "box"
 triggers:
-  platform: event
+  trigger: event
   event_type: !input trigger_event
 actions:
   service: !input service_to_call

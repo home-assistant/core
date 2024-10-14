@@ -150,7 +150,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "hps": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
-            device_class=BinarySensorDeviceClass.MOTION,
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value="presence",
         ),
     ),

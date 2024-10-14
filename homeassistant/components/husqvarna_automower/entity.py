@@ -125,7 +125,9 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
             manufacturer="Husqvarna",
-            model=self.mower_attributes.system.model,
+            model=self.mower_attributes.system.model.removeprefix(
+                "HUSQVARNA "
+            ).removeprefix("Husqvarna "),
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
@@ -155,8 +157,8 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
         return super().available and _check_error_free(self.mower_attributes)
 
 
-class WorkAreaControlEntity(AutomowerControlEntity):
-    """Base entity work work areas with control function."""
+class WorkAreaAvailableEntity(AutomowerAvailableEntity):
+    """Base entity for work work areas."""
 
     def __init__(
         self,
@@ -184,3 +186,7 @@ class WorkAreaControlEntity(AutomowerControlEntity):
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
         return super().available and self.work_area_id in self.work_areas
+
+
+class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
+    """Base entity work work areas with control function."""

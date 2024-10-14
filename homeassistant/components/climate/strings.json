@@ -275,6 +275,12 @@
     },
     "humidity_out_of_range": {
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+    },
+    "missing_target_temperature_entity_feature": {
+      "message": "Set temperature action was used with the target temperature parameter but the entity does not support it."
+    },
+    "missing_target_temperature_range_entity_feature": {
+      "message": "Set temperature action was used with the target temperature low/high parameter but the entity does not support it."
     }
   }
 }

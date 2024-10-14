@@ -91,7 +91,7 @@ async def test_async_create_flow_checks_existing_flows_after_startup(
     """Test existing flows prevent an identical ones from being after startup."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     with patch(
-        "homeassistant.data_entry_flow.FlowManager.async_has_matching_flow",
+        "homeassistant.config_entries.ConfigEntriesFlowManager.async_has_matching_discovery_flow",
         return_value=True,
     ):
         discovery_flow.async_create_flow(
