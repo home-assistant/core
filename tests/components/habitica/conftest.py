@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -19,6 +20,23 @@ def disable_plumbum():
     """
     with patch("plumbum.local"), patch("plumbum.colors"):
         yield
+
+
+def mock_called_with(
+    mock_client: AiohttpClientMocker,
+    method: str,
+    url: str,
+) -> tuple | None:
+    """Assert request mock was called with json data."""
+
+    return next(
+        (
+            call
+            for call in mock_client.mock_calls
+            if call[0] == method.upper() and call[1] == URL(url)
+        ),
+        None,
+    )
 
 
 @pytest.fixture
