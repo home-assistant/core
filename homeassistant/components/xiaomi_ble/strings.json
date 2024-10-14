@@ -45,7 +45,8 @@
       "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
       "expected_24_characters": "Expected a 24 character hexadecimal bindkey.",
       "expected_32_characters": "Expected a 32 character hexadecimal bindkey.",
-      "auth_failed": "Authentication failed: {error_detail}"
+      "auth_failed": "Authentication failed: {error_detail}",
+      "api_device_not_found": "The device was not found in your Mi account."
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",

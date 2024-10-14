@@ -212,11 +212,11 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                     "api_error", description_placeholders={"error_detail": str(ex)}
                 ) from ex
             else:
-                if device_details is None:
-                    raise AbortFlow("api_device_not_found")
-                return await self.async_step_get_encryption_key_4_5(
-                    {"bindkey": device_details.bindkey}
-                )
+                if device_details:
+                    return await self.async_step_get_encryption_key_4_5(
+                        {"bindkey": device_details.bindkey}
+                    )
+                errors = {"base": "api_device_not_found"}
 
         user_input = user_input or {}
         return self.async_show_form(
