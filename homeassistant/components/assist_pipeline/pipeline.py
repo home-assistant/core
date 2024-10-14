@@ -1289,6 +1289,20 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
+async def buffer_then_audio_stream(stt_audio_buffer, stt_processed_stream
+                                   ) -> AsyncGenerator[EnhancedAudioChunk]:
+    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+    # This is basically an async itertools.chain.
+    # Buffered audio
+    for chunk in stt_audio_buffer:
+        yield chunk
+
+    # Streamed audio
+    assert stt_processed_stream is not None
+    async for chunk in stt_processed_stream:
+        yield chunk
+
+
 @dataclass
 class PipelineInput:
     """Input to a pipeline run."""
@@ -1313,6 +1327,48 @@ class PipelineInput:
     conversation_id: str | None = None
 
     device_id: str | None = None
+
+    def try_wake_up(self):
+        # Avoid duplicate wake-ups by checking cooldown
+        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
+            self.wake_word_phrase
+        )
+        if last_wake_up is not None:
+            sec_since_last_wake_up = time.monotonic() - last_wake_up
+            if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                _LOGGER.debug(
+                    "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                    self.wake_word_phrase,
+                )
+                raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+
+        # Record last wake up time to block duplicate detections
+        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+            time.monotonic()
+        )
+    async def handle_intent_and_tts(self, current_stage, intent_input):
+        if self.run.end_stage != PipelineStage.STT:
+            tts_input = self.tts_input
+
+            if current_stage == PipelineStage.INTENT:
+                # intent-recognition
+                assert intent_input is not None
+                tts_input = await self.run.recognize_intent(
+                    intent_input,
+                    self.conversation_id,
+                    self.device_id,
+                )
+                if tts_input.strip():
+                    current_stage = PipelineStage.TTS
+                else:
+                    # Skip TTS
+                    current_stage = PipelineStage.END
+
+            if self.run.end_stage != PipelineStage.INTENT:
+                # text-to-speech
+                if current_stage == PipelineStage.TTS:
+                    assert tts_input is not None
+                    await self.run.text_to_speech(tts_input)
 
     async def execute(self) -> None:
         """Run pipeline."""
@@ -1348,43 +1404,16 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
-                if self.wake_word_phrase is not None:
-                    # Avoid duplicate wake-ups by checking cooldown
-                    last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-                        self.wake_word_phrase
-                    )
-                    if last_wake_up is not None:
-                        sec_since_last_wake_up = time.monotonic() - last_wake_up
-                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                            _LOGGER.debug(
-                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
-                                self.wake_word_phrase,
-                            )
-                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+                # Attempt to wake up for speech recognition
 
-                    # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
-                        time.monotonic()
-                    )
+                if self.wake_word_phrase is not None:
+                    self.try_wake_up()
 
                 stt_input_stream = stt_processed_stream
 
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
-                    # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[EnhancedAudioChunk]
-                    ):
-                        # Buffered audio
-                        for chunk in stt_audio_buffer:
-                            yield chunk
-
-                        # Streamed audio
-                        assert stt_processed_stream is not None
-                        async for chunk in stt_processed_stream:
-                            yield chunk
-
-                    stt_input_stream = buffer_then_audio_stream()
+                    buffer_then_audio_stream(stt_audio_buffer, stt_processed_stream)
 
                 intent_input = await self.run.speech_to_text(
                     self.stt_metadata,
@@ -1392,28 +1421,8 @@ class PipelineInput:
                 )
                 current_stage = PipelineStage.INTENT
 
-            if self.run.end_stage != PipelineStage.STT:
-                tts_input = self.tts_input
-
-                if current_stage == PipelineStage.INTENT:
-                    # intent-recognition
-                    assert intent_input is not None
-                    tts_input = await self.run.recognize_intent(
-                        intent_input,
-                        self.conversation_id,
-                        self.device_id,
-                    )
-                    if tts_input.strip():
-                        current_stage = PipelineStage.TTS
-                    else:
-                        # Skip TTS
-                        current_stage = PipelineStage.END
-
-                if self.run.end_stage != PipelineStage.INTENT:
-                    # text-to-speech
-                    if current_stage == PipelineStage.TTS:
-                        assert tts_input is not None
-                        await self.run.text_to_speech(tts_input)
+            # Handle voice intent and TTS
+            await self.handle_intent_and_tts(current_stage,intent_input)
 
         except PipelineError as err:
             self.run.process_event(
