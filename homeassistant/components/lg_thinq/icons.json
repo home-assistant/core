@@ -305,9 +305,6 @@
       "battery_level": {
         "default": "mdi:battery-medium"
       },
-      "battery_percent": {
-        "default": "mdi:battery-medium"
-      },
       "relative_to_start": {
         "default": "mdi:clock-time-three-outline"
       },
