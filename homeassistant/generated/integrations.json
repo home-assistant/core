@@ -2839,6 +2839,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "inels": {
+      "name": "iNELS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",
