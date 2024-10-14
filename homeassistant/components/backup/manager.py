@@ -15,6 +15,7 @@ from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -262,6 +263,23 @@ class BackupManager:
                 )
 
         return tar_file_path.stat().st_size
+
+    async def restore_backup(self, slug: str) -> None:
+        """Restore a backup."""
+        if (backup := await self.get_backup(slug)) is None:
+            raise HomeAssistantError(f"Backup {slug} not found")
+
+        def _write_restore_file() -> None:
+            """Write the restore file."""
+            with open(
+                self.hass.config.path(RESTORE_BACKUP_FILE),
+                mode="w",
+                encoding="utf-8",
+            ) as restore_fp:
+                restore_fp.write(f"{backup.path.as_posix()};")
+
+        await self.hass.async_add_executor_job(_write_restore_file)
+        await self.hass.services.async_call("homeassistant", "restart", {})
 
 
 def _generate_slug(date: str, name: str) -> str:
