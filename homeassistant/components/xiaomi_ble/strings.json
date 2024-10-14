@@ -34,7 +34,7 @@
         }
       },
       "get_encryption_key_4_5_choose_method": {
-        "description": "A Mi device can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your Mi account.",
+        "description": "A Mi device can be set up in Home Assistant in two different ways.\n\nYou can enter the bindkey yourself, or Home Assistant can import them from your Mi account.",
         "menu_options": {
           "cloud_auth": "Mi account (recommended)",
           "get_encryption_key_4_5": "Enter encryption key manually"
