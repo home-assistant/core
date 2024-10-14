@@ -1,12 +1,13 @@
 """Home Assistant module to handle restoring backups."""
 
+from dataclasses import dataclass
 import json
 import logging
 import os
+from pathlib import Path
 import shutil
 import sys
 from tempfile import TemporaryDirectory
-from typing import TypedDict
 
 import securetar
 
@@ -16,37 +17,39 @@ KEEP_PATHS = ("backups", ".HA_RESTORE")
 _LOGGER = logging.getLogger(__name__)
 
 
-class RestoreBackupFileContent(TypedDict):
-    """Type definition for restore backup file content."""
+@dataclass
+class RestoreBackupFileContent:
+    """Definition for restore backup file content."""
 
-    backup_file_path: str
+    backup_file_path: Path
 
 
-def restore_backup_file_content(config_dir: str) -> RestoreBackupFileContent | None:
+def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | None:
     """Return the contents of the restore backup file."""
-    instruction_path = os.path.join(config_dir, RESTORE_BACKUP_FILE)
-    if os.path.exists(instruction_path):
-        with open(instruction_path, encoding="utf-8") as file:
-            [backup_file_path, *_] = file.readline().split(";")
-            return RestoreBackupFileContent(backup_file_path=backup_file_path)
+    instruction_path = config_dir.joinpath(RESTORE_BACKUP_FILE)
+    if instruction_path.exists():
+        instruction_content = instruction_path.read_text(encoding="utf-8")
+        return RestoreBackupFileContent(
+            backup_file_path=Path(instruction_content.split(";")[0])
+        )
     return None
 
 
-def _clear_configuration_directory(config_dir: str) -> None:
+def _clear_configuration_directory(config_dir: Path) -> None:
     """Delete all files and directories in the config directory except for the backups directory."""
     config_contents = sorted(
         [entry for entry in os.listdir(config_dir) if entry not in KEEP_PATHS]
     )
 
     for entry in config_contents:
-        entrypath = os.path.join(config_dir, entry)
-        if os.path.isfile(entrypath):
-            os.remove(entrypath)
-        elif os.path.isdir(entrypath):
+        entrypath = config_dir.joinpath(entry)
+        if entrypath.is_file():
+            entrypath.unlink()
+        elif entrypath.is_dir():
             shutil.rmtree(entrypath)
 
 
-def _extract_backup(config_dir: str, backup_file_path: str) -> None:
+def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
     """Extract the backup file to the config directory."""
     with (
         TemporaryDirectory() as tempdir,
@@ -56,15 +59,15 @@ def _extract_backup(config_dir: str, backup_file_path: str) -> None:
             mode="r",
         ) as ostf,
     ):
-        ostf.extractall(os.path.join(tempdir, "extracted"))
+        ostf.extractall(Path(tempdir, "extracted"))
         with open(
-            os.path.join(tempdir, "extracted", "backup.json"),
+            Path(tempdir, "extracted", "backup.json"),
             encoding="utf8",
         ) as backup_meta_file:
             backup_meta = json.load(backup_meta_file)
 
         with securetar.SecureTarFile(
-            os.path.join(
+            Path(
                 tempdir,
                 "extracted",
                 f"homeassistant.tar{'.gz' if backup_meta["compressed"] else ''}",
@@ -80,16 +83,24 @@ def _extract_backup(config_dir: str, backup_file_path: str) -> None:
             istf.extractall(config_dir)
 
 
-def restore_backup(config_dir: str) -> bool:
+def restore_backup(config_dir_path: str) -> bool:
     """Restore the backup file if any.
 
     Returns True if a restore backup file was found and restored, False otherwise.
     """
+    config_dir = Path(config_dir_path)
     if not (restore_content := restore_backup_file_content(config_dir)):
         return False
 
+    if (
+        not restore_content.backup_file_path.exists()
+        or not restore_content.backup_file_path.is_file()
+    ):
+        _LOGGER.error("Backup file %s does not exist", restore_content.backup_file_path)
+        return False
+
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    backup_file_path = restore_content["backup_file_path"]
+    backup_file_path = restore_content.backup_file_path
     _LOGGER.info("Restoring %s", backup_file_path)
     _extract_backup(config_dir, backup_file_path)
     _LOGGER.info("Restore complete, restarting")

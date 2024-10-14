@@ -1,5 +1,6 @@
 """Test methods in backup_restore."""
 
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -13,16 +14,16 @@ from .common import get_test_config_dir
     ("exists", "content", "expected"),
     [
         (False, "", None),
-        (True, "", backup_restore.RestoreBackupFileContent(backup_file_path="")),
+        (True, "", backup_restore.RestoreBackupFileContent(backup_file_path=Path(""))),
         (
             True,
             "test;",
-            backup_restore.RestoreBackupFileContent(backup_file_path="test"),
+            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
         ),
         (
             True,
             "test;;;;",
-            backup_restore.RestoreBackupFileContent(backup_file_path="test"),
+            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
         ),
     ],
 )
@@ -32,14 +33,11 @@ def test_reading_the_instruction_contents(
     expected: backup_restore.RestoreBackupFileContent | None,
 ) -> None:
     """Test reading the content of the .HA_RESTORE file."""
-    mock_open = mock.mock_open()
     with (
-        mock.patch("homeassistant.backup_restore.open", mock_open, create=True),
-        mock.patch("os.path.exists", return_value=exists),
+        mock.patch("pathlib.Path.read_text", return_value=content),
+        mock.patch("pathlib.Path.exists", return_value=exists),
     ):
-        opened_file = mock_open.return_value
-        opened_file.readline.return_value = content
-        assert (
-            backup_restore.restore_backup_file_content(get_test_config_dir())
-            == expected
+        read_content = backup_restore.restore_backup_file_content(
+            Path(get_test_config_dir())
         )
+        assert read_content == expected
