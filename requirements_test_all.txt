@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.31
 
 # homeassistant.components.tis_control
-TISControlProtocol==0.3.0
+TISControlProtocol==0.5.0
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -232,6 +232,9 @@ aioemonitor==1.0.5
 
 # homeassistant.components.esphome
 aioesphomeapi==27.0.0
+
+# homeassistant.components.tis_control
+aiofiles==24.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
