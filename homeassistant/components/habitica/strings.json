@@ -822,7 +822,7 @@
         },
         "every_x": {
           "name": "Repeat every X",
-          "description": "Set the number of days, weeks, months, or years after which the daily repeats. A value of 0 means the daily will never be due (a grey daily)."
+          "description": "Set the number of days, weeks, months, or years after which the daily repeats. A value of 0 means the daily will never be due (a 'Grey Daily')."
         },
         "repeat": {
           "name": "[%key:component::habitica::common::repeat_name%]",
