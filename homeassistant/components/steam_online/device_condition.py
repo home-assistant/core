@@ -72,8 +72,6 @@ def async_condition_from_config(
         """Test if an entity is a certain state."""
 
         trigger = variables.get("trigger")
-        # from_state: State = trigger.get("from_state")
-        # from_game = from_state.attributes.get("game_id")
 
         to_state: State = trigger.get("to_state")
         to_game = to_state.attributes.get("game_id")
