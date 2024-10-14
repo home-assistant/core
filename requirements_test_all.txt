@@ -167,7 +167,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
-aioairzone==0.9.3
+aioairzone==0.9.5
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -186,7 +186,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.3
+aioautomower==2024.10.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -243,7 +243,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.1.0
+aiohasupervisor==0.2.0b0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -481,7 +481,7 @@ autarco==3.0.0
 axis==62
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.1
+ayla-iot-unofficial==1.4.2
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -798,7 +798,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.5
+gcal-sync==6.1.6
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -826,7 +826,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.4
 
 # homeassistant.components.gios
-gios==4.0.0
+gios==5.0.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -1277,7 +1277,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.7
 
 # homeassistant.components.opower
-opower==0.8.2
+opower==0.8.4
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1481,7 +1481,7 @@ pydaikin==2.13.7
 pydeako==0.4.0
 
 # homeassistant.components.deconz
-pydeconz==116
+pydeconz==118
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1580,7 +1580,7 @@ pyinsteon==1.6.3
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.16.0
+pyipp==0.17.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -2128,7 +2128,7 @@ snapcast==2.3.6
 soco==0.30.4
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.1
+solarlog_cli==0.3.2
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -2384,7 +2384,7 @@ xiaomi-ble==0.32.0
 xknx==3.2.0
 
 # homeassistant.components.knx
-xknxproject==3.8.0
+xknxproject==3.8.1
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
@@ -2418,7 +2418,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.09.27
+yt-dlp==2024.10.07
 
 # homeassistant.components.zamg
 zamg==0.3.6

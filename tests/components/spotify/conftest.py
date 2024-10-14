@@ -79,6 +79,7 @@ def mock_spotify() -> Generator[MagicMock]:
         client.current_user.return_value = current_user
         client.me.return_value = current_user
         for fixture, method in (
+            ("devices.json", "devices"),
             ("current_user_playlist.json", "current_user_playlists"),
             ("playback.json", "current_playback"),
             ("followed_artists.json", "current_user_followed_artists"),

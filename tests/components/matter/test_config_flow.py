@@ -827,6 +827,10 @@ async def test_addon_running(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.matter.config.abort.cannot_connect"],
+)
 @pytest.mark.parametrize(
     (
         "discovery_info",
