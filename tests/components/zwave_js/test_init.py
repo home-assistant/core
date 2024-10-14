@@ -6,6 +6,7 @@ import logging
 from unittest.mock import AsyncMock, call, patch
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
@@ -554,7 +555,7 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
@@ -603,7 +604,7 @@ async def test_install_addon(
     assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
@@ -747,7 +748,7 @@ async def test_addon_options_changed(
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
         ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )

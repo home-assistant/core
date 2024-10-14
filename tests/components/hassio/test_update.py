@@ -4,7 +4,8 @@ from datetime import timedelta
 import os
 from unittest.mock import AsyncMock, patch
 
-from aiohasupervisor import SupervisorBadRequestError
+from aiohasupervisor import SupervisorBadRequestError, SupervisorError
+from aiohasupervisor.models import StoreAddonUpdate
 import pytest
 
 from homeassistant.components.hassio import DOMAIN, HassioAPIError
@@ -227,9 +228,7 @@ async def test_update_entities(
     assert state.attributes["auto_update"] is auto_update
 
 
-async def test_update_addon(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> None:
     """Test updating addon update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -243,17 +242,13 @@ async def test_update_addon(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/addons/test/update",
-        json={"result": "ok", "data": {}},
-    )
-
     await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.test_update"},
         blocking=True,
     )
+    update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
 async def test_update_os(
@@ -344,7 +339,8 @@ async def test_update_supervisor(
 
 
 async def test_update_addon_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    update_addon: AsyncMock,
 ) -> None:
     """Test updating addon update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -358,11 +354,7 @@ async def test_update_addon_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/addons/test/update",
-        exc=HassioAPIError,
-    )
-
+    update_addon.side_effect = SupervisorError
     with pytest.raises(HomeAssistantError, match=r"^Error updating test:"):
         assert not await hass.services.async_call(
             "update",

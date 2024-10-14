@@ -74,40 +74,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
 
 
 @bind_hass
-@api_data
-async def async_update_addon(
-    hass: HomeAssistant,
-    slug: str,
-    backup: bool = False,
-) -> dict:
-    """Update add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/update"
-    return await hassio.send_command(
-        command,
-        payload={"backup": backup},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_set_addon_options(
-    hass: HomeAssistant, slug: str, options: dict
-) -> dict:
-    """Set add-on options.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/options"
-    return await hassio.send_command(command, payload=options)
-
-
-@bind_hass
 async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
     """Return discovery data for an add-on."""
     hassio: HassIO = hass.data[DOMAIN]
