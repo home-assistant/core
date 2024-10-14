@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
     SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigFlow,
@@ -160,9 +161,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             "type": "Apple TV",
         }
         self.scan_filter = self.unique_id
-        return await self.async_step_restore_device()
+        return await self.async_step_reauth_confirm()
 
-    async def async_step_restore_device(
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Inform user that reconfiguration is about to start."""
@@ -171,7 +172,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.async_pair_next_protocol, allow_exist=True
             )
 
-        return self.async_show_form(step_id="restore_device")
+        return self.async_show_form(step_id="reauth_confirm")
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -598,14 +599,12 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_IDENTIFIERS: self.atv_identifiers,
         }
 
-        existing_entry = await self.async_set_unique_id(
-            self.device_identifier, raise_on_progress=False
-        )
+        await self.async_set_unique_id(self.device_identifier, raise_on_progress=False)
 
         # If an existing config entry is updated, then this was a re-auth
-        if existing_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                existing_entry, data=data, unique_id=self.unique_id
+                self._get_reauth_entry(), data=data, unique_id=self.unique_id
             )
 
         return self.async_create_entry(title=self.atv.name, data=data)

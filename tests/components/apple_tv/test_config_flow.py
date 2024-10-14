@@ -1185,15 +1185,13 @@ async def test_zeroconf_mismatch(hass: HomeAssistant, mock_scan: AsyncMock) -> N
 async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
     """Test that reconfigure flow updates config entry."""
     config_entry = MockConfigEntry(
-        domain="apple_tv", unique_id="mrpid", data={"identifiers": ["mrpid"]}
+        domain="apple_tv",
+        unique_id="mrpid",
+        data={"identifiers": ["mrpid"], "name": "apple tv"},
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth"},
-        data={"identifier": "mrpid", "name": "apple tv"},
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
