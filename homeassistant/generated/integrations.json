@@ -212,6 +212,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "aws_data": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "AWS Data"
+        },
         "fire_tv": {
           "integration_type": "virtual",
           "config_flow": false,

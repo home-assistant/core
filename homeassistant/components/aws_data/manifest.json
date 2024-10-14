@@ -1,0 +1,13 @@
+{
+  "domain": "aws_data",
+  "name": "AWS Data",
+  "codeowners": ["@APersonDoingStuff"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/aws_data",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["boto3==1.34.131", "botocore==1.34.131"],
+  "ssdp": [],
+  "zeroconf": []
+}

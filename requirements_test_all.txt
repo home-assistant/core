@@ -544,7 +544,13 @@ bond-async==0.2.1
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
 
+# homeassistant.components.amazon_polly
+# homeassistant.components.aws_data
+# homeassistant.components.route53
+boto3==1.34.131
+
 # homeassistant.components.aws
+# homeassistant.components.aws_data
 botocore==1.34.131
 
 # homeassistant.components.bring
