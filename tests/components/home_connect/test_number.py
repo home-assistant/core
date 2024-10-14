@@ -123,7 +123,6 @@ async def test_number_entity_functionality(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     appliance.set_setting.assert_called_once_with(setting_key, new_value)
 
 
