@@ -13,6 +13,8 @@ from homeassistant.components.mawaqit.const import (
     CONF_CALC_METHOD,
     CONF_SEARCH,
     CONF_TYPE_SEARCH,
+    CONF_TYPE_SEARCH_COORDINATES,
+    CONF_TYPE_SEARCH_KEYWORD,
     MAWAQIT_STORAGE_VERSION,
     MAWAQIT_TEST_STORAGE_KEY,
 )
@@ -290,14 +292,14 @@ async def test_async_step_user_valid_credentials(
         assert result.get("step_id") == "search_method"
 
 
-# ----- SEARCH METHOD FORM ----- #
+# ----- SEARCH METHOD SELECTION FORM ----- #
 
 
 @pytest.mark.asyncio
 async def test_async_step_search_method_coordinate_no_neighborhood(
     hass: HomeAssistant, setup_test_environment
 ) -> None:
-    """Test the user step when no mosque is found in the neighborhood."""
+    """Test the search method selection step with coordinates search method and where no neighbor mosques are found."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
 
@@ -314,7 +316,9 @@ async def test_async_step_search_method_coordinate_no_neighborhood(
         ),
     ):
         # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "coordinates"})
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_COORDINATES}
+        )
 
         # Check that the flow is aborted due to the lack of mosques nearby
         assert result.get("type") == data_entry_flow.FlowResultType.ABORT
@@ -325,7 +329,7 @@ async def test_async_step_search_method_coordinate_no_neighborhood(
 async def test_async_step_search_method_coordinate_valid(
     hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
 ) -> None:
-    """Test the user step when no mosque is found in the neighborhood."""
+    """Test the search method selection step with coordinates search method and where neighbor mosques are found."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -346,7 +350,9 @@ async def test_async_step_search_method_coordinate_valid(
         ),
     ):
         # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "coordinates"})
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_COORDINATES}
+        )
 
         # Check that
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
@@ -357,7 +363,7 @@ async def test_async_step_search_method_coordinate_valid(
 async def test_async_step_search_method_keyword(
     hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
 ) -> None:
-    """Test the user step when no mosque is found in the neighborhood."""
+    """Test the search method selection step with keyword search choice and check if the flow proceeds to the keyword search form."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -370,7 +376,9 @@ async def test_async_step_search_method_keyword(
         ),
     ):
         # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "keyword"})
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_KEYWORD}
+        )
 
         # Check that
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
@@ -381,7 +389,7 @@ async def test_async_step_search_method_keyword(
 async def test_async_step_search_method_input_None(
     hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
 ) -> None:
-    """Test the user step when no mosque is found in the neighborhood."""
+    """Test the search method selection step with no input provided and check if the flow show again the search method selection form."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -405,7 +413,7 @@ async def test_async_step_search_method_input_None(
 async def test_async_step_search_method_Input_UNKNOWN(
     hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
 ) -> None:
-    """Test the user step when no mosque is found in the neighborhood."""
+    """Test the search method selection step with an unknown input provided and check if the flow show again the search method selection form."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -674,7 +682,7 @@ async def test_options_flow_valid_input(
         # Simulate user input in the options flow , Assuming the user selects the first mosque
         mosque_uuid_label = mocked_mosques_data[0][1]
 
-        result = await flow.async_step_mosque_coordinates(
+        result = await flow.async_step_init(
             user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
         # print(result)
@@ -715,11 +723,11 @@ async def test_options_flow_no_input_reopens_form(
         ),
     ):
         # Simulate the init step
-        result = await flow.async_step_mosque_coordinates(user_input=None)
+        result = await flow.async_step_init(user_input=None)
         assert (
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result.get("step_id") == "mosque_coordinates"
+        assert result.get("step_id") == "init"
 
 
 @pytest.mark.asyncio
@@ -749,12 +757,12 @@ async def test_options_flow_no_input_error_reopens_form(
         flow.hass = hass  # Assign HomeAssistant instance
 
         # Simulate the init step
-        result = await flow.async_step_mosque_coordinates(user_input=None)
+        result = await flow.async_step_init(user_input=None)
         # Same tests as test_options_flow_no_input_reopens_form :
         assert (
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result.get("step_id") == "mosque_coordinates"
+        assert result.get("step_id") == "init"
 
 
 # ----- KEEP OR RESET FORM ----- #
