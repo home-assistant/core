@@ -184,13 +184,13 @@ async def _test_setup(
 async def test_setup_go_binary(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_server: Mock,
+    mock_server: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the go2rtc config entry with binary."""
 
     def after_setup() -> None:
-        mock_server.assert_called_once_with("/usr/bin/go2rtc")
+        mock_server.assert_called_once_with(hass, "/usr/bin/go2rtc")
         mock_server.return_value.start.assert_called_once()
 
     await _test_setup(hass, mock_client, mock_config_entry, after_setup)
