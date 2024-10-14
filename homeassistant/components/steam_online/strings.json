@@ -42,8 +42,7 @@
       "turned_off": "{entity_name} turned off"
     },
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_same_game_as_primary": "Is playing same game as primary"
     }
   }
 }
