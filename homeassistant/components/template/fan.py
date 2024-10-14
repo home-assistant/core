@@ -225,29 +225,6 @@ async def async_setup_entry(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = FAN_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [
-            TemplateFan(
-                hass,
-                validated_config.get(
-                    CONF_NAME, {template: config_entry.entry_id}
-                ).template,
-                validated_config,
-                config_entry.entry_id,
-            )
-        ]
-    )
-
-
 class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
