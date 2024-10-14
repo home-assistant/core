@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
@@ -294,29 +293,7 @@ async def ws_webrtc_offer(
 
     send_message(WebRTCSessionId(session_id))
 
-    if camera.supports_async_webrtc_offer:
-        await camera.async_handle_web_rtc_offer(offer, session_id, send_message)
-    else:
-        try:
-            answer: str = await camera.async_handle_web_rtc_offer(offer)  # type: ignore[func-returns-value, call-arg, assignment]
-        except (HomeAssistantError, ValueError) as ex:
-            _LOGGER.error("Error handling WebRTC offer: %s", ex)
-            send_message(
-                WebRTCError(
-                    "webrtc_offer_failed",
-                    str(ex),
-                )
-            )
-        except TimeoutError:
-            _LOGGER.error("Timeout handling WebRTC offer")
-            send_message(
-                WebRTCError(
-                    "webrtc_offer_failed",
-                    "Timeout handling WebRTC offer",
-                )
-            )
-        else:
-            send_message(WebRTCAnswer(answer))
+    await camera.async_handle_webrtc_offer(offer, session_id, send_message)
 
 
 @websocket_api.websocket_command(

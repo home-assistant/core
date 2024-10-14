@@ -9,7 +9,7 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cache, partial
 import inspect
 import logging
 import os
@@ -55,6 +55,7 @@ from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
+    deprecated_function,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -91,6 +92,7 @@ from .webrtc import (
     RTCIceServer,
     WebRTCAnswer,
     WebRTCClientConfiguration,
+    WebRTCError,
     WebRTCSendMessage,
     async_get_supported_legacy_provider,
     async_get_supported_provider,
@@ -466,7 +468,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
         self._legacy_webrtc_provider: CameraWebRTCLegacyProvider | None = None
-        self.supports_async_webrtc_offer = False
 
     @cached_property
     def entity_picture(self) -> str:
@@ -582,35 +583,80 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return None
 
-    async def async_handle_web_rtc_offer(
+    @cache
+    def _get_sync_webrtc_offer_fn(
+        self,
+    ) -> None | Callable[[str], Coroutine[None, None, str | None]]:
+        """Return the sync function to handle a WebRTC offer if found."""
+        if (
+            (sync_offer := getattr(self, "async_handle_web_rtc_offer", None))
+            and callable(sync_offer)
+            and inspect.iscoroutinefunction(sync_offer)
+        ):
+            return deprecated_function(
+                "async_handle_webrtc_offer", breaks_in_ha_version="2025.11"
+            )(sync_offer)
+
+        return None
+
+    async def async_handle_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
-        """Handle the WebRTC offer and return an answer.
+        """Handle the WebRTC offer in async. Messages and result are sent via send_message callback.
 
         This is used by cameras with CameraEntityFeature.STREAM
         and StreamType.WEB_RTC.
 
         Integrations can override with a native WebRTC implementation.
         """
-        if (
+        if sync_offer := self._get_sync_webrtc_offer_fn():
+            try:
+                answer = await sync_offer(offer_sdp)
+            except (HomeAssistantError, ValueError) as ex:
+                _LOGGER.error("Error handling WebRTC offer: %s", ex)
+                send_message(
+                    WebRTCError(
+                        "webrtc_offer_failed",
+                        str(ex),
+                    )
+                )
+            except TimeoutError:
+                # This catch was already here and should stay through the deprecation
+                _LOGGER.error("Timeout handling WebRTC offer")
+                send_message(
+                    WebRTCError(
+                        "webrtc_offer_failed",
+                        "Timeout handling WebRTC offer",
+                    )
+                )
+            else:
+                if answer:
+                    send_message(WebRTCAnswer(answer))
+                else:
+                    _LOGGER.error("Error handling WebRTC offer: No answer")
+                    send_message(
+                        WebRTCError(
+                            "webrtc_offer_failed",
+                            "No answer",
+                        )
+                    )
+        elif (
             self._webrtc_provider
             and await self._webrtc_provider.async_handle_webrtc_offer(
                 self, offer_sdp, session_id, send_message
             )
         ):
             return
-
-        if self._legacy_webrtc_provider and (
+        elif self._legacy_webrtc_provider and (
             answer := await self._legacy_webrtc_provider.async_handle_web_rtc_offer(
                 self, offer_sdp
             )
         ):
             send_message(WebRTCAnswer(answer))
-            return
-
-        raise HomeAssistantError(
-            "WebRTC offer was not accepted by the supported providers"
-        )
+        else:
+            raise HomeAssistantError(
+                "WebRTC offer was not accepted by the supported providers"
+            )
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -730,13 +776,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             async_get_supported_legacy_provider
         )
 
-        self.supports_async_webrtc_offer = (
-            inspect.signature(self.async_handle_web_rtc_offer).parameters.get(
-                "send_message"
-            )
-            is not None
-        )
-
     async def async_refresh_providers(self) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
@@ -782,10 +821,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
         config.configuration.ice_servers.extend(ice_servers)
 
-        get_all_candidates_upfront = not self.supports_async_webrtc_offer
-        if self._legacy_webrtc_provider:
-            get_all_candidates_upfront = True
-        config.get_candidates_upfront = get_all_candidates_upfront
+        config.get_candidates_upfront = (
+            self._get_sync_webrtc_offer_fn() or self._legacy_webrtc_provider
+        ) is not None
 
         return config
 
