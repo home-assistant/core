@@ -308,3 +308,30 @@ async def test_dhcp_discovery(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ring_client: Mock,
+    mock_added_config_entry: MockConfigEntry,
+) -> None:
+    """Test we get the form."""
+
+    assert mock_added_config_entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
+
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("uuid.uuid4", return_value="new-hardware-id"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.data[CONF_DEVICE_ID] == "new-hardware-id"
