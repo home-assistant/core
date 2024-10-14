@@ -602,15 +602,13 @@ async def test_setting_up_core_update_when_addon_fails(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     addon_installed: AsyncMock,
+    addon_stats: AsyncMock,
 ) -> None:
     """Test setting up core update when single addon fails."""
     addon_installed.side_effect = SupervisorBadRequestError("Addon Test does not exist")
+    addon_stats.side_effect = SupervisorBadRequestError("add-on is not running")
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_addon_stats",
-            side_effect=HassioAPIError("add-on is not running"),
-        ),
         patch(
             "homeassistant.components.hassio.HassIO.get_addon_changelog",
             side_effect=HassioAPIError("add-on is not running"),

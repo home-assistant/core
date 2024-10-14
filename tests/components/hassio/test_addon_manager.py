@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, call
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
@@ -170,7 +171,7 @@ async def test_set_addon_options(
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "test_addon", {"options": {"test_key": "test"}}
+        "test_addon", AddonsOptions(config={"test_key": "test"})
     )
 
 
@@ -178,7 +179,7 @@ async def test_set_addon_options_error(
     hass: HomeAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
 ) -> None:
     """Test set addon options raises error."""
-    set_addon_options.side_effect = HassioAPIError("Boom")
+    set_addon_options.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_set_addon_options({"test_key": "test"})
@@ -187,7 +188,7 @@ async def test_set_addon_options_error(
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "test_addon", {"options": {"test_key": "test"}}
+        "test_addon", AddonsOptions(config={"test_key": "test"})
     )
 
 
@@ -790,7 +791,7 @@ async def test_schedule_install_setup_addon(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -801,7 +802,7 @@ async def test_schedule_install_setup_addon(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -859,7 +860,7 @@ async def test_schedule_install_setup_addon_error(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -870,7 +871,7 @@ async def test_schedule_install_setup_addon_error(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -956,7 +957,7 @@ async def test_schedule_setup_addon(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -1005,7 +1006,7 @@ async def test_schedule_setup_addon_error(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,

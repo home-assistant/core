@@ -363,10 +363,7 @@ def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 @pytest.fixture(name="addon_options")
 def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
     """Mock add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_options
-
-    return mock_addon_options(addon_info)
+    return addon_info.return_value.options
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
@@ -434,6 +431,15 @@ def store_info_fixture(
         addons=store_addons, repositories=store_repositories
     )
     return supervisor_client.store.info
+
+
+@pytest.fixture(name="addon_stats")
+def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon stats info."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_addon_stats
+
+    return mock_addon_stats(supervisor_client)
 
 
 @pytest.fixture(name="supervisor_client")
