@@ -15,6 +15,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     NotValidPresetModeError,
 )
+from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
 
@@ -114,41 +115,80 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
     assert hass.states.async_all("fan") == []
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config",
+    ("config", "domain"),
     [
-        {
-            FAN_DOMAIN: {
-                "platform": "template",
-                "fans": {
-                    "test_fan": {
-                        "value_template": """
+        (
+            {
+                FAN_DOMAIN: {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": """
         {% if is_state('input_boolean.state', 'True') %}
             {{ 'on' }}
         {% else %}
             {{ 'off' }}
         {% endif %}
     """,
-                        "percentage_template": (
-                            "{{ states('input_number.percentage') }}"
-                        ),
-                        "preset_mode_template": (
-                            "{{ states('input_select.preset_mode') }}"
-                        ),
-                        "oscillating_template": "{{ states('input_select.osc') }}",
-                        "direction_template": "{{ states('input_select.direction') }}",
-                        "speed_count": "3",
-                        "set_percentage": {
-                            "service": "script.fans_set_speed",
-                            "data_template": {"percentage": "{{ percentage }}"},
-                        },
-                        "turn_on": {"service": "script.fan_on"},
-                        "turn_off": {"service": "script.fan_off"},
+                            "percentage_template": (
+                                "{{ states('input_number.percentage') }}"
+                            ),
+                            "preset_mode_template": (
+                                "{{ states('input_select.preset_mode') }}"
+                            ),
+                            "oscillating_template": "{{ states('input_select.osc') }}",
+                            "direction_template": "{{ states('input_select.direction') }}",
+                            "speed_count": "3",
+                            "set_percentage": {
+                                "service": "script.fans_set_speed",
+                                "data_template": {"percentage": "{{ percentage }}"},
+                            },
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+            FAN_DOMAIN,
+        ),
+        (
+            {
+                TEMPLATE_DOMAIN: [
+                    {
+                        FAN_DOMAIN: [
+                            {
+                                "state": """
+    {% if is_state('input_boolean.state', 'True') %}
+        {{ 'on' }}
+    {% else %}
+        {{ 'off' }}
+    {% endif %}
+""",
+                                "percentage": (
+                                    "{{ states('input_number.percentage') }}"
+                                ),
+                                "preset_mode": (
+                                    "{{ states('input_select.preset_mode') }}"
+                                ),
+                                "oscillating": "{{ states('input_select.osc') }}",
+                                "direction": "{{ states('input_select.direction') }}",
+                                "speed_count": "3",
+                                "set_percentage": {
+                                    "service": "script.fans_set_speed",
+                                    "data_template": {"percentage": "{{ percentage }}"},
+                                },
+                                "turn_on": {"service": "script.fan_on"},
+                                "turn_off": {"service": "script.fan_off"},
+                                "name": "Test fan",
+                            }
+                        ]
                     }
-                },
-            }
-        },
+                ]
+            },
+            TEMPLATE_DOMAIN,
+        ),
     ],
 )
 @pytest.mark.usefixtures("start_ha")

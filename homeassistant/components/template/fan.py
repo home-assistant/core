@@ -19,6 +19,7 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
@@ -154,13 +155,16 @@ PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass, config, unique_id_prefix=None):
     """Create the Template Fans."""
     fans = []
 
-    for entity_config in rewrite_legacy_to_modern_conf(hass, config.get(CONF_FANS, {})):
+    # for entity_config in rewrite_legacy_to_modern_conf(hass, config.get(CONF_FANS, {})):
+    for entity_config in config:
         unique_id = entity_config.get(CONF_UNIQUE_ID)
         object_id = entity_config.get(CONF_OBJECT_ID)
+        if unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         fans.append(
             TemplateFan(
@@ -181,7 +185,45 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template fans."""
-    async_add_entities(await _async_create_entities(hass, config))
+    if discovery_info is None:
+        async_add_entities(
+            await _async_create_entities(
+                hass,
+                rewrite_legacy_to_modern_conf(hass, config[CONF_FANS]),
+            )
+        )
+        return
+
+    async_add_entities(
+        await _async_create_entities(
+            hass,
+            discovery_info["entities"],
+            discovery_info["unique_id"],
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = FAN_CONFIG_SCHEMA(_options)
+    async_add_entities(
+        [
+            TemplateFan(
+                hass,
+                validated_config.get(
+                    CONF_NAME, {template: config_entry.entry_id}
+                ).template,
+                validated_config,
+                config_entry.entry_id,
+            )
+        ]
+    )
 
 
 class TemplateFan(TemplateEntity, FanEntity):
@@ -202,6 +244,8 @@ class TemplateFan(TemplateEntity, FanEntity):
             hass, config=config, fallback_name=object_id, unique_id=unique_id
         )
         self.hass = hass
+        if object_id is None:
+            object_id = self._attr_name
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
