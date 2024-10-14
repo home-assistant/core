@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_CODE
@@ -134,24 +134,24 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         state = None
 
         if self._info["status"]["alarm"]:
-            state = AlarmControlPanelEntityState.TRIGGERED
+            state = AlarmControlPanelState.TRIGGERED
         elif self._info["status"]["armed_zero_entry_delay"]:
-            state = AlarmControlPanelEntityState.ARMED_NIGHT
+            state = AlarmControlPanelState.ARMED_NIGHT
         elif self._info["status"]["armed_away"]:
-            state = AlarmControlPanelEntityState.ARMED_AWAY
+            state = AlarmControlPanelState.ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
-            state = AlarmControlPanelEntityState.ARMED_HOME
+            state = AlarmControlPanelState.ARMED_HOME
         elif self._info["status"]["exit_delay"]:
-            state = AlarmControlPanelEntityState.ARMING
+            state = AlarmControlPanelState.ARMING
         elif self._info["status"]["entry_delay"]:
-            state = AlarmControlPanelEntityState.PENDING
+            state = AlarmControlPanelState.PENDING
         elif self._info["status"]["alpha"]:
-            state = AlarmControlPanelEntityState.DISARMED
+            state = AlarmControlPanelState.DISARMED
         return state
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

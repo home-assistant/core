@@ -15,7 +15,7 @@ from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant
@@ -117,7 +117,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._changed_by_time: str | None = None
         self._changed_by_id: int | None = None
         self._changed_by: str | None = None
-        self._state: AlarmControlPanelEntityState | None = None
+        self._state: AlarmControlPanelState | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes."""
@@ -169,7 +169,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         return CodeFormat.NUMBER
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the element."""
         return self._state
 
@@ -199,25 +199,25 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         elk_state_to_hass_state = {
-            ArmedStatus.DISARMED: AlarmControlPanelEntityState.DISARMED,
-            ArmedStatus.ARMED_AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
-            ArmedStatus.ARMED_STAY: AlarmControlPanelEntityState.ARMED_HOME,
-            ArmedStatus.ARMED_STAY_INSTANT: AlarmControlPanelEntityState.ARMED_HOME,
-            ArmedStatus.ARMED_TO_NIGHT: AlarmControlPanelEntityState.ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_NIGHT_INSTANT: AlarmControlPanelEntityState.ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelEntityState.ARMED_AWAY,
+            ArmedStatus.DISARMED: AlarmControlPanelState.DISARMED,
+            ArmedStatus.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+            ArmedStatus.ARMED_STAY: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_STAY_INSTANT: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_TO_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_NIGHT_INSTANT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelState.ARMED_AWAY,
         }
 
         if self._element.alarm_state is None:
             self._state = None
         elif self._element.in_alarm_state():
             # Area is in alarm state
-            self._state = AlarmControlPanelEntityState.TRIGGERED
+            self._state = AlarmControlPanelState.TRIGGERED
         elif self._entry_exit_timer_is_running():
             self._state = (
-                AlarmControlPanelEntityState.ARMING
+                AlarmControlPanelState.ARMING
                 if self._element.is_exit
-                else AlarmControlPanelEntityState.PENDING
+                else AlarmControlPanelState.PENDING
             )
         elif self._element.armed_status is not None:
             self._state = elk_state_to_hass_state[self._element.armed_status]

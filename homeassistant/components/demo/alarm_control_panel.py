@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityState
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.manual.alarm_control_panel import ManualAlarm
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ARMING_TIME, CONF_DELAY_TIME, CONF_TRIGGER_TIME
@@ -29,36 +29,36 @@ async def async_setup_entry(
                 True,
                 False,
                 {
-                    AlarmControlPanelEntityState.ARMED_AWAY: {
+                    AlarmControlPanelState.ARMED_AWAY: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.ARMED_HOME: {
+                    AlarmControlPanelState.ARMED_HOME: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.ARMED_NIGHT: {
+                    AlarmControlPanelState.ARMED_NIGHT: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.ARMED_VACATION: {
+                    AlarmControlPanelState.ARMED_VACATION: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.DISARMED: {
+                    AlarmControlPanelState.DISARMED: {
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS: {
+                    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
-                    AlarmControlPanelEntityState.TRIGGERED: {
+                    AlarmControlPanelState.TRIGGERED: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5)
                     },
                 },

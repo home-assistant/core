@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROl_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,16 +24,16 @@ from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_TO_ALARM_STATE = {
-    AncillaryControlPanel.ARMED_AWAY: AlarmControlPanelEntityState.ARMED_AWAY,
-    AncillaryControlPanel.ARMED_NIGHT: AlarmControlPanelEntityState.ARMED_NIGHT,
-    AncillaryControlPanel.ARMED_STAY: AlarmControlPanelEntityState.ARMED_HOME,
-    AncillaryControlPanel.ARMING_AWAY: AlarmControlPanelEntityState.ARMING,
-    AncillaryControlPanel.ARMING_NIGHT: AlarmControlPanelEntityState.ARMING,
-    AncillaryControlPanel.ARMING_STAY: AlarmControlPanelEntityState.ARMING,
-    AncillaryControlPanel.DISARMED: AlarmControlPanelEntityState.DISARMED,
-    AncillaryControlPanel.ENTRY_DELAY: AlarmControlPanelEntityState.PENDING,
-    AncillaryControlPanel.EXIT_DELAY: AlarmControlPanelEntityState.PENDING,
-    AncillaryControlPanel.IN_ALARM: AlarmControlPanelEntityState.TRIGGERED,
+    AncillaryControlPanel.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+    AncillaryControlPanel.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+    AncillaryControlPanel.ARMED_STAY: AlarmControlPanelState.ARMED_HOME,
+    AncillaryControlPanel.ARMING_AWAY: AlarmControlPanelState.ARMING,
+    AncillaryControlPanel.ARMING_NIGHT: AlarmControlPanelState.ARMING,
+    AncillaryControlPanel.ARMING_STAY: AlarmControlPanelState.ARMING,
+    AncillaryControlPanel.DISARMED: AlarmControlPanelState.DISARMED,
+    AncillaryControlPanel.ENTRY_DELAY: AlarmControlPanelState.PENDING,
+    AncillaryControlPanel.EXIT_DELAY: AlarmControlPanelState.PENDING,
+    AncillaryControlPanel.IN_ALARM: AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -97,7 +97,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
             super().async_update_callback()
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the control panel."""
         if self._device.panel in DECONZ_TO_ALARM_STATE:
             return DECONZ_TO_ALARM_STATE[self._device.panel]

@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,14 +16,14 @@ from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 FREEBOX_TO_STATUS = {
-    "alarm1_arming": AlarmControlPanelEntityState.ARMING,
-    "alarm2_arming": AlarmControlPanelEntityState.ARMING,
-    "alarm1_armed": AlarmControlPanelEntityState.ARMED_AWAY,
-    "alarm2_armed": AlarmControlPanelEntityState.ARMED_HOME,
-    "alarm1_alert_timer": AlarmControlPanelEntityState.TRIGGERED,
-    "alarm2_alert_timer": AlarmControlPanelEntityState.TRIGGERED,
-    "alert": AlarmControlPanelEntityState.TRIGGERED,
-    "idle": AlarmControlPanelEntityState.DISARMED,
+    "alarm1_arming": AlarmControlPanelState.ARMING,
+    "alarm2_arming": AlarmControlPanelState.ARMING,
+    "alarm1_armed": AlarmControlPanelState.ARMED_AWAY,
+    "alarm2_armed": AlarmControlPanelState.ARMED_HOME,
+    "alarm1_alert_timer": AlarmControlPanelState.TRIGGERED,
+    "alarm2_alert_timer": AlarmControlPanelState.TRIGGERED,
+    "alert": AlarmControlPanelState.TRIGGERED,
+    "idle": AlarmControlPanelState.DISARMED,
 }
 
 

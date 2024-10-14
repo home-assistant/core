@@ -8,7 +8,7 @@ from pyhap.const import CATEGORY_ALARM_SYSTEM
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -37,22 +37,22 @@ HK_ALARM_DISARMED = 3
 HK_ALARM_TRIGGERED = 4
 
 HASS_TO_HOMEKIT_CURRENT = {
-    AlarmControlPanelEntityState.ARMED_HOME: HK_ALARM_STAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_VACATION: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_AWAY: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_NIGHT: HK_ALARM_NIGHT_ARMED,
-    AlarmControlPanelEntityState.ARMING: HK_ALARM_DISARMED,
-    AlarmControlPanelEntityState.DISARMED: HK_ALARM_DISARMED,
-    AlarmControlPanelEntityState.TRIGGERED: HK_ALARM_TRIGGERED,
+    AlarmControlPanelState.ARMED_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelState.ARMED_VACATION: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelState.ARMED_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelState.ARMED_NIGHT: HK_ALARM_NIGHT_ARMED,
+    AlarmControlPanelState.ARMING: HK_ALARM_DISARMED,
+    AlarmControlPanelState.DISARMED: HK_ALARM_DISARMED,
+    AlarmControlPanelState.TRIGGERED: HK_ALARM_TRIGGERED,
 }
 
 HASS_TO_HOMEKIT_TARGET = {
-    AlarmControlPanelEntityState.ARMED_HOME: HK_ALARM_STAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_VACATION: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_AWAY: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelEntityState.ARMED_NIGHT: HK_ALARM_NIGHT_ARMED,
-    AlarmControlPanelEntityState.ARMING: HK_ALARM_AWAY_ARMED,
-    AlarmControlPanelEntityState.DISARMED: HK_ALARM_DISARMED,
+    AlarmControlPanelState.ARMED_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelState.ARMED_VACATION: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelState.ARMED_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelState.ARMED_NIGHT: HK_ALARM_NIGHT_ARMED,
+    AlarmControlPanelState.ARMING: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelState.DISARMED: HK_ALARM_DISARMED,
 }
 
 HASS_TO_HOMEKIT_SERVICES = {
@@ -118,7 +118,7 @@ class SecuritySystem(HomeAccessory):
 
         self.char_current_state = serv_alarm.configure_char(
             CHAR_CURRENT_SECURITY_STATE,
-            value=HASS_TO_HOMEKIT_CURRENT[AlarmControlPanelEntityState.DISARMED],
+            value=HASS_TO_HOMEKIT_CURRENT[AlarmControlPanelState.DISARMED],
             valid_values={
                 key: val
                 for key, val in default_current_states.items()
@@ -154,7 +154,7 @@ class SecuritySystem(HomeAccessory):
         """Update security state after state changed."""
         hass_state = None
         if new_state and new_state.state is not None and new_state.state != "None":
-            hass_state = AlarmControlPanelEntityState(new_state.state)
+            hass_state = AlarmControlPanelState(new_state.state)
         if (
             hass_state
             and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None

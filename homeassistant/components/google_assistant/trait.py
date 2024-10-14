@@ -35,7 +35,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
@@ -1553,19 +1553,19 @@ class ArmDisArmTrait(_Trait):
     commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        AlarmControlPanelEntityState.ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-        AlarmControlPanelEntityState.ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
-        AlarmControlPanelEntityState.ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        AlarmControlPanelEntityState.TRIGGERED: SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: SERVICE_ALARM_TRIGGER,
     }
 
     state_to_support = {
-        AlarmControlPanelEntityState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-        AlarmControlPanelEntityState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
-        AlarmControlPanelEntityState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        AlarmControlPanelEntityState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-        AlarmControlPanelEntityState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
 
@@ -1591,8 +1591,8 @@ class ArmDisArmTrait(_Trait):
     def _default_arm_state(self):
         states = self._supported_states()
 
-        if AlarmControlPanelEntityState.TRIGGERED in states:
-            states.remove(AlarmControlPanelEntityState.TRIGGERED)
+        if AlarmControlPanelState.TRIGGERED in states:
+            states.remove(AlarmControlPanelState.TRIGGERED)
 
         if not states:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
@@ -1607,7 +1607,7 @@ class ArmDisArmTrait(_Trait):
             # level synonyms are generated from state names
             # 'armed_away' becomes 'armed away' or 'away'
             level_synonym = [state.replace("_", " ")]
-            if state != AlarmControlPanelEntityState.TRIGGERED:
+            if state != AlarmControlPanelState.TRIGGERED:
                 level_synonym.append(state.split("_")[1])
 
             level = {
@@ -1648,11 +1648,11 @@ class ArmDisArmTrait(_Trait):
         elif (
             params["arm"]
             and params.get("cancel")
-            and self.state.state == AlarmControlPanelEntityState.PENDING
+            and self.state.state == AlarmControlPanelState.PENDING
         ):
             service = SERVICE_ALARM_DISARM
         else:
-            if self.state.state == AlarmControlPanelEntityState.DISARMED:
+            if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM

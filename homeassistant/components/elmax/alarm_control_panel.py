@@ -10,7 +10,7 @@ from elmax_api.model.panel import PanelStatus
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,7 +67,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
-    _pending_state: AlarmControlPanelEntityState | None = None
+    _pending_state: AlarmControlPanelState | None = None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -76,7 +76,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
                 f"Cannot arm {self.name}: please check for open windows/doors first"
             )
 
-        self._pending_state = AlarmControlPanelEntityState.ARMING
+        self._pending_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
 
         try:
@@ -100,7 +100,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         if code is None or code == "":
             raise ValueError("Please input the disarm code.")
 
-        self._pending_state = AlarmControlPanelEntityState.DISARMING
+        self._pending_state = AlarmControlPanelState.DISARMING
         self.async_write_ha_state()
 
         try:
@@ -123,7 +123,7 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             await self.coordinator.async_refresh()
 
     @property
-    def alarm_state(self) -> AlarmControlPanelEntityState | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
         if self._pending_state is not None:
             return self._pending_state
@@ -144,10 +144,10 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
 
 
 ALARM_STATE_TO_HA = {
-    AlarmArmStatus.ARMED_TOTALLY: AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1_P2: AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmArmStatus.ARMED_P2: AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmArmStatus.ARMED_P1: AlarmControlPanelEntityState.ARMED_AWAY,
-    AlarmArmStatus.NOT_ARMED: AlarmControlPanelEntityState.DISARMED,
-    AlarmStatus.TRIGGERED: AlarmControlPanelEntityState.TRIGGERED,
+    AlarmArmStatus.ARMED_TOTALLY: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P2: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.ARMED_P1: AlarmControlPanelState.ARMED_AWAY,
+    AlarmArmStatus.NOT_ARMED: AlarmControlPanelState.DISARMED,
+    AlarmStatus.TRIGGERED: AlarmControlPanelState.TRIGGERED,
 }

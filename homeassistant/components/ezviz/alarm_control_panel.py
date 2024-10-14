@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,9 +41,9 @@ ALARM_TYPE = EzvizAlarmControlPanelEntityDescription(
     key="ezviz_alarm",
     ezviz_alarm_states=[
         None,
-        AlarmControlPanelEntityState.DISARMED,
-        AlarmControlPanelEntityState.ARMED_AWAY,
-        AlarmControlPanelEntityState.ARMED_HOME,
+        AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.ARMED_AWAY,
+        AlarmControlPanelState.ARMED_HOME,
     ],
 )
 
@@ -104,7 +104,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
             if self.coordinator.ezviz_client.api_set_defence_mode(
                 DefenseModeType.HOME_MODE.value
             ):
-                self._attr_alarm_state = AlarmControlPanelEntityState.DISARMED
+                self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot disarm EZVIZ alarm") from err
@@ -115,7 +115,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
             if self.coordinator.ezviz_client.api_set_defence_mode(
                 DefenseModeType.AWAY_MODE.value
             ):
-                self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_AWAY
+                self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
@@ -126,7 +126,7 @@ class EzvizAlarm(AlarmControlPanelEntity):
             if self.coordinator.ezviz_client.api_set_defence_mode(
                 DefenseModeType.SLEEP_MODE.value
             ):
-                self._attr_alarm_state = AlarmControlPanelEntityState.ARMED_HOME
+                self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
 
         except PyEzvizError as err:
             raise HomeAssistantError("Cannot arm EZVIZ alarm") from err
