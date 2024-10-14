@@ -42,12 +42,6 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        config_entry = self._async_current_entries()
-        if config_entry:
-            return self.async_abort(reason="single_instance_allowed")
-
-        errors = {}
-
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
