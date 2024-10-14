@@ -103,6 +103,7 @@ FLOWS = {
         "cambridge_audio",
         "canary",
         "cast",
+        "ccl",
         "ccm15",
         "cert_expiry",
         "chacon_dio",
