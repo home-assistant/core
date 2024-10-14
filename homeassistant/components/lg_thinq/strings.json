@@ -39,7 +39,7 @@
         "name": "Mood light"
       },
       "operation_power": {
-        "name": "Power"
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]"
       },
       "optimal_humidity": {
         "name": "Ventilation"
@@ -101,8 +101,8 @@
               "low": "Low",
               "mid": "Medium",
               "high": "High",
-              "power": "Power",
-              "auto": "Auto"
+              "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
+              "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]"
             }
           },
           "preset_mode": {
@@ -549,7 +549,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
-          "power": "Power",
+          "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
           "smart_off": "[%key:common::state::off%]",
@@ -616,10 +616,10 @@
       "current_dish_washing_course": {
         "name": "Current cycle",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
           "heavy": "Intensive",
           "delicate": "Delicate",
-          "turbo": "Turbo",
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
           "normal": "Normal",
           "rinse": "Rinse",
           "refresh": "Refresh",
@@ -646,11 +646,11 @@
       "softening_level": {
         "name": "Softening level",
         "state": {
-          "softeninglevel_0": "0",
-          "softeninglevel_1": "1",
-          "softeninglevel_2": "2",
-          "softeninglevel_3": "3",
-          "softeninglevel_4": "4"
+          "softeninglevel_0": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_0%]",
+          "softeninglevel_1": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_1%]",
+          "softeninglevel_2": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_2%]",
+          "softeninglevel_3": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_3%]",
+          "softeninglevel_4": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_4%]"
         }
       },
       "cock_state": {
@@ -754,46 +754,46 @@
         }
       },
       "relative_to_start": {
-        "name": "Schedule turn-on"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start::name%]"
       },
       "relative_to_start_for_location": {
-        "name": "{location} schedule turn-on"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_for_location::name%]"
       },
       "relative_to_start_wm": {
-        "name": "Delay starts in"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_wm::name%]"
       },
       "relative_to_start_wm_for_location": {
-        "name": "{location} delay starts in"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_wm_for_location::name%]"
       },
       "relative_to_stop": {
-        "name": "Schedule turn-off"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop::name%]"
       },
       "relative_to_stop_for_location": {
-        "name": "{location} schedule turn-off"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_for_location::name%]"
       },
       "relative_to_stop_wm": {
-        "name": "Delay ends in"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_wm::name%]"
       },
       "relative_to_stop_wm_for_location": {
-        "name": "{location} delay ends in"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_wm_for_location::name%]"
       },
       "sleep_timer_relative_to_stop": {
-        "name": "Sleep timer"
+        "name": "[%key:component::lg_thinq::entity::number::sleep_timer_relative_hour_to_stop::name%]"
       },
       "sleep_timer_relative_to_stop_for_location": {
-        "name": "{location} sleep timer"
+        "name": "[%key:component::lg_thinq::entity::number::sleep_timer_relative_hour_to_stop_for_location::name%]"
       },
       "absolute_to_start": {
-        "name": "Schedule turn-on"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start::name%]"
       },
       "absolute_to_start_for_location": {
-        "name": "{location} schedule turn-on"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_for_location::name%]"
       },
       "absolute_to_stop": {
-        "name": "Schedule turn-off"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop::name%]"
       },
       "absolute_to_stop_for_location": {
-        "name": "{location} schedule turn-off"
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_for_location::name%]"
       },
       "remain": {
         "name": "Remaining time"
@@ -848,7 +848,7 @@
           "high": "High",
           "power": "Turbo",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "auto": "Auto",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
           "wind_1": "Step 1",
           "wind_2": "Step 2",
           "wind_3": "Step 3",
@@ -872,7 +872,7 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purifying",
-          "auto": "[%key:component::lg_thinq::entity::select::wind_strength::state::auto%]",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
@@ -970,8 +970,8 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::select::wind_strength::state::auto%]",
-          "power": "Power",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::replace%]",
           "smart_power": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]",
           "smart_off": "[%key:common::state::off%]",
@@ -984,7 +984,7 @@
           "off": "[%key:common::state::off%]",
           "fast": "Fast",
           "silent": "Silent",
-          "normal": "Delicate"
+          "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
     }
