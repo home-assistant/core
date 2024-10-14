@@ -35,6 +35,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wifi_strength",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        unit_of_measurement="dBm",
     ),
 )
 
