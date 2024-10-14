@@ -303,7 +303,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 f"but it is in state {self.config_entry.state}, "
                 "This will stop working in Home Assistant 2025.11",
                 error_if_core=True,
-                error_if_integration=True,
+                error_if_integration=False,
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
