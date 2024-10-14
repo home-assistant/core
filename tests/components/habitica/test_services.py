@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.habitica.const import (
+    ATTR_ADD_CHECKLIST_ITEM,
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
@@ -23,17 +24,20 @@ from homeassistant.components.habitica.const import (
     ATTR_PRIORITY,
     ATTR_REMINDER,
     ATTR_REMINDER_TIME,
+    ATTR_REMOVE_CHECKLIST_ITEM,
     ATTR_REMOVE_REMINDER,
     ATTR_REMOVE_REMINDER_TIME,
     ATTR_REMOVE_TAG,
     ATTR_REPEAT,
     ATTR_REPEAT_MONTHLY,
+    ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_SKILL,
     ATTR_TARGET,
     ATTR_START_DATE,
     ATTR_STREAK,
     ATTR_TAG,
     ATTR_TASK,
+    ATTR_UNSCORE_CHECKLIST_ITEM,
     ATTR_UP_DOWN,
     DEFAULT_URL,
     DOMAIN,
@@ -1783,3 +1787,124 @@ async def test_remove_tags(
     assert len(tags) == 1
 
     assert set(tags) == {"20409521-c096-447f-9a90-23e8da615710"}
+
+
+async def test_add_checklist(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+) -> None:
+    """Test adding a checklist item."""
+
+    task_id = "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+    mock_habitica.put(
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+        json={"success": True, "data": {}},
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DAILY,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_ADD_CHECKLIST_ITEM: ["Checklist-item2"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    mock_call = mock_called_with(
+        mock_habitica,
+        "PUT",
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+    )
+    assert mock_call
+    assert (checklist := json.loads(mock_call[2]).get("checklist"))
+    assert len(checklist) == 2
+    assert {
+        "completed": False,
+        "id": "5d1935ff-80c8-443c-b2e9-733c66b44745",
+        "text": "Checklist-item2",
+    } in checklist
+
+
+async def test_remove_checklist(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+) -> None:
+    """Test adding a checklist item."""
+
+    task_id = "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+    mock_habitica.put(
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+        json={"success": True, "data": {}},
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DAILY,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_REMOVE_CHECKLIST_ITEM: ["Checklist-item1"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    mock_call = mock_called_with(
+        mock_habitica,
+        "PUT",
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+    )
+    assert mock_call
+    checklist = json.loads(mock_call[2]).get("checklist")
+    assert len(checklist) == 0
+
+
+@pytest.mark.parametrize(
+    ("service", "task_id", "expected"),
+    [
+        (ATTR_SCORE_CHECKLIST_ITEM, "564b9ac9-c53d-4638-9e7f-1cd96fe19baa", True),
+        (ATTR_UNSCORE_CHECKLIST_ITEM, "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1", False),
+    ],
+    ids=["score_checklist", "unscore_checklist"],
+)
+async def test_complete_checklist(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+    service: str,
+    task_id: str,
+    expected: bool,
+) -> None:
+    """Test completing a checklist item."""
+
+    mock_habitica.put(
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+        json={"success": True, "data": {}},
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DAILY,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            service: ["Checklist-item1"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    mock_call = mock_called_with(
+        mock_habitica,
+        "PUT",
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+    )
+    assert mock_call
+    checklist = json.loads(mock_call[2]).get("checklist")
+    assert len(checklist) == 1
+    assert checklist[0]["completed"] is expected
