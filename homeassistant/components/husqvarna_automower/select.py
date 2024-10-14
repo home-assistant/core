@@ -33,13 +33,13 @@ async def async_setup_entry(
     """Set up select platform."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AutomowerHeadlightModeSelectEntity(mower_id, coordinator)
+        AutomowerSelectEntity(mower_id, coordinator)
         for mower_id in coordinator.data
         if coordinator.data[mower_id].capabilities.headlights
     )
 
 
-class AutomowerHeadlightModeSelectEntity(AutomowerControlEntity, SelectEntity):
+class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     """Defining the headlight mode entity."""
 
     _attr_options = HEADLIGHT_MODES
