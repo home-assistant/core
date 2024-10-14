@@ -11,6 +11,7 @@ from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -34,6 +35,7 @@ from homeassistant.setup import async_notify_setup_error
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    fan as fan_platform,
     image as image_platform,
     number as number_platform,
     select as select_platform,
@@ -80,6 +82,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         vol.Optional(BUTTON_DOMAIN): vol.All(
             cv.ensure_list, [button_platform.BUTTON_SCHEMA]
         ),
+        vol.Optional(FAN_DOMAIN): vol.All(cv.ensure_list, [fan_platform.FAN_SCHEMA]),
         vol.Optional(IMAGE_DOMAIN): vol.All(
             cv.ensure_list, [image_platform.IMAGE_SCHEMA]
         ),
