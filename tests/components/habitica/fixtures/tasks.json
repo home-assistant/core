@@ -234,12 +234,24 @@
       "daysOfMonth": [],
       "weeksOfMonth": [],
       "checklist": [],
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "e2c62b7f-2e20-474b-a268-779252b25e8c",
+          "startDate": "",
+          "time": "2024-10-14T20:30:00+00:00"
+        },
+        {
+          "id": "4c472190-efba-4277-9d3e-ce7a9e1262ba",
+          "startDate": "",
+          "time": "2024-10-14T22:30:00+00:00"
+        }
+      ],
       "createdAt": "2024-07-07T17:51:53.268Z",
       "updatedAt": "2024-09-21T22:24:20.154Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": true,
-      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+      "alias": "alias_zahnseide_benutzen"
     },
     {
       "_id": "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
