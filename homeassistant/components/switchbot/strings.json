@@ -87,6 +87,9 @@
       },
       "light_level": {
         "name": "Light level"
+      },
+      "attempt_state": {
+        "name": "Attempt state"
       }
     },
     "cover": {

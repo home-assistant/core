@@ -75,6 +75,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
+    "attemptState": SensorEntityDescription(
+        key="attemptState",
+        translation_key="attempt_state",
+        native_unit_of_measurement="",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
