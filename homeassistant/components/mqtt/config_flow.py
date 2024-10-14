@@ -16,11 +16,12 @@ from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
-from homeassistant.components.hassio.addon_manager import (
+from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
+    HassioServiceInfo,
+    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -342,9 +343,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if is_hassio(self.hass):
             # Offer to set up broker add-on if supervisor is available
             self._addon_manager = get_addon_manager(self.hass)

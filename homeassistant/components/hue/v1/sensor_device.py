@@ -10,7 +10,7 @@ from ..const import (
 )
 
 
-class GenericHueDevice(entity.Entity):
+class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-module
     """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):

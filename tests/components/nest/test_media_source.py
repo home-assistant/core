@@ -17,7 +17,7 @@ from google_nest_sdm.event import EventMessage
 import numpy as np
 import pytest
 
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     URI_SCHEME,
     Unresolvable,

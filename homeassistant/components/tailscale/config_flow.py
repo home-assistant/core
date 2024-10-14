@@ -15,6 +15,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_TAILNET, DOMAIN
 
+AUTHKEYS_URL = "https://login.tailscale.com/admin/settings/keys"
+
 
 async def validate_input(hass: HomeAssistant, *, tailnet: str, api_key: str) -> None:
     """Try using the give tailnet & api key against the Tailscale API."""
@@ -66,9 +68,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders={
-                "authkeys_url": "https://login.tailscale.com/admin/settings/authkeys"
-            },
+            description_placeholders={"authkeys_url": AUTHKEYS_URL},
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -123,6 +123,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={"authkeys_url": AUTHKEYS_URL},
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )

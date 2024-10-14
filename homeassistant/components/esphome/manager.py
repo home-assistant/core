@@ -476,6 +476,13 @@ class ESPHomeManager:
             # will be cleared anyway.
             entry_data.async_update_device_state()
 
+        if Platform.ASSIST_SATELLITE in self.entry_data.loaded_platforms:
+            await self.hass.config_entries.async_unload_platforms(
+                self.entry, [Platform.ASSIST_SATELLITE]
+            )
+
+            self.entry_data.loaded_platforms.remove(Platform.ASSIST_SATELLITE)
+
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
         if isinstance(

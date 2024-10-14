@@ -1,5 +1,7 @@
 """The tests for the Ring component."""
 
+from unittest.mock import AsyncMock, patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
@@ -12,11 +14,12 @@ from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
 from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MOCK_HARDWARE_ID
 from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -231,33 +234,6 @@ async def test_error_on_device_update(
 
     assert log_msg in caplog.text
     assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-
-
-async def test_issue_deprecated_service_ring_update(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    caplog: pytest.LogCaptureFixture,
-    mock_ring_client,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the issue is raised on deprecated service ring.update."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(DOMAIN, "update", {}, blocking=True)
-
-    issue = issue_registry.async_get_issue("ring", "deprecated_service_ring_update")
-    assert issue
-    assert issue.issue_domain == "ring"
-    assert issue.issue_id == "deprecated_service_ring_update"
-    assert issue.translation_key == "deprecated_service_ring_update"
-
-    assert (
-        "Detected use of service 'ring.update'. "
-        "This is deprecated and will stop working in Home Assistant 2024.10. "
-        "Use 'homeassistant.update_entity' instead which updates all ring entities"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -477,3 +453,32 @@ async def test_no_listen_start(
     assert "Ring event listener failed to start after 10 seconds" in [
         record.message for record in caplog.records if record.levelname == "WARNING"
     ]
+
+
+async def test_migrate_create_device_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration creates new device id created."""
+    entry = MockConfigEntry(
+        title="Ring",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            "token": {"access_token": "mock-token"},
+        },
+        unique_id="foo@bar.com",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    with patch("uuid.uuid4", return_value=MOCK_HARDWARE_ID):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert CONF_DEVICE_ID in entry.data
+    assert entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
+
+    assert "Migration to version 1.2 complete" in caplog.text

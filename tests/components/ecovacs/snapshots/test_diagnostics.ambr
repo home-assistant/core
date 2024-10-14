@@ -8,6 +8,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'ecovacs',
       'minor_version': 1,
       'options': dict({
@@ -59,6 +61,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'ecovacs',
       'minor_version': 1,
       'options': dict({

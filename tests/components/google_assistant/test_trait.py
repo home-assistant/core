@@ -612,10 +612,10 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
-            valve.STATE_OPENING,
-            valve.STATE_CLOSING,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
@@ -736,10 +736,10 @@ async def test_startstop_cover_valve(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
-            valve.STATE_OPENING,
-            valve.STATE_CLOSING,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
@@ -1602,7 +1602,7 @@ async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1628,7 +1628,7 @@ async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.UNLOCKING), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1645,7 +1645,7 @@ async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.JAMMED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1670,7 +1670,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     )
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1706,7 +1706,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
 
     # Test without pin
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), BASIC_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), BASIC_CONFIG
     )
 
     with pytest.raises(error.SmartHomeError) as err:
@@ -3144,7 +3144,7 @@ async def test_openclose_cover_valve_unknown_state(
             valve.DOMAIN,
             valve.SERVICE_SET_VALVE_POSITION,
             ValveEntityFeature.SET_POSITION,
-            valve.STATE_OPEN,
+            valve.ValveState.OPEN,
         ),
     ],
 )
@@ -3191,7 +3191,7 @@ async def test_openclose_cover_valve_assumed_state(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
+            valve.ValveState.OPEN,
         ),
     ],
 )
@@ -3242,8 +3242,8 @@ async def test_openclose_cover_valve_query_only(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
             valve.SERVICE_OPEN_VALVE,
             valve.SERVICE_CLOSE_VALVE,

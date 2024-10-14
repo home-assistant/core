@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
@@ -55,6 +56,7 @@ NUMBER_SCHEMA = (
             vol.Required(CONF_STEP): cv.template,
             vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
             vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
@@ -70,6 +72,7 @@ NUMBER_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_MIN): cv.template,
         vol.Optional(CONF_MAX): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 )
@@ -159,6 +162,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[CONF_MIN]
         self._max_value_template = config[CONF_MAX]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
@@ -230,12 +234,15 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
+
         self._command_set_value = Script(
             hass,
             config[CONF_SET_VALUE],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
             DOMAIN,
         )
+
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def native_value(self) -> float | None:

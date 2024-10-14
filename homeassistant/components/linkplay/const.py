@@ -4,4 +4,4 @@ from homeassistant.const import Platform
 
 DOMAIN = "linkplay"
 PLATFORMS = [Platform.MEDIA_PLAYER]
-CONF_SESSION = "session"
+DATA_SESSION = "session"

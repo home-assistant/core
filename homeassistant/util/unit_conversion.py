@@ -47,6 +47,10 @@ _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
+# Energy conversion constants
+_WH_TO_J = 3600  # 1 Wh = 3600 J
+_WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+
 # Mass conversion constants
 _POUND_TO_G = 453.59237
 _OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
@@ -154,10 +158,12 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.FEET: 1 / _FOOT_TO_M,
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
+        UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.MILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.FEET,
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
@@ -172,9 +178,9 @@ class ConductivityConverter(BaseUnitConverter):
 
     UNIT_CLASS = "conductivity"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfConductivity.MICROSIEMENS: 1,
-        UnitOfConductivity.MILLISIEMENS: 1e-3,
-        UnitOfConductivity.SIEMENS: 1e-6,
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
     }
     VALID_UNITS = set(UnitOfConductivity)
 
@@ -209,19 +215,19 @@ class EnergyConverter(BaseUnitConverter):
 
     UNIT_CLASS = "energy"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.JOULE: _WH_TO_J * 1e3,
+        UnitOfEnergy.KILO_JOULE: _WH_TO_J,
+        UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
+        UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.MEGA_JOULE: 3.6,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
+        UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
+        UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
+        UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
-    VALID_UNITS = {
-        UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.GIGA_JOULE,
-    }
+    VALID_UNITS = set(UnitOfEnergy)
 
 
 class InformationConverter(BaseUnitConverter):
@@ -333,9 +339,11 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
         UnitOfSpeed.FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: 1,
     }
@@ -344,11 +352,13 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        UnitOfSpeed.INCHES_PER_SECOND,
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfSpeed.BEAUFORT,
     }
 

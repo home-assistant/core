@@ -267,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -695,11 +700,6 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
-    "_powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
-        },
-    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -764,6 +764,11 @@ ZEROCONF = {
             "name": "slzb-06*",
         },
     ],
+    "_smoip._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
+        },
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos",
@@ -791,6 +796,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee50*",
+        },
+    ],
+    "_stream-magic._tcp.local.": [
+        {
+            "domain": "cambridge_audio",
         },
     ],
     "_system-bridge._tcp.local.": [

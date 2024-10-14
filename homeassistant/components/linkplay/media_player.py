@@ -9,6 +9,7 @@ from typing import Any, Concatenate
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -19,13 +20,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
-)
-from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -109,6 +112,15 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
+SERVICE_PLAY_PRESET = "play_preset"
+ATTR_PRESET_NUMBER = "preset_number"
+
+SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -117,6 +129,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up a media player from a config entry."""
 
+    # register services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
+    )
+
+    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
@@ -156,9 +175,8 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
-        if model == MANUFACTURER_GENERIC:
-            model_id = None
-        else:
+        model_id = None
+        if model != MANUFACTURER_GENERIC:
             model_id = bridge.device.properties["project"]
 
         self._attr_device_info = dr.DeviceInfo(
@@ -217,6 +235,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         await self._bridge.player.resume()
 
     @exception_wrap
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._bridge.player.stop()
+
+    @exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next command."""
         await self._bridge.player.next()
@@ -261,6 +284,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
 
         url = async_process_play_media_url(self.hass, media_id)
         await self._bridge.player.play(url)
+
+    @exception_wrap
+    async def async_play_preset(self, preset_number: int) -> None:
+        """Play preset number."""
+        await self._bridge.player.play_preset(preset_number)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""

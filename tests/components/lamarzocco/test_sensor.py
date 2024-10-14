@@ -47,15 +47,14 @@ async def test_sensors(
         assert entry == snapshot(name=f"{serial_number}_{sensor}-entry")
 
 
-@pytest.mark.usefixtures("remove_local_connection")
 async def test_shot_timer_not_exists(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_no_local_connection: MockConfigEntry,
 ) -> None:
     """Test the La Marzocco shot timer doesn't exist if host not set."""
 
-    await async_init_integration(hass, mock_config_entry)
+    await async_init_integration(hass, mock_config_entry_no_local_connection)
     state = hass.states.get(f"sensor.{mock_lamarzocco.serial_number}_shot_timer")
     assert state is None
 

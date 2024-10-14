@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import functools as ft
-from functools import cached_property
 import logging
 from typing import Any, Literal, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -37,6 +37,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
@@ -86,6 +87,7 @@ from .const import (  # noqa: F401
     FAN_ON,
     FAN_TOP,
     HVAC_MODES,
+    INTENT_GET_TEMPERATURE,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -113,6 +115,7 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -149,7 +152,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""
-    component = hass.data[DOMAIN] = EntityComponent[ClimateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ClimateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -201,7 +204,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
-        "async_set_humidity",
+        async_service_humidity_set,
         [ClimateEntityFeature.TARGET_HUMIDITY],
     )
     component.async_register_entity_service(
@@ -222,14 +225,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -713,7 +714,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 (
                     "%s::%s sets the hvac_mode %s which is not "
                     "valid for this entity with modes: %s. "
-                    "This will stop working in 2025.3 and raise an error instead. "
+                    "This will stop working in 2025.4 and raise an error instead. "
                     "Please %s"
                 ),
                 self.platform.platform_name,
@@ -929,15 +930,71 @@ async def async_service_aux_heat(
         await entity.async_turn_aux_heat_off()
 
 
+async def async_service_humidity_set(
+    entity: ClimateEntity, service_call: ServiceCall
+) -> None:
+    """Handle set humidity service."""
+    humidity = service_call.data[ATTR_HUMIDITY]
+    min_humidity = entity.min_humidity
+    max_humidity = entity.max_humidity
+    _LOGGER.debug(
+        "Check valid humidity %d in range %d - %d",
+        humidity,
+        min_humidity,
+        max_humidity,
+    )
+    if humidity < min_humidity or humidity > max_humidity:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="humidity_out_of_range",
+            translation_placeholders={
+                "humidity": str(humidity),
+                "min_humidity": str(min_humidity),
+                "max_humidity": str(max_humidity),
+            },
+        )
+
+    await entity.async_set_humidity(humidity)
+
+
 async def async_service_temperature_set(
     entity: ClimateEntity, service_call: ServiceCall
 ) -> None:
     """Handle set temperature service."""
+    if (
+        ATTR_TEMPERATURE in service_call.data
+        and not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_entity_feature",
+        )
+    if (
+        ATTR_TARGET_TEMP_LOW in service_call.data
+        and not entity.supported_features
+        & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_range_entity_feature",
+        )
+
     hass = entity.hass
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     min_temp = entity.min_temp
     max_temp = entity.max_temp
     temp_unit = entity.temperature_unit
+
+    if (
+        (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
+        and (target_high_temp := service_call.data.get(ATTR_TARGET_TEMP_HIGH))
+        and target_low_temp > target_high_temp
+    ):
+        # Ensure target_low_temp is not higher than target_high_temp.
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="low_temp_higher_than_high_temp",
+        )
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:

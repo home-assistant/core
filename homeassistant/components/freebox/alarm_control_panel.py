@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, FreeboxHomeCategory
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 FREEBOX_TO_STATUS = {

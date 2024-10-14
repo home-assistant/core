@@ -20,8 +20,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import GoGoGate2Entity, cover_unique_id, get_data_update_coordinator
+from .common import cover_unique_id, get_data_update_coordinator
 from .coordinator import DeviceDataUpdateCoordinator
+from .entity import GoGoGate2Entity
 
 
 async def async_setup_entry(

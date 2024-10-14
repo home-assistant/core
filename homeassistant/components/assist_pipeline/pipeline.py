@@ -26,7 +26,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.components.tts.media_source import (
+from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback

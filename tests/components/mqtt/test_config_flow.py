@@ -8,14 +8,17 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.addon_manager import AddonError
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import (
+    AddonError,
+    HassioAPIError,
+    HassioServiceInfo,
+)
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -417,7 +420,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
@@ -669,7 +672,7 @@ async def test_addon_not_running_api_error(
 
     Case: The Mosquitto add-on start fails on a API error.
     """
-    start_addon.side_effect = HassioAPIError()
+    start_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -756,7 +759,7 @@ async def test_addon_info_error(
 
     Case: The Mosquitto add-on info could not be retrieved.
     """
-    addon_info.side_effect = AddonError()
+    addon_info.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}

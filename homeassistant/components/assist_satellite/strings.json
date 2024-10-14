@@ -4,8 +4,8 @@
     "_": {
       "name": "Assist satellite",
       "state": {
-        "listening_wake_word": "Wake word",
-        "listening_command": "Voice command",
+        "idle": "[%key:common::state::idle%]",
+        "listening": "Listening",
         "responding": "Responding",
         "processing": "Processing"
       }

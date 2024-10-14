@@ -8,7 +8,7 @@ from linkplay.utils import async_create_unverified_client_session
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import CONF_SESSION, DOMAIN
+from .const import DATA_SESSION, DOMAIN
 
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_ARYLIC: Final[str] = "Arylic"
@@ -57,7 +57,7 @@ def get_info_from_project(project: str) -> tuple[str, str]:
 async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
     """Get a ClientSession that can be used with LinkPlay devices."""
     hass.data.setdefault(DOMAIN, {})
-    if CONF_SESSION not in hass.data[DOMAIN]:
+    if DATA_SESSION not in hass.data[DOMAIN]:
         clientsession: ClientSession = await async_create_unverified_client_session()
 
         @callback
@@ -66,8 +66,8 @@ async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
             clientsession.detach()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
-        hass.data[DOMAIN][CONF_SESSION] = clientsession
+        hass.data[DOMAIN][DATA_SESSION] = clientsession
         return clientsession
 
-    session: ClientSession = hass.data[DOMAIN][CONF_SESSION]
+    session: ClientSession = hass.data[DOMAIN][DATA_SESSION]
     return session

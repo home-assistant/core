@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the AndroidTV integration."""
 
-from homeassistant.components.asuswrt.diagnostics import TO_REDACT
+from homeassistant.components.androidtv.diagnostics import TO_REDACT
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -36,4 +36,4 @@ async def test_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    assert result["entry"] == entry_dict
+    assert result["entry"] == entry_dict | {"discovery_keys": {}}

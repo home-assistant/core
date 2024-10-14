@@ -17,10 +17,6 @@ RUSSOUND_RIO_EXCEPTIONS = (
 )
 
 
-class NoPrimaryControllerException(Exception):
-    """Thrown when the Russound device is not the primary unit in the RNET stack."""
-
-
 CONNECT_TIMEOUT = 5
 
 MP_FEATURES_BY_FLAG = {

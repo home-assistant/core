@@ -40,7 +40,7 @@ from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.humidifier import HumidifierEntityFeature
 from homeassistant.components.light import LightEntityFeature
-from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
+from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
@@ -71,7 +71,6 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_IDLE,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -1524,11 +1523,11 @@ class LockUnlockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return LockUnlock query attributes."""
-        if self.state.state == STATE_JAMMED:
+        if self.state.state == LockState.JAMMED:
             return {"isJammed": True}
 
         # If its unlocking its not yet unlocked so we consider is locked
-        return {"isLocked": self.state.state in (STATE_UNLOCKING, STATE_LOCKED)}
+        return {"isLocked": self.state.state in (LockState.UNLOCKING, LockState.LOCKED)}
 
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
