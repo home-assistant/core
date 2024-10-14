@@ -173,14 +173,17 @@
       }
     },
     "sensor": {
-      "error": {
-        "default": "mdi:alert-circle-outline"
+      "odor_level": {
+        "default": "mdi:scent"
       },
       "current_temperature": {
         "default": "mdi:thermometer"
       },
       "temperature": {
         "default": "mdi:thermometer"
+      },
+      "total_pollution_level": {
+        "default": "mdi:air-filter"
       },
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
@@ -196,6 +199,18 @@
       },
       "wind_volume_for_location": {
         "default": "mdi:wind-power-outline"
+      },
+      "brightness": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "brightness_for_location": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "duration": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "duration_for_location": {
+        "default": "mdi:tune-vertical-variant"
       },
       "day_target_temperature": {
         "default": "mdi:thermometer"
@@ -224,6 +239,9 @@
       "fresh_air_filter": {
         "default": "mdi:air-filter"
       },
+      "filter_lifetime": {
+        "default": "mdi:air-filter"
+      },
       "used_time": {
         "default": "mdi:air-filter"
       },
@@ -235,6 +253,15 @@
       },
       "personalization_mode": {
         "default": "mdi:dots-circle"
+      },
+      "current_dish_washing_course": {
+        "default": "mdi:format-list-checks"
+      },
+      "rinse_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "softening_level": {
+        "default": "mdi:tune-vertical-variant"
       },
       "cock_state": {
         "default": "mdi:air-filter"
@@ -250,6 +277,117 @@
       },
       "target_temperature_for_location": {
         "default": "mdi:thermometer"
+      },
+      "elapsed_day_state": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "elapsed_day_total": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "recipe_name": {
+        "default": "mdi:information-box-outline"
+      },
+      "wort_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "yeast_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "beer_remain": {
+        "default": "mdi:glass-mug-variant"
+      },
+      "battery_level": {
+        "default": "mdi:battery-medium"
+      },
+      "relative_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_wm_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_wm_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "sleep_timer_relative_to_stop": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_timer_relative_to_stop_for_location": {
+        "default": "mdi:bed-clock"
+      },
+      "absolute_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_stop_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "remain": {
+        "default": "mdi:timer-sand"
+      },
+      "remain_for_location": {
+        "default": "mdi:timer-sand"
+      },
+      "running": {
+        "default": "mdi:timer-play-outline"
+      },
+      "running_for_location": {
+        "default": "mdi:timer-play-outline"
+      },
+      "total": {
+        "default": "mdi:timer-play-outline"
+      },
+      "total_for_location": {
+        "default": "mdi:timer-play-outline"
+      },
+      "target": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "target_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_end": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_end_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "power_level": {
+        "default": "mdi:radiator"
+      },
+      "power_level_for_location": {
+        "default": "mdi:radiator"
       }
     }
   }
