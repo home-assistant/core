@@ -1,7 +1,5 @@
 """Tests for the habitica component."""
 
-import json
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -24,26 +22,21 @@ def disable_plumbum():
         yield
 
 
-def assert_mock_called_with(
+def mock_called_with(
     mock_client: AiohttpClientMocker,
     method: str,
     url: str,
-    data: dict[str, Any] | None = None,
-) -> None:
+) -> tuple | None:
     """Assert request mock was called with json data."""
 
-    mock = next(
+    return next(
         (
             call
             for call in mock_client.mock_calls
             if call[0] == method.upper() and call[1] == URL(url)
         ),
-        [],
+        None,
     )
-    assert mock
-    assert len(mock)
-    if data:
-        assert json.loads(mock[2]) == data
 
 
 @pytest.fixture

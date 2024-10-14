@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+import json
 import re
 from unittest.mock import patch
 
@@ -24,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import assert_mock_called_with
+from .conftest import mock_called_with
 
 from tests.common import (
     MockConfigEntry,
@@ -135,7 +136,7 @@ async def test_complete_todo_item(
         blocking=True,
     )
 
-    assert_mock_called_with(
+    assert mock_called_with(
         mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/up"
     )
 
@@ -181,7 +182,7 @@ async def test_uncomplete_todo_item(
         blocking=True,
     )
 
-    assert_mock_called_with(
+    assert mock_called_with(
         mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/{uid}/score/down"
     )
 
@@ -275,16 +276,15 @@ async def test_update_todo_item(
         blocking=True,
     )
 
-    assert_mock_called_with(
-        mock_habitica,
-        "PUT",
-        f"{DEFAULT_URL}/api/v3/tasks/{uid}",
-        {
-            "date": date,
-            "notes": "test-description",
-            "text": "test-summary",
-        },
+    mock_call = mock_called_with(
+        mock_habitica, "PUT", f"{DEFAULT_URL}/api/v3/tasks/{uid}"
     )
+    assert mock_call
+    assert json.loads(mock_call[2]) == {
+        "date": date,
+        "notes": "test-description",
+        "text": "test-summary",
+    }
 
 
 async def test_update_todo_item_exception(
@@ -352,17 +352,18 @@ async def test_add_todo_item(
         blocking=True,
     )
 
-    assert_mock_called_with(
+    mock_call = mock_called_with(
         mock_habitica,
         "post",
         f"{DEFAULT_URL}/api/v3/tasks/user",
-        {
-            "date": "2024-07-30",
-            "notes": "test-description",
-            "text": "test-summary",
-            "type": "todo",
-        },
     )
+    assert mock_call
+    assert json.loads(mock_call[2]) == {
+        "date": "2024-07-30",
+        "notes": "test-description",
+        "text": "test-summary",
+        "type": "todo",
+    }
 
 
 async def test_add_todo_item_exception(
@@ -425,7 +426,7 @@ async def test_delete_todo_item(
         blocking=True,
     )
 
-    assert_mock_called_with(
+    assert mock_called_with(
         mock_habitica, "delete", f"{DEFAULT_URL}/api/v3/tasks/{uid}"
     )
 
@@ -485,7 +486,7 @@ async def test_delete_completed_todo_items(
         blocking=True,
     )
 
-    assert_mock_called_with(
+    assert mock_called_with(
         mock_habitica, "post", f"{DEFAULT_URL}/api/v3/tasks/clearCompletedTodos"
     )
 
@@ -583,7 +584,7 @@ async def test_move_todo_item(
     assert resp.get("success")
 
     for pos in (0, 1):
-        assert_mock_called_with(
+        assert mock_called_with(
             mock_habitica,
             "post",
             f"{DEFAULT_URL}/api/v3/tasks/{uid}/move/to/{pos}",
