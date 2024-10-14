@@ -94,10 +94,6 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._attr_name = name
         if yaml_slug:  # Backwards compatibility with YAML configuration entries
             self.entity_id = f"select.{yaml_slug}"
-            if (
-                unique_id is None
-            ):  # Provide a unique_id if not provided based on the unique yaml_slug property
-                unique_id = f"utility_meter_{yaml_slug}_unique_id"
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._current_tariff: str | None = None
