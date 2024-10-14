@@ -36,7 +36,9 @@
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::abort::invalid_auth%]"
     }
   },
   "services": {
