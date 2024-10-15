@@ -551,9 +551,8 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
 
         super().__init__(coordinator, f"blutrv:{id_}")
         self._id = id_
-        self._thermostat_type = coordinator.device.config[f"blutrv:{id_}"].get(
-            "type", "heating"
-        )
+        self._config = coordinator.device.config[f"blutrv:{id_}"]
+        self._thermostat_type = self._config.get("type", "heating")
 
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
@@ -585,7 +584,7 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
-        if not self.status["pos"]:
+        if not self._config["enable"]:
             return HVACMode.OFF
 
         return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
@@ -624,6 +623,6 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
             {
                 "id": self._id,
                 "method": "Trv.SetConfig",
-                "params": {"id": 0, "enable": mode},
+                "params": {"id": 0, "config": {"enable": mode}},
             },
         )
