@@ -533,11 +533,13 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         else:
             return result
 
-        if (
-            result["type"] is FlowResultType.ABORT
-            and flow.source != SOURCE_SYSTEM
-            and flow.source not in DISCOVERY_SOURCES
-        ):
+        # Exclude discovery flows - but only for first step
+        if flow.source == SOURCE_SYSTEM or flow.source in DISCOVERY_SOURCES:
+            if not hasattr(flow, "__user_visible"):
+                setattr(flow, "__user_visible", True)
+                return result
+
+        if result["type"] is FlowResultType.ABORT:
             await _ensure_translation_exists(
                 flow.hass,
                 _ignore_translations,
