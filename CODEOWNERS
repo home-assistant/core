@@ -1346,6 +1346,8 @@ build.json @home-assistant/supervisor
 /tests/components/sma/ @kellerza @rklomp
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
+/homeassistant/components/smart_meter_b_route/ @SeraphicRav
+/tests/components/smart_meter_b_route/ @SeraphicRav
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smarttub/ @mdz
