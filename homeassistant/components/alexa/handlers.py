@@ -1604,6 +1604,7 @@ def handle_fan(
     data: dict[str, Any],
 ) -> tuple[str, dict[str, Any], float]:
     """Handle fan speed."""
+    _ = instance
     return process_fan_speed(entity, range_delta, range_delta_default, data)
 
 
