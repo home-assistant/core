@@ -148,7 +148,10 @@ class AddonManager:
         discovery_info_config: dict = discovery_info["config"]
         return discovery_info_config
 
-    @api_error("Failed to get the {addon_name} add-on info")
+    @api_error(
+        "Failed to get the {addon_name} add-on info",
+        expected_error_type=SupervisorError,
+    )
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
         addon_store_info = await self._supervisor_client.store.addon_info(
@@ -202,11 +205,12 @@ class AddonManager:
 
     def _check_addon_available(self, addon_info: AddonInfo) -> None:
         """Check if the managed add-on is available."""
-
         if not addon_info.available:
             raise AddonError(f"{self.addon_name} add-on is not available")
 
-    @api_error("Failed to install the {addon_name} add-on")
+    @api_error(
+        "Failed to install the {addon_name} add-on", expected_error_type=SupervisorError
+    )
     async def async_install_addon(self) -> None:
         """Install the managed add-on."""
         addon_info = await self.async_get_addon_info()
@@ -215,7 +219,10 @@ class AddonManager:
 
         await self._supervisor_client.store.install_addon(self.addon_slug)
 
-    @api_error("Failed to uninstall the {addon_name} add-on")
+    @api_error(
+        "Failed to uninstall the {addon_name} add-on",
+        expected_error_type=SupervisorError,
+    )
     async def async_uninstall_addon(self) -> None:
         """Uninstall the managed add-on."""
         await self._supervisor_client.addons.uninstall_addon(self.addon_slug)
@@ -238,17 +245,23 @@ class AddonManager:
             self.addon_slug, StoreAddonUpdate(backup=False)
         )
 
-    @api_error("Failed to start the {addon_name} add-on")
+    @api_error(
+        "Failed to start the {addon_name} add-on", expected_error_type=SupervisorError
+    )
     async def async_start_addon(self) -> None:
         """Start the managed add-on."""
         await self._supervisor_client.addons.start_addon(self.addon_slug)
 
-    @api_error("Failed to restart the {addon_name} add-on")
+    @api_error(
+        "Failed to restart the {addon_name} add-on", expected_error_type=SupervisorError
+    )
     async def async_restart_addon(self) -> None:
         """Restart the managed add-on."""
         await self._supervisor_client.addons.restart_addon(self.addon_slug)
 
-    @api_error("Failed to stop the {addon_name} add-on")
+    @api_error(
+        "Failed to stop the {addon_name} add-on", expected_error_type=SupervisorError
+    )
     async def async_stop_addon(self) -> None:
         """Stop the managed add-on."""
         await self._supervisor_client.addons.stop_addon(self.addon_slug)

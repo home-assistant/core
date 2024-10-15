@@ -138,7 +138,7 @@ async def test_get_addon_info(
         "addon_store_info_error",
         "addon_store_info_calls",
     ),
-    [(SupervisorError("Boom"), 1, None, 1), (None, 0, HassioAPIError("Boom"), 1)],
+    [(SupervisorError("Boom"), 1, None, 1), (None, 0, SupervisorError("Boom"), 1)],
 )
 async def test_get_addon_info_error(
     addon_manager: AddonManager,
@@ -216,7 +216,7 @@ async def test_install_addon_error(
     """Test install addon raises error."""
     addon_store_info.return_value.available = True
     addon_info.return_value.available = True
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
@@ -267,7 +267,7 @@ async def test_schedule_install_addon_error(
     install_addon: AsyncMock,
 ) -> None:
     """Test schedule install addon raises error."""
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_install_addon()
@@ -284,7 +284,7 @@ async def test_schedule_install_addon_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test schedule install addon logs error."""
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     await addon_manager.async_schedule_install_addon(catch_error=True)
 

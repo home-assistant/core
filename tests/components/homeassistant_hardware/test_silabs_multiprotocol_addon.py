@@ -10,13 +10,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 import pytest
 
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonInfo,
-    AddonState,
-    HassIO,
-    HassioAPIError,
-)
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -1202,7 +1196,7 @@ async def test_option_flow_install_multi_pan_addon_install_fails(
 ) -> None:
     """Test installing the multi pan addon."""
 
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -1358,7 +1352,7 @@ async def test_option_flow_addon_info_fails(
 ) -> None:
     """Test installing the multi pan addon."""
 
-    addon_store_info.side_effect = HassioAPIError("Boom")
+    addon_store_info.side_effect = SupervisorError("Boom")
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -1664,7 +1658,7 @@ async def test_check_multi_pan_addon_info_error(
 ) -> None:
     """Test `check_multi_pan_addon` where the addon info cannot be read."""
 
-    addon_store_info.side_effect = HassioAPIError("Boom")
+    addon_store_info.side_effect = SupervisorError("Boom")
 
     with pytest.raises(HomeAssistantError):
         await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
