@@ -1252,6 +1252,8 @@ async def handle_cover_and_valve_positions(
         elif position == valve.STATE_OPEN:
             service = valve.SERVICE_OPEN_VALVE
 
+    _ = data
+
     return service
 
 
