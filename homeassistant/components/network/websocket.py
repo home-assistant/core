@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import get_url
 
 from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, NETWORK_CONFIG_SCHEMA
 from .network import async_get_network
@@ -19,6 +20,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     """Register network websocket commands."""
     websocket_api.async_register_command(hass, websocket_network_adapters)
     websocket_api.async_register_command(hass, websocket_network_adapters_configure)
+    websocket_api.async_register_command(hass, websocket_network_url)
 
 
 @websocket_api.require_admin
@@ -61,4 +63,29 @@ async def websocket_network_adapters_configure(
     connection.send_result(
         msg["id"],
         {ATTR_CONFIGURED_ADAPTERS: network.configured_adapters},
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "network/url",
+        vol.Required("url_type"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_network_url(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the internal URL."""
+    connection.send_result(
+        msg["id"],
+        get_url(
+            hass,
+            allow_internal=msg["url_type"] == "internal",
+            allow_external=msg["url_type"] == "external",
+            allow_cloud=msg["url_type"] == "cloud",
+        ),
     )
