@@ -18,6 +18,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
         websocket_api.async_register_command(hass, handle_backup_start)
         return
 
+    websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
     websocket_api.async_register_command(hass, handle_remove)
@@ -39,6 +40,30 @@ async def handle_info(
         {
             "backups": list(backups.values()),
             "backing_up": manager.backing_up,
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/details",
+        vol.Required("slug"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_details(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get backup details for a specific slug."""
+    manager = hass.data[DATA_MANAGER]
+    backup = await manager.get_backup(msg["slug"])
+    connection.send_result(
+        msg["id"],
+        {
+            "backup": backup,
         },
     )
 
