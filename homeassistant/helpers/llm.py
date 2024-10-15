@@ -160,6 +160,7 @@ class APIInstance:
 
     api: API
     api_prompt: str
+    exposed_entities: dict[str, Any]
     llm_context: LLMContext
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
@@ -309,6 +310,7 @@ class AssistAPI(API):
         return APIInstance(
             api=self,
             api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            exposed_entities=exposed_entities,
             llm_context=llm_context,
             tools=self._async_get_tools(llm_context, exposed_entities),
             custom_serializer=_selector_serializer,
@@ -480,13 +482,13 @@ def _get_exposed_entities(
                     area_names.extend(area.aliases)
 
         info: dict[str, Any] = {
-            "names": ", ".join(names),
+            "aliases": names,
             "domain": state.domain,
             "state": state.state,
         }
 
         if area_names:
-            info["areas"] = ", ".join(area_names)
+            info["areas"] = area_names
 
         if attributes := {
             attr_name: str(attr_value)

@@ -195,16 +195,16 @@ class OllamaConversationEntity(
             try:
                 prompt_parts = [
                     template.Template(
-                        llm.BASE_PROMPT
-                        + settings.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                        settings.get(CONF_PROMPT),
                         self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
                             "user_name": user_name,
                             "llm_context": llm_context,
+                            "exposed_entities": llm_api.exposed_entities
                         },
-                        parse_result=False,
+                        parse_result=True,
                     )
                 ]
 
@@ -218,8 +218,9 @@ class OllamaConversationEntity(
                     response=intent_response, conversation_id=conversation_id
                 )
 
-            if llm_api:
-                prompt_parts.append(llm_api.api_prompt)
+            # if llm_api:
+               # Do not auto append api prompt! Saving for later to add a config_flow option to enable this
+               # prompt_parts.append(llm_api.api_prompt)
 
             prompt = "\n".join(prompt_parts)
             _LOGGER.debug("Prompt: %s", prompt)
