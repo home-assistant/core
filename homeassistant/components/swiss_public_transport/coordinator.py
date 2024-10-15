@@ -18,12 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    CONNECTION_DATETIME_STR_FORMAT,
-    CONNECTIONS_COUNT,
-    DEFAULT_UPDATE_TIME,
-    DOMAIN,
-)
+from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
