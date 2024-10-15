@@ -159,7 +159,6 @@ async def _async_create_entities(hass, config, unique_id_prefix=None):
     """Create the Template Fans."""
     fans = []
 
-    # for entity_config in rewrite_legacy_to_modern_conf(hass, config.get(CONF_FANS, {})):
     for entity_config in config:
         unique_id = entity_config.get(CONF_UNIQUE_ID)
         object_id = entity_config.get(CONF_OBJECT_ID)
