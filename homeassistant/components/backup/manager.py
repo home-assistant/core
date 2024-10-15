@@ -12,9 +12,10 @@ from pathlib import Path
 import tarfile
 from tarfile import TarError
 import time
-from typing import Any, Protocol, cast
+from typing import Any, Generic, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
+from typing_extensions import TypeVar
 
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
@@ -29,6 +30,8 @@ from .models import BaseBackup
 from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
+
+_T = TypeVar("_T")
 
 
 @dataclass(slots=True)
@@ -52,13 +55,13 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BaseBackupManager(abc.ABC):
+class BaseBackupManager(abc.ABC, Generic[_T]):
     """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backups: dict[str, Backup] = {}
+        self.backups: dict[str, _T] = {}
         self.backing_up = False
 
     async def async_post_backup_actions(self, **kwargs: Any) -> None:
@@ -68,18 +71,18 @@ class BaseBackupManager(abc.ABC):
         """Pre backup actions."""
 
     @abc.abstractmethod
-    async def async_create_backup(self, **kwargs: Any) -> Backup:
+    async def async_create_backup(self, **kwargs: Any) -> _T:
         """Generate a backup."""
 
     @abc.abstractmethod
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, _T]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their slug.
         """
 
     @abc.abstractmethod
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _T | None:
         """Get a backup."""
 
     @abc.abstractmethod
@@ -87,11 +90,11 @@ class BaseBackupManager(abc.ABC):
         """Remove a backup."""
 
     @abc.abstractmethod
-    async def async_sync_backup(self, *, backup: Backup, **kwargs: Any) -> None:
+    async def async_sync_backup(self, *, backup: _T, **kwargs: Any) -> None:
         """Sync a backup."""
 
 
-class BackupManager(BaseBackupManager):
+class BackupManager(BaseBackupManager[Backup]):
     """Backup manager for the Backup integration."""
 
     def __init__(self, hass: HomeAssistant) -> None:

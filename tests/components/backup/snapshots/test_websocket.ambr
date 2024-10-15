@@ -249,6 +249,80 @@
     'type': 'result',
   })
 # ---
+# name: test_backup_sync[with_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'only_supervisor',
+      'message': 'Only allowed as Supervisor',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[with_hassio-hass_supervisor_access_token]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[without_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[without_hassio-hass_supervisor_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception0]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
+      'message': '',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception1]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception2]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_details[with_hassio-with_backup_content]
   dict({
     'error': dict({

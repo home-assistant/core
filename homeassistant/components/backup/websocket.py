@@ -8,7 +8,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_MANAGER, LOGGER
+from .const import DATA_MANAGER, LOCAL_DATA_MANAGER, LOGGER
+from .models import BaseBackup
 
 
 @callback
@@ -21,6 +22,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
         websocket_api.async_register_command(hass, handle_backup_start)
+        websocket_api.async_register_command(hass, handle_backup_sync)
         return
 
     websocket_api.async_register_command(hass, handle_details)
@@ -149,6 +151,44 @@ async def handle_backup_end(
     connection.send_result(msg["id"])
 
 
+@websocket_api.ws_require_user(only_supervisor=True)
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/sync",
+        vol.Required("backup"): {
+            vol.Required("date"): str,
+            vol.Required("name"): str,
+            vol.Required("size"): float,
+            vol.Required("slug"): str,
+        },
+    }
+)
+@websocket_api.async_response
+async def handle_backup_sync(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Backup sync notification."""
+    LOGGER.debug("Backup sync notification")
+    backup = msg["backup"]
+
+    try:
+        await hass.data[DATA_MANAGER].async_sync_backup(
+            backup=BaseBackup(
+                date=backup["date"],
+                name=backup["name"],
+                size=backup["size"],
+                slug=backup["slug"],
+            )
+        )
+    except Exception as err:  # noqa: BLE001
+        connection.send_error(msg["id"], "backup_sync_failed", str(err))
+        return
+
+    connection.send_result(msg["id"])
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "backup/agents/info"})
 @websocket_api.async_response
@@ -158,7 +198,7 @@ async def backup_agents_info(
     msg: dict[str, Any],
 ) -> None:
     """Return backup agents info."""
-    manager = hass.data[DATA_MANAGER]
+    manager = hass.data[LOCAL_DATA_MANAGER]
     await manager.load_platforms()
     connection.send_result(
         msg["id"],
@@ -178,7 +218,7 @@ async def backup_agents_list_synced_backups(
     msg: dict[str, Any],
 ) -> None:
     """Return a list of synced backups."""
-    manager = hass.data[DATA_MANAGER]
+    manager = hass.data[LOCAL_DATA_MANAGER]
     backups: list[dict[str, Any]] = []
     await manager.load_platforms()
     for agent_id, agent in manager.sync_agents.items():
@@ -203,7 +243,7 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download a synced backup."""
-    manager = hass.data[DATA_MANAGER]
+    manager = hass.data[LOCAL_DATA_MANAGER]
     await manager.load_platforms()
 
     if not (agent := manager.sync_agents.get(msg["agent"])):

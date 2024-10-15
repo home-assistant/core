@@ -220,6 +220,49 @@ async def test_backup_start(
 
 
 @pytest.mark.parametrize(
+    "access_token_fixture_name",
+    ["hass_access_token", "hass_supervisor_access_token"],
+)
+@pytest.mark.parametrize(
+    ("with_hassio"),
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_backup_sync(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    sync_access_token_proxy: str,
+    *,
+    access_token_fixture_name: str,
+    with_hassio: bool,
+) -> None:
+    """Test handling of pre backup actions from a WS command."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass, sync_access_token_proxy)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_sync_backup",
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/sync",
+                "backup": {
+                    "date": "1970-01-01T00:00:00+00:00",
+                    "name": "Awesome backup",
+                    "size": 12.12,
+                    "slug": "abc123",
+                },
+            }
+        )
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
     "exception",
     [
         TimeoutError(),
@@ -245,6 +288,45 @@ async def test_backup_end_excepion(
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/end"})
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError(),
+        HomeAssistantError("Boom"),
+        Exception("Boom"),
+    ],
+)
+async def test_backup_sync_excepion(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    hass_supervisor_access_token: str,
+    exception: Exception,
+) -> None:
+    """Test exception handling while running sync backup action from a WS command."""
+    await setup_backup_integration(hass, with_hassio=True)
+
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_sync_backup",
+        side_effect=exception,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/sync",
+                "backup": {
+                    "date": "1970-01-01T00:00:00+00:00",
+                    "name": "Awesome backup",
+                    "size": 12.12,
+                    "slug": "abc123",
+                },
+            }
+        )
         assert await client.receive_json() == snapshot
 
 
