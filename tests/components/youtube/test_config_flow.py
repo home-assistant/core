@@ -210,6 +210,10 @@ async def test_flow_http_error(
         )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.youtube.config.abort.wrong_account"],
+)
 @pytest.mark.parametrize(
     ("fixture", "abort_reason", "placeholders", "call_count", "access_token"),
     [
