@@ -826,7 +826,7 @@ async def test_options_effect_show_list(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(  # Remove when translations fixed
     "ignore_translations",
-    ["component.hyperion.config.abort.cannot_connect"],
+    ["component.hyperion.options.abort.cannot_connect"],
 )
 async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistant) -> None:
     """Check an options flow effect hide list with a failed connection."""
