@@ -566,6 +566,10 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         """Return item ID key."""
         return f"{self.model_name}_id"
 
+    def __getitem__(self, key: str) -> Any:
+        """Allow access to storage collection items by key."""
+        return self.storage_collection.data[key]
+
     @callback
     def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
