@@ -356,6 +356,7 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
 
+
 @pytest.mark.parametrize(
     "do_config",
     [
