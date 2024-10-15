@@ -2839,7 +2839,7 @@ total-connect-client==2024.5
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.2
+tplink-omada-client==1.4.3
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
