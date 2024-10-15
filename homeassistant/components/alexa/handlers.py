@@ -1569,7 +1569,7 @@ def handle_cover(
     range_delta: float,
     range_delta_default: bool,
     data: dict[str, Any],
-) -> tuple[str, dict[str, Any], int]:
+) -> tuple[str, dict[str, Any], float]:
     """Handle cover position and tilt."""
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         return process_cover_position(entity, range_delta, range_delta_default, data)
@@ -1585,7 +1585,7 @@ def handle_fan(
     range_delta: float,
     range_delta_default: bool,
     data: dict[str, Any],
-) -> tuple[str, dict[str, Any], int]:
+) -> tuple[str, dict[str, Any], float]:
     """Handle fan speed."""
     return process_fan_speed(entity, range_delta, range_delta_default, data)
 
@@ -1697,7 +1697,7 @@ def process_fan_speed(
 # Humidifier handling
 def process_humidifier(
     entity: Any, range_delta: float, range_delta_default: bool, data: dict[str, Any]
-) -> tuple[str, dict[str, Any], float]:
+) -> tuple[str, dict[str, Any], int]:
     """Process humidifier target humidity."""
     percentage_step = 5
     range_delta = (
@@ -1749,7 +1749,7 @@ def process_number(
 # Vacuum fan speed handling
 def process_vacuum(
     entity: Any, range_delta: float, data: dict[str, Any]
-) -> tuple[str, dict[str, Any], Any | None]:
+) -> tuple[str, dict[str, Any], Any]:
     """Process vacuum fan speed."""
     range_delta = int(range_delta)
     service = vacuum.SERVICE_SET_FAN_SPEED

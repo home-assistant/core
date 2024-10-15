@@ -237,7 +237,7 @@ class AlexaCapabilityResource:
         label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label_dict = {"TYPE_KEY": "asset", "value": {"assetId": label}}
+                label_dict = {TYPE_KEY: "asset", "value": {"assetId": label}}
             else:
                 label_dict = {
                     TYPE_KEY: "text",
