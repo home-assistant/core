@@ -106,9 +106,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         _properties = discovery_info.properties
-        _version = _properties.get("version", "n/a")
         self.product = _product = _properties.get("product", "Unknown Smile")
-
+        _version = _properties.get("version", "n/a")
         unique_id = discovery_info.hostname.split(".")[0].split("-")[0]
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
