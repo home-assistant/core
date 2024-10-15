@@ -257,8 +257,12 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
-            vol.Optional(CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE): cv.positive_int,
-            vol.Optional(CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE
+            ): cv.positive_int,
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {

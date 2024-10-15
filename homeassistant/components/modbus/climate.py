@@ -276,14 +276,20 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    [self._hvac_off_value if hvac_mode == HVACMode.OFF else self._hvac_on_value],
+                    [
+                        self._hvac_off_value
+                        if hvac_mode == HVACMode.OFF
+                        else self._hvac_on_value
+                    ],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    self._hvac_off_value if hvac_mode == HVACMode.OFF else self._hvac_on_value,
+                    self._hvac_off_value
+                    if hvac_mode == HVACMode.OFF
+                    else self._hvac_on_value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
