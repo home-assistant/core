@@ -3,17 +3,16 @@
 from dataclasses import dataclass
 from typing import Any
 
-from spotipy import Spotify
-
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .coordinator import SpotifyCoordinator
+
 
 @dataclass
-class HomeAssistantSpotifyData:
-    """Spotify data stored in the Home Assistant data object."""
+class SpotifyData:
+    """Class to hold Spotify data."""
 
-    client: Spotify
-    current_user: dict[str, Any]
-    devices: DataUpdateCoordinator[list[dict[str, Any]]]
+    coordinator: SpotifyCoordinator
     session: OAuth2Session
+    devices: DataUpdateCoordinator[list[dict[str, Any]]]

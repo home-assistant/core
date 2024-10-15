@@ -9,7 +9,7 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt import DPTComplexData, DPTEnumData
 from xknx.exceptions import XKNXException
-from xknx.telegram import Telegram
+from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import HomeAssistant
@@ -119,6 +119,8 @@ class Telegrams:
             device := self.project.devices.get(f"{telegram.source_address}")
         ) is not None:
             src_name = f"{device['manufacturer_name']} {device['name']}"
+        elif telegram.direction is TelegramDirection.OUTGOING:
+            src_name = "Home Assistant"
 
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
             payload_data = telegram.payload.value.value

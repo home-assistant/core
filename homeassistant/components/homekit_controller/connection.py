@@ -22,7 +22,7 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -154,6 +154,7 @@ class HKDevice:
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
         self._load_platforms_lock = asyncio.Lock()
+        self._full_update_requested: bool = False
 
     @property
     def entity_map(self) -> Accessories:
@@ -432,7 +433,7 @@ class HKDevice:
                 continue
 
             if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.info(
+                _LOGGER.warning(
                     (
                         "Found candidate device for %s:aid:%s, but owned by a different"
                         " config entry, skipping"
@@ -442,7 +443,7 @@ class HKDevice:
                 )
                 continue
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating device identifiers for %s:aid:%s",
                 self.unique_id,
                 accessory.aid,
@@ -841,6 +842,7 @@ class HKDevice:
 
     async def async_request_update(self, now: datetime | None = None) -> None:
         """Request an debounced update from the accessory."""
+        self._full_update_requested = True
         await self._debounced_update.async_call()
 
     async def async_update(self, now: datetime | None = None) -> None:
@@ -849,7 +851,8 @@ class HKDevice:
         accessories = self.entity_map.accessories
 
         if (
-            len(accessories) == 1
+            not self._full_update_requested
+            and len(accessories) == 1
             and self.available
             and not (to_poll - self.watchable_characteristics)
             and self.pairing.is_available
@@ -879,6 +882,8 @@ class HKDevice:
             firmware_iid = accessory_info[CharacteristicsTypes.FIRMWARE_REVISION].iid
             to_poll = {(first_accessory.aid, firmware_iid)}
 
+        self._full_update_requested = False
+
         if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(
@@ -899,7 +904,7 @@ class HKDevice:
             return
 
         if self._polling_lock_warned:
-            _LOGGER.info(
+            _LOGGER.warning(
                 (
                     "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"

@@ -32,7 +32,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'light',
-    'unique_id': '1-light',
+    'unique_id': '1',
     'unit_of_measurement': None,
   })
 # ---
@@ -87,7 +87,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'light',
-    'unique_id': '2-light',
+    'unique_id': '2',
     'unit_of_measurement': None,
   })
 # ---

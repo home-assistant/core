@@ -682,7 +682,7 @@ async def test_stt_provider_missing(
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
-        "homeassistant.components.stt.async_get_provider",
+        "homeassistant.components.stt.async_get_speech_to_text_entity",
         return_value=None,
     ):
         client = await hass_ws_client(hass)
@@ -708,11 +708,11 @@ async def test_stt_provider_bad_metadata(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
-    mock_stt_provider,
+    mock_stt_provider_entity,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with wrong metadata."""
-    with patch.object(mock_stt_provider, "check_metadata", return_value=False):
+    with patch.object(mock_stt_provider_entity, "check_metadata", return_value=False):
         client = await hass_ws_client(hass)
 
         await client.send_json_auto_id(
@@ -743,7 +743,7 @@ async def test_stt_stream_failed(
     client = await hass_ws_client(hass)
 
     with patch(
-        "tests.components.assist_pipeline.conftest.MockSttProvider.async_process_audio_stream",
+        "tests.components.assist_pipeline.conftest.MockSTTProviderEntity.async_process_audio_stream",
         side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(
@@ -1188,7 +1188,7 @@ async def test_get_pipeline(
         "id": ANY,
         "language": "en",
         "name": "Home Assistant",
-        "stt_engine": "test",
+        "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
         "tts_engine": "test",
         "tts_language": "en-US",
@@ -1213,7 +1213,7 @@ async def test_get_pipeline(
         "language": "en",
         "name": "Home Assistant",
         # It found these defaults
-        "stt_engine": "test",
+        "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
         "tts_engine": "test",
         "tts_language": "en-US",
@@ -1297,7 +1297,7 @@ async def test_list_pipelines(
                 "id": ANY,
                 "language": "en",
                 "name": "Home Assistant",
-                "stt_engine": "test",
+                "stt_engine": "stt.mock_stt",
                 "stt_language": "en-US",
                 "tts_engine": "test",
                 "tts_language": "en-US",

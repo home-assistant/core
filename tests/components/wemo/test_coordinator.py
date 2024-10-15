@@ -178,6 +178,7 @@ async def test_device_info(
     }
     assert device_entries[0].manufacturer == "Belkin"
     assert device_entries[0].model == "LightSwitch"
+    assert device_entries[0].model_id == "LightSwitch"
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 

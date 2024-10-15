@@ -23,8 +23,8 @@ from homeassistant.components.tts import (
     ATTR_MEDIA_PLAYER_ENTITY_ID,
     ATTR_MESSAGE,
     DOMAIN as TTS_DOMAIN,
+    get_engine_instance,
 )
-from homeassistant.components.tts.helper import get_engine_instance
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant

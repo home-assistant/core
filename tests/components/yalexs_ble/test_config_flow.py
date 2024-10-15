@@ -513,14 +513,10 @@ async def test_integration_discovery_takes_precedence_over_bluetooth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    flows = [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["handler"] == DOMAIN
-    ]
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
-    assert flows[0]["context"]["unique_id"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
-    assert flows[0]["context"]["local_name"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
+    assert flows[0].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert flows[0].local_name == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
 
     with patch(
         "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
@@ -728,14 +724,10 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    flows = [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["handler"] == DOMAIN
-    ]
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
-    assert flows[0]["context"]["unique_id"] == LOCK_DISCOVERY_INFO_UUID_ADDRESS.address
-    assert flows[0]["context"]["local_name"] == LOCK_DISCOVERY_INFO_UUID_ADDRESS.name
+    assert flows[0].unique_id == LOCK_DISCOVERY_INFO_UUID_ADDRESS.address
+    assert flows[0].local_name == LOCK_DISCOVERY_INFO_UUID_ADDRESS.name
 
     with patch(
         "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
@@ -808,14 +800,10 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_non_unique_
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    flows = [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["handler"] == DOMAIN
-    ]
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
-    assert flows[0]["context"]["unique_id"] == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address
-    assert flows[0]["context"]["local_name"] == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.name
+    assert flows[0].unique_id == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address
+    assert flows[0].local_name == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.name
 
     with patch(
         "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
@@ -945,11 +933,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         unique_id=YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_validate"
 

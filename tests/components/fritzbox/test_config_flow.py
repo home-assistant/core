@@ -12,12 +12,7 @@ from requests.exceptions import HTTPError
 from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -129,12 +124,7 @@ async def test_reauth_success(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow."""
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -158,12 +148,7 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -186,12 +171,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -216,13 +196,9 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -249,13 +225,9 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -264,7 +236,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"]["base"] == "no_devices_found"
 
     result = await hass.config_entries.flow.async_configure(

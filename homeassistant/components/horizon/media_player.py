@@ -65,7 +65,7 @@ def setup_platform(
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
         raise PlatformNotReady from msg
 
-    _LOGGER.info("Connection to %s at %s established", name, host)
+    _LOGGER.debug("Connection to %s at %s established", name, host)
 
     add_entities([HorizonDevice(client, name, keys)], True)
 

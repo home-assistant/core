@@ -10,6 +10,8 @@
     }
   },
   "services": {
-    "identify": "mdi:crosshairs-question"
+    "identify": {
+      "service": "mdi:crosshairs-question"
+    }
   }
 }

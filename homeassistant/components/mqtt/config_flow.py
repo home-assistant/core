@@ -16,11 +16,12 @@ from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
-from homeassistant.components.hassio.addon_manager import (
+from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
+    HassioServiceInfo,
+    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -342,9 +343,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if is_hassio(self.hass):
             # Offer to set up broker add-on if supervisor is available
             self._addon_manager = get_addon_manager(self.hass)
@@ -401,6 +399,36 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-authentication with MQTT broker."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if is_hassio(self.hass):
+            # Check if entry setup matches the add-on discovery config
+            addon_manager = get_addon_manager(self.hass)
+            try:
+                addon_discovery_config = (
+                    await addon_manager.async_get_addon_discovery_info()
+                )
+            except AddonError:
+                # Follow manual flow if we have an error
+                pass
+            else:
+                # Check if the addon secrets need to be renewed.
+                # This will repair the config entry,
+                # in case the official Mosquitto Broker addon was re-installed.
+                if (
+                    entry_data[CONF_BROKER] == addon_discovery_config[CONF_HOST]
+                    and entry_data[CONF_PORT] == addon_discovery_config[CONF_PORT]
+                    and entry_data.get(CONF_USERNAME)
+                    == (username := addon_discovery_config.get(CONF_USERNAME))
+                    and entry_data.get(CONF_PASSWORD)
+                    != (password := addon_discovery_config.get(CONF_PASSWORD))
+                ):
+                    _LOGGER.info(
+                        "Executing autorecovery %s add-on secrets",
+                        addon_manager.addon_name,
+                    )
+                    return await self.async_step_reauth_confirm(
+                        user_input={CONF_USERNAME: username, CONF_PASSWORD: password}
+                    )
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

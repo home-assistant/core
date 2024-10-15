@@ -375,9 +375,8 @@ class EventData(Base):
         event: Event, dialect: SupportedDialect | None
     ) -> bytes:
         """Create shared_data from an event."""
-        if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result = json_bytes_strip_null(event.data)
-        bytes_result = json_bytes(event.data)
+        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        bytes_result = encoder(event.data)
         if len(bytes_result) > MAX_EVENT_DATA_BYTES:
             _LOGGER.warning(
                 "Event data for %s exceed maximum size of %s bytes. "
@@ -693,13 +692,13 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics with datatime objects."""
+        """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),

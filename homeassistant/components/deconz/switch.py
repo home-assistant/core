@@ -7,13 +7,13 @@ from typing import Any
 from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import POWER_PLUGS
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     Switches are based on the same device class as lights in deCONZ.
     """
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[SWITCH_DOMAIN] = set()
 
     @callback
     def async_add_switch(_: EventType, switch_id: str) -> None:
@@ -46,7 +46,7 @@ async def async_setup_entry(
 class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
     """Representation of a deCONZ power plug."""
 
-    TYPE = DOMAIN
+    TYPE = SWITCH_DOMAIN
 
     @property
     def is_on(self) -> bool:

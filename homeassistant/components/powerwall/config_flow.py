@@ -188,9 +188,9 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm a discovered powerwall."""
         assert self.ip_address is not None
+        assert self.title is not None
         assert self.unique_id is not None
         if user_input is not None:
-            assert self.title is not None
             return self.async_create_entry(
                 title=self.title,
                 data={

@@ -31,6 +31,7 @@ from aioesphomeapi import (
     LightInfo,
     LockInfo,
     MediaPlayerInfo,
+    MediaPlayerSupportedFormat,
     NumberInfo,
     SelectInfo,
     SensorInfo,
@@ -148,6 +149,9 @@ class RuntimeEntryData:
         tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
     original_options: dict[str, Any] = field(default_factory=dict)
+    media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
     @property
     def name(self) -> str:

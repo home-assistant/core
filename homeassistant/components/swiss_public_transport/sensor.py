@@ -71,6 +71,11 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data_connection: data_connection["delay"],
     ),
+    SwissPublicTransportSensorEntityDescription(
+        key="line",
+        translation_key="line",
+        value_fn=lambda data_connection: data_connection["line"],
+    ),
 )
 
 

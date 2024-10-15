@@ -9,7 +9,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -35,7 +35,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
-    scanner = QuantumGatewayDeviceScanner(config[DOMAIN])
+    scanner = QuantumGatewayDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 

@@ -40,6 +40,7 @@ def tariff_transform(value: str) -> str:
 
 
 @dataclass(frozen=True)
+# pylint: disable-next=hass-enforce-class-module
 class DSMRReaderSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for DSMR Reader."""
 

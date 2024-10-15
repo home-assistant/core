@@ -15,7 +15,7 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
+from homeassistant.components.camera import CameraState, StreamType
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -218,7 +218,7 @@ async def test_camera_device(
     assert len(hass.states.async_all()) == 1
     camera = hass.states.get("camera.my_camera")
     assert camera is not None
-    assert camera.state == STATE_STREAMING
+    assert camera.state == CameraState.STREAMING
     assert camera.attributes.get(ATTR_FRIENDLY_NAME) == "My Camera"
 
     entry = entity_registry.async_get("camera.my_camera")
@@ -245,7 +245,7 @@ async def test_camera_stream(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -267,7 +267,7 @@ async def test_camera_ws_stream(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     client = await hass_ws_client(hass)
@@ -300,7 +300,7 @@ async def test_camera_ws_stream_failure(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -341,7 +341,7 @@ async def test_camera_stream_missing_trait(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == CameraState.IDLE
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source is None
@@ -375,7 +375,7 @@ async def test_refresh_expired_stream_token(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
@@ -446,7 +446,7 @@ async def test_stream_response_already_expired(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     # The stream is expired, but we return it anyway
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -474,7 +474,7 @@ async def test_camera_removed(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     # Start a stream, exercising cleanup on remove
     auth.responses = [
@@ -502,7 +502,7 @@ async def test_camera_remove_failure(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     # Start a stream, exercising cleanup on remove
     auth.responses = [
@@ -543,7 +543,7 @@ async def test_refresh_expired_stream_failure(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     # Request an HLS stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
@@ -602,7 +602,7 @@ async def test_camera_web_rtc(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
 
     client = await hass_ws_client(hass)
@@ -639,7 +639,7 @@ async def test_camera_web_rtc_unsupported(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     client = await hass_ws_client(hass)
@@ -676,7 +676,7 @@ async def test_camera_web_rtc_offer_failure(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -741,7 +741,7 @@ async def test_camera_multiple_streams(
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_STREAMING
+    assert cam.state == CameraState.STREAMING
     # Prefer WebRTC over RTSP/HLS
     assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
 

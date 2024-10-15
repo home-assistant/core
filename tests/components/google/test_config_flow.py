@@ -437,6 +437,10 @@ async def test_multiple_config_entries(
     assert len(entries) == 2
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.google.config.abort.missing_credentials"],
+)
 async def test_missing_configuration(
     hass: HomeAssistant,
 ) -> None:
@@ -497,14 +501,7 @@ async def test_reauth_flow(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -761,14 +758,7 @@ async def test_web_reauth_flow(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

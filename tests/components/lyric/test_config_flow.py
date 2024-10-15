@@ -36,6 +36,10 @@ async def mock_impl(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.lyric.config.abort.missing_credentials"],
+)
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -126,9 +130,7 @@ async def test_reauthentication_flow(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

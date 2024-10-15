@@ -1,0 +1,159 @@
+# serializer version: 1
+# name: test_states[camera.front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '765432',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front?token=1caab5c3b3',
+      'friendly_name': 'Front',
+      'last_video_id': None,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.front_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '987654',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front_door?token=1caab5c3b3',
+      'friendly_name': 'Front Door',
+      'last_video_id': None,
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.internal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.internal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '345678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.internal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.internal?token=1caab5c3b3',
+      'friendly_name': 'Internal',
+      'last_video_id': None,
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.internal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -32,5 +32,15 @@
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSBLAN device"
     }
+  },
+  "entity": {
+    "sensor": {
+      "current_temperature": {
+        "name": "Current Temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside Temperature"
+      }
+    }
   }
 }

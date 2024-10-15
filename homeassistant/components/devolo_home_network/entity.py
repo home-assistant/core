@@ -26,6 +26,7 @@ type _DataType = (
     | list[NeighborAPInfo]
     | WifiGuestAccessGet
     | bool
+    | int
 )
 
 

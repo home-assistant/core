@@ -17,7 +17,6 @@ from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IQVIAEntity
 from .const import (
     DOMAIN,
     TYPE_ALLERGY_FORECAST,
@@ -33,6 +32,7 @@ from .const import (
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
 )
+from .entity import IQVIAEntity
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
 ATTR_ALLERGEN_GENUS = "allergen_genus"
@@ -244,8 +244,8 @@ class IndexSensor(IQVIAEntity, SensorEntity):
         key = self.entity_description.key.split("_")[-1].title()
 
         try:
-            [period] = [p for p in data["periods"] if p["Type"] == key]  # type: ignore[index]
-        except TypeError:
+            period = next(p for p in data["periods"] if p["Type"] == key)  # type: ignore[index]
+        except StopIteration:
             return
 
         data = cast(dict[str, Any], data)

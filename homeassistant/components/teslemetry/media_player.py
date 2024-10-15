@@ -115,7 +115,7 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(
             self.api.adjust_volume(int(volume * self._volume_max))
@@ -126,7 +126,7 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state != MediaPlayerState.PLAYING:
-            self.raise_for_scope()
+            self.raise_for_scope(Scope.VEHICLE_CMDS)
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.media_toggle_playback())
             self._attr_state = MediaPlayerState.PLAYING
@@ -135,7 +135,7 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if self.state == MediaPlayerState.PLAYING:
-            self.raise_for_scope()
+            self.raise_for_scope(Scope.VEHICLE_CMDS)
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.media_toggle_playback())
             self._attr_state = MediaPlayerState.PAUSED
@@ -143,12 +143,12 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.media_next_track())
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.media_prev_track())

@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from homeassistant.components import notify
-from homeassistant.components.intent.timers import TimerEventType, TimerInfo
+from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback

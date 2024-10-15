@@ -54,7 +54,7 @@ from .const import (
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from .exposed_entities import ExposedEntities
+from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
 
 ATTR_ENTRY_ID = "entry_id"
 ATTR_SAFE_MODE = "safe_mode"

@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .. import pilight
+from . import EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class PilightSensor(SensorEntity):
         self._payload = payload
         self._unit_of_measurement = unit_of_measurement
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+        hass.bus.listen(EVENT, self._handle_code)
 
     @property
     def name(self):

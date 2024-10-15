@@ -178,11 +178,11 @@
       "title": "Global Options",
       "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
       "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
-      "always_prefer_xy_color_mode": "Always prefer XY color mode",
       "group_members_assume_state": "Group members assume state of group",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
       "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
+      "enable_mains_startup_polling": "Refresh state for mains powered devices on startup",
       "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {

@@ -30,7 +30,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -125,11 +124,25 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_import(
-        self, import_config: ConfigType | None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                data_schema=self.add_suggested_values_to_schema(
+                    _get_data_schema(self.hass),
+                    reconfigure_entry.data,
+                ),
+                step_id="reconfigure",
+            )
+
+        return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
 
 
 class JewishCalendarOptionsFlowHandler(OptionsFlowWithConfigEntry):

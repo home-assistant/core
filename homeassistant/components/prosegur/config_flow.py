@@ -116,9 +116,11 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Prosegur."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             try:

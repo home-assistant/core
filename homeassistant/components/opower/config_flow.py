@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import socket
 from typing import Any
 
 from opower import (
@@ -40,7 +39,7 @@ async def _validate_login(
 ) -> dict[str, str]:
     """Validate login data and return any errors."""
     api = Opower(
-        async_create_clientsession(hass, family=socket.AF_INET),
+        async_create_clientsession(hass),
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
@@ -50,8 +49,12 @@ async def _validate_login(
     try:
         await api.async_login()
     except InvalidAuth:
+        _LOGGER.exception(
+            "Invalid auth when connecting to %s", login_data[CONF_UTILITY]
+        )
         errors["base"] = "invalid_auth"
     except CannotConnect:
+        _LOGGER.exception("Could not connect to %s", login_data[CONF_UTILITY])
         errors["base"] = "cannot_connect"
     return errors
 

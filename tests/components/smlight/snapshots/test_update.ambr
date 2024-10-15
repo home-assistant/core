@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_update_setup[update.mock_title_core_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.mock_title_core_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Core firmware',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 21>,
+    'translation_key': 'core_update',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-core_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_setup[update.mock_title_core_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'friendly_name': 'Mock Title Core firmware',
+      'in_progress': False,
+      'installed_version': 'v2.3.6',
+      'latest_version': 'v2.5.2',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 21>,
+      'title': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.mock_title_core_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_setup[update.mock_title_zigbee_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.mock_title_zigbee_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Zigbee firmware',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 21>,
+    'translation_key': 'zigbee_update',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-zigbee_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_setup[update.mock_title_zigbee_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'friendly_name': 'Mock Title Zigbee firmware',
+      'in_progress': False,
+      'installed_version': '20240314',
+      'latest_version': '20240716',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 21>,
+      'title': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.mock_title_zigbee_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

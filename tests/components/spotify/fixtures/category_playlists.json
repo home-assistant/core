@@ -1,0 +1,84 @@
+{
+  "playlists": {
+    "href": "https://api.spotify.com/v1/browse/categories/0JQ5DAqbMKFRY5ok2pxXJ0/playlists?country=NL&offset=0&limit=20",
+    "items": [
+      {
+        "collaborative": false,
+        "description": "Lekker  eten en lang natafelen? Daar hoort muziek bij.",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/playlist/37i9dQZF1DX7yhuKT9G4qk"
+        },
+        "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DX7yhuKT9G4qk",
+        "id": "37i9dQZF1DX7yhuKT9G4qk",
+        "images": [
+          {
+            "height": null,
+            "url": "https://i.scdn.co/image/ab67706f0000000343319faa9428405f3312b588",
+            "width": null
+          }
+        ],
+        "name": "eten met vrienden",
+        "owner": {
+          "display_name": "Spotify",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/spotify"
+          },
+          "href": "https://api.spotify.com/v1/users/spotify",
+          "id": "spotify",
+          "type": "user",
+          "uri": "spotify:user:spotify"
+        },
+        "primary_color": null,
+        "public": null,
+        "snapshot_id": "MTcwMTY5Njk3NywwMDAwMDAwMDkyY2JjZDA1MjA2YTBmNzMxMmFlNGI0YzRhMjg0ZWZl",
+        "tracks": {
+          "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DX7yhuKT9G4qk/tracks",
+          "total": 313
+        },
+        "type": "playlist",
+        "uri": "spotify:playlist:37i9dQZF1DX7yhuKT9G4qk"
+      },
+      {
+        "collaborative": false,
+        "description": "From new retro to classic country blues, honky tonk, rockabilly, and more.",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/playlist/37i9dQZF1DXbvE0SE0Cczh"
+        },
+        "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DXbvE0SE0Cczh",
+        "id": "37i9dQZF1DXbvE0SE0Cczh",
+        "images": [
+          {
+            "height": null,
+            "url": "https://i.scdn.co/image/ab67706f00000003b93c270883619dde61725fc8",
+            "width": null
+          }
+        ],
+        "name": "Jukebox Joint",
+        "owner": {
+          "display_name": "Spotify",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/spotify"
+          },
+          "href": "https://api.spotify.com/v1/users/spotify",
+          "id": "spotify",
+          "type": "user",
+          "uri": "spotify:user:spotify"
+        },
+        "primary_color": null,
+        "public": null,
+        "snapshot_id": "MTY4NjkxODgwMiwwMDAwMDAwMGUwNWRkNjY5N2UzM2Q4NzI4NzRiZmNhMGVmMzAyZTA5",
+        "tracks": {
+          "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DXbvE0SE0Cczh/tracks",
+          "total": 60
+        },
+        "type": "playlist",
+        "uri": "spotify:playlist:37i9dQZF1DXbvE0SE0Cczh"
+      }
+    ],
+    "limit": 20,
+    "next": "https://api.spotify.com/v1/browse/categories/0JQ5DAqbMKFRY5ok2pxXJ0/playlists?country=NL&offset=20&limit=20",
+    "offset": 0,
+    "previous": null,
+    "total": 46
+  }
+}

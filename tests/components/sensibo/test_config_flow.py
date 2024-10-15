@@ -192,15 +192,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -254,15 +246,7 @@ async def test_reauth_flow_error(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
@@ -338,15 +322,7 @@ async def test_flow_reauth_no_username_or_device(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

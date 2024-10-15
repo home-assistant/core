@@ -1,6 +1,26 @@
 {
   "config": {
     "step": {
+      "alarm_control_panel": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "disarm": "Disarm action",
+          "arm_away": "Arm away action",
+          "arm_custom_bypass": "Arm custom bypass action",
+          "arm_home": "Arm home action",
+          "arm_night": "Arm night action",
+          "arm_vacation": "Arm vacation action",
+          "trigger": "Trigger action",
+          "code_arm_required": "Code arm required",
+          "code_format": "Code format"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template alarm control panel"
+      },
       "binary_sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -45,7 +65,8 @@
           "step": "Step value",
           "set_value": "Actions on set value",
           "max": "Maximum value",
-          "min": "Minimum value"
+          "min": "Minimum value",
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
@@ -82,9 +103,10 @@
       "user": {
         "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
+          "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
-          "image": "Template a image",
+          "image": "Template an image",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
@@ -110,6 +132,25 @@
   },
   "options": {
     "step": {
+      "alarm_control_panel": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "disarm": "[%key:component::template::config::step::alarm_control_panel::data::disarm%]",
+          "arm_away": "[%key:component::template::config::step::alarm_control_panel::data::arm_away%]",
+          "arm_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data::arm_custom_bypass%]",
+          "arm_home": "[%key:component::template::config::step::alarm_control_panel::data::arm_home%]",
+          "arm_night": "[%key:component::template::config::step::alarm_control_panel::data::arm_night%]",
+          "arm_vacation": "[%key:component::template::config::step::alarm_control_panel::data::arm_vacation%]",
+          "trigger": "[%key:component::template::config::step::alarm_control_panel::data::trigger%]",
+          "code_arm_required": "[%key:component::template::config::step::alarm_control_panel::data::code_arm_required%]",
+          "code_format": "[%key:component::template::config::step::alarm_control_panel::data::code_format%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::alarm_control_panel::title%]"
+      },
       "binary_sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -199,6 +240,13 @@
     }
   },
   "selector": {
+    "alarm_control_panel_code_format": {
+      "options": {
+        "no_code": "No code format",
+        "number": "Number",
+        "text": "Text"
+      }
+    },
     "binary_sensor_device_class": {
       "options": {
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",

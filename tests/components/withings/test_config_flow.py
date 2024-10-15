@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.withings.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -145,14 +145,7 @@ async def test_config_reauth_profile(
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, polling_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": polling_config_entry.entry_id,
-        },
-        data=polling_config_entry.data,
-    )
+    result = await polling_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -207,14 +200,7 @@ async def test_config_reauth_wrong_account(
     """Test reauth with wrong account."""
     await setup_integration(hass, polling_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": polling_config_entry.entry_id,
-        },
-        data=polling_config_entry.data,
-    )
+    result = await polling_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

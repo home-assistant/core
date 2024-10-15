@@ -45,9 +45,9 @@ class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

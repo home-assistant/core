@@ -165,6 +165,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetBinarySensorEntityDescription, ...] = (
 ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(key="backup_capable"),
     BinarySensorEntityDescription(key="grid_services_active"),
+    BinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 
