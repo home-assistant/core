@@ -35,14 +35,13 @@ async def async_setup_entry(
         # Prepare a list of tuples containing necessary switch details
         switch_entities = [
             (
-                appliance_name,
-                next(iter(appliance["channels"][0].values())),
+                appliance["name"],
+                list(appliance["channels"][0].values())[0],
                 appliance["device_id"],
                 appliance["is_protected"],
                 appliance["gateway"],
             )
-            for switch in switches
-            for appliance_name, appliance in switch.items()
+            for appliance in switches
         ]
         # Create TISSwitch objects and add them to Home Assistant
         tis_switches = [
