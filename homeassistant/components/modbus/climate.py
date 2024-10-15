@@ -481,7 +481,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             onoff = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
             )
-            if onoff == 0:
+            if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
 
         self.async_write_ha_state()
