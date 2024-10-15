@@ -348,7 +348,9 @@ class HoneywellUSThermostat(ClimateEntity):
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
-        return heat_status in {MODE_PERMANENT_HOLD} or cool_status in {MODE_PERMANENT_HOLD}
+        return heat_status in {MODE_PERMANENT_HOLD} or cool_status in {
+            MODE_PERMANENT_HOLD
+        }
 
     async def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
