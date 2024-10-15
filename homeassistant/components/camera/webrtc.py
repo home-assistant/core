@@ -353,7 +353,7 @@ async def ws_candidate(
         )
         return
 
-    await camera.async_on_webrtc_candiate(msg["session_id"], msg["candidate"])
+    await camera.async_on_webrtc_candidate(msg["session_id"], msg["candidate"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 

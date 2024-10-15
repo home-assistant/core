@@ -830,7 +830,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return config
 
-    async def async_on_webrtc_candiate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
