@@ -4,8 +4,8 @@ import logging
 from typing import Any
 
 from momonga import Momonga, MomongaSkJoinFailure, MomongaSkScanFailure
-from serial import Serial
 from serial.tools.list_ports import comports
+from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.components.usb import (
@@ -22,26 +22,26 @@ from .const import DOMAIN, ENTRY_TITLE
 _LOGGER = logging.getLogger(__name__)
 
 
-def activate_ascii_mode_if_needed(device: str) -> None:
-    """Activate ASCII mode if needed."""
-    with Serial(device, 115200) as serial:
-        serial.write(b"ROPT\r")
-        _LOGGER.debug(serial.readline())
-        mode = serial.read_until(b"\r").strip()
-        _LOGGER.info("Mode: %s", mode)
-        if mode == b"OK 00":
-            _LOGGER.info("Activating ASCII mode")
-            serial.write(b"WOPT 01\r")
-        else:
-            _LOGGER.info("ASCII mode already active")
-        serial.flush()
-
-
-def validate_input(device: str, id: str, password: str) -> None:
+def _validate_input(device: str, id: str, password: str) -> None:
     """Validate the user input allows us to connect."""
-    activate_ascii_mode_if_needed(device)
     with Momonga(dev=device, rbid=id, pwd=password):
         pass
+
+
+def _human_readable_device_name(port: UsbServiceInfo | ListPortInfo) -> str:
+    return human_readable_device_name(
+        port.device,
+        port.serial_number,
+        port.manufacturer,
+        port.description,
+        port.vid,
+        port.pid,
+    )
+
+
+def _generate_unique_id(port: UsbServiceInfo | ListPortInfo) -> str:
+    """Generate unique id from usb attributes."""
+    return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
 
 
 class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,38 +49,49 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    device: str | None = None
+    device: UsbServiceInfo | None = None
 
     @callback
-    async def get_usb_devices(self) -> dict[str, str]:
+    def _get_discovered_device_id_and_name(
+        self, device_options: dict[str, ListPortInfo]
+    ) -> tuple[str | None, str | None]:
+        discovered_device_id = (
+            get_serial_by_id(self.device.device) if self.device else None
+        )
+        discovered_device = (
+            device_options.get(discovered_device_id) if discovered_device_id else None
+        )
+        discovered_device_name = (
+            _human_readable_device_name(discovered_device)
+            if discovered_device
+            else None
+        )
+        return discovered_device_id, discovered_device_name
+
+    @callback
+    async def _get_usb_devices(self) -> dict[str, ListPortInfo]:
         """Return a list of available USB devices."""
         devices = await self.hass.async_add_executor_job(comports)
-        return {
-            get_serial_by_id(port.device): human_readable_device_name(
-                port.device,
-                port.serial_number,
-                port.manufacturer,
-                port.description,
-                port.vid,
-                port.pid,
-            )
-            for port in devices
-        }
+        return {get_serial_by_id(port.device): port for port in devices}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        device_options = await self._get_usb_devices()
         if (
             user_input is not None
             and CONF_DEVICE in user_input
+            and user_input[CONF_DEVICE]
             and CONF_ID in user_input
+            and user_input[CONF_ID]
             and CONF_PASSWORD in user_input
+            and user_input[CONF_PASSWORD]
         ):
             try:
                 await self.hass.async_add_executor_job(
-                    validate_input,
+                    _validate_input,
                     user_input[CONF_DEVICE],
                     user_input[CONF_ID],
                     user_input[CONF_PASSWORD],
@@ -93,16 +104,17 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    user_input[CONF_ID], raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
+                device_id = get_serial_by_id(user_input[CONF_DEVICE])
+                device = device_options[device_id]
+                if not self.context["unique_id"]:
+                    await self.async_set_unique_id(
+                        _generate_unique_id(device), raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
-        device_options = await self.get_usb_devices()
-        discovered_device_id = get_serial_by_id(self.device) if self.device else None
-        discovered_device_name = (
-            device_options.get(discovered_device_id) if discovered_device_id else None
+        discovered_device_id, discovered_device_name = (
+            self._get_discovered_device_id_and_name(device_options)
         )
         return self.async_show_form(
             step_id="user",
@@ -110,8 +122,11 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_DEVICE, default=discovered_device_id): vol.In(
                         {discovered_device_id: discovered_device_name}
-                        if discovered_device_name
-                        else device_options
+                        if discovered_device_id and discovered_device_name
+                        else {
+                            name: _human_readable_device_name(device)
+                            for name, device in device_options.items()
+                        }
                     ),
                     vol.Required(CONF_ID): str,
                     vol.Required(CONF_PASSWORD): str,
@@ -122,5 +137,9 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a step triggered by USB device detection."""
-        self.device = discovery_info.device
+        self.device = discovery_info
+        await self.async_set_unique_id(
+            _generate_unique_id(self.device), raise_on_progress=False
+        )
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()

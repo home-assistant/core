@@ -27,38 +27,6 @@ def mock_comports() -> Generator[Mock]:
 
 
 @pytest.fixture
-def mock_serial(read_until_response=b"OK 00") -> Generator[Mock]:
-    """Mock for Serial class."""
-
-    class MockSerial:
-        def __init__(self, *args, **kwargs) -> None:
-            pass
-
-        def write(self, *args, **kwargs) -> None:
-            pass
-
-        def readline(self) -> bytes:
-            return b""
-
-        def read_until(self, *args, **kwargs) -> bytes:
-            return read_until_response
-
-        def flush(self) -> None:
-            pass
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args, **kwargs) -> None:
-            pass
-
-    with patch(
-        "homeassistant.components.smart_meter_b_route.config_flow.Serial", MockSerial
-    ):
-        yield MockSerial
-
-
-@pytest.fixture
 def mock_momonga(exception=None) -> Generator[Mock]:
     """Mock for Serial class."""
 

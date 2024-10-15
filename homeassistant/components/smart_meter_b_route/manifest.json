@@ -12,7 +12,7 @@
     "momonga.momonga_session_manager",
     "momonga.sk_wrapper_logger"
   ],
-  "requirements": ["pyserial==3.5", "momonga==0.1.1"],
+  "requirements": ["pyserial==3.5", "momonga==0.1.2"],
   "usb": [
     {
       "vid": "0403",
