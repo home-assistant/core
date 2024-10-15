@@ -203,8 +203,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
         Integrations should implement alarm_state instead of using state directly.
         """
-        if self.__alarm_legacy_state_reported is True:
-            return
         self.__alarm_legacy_state_reported = True
         if "custom_components" in type(self).__module__:
             # Do not report on core integrations as they have been fixed.
