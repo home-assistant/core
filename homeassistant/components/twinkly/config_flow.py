@@ -28,7 +28,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_device: tuple[dict[str, Any], str] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle config steps."""
         host = user_input[CONF_HOST] if user_input else None
 

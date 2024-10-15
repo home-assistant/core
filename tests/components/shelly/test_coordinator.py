@@ -854,6 +854,27 @@ async def test_rpc_runs_connected_events_when_initialized(
     assert call.script_list() in mock_rpc_device.mock_calls
 
 
+async def test_rpc_sleeping_device_unload_ignore_ble_scanner(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC sleeping device does not stop ble scanner on unload."""
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    entry = await init_integration(hass, 2, sleep_period=1000)
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Unload
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # BLE script list is called during stop ble scanner
+    assert call.script_list() not in mock_rpc_device.mock_calls
+
+
 async def test_block_sleeping_device_connection_error(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

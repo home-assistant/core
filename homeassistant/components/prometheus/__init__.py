@@ -51,6 +51,16 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_ON,
@@ -806,6 +816,35 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+    def _handle_alarm_control_panel(self, state: State) -> None:
+        current_state = state.state
+
+        if current_state:
+            metric = self._metric(
+                "alarm_control_panel_state",
+                prometheus_client.Gauge,
+                "State of the alarm control panel (0/1)",
+                ["state"],
+            )
+
+            alarm_states = [
+                STATE_ALARM_ARMED_AWAY,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                STATE_ALARM_ARMED_HOME,
+                STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_VACATION,
+                STATE_ALARM_DISARMED,
+                STATE_ALARM_TRIGGERED,
+                STATE_ALARM_PENDING,
+                STATE_ALARM_ARMING,
+                STATE_ALARM_DISARMING,
+            ]
+
+            for alarm_state in alarm_states:
+                metric.labels(**dict(self._labels(state), state=alarm_state)).set(
+                    float(alarm_state == current_state)
+                )
 
 
 class PrometheusView(HomeAssistantView):

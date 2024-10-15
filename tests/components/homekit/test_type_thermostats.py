@@ -163,6 +163,40 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -
 
     hass.states.async_set(
         entity_id,
+        HVACMode.HEAT,
+        {
+            **base_attrs,
+            ATTR_TEMPERATURE: 22.2,
+            ATTR_CURRENT_TEMPERATURE: 17.8,
+            ATTR_HVAC_ACTION: HVACAction.PREHEATING,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.2
+    assert acc.char_current_heat_cool.value == 1
+    assert acc.char_target_heat_cool.value == 1
+    assert acc.char_current_temp.value == 17.8
+    assert acc.char_display_units.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            **base_attrs,
+            ATTR_TEMPERATURE: 22.2,
+            ATTR_CURRENT_TEMPERATURE: 17.8,
+            ATTR_HVAC_ACTION: HVACAction.DEFROSTING,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.2
+    assert acc.char_current_heat_cool.value == 1
+    assert acc.char_target_heat_cool.value == 1
+    assert acc.char_current_temp.value == 17.8
+    assert acc.char_display_units.value == 0
+
+    hass.states.async_set(
+        entity_id,
         HVACMode.FAN_ONLY,
         {
             **base_attrs,

@@ -1,6 +1,7 @@
 """The tests for the Template button platform."""
 
 import datetime as dt
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -232,11 +233,11 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
 
 def _verify(
-    hass,
-    expected_value,
-    attributes=None,
-    entity_id=_TEST_BUTTON,
-):
+    hass: HomeAssistant,
+    expected_value: str,
+    attributes: dict[str, Any] | None = None,
+    entity_id: str = _TEST_BUTTON,
+) -> None:
     """Verify button's state."""
     attributes = attributes or {}
     if CONF_FRIENDLY_NAME not in attributes:

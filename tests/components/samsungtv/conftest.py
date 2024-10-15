@@ -179,7 +179,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
     class MockSamsungTVAsyncRest:
         """Mock for a MockSamsungTVAsyncRest."""
 
-        def __init__(self, host, session, port, timeout):
+        def __init__(self, host, session, port, timeout) -> None:
             """Mock a MockSamsungTVAsyncRest."""
             self.port = port
             self.host = host

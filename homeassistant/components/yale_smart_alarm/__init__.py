@@ -6,7 +6,6 @@ from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 
 from .const import LOGGER, PLATFORMS
@@ -19,9 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
     """Set up Yale from a config entry."""
 
     coordinator = YaleDataUpdateCoordinator(hass, entry)
-    if not await hass.async_add_executor_job(coordinator.get_updates):
-        raise ConfigEntryAuthFailed
-
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

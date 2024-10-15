@@ -319,7 +319,9 @@ async def test_ws_webhook(
 
     received = []
 
-    async def handler(hass, webhook_id, request):
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
         """Handle a webhook."""
         received.append(request)
         return web.json_response({"from": "handler"})

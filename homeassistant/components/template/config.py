@@ -115,7 +115,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 )
 
             definitions = list(cfg[new_key]) if new_key in cfg else []
-            definitions.extend(transform(cfg[old_key]))
+            definitions.extend(transform(hass, cfg[old_key]))
             cfg = {**cfg, new_key: definitions}
 
         config_sections.append(cfg)

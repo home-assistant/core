@@ -15,7 +15,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
-from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, SETPOINTS
+from .const import (
+    ADD_ENTITIES_CALLBACKS,
+    BINSENSOR_PORTS,
+    CONF_DOMAIN_DATA,
+    DOMAIN,
+    SETPOINTS,
+)
 from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 
@@ -43,6 +49,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_BINARY_SENSOR: (async_add_entities, create_lcn_binary_sensor_entity)}
+    )
 
     async_add_entities(
         create_lcn_binary_sensor_entity(hass, entity_config, config_entry)

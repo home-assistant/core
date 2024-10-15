@@ -25,7 +25,9 @@ async def async_setup_entry(
     """Set up button platform."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AutomowerButtonEntity(mower_id, coordinator) for mower_id in coordinator.data
+        AutomowerButtonEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+        if coordinator.data[mower_id].capabilities.can_confirm_error
     )
 
 
@@ -33,7 +35,6 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
     _attr_translation_key = "confirm_error"
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,

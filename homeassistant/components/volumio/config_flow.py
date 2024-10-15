@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyvolumio import CannotConnectError, Volumio
 import voluptuous as vol
@@ -68,7 +69,9 @@ class VolumioConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

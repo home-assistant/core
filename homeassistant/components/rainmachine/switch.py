@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -184,8 +184,8 @@ async def async_setup_entry(
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()
 
-    for service_name, schema, method in (
-        ("start_program", {}, "async_start_program"),
+    services: tuple[tuple[str, VolDictType | None, str], ...] = (
+        ("start_program", None, "async_start_program"),
         (
             "start_zone",
             {
@@ -195,11 +195,11 @@ async def async_setup_entry(
             },
             "async_start_zone",
         ),
-        ("stop_program", {}, "async_stop_program"),
-        ("stop_zone", {}, "async_stop_zone"),
-    ):
-        schema_dict = cast(VolDictType, schema)
-        platform.async_register_entity_service(service_name, schema_dict, method)
+        ("stop_program", None, "async_stop_program"),
+        ("stop_zone", None, "async_stop_zone"),
+    )
+    for service_name, schema, method in services:
+        platform.async_register_entity_service(service_name, schema, method)
 
     data = entry.runtime_data
     entities: list[RainMachineBaseSwitch] = []

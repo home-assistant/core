@@ -3,11 +3,12 @@
 import asyncio
 import logging
 import os
+from typing import Any
 
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.util.json import load_json_object
 
@@ -50,7 +51,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self._session.authorize_url
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Let user select host or cloud."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")

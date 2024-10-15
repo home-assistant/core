@@ -1,6 +1,6 @@
 """The tests the History component."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 from unittest.mock import sentinel
@@ -13,7 +13,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -291,13 +291,9 @@ async def test_get_significant_states_only(hass: HomeAssistant, hass_history) ->
     )
 
 
-async def check_significant_states(hass, zero, four, states, config):
-    """Check if significant states are retrieved."""
-    hist = get_significant_states(hass, zero, four)
-    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
-
-
-async def async_record_states(hass):
+async def async_record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and

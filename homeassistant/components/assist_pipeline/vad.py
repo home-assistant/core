@@ -6,12 +6,10 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Final
+
+from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 
 _LOGGER = logging.getLogger(__name__)
-
-_SAMPLE_RATE: Final = 16000  # Hz
-_SAMPLE_WIDTH: Final = 2  # bytes
 
 
 class VadSensitivity(StrEnum):
@@ -26,12 +24,12 @@ class VadSensitivity(StrEnum):
         """Return seconds of silence for sensitivity level."""
         sensitivity = VadSensitivity(sensitivity)
         if sensitivity == VadSensitivity.RELAXED:
-            return 2.0
+            return 1.25
 
         if sensitivity == VadSensitivity.AGGRESSIVE:
-            return 0.5
+            return 0.25
 
-        return 1.0
+        return 0.7
 
 
 class AudioBuffer:
@@ -80,7 +78,7 @@ class VoiceCommandSegmenter:
     speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
 
-    silence_seconds: float = 1.0
+    silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
     timeout_seconds: float = 15.0
@@ -91,6 +89,9 @@ class VoiceCommandSegmenter:
 
     in_command: bool = False
     """True if inside voice command."""
+
+    timed_out: bool = False
+    """True a timeout occurred during voice command."""
 
     _speech_seconds_left: float = 0.0
     """Seconds left before considering voice command as started."""
@@ -121,6 +122,9 @@ class VoiceCommandSegmenter:
 
         Returns False when command is done.
         """
+        if self.timed_out:
+            self.timed_out = False
+
         self._timeout_seconds_left -= chunk_seconds
         if self._timeout_seconds_left <= 0:
             _LOGGER.warning(
@@ -128,6 +132,7 @@ class VoiceCommandSegmenter:
                 self.timeout_seconds,
             )
             self.reset()
+            self.timed_out = True
             return False
 
         if not self.in_command:
@@ -179,7 +184,9 @@ class VoiceCommandSegmenter:
         """
         if vad_samples_per_chunk is None:
             # No chunking
-            chunk_seconds = (len(chunk) // _SAMPLE_WIDTH) / _SAMPLE_RATE
+            chunk_seconds = (
+                len(chunk) // (SAMPLE_WIDTH * SAMPLE_CHANNELS)
+            ) / SAMPLE_RATE
             is_speech = vad_is_speech(chunk)
             return self.process(chunk_seconds, is_speech)
 
@@ -187,8 +194,8 @@ class VoiceCommandSegmenter:
             raise ValueError("leftover_chunk_buffer is required when vad uses chunking")
 
         # With chunking
-        seconds_per_chunk = vad_samples_per_chunk / _SAMPLE_RATE
-        bytes_per_chunk = vad_samples_per_chunk * _SAMPLE_WIDTH
+        seconds_per_chunk = vad_samples_per_chunk / SAMPLE_RATE
+        bytes_per_chunk = vad_samples_per_chunk * (SAMPLE_WIDTH * SAMPLE_CHANNELS)
         for vad_chunk in chunk_samples(chunk, bytes_per_chunk, leftover_chunk_buffer):
             is_speech = vad_is_speech(vad_chunk)
             if not self.process(seconds_per_chunk, is_speech):

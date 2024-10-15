@@ -5,8 +5,9 @@ import dataclasses
 from unittest import mock
 
 from aiohomekit.controller import TransportType
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import pytest
 
@@ -349,7 +350,7 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
 ) -> None:
     """Test that we only poll firmware if available and all chars are watchable accessory mode."""
 
-    def _create_accessory(accessory):
+    def _create_accessory(accessory: Accessory) -> Service:
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
 
         on_char = service.add_char(CharacteristicsTypes.ON)

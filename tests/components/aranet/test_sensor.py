@@ -11,6 +11,7 @@ from . import (
     DISABLED_INTEGRATIONS_SERVICE_INFO,
     VALID_ARANET2_DATA_SERVICE_INFO,
     VALID_ARANET_RADIATION_DATA_SERVICE_INFO,
+    VALID_ARANET_RADON_DATA_SERVICE_INFO,
     VALID_DATA_SERVICE_INFO,
 )
 
@@ -181,6 +182,71 @@ async def test_sensors_aranet4(hass: HomeAssistant) -> None:
     interval_sensor_attrs = interval_sensor.attributes
     assert interval_sensor.state == "300"
     assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Update Interval"
+    assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
+    assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_aranetrn(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors for Aranet Radon device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 0
+    inject_bluetooth_service_info(hass, VALID_ARANET_RADON_DATA_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 6
+
+    batt_sensor = hass.states.get("sensor.aranetrn_12345_battery")
+    batt_sensor_attrs = batt_sensor.attributes
+    assert batt_sensor.state == "100"
+    assert batt_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Battery"
+    assert batt_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert batt_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    co2_sensor = hass.states.get("sensor.aranetrn_12345_radon_concentration")
+    co2_sensor_attrs = co2_sensor.attributes
+    assert co2_sensor.state == "7"
+    assert co2_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Radon Concentration"
+    assert co2_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "Bq/m³"
+    assert co2_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    humid_sensor = hass.states.get("sensor.aranetrn_12345_humidity")
+    humid_sensor_attrs = humid_sensor.attributes
+    assert humid_sensor.state == "46.2"
+    assert humid_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Humidity"
+    assert humid_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert humid_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    temp_sensor = hass.states.get("sensor.aranetrn_12345_temperature")
+    temp_sensor_attrs = temp_sensor.attributes
+    assert temp_sensor.state == "25.5"
+    assert temp_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Temperature"
+    assert temp_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    press_sensor = hass.states.get("sensor.aranetrn_12345_pressure")
+    press_sensor_attrs = press_sensor.attributes
+    assert press_sensor.state == "1018.5"
+    assert press_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Pressure"
+    assert press_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
+    assert press_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    interval_sensor = hass.states.get("sensor.aranetrn_12345_update_interval")
+    interval_sensor_attrs = interval_sensor.attributes
+    assert interval_sensor.state == "600"
+    assert (
+        interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Update Interval"
+    )
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 

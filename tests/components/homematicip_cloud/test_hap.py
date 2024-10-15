@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .helper import HAPID, HAPPIN
+from .helper import HAPID, HAPPIN, HomeFactory
 
 from tests.common import MockConfigEntry
 
@@ -114,7 +114,7 @@ async def test_hap_setup_connection_error() -> None:
 
 
 async def test_hap_reset_unloads_entry_if_setup(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test calling reset while the entry has been setup."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
@@ -129,7 +129,7 @@ async def test_hap_reset_unloads_entry_if_setup(
 
 
 async def test_hap_create(
-    hass: HomeAssistant, hmip_config_entry, simple_mock_home
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
@@ -141,7 +141,7 @@ async def test_hap_create(
 
 
 async def test_hap_create_exception(
-    hass: HomeAssistant, hmip_config_entry, mock_connection_init
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)

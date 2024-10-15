@@ -588,12 +588,16 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         suggested_values = {
             CONF_HOST: entry.options[CONF_HOST],
             CONF_PORT: entry.options[CONF_PORT],
+            CONF_USERNAME: entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: entry.data.get(CONF_PASSWORD),
         }
 
         if user_input:
             suggested_values = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
             try:
                 await self._validate_edit_controller(user_input)
@@ -652,7 +656,9 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_ADD_CONTROLLER,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_ADD_CONTROLLER, user_input
+            ),
             errors=errors,
         )
 

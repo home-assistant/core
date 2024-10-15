@@ -303,7 +303,9 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="unknown")
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Connect to panel and get config."""
         errors = {}
         if user_input:

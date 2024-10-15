@@ -2,9 +2,11 @@
 
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import mock_open, patch
 
 from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.test_utils import TestClient
 
 import homeassistant.components.html5.notify as html5
 from homeassistant.core import HomeAssistant
@@ -69,7 +71,11 @@ REGISTER_URL = "/api/notify.html5"
 PUBLISH_URL = "/api/notify.html5/callback"
 
 
-async def mock_client(hass, hass_client, registrations=None):
+async def mock_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    registrations: dict[str, Any] | None = None,
+) -> TestClient:
     """Create a test client for HTML5 views."""
     if registrations is None:
         registrations = {}

@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from yalesmartalarmclient.exceptions import UnknownError
-from yalesmartalarmclient.lock import YaleDoorManAPI
+from yalesmartalarmclient import UnknownError, YaleDoorManAPI, YaleSmartAlarmData
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -20,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -47,7 +45,7 @@ async def test_lock(
 )
 async def test_lock_service_calls(
     hass: HomeAssistant,
-    load_json: dict[str, Any],
+    get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -56,8 +54,8 @@ async def test_lock_service_calls(
 
     client = load_config_entry[1]
 
-    data = deepcopy(load_json)
-    data["data"] = data.pop("DEVICES")
+    data = deepcopy(get_data.cycle)
+    data["data"] = data.pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "000"})
@@ -65,6 +63,14 @@ async def test_lock_service_calls(
 
     state = hass.states.get("lock.device1")
     assert state.state == "locked"
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.device1"},
+            blocking=True,
+        )
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -93,7 +99,7 @@ async def test_lock_service_calls(
 )
 async def test_lock_service_call_fails(
     hass: HomeAssistant,
-    load_json: dict[str, Any],
+    get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -102,8 +108,8 @@ async def test_lock_service_call_fails(
 
     client = load_config_entry[1]
 
-    data = deepcopy(load_json)
-    data["data"] = data.pop("DEVICES")
+    data = deepcopy(get_data.cycle)
+    data["data"] = data.pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(side_effect=UnknownError("test_side_effect"))
@@ -145,7 +151,7 @@ async def test_lock_service_call_fails(
 )
 async def test_lock_service_call_fails_with_incorrect_status(
     hass: HomeAssistant,
-    load_json: dict[str, Any],
+    get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -154,8 +160,8 @@ async def test_lock_service_call_fails_with_incorrect_status(
 
     client = load_config_entry[1]
 
-    data = deepcopy(load_json)
-    data["data"] = data.pop("DEVICES")
+    data = deepcopy(get_data.cycle)
+    data["data"] = data.pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "FFF"})

@@ -54,7 +54,7 @@ async def setup_component(hass: HomeAssistant) -> None:
 class HlsClient:
     """Test fixture for fetching the hls stream."""
 
-    def __init__(self, http_client, parsed_url):
+    def __init__(self, http_client, parsed_url) -> None:
         """Initialize HlsClient."""
         self.http_client = http_client
         self.parsed_url = parsed_url

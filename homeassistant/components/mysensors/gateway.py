@@ -16,7 +16,6 @@ import voluptuous as vol
 from homeassistant.components.mqtt import (
     DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
-    ReceivePayloadType,
     async_publish,
     async_subscribe,
 )
@@ -24,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.unit_system import METRIC_SYSTEM
 

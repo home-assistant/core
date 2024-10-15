@@ -100,7 +100,7 @@ async def test_config_already_registered_not_passed_to_config_entry(
 
 
 async def test_load_entry_fails_due_to_connection_error(
-    hass: HomeAssistant, hmip_config_entry, mock_connection_init
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
     """Test load entry fails due to connection error."""
     hmip_config_entry.add_to_hass(hass)
@@ -116,7 +116,7 @@ async def test_load_entry_fails_due_to_connection_error(
 
 
 async def test_load_entry_fails_due_to_generic_exception(
-    hass: HomeAssistant, hmip_config_entry
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Test load entry fails due to generic exception."""
     hmip_config_entry.add_to_hass(hass)

@@ -20,10 +20,11 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
 class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A Yale Data Update Coordinator."""
 
+    yale: YaleSmartAlarmClient
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Yale hub."""
         self.entry = entry
-        self.yale: YaleSmartAlarmClient | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -31,6 +32,17 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             always_update=False,
         )
+
+    async def _async_setup(self) -> None:
+        """Set up connection to Yale."""
+        try:
+            self.yale = YaleSmartAlarmClient(
+                self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
+            )
+        except AuthenticationError as error:
+            raise ConfigEntryAuthFailed from error
+        except YALE_BASE_ERRORS as error:
+            raise UpdateFailed from error
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Yale."""
@@ -132,25 +144,9 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
-
-        if self.yale is None:
-            try:
-                self.yale = YaleSmartAlarmClient(
-                    self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
-                )
-            except AuthenticationError as error:
-                raise ConfigEntryAuthFailed from error
-            except YALE_BASE_ERRORS as error:
-                raise UpdateFailed from error
-
         try:
             arm_status = self.yale.get_armed_status()
-            data = self.yale.get_all()
-            cycle = data["CYCLE"]
-            status = data["STATUS"]
-            online = data["ONLINE"]
-            panel_info = data["PANEL INFO"]
-
+            data = self.yale.get_information()
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
@@ -158,8 +154,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return {
             "arm_status": arm_status,
-            "cycle": cycle,
-            "status": status,
-            "online": online,
-            "panel_info": panel_info,
+            "cycle": data.cycle,
+            "status": data.status,
+            "online": data.online,
+            "panel_info": data.panel_info,
         }

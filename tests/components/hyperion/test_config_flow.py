@@ -427,7 +427,7 @@ async def test_auth_create_token_approval_declined_task_canceled(
     class CanceledAwaitableMock(AsyncMock):
         """A canceled awaitable mock."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__()
             self.done = Mock(return_value=False)
             self.cancel = Mock()

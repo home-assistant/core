@@ -40,6 +40,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
+    if not discovery_info:
+        return
 
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     binary_sensor_config = discovery_info

@@ -371,7 +371,9 @@ def get_frame(path: str, previous_frame: MagicMock | None) -> MagicMock:
     )
 
 
-async def async_log_error_from_test_path(hass, path, watcher):
+async def async_log_error_from_test_path(
+    hass: HomeAssistant, path: str, watcher: WatchLogErrorHandler
+) -> None:
     """Log error while mocking the path."""
     call_path = "internal_path.py"
     main_frame = get_frame("main_path/main.py", None)

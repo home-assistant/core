@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_entity_basic[media_player.zone_a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.zone_a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sonos',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 4127295>,
+    'translation_key': None,
+    'unique_id': 'RINCON_test',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_basic[media_player.zone_a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Zone A',
+      'group_members': list([
+        'media_player.zone_a',
+      ]),
+      'is_volume_muted': False,
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'supported_features': <MediaPlayerEntityFeature: 4127295>,
+      'volume_level': 0.19,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.zone_a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

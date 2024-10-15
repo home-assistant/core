@@ -12,6 +12,7 @@ from roborock.exceptions import (
     RoborockException,
     RoborockInvalidCode,
     RoborockInvalidEmail,
+    RoborockTooFrequentCodeRequests,
     RoborockUrlException,
 )
 from roborock.web_api import RoborockApiClient
@@ -83,6 +84,8 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown_url"
         except RoborockInvalidEmail:
             errors["base"] = "invalid_email_format"
+        except RoborockTooFrequentCodeRequests:
+            errors["base"] = "too_frequent_code_requests"
         except RoborockException:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_roborock"

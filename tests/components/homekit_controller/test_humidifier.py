@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.humidifier import DOMAIN, MODE_AUTO, MODE_NORMAL
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_humidifier_service(accessory):
+def create_humidifier_service(accessory: Accessory) -> Service:
     """Define a humidifier characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.HUMIDIFIER_DEHUMIDIFIER)
 
@@ -39,7 +40,7 @@ def create_humidifier_service(accessory):
     return service
 
 
-def create_dehumidifier_service(accessory):
+def create_dehumidifier_service(accessory: Accessory) -> Service:
     """Define a dehumidifier characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.HUMIDIFIER_DEHUMIDIFIER)
 

@@ -23,7 +23,6 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
@@ -50,6 +49,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -438,7 +438,7 @@ UOM_FRIENDLY_NAME = {
     "133": UnitOfFrequency.KILOHERTZ,
     "134": f"{UnitOfLength.METERS}/{UnitOfTime.SECONDS}²",
     "135": UnitOfApparentPower.VOLT_AMPERE,  # Volt-Amp
-    "136": POWER_VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
+    "136": UnitOfReactivePower.VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
     "137": "",  # NTP DateTime - Number of seconds since 1900
     "138": UnitOfPressure.PSI,
     "139": DEGREE,  # Degree 0-360

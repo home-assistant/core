@@ -153,7 +153,7 @@ async def async_setup_platform(
         )
         return
 
-    config = rewrite_common_legacy_to_modern_conf(config)
+    config = rewrite_common_legacy_to_modern_conf(hass, config)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyinsteon import async_connect
 
@@ -54,7 +55,9 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     _device_name: str | None = None
     discovered_conf: dict[str, str] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Init the config flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

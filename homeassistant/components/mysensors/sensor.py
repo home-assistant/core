@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
@@ -195,7 +196,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
-        native_unit_of_measurement="var",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",

@@ -1,12 +1,13 @@
 """Config flow for Soma."""
 
 import logging
+from typing import Any
 
 from api.soma_api import SomaApi
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
@@ -24,7 +25,9 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Instantiate config flow."""
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         if user_input is None:
             data = {

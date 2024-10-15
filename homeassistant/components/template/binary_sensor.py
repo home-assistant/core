@@ -119,17 +119,21 @@ LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
 )
 
 
-def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, cfg: dict[str, dict]
+) -> list[dict]:
     """Rewrite legacy binary sensor definitions to modern ones."""
     sensors = []
 
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
+        entity_cfg = rewrite_common_legacy_to_modern_conf(
+            hass, entity_cfg, LEGACY_FIELDS
+        )
 
         if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id)
+            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
 
         sensors.append(entity_cfg)
 
@@ -183,7 +187,7 @@ async def async_setup_platform(
         _async_create_template_tracking_entities(
             async_add_entities,
             hass,
-            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
             None,
         )
         return

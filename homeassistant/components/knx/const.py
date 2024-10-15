@@ -6,18 +6,10 @@ from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
 
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
-    PRESET_SLEEP,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
@@ -173,13 +165,4 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.OFF: HVACAction.OFF,
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
-}
-
-PRESET_MODES: Final = {
-    # Map DPT 20.102 HVAC operating modes to HA presets
-    HVACOperationMode.AUTO: PRESET_NONE,
-    HVACOperationMode.BUILDING_PROTECTION: PRESET_ECO,
-    HVACOperationMode.ECONOMY: PRESET_SLEEP,
-    HVACOperationMode.STANDBY: PRESET_AWAY,
-    HVACOperationMode.COMFORT: PRESET_COMFORT,
 }

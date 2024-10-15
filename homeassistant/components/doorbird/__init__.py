@@ -29,7 +29,7 @@ from .view import DoorBirdRequestView
 
 CONF_CUSTOM_URL = "hass_url_override"
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 

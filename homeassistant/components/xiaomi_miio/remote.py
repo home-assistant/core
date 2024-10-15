@@ -170,12 +170,12 @@ async def async_setup_platform(
     )
     platform.async_register_entity_service(
         SERVICE_SET_REMOTE_LED_ON,
-        {},
+        None,
         async_service_led_on_handler,
     )
     platform.async_register_entity_service(
         SERVICE_SET_REMOTE_LED_OFF,
-        {},
+        None,
         async_service_led_off_handler,
     )
 

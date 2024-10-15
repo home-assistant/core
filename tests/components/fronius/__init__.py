@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 import json
 from typing import Any
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -114,7 +117,12 @@ def mock_responses(
     )
 
 
-async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_update):
+async def enable_all_entities(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_id: str,
+    time_till_next_update: timedelta,
+) -> None:
     """Enable all entities for a config entry and fast forward time to receive data."""
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, config_entry_id)

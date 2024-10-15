@@ -172,6 +172,7 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
         translation_key=HabitipySensorEntity.DAILIES,
         native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "daily"],
+        entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.TODOS,
@@ -180,6 +181,7 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
         value_fn=lambda tasks: [
             r for r in tasks if r.get("type") == "todo" and not r.get("completed")
         ],
+        entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.REWARDS,

@@ -116,37 +116,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_START,
-        {},
+        None,
         "async_start",
         [VacuumEntityFeature.START],
     )
     component.async_register_entity_service(
         SERVICE_PAUSE,
-        {},
+        None,
         "async_pause",
         [VacuumEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
         SERVICE_RETURN_TO_BASE,
-        {},
+        None,
         "async_return_to_base",
         [VacuumEntityFeature.RETURN_HOME],
     )
     component.async_register_entity_service(
         SERVICE_CLEAN_SPOT,
-        {},
+        None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
-        {},
+        None,
         "async_locate",
         [VacuumEntityFeature.LOCATE],
     )
     component.async_register_entity_service(
         SERVICE_STOP,
-        {},
+        None,
         "async_stop",
         [VacuumEntityFeature.STOP],
     )

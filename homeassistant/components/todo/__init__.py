@@ -183,7 +183,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.REMOVE_COMPLETED_ITEMS,
-        {},
+        None,
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )

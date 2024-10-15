@@ -990,7 +990,7 @@ async def test_execute_stmt_lambda_element(
     all_calls = 0
 
     class MockExecutor:
-        def __init__(self, stmt):
+        def __init__(self, stmt) -> None:
             assert isinstance(stmt, StatementLambdaElement)
 
         def all(self):

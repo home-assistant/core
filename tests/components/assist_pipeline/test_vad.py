@@ -17,14 +17,11 @@ def test_silence() -> None:
 
     # True return value indicates voice command has not finished
     assert segmenter.process(_ONE_SECOND * 3, False)
+    assert not segmenter.in_command
 
 
 def test_speech() -> None:
     """Test that silence + speech + silence triggers a voice command."""
-
-    def is_speech(chunk):
-        """Anything non-zero is speech."""
-        return sum(chunk) > 0
 
     segmenter = VoiceCommandSegmenter()
 
@@ -33,10 +30,12 @@ def test_speech() -> None:
 
     # "speech"
     assert segmenter.process(_ONE_SECOND, True)
+    assert segmenter.in_command
 
     # silence
     # False return value indicates voice command is finished
     assert not segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.in_command
 
 
 def test_audio_buffer() -> None:
@@ -105,3 +104,105 @@ def test_chunk_samples_leftover() -> None:
 
     assert len(chunks) == 1
     assert leftover_chunk_buffer.bytes() == bytes([5, 6])
+
+
+def test_silence_seconds() -> None:
+    """Test end of voice command silence seconds."""
+
+    segmenter = VoiceCommandSegmenter(silence_seconds=1.0)
+
+    # silence
+    assert segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.in_command
+
+    # "speech"
+    assert segmenter.process(_ONE_SECOND, True)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+    assert segmenter.in_command
+
+    # exactly enough silence now
+    assert not segmenter.process(_ONE_SECOND * 0.5, False)
+    assert not segmenter.in_command
+
+
+def test_silence_reset() -> None:
+    """Test that speech resets end of voice command detection."""
+
+    segmenter = VoiceCommandSegmenter(silence_seconds=1.0, reset_seconds=0.5)
+
+    # silence
+    assert segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.in_command
+
+    # "speech"
+    assert segmenter.process(_ONE_SECOND, True)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+    assert segmenter.in_command
+
+    # speech should reset silence detection
+    assert segmenter.process(_ONE_SECOND * 0.5, True)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+    assert segmenter.in_command
+
+    # exactly enough silence now
+    assert not segmenter.process(_ONE_SECOND * 0.5, False)
+    assert not segmenter.in_command
+
+
+def test_speech_reset() -> None:
+    """Test that silence resets start of voice command detection."""
+
+    segmenter = VoiceCommandSegmenter(
+        silence_seconds=1.0, reset_seconds=0.5, speech_seconds=1.0
+    )
+
+    # silence
+    assert segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.in_command
+
+    # not enough speech to start voice command
+    assert segmenter.process(_ONE_SECOND * 0.5, True)
+    assert not segmenter.in_command
+
+    # silence should reset speech detection
+    assert segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.in_command
+
+    # not enough speech to start voice command
+    assert segmenter.process(_ONE_SECOND * 0.5, True)
+    assert not segmenter.in_command
+
+    # exactly enough speech now
+    assert segmenter.process(_ONE_SECOND * 0.5, True)
+    assert segmenter.in_command
+
+
+def test_timeout() -> None:
+    """Test that voice command detection times out."""
+
+    segmenter = VoiceCommandSegmenter(timeout_seconds=1.0)
+
+    # not enough to time out
+    assert not segmenter.timed_out
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+    assert not segmenter.timed_out
+
+    # enough to time out
+    assert not segmenter.process(_ONE_SECOND * 0.5, True)
+    assert segmenter.timed_out
+
+    # flag resets with more audio
+    assert segmenter.process(_ONE_SECOND * 0.5, True)
+    assert not segmenter.timed_out
+
+    assert not segmenter.process(_ONE_SECOND * 0.5, False)
+    assert segmenter.timed_out

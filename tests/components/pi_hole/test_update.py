@@ -1,7 +1,7 @@
 """Test pi_hole component."""
 
 from homeassistant.components import pi_hole
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA_DEFAULTS, _create_mocked_hole, _patch_init_hole
@@ -80,3 +80,44 @@ async def test_update_no_versions(hass: HomeAssistant) -> None:
     assert state.attributes["installed_version"] is None
     assert state.attributes["latest_version"] is None
     assert state.attributes["release_url"] is None
+
+
+async def test_update_no_updates(hass: HomeAssistant) -> None:
+    """Tests update entity when no latest data available."""
+    mocked_hole = _create_mocked_hole(has_versions=True, has_update=False)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.pi_hole_core_update_available")
+    assert state.name == "Pi-Hole Core update available"
+    assert state.state == STATE_OFF
+    assert state.attributes["installed_version"] == "v5.5"
+    assert state.attributes["latest_version"] == "v5.5"
+    assert (
+        state.attributes["release_url"]
+        == "https://github.com/pi-hole/pi-hole/releases/tag/v5.5"
+    )
+
+    state = hass.states.get("update.pi_hole_ftl_update_available")
+    assert state.name == "Pi-Hole FTL update available"
+    assert state.state == STATE_OFF
+    assert state.attributes["installed_version"] == "v5.10"
+    assert state.attributes["latest_version"] == "v5.10"
+    assert (
+        state.attributes["release_url"]
+        == "https://github.com/pi-hole/FTL/releases/tag/v5.10"
+    )
+
+    state = hass.states.get("update.pi_hole_web_update_available")
+    assert state.name == "Pi-Hole Web update available"
+    assert state.state == STATE_OFF
+    assert state.attributes["installed_version"] == "v5.7"
+    assert state.attributes["latest_version"] == "v5.7"
+    assert (
+        state.attributes["release_url"]
+        == "https://github.com/pi-hole/AdminLTE/releases/tag/v5.7"
+    )

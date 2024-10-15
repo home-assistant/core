@@ -33,15 +33,13 @@ async def test_get_allowed_channel(
 
 async def test_factory_reset(hass: HomeAssistant, otbr_config_entry_multipan) -> None:
     """Test factory_reset."""
-    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
-
     with (
         patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock,
         patch(
             "python_otbr_api.OTBR.delete_active_dataset"
         ) as delete_active_dataset_mock,
     ):
-        await data.factory_reset()
+        await hass.data[otbr.DATA_OTBR].factory_reset()
 
     delete_active_dataset_mock.assert_not_called()
     factory_reset_mock.assert_called_once_with()
@@ -51,8 +49,6 @@ async def test_factory_reset_not_supported(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test factory_reset."""
-    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
-
     with (
         patch(
             "python_otbr_api.OTBR.factory_reset",
@@ -62,7 +58,7 @@ async def test_factory_reset_not_supported(
             "python_otbr_api.OTBR.delete_active_dataset"
         ) as delete_active_dataset_mock,
     ):
-        await data.factory_reset()
+        await hass.data[otbr.DATA_OTBR].factory_reset()
 
     delete_active_dataset_mock.assert_called_once_with()
     factory_reset_mock.assert_called_once_with()
@@ -72,8 +68,6 @@ async def test_factory_reset_error_1(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test factory_reset."""
-    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
-
     with (
         patch(
             "python_otbr_api.OTBR.factory_reset",
@@ -86,7 +80,7 @@ async def test_factory_reset_error_1(
             HomeAssistantError,
         ),
     ):
-        await data.factory_reset()
+        await hass.data[otbr.DATA_OTBR].factory_reset()
 
     delete_active_dataset_mock.assert_not_called()
     factory_reset_mock.assert_called_once_with()
@@ -96,8 +90,6 @@ async def test_factory_reset_error_2(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test factory_reset."""
-    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
-
     with (
         patch(
             "python_otbr_api.OTBR.factory_reset",
@@ -111,7 +103,7 @@ async def test_factory_reset_error_2(
             HomeAssistantError,
         ),
     ):
-        await data.factory_reset()
+        await hass.data[otbr.DATA_OTBR].factory_reset()
 
     delete_active_dataset_mock.assert_called_once_with()
     factory_reset_mock.assert_called_once_with()

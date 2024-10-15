@@ -31,10 +31,10 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_LINK_DEACTIVATE, {}, "async_link_deactivate"
+        SERVICE_LINK_DEACTIVATE, None, "async_link_deactivate"
     )
     platform.async_register_entity_service(
-        SERVICE_LINK_FADE_STOP, {}, "async_link_fade_stop"
+        SERVICE_LINK_FADE_STOP, None, "async_link_fade_stop"
     )
     platform.async_register_entity_service(
         SERVICE_LINK_GOTO, UPB_BRIGHTNESS_RATE_SCHEMA, "async_link_goto"

@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from roborock import RoborockTooFrequentCodeRequests
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
     RoborockException,
@@ -71,6 +72,7 @@ async def test_config_flow_success(
         (RoborockException(), {"base": "unknown_roborock"}),
         (RoborockAccountDoesNotExist(), {"base": "invalid_email"}),
         (RoborockInvalidEmail(), {"base": "invalid_email_format"}),
+        (RoborockTooFrequentCodeRequests(), {"base": "too_frequent_code_requests"}),
         (RoborockUrlException(), {"base": "unknown_url"}),
         (Exception(), {"base": "unknown"}),
     ],

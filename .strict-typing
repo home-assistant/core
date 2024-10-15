@@ -196,7 +196,9 @@ homeassistant.components.fritzbox.*
 homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
+homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
+homeassistant.components.fyta.*
 homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
@@ -293,6 +295,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.mailbox.*
+homeassistant.components.manual.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*

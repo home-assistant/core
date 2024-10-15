@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up SMLIGHT Zigbee Integration",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+        }
+      },
+      "auth": {
+        "description": "Please enter the username and password",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up SMLIGHT at {host}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "zigbee_temperature": {
+        "name": "Zigbee chip temp"
+      },
+      "core_temperature": {
+        "name": "Core chip temp"
+      },
+      "fs_usage": {
+        "name": "Filesystem usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from yalexs.authenticator import ValidationResult
+from yalexs.authenticator_common import ValidationResult
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant import config_entries

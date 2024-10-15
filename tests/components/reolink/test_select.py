@@ -1,8 +1,8 @@
 """Test the Reolink select platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME
 
@@ -28,18 +27,19 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_floodlight_mode_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select entity with floodlight_mode."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_floodlight_mode"
-    assert hass.states.is_state(entity_id, "auto")
+    assert hass.states.get(entity_id).state == "auto"
 
     reolink_connect.set_whiteled = AsyncMock()
     await hass.services.async_call(
@@ -71,12 +71,11 @@ async def test_floodlight_mode_select(
         )
 
     reolink_connect.whiteled_mode.return_value = -99  # invalid value
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_play_quick_reply_message(
@@ -88,12 +87,12 @@ async def test_play_quick_reply_message(
     """Test select play_quick_reply_message entity."""
     reolink_connect.quick_reply_dict.return_value = {0: "off", 1: "test message"}
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_play_quick_reply_message"
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     reolink_connect.play_quick_reply = AsyncMock()
     await hass.services.async_call(
@@ -107,6 +106,7 @@ async def test_play_quick_reply_message(
 
 async def test_chime_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     test_chime: Chime,
@@ -114,13 +114,13 @@ async def test_chime_select(
 ) -> None:
     """Test chime select entity."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
-    assert hass.states.is_state(entity_id, "pianokey")
+    assert hass.states.get(entity_id).state == "pianokey"
 
     test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
@@ -150,9 +150,8 @@ async def test_chime_select(
         )
 
     test_chime.event_info = {}
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN

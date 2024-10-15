@@ -92,6 +92,24 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            "30.0",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             "on",
@@ -225,6 +243,20 @@ async def test_config_flow(
             },
             {"verify_ssl": True},
             {"verify_ssl": True},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
         ),
         (
             "select",
@@ -401,6 +433,24 @@ def get_suggested(schema, key):
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {"state": "{{ states('number.two') }}"},
+            ["30.0", "20.0"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            "state",
         ),
         (
             "select",
@@ -1155,6 +1205,20 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             },
             {},
             {},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
         ),
         (
             "select",

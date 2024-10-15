@@ -89,12 +89,12 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
 
     # test rendering value
     tpl = template.Template("{{ value + 1 }}", hass=hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(4321) == "4322"
 
     # test variables at rendering
     tpl = template.Template("{{ some_var }}", hass=hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 
@@ -161,8 +161,8 @@ async def test_command_template_variables(
 
 async def test_command_template_fails(hass: HomeAssistant) -> None:
     """Test the exception handling of an MQTT command template."""
-    tpl = template.Template("{{ value * 2 }}")
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value * 2 }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     with pytest.raises(MqttCommandTemplateException) as exc:
         cmd_tpl.async_render(None)
     assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
@@ -174,13 +174,13 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value_json.id }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test variables at rendering
-    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, config_attributes={"code": 1234})
+    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, config_attributes={"code": 1234})
     assert (
         val_tpl.async_render_with_possible_json_value(
             '{"id": 4321}', variables=variables
@@ -189,8 +189,8 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     )
 
     # test with default value if an error occurs due to an invalid template
-    tpl = template.Template("{{ value_json.id | as_datetime }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value_json.id | as_datetime }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl)
     assert (
         val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
         == "my default"
@@ -200,19 +200,19 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     entity = Entity()
     entity.hass = hass
     entity.entity_id = "select.test"
-    tpl = template.Template("{{ value_json.id }}")
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test this object in a template
-    tpl2 = template.Template("{{ this.entity_id }}")
+    tpl2 = template.Template("{{ this.entity_id }}", hass=hass)
     val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
     assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
 
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
-        tpl3 = template.Template("{{ this.entity_id }}")
+        tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
@@ -223,8 +223,8 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
-    tpl = template.Template("{{ value_json.some_var * 2 }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
+    tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
     assert str(exc.value) == (
@@ -418,6 +418,74 @@ async def test_mqtt_publish_action_call_with_template_payload_renders_template(
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
     mqtt_mock.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("attr_payload", "payload", "evaluate_payload", "literal_eval_calls"),
+    [
+        ("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef", True, 1),
+        ("b'\\xde\\xad\\xbe\\xef'", "b'\\xde\\xad\\xbe\\xef'", False, 0),
+        ("DEADBEEF", "DEADBEEF", False, 0),
+        (
+            "b'\\xde",
+            "b'\\xde",
+            True,
+            1,
+        ),  # Bytes literal is invalid, fall back to string
+    ],
+)
+async def test_mqtt_publish_action_call_with_raw_data(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    attr_payload: str,
+    payload: str | bytes,
+    evaluate_payload: bool,
+    literal_eval_calls: int,
+) -> None:
+    """Test the mqtt publish action call raw data.
+
+    When `payload` represents a `bytes` object, it should be published
+    as raw data if `evaluate_payload` is set.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: attr_payload,
+            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == payload
+
+    with patch(
+        "homeassistant.components.mqtt.models.literal_eval"
+    ) as literal_eval_mock:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: attr_payload,
+            },
+            blocking=True,
+        )
+        literal_eval_mock.assert_not_called()
+
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: attr_payload,
+                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            },
+            blocking=True,
+        )
+        assert len(literal_eval_mock.mock_calls) == literal_eval_calls
 
 
 # The use of a payload_template in an mqtt publish action call
@@ -2390,7 +2458,6 @@ async def test_multi_platform_discovery(
         "PayloadSentinel",
         "PublishPayloadType",
         "ReceiveMessage",
-        "ReceivePayloadType",
         "async_prepare_subscribe_topics",
         "async_publish",
         "async_subscribe",

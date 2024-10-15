@@ -72,11 +72,14 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
         self.device_info["model"] = about["info"]["model"]
         self.device_info["manufacturer"] = about["info"]["brand"]
         self.device_info[ATTR_IDENTIFIERS] = {
-            (DOMAIN, format_mac(iface["mac"])) for iface in about["info"]["ifaces"]
+            (DOMAIN, format_mac(iface["mac"]))
+            for iface in about["info"]["ifaces"]
+            if "mac" in iface and iface["mac"] is not None
         }
         self.device_info[ATTR_CONNECTIONS] = {
             (CONNECTION_NETWORK_MAC, format_mac(iface["mac"]))
             for iface in about["info"]["ifaces"]
+            if "mac" in iface and iface["mac"] is not None
         }
 
     async def _async_update_data(self) -> OpenWebIfStatus:

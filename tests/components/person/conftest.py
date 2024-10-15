@@ -18,7 +18,7 @@ DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
 
 
 @pytest.fixture
-def storage_collection(hass):
+def storage_collection(hass: HomeAssistant) -> person.PersonStorageCollection:
     """Return an empty storage collection."""
     id_manager = collection.IDManager()
     return person.PersonStorageCollection(

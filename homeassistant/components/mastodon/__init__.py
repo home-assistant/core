@@ -17,10 +17,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
+from homeassistant.util import slugify
 
-from .const import CONF_BASE_URL, DOMAIN
+from .const import CONF_BASE_URL, DOMAIN, LOGGER
 from .coordinator import MastodonCoordinator
-from .utils import create_mastodon_client
+from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
@@ -78,6 +79,39 @@ async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) ->
     return await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config."""
+
+    if entry.version == 1 and entry.minor_version == 1:
+        # Version 1.1 had the unique_id as client_id, this isn't necessarily unique
+        LOGGER.debug("Migrating config entry from version %s", entry.version)
+
+        try:
+            _, instance, account = await hass.async_add_executor_job(
+                setup_mastodon,
+                entry,
+            )
+        except MastodonError as ex:
+            LOGGER.error("Migration failed with error %s", ex)
+            return False
+
+        entry.minor_version = 2
+
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=slugify(construct_mastodon_username(instance, account)),
+        )
+
+        LOGGER.info(
+            "Entry %s successfully migrated to version %s.%s",
+            entry.entry_id,
+            entry.version,
+            entry.minor_version,
+        )
+
+    return True
 
 
 def setup_mastodon(entry: ConfigEntry) -> tuple[Mastodon, dict, dict]:

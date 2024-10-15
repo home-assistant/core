@@ -22,7 +22,9 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
@@ -473,3 +475,57 @@ async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert hass.states.get(entity_id).state == STATE_OPENING
+
+
+async def test_open_tilt(shutterbox, hass: HomeAssistant) -> None:
+    """Test closing tilt."""
+    feature_mock, entity_id = shutterbox
+
+    def initial_update():
+        feature_mock.tilt_current = 100
+
+    def set_tilt_position(tilt_position):
+        assert tilt_position == 0
+        feature_mock.tilt_current = tilt_position
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt_position)
+
+    await async_setup_entity(hass, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    await hass.services.async_call(
+        "cover",
+        SERVICE_OPEN_COVER_TILT,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100  # inverted
+
+
+async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
+    """Test closing tilt."""
+    feature_mock, entity_id = shutterbox
+
+    def initial_update():
+        feature_mock.tilt_current = 0
+
+    def set_tilt_position(tilt_position):
+        assert tilt_position == 100
+        feature_mock.tilt_current = tilt_position
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt_position)
+
+    await async_setup_entity(hass, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    await hass.services.async_call(
+        "cover",
+        SERVICE_CLOSE_COVER_TILT,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0  # inverted

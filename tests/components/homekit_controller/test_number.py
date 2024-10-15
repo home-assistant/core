@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -11,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import Helper, setup_test_component
 
 
-def create_switch_with_spray_level(accessory):
+def create_switch_with_spray_level(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 

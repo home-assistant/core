@@ -159,9 +159,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_start",
     )
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
+    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
+    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
     component.async_register_entity_service(
         SERVICE_CHANGE,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},

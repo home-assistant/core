@@ -1,6 +1,7 @@
 """Test Bluetooth LE device tracker."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from bleak import BleakError
@@ -31,7 +32,7 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 class MockBleakClient:
     """Mock BleakClient."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock BleakClient."""
 
     async def __aenter__(self, *args, **kwargs):

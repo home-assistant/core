@@ -49,17 +49,25 @@ def addon_info_fixture():
         yield addon_info
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://custom_url:1234",
+        "http://custom_url:1234/",
+        "http://custom_url:1234//",
+    ],
+)
 async def test_user_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str
 ) -> None:
     """Test the user flow."""
-    url = "http://custom_url:1234"
-    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+    stripped_url = "http://custom_url:1234"
+    aioclient_mock.get(f"{stripped_url}/node/dataset/active", text="aa")
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
     )
 
-    expected_data = {"url": url}
+    expected_data = {"url": stripped_url}
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -347,7 +355,7 @@ async def test_hassio_discovery_flow_2x_addons(
     aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
     aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
 
-    async def _addon_info(hass, slug):
+    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         if slug == "otbr":
             return {

@@ -658,7 +658,9 @@ def _get_test_integration(
     )
 
 
-def _get_test_integration_with_application_credentials(hass, name):
+def _get_test_integration_with_application_credentials(
+    hass: HomeAssistant, name: str
+) -> loader.Integration:
     """Return a generated test integration with application_credentials support."""
     return loader.Integration(
         hass,
@@ -678,7 +680,9 @@ def _get_test_integration_with_application_credentials(hass, name):
     )
 
 
-def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
+def _get_test_integration_with_zeroconf_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a zeroconf matcher."""
     return loader.Integration(
         hass,
@@ -697,7 +701,9 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_legacy_zeroconf_matcher(hass, name, config_flow):
+def _get_test_integration_with_legacy_zeroconf_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a legacy zeroconf matcher."""
     return loader.Integration(
         hass,
@@ -724,7 +730,9 @@ def _get_test_integration_with_legacy_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
+def _get_test_integration_with_dhcp_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a dhcp matcher."""
     return loader.Integration(
         hass,
@@ -748,7 +756,9 @@ def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
+def _get_test_integration_with_bluetooth_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a bluetooth matcher."""
     return loader.Integration(
         hass,
@@ -767,7 +777,9 @@ def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_usb_matcher(hass, name, config_flow):
+def _get_test_integration_with_usb_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a usb matcher."""
     return loader.Integration(
         hass,

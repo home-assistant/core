@@ -20,7 +20,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-async def setup_component(hass):
+async def setup_component(hass: HomeAssistant) -> None:
     """Set up Toon component."""
     await async_process_ha_core_config(
         hass,

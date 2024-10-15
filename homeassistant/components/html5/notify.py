@@ -533,7 +533,7 @@ class HTML5NotificationService(BaseNotificationService):
             elif response.status_code > 399:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status,
+                    response.status_code,
                     response.text,
                 )
 

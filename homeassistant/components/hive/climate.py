@@ -83,7 +83,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING_OFF,
-        {},
+        None,
         "async_heating_boost_off",
     )
 

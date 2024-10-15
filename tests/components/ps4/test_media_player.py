@@ -1,5 +1,6 @@
 """Tests for the PS4 media player platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from pyps4_2ndscreen.credential import get_ddp_message
@@ -130,7 +131,9 @@ MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY
 MOCK_LOAD = "homeassistant.components.ps4.media_player.load_games"
 
 
-async def setup_mock_component(hass, entry=None):
+async def setup_mock_component(
+    hass: HomeAssistant, entry: MockConfigEntry | None = None
+) -> str:
     """Set up Mock Media Player."""
     if entry is None:
         mock_entry = MockConfigEntry(
@@ -150,7 +153,9 @@ async def setup_mock_component(hass, entry=None):
     return mock_entities[0]
 
 
-async def mock_ddp_response(hass, mock_status_data):
+async def mock_ddp_response(
+    hass: HomeAssistant, mock_status_data: dict[str, Any]
+) -> None:
     """Mock raw UDP response from device."""
     mock_protocol = hass.data[PS4_DATA].protocol
     assert mock_protocol.local_port == DEFAULT_UDP_PORT

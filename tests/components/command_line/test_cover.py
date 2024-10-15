@@ -36,6 +36,24 @@ from . import mock_asyncio_subprocess_run
 from tests.common import async_fire_time_changed
 
 
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 

@@ -1,6 +1,7 @@
 """Config flow for Samsung SyncThru."""
 
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
@@ -23,7 +24,9 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     url: str
     name: str
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user initiated flow."""
         if user_input is None:
             return await self._async_show_form(step_id="user")

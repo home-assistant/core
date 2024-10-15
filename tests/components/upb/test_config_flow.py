@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.upb.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,7 +27,9 @@ def mocked_upb(sync_complete=True, config_ok=True):
     )
 
 
-async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
+async def valid_tcp_flow(
+    hass: HomeAssistant, sync_complete: bool = True, config_ok: bool = True
+) -> ConfigFlowResult:
     """Get result dict that are standard for most tests."""
 
     with (

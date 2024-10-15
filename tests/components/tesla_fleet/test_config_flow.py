@@ -57,7 +57,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -121,7 +121,7 @@ async def test_full_flow_user_cred(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Check full flow."""
 
@@ -200,7 +200,7 @@ async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication."""
     old_entry = MockConfigEntry(
@@ -261,7 +261,7 @@ async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})

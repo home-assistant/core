@@ -1,5 +1,19 @@
 {
   "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "mdi:sofa",
+              "standby": "mdi:home-export-outline",
+              "economy": "mdi:leaf",
+              "building_protection": "mdi:sun-snowflake-variant"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "individual_address": {
         "default": "mdi:router-network"

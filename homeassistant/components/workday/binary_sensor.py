@@ -92,7 +92,7 @@ def _get_obj_holidays(
         subdiv=province,
         years=year,
         language=language,
-        categories=set_categories,  # type: ignore[arg-type]
+        categories=set_categories,
     )
     if (supported_languages := obj_holidays.supported_languages) and language == "en":
         for lang in supported_languages:
@@ -102,7 +102,7 @@ def _get_obj_holidays(
                     subdiv=province,
                     years=year,
                     language=lang,
-                    categories=set_categories,  # type: ignore[arg-type]
+                    categories=set_categories,
                 )
             LOGGER.debug("Changing language from %s to %s", language, lang)
     return obj_holidays

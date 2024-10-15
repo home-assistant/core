@@ -46,7 +46,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, async_mock_service
 
 
-async def _wait_for_light_coalesce(hass):
+async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
     )

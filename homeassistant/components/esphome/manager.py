@@ -197,9 +197,9 @@ class ESPHomeManager:
         if service.data_template:
             try:
                 data_template = {
-                    key: Template(value) for key, value in service.data_template.items()
+                    key: Template(value, hass)
+                    for key, value in service.data_template.items()
                 }
-                template.attach(hass, data_template)
                 service_data.update(
                     template.render_complex(data_template, service.variables)
                 )

@@ -524,7 +524,7 @@ async def test_exclude_described_event(
     entity_id2 = "automation.included_rule"
     entity_id3 = "sensor.excluded_domain"
 
-    def _describe(event):
+    def _describe(event: Event) -> dict[str, str]:
         """Describe an event."""
         return {
             "name": "Test Name",
@@ -532,7 +532,12 @@ async def test_exclude_described_event(
             "entity_id": event.data[ATTR_ENTITY_ID],
         }
 
-    def async_describe_events(hass, async_describe_event):
+    def async_describe_events(
+        hass: HomeAssistant,
+        async_describe_event: Callable[
+            [str, str, Callable[[Event], dict[str, str]]], None
+        ],
+    ) -> None:
         """Mock to describe events."""
         async_describe_event("automation", "some_automation_event", _describe)
         async_describe_event("sensor", "some_event", _describe)

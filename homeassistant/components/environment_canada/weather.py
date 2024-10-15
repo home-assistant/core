@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -190,10 +192,12 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
         if not (half_days := ec_data.daily_forecasts):
             return None
 
-        def get_day_forecast(fcst: list[dict[str, str]]) -> Forecast:
+        def get_day_forecast(
+            fcst: list[dict[str, Any]],
+        ) -> Forecast:
             high_temp = int(fcst[0]["temperature"]) if len(fcst) == 2 else None
             return {
-                ATTR_FORECAST_TIME: fcst[0]["timestamp"],
+                ATTR_FORECAST_TIME: fcst[0]["timestamp"].isoformat(),
                 ATTR_FORECAST_NATIVE_TEMP: high_temp,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: int(fcst[-1]["temperature"]),
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import functools
+from itertools import chain
 import logging
 import re
 import time
@@ -238,10 +239,6 @@ async def async_start(  # noqa: C901
 
         component, node_id, object_id = match.groups()
 
-        if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Integration %s is not supported", component)
-            return
-
         if payload:
             try:
                 discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
@@ -351,9 +348,15 @@ async def async_start(  # noqa: C901
             0,
             job_type=HassJobType.Callback,
         )
-        for topic in (
-            f"{discovery_topic}/+/+/config",
-            f"{discovery_topic}/+/+/+/config",
+        for topic in chain(
+            (
+                f"{discovery_topic}/{component}/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
+            (
+                f"{discovery_topic}/{component}/+/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
         )
     ]
 
