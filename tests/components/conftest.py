@@ -468,7 +468,7 @@ def supervisor_client() -> Generator[AsyncMock]:
 
 async def _ensure_translation_exists(
     hass: HomeAssistant,
-    ignore_translations: list[str],
+    ignore_translations: dict[str, StoreInfo],
     category: str,
     component: str,
     key: str,
@@ -476,6 +476,7 @@ async def _ensure_translation_exists(
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
     if full_key in ignore_translations:
+        ignore_translations[full_key] = "used"
         return
 
     translations = await async_get_translations(hass, "en", category, [component])
@@ -504,7 +505,7 @@ async def _ensure_translation_exists(
 
 
 @pytest.fixture
-def ignore_translations() -> list[str]:
+def ignore_translations() -> str | list[str]:
     """Ignore specific translations.
 
     Override or parametrize this fixture with a fixture that returns,
@@ -514,8 +515,12 @@ def ignore_translations() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-def check_config_translations(ignore_translations: list[str]) -> Generator[None]:
+def check_config_translations(ignore_translations: str | list[str]) -> Generator[None]:
     """Ensure config_flow translations are available."""
+    if not isinstance(ignore_translations, list):
+        ignore_translations = [ignore_translations]
+
+    _ignore_translations = {k: "unused" for k in ignore_translations}
     _original = FlowManager._async_handle_step
 
     async def _async_handle_step(
@@ -535,7 +540,7 @@ def check_config_translations(ignore_translations: list[str]) -> Generator[None]
         ):
             await _ensure_translation_exists(
                 flow.hass,
-                ignore_translations,
+                _ignore_translations,
                 category,
                 component,
                 f"abort.{result["reason"]}",
@@ -548,3 +553,10 @@ def check_config_translations(ignore_translations: list[str]) -> Generator[None]
         _async_handle_step,
     ):
         yield
+
+    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    if unused_ignore:
+        raise ValueError(
+            f"Unused ignore translations: {', '.join(unused_ignore)}. "
+            "Please remove them from the ignore_translations fixture."
+        )
