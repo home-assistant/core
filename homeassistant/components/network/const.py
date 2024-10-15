@@ -30,3 +30,5 @@ NETWORK_CONFIG_SCHEMA = vol.Schema(
         ): vol.Schema(vol.All(cv.ensure_list, [cv.string])),
     }
 )
+
+URL_TYPES: Final = ["internal", "external", "cloud"]

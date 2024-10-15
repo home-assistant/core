@@ -11,7 +11,12 @@ from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import get_url
 
-from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, NETWORK_CONFIG_SCHEMA
+from .const import (
+    ATTR_ADAPTERS,
+    ATTR_CONFIGURED_ADAPTERS,
+    NETWORK_CONFIG_SCHEMA,
+    URL_TYPES,
+)
 from .network import async_get_network
 
 
@@ -70,7 +75,7 @@ async def websocket_network_adapters_configure(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "network/url",
-        vol.Required("url_type"): str,
+        vol.Required("url_type"): vol.In(URL_TYPES),
     }
 )
 @websocket_api.async_response
@@ -80,9 +85,6 @@ async def websocket_network_url(
     msg: dict[str, Any],
 ) -> None:
     """Get the internal URL."""
-    if msg["url_type"] not in ["internal", "external", "cloud"]:
-        connection.send_error(msg["id"], "invalid_url_type", "Invalid URL type")
-        return
     connection.send_result(
         msg["id"],
         get_url(

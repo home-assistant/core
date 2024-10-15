@@ -925,4 +925,4 @@ async def test_websocket_network_url(
     await client.send_json({"id": 4, "type": "network/url", "url_type": "invalid"})
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_url_type"
+    assert msg["error"]["code"] == "invalid_format"
