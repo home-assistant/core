@@ -24,7 +24,6 @@ from homeassistant.helpers.issue_registry import (
 
 from .const import DOMAIN, LOGGER
 from .helpers import MassEntryData
-from .services import register_services
 
 if TYPE_CHECKING:
     from music_assistant.common.models.event import MassEvent
@@ -89,7 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-        register_services(hass)
 
     hass.data[DOMAIN][entry.entry_id] = MassEntryData(mass, listen_task)
 

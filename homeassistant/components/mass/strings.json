@@ -10,24 +10,20 @@
     "step": {
       "init": {
         "data": {
-          "url": "URL of the Music Assistant server",
-          "expose_players_assist": "Expose players to Assist"
+          "url": "URL of the Music Assistant server"
         }
       },
       "manual": {
         "title": "Manually add Music Assistant Server",
         "description": "Enter the URL to your already running Music Assistant Server. If you do not have the Music Assistant Sewrver running, you should install it first.",
         "data": {
-          "url": "URL of the Music Assistant server",
-          "expose_players_assist": "Expose players to Assist"
+          "url": "URL of the Music Assistant server"
         }
       },
       "discovery_confirm": {
         "description": "Do you want to add the Music Assistant Server `{url}` to Home Assistant?",
         "title": "Discovered Music Assistant Server",
-        "data": {
-          "expose_players_assist": "Expose players to Assist"
-        }
+        "data": {}
       }
     },
     "error": {
@@ -38,82 +34,6 @@
       "already_in_progress": "Configuration flow is already in progress",
       "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
       "cannot_connect": "Failed to connect"
-    }
-  },
-  "services": {
-    "play_media": {
-      "name": "Play Media (advanced)",
-      "description": "Play media on a Music Assistant player with more fine grained control options.",
-      "fields": {
-        "media_id": {
-          "name": "Media ID(s)",
-          "description": "URI or name of the item you want to play. Specify a list if you want to play/enqueue multiple items."
-        },
-        "media_type": {
-          "name": "Media type",
-          "description": "The type of the content to play. Such as artist, album, track or playlist. Will be auto determined if omitted."
-        },
-        "enqueue": {
-          "name": "Enqueue",
-          "description": "If the content should be played now or be added to the queue. Options are: play, replace, next. replace_next, add"
-        },
-        "artist": {
-          "name": "Artist name",
-          "description": "When specifying a track or album by name in the Media ID field, you can optionally restrict results by this artist name."
-        },
-        "album": {
-          "name": "Album name",
-          "description": "When specifying a track by name in the Media ID field, you can optionally restrict results by this album name."
-        },
-        "radio_mode": {
-          "name": "Enable Radio Mode",
-          "description": "Enable radio mode to auto generate a playlist based on the selection."
-        }
-      }
-    },
-    "play_announcement": {
-      "name": "Play Announcement (advanced)",
-      "description": "Play announcement on a Music Assistant player with more fine grained control options.",
-      "fields": {
-        "url": {
-          "name": "URL",
-          "description": "URL to the notification sound."
-        },
-        "use_pre_announce": {
-          "name": "Use pre-announce",
-          "description": "Use pre-announcement sound for the announcement. Omit to use the player default."
-        },
-        "announce_volume": {
-          "name": "Announce volume",
-          "description": "Use a forced volume level for the announcement. Omit to use player default."
-        }
-      }
-    },
-    "search": {
-      "name": "Search Music Assistant",
-      "description": "Perform a global search on the Music Assistant library and all providers.",
-      "fields": {
-        "name": {
-          "name": "Search name",
-          "description": "The name/title to search for."
-        },
-        "media_type": {
-          "name": "Media type(s)",
-          "description": "The type of the content to search. Such as artist, album, track, radio or playlist. All types if omitted."
-        },
-        "artist": {
-          "name": "Artist name",
-          "description": "When specifying a track or album name in the name field, you can optionally restrict results by this artist name."
-        },
-        "album": {
-          "name": "Album name",
-          "description": "When specifying a track name in the name field, you can optionally restrict results by this album name."
-        },
-        "limit": {
-          "name": "Limit",
-          "description": "Maximum number of items to return (per media type)."
-        }
-      }
     }
   },
   "selector": {
@@ -132,8 +52,7 @@
     "step": {
       "init": {
         "data": {
-          "url": "URL of the Music Assistant server",
-          "expose_players_assist": "Expose players to Assist"
+          "url": "URL of the Music Assistant server"
         }
       }
     }

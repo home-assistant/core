@@ -15,14 +15,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_ASSIST_AUTO_EXPOSE_PLAYERS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 DEFAULT_URL = "http://mass.local:8095"
 DEFAULT_TITLE = "Music Assistant"
@@ -165,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -185,9 +185,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 # store as data instead of options - adjust this once the reconfigure flow is available
                 data={
                     CONF_URL: user_input[CONF_URL],
-                    CONF_ASSIST_AUTO_EXPOSE_PLAYERS: user_input[
-                        CONF_ASSIST_AUTO_EXPOSE_PLAYERS
-                    ],
                 },
             )
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
@@ -209,15 +206,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_URL,
                     default=config_entry.data.get(CONF_URL),
                 ): str,
-                vol.Optional(
-                    CONF_ASSIST_AUTO_EXPOSE_PLAYERS,
-                    default=(
-                        config_entry.data.get(CONF_ASSIST_AUTO_EXPOSE_PLAYERS)
-                        if config_entry.data.get(CONF_ASSIST_AUTO_EXPOSE_PLAYERS)
-                        is not None
-                        else False
-                    ),
-                ): bool,
             }
         )
 
