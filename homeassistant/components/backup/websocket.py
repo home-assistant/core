@@ -33,7 +33,7 @@ async def handle_info(
 ) -> None:
     """List all stored backups."""
     manager = hass.data[DATA_MANAGER]
-    backups = await manager.get_backups()
+    backups = await manager.async_get_backups()
     connection.send_result(
         msg["id"],
         {
@@ -57,7 +57,7 @@ async def handle_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
-    await hass.data[DATA_MANAGER].remove_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].async_remove_backup(slug=msg["slug"])
     connection.send_result(msg["id"])
 
 
@@ -70,7 +70,7 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_MANAGER].generate_backup()
+    backup = await hass.data[DATA_MANAGER].async_create_backup()
     connection.send_result(msg["id"], backup)
 
 
@@ -88,7 +88,7 @@ async def handle_backup_start(
     LOGGER.debug("Backup start notification")
 
     try:
-        await manager.pre_backup_actions()
+        await manager.async_pre_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "pre_backup_actions_failed", str(err))
         return
@@ -110,7 +110,7 @@ async def handle_backup_end(
     LOGGER.debug("Backup end notification")
 
     try:
-        await manager.post_backup_actions()
+        await manager.async_post_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
         return
