@@ -251,7 +251,7 @@ def _is_domain_on(old_state, new_state) -> bool:
     return (new_state.domain == event.DOMAIN
             or new_state.state == STATE_ON
             and (old_state is None or old_state.state != STATE_ON)
-    )
+            )
 
 
 async def _async_est(

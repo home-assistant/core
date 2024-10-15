@@ -82,6 +82,7 @@ from .errors import (
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
 _ALEXA_SECURITY_PANEL_CONTROLLER_NAMESPACE = "Alexa.securityPanelController"
+_ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE = "Alexa.ThermostatController"
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
 
@@ -830,7 +831,7 @@ def temperature_from_object(
     return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))
+@HANDLERS.register((_ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE, "SetTargetTemperature"))
 async def async_api_set_target_temp(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -857,7 +858,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "targetSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": temp, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -869,7 +870,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "lowerSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": temp_low, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -881,7 +882,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "upperSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": temp_high, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -899,7 +900,7 @@ async def async_api_set_target_temp(
     return response
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "AdjustTargetTemperature"))
+@HANDLERS.register((_ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE, "AdjustTargetTemperature"))
 async def async_api_adjust_target_temp(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -940,14 +941,14 @@ async def async_api_adjust_target_temp(
         response.add_context_property(
             {
                 "name": "upperSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": target_temp_high, "scale": API_TEMP_UNITS[unit]},
             }
         )
         response.add_context_property(
             {
                 "name": "lowerSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": target_temp_low, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -967,7 +968,7 @@ async def async_api_adjust_target_temp(
         response.add_context_property(
             {
                 "name": "targetSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
                 "value": {"value": target_temp, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -985,7 +986,7 @@ async def async_api_adjust_target_temp(
     return response
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "SetThermostatMode"))
+@HANDLERS.register((_ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE, "SetThermostatMode"))
 async def async_api_set_thermostat_mode(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -1051,7 +1052,7 @@ async def async_api_set_thermostat_mode(
     response.add_context_property(
         {
             "name": "thermostatMode",
-            "namespace": "Alexa.ThermostatController",
+            "namespace": _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE,
             "value": mode,
         }
     )
@@ -1376,6 +1377,58 @@ async def async_api_toggle_off(
     return response
 
 
+def _set_cover_position(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+    range_value = int(range_value)
+    if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
+        service = cover.SERVICE_CLOSE_COVER
+    elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
+        service = cover.SERVICE_OPEN_COVER
+    else:
+        service = cover.SERVICE_SET_COVER_POSITION
+        data[cover.ATTR_POSITION] = range_value
+
+    return range_value, service
+
+
+def _set_cover_tilt(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+    range_value = int(range_value)
+    if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
+        service = cover.SERVICE_CLOSE_COVER_TILT
+    elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
+        service = cover.SERVICE_OPEN_COVER_TILT
+    else:
+        service = cover.SERVICE_SET_COVER_TILT_POSITION
+        data[cover.ATTR_TILT_POSITION] = range_value
+
+    return range_value, service
+
+
+def _set_fan_speed(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+    range_value = int(range_value)
+    if range_value == 0:
+        service = fan.SERVICE_TURN_OFF
+    elif supported & fan.FanEntityFeature.SET_SPEED:
+        service = fan.SERVICE_SET_PERCENTAGE
+        data[fan.ATTR_PERCENTAGE] = range_value
+    else:
+        service = fan.SERVICE_TURN_ON
+
+    return range_value, service
+
+
+def _set_valve_position(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+    range_value = int(range_value)
+    if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
+        service = valve.SERVICE_CLOSE_VALVE
+    elif supported & valve.ValveEntityFeature.OPEN and range_value == 100:
+        service = valve.SERVICE_OPEN_VALVE
+    else:
+        service = valve.SERVICE_SET_VALVE_POSITION
+        data[valve.ATTR_POSITION] = range_value
+
+    return range_value, service
+
+
 @HANDLERS.register(("Alexa.RangeController", "SetRangeValue"))
 async def async_api_set_range(
     hass: ha.HomeAssistant,
@@ -1394,36 +1447,15 @@ async def async_api_set_range(
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        range_value = int(range_value)
-        if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
-            service = cover.SERVICE_CLOSE_COVER
-        elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
-            service = cover.SERVICE_OPEN_COVER
-        else:
-            service = cover.SERVICE_SET_COVER_POSITION
-            data[cover.ATTR_POSITION] = range_value
+        range_value, service = _set_cover_position(data, range_value, supported)
 
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
-        range_value = int(range_value)
-        if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
-            service = cover.SERVICE_CLOSE_COVER_TILT
-        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
-            service = cover.SERVICE_OPEN_COVER_TILT
-        else:
-            service = cover.SERVICE_SET_COVER_TILT_POSITION
-            data[cover.ATTR_TILT_POSITION] = range_value
+        range_value, service = _set_cover_tilt(data, range_value, supported)
 
     # Fan Speed
     elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        range_value = int(range_value)
-        if range_value == 0:
-            service = fan.SERVICE_TURN_OFF
-        elif supported & fan.FanEntityFeature.SET_SPEED:
-            service = fan.SERVICE_SET_PERCENTAGE
-            data[fan.ATTR_PERCENTAGE] = range_value
-        else:
-            service = fan.SERVICE_TURN_ON
+        range_value, service = _set_fan_speed(data, range_value, supported)
 
     # Humidifier target humidity
     elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
@@ -1463,14 +1495,7 @@ async def async_api_set_range(
 
     # Valve Position
     elif instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
-        range_value = int(range_value)
-        if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
-            service = valve.SERVICE_CLOSE_VALVE
-        elif supported & valve.ValveEntityFeature.OPEN and range_value == 100:
-            service = valve.SERVICE_OPEN_VALVE
-        else:
-            service = valve.SERVICE_SET_VALVE_POSITION
-            data[valve.ATTR_POSITION] = range_value
+        range_value, service = _set_valve_position(data, range_value, supported)
 
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
