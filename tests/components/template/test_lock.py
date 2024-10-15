@@ -5,6 +5,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.components.lock import LockState
+from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -53,17 +54,40 @@ OPTIMISTIC_CODED_LOCK_CONFIG = {
 }
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config",
+    ("config", "domain"),
     [
-        {
-            lock.DOMAIN: {
-                **OPTIMISTIC_LOCK_CONFIG,
-                "name": "Test template lock",
-                "value_template": "{{ states.switch.test_state.state }}",
-            }
-        },
+        (
+            {
+                lock.DOMAIN: {
+                    **OPTIMISTIC_LOCK_CONFIG,
+                    "name": "Test template lock",
+                    "value_template": "{{ states.switch.test_state.state }}",
+                }
+            },
+            lock.DOMAIN,
+        ),
+        (
+            {
+                TEMPLATE_DOMAIN: [
+                    {
+                        lock.DOMAIN: [
+                            {
+                                **{
+                                    key: value
+                                    for key, value in OPTIMISTIC_LOCK_CONFIG.items()
+                                    if key != "platform"
+                                },
+                                "name": "Test template lock",
+                                "state": "{{ states.switch.test_state.state }}",
+                            }
+                        ]
+                    }
+                ]
+            },
+            TEMPLATE_DOMAIN,
+        ),
     ],
 )
 @pytest.mark.usefixtures("start_ha")
