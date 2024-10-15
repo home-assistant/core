@@ -104,7 +104,7 @@ def error_message(
     }
 
 
-def event_message(iden: int | str, event: Any) -> dict[str, Any]:
+def event_message(iden: int, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 
