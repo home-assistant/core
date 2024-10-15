@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -14,6 +15,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.typing import ConfigType
 
@@ -93,6 +99,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+logger = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Alexa component."""
@@ -101,15 +109,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config = config[DOMAIN]
 
-    intent.async_setup(hass)
+    # Setup intents
+    try:
+        intent.async_setup(hass)
+    except HomeAssistantError as err:
+        logger.error("Failed to set up intents: %s", err)
+        return False
 
+    # Setup flash briefings
     if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
-        flash_briefings.async_setup(hass, flash_briefings_config)
+        try:
+            flash_briefings.async_setup(hass, flash_briefings_config)
+        except ConfigValidationError as err:
+            logger.error("Failed to set up flash briefings: %s", err)
+            return False
 
-    # smart_home being absent is not the same as smart_home being None
+    # Setup smart home
     if CONF_SMART_HOME in config:
         smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME]
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
-        await smart_home.async_setup(hass, smart_home_config)
+        try:
+            await smart_home.async_setup(hass, smart_home_config)
+        except ServiceValidationError as err:
+            logger.error("Failed to set up smart home: %s", err)
+            return False
 
     return True
