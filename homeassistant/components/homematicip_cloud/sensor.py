@@ -8,6 +8,8 @@ from typing import Any
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
     AsyncEnergySensorsInterface,
+    AsyncFloorTerminalBlock6,
+    AsyncFloorTerminalBlock10,
     AsyncFloorTerminalBlock12,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
@@ -29,6 +31,7 @@ from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
     AsyncWeatherSensorPro,
+    AsyncWiredFloorTerminalBlock12,
 )
 from homematicip.base.enums import FunctionalChannelType, ValveState
 from homematicip.base.functionalChannels import (
@@ -187,15 +190,23 @@ async def async_setup_entry(  # noqa: C901
                     if ch.currentPowerConsumption is not None:
                         entities.append(HmipEsiLedCurrentPowerConsumption(hap, device))
                     entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
-        if isinstance(device, AsyncFloorTerminalBlock12):
-            for channel in device.functionalChannels:
-                if isinstance(channel, FloorTerminalBlockMechanicChannel):
-                    if getattr(channel, "valvePosition", None) is not None:
-                        entities.append(
-                            HomematicipFloorTerminalBlockMechanicChannelValve(
-                                hap, device, channel=channel.index
-                            )
-                        )
+        if isinstance(
+            device,
+            (
+                AsyncFloorTerminalBlock6,
+                AsyncFloorTerminalBlock10,
+                AsyncFloorTerminalBlock12,
+                AsyncWiredFloorTerminalBlock12,
+            ),
+        ):
+            entities.extend(
+                HomematicipFloorTerminalBlockMechanicChannelValve(
+                    hap, device, channel=channel.index
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, FloorTerminalBlockMechanicChannel)
+                and getattr(channel, "valvePosition", None) is not None
+            )
 
     async_add_entities(entities)
 
