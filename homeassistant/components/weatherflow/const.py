@@ -15,4 +15,4 @@ def format_dispatch_call(config_entry: ConfigEntry) -> str:
 
 ERROR_MSG_ADDRESS_IN_USE = "address_in_use"
 ERROR_MSG_CANNOT_CONNECT = "cannot_connect"
-ERROR_MSG_NO_DEVICE_FOUND = "no_devices_found"
+ERROR_MSG_NO_DEVICE_FOUND = "no_device_found"
