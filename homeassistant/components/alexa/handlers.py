@@ -1429,7 +1429,7 @@ async def async_api_toggle_off(
 
 
 # helper methods for async_api_set_range, for RangeController
-def _set_cover_position_RC(
+def _set_cover_position_rc(
     data: dict[str, Any], range_value: int, supported: int
 ) -> str | None:
     service = None
@@ -1443,7 +1443,7 @@ def _set_cover_position_RC(
     return service
 
 
-def _set_cover_tilt_RC(
+def _set_cover_tilt_rc(
     data: dict[str, Any], range_value: int, supported: int
 ) -> str | None:
     service = None
@@ -1457,7 +1457,7 @@ def _set_cover_tilt_RC(
     return service
 
 
-def _set_fan_speed_RC(
+def _set_fan_speed_rc(
     data: dict[str, Any], range_value: int, supported: int
 ) -> str | None:
     service = None
@@ -1471,13 +1471,13 @@ def _set_fan_speed_RC(
     return service
 
 
-def _set_humidifier_humidity_RC(data: dict[str, Any], range_value: int) -> str | None:
+def _set_humidifier_humidity_rc(data: dict[str, Any], range_value: int) -> str | None:
     service = humidifier.SERVICE_SET_HUMIDITY
     data[humidifier.ATTR_HUMIDITY] = range_value
     return service
 
 
-def _set_input_number_value_RC(
+def _set_input_number_value_rc(
     data: dict[str, Any], range_value: float, entity: Any
 ) -> str | None:
     service = input_number.SERVICE_SET_VALUE
@@ -1487,7 +1487,7 @@ def _set_input_number_value_RC(
     return service
 
 
-def _set_number_value_RC(
+def _set_number_value_rc(
     data: dict[str, Any], range_value: float, entity: Any
 ) -> str | None:
     service = number.SERVICE_SET_VALUE
@@ -1497,7 +1497,7 @@ def _set_number_value_RC(
     return service
 
 
-def _set_vacuum_fan_speed_RC(
+def _set_vacuum_fan_speed_rc(
     data: dict[str, Any], range_value: int, entity: Any
 ) -> str | None:
     service = vacuum.SERVICE_SET_FAN_SPEED
@@ -1511,7 +1511,7 @@ def _set_vacuum_fan_speed_RC(
     return service
 
 
-def _set_valve_position_RC(
+def _set_valve_position_rc(
     data: dict[str, Any], range_value: int, supported: int
 ) -> str | None:
     service = None
@@ -1542,28 +1542,28 @@ async def async_api_set_range(
     supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     handlers: dict[str, Callable[[], str | None]] = {
-        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _set_cover_position_RC(
+        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _set_cover_position_rc(
             data, int(range_value), supported
         ),
-        f"{cover.DOMAIN}.tilt": lambda: _set_cover_tilt_RC(
+        f"{cover.DOMAIN}.tilt": lambda: _set_cover_tilt_rc(
             data, int(range_value), supported
         ),
-        f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: _set_fan_speed_RC(
+        f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: _set_fan_speed_rc(
             data, int(range_value), supported
         ),
-        f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: _set_humidifier_humidity_RC(
+        f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: _set_humidifier_humidity_rc(
             data, int(range_value)
         ),
-        f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: _set_input_number_value_RC(
+        f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: _set_input_number_value_rc(
             data, float(range_value), entity
         ),
-        f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: _set_number_value_RC(
+        f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: _set_number_value_rc(
             data, float(range_value), entity
         ),
-        f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": lambda: _set_vacuum_fan_speed_RC(
+        f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": lambda: _set_vacuum_fan_speed_rc(
             data, int(range_value), entity
         ),
-        f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: _set_valve_position_RC(
+        f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: _set_valve_position_rc(
             data, int(range_value), supported
         ),
     }
@@ -1597,7 +1597,7 @@ async def async_api_set_range(
 
 
 # Helper methods for async_api_adjust_range
-def _adjust_cover_position_RC(
+def _adjust_cover_position_rc(
     data: dict[str, Any],
     range_delta: float,
     range_delta_default: bool,
@@ -1622,7 +1622,7 @@ def _adjust_cover_position_RC(
     return service, response_value
 
 
-def _adjust_cover_tilt_RC(
+def _adjust_cover_tilt_rc(
     data: dict[str, Any],
     range_delta: float,
     range_delta_default: bool,
@@ -1647,7 +1647,7 @@ def _adjust_cover_tilt_RC(
     return service, response_value
 
 
-def _adjust_fan_speed_RC(
+def _adjust_fan_speed_rc(
     data: dict[str, Any],
     range_delta: float,
     range_delta_default: bool,
@@ -1673,7 +1673,7 @@ def _adjust_fan_speed_RC(
     return service, response_value
 
 
-def _adjust_humidifier_humidity_RC(
+def _adjust_humidifier_humidity_rc(
     data: dict[str, Any],
     range_delta: float,
     range_delta_default: bool,
@@ -1699,7 +1699,7 @@ def _adjust_humidifier_humidity_RC(
     return service, response_value
 
 
-def _adjust_input_number_value_RC(
+def _adjust_input_number_value_rc(
     data: dict[str, Any], range_delta: float, entity: ha.Entity
 ) -> tuple[str, int]:
     """Adjust the input number value."""
@@ -1714,7 +1714,7 @@ def _adjust_input_number_value_RC(
     return service, int(response_value)
 
 
-def _adjust_number_value_RC(
+def _adjust_number_value_rc(
     data: dict[str, Any], range_delta: float, entity: ha.Entity
 ) -> tuple[str, int]:
     """Adjust the number value."""
@@ -1729,7 +1729,7 @@ def _adjust_number_value_RC(
     return service, int(response_value)
 
 
-def _adjust_vacuum_fan_speed_RC(
+def _adjust_vacuum_fan_speed_rc(
     data: dict[str, Any], range_delta: float, entity: ha.Entity
 ) -> tuple[str, int]:
     """Adjust the vacuum fan speed."""
@@ -1752,7 +1752,7 @@ def _adjust_vacuum_fan_speed_RC(
     return service, response_value
 
 
-def _adjust_valve_position_RC(
+def _adjust_valve_position_rc(
     data: dict[str, Any],
     range_delta: float,
     range_delta_default: bool,
@@ -1795,28 +1795,28 @@ async def async_api_adjust_range(
     response_value: int | None = 0
 
     handlers: dict[str, Callable[[], tuple[str, int] | None]] = {
-        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _adjust_cover_position_RC(
+        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": lambda: _adjust_cover_position_rc(
             data, range_delta, range_delta_default, entity
         ),
-        f"{cover.DOMAIN}.tilt": lambda: _adjust_cover_tilt_RC(
+        f"{cover.DOMAIN}.tilt": lambda: _adjust_cover_tilt_rc(
             data, range_delta, range_delta_default, entity
         ),
-        f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: _adjust_fan_speed_RC(
+        f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": lambda: _adjust_fan_speed_rc(
             data, range_delta, range_delta_default, entity
         ),
-        f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: _adjust_humidifier_humidity_RC(
+        f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": lambda: _adjust_humidifier_humidity_rc(
             data, range_delta, range_delta_default, entity
         ),
-        f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: _adjust_input_number_value_RC(
+        f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": lambda: _adjust_input_number_value_rc(
             data, range_delta, entity
         ),
-        f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: _adjust_number_value_RC(
+        f"{number.DOMAIN}.{number.ATTR_VALUE}": lambda: _adjust_number_value_rc(
             data, range_delta, entity
         ),
-        f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": lambda: _adjust_vacuum_fan_speed_RC(
+        f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": lambda: _adjust_vacuum_fan_speed_rc(
             data, range_delta, entity
         ),
-        f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: _adjust_valve_position_RC(
+        f"{valve.DOMAIN}.{valve.ATTR_POSITION}": lambda: _adjust_valve_position_rc(
             data, range_delta, range_delta_default, entity
         ),
     }
