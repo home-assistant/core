@@ -1180,7 +1180,7 @@ async def test_addon_running(
             {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
         ),
     ],
@@ -1363,7 +1363,7 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     ("discovery_info", "start_addon_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
+    [({"config": ADDON_DISCOVERY_INFO}, SupervisorError())],
 )
 async def test_addon_installed_start_failure(
     hass: HomeAssistant,
@@ -1766,7 +1766,7 @@ async def test_install_addon_failure(
     hass: HomeAssistant, supervisor, addon_not_installed, install_addon
 ) -> None:
     """Test add-on install failure."""
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

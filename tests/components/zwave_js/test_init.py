@@ -610,7 +610,7 @@ async def test_install_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
+@pytest.mark.parametrize("addon_info_side_effect", [SupervisorError("Boom")])
 async def test_addon_info_failure(
     hass: HomeAssistant,
     addon_installed,
