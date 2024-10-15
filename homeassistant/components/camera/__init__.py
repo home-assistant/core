@@ -6,7 +6,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -167,6 +167,20 @@ class Image:
 
     content_type: str = attr.ib()
     content: bytes = attr.ib()
+
+
+@dataclass(frozen=True)
+class CameraCapabilities:
+    """Camera capabilities."""
+
+    frontend_stream_types: set[StreamType]
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+
+        return {
+            "frontentStreamTypes": self.frontend_stream_types,
+        }
 
 
 @bind_hass
@@ -346,6 +360,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
     websocket_api.async_register_command(hass, ws_get_client_config)
+    websocket_api.async_register_command(hass, ws_camera_capabilities)
 
     await component.async_setup(config)
 
@@ -748,6 +763,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return config
 
+    @final
+    @callback
+    def get_camera_capabilities(self) -> CameraCapabilities:
+        """Return the camera capabilities."""
+        frontend_stream_types = set()
+        if CameraEntityFeature.STREAM in self.supported_features_compat:
+            if (
+                type(self).async_handle_web_rtc_offer
+                != Camera.async_handle_web_rtc_offer
+            ):
+                # The camera has a native WebRTC implementation
+                frontend_stream_types.add(StreamType.WEB_RTC)
+            else:
+                frontend_stream_types.add(StreamType.HLS)
+
+                if self._webrtc_providers:
+                    frontend_stream_types.add(StreamType.WEB_RTC)
+
+        return CameraCapabilities(frontend_stream_types)
+
 
 class CameraView(HomeAssistantView):
     """Base CameraView."""
@@ -836,6 +871,29 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest from err
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/capabilities",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get camera capabilities websocket command.
+
+    Async friendly.
+    """
+    try:
+        camera = get_camera_from_entity_id(hass, msg["entity_id"])
+        capabilities = camera.get_camera_capabilities()
+        connection.send_result(msg["id"], capabilities.to_frontend_dict())
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error requesting camera capabilities: %s", ex)
+        connection.send_error(msg["id"], "camera_capabilities_failed", str(ex))
 
 
 @websocket_api.websocket_command(
