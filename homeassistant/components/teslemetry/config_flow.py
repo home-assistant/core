@@ -22,6 +22,7 @@ from .const import DOMAIN, LOGGER
 
 TESLEMETRY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
+    "name": "Teslemetry",
     "short_url": "teslemetry.com/console",
     "url": "[teslemetry.com/console](https://teslemetry.com/console)",
 }
