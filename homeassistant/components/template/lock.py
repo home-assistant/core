@@ -57,6 +57,7 @@ LOCK_SCHEMA = vol.Schema(
         vol.Optional(CONF_CODE_FORMAT): cv.template,
         vol.Optional(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
 
