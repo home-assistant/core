@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_light_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '97358',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Dimmer',
+    'model_id': None,
+    'name': 'Licht',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '97358',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_light_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Licht',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.licht',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
