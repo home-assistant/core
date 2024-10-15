@@ -73,10 +73,6 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.melcloud.config.abort.cannot_connect"],
-)
 @pytest.mark.parametrize(
     ("error", "reason"),
     [(ClientError(), "cannot_connect"), (TimeoutError(), "cannot_connect")],
