@@ -330,7 +330,7 @@ async def test_config_flow_unknown_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_duplicate_entry(
+async def test_config_flow_duplicate_entries(
     hass: HomeAssistant,
     mock_hub_ping: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
@@ -367,3 +367,48 @@ async def test_config_flow_duplicate_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_config_flow_multiple_entries(
+    hass: HomeAssistant,
+    mock_hub_ping: AsyncMock,
+    mock_hub_configuration_test: AsyncMock,
+    mock_hub_configuration_prod: AsyncMock,
+) -> None:
+    """Test we handle an unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.2.3.4",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "1.2.3.4"
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+    }
+
+    mock_hub_configuration_prod.return_value = mock_hub_configuration_test.return_value
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "5.6.7.8",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "5.6.7.8"
+    assert result["data"] == {
+        CONF_HOST: "5.6.7.8",
+    }
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
