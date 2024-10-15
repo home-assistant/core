@@ -92,6 +92,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+# New class to encapsulate Pipeline Settings
+class PipelineSettings:
+    def __init__(
+        self,
+        wake_word_settings: Optional[WakeWordSettings] = None,
+        audio_settings: Optional[AudioSettings] = None,
+        tts_audio_output: Optional[str | dict[str, Any]] = None,
+    ):
+        self.wake_word_settings = wake_word_settings
+        self.audio_settings = audio_settings or AudioSettings()
+        self.tts_audio_output = tts_audio_output
+
+
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
     *,
@@ -102,9 +115,7 @@ async def async_pipeline_from_audio_stream(
     wake_word_phrase: str | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
-    tts_audio_output: str | dict[str, Any] | None = None,
-    wake_word_settings: WakeWordSettings | None = None,
-    audio_settings: AudioSettings | None = None,
+    pipeline_settings: PipelineSettings,
     device_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
@@ -126,10 +137,11 @@ async def async_pipeline_from_audio_stream(
             start_stage=start_stage,
             end_stage=end_stage,
             event_callback=event_callback,
-            tts_audio_output=tts_audio_output,
-            wake_word_settings=wake_word_settings,
-            audio_settings=audio_settings or AudioSettings(),
+            tts_audio_output=pipeline_settings.tts_audio_output,
+            wake_word_settings=pipeline_settings.wake_word_settings,
+            audio_settings=pipeline_settings.audio_settings or AudioSettings(),
         ),
     )
     await pipeline_input.validate()
     await pipeline_input.execute()
+
