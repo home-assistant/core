@@ -190,23 +190,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data={})
 
-        schema = self.mass_config_option_schema(self.config_entry)
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
-        )
-
-    def mass_config_option_schema(
-        self, config_entry: config_entries.ConfigEntry
-    ) -> vol.Schema:
-        """Return a schema for MusicAssistant completion options."""
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_URL,
-                    default=config_entry.data.get(CONF_URL),
-                ): str,
-            }
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_URL,
+                        default=self.config_entry.data.get(CONF_URL),
+                    ): str,
+                }
+            ),
         )
 
 
