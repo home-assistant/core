@@ -51,6 +51,26 @@ CAPTURE_CHANNELS: Final = 1
 MAX_CAPTURE_TIMEOUT: Final = 60.0
 
 
+async def _stt_stream(
+    audio_queue: asyncio.Queue[bytes],
+    incoming_sample_rate: Any
+) -> AsyncGenerator[bytes]:
+    state = None
+
+    # Yield until we receive an empty chunk
+    while chunk := await audio_queue.get():
+        if incoming_sample_rate != SAMPLE_RATE:
+            chunk, state = audioop.ratecv(
+                chunk,
+                SAMPLE_WIDTH,
+                SAMPLE_CHANNELS,
+                incoming_sample_rate,
+                SAMPLE_RATE,
+                state,
+            )
+        yield chunk
+
+
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
@@ -167,22 +187,6 @@ async def websocket_run(
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
 
-        async def stt_stream() -> AsyncGenerator[bytes]:
-            state = None
-
-            # Yield until we receive an empty chunk
-            while chunk := await audio_queue.get():
-                if incoming_sample_rate != SAMPLE_RATE:
-                    chunk, state = audioop.ratecv(
-                        chunk,
-                        SAMPLE_WIDTH,
-                        SAMPLE_CHANNELS,
-                        incoming_sample_rate,
-                        SAMPLE_RATE,
-                        state,
-                    )
-                yield chunk
-
         def handle_binary(
             _hass: HomeAssistant,
             _connection: websocket_api.ActiveConnection,
@@ -204,7 +208,7 @@ async def websocket_run(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
-        input_args["stt_stream"] = stt_stream()
+        input_args["stt_stream"] = _stt_stream(audio_queue, incoming_sample_rate)
         input_args["wake_word_phrase"] = wake_word_phrase
 
         # Audio settings
