@@ -112,7 +112,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info.hostname.split(".")[0].split("-")[0]
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
-    
+
         if config_entry := await self.async_set_unique_id(unique_id):
             try:
                 await validate_input(
