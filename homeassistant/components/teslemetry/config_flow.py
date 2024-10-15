@@ -80,7 +80,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reauth_confirm(entry_data)
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
