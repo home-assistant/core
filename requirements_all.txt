@@ -1547,7 +1547,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.3
+opower==0.8.4
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1834,7 +1834,7 @@ pydanfossair==0.1.0
 pydeako==0.4.0
 
 # homeassistant.components.deconz
-pydeconz==116
+pydeconz==118
 
 # homeassistant.components.delijn
 pydelijn==1.1.0
@@ -2682,7 +2682,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.1
+solarlog_cli==0.3.2
 
 # homeassistant.components.solax
 solax==3.1.1
