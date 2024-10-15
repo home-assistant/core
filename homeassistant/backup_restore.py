@@ -8,7 +8,10 @@ import shutil
 import sys
 from tempfile import TemporaryDirectory
 
+from awesomeversion import AwesomeVersion
 import securetar
+
+from .const import __version__ as HA_VERSION
 
 RESTORE_BACKUP_FILE = ".HA_RESTORE"
 KEEP_PATHS = ("backups", ".HA_RESTORE")
@@ -64,6 +67,15 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
         backup_meta_file = Path(tempdir, "extracted", "backup.json")
         backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
 
+        if (
+            backup_meta_version := AwesomeVersion(
+                backup_meta["homeassistant"]["version"]
+            )
+        ) > HA_VERSION:
+            raise ValueError(
+                f"You need at least Home Assistant version {backup_meta_version} to restore this backup"
+            )
+
         with securetar.SecureTarFile(
             Path(
                 tempdir,
@@ -94,8 +106,9 @@ def restore_backup(config_dir_path: str) -> bool:
         not restore_content.backup_file_path.exists()
         or not restore_content.backup_file_path.is_file()
     ):
-        _LOGGER.error("Backup file %s does not exist", restore_content.backup_file_path)
-        return False
+        raise ValueError(
+            f"Backup file {restore_content.backup_file_path} does not exist"
+        )
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     backup_file_path = restore_content.backup_file_path
