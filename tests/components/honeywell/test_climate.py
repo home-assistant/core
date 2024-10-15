@@ -29,6 +29,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.honeywell.climate import (
     DOMAIN,
+    MODE_PERMANENT_HOLD,
+    MODE_TEMPORARY_HOLD,
     PRESET_HOLD,
     RETRY,
     SCAN_INTERVAL,
@@ -1207,3 +1209,46 @@ async def test_unique_id(
     await init_integration(hass, config_entry)
     entity_entry = entity_registry.async_get(f"climate.{device.name}")
     assert entity_entry.unique_id == str(device.deviceid)
+
+
+async def test_preset_mode(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: er.EntityRegistry,
+) -> None:
+    """Test mode settings properly reflected."""
+    await init_integration(hass, config_entry)
+    entity_id = f"climate.{device.name}"
+
+    device.raw_ui_data["StatusHeat"] = 3
+    device.raw_ui_data["StatusCool"] = 3
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    device.raw_ui_data["StatusHeat"] = MODE_TEMPORARY_HOLD
+    device.raw_ui_data["StatusCool"] = MODE_TEMPORARY_HOLD
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
+
+    device.raw_ui_data["StatusHeat"] = MODE_PERMANENT_HOLD
+    device.raw_ui_data["StatusCool"] = MODE_PERMANENT_HOLD
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD

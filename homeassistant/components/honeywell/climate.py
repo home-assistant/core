@@ -49,6 +49,10 @@ from .const import (
     RETRY,
 )
 
+MODE_PERMANENT_HOLD = 2
+MODE_TEMPORARY_HOLD = 1
+MODE_HOLD = {MODE_PERMANENT_HOLD, MODE_TEMPORARY_HOLD}
+
 ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
@@ -325,9 +329,10 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         if self._away:
             return PRESET_AWAY
-        if self._is_permanent_hold():
+        if self._is_hold():
             return PRESET_HOLD
-
+        if self._away:
+            self._away = False
         return PRESET_NONE
 
     @property
@@ -335,10 +340,15 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
 
+    def _is_hold(self) -> bool:
+        heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
+        cool_status = self._device.raw_ui_data.get("StatusCool", 0)
+        return heat_status in MODE_HOLD or cool_status in MODE_HOLD
+
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
-        return heat_status == 2 or cool_status == 2
+        return heat_status in {MODE_PERMANENT_HOLD} or cool_status in {MODE_PERMANENT_HOLD}
 
     async def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
