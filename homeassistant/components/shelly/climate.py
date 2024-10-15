@@ -124,6 +124,7 @@ def async_setup_rpc_entry(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
     climate_key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+    valve_key_ids = get_rpc_key_ids(coordinator.device.status, "blutrv")
 
     climate_ids = []
     for id_ in climate_key_ids:
@@ -139,10 +140,11 @@ def async_setup_rpc_entry(
             unique_id = f"{coordinator.mac}-switch:{id_}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if not climate_ids:
-        return
+    if climate_ids:
+        async_add_entities(RpcTrvClimate(coordinator, id_) for id_ in climate_ids)
 
-    async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
+    if valve_key_ids:
+        async_add_entities(RpcTrvClimate(coordinator, id_) for id_ in valve_key_ids)
 
 
 @dataclass
@@ -527,4 +529,101 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
         await self.call_rpc(
             "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
+        )
+
+
+class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
+    """Entity that controls a thermostat on RPC based Shelly devices."""
+
+    _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
+    _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, f"blutrv:{id_}")
+        self._id = id_
+        self._thermostat_type = coordinator.device.config[f"blutrv:{id_}"].get(
+            "type", "heating"
+        )
+
+        if self._thermostat_type == "cooling":
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
+        else:
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Set target temperature."""
+        return cast(float, self.status["target_C"])
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return current temperature."""
+        return cast(float, self.status["current_C"])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return current humidity."""
+        if self._humidity_key is None:
+            return None
+
+        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """HVAC current mode."""
+        if not self.status["pos"]:
+            return HVACMode.OFF
+
+        return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """HVAC current action."""
+        if not self.status["pos"]:
+            return HVACAction.IDLE
+
+        return (
+            HVACAction.COOLING
+            if self._thermostat_type == "cooling"
+            else HVACAction.HEATING
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        await self.call_rpc(
+            "BluTRV.Call",
+            {
+                "id": self._id,
+                "method": "Trv.SetTarget",
+                "params": {"id": 0, "target_C": target_temp},
+            },
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
+        await self.call_rpc(
+            "BluTRV.Call",
+            {
+                "id": self._id,
+                "method": "Trv.SetConfig",
+                "params": {"id": 0, "enable": mode},
+            },
         )
