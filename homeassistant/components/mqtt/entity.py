@@ -731,6 +731,12 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                     self._migrate_discovery,
                     discovery_hash,
                 )
+            # Cleanup platform resources
+            await self.async_tear_down()
+            # Unregister and clean discovery
+            stop_discovery_updates(
+                self.hass, self._discovery_data, self._remove_discovery_updated
+            )
             send_discovery_done(self.hass, self._discovery_data)
             return
 
@@ -741,40 +747,18 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             discovery_payload,
         )
         new_discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
-        # Migrate the discovery topic, if migration is allowed
-        if (
-            self._migrate_discovery is not None
-            and new_discovery_topic != self._migrate_discovery
-        ):
-            # Finish discovery migration
-            _LOGGER.info(
-                "Processing discovery migration for %s %s on topic %s",
-                self.log_name,
-                discovery_hash,
-                new_discovery_topic,
-            )
-            self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
 
         # Abort early if there is no normal update
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
-            if self._migrate_discovery is None:
-                _LOGGER.warning(
-                    "Illegal discovery payload "
-                    "for %s on topic %s detected, "
-                    "ignoring update, discovery registered to %s",
-                    discovery_hash,
-                    new_discovery_topic,
-                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                )
-            # Complete the discovery migration when the old discovery topic is cleared
-            elif not discovery_payload and not discovery_payload.migrate_discovery:
-                _LOGGER.info(
-                    "Completing discovery migration for %s on topic %s",
-                    discovery_hash,
-                    new_discovery_topic,
-                )
-                self._migrate_discovery = None
+            _LOGGER.warning(
+                "Illegal discovery payload "
+                "for %s on topic %s detected, "
+                "ignoring update, discovery registered to %s",
+                discovery_hash,
+                new_discovery_topic,
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+            )
             send_discovery_done(self.hass, self._discovery_data)
             return
 
@@ -932,7 +916,12 @@ class MqttDiscoveryUpdateMixin(Entity):
         if TYPE_CHECKING:
             assert self._discovery_data
         self._cleanup_discovery_on_remove()
-        await self._async_remove_state_and_registry_entry()
+        if self._migrate_discovery is None:
+            # Unload and cleanup registry
+            await self._async_remove_state_and_registry_entry()
+        else:
+            # Only unload the entity
+            await self.async_remove(force_remove=True)
         send_discovery_done(self.hass, self._discovery_data)
 
     @callback
@@ -956,6 +945,19 @@ class MqttDiscoveryUpdateMixin(Entity):
             and self._discovery_data[ATTR_DISCOVERY_TOPIC]
             == payload.discovery_data[ATTR_DISCOVERY_TOPIC]
         ):
+            if self.unique_id is None or self.device_info is None:
+                _LOGGER.error(
+                    "Discovery migration is not possible for "
+                    "for entity %s on topic %s. A unique_id "
+                    "and device context is required, got unique_id: %s, device: %s",
+                    self.entity_id,
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                    self.unique_id,
+                    self.device_info,
+                )
+                send_discovery_done(self.hass, self._discovery_data)
+                return
+
             self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
             if payload.device_discovery:
@@ -976,8 +978,6 @@ class MqttDiscoveryUpdateMixin(Entity):
                     self._migrate_discovery,
                     discovery_hash,
                 )
-            send_discovery_done(self.hass, self._discovery_data)
-            return
         old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         _LOGGER.debug(
             "Got update for entity with hash: %s '%s'",
@@ -985,49 +985,28 @@ class MqttDiscoveryUpdateMixin(Entity):
             payload,
         )
         new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
-        # Migrate the discovery topic, if migration is allowed
-        if (
-            self._migrate_discovery is not None
-            and new_discovery_topic != self._migrate_discovery
-        ):
-            # Finish discovery migration
-            _LOGGER.info(
-                "Processing discovery migration for entity %s %s on topic %s",
-                self.entity_id,
-                discovery_hash,
-                new_discovery_topic,
-            )
-            self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
-
         # Abort early if there is no normal update
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
-            if self._migrate_discovery is None:
-                _LOGGER.warning(
-                    "Illegal discovery payload "
-                    "for entity %s %s on topic %s detected, "
-                    "ignoring update, discovery registered to %s",
-                    self.entity_id,
-                    discovery_hash,
-                    new_discovery_topic,
-                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                )
-            # Complete the discovery migration when the old discovery topic is cleared
-            elif not payload and not payload.migrate_discovery:
-                _LOGGER.info(
-                    "Completing discovery migration for entity %s %s on topic %s",
-                    self.entity_id,
-                    discovery_hash,
-                    new_discovery_topic,
-                )
-                self._migrate_discovery = None
+            _LOGGER.warning(
+                "Illegal discovery payload "
+                "for entity %s %s on topic %s detected, "
+                "ignoring update, discovery registered to %s",
+                self.entity_id,
+                discovery_hash,
+                new_discovery_topic,
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+            )
             send_discovery_done(self.hass, self._discovery_data)
             return
 
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
-            _LOGGER.info("Removing component: %s", self.entity_id)
+            if self._migrate_discovery is None:
+                _LOGGER.info("Removing component: %s", self.entity_id)
+            else:
+                _LOGGER.info("Unloading component: %s", self.entity_id)
             self.hass.async_create_task(
                 self._async_process_discovery_update_and_remove()
             )

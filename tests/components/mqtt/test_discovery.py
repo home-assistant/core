@@ -438,6 +438,7 @@ async def test_discovery_integration_info(
 async def test_discovery_migration_to_device_base(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
     caplog: pytest.LogCaptureFixture,
@@ -495,13 +496,25 @@ async def test_discovery_migration_to_device_base(
         )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
+
+    # Assert we still have our device entry
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    # Check our trigger was unloaden
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert len(triggers) == 0
+    # Check the sensor was unloaded
+    state = hass.states.get("sensor.test_device_mqtt_sensor")
+    assert state is None
+    # Check the entity registry entry is retained
+    assert entity_registry.async_is_registered("sensor.test_device_mqtt_sensor")
+
     assert (
         "Migration to device based discovery started on "
         "topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
     )
-
-    # Check we still have our mqtt items
-    await help_check_discovered_items(hass, device_registry, tag_mock)
 
     # Migrate to device based discovery
     caplog.clear()
@@ -512,22 +525,6 @@ async def test_discovery_migration_to_device_base(
         payload,
     )
     await hass.async_block_till_done()
-
-    assert (
-        "Processing discovery migration for Device trigger "
-        "('device_automation', '0AFFD2 bla1') on topic homeassistant/device/0AFFD2/config"
-        in caplog.text
-    )
-    assert (
-        "Processing discovery migration for entity "
-        "sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2') on topic homeassistant/device/0AFFD2/config"
-        in caplog.text
-    )
-    assert (
-        "Processing discovery migration for Tag "
-        "('tag', '0AFFD2 bla3') on topic homeassistant/device/0AFFD2/config"
-        in caplog.text
-    )
 
     caplog.clear()
     for _ in range(2):
@@ -545,20 +542,6 @@ async def test_discovery_migration_to_device_base(
         # Check we still have our mqtt items after publishing an
         # empty payload to the old discovery topics
         await help_check_discovered_items(hass, device_registry, tag_mock)
-
-    assert (
-        "Completing discovery migration for ('device_automation', '0AFFD2 bla1') "
-        "on topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
-    )
-    assert (
-        "Completing discovery migration for entity sensor.test_device_mqtt_sensor "
-        "('sensor', '0AFFD2 bla2') on topic homeassistant/sensor/0AFFD2/bla2/config"
-        in caplog.text
-    )
-    assert (
-        "Completing discovery migration for ('tag', '0AFFD2 bla3') "
-        "on topic homeassistant/tag/0AFFD2/bla3/config" in caplog.text
-    )
 
     # Check we cannot accidentally migrate back and remove the items
     caplog.clear()
@@ -617,6 +600,57 @@ async def test_discovery_migration_to_device_base(
     # Check the device was removed as all device components were removed
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"state_topic": "foobar/sensors/bla2/state", "name": "none_test"},
+        {
+            "state_topic": "foobar/sensors/bla2/state",
+            "name": "none_test",
+            "unique_id": "very_unique",
+        },
+        {
+            "state_topic": "foobar/sensors/bla2/state",
+            "device": {"identifiers": ["0AFFD2"], "name": "none_test"},
+        },
+    ],
+)
+async def test_discovery_migration_unique_id(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
+) -> None:
+    """Test entity has a unique_id and device context when migrating."""
+    await mqtt_mock_entry()
+
+    discovery_topic = "homeassistant/sensor/0AFFD2/bla2/config"
+
+    # Discovery with single config schema
+    payload = json.dumps(config)
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Try discovery migration
+    payload = json.dumps({"migr_discvry": True})
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        payload,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Assert the migration attempt fails
+    assert "Discovery migration is not possible" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -626,6 +660,7 @@ async def test_discovery_migration_to_device_base(
 async def test_discovery_migration_to_single_base(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     tag_mock: AsyncMock,
     caplog: pytest.LogCaptureFixture,
@@ -633,7 +668,7 @@ async def test_discovery_migration_to_single_base(
     device_discovery_topic: str,
     device_config: dict[str, Any],
 ) -> None:
-    """Test the rollback of device based discovery migratio to a single component discovery."""
+    """Test the rollback of device discovery to a single component discovery."""
     await mqtt_mock_entry()
 
     # Start device based discovery
@@ -671,11 +706,22 @@ async def test_discovery_migration_to_single_base(
     )
     await hass.async_block_till_done()
 
-    # Check we still have our mqtt items
-    await help_check_discovered_items(hass, device_registry, tag_mock)
+    # Assert we still have our device entry
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+    # Check our trigger was unloaden
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert len(triggers) == 0
+    # Check the sensor was unloaded
+    state = hass.states.get("sensor.test_device_mqtt_sensor")
+    assert state is None
+    # Check the entity registry entry is retained
+    assert entity_registry.async_is_registered("sensor.test_device_mqtt_sensor")
 
-    # 2) Publish the new component based payloads
-    #    to switch to component based discovery
+    # Publish the new component based payloads
+    # to switch back to component based discovery
     for discovery_topic, config in single_configs:
         payload = json.dumps(config)
         async_fire_mqtt_message(
