@@ -442,6 +442,13 @@ def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return mock_addon_stats(supervisor_client)
 
 
+@pytest.fixture(name="addon_changelog")
+def addon_changelog_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon changelog."""
+    supervisor_client.store.addon_changelog.return_value = ""
+    return supervisor_client.store.addon_changelog
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
