@@ -22,7 +22,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_discovery_parameters": "Detected unsupported API version",
+      "unsupported_api_version": "Detected unsupported API version",
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "Enabling API was successful"

@@ -234,7 +234,7 @@ async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> No
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_parameters"
+    assert result["reason"] == "unsupported_api_version"
 
 
 async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
@@ -302,10 +302,6 @@ async def test_error_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.homewizard.config.abort.unsupported_api_version"],
-)
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
