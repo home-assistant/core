@@ -14,9 +14,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 
-from .const import DOMAIN
-from .coordinator import GitHubDataUpdateCoordinator
-
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
@@ -37,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     else:
         data["rate_limit"] = rate_limit_response.data.as_dict
 
-    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    repositories = config_entry.runtime_data
     data["repositories"] = {}
 
     for repository, coordinator in repositories.items():

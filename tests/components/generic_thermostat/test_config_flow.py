@@ -6,12 +6,11 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.climate import PRESET_AWAY
-from homeassistant.components.generic_thermostat.climate import (
+from homeassistant.components.generic_thermostat.const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
-    CONF_NAME,
     CONF_PRESETS,
     CONF_SENSOR,
     DOMAIN,
@@ -21,6 +20,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     STATE_OFF,
     UnitOfTemperature,
 )

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
 from homeassistant.const import CONF_TYPE

@@ -1,0 +1,57 @@
+{
+  "Calibrated": false,
+  "Created": "2000-00-00T00:00:00.447Z",
+  "HouseID": "houseid",
+  "HouseName": "MockName",
+  "LockID": "ABC",
+  "LockName": "Test",
+  "LockStatus": {
+    "status": "unknown"
+  },
+  "OfflineKeys": {
+    "created": [],
+    "createdhk": [
+      {
+        "UserID": "mock-user-id",
+        "created": "2000-00-00T00:00:00.447Z",
+        "key": "mockkey",
+        "slot": 12
+      }
+    ],
+    "deleted": [],
+    "loaded": []
+  },
+  "SerialNumber": "ABC",
+  "Type": 3,
+  "Updated": "2000-00-00T00:00:00.447Z",
+  "battery": -1,
+  "cameras": [],
+  "currentFirmwareVersion": "undefined-1.59.0-1.13.2",
+  "geofenceLimits": {
+    "ios": {
+      "debounceInterval": 90,
+      "gpsAccuracyMultiplier": 2.5,
+      "maximumGeofence": 5000,
+      "minGPSAccuracyRequired": 80,
+      "minimumGeofence": 100
+    }
+  },
+  "homeKitEnabled": false,
+  "isGalileo": false,
+  "macAddress": "a:b:c",
+  "parametersToSet": {},
+  "pubsubChannel": "mockpubsub",
+  "ruleHash": {},
+  "skuNumber": "AUG-X",
+  "supportsEntryCodes": false,
+  "users": {
+    "mockuserid": {
+      "FirstName": "MockName",
+      "LastName": "House",
+      "UserType": "superuser",
+      "identifiers": ["phone:+15558675309", "email:mockme@mock.org"]
+    }
+  },
+  "zWaveDSK": "1-2-3-4",
+  "zWaveEnabled": true
+}

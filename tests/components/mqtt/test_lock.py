@@ -10,14 +10,8 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     LockEntityFeature,
+    LockState,
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
@@ -89,12 +83,12 @@ CONFIG_WITH_STATES = {
 @pytest.mark.parametrize(
     ("hass_config", "payload", "lock_state"),
     [
-        (CONFIG_WITH_STATES, "closed", STATE_LOCKED),
-        (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
-        (CONFIG_WITH_STATES, "open", STATE_OPEN),
-        (CONFIG_WITH_STATES, "opening", STATE_OPENING),
-        (CONFIG_WITH_STATES, "unlocked", STATE_UNLOCKED),
-        (CONFIG_WITH_STATES, "unlocking", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "closed", LockState.LOCKED),
+        (CONFIG_WITH_STATES, "closing", LockState.LOCKING),
+        (CONFIG_WITH_STATES, "open", LockState.OPEN),
+        (CONFIG_WITH_STATES, "opening", LockState.OPENING),
+        (CONFIG_WITH_STATES, "unlocked", LockState.UNLOCKED),
+        (CONFIG_WITH_STATES, "unlocking", LockState.UNLOCKING),
     ],
 )
 async def test_controlling_state_via_topic(
@@ -115,18 +109,18 @@ async def test_controlling_state_via_topic(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is lock_state
+    assert state.state == lock_state
 
 
 @pytest.mark.parametrize(
     ("hass_config", "payload", "lock_state"),
     [
-        (CONFIG_WITH_STATES, "closed", STATE_LOCKED),
-        (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
-        (CONFIG_WITH_STATES, "open", STATE_OPEN),
-        (CONFIG_WITH_STATES, "opening", STATE_OPENING),
-        (CONFIG_WITH_STATES, "unlocked", STATE_UNLOCKED),
-        (CONFIG_WITH_STATES, "unlocking", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "closed", LockState.LOCKED),
+        (CONFIG_WITH_STATES, "closing", LockState.LOCKING),
+        (CONFIG_WITH_STATES, "open", LockState.OPEN),
+        (CONFIG_WITH_STATES, "opening", LockState.OPENING),
+        (CONFIG_WITH_STATES, "unlocked", LockState.UNLOCKED),
+        (CONFIG_WITH_STATES, "unlocking", LockState.UNLOCKING),
         (CONFIG_WITH_STATES, "None", STATE_UNKNOWN),
     ],
 )
@@ -146,13 +140,13 @@ async def test_controlling_non_default_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", payload)
 
     state = hass.states.get("lock.test")
-    assert state.state is lock_state
+    assert state.state == lock_state
 
     # Empty state is ignored
     async_fire_mqtt_message(hass, "state-topic", "")
 
     state = hass.states.get("lock.test")
-    assert state.state is lock_state
+    assert state.state == lock_state
 
 
 @pytest.mark.parametrize(
@@ -165,7 +159,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"closed"}',
-            STATE_LOCKED,
+            LockState.LOCKED,
         ),
         (
             help_custom_config(
@@ -174,7 +168,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"closing"}',
-            STATE_LOCKING,
+            LockState.LOCKING,
         ),
         (
             help_custom_config(
@@ -183,7 +177,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"unlocking"}',
-            STATE_UNLOCKING,
+            LockState.UNLOCKING,
         ),
         (
             help_custom_config(
@@ -192,7 +186,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"open"}',
-            STATE_OPEN,
+            LockState.OPEN,
         ),
         (
             help_custom_config(
@@ -201,7 +195,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"opening"}',
-            STATE_OPENING,
+            LockState.OPENING,
         ),
         (
             help_custom_config(
@@ -210,7 +204,7 @@ async def test_controlling_non_default_state_via_topic(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"unlocked"}',
-            STATE_UNLOCKED,
+            LockState.UNLOCKED,
         ),
         (
             help_custom_config(
@@ -238,7 +232,7 @@ async def test_controlling_state_via_topic_and_json_message(
     async_fire_mqtt_message(hass, "state-topic", payload)
 
     state = hass.states.get("lock.test")
-    assert state.state is lock_state
+    assert state.state == lock_state
 
 
 @pytest.mark.parametrize(
@@ -251,7 +245,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"closed"}',
-            STATE_LOCKED,
+            LockState.LOCKED,
         ),
         (
             help_custom_config(
@@ -260,7 +254,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"closing"}',
-            STATE_LOCKING,
+            LockState.LOCKING,
         ),
         (
             help_custom_config(
@@ -269,7 +263,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"open"}',
-            STATE_OPEN,
+            LockState.OPEN,
         ),
         (
             help_custom_config(
@@ -278,7 +272,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"opening"}',
-            STATE_OPENING,
+            LockState.OPENING,
         ),
         (
             help_custom_config(
@@ -287,7 +281,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"unlocked"}',
-            STATE_UNLOCKED,
+            LockState.UNLOCKED,
         ),
         (
             help_custom_config(
@@ -296,7 +290,7 @@ async def test_controlling_state_via_topic_and_json_message(
                 ({"value_template": "{{ value_json.val }}"},),
             ),
             '{"val":"unlocking"}',
-            STATE_UNLOCKING,
+            LockState.UNLOCKING,
         ),
     ],
 )
@@ -315,7 +309,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
     async_fire_mqtt_message(hass, "state-topic", payload)
 
     state = hass.states.get("lock.test")
-    assert state.state is lock_state
+    assert state.state == lock_state
 
 
 @pytest.mark.parametrize(
@@ -342,7 +336,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -352,7 +346,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -362,7 +356,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -393,7 +387,7 @@ async def test_sending_mqtt_commands_with_template(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -408,7 +402,7 @@ async def test_sending_mqtt_commands_with_template(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -423,7 +417,7 @@ async def test_sending_mqtt_commands_with_template(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -453,7 +447,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -463,7 +457,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -473,7 +467,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -502,7 +496,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
 
@@ -513,7 +507,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -523,7 +517,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -533,7 +527,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_OPEN
+    assert state.state == LockState.OPEN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -564,7 +558,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
 
@@ -575,7 +569,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -585,7 +579,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
@@ -595,7 +589,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_OPEN
+    assert state.state == LockState.OPEN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -644,7 +638,7 @@ async def test_sending_mqtt_commands_pessimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
@@ -658,7 +652,7 @@ async def test_sending_mqtt_commands_pessimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
@@ -672,7 +666,7 @@ async def test_sending_mqtt_commands_pessimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     # send lock command to lock
     await hass.services.async_call(
@@ -688,21 +682,21 @@ async def test_sending_mqtt_commands_pessimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKING
+    assert state.state == LockState.LOCKING
 
     # receive jammed state from lock
     async_fire_mqtt_message(hass, "state-topic", "JAMMED")
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_JAMMED
+    assert state.state == LockState.JAMMED
 
     # receive solved state from lock
     async_fire_mqtt_message(hass, "state-topic", "LOCKED")
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -757,11 +751,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass,
-        mqtt_mock_entry,
-        lock.DOMAIN,
-        DEFAULT_CONFIG,
-        MQTT_LOCK_ATTRIBUTES_BLOCKED,
+        hass, mqtt_mock_entry, lock.DOMAIN, DEFAULT_CONFIG, MQTT_LOCK_ATTRIBUTES_BLOCKED
     )
 
 
@@ -781,11 +771,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        lock.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -796,22 +782,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        lock.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry, caplog, lock.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -846,19 +826,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_lock(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered lock."""
     data = '{ "name": "test", "command_topic": "test_topic" }'
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, lock.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, lock.DOMAIN, data)
 
 
 async def test_discovery_update_lock(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered lock."""
     config1 = {
@@ -874,14 +850,12 @@ async def test_discovery_update_lock(
         "availability_topic": "availability_topic2",
     }
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, lock.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, lock.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_lock(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered lock."""
     data1 = (
@@ -893,27 +867,18 @@ async def test_discovery_update_unchanged_lock(
         "homeassistant.components.mqtt.lock.MqttLock.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            lock.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, lock.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, lock.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, lock.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -1025,8 +990,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = lock.DOMAIN
@@ -1076,8 +1040,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = lock.DOMAIN

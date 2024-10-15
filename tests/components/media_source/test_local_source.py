@@ -1,5 +1,6 @@
 """Test Local Media Source."""
 
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -7,7 +8,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_source import const

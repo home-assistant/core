@@ -1,5 +1,7 @@
 """Test Hue diagnostics."""
 
+from unittest.mock import Mock
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
@@ -9,7 +11,7 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics_v1(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge_v1
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge_v1: Mock
 ) -> None:
     """Test diagnostics v1."""
     await setup_platform(hass, mock_bridge_v1, [])
@@ -19,7 +21,7 @@ async def test_diagnostics_v1(
 
 
 async def test_diagnostics_v2(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge_v2
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge_v2: Mock
 ) -> None:
     """Test diagnostics v2."""
     mock_bridge_v2.api.get_diagnostics.return_value = {"hello": "world"}

@@ -102,6 +102,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_native_value = CallState.IDLE
         self._attr_device_info = DeviceInfo(
+            configuration_url=self._fritzbox_phonebook.fph.fc.address,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model=self._fritzbox_phonebook.fph.modelname,

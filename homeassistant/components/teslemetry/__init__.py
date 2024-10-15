@@ -15,16 +15,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
+    TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .services import async_register_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -42,6 +47,14 @@ PLATFORMS: Final = [
 ]
 
 type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Telemetry integration."""
+    async_register_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -64,6 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
+
+    device_registry = dr.async_get(hass)
 
     # Create array of classes
     vehicles: list[TeslemetryVehicleData] = []
@@ -92,11 +107,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     device=device,
                 )
             )
+
         elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
+            if not (
+                product["components"]["battery"]
+                or product["components"]["solar"]
+                or "wall_connectors" in product["components"]
+            ):
+                LOGGER.debug(
+                    "Skipping Energy Site %s as it has no components",
+                    site_id,
+                )
+                continue
+
             api = EnergySpecific(teslemetry.energy, site_id)
-            live_coordinator = TeslemetryEnergySiteLiveCoordinator(hass, api)
-            info_coordinator = TeslemetryEnergySiteInfoCoordinator(hass, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -108,8 +133,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             energysites.append(
                 TeslemetryEnergyData(
                     api=api,
-                    live_coordinator=live_coordinator,
-                    info_coordinator=info_coordinator,
+                    live_coordinator=TeslemetryEnergySiteLiveCoordinator(hass, api),
+                    info_coordinator=TeslemetryEnergySiteInfoCoordinator(
+                        hass, api, product
+                    ),
+                    history_coordinator=TeslemetryEnergyHistoryCoordinator(hass, api),
                     id=site_id,
                     device=device,
                 )
@@ -129,6 +157,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             energysite.info_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
+        *(
+            energysite.history_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
     )
 
     # Add energy device models
@@ -142,6 +174,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 models.add(battery["part_name"])
         if models:
             energysite.device["model"] = ", ".join(sorted(models))
+
+        # Create the energy site device regardless of it having entities
+        # This is so users with a Wall Connector but without a Powerwall can still make service calls
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **energysite.device
+        )
 
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)

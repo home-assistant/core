@@ -1,9 +1,9 @@
 """Test helpers."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -47,6 +47,33 @@ def mock_room() -> Mock:
     room.fibaro_id = 1
     room.name = "Room 1"
     return room
+
+
+@pytest.fixture
+def mock_power_sensor() -> Mock:
+    """Fixture for an individual power sensor without value."""
+    sensor = Mock()
+    sensor.fibaro_id = 1
+    sensor.parent_fibaro_id = 0
+    sensor.name = "Test sensor"
+    sensor.room_id = 1
+    sensor.visible = True
+    sensor.enabled = True
+    sensor.type = "com.fibaro.powerMeter"
+    sensor.base_type = "com.fibaro.device"
+    sensor.properties = {
+        "zwaveCompany": "Goap",
+        "endPointId": "2",
+        "manufacturer": "",
+        "power": "6.60",
+    }
+    sensor.actions = {}
+    sensor.has_central_scene_event = False
+    value_mock = Mock()
+    value_mock.has_value = False
+    value_mock.is_bool_value = False
+    sensor.value = value_mock
+    return sensor
 
 
 @pytest.fixture

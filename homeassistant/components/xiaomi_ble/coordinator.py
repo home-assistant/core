@@ -16,11 +16,11 @@ from homeassistant.components.bluetooth.active_update_processor import (
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 
 from .const import CONF_SLEEPY_DEVICE
+from .types import XiaomiBLEConfigEntry
 
 
 class XiaomiActiveBluetoothProcessorCoordinator(
@@ -45,7 +45,7 @@ class XiaomiActiveBluetoothProcessorCoordinator(
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
-        entry: ConfigEntry,
+        entry: XiaomiBLEConfigEntry,
         connectable: bool = True,
     ) -> None:
         """Initialize the Xiaomi Bluetooth Active Update Processor Coordinator."""

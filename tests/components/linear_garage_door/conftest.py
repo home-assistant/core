@@ -1,9 +1,9 @@
 """Common fixtures for the Linear Garage Door tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.linear_garage_door import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

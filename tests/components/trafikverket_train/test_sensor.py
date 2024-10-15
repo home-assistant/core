@@ -8,7 +8,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoTrainAnnouncementFound
-from pytrafikverket.trafikverket_train import TrainStop
+from pytrafikverket.models import TrainStopModel
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
@@ -23,8 +23,8 @@ async def test_sensor_next(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     load_int: ConfigEntry,
-    get_trains_next: list[TrainStop],
-    get_train_stop: TrainStop,
+    get_trains_next: list[TrainStopModel],
+    get_train_stop: TrainStopModel,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor."""
@@ -70,7 +70,7 @@ async def test_sensor_single_stop(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     load_int: ConfigEntry,
-    get_trains_next: list[TrainStop],
+    get_trains_next: list[TrainStopModel],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor."""
@@ -86,7 +86,7 @@ async def test_sensor_update_auth_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     load_int: ConfigEntry,
-    get_trains_next: list[TrainStop],
+    get_trains_next: list[TrainStopModel],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor with authentication update failure."""
@@ -119,7 +119,7 @@ async def test_sensor_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     load_int: ConfigEntry,
-    get_trains_next: list[TrainStop],
+    get_trains_next: list[TrainStopModel],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor with update failure."""
@@ -149,7 +149,7 @@ async def test_sensor_update_failure_no_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     load_int: ConfigEntry,
-    get_trains_next: list[TrainStop],
+    get_trains_next: list[TrainStopModel],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor with update failure from empty state."""

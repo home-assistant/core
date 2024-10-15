@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
 from typing import Any
 
-from pysqueezebox import Server, async_discover
+from pysqueezebox import Player, Server, async_discover
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    BrowseError,
+    BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -21,22 +24,20 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
     entity_platform,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -46,28 +47,19 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
+from . import SqueezeboxConfigEntry
 from .browse_media import (
     build_item_response,
     generate_playlist,
     library_payload,
     media_source_content_filter,
 )
-from .const import (
-    CONF_HTTPS,
-    DISCOVERY_TASK,
-    DOMAIN,
-    KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
-    SQUEEZEBOX_SOURCE_STRINGS,
-)
+from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, SQUEEZEBOX_SOURCE_STRINGS
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-SERVICE_SYNC = "sync"
-SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
-ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
@@ -82,7 +74,6 @@ ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
-    ATTR_SYNC_GROUP,
 ]
 
 SQUEEZEBOX_MODE = {
@@ -95,7 +86,7 @@ SQUEEZEBOX_MODE = {
 async def start_server_discovery(hass: HomeAssistant) -> None:
     """Start a server discovery task."""
 
-    def _discovered_server(server):
+    def _discovered_server(server: Server) -> None:
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
@@ -118,32 +109,18 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: SqueezeboxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up an LMS Server from a config entry."""
-    config = config_entry.data
-    _LOGGER.debug("Reached async_setup_entry for host=%s", config[CONF_HOST])
-
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    https = config.get(CONF_HTTPS, False)
-
+    """Set up an player discovery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
+    lms = entry.runtime_data.server
 
-    session = async_get_clientsession(hass)
-    _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(session, host, port, username, password, https=https)
-
-    async def _discovery(now=None):
+    async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
 
-        async def _discovered_player(player):
+        async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
             entity = next(
                 (
@@ -161,21 +138,23 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player, lms)
                 known_players.append(entity)
-                async_add_entities([entity])
+                async_add_entities([entity], True)
 
         if players := await lms.async_get_players():
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
-            async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        entry.async_on_unload(
+            async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
-    _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    config_entry.async_create_background_task(
-        hass, _discovery(), "squeezebox.media_player.discovery"
+    _LOGGER.debug(
+        "Adding player discovery job for LMS server: %s", entry.data[CONF_HOST]
+    )
+    entry.async_create_background_task(
+        hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
 
     # Register entity services
@@ -200,15 +179,9 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
-        "async_sync",
-    )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    config_entry.async_on_unload(async_at_start(hass, start_server_discovery))
+    entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
@@ -241,18 +214,33 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player):
+    def __init__(self, player: Player, server: Server) -> None:
         """Initialize the SqueezeBox device."""
         self._player = player
-        self._query_result = {}
-        self._remove_dispatcher = None
+        self._query_result: bool | dict = {}
+        self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
+        _manufacturer = None
+        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
+            _manufacturer = "Ralph Irving"
+        elif (
+            "Squeezebox" in player.model
+            or "Transporter" in player.model
+            or "Slim" in player.model
+        ):
+            _manufacturer = "Logitech"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)}, name=player.name
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=player.name,
+            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
+            via_device=(DOMAIN, server.uuid),
+            model=player.model,
+            manufacturer=_manufacturer,
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device-specific attributes."""
         return {
             attr: getattr(self, attr)
@@ -261,20 +249,24 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         }
 
     @callback
-    def rediscovered(self, unique_id, connected):
+    def rediscovered(self, unique_id: str, connected: bool) -> None:
         """Make a player available again."""
         if unique_id == self.unique_id and connected:
             self._attr_available = True
-            _LOGGER.info("Player %s is available again", self.name)
-            self._remove_dispatcher()
+            _LOGGER.debug("Player %s is available again", self.name)
+            if self._remove_dispatcher:
+                self._remove_dispatcher()
 
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if not self._player.power:
             return MediaPlayerState.OFF
-        if self._player.mode:
-            return SQUEEZEBOX_MODE.get(self._player.mode)
+        if self._player.mode and self._player.mode in SQUEEZEBOX_MODE:
+            return SQUEEZEBOX_MODE[self._player.mode]
+        _LOGGER.error(
+            "Received unknown mode %s from player %s", self._player.mode, self.name
+        )
         return None
 
     async def async_update(self) -> None:
@@ -286,7 +278,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
-                _LOGGER.info("Player %s is not available", self.name)
+                _LOGGER.debug("Player %s is not available", self.name)
                 self._attr_available = False
 
                 # start listening for restored players
@@ -299,28 +291,30 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume:
             return int(float(self._player.volume)) / 100.0
 
-    @property
-    def is_volume_muted(self):
-        """Return true if volume is muted."""
-        return self._player.muting
+        return None
 
     @property
-    def media_content_id(self):
+    def is_volume_muted(self) -> bool:
+        """Return true if volume is muted."""
+        return bool(self._player.muting)
+
+    @property
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if not self._player.playlist:
             return None
         if len(self._player.playlist) > 1:
             urls = [{"url": track["url"]} for track in self._player.playlist]
             return json.dumps({"index": self._player.current_index, "urls": urls})
-        return self._player.url
+        return str(self._player.url)
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         if not self._player.playlist:
             return None
@@ -329,47 +323,47 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return MediaType.MUSIC
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int:
         """Duration of current playing media in seconds."""
-        return self._player.duration
+        return int(self._player.duration) if self._player.duration else 0
 
     @property
-    def media_position(self):
+    def media_position(self) -> int:
         """Position of current playing media in seconds."""
-        return self._player.time
+        return int(self._player.time) if self._player.time else 0
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """Last time status was updated."""
         return self._last_update
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return self._player.image_url
+        return str(self._player.image_url) if self._player.image_url else None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._player.title
+        return str(self._player.title)
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
-        return self._player.remote_title
+        return str(self._player.remote_title)
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        return self._player.artist
+        return str(self._player.artist)
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        return self._player.album
+        return str(self._player.album)
 
     @property
-    def repeat(self):
+    def repeat(self) -> RepeatMode:
         """Repeat setting."""
         if self._player.repeat == "song":
             return RepeatMode.ONE
@@ -378,13 +372,13 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return RepeatMode.OFF
 
     @property
-    def shuffle(self):
+    def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         # Squeezebox has a third shuffle mode (album) not recognized by Home Assistant
-        return self._player.shuffle == "song"
+        return bool(self._player.shuffle == "song")
 
     @property
-    def group_members(self):
+    def group_members(self) -> list[str]:
         """List players we are synced with."""
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
@@ -396,12 +390,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         ]
 
     @property
-    def sync_group(self):
-        """List players we are synced with. Deprecated."""
-        return self.group_members
-
-    @property
-    def query_result(self):
+    def query_result(self) -> dict | bool:
         """Return the result from the call_query service."""
         return self._query_result
 
@@ -494,11 +483,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             try:
                 # a saved playlist by number
                 payload = {
-                    "search_id": int(media_id),
+                    "search_id": media_id,
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(self._player, payload)
-            except ValueError:
+            except BrowseError:
                 # a list of urls
                 content = json.loads(media_id)
                 playlist = content["urls"]
@@ -536,7 +525,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Send the media player the command for clear playlist."""
         await self._player.async_clear_playlist()
 
-    async def async_call_method(self, command, parameters=None):
+    async def async_call_method(
+        self, command: str, parameters: list[str] | None = None
+    ) -> None:
         """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
@@ -547,7 +538,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             all_params.extend(parameters)
         await self._player.async_query(*all_params)
 
-    async def async_call_query(self, command, parameters=None):
+    async def async_call_query(
+        self, command: str, parameters: list[str] | None = None
+    ) -> None:
         """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
@@ -573,31 +566,19 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if other_player_id := player_ids.get(other_player):
                 await self._player.async_sync(other_player_id)
             else:
-                _LOGGER.info(
-                    "Could not find player_id for %s. Not syncing", other_player
+                raise ServiceValidationError(
+                    f"Could not join unknown player {other_player}"
                 )
-
-    async def async_sync(self, other_player):
-        """Sync this Squeezebox player to another. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.sync is deprecated; use media_player.join_players"
-            " instead"
-        )
-        await self.async_join_players([other_player])
 
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
 
-    async def async_unsync(self):
-        """Unsync this Squeezebox player. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player"
-            " instead"
-        )
-        await self.async_unjoin_player()
-
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         _LOGGER.debug(
             "Reached async_browse_media with content_type %s and content_id %s",
@@ -608,7 +589,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if media_content_type in [None, "library"]:
             return await library_payload(self.hass, self._player)
 
-        if media_source.is_media_source_id(media_content_id):
+        if media_content_id and media_source.is_media_source_id(media_content_id):
             return await media_source.async_browse_media(
                 self.hass, media_content_id, content_filter=media_source_content_filter
             )

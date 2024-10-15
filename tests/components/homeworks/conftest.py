@@ -1,9 +1,9 @@
 """Common fixtures for the Lutron Homeworks Series 4 and 8 tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
@@ -17,9 +17,54 @@ from homeassistant.components.homeworks.const import (
     CONF_RELEASE_DELAY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 
 from tests.common import MockConfigEntry
+
+CONFIG_ENTRY_OPTIONS = {
+    CONF_CONTROLLER_ID: "main_controller",
+    CONF_HOST: "192.168.0.1",
+    CONF_PORT: 1234,
+    CONF_DIMMERS: [
+        {
+            CONF_ADDR: "[02:08:01:01]",
+            CONF_NAME: "Foyer Sconces",
+            CONF_RATE: 1.0,
+        }
+    ],
+    CONF_KEYPADS: [
+        {
+            CONF_ADDR: "[02:08:02:01]",
+            CONF_NAME: "Foyer Keypad",
+            CONF_BUTTONS: [
+                {
+                    CONF_NAME: "Morning",
+                    CONF_NUMBER: 1,
+                    CONF_LED: True,
+                    CONF_RELEASE_DELAY: None,
+                },
+                {
+                    CONF_NAME: "Relax",
+                    CONF_NUMBER: 2,
+                    CONF_LED: True,
+                    CONF_RELEASE_DELAY: None,
+                },
+                {
+                    CONF_NAME: "Dim up",
+                    CONF_NUMBER: 3,
+                    CONF_LED: False,
+                    CONF_RELEASE_DELAY: 0.2,
+                },
+            ],
+        }
+    ],
+}
 
 
 @pytest.fixture
@@ -28,45 +73,19 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Lutron Homeworks",
         domain=DOMAIN,
-        data={},
-        options={
-            CONF_CONTROLLER_ID: "main_controller",
-            CONF_HOST: "192.168.0.1",
-            CONF_PORT: 1234,
-            CONF_DIMMERS: [
-                {
-                    CONF_ADDR: "[02:08:01:01]",
-                    CONF_NAME: "Foyer Sconces",
-                    CONF_RATE: 1.0,
-                }
-            ],
-            CONF_KEYPADS: [
-                {
-                    CONF_ADDR: "[02:08:02:01]",
-                    CONF_NAME: "Foyer Keypad",
-                    CONF_BUTTONS: [
-                        {
-                            CONF_NAME: "Morning",
-                            CONF_NUMBER: 1,
-                            CONF_LED: True,
-                            CONF_RELEASE_DELAY: None,
-                        },
-                        {
-                            CONF_NAME: "Relax",
-                            CONF_NUMBER: 2,
-                            CONF_LED: True,
-                            CONF_RELEASE_DELAY: None,
-                        },
-                        {
-                            CONF_NAME: "Dim up",
-                            CONF_NUMBER: 3,
-                            CONF_LED: False,
-                            CONF_RELEASE_DELAY: 0.2,
-                        },
-                    ],
-                }
-            ],
-        },
+        data={CONF_PASSWORD: None, CONF_USERNAME: None},
+        options=CONFIG_ENTRY_OPTIONS,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_username_password() -> MockConfigEntry:
+    """Return the default mocked config entry with credentials."""
+    return MockConfigEntry(
+        title="Lutron Homeworks",
+        domain=DOMAIN,
+        data={CONF_PASSWORD: "hunter2", CONF_USERNAME: "username"},
+        options=CONFIG_ENTRY_OPTIONS,
     )
 
 

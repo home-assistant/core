@@ -1,10 +1,10 @@
 """Common fixtures for testing greeneye_monitor."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass

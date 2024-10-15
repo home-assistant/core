@@ -61,5 +61,6 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
 }
 DATA_LIFX_MANAGER = "lifx_manager"
 
+LIFX_CEILING_PRODUCT_IDS = {176, 177}
 
 _LOGGER = logging.getLogger(__package__)

@@ -594,7 +594,7 @@ def delete_statistics_short_term_rows(
 def delete_event_rows(
     event_ids: Iterable[int],
 ) -> StatementLambdaElement:
-    """Delete statistics_short_term rows."""
+    """Delete event rows."""
     return lambda_stmt(
         lambda: delete(Events)
         .where(Events.event_id.in_(event_ids))
@@ -760,6 +760,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
             )
         )
         .values(entity_id=None)
+    )
+
+
+def has_used_states_entity_ids() -> StatementLambdaElement:
+    """Check if there are used entity_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.entity_id.isnot(None)).limit(1)
     )
 
 

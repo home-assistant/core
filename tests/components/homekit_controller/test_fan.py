@@ -1,15 +1,18 @@
 """Basic checks for HomeKit fans."""
 
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import get_next_aid, setup_test_component
+from .common import setup_test_component
 
 
-def create_fan_service(accessory):
+def create_fan_service(accessory: Accessory) -> None:
     """Define fan v1 characteristics as per HAP spec.
 
     This service is no longer documented in R2 of the public HAP spec but existing
@@ -27,7 +30,7 @@ def create_fan_service(accessory):
     speed.value = 0
 
 
-def create_fanv2_service(accessory):
+def create_fanv2_service(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -44,7 +47,7 @@ def create_fanv2_service(accessory):
     swing_mode.value = 0
 
 
-def create_fanv2_service_non_standard_rotation_range(accessory):
+def create_fanv2_service_non_standard_rotation_range(accessory: Accessory) -> None:
     """Define fan v2 with a non-standard rotation range."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -58,7 +61,7 @@ def create_fanv2_service_non_standard_rotation_range(accessory):
     speed.minStep = 1
 
 
-def create_fanv2_service_with_min_step(accessory):
+def create_fanv2_service_with_min_step(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -76,7 +79,7 @@ def create_fanv2_service_with_min_step(accessory):
     swing_mode.value = 0
 
 
-def create_fanv2_service_without_rotation_speed(accessory):
+def create_fanv2_service_without_rotation_speed(accessory: Accessory) -> None:
     """Define fan v2 characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.FAN_V2)
 
@@ -90,9 +93,11 @@ def create_fanv2_service_without_rotation_speed(accessory):
     swing_mode.value = 0
 
 
-async def test_fan_read_state(hass: HomeAssistant) -> None:
+async def test_fan_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read the state of a HomeKit fan accessory."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN, {CharacteristicsTypes.ON: False}
@@ -105,9 +110,9 @@ async def test_fan_read_state(hass: HomeAssistant) -> None:
     assert state.state == "on"
 
 
-async def test_turn_on(hass: HomeAssistant) -> None:
+async def test_turn_on(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
     """Test that we can turn a fan on."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     await hass.services.async_call(
         "fan",
@@ -152,10 +157,12 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     )
 
 
-async def test_turn_on_off_without_rotation_speed(hass: HomeAssistant) -> None:
+async def test_turn_on_off_without_rotation_speed(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can turn a fan on."""
     helper = await setup_test_component(
-        hass, create_fanv2_service_without_rotation_speed
+        hass, get_next_aid(), create_fanv2_service_without_rotation_speed
     )
 
     await hass.services.async_call(
@@ -185,9 +192,9 @@ async def test_turn_on_off_without_rotation_speed(hass: HomeAssistant) -> None:
     )
 
 
-async def test_turn_off(hass: HomeAssistant) -> None:
+async def test_turn_off(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
     """Test that we can turn a fan off."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     await helper.async_update(ServicesTypes.FAN, {CharacteristicsTypes.ON: 1})
 
@@ -205,9 +212,9 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     )
 
 
-async def test_set_speed(hass: HomeAssistant) -> None:
+async def test_set_speed(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
     """Test that we set fan speed."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     await helper.async_update(ServicesTypes.FAN, {CharacteristicsTypes.ON: 1})
 
@@ -264,9 +271,11 @@ async def test_set_speed(hass: HomeAssistant) -> None:
     )
 
 
-async def test_set_percentage(hass: HomeAssistant) -> None:
+async def test_set_percentage(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we set fan speed by percentage."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     await helper.async_update(ServicesTypes.FAN, {CharacteristicsTypes.ON: 1})
 
@@ -297,9 +306,9 @@ async def test_set_percentage(hass: HomeAssistant) -> None:
     )
 
 
-async def test_speed_read(hass: HomeAssistant) -> None:
+async def test_speed_read(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
     """Test that we can read a fans oscillation."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN,
@@ -337,9 +346,11 @@ async def test_speed_read(hass: HomeAssistant) -> None:
     assert state.attributes["percentage"] == 0
 
 
-async def test_set_direction(hass: HomeAssistant) -> None:
+async def test_set_direction(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can set fan spin direction."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     await hass.services.async_call(
         "fan",
@@ -368,9 +379,11 @@ async def test_set_direction(hass: HomeAssistant) -> None:
     )
 
 
-async def test_direction_read(hass: HomeAssistant) -> None:
+async def test_direction_read(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read a fans oscillation."""
-    helper = await setup_test_component(hass, create_fan_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fan_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN, {CharacteristicsTypes.ROTATION_DIRECTION: 0}
@@ -383,9 +396,11 @@ async def test_direction_read(hass: HomeAssistant) -> None:
     assert state.attributes["direction"] == "reverse"
 
 
-async def test_fanv2_read_state(hass: HomeAssistant) -> None:
+async def test_fanv2_read_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read the state of a HomeKit fan accessory."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: False}
@@ -398,9 +413,9 @@ async def test_fanv2_read_state(hass: HomeAssistant) -> None:
     assert state.state == "on"
 
 
-async def test_v2_turn_on(hass: HomeAssistant) -> None:
+async def test_v2_turn_on(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
     """Test that we can turn a fan on."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await hass.services.async_call(
         "fan",
@@ -473,9 +488,11 @@ async def test_v2_turn_on(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_turn_off(hass: HomeAssistant) -> None:
+async def test_v2_turn_off(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can turn a fan off."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await helper.async_update(ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: 1})
 
@@ -493,9 +510,11 @@ async def test_v2_turn_off(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_set_speed(hass: HomeAssistant) -> None:
+async def test_v2_set_speed(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we set fan speed."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await helper.async_update(ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: 1})
 
@@ -552,9 +571,11 @@ async def test_v2_set_speed(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_set_percentage(hass: HomeAssistant) -> None:
+async def test_v2_set_percentage(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we set fan speed by percentage."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await helper.async_update(ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: 1})
 
@@ -585,9 +606,13 @@ async def test_v2_set_percentage(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_set_percentage_with_min_step(hass: HomeAssistant) -> None:
+async def test_v2_set_percentage_with_min_step(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we set fan speed by percentage."""
-    helper = await setup_test_component(hass, create_fanv2_service_with_min_step)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_fanv2_service_with_min_step
+    )
 
     await helper.async_update(ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: 1})
 
@@ -618,9 +643,11 @@ async def test_v2_set_percentage_with_min_step(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_speed_read(hass: HomeAssistant) -> None:
+async def test_v2_speed_read(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read a fans oscillation."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN_V2,
@@ -657,9 +684,11 @@ async def test_v2_speed_read(hass: HomeAssistant) -> None:
     assert state.attributes["percentage"] == 0
 
 
-async def test_v2_set_direction(hass: HomeAssistant) -> None:
+async def test_v2_set_direction(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can set fan spin direction."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await hass.services.async_call(
         "fan",
@@ -688,9 +717,11 @@ async def test_v2_set_direction(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_direction_read(hass: HomeAssistant) -> None:
+async def test_v2_direction_read(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read a fans oscillation."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN_V2, {CharacteristicsTypes.ROTATION_DIRECTION: 0}
@@ -703,9 +734,11 @@ async def test_v2_direction_read(hass: HomeAssistant) -> None:
     assert state.attributes["direction"] == "reverse"
 
 
-async def test_v2_oscillate(hass: HomeAssistant) -> None:
+async def test_v2_oscillate(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can control a fans oscillation."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     await hass.services.async_call(
         "fan",
@@ -734,9 +767,11 @@ async def test_v2_oscillate(hass: HomeAssistant) -> None:
     )
 
 
-async def test_v2_oscillate_read(hass: HomeAssistant) -> None:
+async def test_v2_oscillate_read(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read a fans oscillation."""
-    helper = await setup_test_component(hass, create_fanv2_service)
+    helper = await setup_test_component(hass, get_next_aid(), create_fanv2_service)
 
     state = await helper.async_update(
         ServicesTypes.FAN_V2, {CharacteristicsTypes.SWING_MODE: 0}
@@ -750,11 +785,11 @@ async def test_v2_oscillate_read(hass: HomeAssistant) -> None:
 
 
 async def test_v2_set_percentage_non_standard_rotation_range(
-    hass: HomeAssistant,
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
     """Test that we set fan speed with a non-standard rotation range."""
     helper = await setup_test_component(
-        hass, create_fanv2_service_non_standard_rotation_range
+        hass, get_next_aid(), create_fanv2_service_non_standard_rotation_range
     )
 
     await helper.async_update(ServicesTypes.FAN_V2, {CharacteristicsTypes.ACTIVE: 1})
@@ -813,7 +848,9 @@ async def test_v2_set_percentage_non_standard_rotation_range(
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test a we can migrate a fan unique id."""
     aid = get_next_aid()
@@ -822,7 +859,9 @@ async def test_migrate_unique_id(
         "homekit_controller",
         f"homekit-00:00:00:00:00:00-{aid}-8",
     )
-    await setup_test_component(hass, create_fanv2_service_non_standard_rotation_range)
+    await setup_test_component(
+        hass, aid, create_fanv2_service_non_standard_rotation_range
+    )
 
     assert (
         entity_registry.async_get(fan_entry.entity_id).unique_id

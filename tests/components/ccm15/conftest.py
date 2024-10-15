@@ -1,10 +1,10 @@
 """Common fixtures for the Midea ccm15 AC Controller tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def ccm15_device() -> Generator[AsyncMock]:
+def ccm15_device() -> Generator[None]:
     """Mock ccm15 device."""
     ccm15_devices = {
         0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b")),
@@ -32,7 +32,7 @@ def ccm15_device() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def network_failure_ccm15_device() -> Generator[AsyncMock]:
+def network_failure_ccm15_device() -> Generator[None]:
     """Mock empty set of ccm15 device."""
     device_state = CCM15DeviceState(devices={})
     with patch(

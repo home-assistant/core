@@ -10,7 +10,10 @@ import time
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,7 +55,7 @@ CANCELLED_STRING = "Cancelled"
 NOT_DEPARTED_STRING = "Not departed yet"
 NO_INFORMATION_STRING = "No information for this train now"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TRAIN_ID): cv.string,
         vol.Required(CONF_STATION_ID): cv.string,
@@ -171,7 +174,7 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._state = NO_INFORMATION_STRING
                 self._unit = ""
             else:
-                self._state = "Error: {}".format(res["error"])
+                self._state = f"Error: {res['error']}"
                 self._unit = ""
         else:
             for i in MONITORED_INFO:

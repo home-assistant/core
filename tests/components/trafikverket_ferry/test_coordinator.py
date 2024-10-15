@@ -8,7 +8,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
 from homeassistant.components.trafikverket_ferry.coordinator import next_departuredate
@@ -27,7 +27,7 @@ async def test_coordinator(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
-    get_ferries: list[FerryStop],
+    get_ferries: list[FerryStopModel],
 ) -> None:
     """Test the Trafikverket Ferry coordinator."""
     entry = MockConfigEntry(

@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components import group
 from homeassistant.components.group.registry import GroupIntegrationRegistry
+from homeassistant.components.lock import LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
@@ -19,17 +20,10 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -405,13 +399,13 @@ async def test_expand_entity_ids_does_not_return_duplicates(
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, [test_group.entity_id, "light.Ceiling"])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, ["light.bowl", test_group.entity_id])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
 
 async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
@@ -439,7 +433,7 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
     """Test that non string elements in lists are ignored."""
-    assert [] == group.expand_entity_ids(hass, [5, True])
+    assert group.expand_entity_ids(hass, [5, True]) == []
 
 
 async def test_get_entity_ids(hass: HomeAssistant) -> None:
@@ -460,9 +454,10 @@ async def test_get_entity_ids(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
-        group.get_entity_ids(hass, test_group.entity_id)
-    )
+    assert sorted(group.get_entity_ids(hass, test_group.entity_id)) == [
+        "light.bowl",
+        "light.ceiling",
+    ]
 
 
 async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
@@ -482,19 +477,19 @@ async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["switch.ac"] == group.get_entity_ids(
+    assert group.get_entity_ids(
         hass, mixed_group.entity_id, domain_filter="switch"
-    )
+    ) == ["switch.ac"]
 
 
 async def test_get_entity_ids_with_non_existing_group_name(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non existing group."""
-    assert [] == group.get_entity_ids(hass, "non_existing")
+    assert group.get_entity_ids(hass, "non_existing") == []
 
 
 async def test_get_entity_ids_with_non_group_state(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non group state."""
-    assert [] == group.get_entity_ids(hass, "switch.AC")
+    assert group.get_entity_ids(hass, "switch.AC") == []
 
 
 async def test_group_being_init_before_first_tracked_state_is_set_to_on(
@@ -620,12 +615,12 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         order=None,
     )
 
-    assert [
+    assert sorted(group.expand_entity_ids(hass, ["group.group_of_groups"])) == [
         "light.test_1",
         "light.test_2",
         "switch.test_1",
         "switch.test_2",
-    ] == sorted(group.expand_entity_ids(hass, ["group.group_of_groups"]))
+    ]
 
 
 async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
@@ -739,78 +734,78 @@ async def test_is_on(hass: HomeAssistant) -> None:
         ),
         (
             ("cover", "cover"),
-            (STATE_OPEN, STATE_CLOSED),
+            (LockState.OPEN, STATE_CLOSED),
             (STATE_CLOSED, STATE_CLOSED),
-            (STATE_OPEN, True),
+            (LockState.OPEN, True),
             (STATE_CLOSED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_UNLOCKED, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.UNLOCKED, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("cover", "lock"),
-            (STATE_OPEN, STATE_LOCKED),
-            (STATE_CLOSED, STATE_LOCKED),
+            (LockState.OPEN, LockState.LOCKED),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
         (
             ("cover", "lock"),
-            (STATE_OPEN, STATE_UNLOCKED),
-            (STATE_CLOSED, STATE_LOCKED),
+            (LockState.OPEN, LockState.UNLOCKED),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
         (
             ("cover", "lock", "light"),
-            (STATE_OPEN, STATE_LOCKED, STATE_ON),
-            (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
+            (LockState.OPEN, LockState.LOCKED, STATE_ON),
+            (STATE_CLOSED, LockState.LOCKED, STATE_OFF),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_OPEN, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.OPEN, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_OPENING, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.OPENING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_UNLOCKING, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.UNLOCKING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_LOCKING, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.LOCKING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_JAMMED, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_LOCKED, False),
-            (STATE_LOCKED, False),
+            (LockState.JAMMED, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.LOCKED, False),
+            (LockState.LOCKED, False),
         ),
         (
             ("cover", "lock"),
-            (STATE_OPEN, STATE_OPEN),
-            (STATE_CLOSED, STATE_LOCKED),
+            (LockState.OPEN, LockState.OPEN),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),

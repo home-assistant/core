@@ -6,30 +6,29 @@ import logging
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SourceType,
     TrackerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TadoConnector
-from .const import DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
+from . import TadoConfigEntry
+from .const import DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
+from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TadoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
-    tado: TadoConnector = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado = entry.runtime_data
     tracked: set = set()
 
     # Fix non-string unique_id for device trackers
@@ -101,8 +100,6 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._device_name = device_name
         self._tado = tado
         self._active = False
-        self._latitude = None
-        self._longitude = None
 
     @callback
     def update_state(self) -> None:
@@ -160,18 +157,3 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     def location_name(self) -> str:
         """Return the state of the device."""
         return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def latitude(self) -> None:
-        """Return latitude value of the device."""
-        return None
-
-    @property
-    def longitude(self) -> None:
-        """Return longitude value of the device."""
-        return None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.GPS

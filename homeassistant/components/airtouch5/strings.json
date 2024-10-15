@@ -27,6 +27,11 @@
           }
         }
       }
+    },
+    "cover": {
+      "damper": {
+        "name": "[%key:component::cover::entity_component::damper::name%]"
+      }
     }
   }
 }

@@ -1,7 +1,8 @@
 """Test helpers for image."""
 
+from collections.abc import Generator
+
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -44,6 +45,21 @@ class MockImageEntityInvalidContentType(image.ImageEntity):
     async def async_added_to_hass(self):
         """Set the update time and assign and incorrect content type."""
         self._attr_content_type = "text/json"
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return b"Test"
+
+
+class MockImageEntityCapitalContentType(image.ImageEntity):
+    """Mock image entity with correct content type, but capitalized."""
+
+    _attr_name = "Test"
+
+    async def async_added_to_hass(self):
+        """Set the update time and assign and incorrect content type."""
+        self._attr_content_type = "Image/jpeg"
         self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_image(self) -> bytes | None:

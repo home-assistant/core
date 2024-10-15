@@ -1,9 +1,9 @@
 """Fixtures for the Android TV integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from . import patchers
 

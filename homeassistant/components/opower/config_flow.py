@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import socket
 from typing import Any
 
 from opower import (
@@ -20,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
@@ -39,7 +39,7 @@ async def _validate_login(
 ) -> dict[str, str]:
     """Validate login data and return any errors."""
     api = Opower(
-        async_create_clientsession(hass, family=socket.AF_INET),
+        async_create_clientsession(hass),
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
@@ -49,8 +49,12 @@ async def _validate_login(
     try:
         await api.async_login()
     except InvalidAuth:
+        _LOGGER.exception(
+            "Invalid auth when connecting to %s", login_data[CONF_UTILITY]
+        )
         errors["base"] = "invalid_auth"
     except CannotConnect:
+        _LOGGER.exception("Could not connect to %s", login_data[CONF_UTILITY])
         errors["base"] = "cannot_connect"
     return errors
 
@@ -151,7 +155,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
-        schema = {
+        schema: VolDictType = {
             vol.Required(CONF_USERNAME): self.reauth_entry.data[CONF_USERNAME],
             vol.Required(CONF_PASSWORD): str,
         }

@@ -27,7 +27,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update your configuration information for {name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -47,6 +47,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
@@ -81,6 +82,9 @@
     }
   },
   "exceptions": {
+    "manual_switching_disabled": {
+      "message": "Can't toggle switch while manual switching is disabled for the device."
+    },
     "change_preset_while_active_mode": {
       "message": "Can't change preset while holiday or summer mode is active on the device."
     },

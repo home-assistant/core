@@ -1,10 +1,10 @@
 """Test 1-Wire diagnostics."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

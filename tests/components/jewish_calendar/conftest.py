@@ -1,9 +1,9 @@
 """Common fixtures for the jewish_calendar tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.jewish_calendar.const import DEFAULT_NAME, DOMAIN
 

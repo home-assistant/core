@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knocki import EventType, KnockiClient
+from knocki import Event, EventType, KnockiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
@@ -28,6 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
 
     entry.async_on_unload(
         client.register_listener(EventType.CREATED, coordinator.add_trigger)
+    )
+
+    async def _refresh_coordinator(_: Event) -> None:
+        await coordinator.async_refresh()
+
+    entry.async_on_unload(
+        client.register_listener(EventType.DELETED, _refresh_coordinator)
     )
 
     entry.runtime_data = coordinator

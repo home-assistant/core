@@ -11,7 +11,8 @@ from pytrafikverket.exceptions import (
     MultipleWeatherStationsFound,
     NoWeatherStationFound,
 )
-from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
+from pytrafikverket.models import WeatherStationInfoModel
+from pytrafikverket.trafikverket_weather import TrafikverketWeather
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -28,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 
-class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
+class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfoModel]):
     """A Sensibo Data Update Coordinator."""
 
     config_entry: TVWeatherConfigEntry
@@ -46,7 +47,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
         )
         self._station = self.config_entry.data[CONF_STATION]
 
-    async def _async_update_data(self) -> WeatherStationInfo:
+    async def _async_update_data(self) -> WeatherStationInfoModel:
         """Fetch data from Trafikverket."""
         try:
             weatherdata = await self._weather_api.async_get_weather(self._station)

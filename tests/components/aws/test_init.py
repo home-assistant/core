@@ -1,6 +1,7 @@
 """Tests for the aws component config and setup."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 
 from homeassistant.core import HomeAssistant
@@ -10,7 +11,7 @@ from homeassistant.setup import async_setup_component
 class MockAioSession:
     """Mock AioSession."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init a mock session."""
         self.get_user = AsyncMock()
         self.invoke = AsyncMock()

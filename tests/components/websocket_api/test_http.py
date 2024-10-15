@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import ServerDisconnectedError, WSMsgType, web
+from aiohttp import WSMsgType, WSServerHandshakeError, web
 import pytest
 
 from homeassistant.components.websocket_api import (
@@ -363,22 +363,40 @@ async def test_non_json_message(
     assert "bad=<object" in caplog.text
 
 
-async def test_prepare_fail(
+async def test_prepare_fail_timeout(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test failing to prepare."""
+    """Test failing to prepare due to timeout."""
     with (
         patch(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(TimeoutError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(ServerDisconnectedError),
+        pytest.raises(WSServerHandshakeError),
     ):
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text
+
+
+async def test_prepare_fail_connection_reset(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test failing to prepare due to connection reset."""
+    with (
+        patch(
+            "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
+            side_effect=(ConnectionResetError, web.WebSocketResponse.prepare),
+        ),
+        pytest.raises(WSServerHandshakeError),
+    ):
+        await hass_ws_client(hass)
+
+    assert "Connection reset by peer while preparing WebSocket" in caplog.text
 
 
 async def test_enable_coalesce(

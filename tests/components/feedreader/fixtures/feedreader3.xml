@@ -14,17 +14,20 @@
             <link>http://www.example.com/link/1</link>
             <guid isPermaLink="false">GUID 1</guid>
             <pubDate>Mon, 30 Apr 2018 15:10:00 +1000</pubDate>
+            <content>Content 1</content>
         </item>
         <item>
             <title>Title 2</title>
             <description>Description 2</description>
             <link>http://www.example.com/link/2</link>
             <guid isPermaLink="false">GUID 2</guid>
+            <content>Content 2</content>
         </item>
         <item>
             <description>Description 3</description>
             <link>http://www.example.com/link/3</link>
             <guid isPermaLink="false">GUID 3</guid>
+            <content>Content 3</content>
         </item>
 
     </channel>

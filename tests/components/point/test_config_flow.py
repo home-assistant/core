@@ -1,151 +1,172 @@
-"""Tests for the Point config flow."""
+"""Test the Minut Point config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.point import DOMAIN, config_flow
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.point.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
+
+CLIENT_ID = "1234"
+CLIENT_SECRET = "5678"
+
+REDIRECT_URL = "https://example.com/auth/external/callback"
 
 
-def init_config_flow(hass, side_effect=None):
-    """Init a configuration flow."""
-    config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
-    flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = AsyncMock(
-        return_value="https://example.com", side_effect=side_effect
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
-    flow.hass = hass
-    return flow
 
 
-@pytest.fixture
-def is_authorized():
-    """Set PointSession authorized."""
-    return True
-
-
-@pytest.fixture
-def mock_pypoint(is_authorized):
-    """Mock pypoint."""
-    with patch(
-        "homeassistant.components.point.config_flow.PointSession"
-    ) as PointSession:
-        PointSession.return_value.get_access_token = AsyncMock(
-            return_value={"access_token": "boo"}
-        )
-        PointSession.return_value.is_authorized = is_authorized
-        PointSession.return_value.user = AsyncMock(
-            return_value={"email": "john.doe@example.com"}
-        )
-        yield PointSession
-
-
-async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
-    """Test we abort if no implementation is registered."""
-    flow = config_flow.PointFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_flows"
-
-
-async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
-    """Test we abort if Point is already setup."""
-    flow = init_config_flow(hass)
-
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
-
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_import()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
-
-
-async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> None:
-    """Test registering an implementation and finishing flow works."""
-    config_flow.register_flow_implementation(hass, "test-other", None, None)
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await flow.async_step_user({"flow_impl": "test"})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-    assert result["description_placeholders"] == {
-        "authorization_url": "https://example.com"
-    }
-
-    result = await flow.async_step_code("123ABC")
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["refresh_args"] == {
-        CONF_CLIENT_ID: "id",
-        CONF_CLIENT_SECRET: "secret",
-    }
-    assert result["title"] == "john.doe@example.com"
-    assert result["data"]["token"] == {"access_token": "boo"}
-
-
-async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
-    """Test that we trigger import when configuring with client."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-
-
-@pytest.mark.parametrize("is_authorized", [False])
-async def test_wrong_code_flow_implementation(
-    hass: HomeAssistant, mock_pypoint
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test wrong code."""
-    flow = init_config_flow(hass)
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
 
-    result = await flow.async_step_code("123ABC")
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "user_id": "abcd",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.point.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd"
+    assert result["result"].data["token"]["user_id"] == "abcd"
+    assert result["result"].data["token"]["type"] == "Bearer"
+    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].data["token"]["expires_in"] == 60
+    assert result["result"].data["token"]["access_token"] == "mock-access-token"
+    assert "webhook_id" in result["result"].data
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected", "expected_unique_id"),
+    [
+        ("abcd", "reauth_successful", "abcd"),
+        (None, "reauth_successful", "abcd"),
+        ("abcde", "wrong_account", "abcde"),
+    ],
+    ids=("correct-unique_id", "missing-unique_id", "wrong-unique_id-abort"),
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauthentication_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    unique_id: str | None,
+    expected: str,
+    expected_unique_id: str,
+) -> None:
+    """Test reauthentication flow."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        version=1,
+        data={"id": "timmo", "auth_implementation": DOMAIN},
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await old_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "user_id": "abcd",
+        },
+    )
+
+    with (
+        patch("homeassistant.components.point.api.AsyncConfigEntryAuth"),
+        patch(
+            f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "auth_error"
+    assert result["reason"] == expected
+    assert old_entry.unique_id == expected_unique_id
 
 
-async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
-    """Test we allow picking implementation if we have one flow_imp."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-
-
-async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
-    """Test we abort if generating authorize url fails."""
-    flow = init_config_flow(hass, side_effect=TimeoutError)
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "authorize_url_timeout"
-
-
-async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> None:
-    """Test we abort if generating authorize url blows up."""
-    flow = init_config_flow(hass, side_effect=ValueError)
-
-    result = await flow.async_step_user()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_authorize_url_generation"
-
-
-async def test_abort_no_code(hass: HomeAssistant) -> None:
-    """Test if no code is given to step_code."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_code()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_code"
+async def test_import_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test import flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"

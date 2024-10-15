@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
+import functools
 from typing import Any, cast
 
 import voluptuous as vol
@@ -15,16 +17,51 @@ from homeassistant.util import yaml
 
 from . import importer, models
 from .const import DOMAIN
-from .errors import FailedToLoad, FileAlreadyExists
+from .errors import BlueprintException, FailedToLoad, FileAlreadyExists
+from .schemas import BLUEPRINT_SCHEMA
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
-    websocket_api.async_register_command(hass, ws_list_blueprints)
-    websocket_api.async_register_command(hass, ws_import_blueprint)
-    websocket_api.async_register_command(hass, ws_save_blueprint)
     websocket_api.async_register_command(hass, ws_delete_blueprint)
+    websocket_api.async_register_command(hass, ws_import_blueprint)
+    websocket_api.async_register_command(hass, ws_list_blueprints)
+    websocket_api.async_register_command(hass, ws_save_blueprint)
+    websocket_api.async_register_command(hass, ws_substitute_blueprint)
+
+
+def _ws_with_blueprint_domain(
+    func: Callable[
+        [
+            HomeAssistant,
+            websocket_api.ActiveConnection,
+            dict[str, Any],
+            models.DomainBlueprints,
+        ],
+        Coroutine[Any, Any, None],
+    ],
+) -> websocket_api.AsyncWebSocketCommandHandler:
+    """Decorate a function to pass in the domain blueprints."""
+
+    @functools.wraps(func)
+    async def with_domain_blueprints(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        domain_blueprints: models.DomainBlueprints | None = hass.data.get(
+            DOMAIN, {}
+        ).get(msg["domain"])
+        if domain_blueprints is None:
+            connection.send_error(
+                msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+            )
+            return
+
+        await func(hass, connection, msg, domain_blueprints)
+
+    return with_domain_blueprints
 
 
 @websocket_api.websocket_command(
@@ -124,26 +161,23 @@ async def ws_import_blueprint(
     }
 )
 @websocket_api.async_response
+@_ws_with_blueprint_domain
 async def ws_save_blueprint(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    domain_blueprints: models.DomainBlueprints,
 ) -> None:
     """Save a blueprint."""
 
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
-
-    if domain not in domain_blueprints:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
-        )
-
     try:
         yaml_data = cast(dict[str, Any], yaml.parse_yaml(msg["yaml"]))
-        blueprint = models.Blueprint(yaml_data, expected_domain=domain)
+        blueprint = models.Blueprint(
+            yaml_data, expected_domain=domain, schema=BLUEPRINT_SCHEMA
+        )
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
     except HomeAssistantError as err:
@@ -154,7 +188,7 @@ async def ws_save_blueprint(
         path = f"{path}.yaml"
 
     try:
-        overrides_existing = await domain_blueprints[domain].async_add_blueprint(
+        overrides_existing = await domain_blueprints.async_add_blueprint(
             blueprint, path, allow_override=msg.get("allow_override", False)
         )
     except FileAlreadyExists:
@@ -180,25 +214,16 @@ async def ws_save_blueprint(
     }
 )
 @websocket_api.async_response
+@_ws_with_blueprint_domain
 async def ws_delete_blueprint(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    domain_blueprints: models.DomainBlueprints,
 ) -> None:
     """Delete a blueprint."""
-
-    path = msg["path"]
-    domain = msg["domain"]
-
-    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
-
-    if domain not in domain_blueprints:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
-        )
-
     try:
-        await domain_blueprints[domain].async_remove_blueprint(path)
+        await domain_blueprints.async_remove_blueprint(msg["path"])
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
         return
@@ -206,3 +231,40 @@ async def ws_delete_blueprint(
     connection.send_result(
         msg["id"],
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "blueprint/substitute",
+        vol.Required("domain"): cv.string,
+        vol.Required("path"): cv.path,
+        vol.Required("input"): dict,
+    }
+)
+@websocket_api.async_response
+@_ws_with_blueprint_domain
+async def ws_substitute_blueprint(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    domain_blueprints: models.DomainBlueprints,
+) -> None:
+    """Process a blueprinted config to allow editing."""
+
+    blueprint_config = {"use_blueprint": {"path": msg["path"], "input": msg["input"]}}
+
+    try:
+        blueprint_inputs = await domain_blueprints.async_inputs_from_config(
+            blueprint_config
+        )
+    except BlueprintException as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
+
+    try:
+        config = blueprint_inputs.async_substitute()
+    except yaml.UndefinedSubstitution as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
+
+    connection.send_result(msg["id"], {"substituted_config": config})

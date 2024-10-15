@@ -188,20 +188,20 @@ class GdacsEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_DESCRIPTION, self._description),
-            (ATTR_EVENT_TYPE, self._event_type),
-            (ATTR_ALERT_LEVEL, self._alert_level),
-            (ATTR_COUNTRY, self._country),
-            (ATTR_DURATION_IN_WEEK, self._duration_in_week),
-            (ATTR_FROM_DATE, self._from_date),
-            (ATTR_TO_DATE, self._to_date),
-            (ATTR_POPULATION, self._population),
-            (ATTR_SEVERITY, self._severity),
-            (ATTR_VULNERABILITY, self._vulnerability),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_DESCRIPTION, self._description),
+                (ATTR_EVENT_TYPE, self._event_type),
+                (ATTR_ALERT_LEVEL, self._alert_level),
+                (ATTR_COUNTRY, self._country),
+                (ATTR_DURATION_IN_WEEK, self._duration_in_week),
+                (ATTR_FROM_DATE, self._from_date),
+                (ATTR_TO_DATE, self._to_date),
+                (ATTR_POPULATION, self._population),
+                (ATTR_SEVERITY, self._severity),
+                (ATTR_VULNERABILITY, self._vulnerability),
+            )
+            if value or isinstance(value, bool)
+        }

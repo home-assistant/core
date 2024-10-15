@@ -39,7 +39,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     service,
-    template,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
@@ -120,7 +119,6 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         id="test-area",
         name="Test area",
         aliases={},
-        normalized_name="test-area",
         floor_id="test-floor",
         icon=None,
         picture=None,
@@ -129,7 +127,6 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         id="area-a",
         name="Area A",
         aliases={},
-        normalized_name="area-a",
         floor_id="floor-a",
         icon=None,
         picture=None,
@@ -283,7 +280,6 @@ def label_mock(hass: HomeAssistant) -> None:
         id="area-with-labels",
         name="Area with labels",
         aliases={},
-        normalized_name="with_labels",
         floor_id=None,
         icon=None,
         labels={"label_area"},
@@ -293,7 +289,6 @@ def label_mock(hass: HomeAssistant) -> None:
         id="area-no-labels",
         name="Area without labels",
         aliases={},
-        normalized_name="without_labels",
         floor_id=None,
         icon=None,
         labels=set(),
@@ -405,7 +400,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     """Test service call with templating."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "entity_id": "hello.world",
         "data": {
             "hello": "{{ 'goodbye' }}",
@@ -435,7 +430,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": {
             "area_id": ["area-42", "{{ 'area-51' }}"],
             "device_id": ["abcdef", "{{ 'fedcba' }}"],
@@ -455,7 +450,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
     }
 
@@ -542,19 +537,19 @@ async def test_split_entity_string(hass: HomeAssistant) -> None:
     await service.async_call_from_config(
         hass,
         {
-            "service": "test_domain.test_service",
+            "action": "test_domain.test_service",
             "entity_id": "hello.world, sensor.beer",
         },
     )
     await hass.async_block_till_done()
-    assert ["hello.world", "sensor.beer"] == calls[-1].data.get("entity_id")
+    assert calls[-1].data.get("entity_id") == ["hello.world", "sensor.beer"]
 
 
 async def test_not_mutate_input(hass: HomeAssistant) -> None:
     """Test for immutable input."""
     async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "entity_id": "hello.world, sensor.beer",
         "data": {"hello": 1},
         "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
@@ -564,9 +559,6 @@ async def test_not_mutate_input(hass: HomeAssistant) -> None:
     # Validate both the original and the copy
     config = cv.SERVICE_SCHEMA(config)
     orig = cv.SERVICE_SCHEMA(orig)
-
-    # Only change after call is each template getting hass attached
-    template.attach(hass, orig)
 
     await service.async_call_from_config(hass, config, validate_config=False)
     assert orig == config
@@ -581,7 +573,7 @@ async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant) -> Non
     await service.async_call_from_config(hass, {})
     assert mock_log.call_count == 2
 
-    await service.async_call_from_config(hass, {"service": "invalid"})
+    await service.async_call_from_config(hass, {"action": "invalid"})
     assert mock_log.call_count == 3
 
 
@@ -597,7 +589,7 @@ async def test_service_call_entry_id(
     assert entry.entity_id == "hello.world"
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": entry.id},
     }
 
@@ -613,7 +605,7 @@ async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     calls = async_mock_service(hass, "test_domain", "test_service")
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": target},
     }
 
@@ -968,6 +960,105 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
                 "name": "",
             }
         }
+    }
+
+
+async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
+    """Test async_get_all_descriptions with filters."""
+    service_descriptions = """
+        test_service:
+          target:
+            entity:
+              domain: alarm_control_panel
+              supported_features:
+                - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+          fields:
+            temperature:
+              filter:
+                supported_features:
+                  - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+                attribute:
+                  supported_color_modes:
+                    - light.ColorMode.COLOR_TEMP
+              selector:
+                number:
+            advanced_stuff:
+              fields:
+                temperature:
+                  filter:
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+                    attribute:
+                      supported_color_modes:
+                        - light.ColorMode.COLOR_TEMP
+                  selector:
+                    number:
+    """
+
+    domain = "test_domain"
+
+    hass.services.async_register(domain, "test_service", lambda call: None)
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    assert await async_setup_component(hass, domain, {})
+
+    def load_yaml(fname, secrets=None):
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_files",
+            side_effect=service._load_services_files,
+        ) as proxy_load_services_files,
+        patch(
+            "homeassistant.util.yaml.loader.load_yaml",
+            side_effect=load_yaml,
+        ) as mock_load_yaml,
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, domain),
+        ]
+    )
+
+    test_service_schema = {
+        "description": "",
+        "fields": {
+            "advanced_stuff": {
+                "fields": {
+                    "temperature": {
+                        "filter": {
+                            "attribute": {"supported_color_modes": ["color_temp"]},
+                            "supported_features": [1],
+                        },
+                        "selector": {"number": None},
+                    },
+                },
+            },
+            "temperature": {
+                "filter": {
+                    "attribute": {"supported_color_modes": ["color_temp"]},
+                    "supported_features": [1],
+                },
+                "selector": {"number": None},
+            },
+        },
+        "name": "",
+        "target": {
+            "entity": [
+                {
+                    "domain": ["alarm_control_panel"],
+                    "supported_features": [1],
+                },
+            ],
+        },
+    }
+
+    assert descriptions == {
+        "test_domain": {"test_service": test_service_schema},
     }
 
 
@@ -1693,10 +1784,10 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     call_1 = ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
-    assert ["test_domain.test_1", "test_domain.test_3"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_1))
-    ]
+    ] == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
         "test",
@@ -1704,10 +1795,10 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
         data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
     )
 
-    assert ["test_domain.test_3"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_2))
-    ]
+    ] == ["test_domain.test_3"]
 
     assert (
         await service.async_extract_entities(
@@ -1731,10 +1822,10 @@ async def test_extract_from_service_empty_if_no_entity_id(hass: HomeAssistant) -
     ]
     call = ServiceCall("test", "service")
 
-    assert [] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call))
-    ]
+    ] == []
 
 
 async def test_extract_from_service_filter_out_non_existing_entities(
@@ -1752,10 +1843,10 @@ async def test_extract_from_service_filter_out_non_existing_entities(
         {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
     )
 
-    assert ["test_domain.test_2"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call))
-    ]
+    ] == ["test_domain.test_2"]
 
 
 async def test_extract_from_service_area_id(

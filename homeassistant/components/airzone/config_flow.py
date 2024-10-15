@@ -114,7 +114,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await airzone.get_version()
-        except AirzoneError as err:
+        except (AirzoneError, TimeoutError) as err:
             raise AbortFlow("cannot_connect") from err
 
         return await self.async_step_discovered_connection()

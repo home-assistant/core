@@ -17,31 +17,23 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     data: dict[str, Any] = {
-        "info": async_redact_data(coordinator.data.info.__dict__, "wifi"),
-        "state": coordinator.data.state.__dict__,
+        "info": async_redact_data(coordinator.data.info.to_dict(), "wifi"),
+        "state": coordinator.data.state.to_dict(),
         "effects": {
-            effect.effect_id: effect.name for effect in coordinator.data.effects
+            effect.effect_id: effect.name
+            for effect in coordinator.data.effects.values()
         },
         "palettes": {
-            palette.palette_id: palette.name for palette in coordinator.data.palettes
+            palette.palette_id: palette.name
+            for palette in coordinator.data.palettes.values()
         },
         "playlists": {
-            playlist.playlist_id: {
-                "name": playlist.name,
-                "repeat": playlist.repeat,
-                "shuffle": playlist.shuffle,
-                "end": playlist.end.preset_id if playlist.end else None,
-            }
-            for playlist in coordinator.data.playlists
+            playlist.playlist_id: playlist.name
+            for playlist in coordinator.data.playlists.values()
         },
         "presets": {
-            preset.preset_id: {
-                "name": preset.name,
-                "quick_label": preset.quick_label,
-                "on": preset.on,
-                "transition": preset.transition,
-            }
-            for preset in coordinator.data.presets
+            preset.preset_id: preset.name
+            for preset in coordinator.data.presets.values()
         },
     }
     return data

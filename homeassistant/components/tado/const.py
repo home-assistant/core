@@ -38,8 +38,6 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 CONF_FALLBACK = "fallback"
 CONF_HOME_ID = "home_id"
 DATA = "data"
-UPDATE_TRACK = "update_track"
-UPDATE_MOBILE_DEVICE_TRACK = "update_mobile_device_track"
 
 # Weather
 CONDITIONS_MAP = {
@@ -207,8 +205,6 @@ DEFAULT_NAME = "Tado"
 TADO_HOME = "Home"
 TADO_ZONE = "Zone"
 
-UPDATE_LISTENER = "update_listener"
-
 # Constants for Temperature Offset
 INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"
 TEMP_OFFSET = "temperatureOffset"
@@ -226,7 +222,7 @@ HA_TERMINATION_TYPE = "default_overlay_type"
 HA_TERMINATION_DURATION = "default_overlay_seconds"
 
 TADO_DEFAULT_MIN_TEMP = 5
-TADO_DEFAULT_MAX_TEMP = 25
+TADO_DEFAULT_MAX_TEMP = 40
 # Constants for service calls
 SERVICE_ADD_METER_READING = "add_meter_reading"
 CONF_CONFIG_ENTRY = "config_entry"
@@ -234,3 +230,10 @@ CONF_READING = "reading"
 ATTR_MESSAGE = "message"
 
 WATER_HEATER_FALLBACK_REPAIR = "water_heater_fallback"
+
+TADO_SWING_SETTING = "swings"
+TADO_FANSPEED_SETTING = "fanSpeeds"
+
+TADO_FANLEVEL_SETTING = "fanLevel"
+TADO_VERTICAL_SWING_SETTING = "verticalSwing"
+TADO_HORIZONTAL_SWING_SETTING = "horizontalSwing"

@@ -18,7 +18,11 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, mock_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 DEFAULT_ISSUES = [
     {
@@ -34,7 +38,11 @@ DEFAULT_ISSUES = [
 ]
 
 
-async def create_issues(hass, ws_client, issues=None):
+async def create_issues(
+    hass: HomeAssistant,
+    ws_client: MockHAClientWebSocket,
+    issues: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     """Create issues."""
 
     def api_issue(issue):
@@ -115,11 +123,15 @@ class MockFixFlowAbort(RepairsFlow):
 
 
 @pytest.fixture(autouse=True)
-async def mock_repairs_integration(hass):
+async def mock_repairs_integration(hass: HomeAssistant) -> None:
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
 
-    def async_create_fix_flow(hass, issue_id, data):
+    def async_create_fix_flow(
+        hass: HomeAssistant,
+        issue_id: str,
+        data: dict[str, str | int | float | None] | None,
+    ) -> RepairsFlow:
         assert issue_id in EXPECTED_DATA
         assert data == EXPECTED_DATA[issue_id]
 

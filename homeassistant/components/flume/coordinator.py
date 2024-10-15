@@ -98,7 +98,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         # The related binary sensors (leak detected, high flow, low battery)
         # will be active until the notification is deleted in the Flume app.
         self.notifications = pyflume.FlumeNotificationList(
-            self.auth, read=None, sort_direction="DESC"
+            self.auth, read=None
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
 

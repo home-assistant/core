@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nx584",
   "iot_class": "local_push",
   "loggers": ["nx584"],
-  "requirements": ["pynx584==0.5"]
+  "requirements": ["pynx584==0.8.2"]
 }

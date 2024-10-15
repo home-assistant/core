@@ -284,7 +284,6 @@ async def test_async_remove_entry(
         assert await hass.config_entries.async_remove(config_entry.entry_id)
         assert unlink_mock.call_count == 3
         rmdir_mock.assert_called_once()
-    await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
     assert config_entry.state is ConfigEntryState.NOT_LOADED

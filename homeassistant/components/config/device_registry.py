@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -138,10 +138,14 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    entry = registry.async_update_device(
-        device_id, remove_config_entry_id=config_entry_id
-    )
+    # Integration might have removed the config entry already, that is fine.
+    if registry.async_get(device_id):
+        entry = registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )
 
-    entry_as_dict = entry.dict_repr if entry else None
+        entry_as_dict = entry.dict_repr if entry else None
+    else:
+        entry_as_dict = None
 
     connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))

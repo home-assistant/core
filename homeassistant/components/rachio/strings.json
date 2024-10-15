@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to your Rachio device",
-        "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then click 'GET API KEY'.",
+        "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -31,6 +31,11 @@
     "binary_sensor": {
       "rain": {
         "name": "Rain"
+      }
+    },
+    "calendar": {
+      "calendar": {
+        "name": "Rachio Base Station {base}"
       }
     },
     "switch": {

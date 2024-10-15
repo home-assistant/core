@@ -35,7 +35,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-async def stream_component(hass):
+async def stream_component(hass: HomeAssistant) -> None:
     """Set up the component before each test."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -305,7 +305,5 @@ async def test_record_stream_rotate(hass: HomeAssistant, filename, h264_video) -
 
     # Assert
     assert os.path.exists(filename)
-    with open(filename, "rb") as rotated_mp4:
-        assert_mp4_has_transform_matrix(
-            rotated_mp4.read(), stream.dynamic_stream_settings.orientation
-        )
+    data = await hass.async_add_executor_job(Path(filename).read_bytes)
+    assert_mp4_has_transform_matrix(data, stream.dynamic_stream_settings.orientation)

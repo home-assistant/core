@@ -97,6 +97,7 @@ class HVACAction(StrEnum):
     """HVAC action for climate devices."""
 
     COOLING = "cooling"
+    DEFROSTING = "defrosting"
     DRYING = "drying"
     FAN = "fan"
     HEATING = "heating"
@@ -143,6 +144,8 @@ DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN = "climate"
+
+INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_FAN_MODE = "set_fan_mode"

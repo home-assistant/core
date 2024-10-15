@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -16,6 +16,7 @@ from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
     CONF_VARIABLES,
@@ -30,11 +31,13 @@ from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
     CONF_ACTION,
+    CONF_ACTIONS,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
     CONF_TRACE,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
+    CONF_TRIGGERS,
     DOMAIN,
     LOGGER,
 )
@@ -52,7 +55,41 @@ _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
 )
 
 
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    if not isinstance(value, dict):
+        return value
+
+    # `trigger` has been renamed to `triggers`
+    if CONF_TRIGGER in value:
+        if CONF_TRIGGERS in value:
+            raise vol.Invalid(
+                "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only."
+            )
+        value[CONF_TRIGGERS] = value.pop(CONF_TRIGGER)
+
+    # `condition` has been renamed to `conditions`
+    if CONF_CONDITION in value:
+        if CONF_CONDITIONS in value:
+            raise vol.Invalid(
+                "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only."
+            )
+        value[CONF_CONDITIONS] = value.pop(CONF_CONDITION)
+
+    # `action` has been renamed to `actions`
+    if CONF_ACTION in value:
+        if CONF_ACTIONS in value:
+            raise vol.Invalid(
+                "Cannot specify both 'action' and 'actions'. Please use 'actions' only."
+            )
+        value[CONF_ACTIONS] = value.pop(CONF_ACTION)
+
+    return value
+
+
 PLATFORM_SCHEMA = vol.All(
+    _backward_compat_schema,
     cv.deprecated(CONF_HIDE_ENTITY),
     script.make_script_schema(
         {
@@ -63,14 +100,18 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
-            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
+            vol.Required(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
         },
         script.SCRIPT_MODE_SINGLE,
     ),
+)
+
+AUTOMATION_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint.schemas.BLUEPRINT_SCHEMA
 )
 
 
@@ -90,7 +131,7 @@ async def _async_validate_config_item(  # noqa: C901
     def _humanize(err: Exception, config: ConfigType) -> str:
         """Humanize vol.Invalid, stringify other exceptions."""
         if isinstance(err, vol.Invalid):
-            return cast(str, humanize_error(config, err))
+            return humanize_error(config, err)
         return str(err)
 
     def _log_invalid_automation(
@@ -151,7 +192,9 @@ async def _async_validate_config_item(  # noqa: C901
         uses_blueprint = True
         blueprints = async_get_blueprints(hass)
         try:
-            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+            blueprint_inputs = await blueprints.async_inputs_from_config(
+                _backward_compat_schema(config)
+            )
         except blueprint.BlueprintException as err:
             if warn_on_errors:
                 LOGGER.error(
@@ -199,8 +242,8 @@ async def _async_validate_config_item(  # noqa: C901
     automation_config.raw_config = raw_config
 
     try:
-        automation_config[CONF_TRIGGER] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGER]
+        automation_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGERS]
         )
     except (
         vol.Invalid,
@@ -216,10 +259,10 @@ async def _async_validate_config_item(  # noqa: C901
         )
         return automation_config
 
-    if CONF_CONDITION in validated_config:
+    if CONF_CONDITIONS in validated_config:
         try:
-            automation_config[CONF_CONDITION] = await async_validate_conditions_config(
-                hass, validated_config[CONF_CONDITION]
+            automation_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, validated_config[CONF_CONDITIONS]
             )
         except (
             vol.Invalid,
@@ -239,8 +282,8 @@ async def _async_validate_config_item(  # noqa: C901
             return automation_config
 
     try:
-        automation_config[CONF_ACTION] = await script.async_validate_actions_config(
-            hass, validated_config[CONF_ACTION]
+        automation_config[CONF_ACTIONS] = await script.async_validate_actions_config(
+            hass, validated_config[CONF_ACTIONS]
         )
     except (
         vol.Invalid,

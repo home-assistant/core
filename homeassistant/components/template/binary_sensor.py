@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -88,9 +88,14 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+
+BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+)
 
 LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -114,24 +119,28 @@ LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
 )
 
 
-def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, cfg: dict[str, dict]
+) -> list[dict]:
     """Rewrite legacy binary sensor definitions to modern ones."""
     sensors = []
 
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
+        entity_cfg = rewrite_common_legacy_to_modern_conf(
+            hass, entity_cfg, LEGACY_FIELDS
+        )
 
         if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id)
+            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
 
         sensors.append(entity_cfg)
 
     return sensors
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
             LEGACY_BINARY_SENSOR_SCHEMA
@@ -178,7 +187,7 @@ async def async_setup_platform(
         _async_create_template_tracking_entities(
             async_add_entities,
             hass,
-            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
             None,
         )
         return
@@ -206,7 +215,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    validated_config = BINARY_SENSOR_SCHEMA(_options)
+    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(_options)
     async_add_entities(
         [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]
     )
@@ -217,7 +226,7 @@ def async_create_preview_binary_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> BinarySensorTemplate:
     """Create a preview sensor."""
-    validated_config = BINARY_SENSOR_SCHEMA(config | {CONF_NAME: name})
+    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return BinarySensorTemplate(hass, validated_config, None)
 
 

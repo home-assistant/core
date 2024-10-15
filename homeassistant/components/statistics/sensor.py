@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -17,11 +17,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -42,6 +43,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -229,7 +231,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -267,6 +269,7 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
+                hass=hass,
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
@@ -282,6 +285,43 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Statistics sensor entry."""
+    sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    if sampling_size:
+        sampling_size = int(sampling_size)
+
+    max_age = None
+    if max_age_input := entry.options.get(CONF_MAX_AGE):
+        max_age = timedelta(
+            hours=max_age_input["hours"],
+            minutes=max_age_input["minutes"],
+            seconds=max_age_input["seconds"],
+        )
+
+    async_add_entities(
+        [
+            StatisticsSensor(
+                hass=hass,
+                source_entity_id=entry.options[CONF_ENTITY_ID],
+                name=entry.options[CONF_NAME],
+                unique_id=entry.entry_id,
+                state_characteristic=entry.options[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=sampling_size,
+                samples_max_age=max_age,
+                samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                precision=int(entry.options[CONF_PRECISION]),
+                percentile=int(entry.options[CONF_PERCENTILE]),
+            )
+        ],
+        True,
+    )
+
+
 class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
@@ -290,6 +330,7 @@ class StatisticsSensor(SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         source_entity_id: str,
         name: str,
         unique_id: str | None,
@@ -304,6 +345,10 @@ class StatisticsSensor(SensorEntity):
         self._attr_name: str = name
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
@@ -326,6 +371,29 @@ class StatisticsSensor(SensorEntity):
         )
 
         self._update_listener: CALLBACK_TYPE | None = None
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is no entity_id
+        # as without we can't track changes
+        # or either size or max_age is not set
+        if not self._source_entity_id or (
+            self._samples_max_buffer_size is None and self._samples_max_age is None
+        ):
+            self._available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        self._async_stats_sensor_startup(self.hass)
+        return self._call_on_remove_callbacks
 
     @callback
     def _async_stats_sensor_state_listener(
@@ -337,7 +405,13 @@ class StatisticsSensor(SensorEntity):
             return
         self._add_state_to_queue(new_state)
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     @callback
     def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
@@ -559,7 +633,9 @@ class StatisticsSensor(SensorEntity):
         _LOGGER.debug("%s: executing scheduled update", self.entity_id)
         self._async_cancel_update_listener()
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
@@ -603,7 +679,13 @@ class StatisticsSensor(SensorEntity):
                 self._add_state_to_queue(state)
 
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        # only write state to the state machine if we are not in preview mode
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        else:
+            self.async_write_ha_state()
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_attributes(self) -> None:

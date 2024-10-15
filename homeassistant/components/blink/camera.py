@@ -51,8 +51,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RECORD, {}, "record")
-    platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
+    platform.async_register_entity_service(SERVICE_RECORD, None, "record")
+    platform.async_register_entity_service(SERVICE_TRIGGER, None, "trigger_camera")
     platform.async_register_entity_service(
         SERVICE_SAVE_RECENT_CLIPS,
         {vol.Required(CONF_FILE_PATH): cv.string},

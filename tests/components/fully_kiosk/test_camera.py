@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from fullykiosk import FullyKioskError
 import pytest
 
 from homeassistant.components.camera import async_get_image
@@ -40,6 +41,12 @@ async def test_camera(
     image = await async_get_image(hass, entity_camera)
     assert mock_fully_kiosk.getCamshot.call_count == 1
     assert image.content == b"image_bytes"
+
+    fully_kiosk_error = FullyKioskError("error", "status")
+    mock_fully_kiosk.getCamshot.side_effect = fully_kiosk_error
+    with pytest.raises(HomeAssistantError) as error:
+        await async_get_image(hass, entity_camera)
+    assert error.value.args[0] == fully_kiosk_error
 
     mock_fully_kiosk.getSettings.return_value = {"motionDetection": False}
     await hass.services.async_call(

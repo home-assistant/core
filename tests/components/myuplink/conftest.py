@@ -1,5 +1,6 @@
 """Test helpers for myuplink."""
 
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -7,7 +8,6 @@ from unittest.mock import MagicMock, patch
 from myuplink import Device, DevicePoint, System
 import orjson
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

@@ -11,6 +11,8 @@ from typing import Any, Concatenate
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.helpers.typing import VolDictType
+
 from .view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +27,9 @@ class RequestDataValidator:
     Will return a 400 if no JSON provided or doesn't match schema.
     """
 
-    def __init__(self, schema: vol.Schema, allow_empty: bool = False) -> None:
+    def __init__(
+        self, schema: VolDictType | vol.Schema, allow_empty: bool = False
+    ) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
             schema = vol.Schema(schema)

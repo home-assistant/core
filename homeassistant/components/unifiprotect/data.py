@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     NVR,
@@ -165,7 +164,7 @@ class ProtectData:
 
         self._auth_failures = 0
         if not was_success:
-            _LOGGER.info("%s: Connection restored", self._entry.title)
+            _LOGGER.warning("%s: Connection restored", self._entry.title)
             self._async_process_updates()
         elif force_update:
             self._async_process_updates()
@@ -342,7 +341,7 @@ class ProtectData:
 
 @callback
 def async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: list[str]
+    hass: HomeAssistant, config_entry_ids: set[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
     return next(

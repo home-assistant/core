@@ -71,13 +71,12 @@ class HoneywellSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on if heat mode is enabled."""
-        if self._device.system_mode == "heat":
-            try:
-                await self._device.set_system_mode("emheat")
-            except SomeComfortError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="switch_failed_on"
-                ) from err
+        try:
+            await self._device.set_system_mode("emheat")
+        except SomeComfortError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="switch_failed_on"
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off if on."""

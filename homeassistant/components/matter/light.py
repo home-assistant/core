@@ -41,7 +41,6 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
 }
-DEFAULT_TRANSITION = 0.2
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
@@ -51,12 +50,24 @@ DEFAULT_TRANSITION = 0.2
 # hw version (attributeKey 0/40/8)
 # sw version (attributeKey 0/40/10)
 TRANSITION_BLOCKLIST = (
-    (4488, 514, "1.0", "1.0.0"),
-    (4488, 260, "1.0", "1.0.0"),
-    (5010, 769, "3.0", "1.0.0"),
-    (4999, 25057, "1.0", "27.0"),
+    (4107, 8475, "v1.0", "v1.0"),
+    (4107, 8550, "v1.0", "v1.0"),
+    (4107, 8551, "v1.0", "v1.0"),
+    (4107, 8571, "v1.0", "v1.0"),
+    (4107, 8656, "v1.0", "v1.0"),
     (4448, 36866, "V1", "V1.0.0.5"),
+    (4456, 1011, "1.0.0", "2.00.00"),
+    (4488, 260, "1.0", "1.0.0"),
+    (4488, 514, "1.0", "1.0.0"),
+    (4921, 42, "1.0", "1.01.060"),
+    (4921, 43, "1.0", "1.01.060"),
+    (4999, 24875, "1.0", "27.0"),
+    (4999, 25057, "1.0", "27.0"),
     (5009, 514, "1.0", "1.0.0"),
+    (5010, 769, "3.0", "1.0.0"),
+    (5130, 544, "v0.4", "6.7.196e9d4e08-14"),
+    (5127, 4232, "ver_0.1", "v1.00.51"),
+    (5245, 1412, "1.0", "1.0.21"),
 )
 
 
@@ -276,7 +287,7 @@ class MatterLight(MatterEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        transition = kwargs.get(ATTR_TRANSITION, DEFAULT_TRANSITION)
+        transition = kwargs.get(ATTR_TRANSITION, 0)
         if self._transitions_disabled:
             transition = 0
 
@@ -352,6 +363,16 @@ class MatterLight(MatterEntity, LightEntity):
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
+                    min_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_min_mireds = min_mireds
+                    max_mireds = self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+                    )
+                    if min_mireds > 0:
+                        self._attr_max_mireds = max_mireds
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -441,6 +462,8 @@ DISCOVERY_SCHEMAS = [
             device_types.DimmablePlugInUnit,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
+            device_types.DimmerSwitch,
+            device_types.ColorDimmerSwitch,
         ),
     ),
     # Additional schema to match (HS Color) lights with incorrect/missing device type

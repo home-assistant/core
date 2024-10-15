@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any
@@ -19,15 +19,11 @@ from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
-from typing_extensions import Generator
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
-from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
-
-from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -40,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -183,7 +179,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
     class MockSamsungTVAsyncRest:
         """Mock for a MockSamsungTVAsyncRest."""
 
-        def __init__(self, host, session, port, timeout):
+        def __init__(self, host, session, port, timeout) -> None:
             """Mock a MockSamsungTVAsyncRest."""
             self.port = port
             self.host = host
@@ -300,9 +296,3 @@ def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:
         yield mac
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")

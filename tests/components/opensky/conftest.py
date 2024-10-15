@@ -1,10 +1,10 @@
 """Configure tests for the OpenSky integration."""
 
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_opensky import StatesResponse
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.opensky.const import (
     CONF_ALTITUDE,

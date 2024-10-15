@@ -7,23 +7,20 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 from random import SystemRandom
 from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
+from propcache import cached_property
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
@@ -33,12 +30,14 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL: Final = timedelta(seconds=30)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/image_proxy/{0}?token={1}"
@@ -71,7 +70,7 @@ class ImageContentTypeError(HomeAssistantError):
 
 def valid_image_content_type(content_type: str | None) -> str:
     """Validate the assigned content type is one of an image."""
-    if content_type is None or content_type.split("/", 1)[0] != "image":
+    if content_type is None or content_type.split("/", 1)[0].lower() != "image":
         raise ImageContentTypeError
     return content_type
 
@@ -89,7 +88,7 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image component."""
-    component = hass.data[DOMAIN] = EntityComponent[ImageEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ImageEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -121,14 +120,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ImageEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ImageEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured"
+      "already_configured": "Account is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
@@ -15,6 +17,13 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "description": "Enter an access token from {url}."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
       }
     }
   },
@@ -55,6 +64,9 @@
       },
       "state": {
         "name": "Status"
+      },
+      "storm_mode_active": {
+        "name": "Storm watch active"
       },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
@@ -274,6 +286,9 @@
       "vehicle_state_rt": {
         "name": "Trunk"
       },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
+      },
       "windows": {
         "name": "Windows"
       }
@@ -386,6 +401,16 @@
       "grid_services_power": {
         "name": "Grid services power"
       },
+      "island_status": {
+        "name": "Island status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "on_grid": "On grid",
+          "off_grid": "Off grid",
+          "off_grid_intentional": "Off grid intentional",
+          "off_grid_unintentional": "Off grid unintentional"
+        }
+      },
       "load_power": {
         "name": "Load power"
       },
@@ -417,7 +442,10 @@
         "name": "version"
       },
       "vin": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "disconnected": "Disconnected"
+        }
       },
       "vpp_backup_reserve_percent": {
         "name": "VPP backup reserve"
@@ -430,6 +458,69 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_energy_exported": {
+        "name": "Battery exported"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
       }
     },
     "switch": {
@@ -473,6 +564,174 @@
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
+    },
+    "set_scheduled_charging_time": {
+      "message": "Time required to complete the operation"
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Departure time required to enable preconditioning"
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "To enable scheduled departure, end off peak time is required."
+    },
+    "invalid_device": {
+      "message": "Invalid device ID: {device_id}"
+    },
+    "no_config_entry_for_device": {
+      "message": "No config entry for device ID: {device_id}"
+    },
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data for device ID: {device_id}"
+    },
+    "no_energy_site_data_for_device": {
+      "message": "No energy site data for device ID: {device_id}"
+    },
+    "command_exception": {
+      "message": "Command returned exception: {message}"
+    },
+    "command_error": {
+      "message": "Command returned error: {error}"
+    },
+    "command_reason": {
+      "message": "Command was rejected: {reason}"
+    },
+    "command_no_result": {
+      "message": "Command had no result"
+    },
+    "wake_up_failed": {
+      "message": "Failed to wake up vehicle: {message}"
+    },
+    "wake_up_timeout": {
+      "message": "Timed out trying to wake up vehicle"
+    },
+    "missing_scope": {
+      "message": "Missing required scope: {scope}"
+    }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "description": "Set vehicle navigation to the provided latitude/longitude coordinates.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to share to.",
+          "name": "Vehicle"
+        },
+        "gps": {
+          "description": "Location to navigate to.",
+          "name": "Location"
+        },
+        "order": {
+          "description": "Order for this destination if specifying multiple destinations.",
+          "name": "Order"
+        }
+      },
+      "name": "Navigate to coordinates"
+    },
+    "set_scheduled_charging": {
+      "description": "Sets a time at which charging should be completed.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Enable or disable scheduled charging.",
+          "name": "Enable"
+        },
+        "time": {
+          "description": "Time to start charging.",
+          "name": "Time"
+        }
+      },
+      "name": "Set scheduled charging"
+    },
+    "set_scheduled_departure": {
+      "description": "Sets a time at which departure should be completed.",
+      "fields": {
+        "departure_time": {
+          "description": "Time to be preconditioned by.",
+          "name": "Departure time"
+        },
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Enable or disable scheduled departure.",
+          "name": "Enable"
+        },
+        "end_off_peak_time": {
+          "description": "Time to complete charging by.",
+          "name": "End off peak time"
+        },
+        "off_peak_charging_enabled": {
+          "description": "Enable off peak charging.",
+          "name": "Off peak charging enabled"
+        },
+        "off_peak_charging_weekdays_only": {
+          "description": "Enable off peak charging on weekdays only.",
+          "name": "Off peak charging weekdays only"
+        },
+        "preconditioning_enabled": {
+          "description": "Enable preconditioning.",
+          "name": "Preconditioning enabled"
+        },
+        "preconditioning_weekdays_only": {
+          "description": "Enable preconditioning on weekdays only.",
+          "name": "Preconditioning weekdays only"
+        }
+      },
+      "name": "Set scheduled departure"
+    },
+    "speed_limit": {
+      "description": "Activate the speed limit of the vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to limit.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Enable or disable speed limit.",
+          "name": "Enable"
+        },
+        "pin": {
+          "description": "4 digit PIN.",
+          "name": "PIN"
+        }
+      },
+      "name": "Set speed limit"
+    },
+    "time_of_use": {
+      "description": "Update the time of use settings for the energy site.",
+      "fields": {
+        "device_id": {
+          "description": "Energy Site to configure.",
+          "name": "Energy Site"
+        },
+        "tou_settings": {
+          "description": "See https://developer.tesla.com/docs/fleet-api#time_of_use_settings for details.",
+          "name": "Settings"
+        }
+      },
+      "name": "Time of use settings"
+    },
+    "valet_mode": {
+      "description": "Activate the valet mode of the vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to limit.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Enable or disable valet mode.",
+          "name": "Enable"
+        },
+        "pin": {
+          "description": "4 digit PIN.",
+          "name": "PIN"
+        }
+      },
+      "name": "Set valet mode"
     }
   }
 }

@@ -5,22 +5,26 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientResponseError
 import pytest
 from yalexs.authenticator_common import AuthenticationState
+from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant.components.august.const import DOMAIN
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .mocks import (
@@ -122,16 +126,16 @@ async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "unlock_return_activities": _unlock_return_activities_side_effect
         },
     )
-    last_err = None
     data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    try:
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+            " consumable"
+        ),
+    ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    except HomeAssistantError as err:
-        last_err = err
-    assert str(last_err) == (
-        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
-        " consumable"
-    )
 
 
 async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
@@ -152,16 +156,15 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "lock_return_activities": _lock_return_activities_side_effect
         },
     )
-    last_err = None
     data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    try:
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+            " consumable"
+        ),
+    ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
-    except HomeAssistantError as err:
-        last_err = err
-    assert str(last_err) == (
-        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
-        " consumable"
-    )
 
 
 async def test_open_throws_hass_service_not_supported_error(
@@ -188,7 +191,7 @@ async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:
     lock_a6697750d607098bae8d6baa11ef8063_name = hass.states.get(
         "lock.a6697750d607098bae8d6baa11ef8063_name"
     )
-    assert lock_a6697750d607098bae8d6baa11ef8063_name.state == STATE_LOCKED
+    assert lock_a6697750d607098bae8d6baa11ef8063_name.state == LockState.LOCKED
 
 
 async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
@@ -371,6 +374,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_load_triggers_ble_discovery(
@@ -420,3 +424,24 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_brand_migration_issue(hass: HomeAssistant) -> None:
+    """Test creating and removing the brand migration issue."""
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    config_entry = await _create_august_with_devices(
+        hass, [august_operative_lock], brand=Brand.YALE_HOME
+    )
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    issue_reg = ir.async_get(hass)
+    issue_entry = issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")
+    assert issue_entry
+    assert issue_entry.severity == ir.IssueSeverity.CRITICAL
+    assert issue_entry.translation_placeholders == {
+        "migrate_url": "https://my.home-assistant.io/redirect/config_flow_start?domain=yale"
+    }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    assert not issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")

@@ -1,10 +1,10 @@
 """Tests for the sensor platform of the A. O. Smith integration."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-async def platforms() -> AsyncGenerator[list[str]]:
+async def platforms() -> AsyncGenerator[None]:
     """Return the platforms to be loaded for this test."""
     with patch("homeassistant.components.aosmith.PLATFORMS", [Platform.SENSOR]):
         yield

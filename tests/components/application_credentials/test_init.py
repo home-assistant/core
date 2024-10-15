@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
@@ -47,6 +46,18 @@ ACCESS_TOKEN = "mock-access-token"
 NAME = "Name"
 
 TEST_DOMAIN = "fake_integration"
+
+
+@pytest.fixture
+def ignore_translations() -> list[str]:
+    """Ignore specific translations.
+
+    We can ignore translations for the fake_integration we are testing with.
+    """
+    return [
+        f"component.{TEST_DOMAIN}.config.abort.missing_configuration",
+        f"component.{TEST_DOMAIN}.config.abort.missing_credentials",
+    ]
 
 
 @pytest.fixture
@@ -125,7 +136,12 @@ def config_flow_handler(
 class OAuthFixture:
     """Fixture to facilitate testing an OAuth flow."""
 
-    def __init__(self, hass, hass_client, aioclient_mock):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hass_client: ClientSessionGenerator,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
         """Initialize OAuthFixture."""
         self.hass = hass
         self.hass_client = hass_client
@@ -185,7 +201,7 @@ async def oauth_fixture(
 class Client:
     """Test client with helper methods for application credentials websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0

@@ -60,6 +60,7 @@ MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3C = "zhimi.airpurifier.mb4"
+MODEL_AIRPURIFIER_3C_REV_A = "zhimi.airp.mb4a"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_M1 = "zhimi.airpurifier.m1"
 MODEL_AIRPURIFIER_M2 = "zhimi.airpurifier.m2"
@@ -124,6 +125,7 @@ MODELS_FAN_MIOT = [
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PROH,
     MODEL_AIRPURIFIER_PROH_EU,

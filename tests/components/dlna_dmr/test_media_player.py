@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -95,7 +95,7 @@ async def mock_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a connected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -145,7 +145,7 @@ async def mock_disconnected_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.

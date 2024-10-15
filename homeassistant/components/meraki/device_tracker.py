@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
 )
@@ -27,7 +27,7 @@ ACCEPTED_VERSIONS = ["2.0", "2.1"]
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_VALIDATOR): cv.string, vol.Required(CONF_SECRET): cv.string}
 )
 
@@ -88,6 +88,7 @@ class MerakiView(HomeAssistantView):
             _LOGGER.debug("No observations found")
             return None
         self._handle(request.app[KEY_HASS], data)
+        return None
 
     @callback
     def _handle(self, hass, data):

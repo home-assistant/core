@@ -1,5 +1,7 @@
 """Constants used for Coinbase."""
 
+ACCOUNT_IS_VAULT = "is_vault"
+
 CONF_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_BASE = "exchange_base"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
@@ -10,18 +12,25 @@ DOMAIN = "coinbase"
 
 # Constants for data returned by Coinbase API
 API_ACCOUNT_AMOUNT = "amount"
+API_ACCOUNT_AVALIABLE = "available_balance"
 API_ACCOUNT_BALANCE = "balance"
 API_ACCOUNT_CURRENCY = "currency"
 API_ACCOUNT_CURRENCY_CODE = "code"
+API_ACCOUNT_HOLD = "hold"
 API_ACCOUNT_ID = "id"
 API_ACCOUNT_NATIVE_BALANCE = "balance"
 API_ACCOUNT_NAME = "name"
-API_ACCOUNTS_DATA = "data"
+API_ACCOUNT_VALUE = "value"
+API_ACCOUNTS = "accounts"
+API_DATA = "data"
 API_RATES = "rates"
+API_RATES_CURRENCY = "currency"
 API_RESOURCE_PATH = "resource_path"
 API_RESOURCE_TYPE = "type"
 API_TYPE_VAULT = "vault"
 API_USD = "USD"
+API_V3_ACCOUNT_ID = "uuid"
+API_V3_TYPE_VAULT = "ACCOUNT_TYPE_VAULT"
 
 WALLETS = {
     "1INCH": "1INCH",

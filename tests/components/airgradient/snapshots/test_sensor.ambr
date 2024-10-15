@@ -305,7 +305,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '48.0',
+    'state': '47.0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_led_bar_brightness-entry]
@@ -462,7 +462,7 @@
     'state': '1',
   })
 # ---
-# name: test_all_entities[indoor][sensor.airgradient_nox_learning_offset-entry]
+# name: test_all_entities[indoor][sensor.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -474,7 +474,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.airgradient_nox_learning_offset',
+    'entity_id': 'sensor.airgradient_nox_index_learning_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -486,7 +486,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'NOx learning offset',
+    'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -495,15 +495,15 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[indoor][sensor.airgradient_nox_learning_offset-state]
+# name: test_all_entities[indoor][sensor.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Airgradient NOx learning offset',
+      'friendly_name': 'Airgradient NOx index learning offset',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airgradient_nox_learning_offset',
+    'entity_id': 'sensor.airgradient_nox_index_learning_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -912,7 +912,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27.96',
+    'state': '22.17',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_voc_index-entry]
@@ -964,7 +964,7 @@
     'state': '99',
   })
 # ---
-# name: test_all_entities[indoor][sensor.airgradient_voc_learning_offset-entry]
+# name: test_all_entities[indoor][sensor.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -976,7 +976,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.airgradient_voc_learning_offset',
+    'entity_id': 'sensor.airgradient_voc_index_learning_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -988,7 +988,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'VOC learning offset',
+    'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -997,15 +997,15 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[indoor][sensor.airgradient_voc_learning_offset-state]
+# name: test_all_entities[indoor][sensor.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Airgradient VOC learning offset',
+      'friendly_name': 'Airgradient VOC index learning offset',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airgradient_voc_learning_offset',
+    'entity_id': 'sensor.airgradient_voc_index_learning_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1109,7 +1109,7 @@
     'state': '1',
   })
 # ---
-# name: test_all_entities[outdoor][sensor.airgradient_nox_learning_offset-entry]
+# name: test_all_entities[outdoor][sensor.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1121,7 +1121,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.airgradient_nox_learning_offset',
+    'entity_id': 'sensor.airgradient_nox_index_learning_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1133,7 +1133,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'NOx learning offset',
+    'original_name': 'NOx index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1142,15 +1142,15 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[outdoor][sensor.airgradient_nox_learning_offset-state]
+# name: test_all_entities[outdoor][sensor.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Airgradient NOx learning offset',
+      'friendly_name': 'Airgradient NOx index learning offset',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airgradient_nox_learning_offset',
+    'entity_id': 'sensor.airgradient_nox_index_learning_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1357,7 +1357,7 @@
     'state': '49',
   })
 # ---
-# name: test_all_entities[outdoor][sensor.airgradient_voc_learning_offset-entry]
+# name: test_all_entities[outdoor][sensor.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1369,7 +1369,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.airgradient_voc_learning_offset',
+    'entity_id': 'sensor.airgradient_voc_index_learning_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1381,7 +1381,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'VOC learning offset',
+    'original_name': 'VOC index learning offset',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1390,15 +1390,15 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[outdoor][sensor.airgradient_voc_learning_offset-state]
+# name: test_all_entities[outdoor][sensor.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Airgradient VOC learning offset',
+      'friendly_name': 'Airgradient VOC index learning offset',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airgradient_voc_learning_offset',
+    'entity_id': 'sensor.airgradient_voc_index_learning_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

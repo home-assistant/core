@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICES): vol.All(
             cv.ensure_list,
@@ -54,7 +54,7 @@ def setup_platform(
     try:
         x10_command("info")
     except CalledProcessError as err:
-        _LOGGER.info("Assuming that the device is CM17A: %s", err.output)
+        _LOGGER.warning("Assuming that the device is CM17A: %s", err.output)
         is_cm11a = False
 
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])

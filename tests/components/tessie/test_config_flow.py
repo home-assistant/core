@@ -67,6 +67,33 @@ async def test_form(
     assert result2["data"] == TEST_CONFIG
 
 
+async def test_abort(
+    hass: HomeAssistant,
+    mock_config_flow_get_state_of_all_vehicles,
+    mock_async_setup_entry,
+) -> None:
+    """Test a duplicate entry aborts."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CONFIG,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        TEST_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -116,14 +143,7 @@ async def test_reauth(
     )
     mock_entry.add_to_hass(hass)
 
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=TEST_CONFIG,
-    )
+    result1 = await mock_entry.start_reauth_flow(hass)
 
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "reauth_confirm"
@@ -167,15 +187,7 @@ async def test_reauth_errors(
     )
     mock_entry.add_to_hass(hass)
 
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=TEST_CONFIG,
-    )
+    result1 = await mock_entry.start_reauth_flow(hass)
 
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],

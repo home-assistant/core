@@ -42,9 +42,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
         self._discovered_adv: MicroBotAdvertisement | None = None
         self._discovered_advs: dict[str, MicroBotAdvertisement] = {}
         self._client: MicroBotApiClient | None = None

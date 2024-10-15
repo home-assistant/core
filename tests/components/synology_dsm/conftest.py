@@ -1,9 +1,9 @@
 """Configure Synology DSM tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

@@ -1,23 +1,24 @@
 """Creates a switch entity for the mower."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import (
+    AutomowerControlEntity,
+    WorkAreaControlEntity,
+    _work_area_translation_key,
+    handle_sending_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +40,17 @@ async def async_setup_entry(
             _stay_out_zones = coordinator.data[mower_id].stay_out_zones
             if _stay_out_zones is not None:
                 entities.extend(
-                    AutomowerStayOutZoneSwitchEntity(
-                        coordinator, mower_id, stay_out_zone_uid
-                    )
+                    StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
+        if coordinator.data[mower_id].capabilities.work_areas:
+            _work_areas = coordinator.data[mower_id].work_areas
+            if _work_areas is not None:
+                entities.extend(
+                    WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                    for work_area_id in _work_areas
+                )
     async_add_entities(entities)
 
 
@@ -67,26 +73,18 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.mower_attributes.mower.mode != MowerModes.HOME
 
+    @handle_sending_exception()
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
+    @handle_sending_exception()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.coordinator.api.commands.resume_schedule(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
 
-class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
+class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     """Defining the Automower stay out zone switch."""
 
     _attr_translation_key = "stay_out_zones"
@@ -128,37 +126,60 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Return True if the device is available and the zones are not `dirty`."""
         return super().available and not self.stay_out_zones.dirty
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        try:
-            await self.coordinator.api.commands.switch_stay_out_zone(
-                self.mower_id, self.stay_out_zone_uid, False
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
-        else:
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.api.commands.switch_stay_out_zone(
+            self.mower_id, self.stay_out_zone_uid, False
+        )
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.coordinator.api.commands.switch_stay_out_zone(
-                self.mower_id, self.stay_out_zone_uid, True
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.switch_stay_out_zone(
+            self.mower_id, self.stay_out_zone_uid, True
+        )
+
+
+class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
+    """Defining the Automower work area switch."""
+
+    def __init__(
+        self,
+        coordinator: AutomowerDataUpdateCoordinator,
+        mower_id: str,
+        work_area_id: int,
+    ) -> None:
+        """Set up Automower switch."""
+        super().__init__(mower_id, coordinator, work_area_id)
+        key = "work_area"
+        self._attr_translation_key = _work_area_translation_key(work_area_id, key)
+        self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
+        if self.work_area_attributes.name == "my_lawn":
+            self._attr_translation_placeholders = {
+                "work_area": self.work_area_attributes.name
+            }
         else:
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
+            self._attr_name = self.work_area_attributes.name
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self.work_area_attributes.enabled
+
+    @handle_sending_exception(poll_after_sending=True)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.coordinator.api.commands.workarea_settings(
+            self.mower_id, self.work_area_id, enabled=False
+        )
+
+    @handle_sending_exception(poll_after_sending=True)
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.coordinator.api.commands.workarea_settings(
+            self.mower_id, self.work_area_id, enabled=True
+        )
 
 
 @callback

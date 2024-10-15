@@ -61,7 +61,12 @@ async def test_controlling_state_via_mqtt(
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["percentage"] is None
-    assert state.attributes["supported_features"] == fan.FanEntityFeature.SET_SPEED
+    assert (
+        state.attributes["supported_features"]
+        == fan.FanEntityFeature.SET_SPEED
+        | fan.FanEntityFeature.TURN_OFF
+        | fan.FanEntityFeature.TURN_ON
+    )
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":1}')

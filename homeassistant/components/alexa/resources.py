@@ -283,7 +283,7 @@ class AlexaPresetResource(AlexaCapabilityResource):
     """Implements Alexa PresetResources.
 
     Use presetResources with RangeController to provide a set of
-    friendlyNamesfor each RangeController preset.
+    friendlyNames for each RangeController preset.
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#presetresources
     """

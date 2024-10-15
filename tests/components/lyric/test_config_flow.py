@@ -26,7 +26,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.fixture
-async def mock_impl(hass):
+async def mock_impl(hass: HomeAssistant) -> None:
     """Mock implementation."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -36,6 +36,10 @@ async def mock_impl(hass):
     )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.lyric.config.abort.missing_credentials"],
+)
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -45,12 +49,11 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     assert result["reason"] == "missing_credentials"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_impl,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -112,12 +115,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_reauthentication_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_impl,
 ) -> None:
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(
@@ -128,9 +130,7 @@ async def test_reauthentication_flow(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

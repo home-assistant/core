@@ -1,10 +1,10 @@
 """Common fixtures for the APsystems Local API tests."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from APsystemsEZ1 import ReturnDeviceInfo, ReturnOutputData
+from APsystemsEZ1 import ReturnAlarmInfo, ReturnDeviceInfo, ReturnOutputData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_apsystems() -> Generator[AsyncMock, None, None]:
+def mock_apsystems() -> Generator[MagicMock]:
     """Mock APSystems lib."""
     with (
         patch(
@@ -52,6 +52,13 @@ def mock_apsystems() -> Generator[AsyncMock, None, None]:
             e2=6.0,
             te2=7.0,
         )
+        mock_api.get_alarm_info.return_value = ReturnAlarmInfo(
+            offgrid=False,
+            shortcircuit_1=True,
+            shortcircuit_2=False,
+            operating=False,
+        )
+        mock_api.get_device_power_status.return_value = True
         yield mock_api
 
 

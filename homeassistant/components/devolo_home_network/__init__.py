@@ -39,6 +39,7 @@ from .const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
+    LAST_RESTART,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     REGULAR_FIRMWARE,
@@ -127,6 +128,19 @@ async def async_setup_entry(
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
+    async def async_update_last_restart() -> int:
+        """Fetch data from API endpoint."""
+        assert device.device
+        update_sw_version(device_registry, device)
+        try:
+            return await device.device.async_uptime()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+        except DevicePasswordProtected as err:
+            raise ConfigEntryAuthFailed(
+                err, translation_domain=DOMAIN, translation_key="password_wrong"
+            ) from err
+
     async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""
         assert device.device
@@ -164,6 +178,14 @@ async def async_setup_entry(
             _LOGGER,
             name=SWITCH_LEDS,
             update_method=async_update_led_status,
+            update_interval=SHORT_UPDATE_INTERVAL,
+        )
+    if device.device and "restart" in device.device.features:
+        coordinators[LAST_RESTART] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=LAST_RESTART,
+            update_method=async_update_last_restart,
             update_interval=SHORT_UPDATE_INTERVAL,
         )
     if device.device and "update" in device.device.features:

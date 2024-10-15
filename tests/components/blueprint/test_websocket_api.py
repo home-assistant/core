@@ -9,7 +9,7 @@ import yaml
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml import parse_yaml
+from homeassistant.util.yaml import UndefinedSubstitution, parse_yaml
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -54,6 +54,17 @@ async def test_list_blueprints(
     blueprints = msg["result"]
     assert blueprints == {
         "test_event_service.yaml": {
+            "metadata": {
+                "domain": "automation",
+                "input": {
+                    "service_to_call": None,
+                    "trigger_event": {"selector": {"text": {}}},
+                    "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
+                },
+                "name": "Call service based on event",
+            },
+        },
+        "test_event_service_legacy_schema.yaml": {
             "metadata": {
                 "domain": "automation",
                 "input": {
@@ -212,16 +223,16 @@ async def test_save_blueprint(
             " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
-            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
-            "  platform: event\n  event_type: !input 'trigger_event'\naction:\n "
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
+            "  trigger: event\n  event_type: !input 'trigger_event'\nactions:\n "
             " service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
             # c dumper will not quote the value after !input
             "blueprint:\n  name: Call service based on event\n  domain: automation\n "
             " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
             " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
             "    mode: box\n          step: 1.0\n  source_url:"
-            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
-            "  platform: event\n  event_type: !input trigger_event\naction:\n  service:"
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntriggers:\n"
+            "  trigger: event\n  event_type: !input trigger_event\nactions:\n  service:"
             " !input service_to_call\n  entity_id: light.kitchen\n"
         )
         # Make sure ita parsable and does not raise
@@ -454,9 +465,124 @@ async def test_delete_blueprint_in_use_by_script(
         msg = await client.receive_json()
 
         assert not unlink_mock.mock_calls
-        assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
             "code": "home_assistant_error",
             "message": "Blueprint in use",
         }
+
+
+async def test_substituting_blueprint_inputs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["substituted_config"] == {
+        "actions": {
+            "entity_id": "light.kitchen",
+            "service": "test.automation",
+        },
+        "triggers": {
+            "event_type": "test_event",
+            "trigger": "event",
+        },
+    }
+
+
+async def test_substituting_blueprint_inputs_unknown_domain(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "donald_duck",
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "invalid_format",
+        "message": "Unsupported domain",
+    }
+
+
+async def test_substituting_blueprint_inputs_incomplete_input(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+            "input": {
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Missing input trigger_event",
+    }
+
+
+async def test_substituting_blueprint_inputs_incomplete_input_2(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=UndefinedSubstitution("blah"),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "blueprint/substitute",
+                "domain": "automation",
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "test_event",
+                    "service_to_call": "test.automation",
+                    "a_number": 5,
+                },
+            }
+        )
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "No substitution found for input blah",
+    }

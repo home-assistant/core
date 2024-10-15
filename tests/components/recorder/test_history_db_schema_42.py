@@ -5,21 +5,15 @@ from __future__ import annotations
 from copy import copy
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch, sentinel
+from unittest.mock import sentinel
 
 from freezegun import freeze_time
 import pytest
-from sqlalchemy import text
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, get_instance, history
+from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.recorder.filters import Filters
-from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.models.legacy import (
-    LegacyLazyState,
-    LegacyLazyStatePreSchema31,
-)
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -35,14 +29,14 @@ from .common import (
     async_wait_recording_done,
     old_db_schema,
 )
-from .db_schema_42 import Events, RecorderRuns, StateAttributes, States, StatesMeta
+from .db_schema_42 import StateAttributes, States, StatesMeta
 
 from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -57,77 +51,6 @@ def db_schema_42():
 @pytest.fixture(autouse=True)
 def setup_recorder(db_schema_42, recorder_mock: Recorder) -> recorder.Recorder:
     """Set up recorder."""
-
-
-async def _async_get_states(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
-    run: RecorderRuns | None = None,
-    no_attributes: bool = False,
-):
-    """Get states from the database."""
-
-    def _get_states_with_session():
-        with session_scope(hass=hass, read_only=True) as session:
-            attr_cache = {}
-            pre_31_schema = get_instance(hass).schema_version < 31
-            return [
-                LegacyLazyStatePreSchema31(row, attr_cache, None)
-                if pre_31_schema
-                else LegacyLazyState(
-                    row,
-                    attr_cache,
-                    None,
-                    row.entity_id,
-                )
-                for row in legacy._get_rows_with_session(
-                    hass,
-                    session,
-                    utc_point_in_time,
-                    entity_ids,
-                    run,
-                    no_attributes,
-                )
-            ]
-
-    return await recorder.get_instance(hass).async_add_executor_job(
-        _get_states_with_session
-    )
-
-
-def _add_db_entries(
-    hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
-) -> None:
-    with session_scope(hass=hass) as session:
-        for idx, entity_id in enumerate(entity_ids):
-            session.add(
-                Events(
-                    event_id=1001 + idx,
-                    event_type="state_changed",
-                    event_data="{}",
-                    origin="LOCAL",
-                    time_fired=point,
-                )
-            )
-            session.add(
-                States(
-                    entity_id=entity_id,
-                    state="on",
-                    attributes='{"name":"the light"}',
-                    last_changed=None,
-                    last_updated=point,
-                    event_id=1001 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
-            session.add(
-                StateAttributes(
-                    shared_attrs='{"name":"the shared light"}',
-                    hash=1234 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
 
 
 async def test_get_full_significant_states_with_session_entity_no_matches(
@@ -891,175 +814,6 @@ def record_states(
         )
 
     return zero, four, states
-
-
-async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
-
-    instance = recorder.get_instance(hass)
-
-    with patch.object(instance.states_meta_manager, "active", False):
-        start = dt_util.utcnow()
-        point = start + timedelta(seconds=1)
-        end = point + timedelta(seconds=1)
-        entity_id = "light.test"
-        await recorder.get_instance(hass).async_add_executor_job(
-            _add_db_entries, hass, point, [entity_id]
-        )
-
-        no_attributes = True
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {"name": "the shared light"}
-
-        with instance.engine.connect() as conn:
-            conn.execute(text("update states set attributes_id=NULL;"))
-            conn.execute(text("drop table state_attributes;"))
-            conn.commit()
-
-        with patch.object(instance, "schema_version", 24):
-            instance.states_meta_manager.active = False
-            no_attributes = True
-            hist = history.state_changes_during_period(
-                hass,
-                start,
-                end,
-                entity_id,
-                no_attributes,
-                include_start_time_state=False,
-            )
-            state = hist[entity_id][0]
-            assert state.attributes == {}
-
-            no_attributes = False
-            hist = history.state_changes_during_period(
-                hass,
-                start,
-                end,
-                entity_id,
-                no_attributes,
-                include_start_time_state=False,
-            )
-            state = hist[entity_id][0]
-            assert state.attributes == {"name": "the light"}
-
-
-async def test_get_states_query_during_migration_to_schema_25(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
-
-    instance = recorder.get_instance(hass)
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id = "light.test"
-    await instance.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
-    assert instance.states_meta_manager.active
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        instance.states_meta_manager.active = False
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {"name": "the light"}
-
-
-async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    hass: HomeAssistant,
-    recorder_db_url: str,
-) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
-
-    instance = recorder.get_instance(hass)
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id_1 = "light.test"
-    entity_id_2 = "switch.test"
-    entity_ids = [entity_id_1, entity_id_2]
-
-    await instance.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
-    assert instance.states_meta_manager.active
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {}
-    assert hist[1].attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {"name": "the shared light"}
-    assert hist[1].attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        instance.states_meta_manager.active = False
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {}
-        assert hist[1].attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {"name": "the light"}
-        assert hist[1].attributes == {"name": "the light"}
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(

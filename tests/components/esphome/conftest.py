@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -19,6 +19,8 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantAnnounceFinished,
+    VoiceAssistantAudioSettings,
     VoiceAssistantFeature,
 )
 import pytest
@@ -39,6 +41,8 @@ from homeassistant.setup import async_setup_component
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
+
+_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
 
 @pytest.fixture(autouse=True)
@@ -166,7 +170,7 @@ def mock_client(mock_device_info) -> APIClient:
 
 
 @pytest.fixture
-async def mock_dashboard(hass):
+async def mock_dashboard(hass: HomeAssistant) -> AsyncGenerator[dict[str, Any]]:
     """Mock dashboard."""
     data = {"configured": [], "importable": []}
     with patch(
@@ -196,6 +200,28 @@ class MockESPHomeDevice:
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
+        self.home_assistant_state_request_callback: Callable[[str, str | None], None]
+        self.voice_assistant_handle_start_callback: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ]
+        self.voice_assistant_handle_stop_callback: Callable[
+            [bool], Coroutine[Any, Any, None]
+        ]
+        self.voice_assistant_handle_audio_callback: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        )
+        self.voice_assistant_handle_announcement_finished_callback: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        )
         self.device_info = device_info
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
@@ -245,15 +271,81 @@ class MockESPHomeDevice:
     def set_home_assistant_state_subscription_callback(
         self,
         on_state_sub: Callable[[str, str | None], None],
+        on_state_request: Callable[[str, str | None], None],
     ) -> None:
         """Set the state call callback."""
         self.home_assistant_state_subscription_callback = on_state_sub
+        self.home_assistant_state_request_callback = on_state_request
 
     def mock_home_assistant_state_subscription(
         self, entity_id: str, attribute: str | None
     ) -> None:
         """Mock a state subscription."""
         self.home_assistant_state_subscription_callback(entity_id, attribute)
+
+    def mock_home_assistant_state_request(
+        self, entity_id: str, attribute: str | None
+    ) -> None:
+        """Mock a state request."""
+        self.home_assistant_state_request_callback(entity_id, attribute)
+
+    def set_subscribe_voice_assistant_callbacks(
+        self,
+        handle_start: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
+        handle_audio: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+    ) -> None:
+        """Set the voice assistant subscription callbacks."""
+        self.voice_assistant_handle_start_callback = handle_start
+        self.voice_assistant_handle_stop_callback = handle_stop
+        self.voice_assistant_handle_audio_callback = handle_audio
+        self.voice_assistant_handle_announcement_finished_callback = (
+            handle_announcement_finished
+        )
+
+    async def mock_voice_assistant_handle_start(
+        self,
+        conversation_id: str,
+        flags: int,
+        settings: VoiceAssistantAudioSettings,
+        wake_word_phrase: str | None,
+    ) -> int | None:
+        """Mock voice assistant handle start."""
+        return await self.voice_assistant_handle_start_callback(
+            conversation_id, flags, settings, wake_word_phrase
+        )
+
+    async def mock_voice_assistant_handle_stop(self, abort: bool) -> None:
+        """Mock voice assistant handle stop."""
+        await self.voice_assistant_handle_stop_callback(abort)
+
+    async def mock_voice_assistant_handle_audio(self, audio: bytes) -> None:
+        """Mock voice assistant handle audio."""
+        assert self.voice_assistant_handle_audio_callback is not None
+        await self.voice_assistant_handle_audio_callback(audio)
+
+    async def mock_voice_assistant_handle_announcement_finished(
+        self, finished: VoiceAssistantAnnounceFinished
+    ) -> None:
+        """Mock voice assistant handle announcement finished."""
+        assert self.voice_assistant_handle_announcement_finished_callback is not None
+        await self.voice_assistant_handle_announcement_finished_callback(finished)
 
 
 async def _mock_generic_device_entry(
@@ -263,6 +355,7 @@ async def _mock_generic_device_entry(
     mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
     states: list[EntityState],
     entry: MockConfigEntry | None = None,
+    hass_storage: dict[str, Any] | None = None,
 ) -> MockESPHomeDevice:
     if not entry:
         entry = MockConfigEntry(
@@ -286,6 +379,17 @@ async def _mock_generic_device_entry(
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
+    if hass_storage:
+        storage_key = f"{DOMAIN}.{entry.entry_id}"
+        hass_storage[storage_key] = {
+            "version": 1,
+            "minor_version": 1,
+            "key": storage_key,
+            "data": {
+                "device_info": device_info.to_dict(),
+            },
+        }
+
     mock_device = MockESPHomeDevice(entry, mock_client, device_info)
 
     def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
@@ -302,12 +406,47 @@ async def _mock_generic_device_entry(
 
     def _subscribe_home_assistant_states(
         on_state_sub: Callable[[str, str | None], None],
+        on_state_request: Callable[[str, str | None], None],
     ) -> None:
         """Subscribe to home assistant states."""
-        mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
+        mock_device.set_home_assistant_state_subscription_callback(
+            on_state_sub, on_state_request
+        )
+
+    def _subscribe_voice_assistant(
+        *,
+        handle_start: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
+        handle_audio: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+    ) -> Callable[[], None]:
+        """Subscribe to voice assistant."""
+        mock_device.set_subscribe_voice_assistant_callbacks(
+            handle_start, handle_stop, handle_audio, handle_announcement_finished
+        )
+
+        def unsub():
+            pass
+
+        return unsub
 
     mock_client.device_info = AsyncMock(return_value=mock_device.device_info)
-    mock_client.subscribe_voice_assistant = Mock()
+    mock_client.subscribe_voice_assistant = _subscribe_voice_assistant
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )
@@ -320,7 +459,7 @@ async def _mock_generic_device_entry(
     class MockReconnectLogic(BaseMockReconnectLogic):
         """Mock ReconnectLogic."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
@@ -453,6 +592,7 @@ async def mock_bluetooth_entry_with_legacy_adv(
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> Callable[
     [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
     Awaitable[MockConfigEntry],
@@ -464,10 +604,17 @@ async def mock_generic_device_entry(
         entity_info: list[EntityInfo],
         user_service: list[UserService],
         states: list[EntityState],
+        mock_storage: bool = False,
     ) -> MockConfigEntry:
         return (
             await _mock_generic_device_entry(
-                hass, mock_client, {}, (entity_info, user_service), states
+                hass,
+                mock_client,
+                {},
+                (entity_info, user_service),
+                states,
+                None,
+                hass_storage if mock_storage else None,
             )
         ).entry
 
@@ -477,6 +624,7 @@ async def mock_generic_device_entry(
 @pytest.fixture
 async def mock_esphome_device(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> Callable[
     [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
     Awaitable[MockESPHomeDevice],
@@ -485,19 +633,21 @@ async def mock_esphome_device(
 
     async def _mock_device(
         mock_client: APIClient,
-        entity_info: list[EntityInfo],
-        user_service: list[UserService],
-        states: list[EntityState],
+        entity_info: list[EntityInfo] | None = None,
+        user_service: list[UserService] | None = None,
+        states: list[EntityState] | None = None,
         entry: MockConfigEntry | None = None,
         device_info: dict[str, Any] | None = None,
+        mock_storage: bool = False,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
             mock_client,
             device_info or {},
-            (entity_info, user_service),
-            states,
+            (entity_info or [], user_service or []),
+            states or [],
             entry,
+            hass_storage if mock_storage else None,
         )
 
     return _mock_device

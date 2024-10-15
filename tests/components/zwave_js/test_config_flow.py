@@ -1,20 +1,20 @@
 """Test the Z-Wave JS config flow."""
 
 import asyncio
+from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
-from unittest.mock import DEFAULT, MagicMock, call, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
-from typing_extensions import Generator
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
@@ -59,7 +59,7 @@ CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
 
 
 @pytest.fixture(name="setup_entry")
-def setup_entry_fixture():
+def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.zwave_js.async_setup_entry", return_value=True
@@ -68,7 +68,7 @@ def setup_entry_fixture():
 
 
 @pytest.fixture(name="supervisor")
-def mock_supervisor_fixture():
+def mock_supervisor_fixture() -> Generator[None]:
     """Mock Supervisor."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=True
@@ -76,37 +76,16 @@ def mock_supervisor_fixture():
         yield
 
 
-@pytest.fixture(name="discovery_info")
-def discovery_info_fixture():
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-@pytest.fixture(name="discovery_info_side_effect")
-def discovery_info_side_effect_fixture():
-    """Return the discovery info from the supervisor."""
-    return None
-
-
-@pytest.fixture(name="get_addon_discovery_info")
-def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        side_effect=discovery_info_side_effect,
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
-
-
 @pytest.fixture(name="server_version_side_effect")
-def server_version_side_effect_fixture():
+def server_version_side_effect_fixture() -> Any | None:
     """Return the server version side effect."""
     return None
 
 
 @pytest.fixture(name="get_server_version", autouse=True)
-def mock_get_server_version(server_version_side_effect, server_version_timeout):
+def mock_get_server_version(
+    server_version_side_effect: Any | None, server_version_timeout: int
+) -> Generator[AsyncMock]:
     """Mock server version."""
     version_info = VersionInfo(
         driver_version="mock-driver-version",
@@ -130,18 +109,18 @@ def mock_get_server_version(server_version_side_effect, server_version_timeout):
 
 
 @pytest.fixture(name="server_version_timeout")
-def mock_server_version_timeout():
+def mock_server_version_timeout() -> int:
     """Patch the timeout for getting server version."""
     return SERVER_VERSION_TIMEOUT
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
-def mock_addon_setup_time():
+def mock_addon_setup_time() -> Generator[None]:
     """Mock add-on setup sleep time."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
-    ) as addon_setup_time:
-        yield addon_setup_time
+    ):
+        yield
 
 
 @pytest.fixture(name="serial_port")
@@ -604,7 +583,7 @@ async def test_usb_discovery(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -653,7 +632,7 @@ async def test_usb_discovery(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -754,7 +733,7 @@ async def test_usb_discovery_addon_not_running(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -849,7 +828,7 @@ async def test_discovery_addon_not_running(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -902,7 +881,7 @@ async def test_discovery_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -952,7 +931,7 @@ async def test_discovery_addon_not_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1365,7 +1344,7 @@ async def test_addon_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1449,7 +1428,7 @@ async def test_addon_installed_start_failure(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
@@ -1528,7 +1507,7 @@ async def test_addon_installed_failures(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
@@ -1676,7 +1655,7 @@ async def test_addon_installed_already_configured(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -1721,7 +1700,7 @@ async def test_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -1771,7 +1750,7 @@ async def test_addon_not_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1815,7 +1794,7 @@ async def test_install_addon_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -2028,7 +2007,7 @@ async def test_options_addon_running(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
@@ -2307,7 +2286,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2329,7 +2308,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2473,7 +2452,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2492,7 +2471,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2706,7 +2685,7 @@ async def test_options_addon_not_installed(
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -2730,7 +2709,7 @@ async def test_options_addon_not_installed(
     await hass.async_block_till_done()
 
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2744,104 +2723,6 @@ async def test_options_addon_not_installed(
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
-
-
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
-async def test_import_addon_installed(
-    hass: HomeAssistant,
-    supervisor,
-    addon_installed,
-    addon_options,
-    set_addon_options,
-    start_addon,
-    get_addon_discovery_info,
-    serial_port,
-) -> None:
-    """Test import step while add-on already installed on Supervisor."""
-    serial_port.device = "/test/imported"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"usb_path": "/test/imported", "network_key": "imported123"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "on_supervisor"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"use_addon": True}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure_addon"
-
-    # the default input should be the imported data
-    default_input = result["data_schema"]({})
-
-    assert default_input == {
-        "usb_path": "/test/imported",
-        "s0_legacy_key": "imported123",
-        "s2_access_control_key": "",
-        "s2_authenticated_key": "",
-        "s2_unauthenticated_key": "",
-        "lr_s2_access_control_key": "",
-        "lr_s2_authenticated_key": "",
-    }
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], default_input
-    )
-
-    assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {
-            "options": {
-                "device": "/test/imported",
-                "s0_legacy_key": "imported123",
-                "s2_access_control_key": "",
-                "s2_authenticated_key": "",
-                "s2_unauthenticated_key": "",
-                "lr_s2_access_control_key": "",
-                "lr_s2_authenticated_key": "",
-            }
-        },
-    )
-
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    with (
-        patch(
-            "homeassistant.components.zwave_js.async_setup", return_value=True
-        ) as mock_setup,
-        patch(
-            "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
-
-    assert start_addon.call_args == call(hass, "core_zwave_js")
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TITLE
-    assert result["data"] == {
-        "url": "ws://host1:3001",
-        "usb_path": "/test/imported",
-        "s0_legacy_key": "imported123",
-        "s2_access_control_key": "",
-        "s2_authenticated_key": "",
-        "s2_unauthenticated_key": "",
-        "lr_s2_access_control_key": "",
-        "lr_s2_authenticated_key": "",
-        "use_addon": True,
-        "integration_created_addon": False,
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:

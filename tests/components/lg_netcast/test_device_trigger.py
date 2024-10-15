@@ -43,7 +43,9 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on triggers firing."""
     await setup_lgnetcast(hass)
@@ -96,11 +98,11 @@ async def test_if_fires_on_turn_on_request(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
-    assert calls[1].data["some"] == ENTITY_ID
-    assert calls[1].data["id"] == 0
+    assert len(service_calls) == 3
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
+    assert service_calls[2].data["some"] == ENTITY_ID
+    assert service_calls[2].data["id"] == 0
 
 
 async def test_failure_scenarios(

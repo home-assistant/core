@@ -5,14 +5,12 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-import logging
 from typing import Any
 
 from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     RecordingMode,
     VideoMode,
 )
@@ -23,16 +21,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectSetableKeysMixin,
+    T,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
@@ -45,10 +46,7 @@ class ProtectSwitchEntityDescription(
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
-    if value:
-        await obj.set_video_mode(VideoMode.HIGH_FPS)
-    else:
-        await obj.set_video_mode(VideoMode.DEFAULT)
+    await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -319,7 +317,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Tracking: person",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="is_ptz",
+        ufp_required_field="feature_flags.is_ptz",
         ufp_value="is_person_tracking_enabled",
         ufp_set_method="set_person_track",
         ufp_perm=PermRequired.WRITE,
@@ -472,15 +470,10 @@ _PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
-class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
+class ProtectBaseSwitch(ProtectIsOnEntity):
     """Base class for UniFi Protect Switch."""
 
     entity_description: ProtectSwitchEntityDescription
-    _state_attrs = ("_attr_available", "_attr_is_on")
-
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -491,18 +484,23 @@ class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
         await self.entity_description.ufp_set(self.device, False)
 
 
-class ProtectSwitch(ProtectBaseSwitch, ProtectDeviceEntity):
+class ProtectSwitch(ProtectDeviceEntity, ProtectBaseSwitch, SwitchEntity):
     """A UniFi Protect Switch."""
 
+    entity_description: ProtectSwitchEntityDescription
 
-class ProtectNVRSwitch(ProtectBaseSwitch, ProtectNVREntity):
+
+class ProtectNVRSwitch(ProtectNVREntity, ProtectBaseSwitch, SwitchEntity):
     """A UniFi Protect NVR Switch."""
+
+    entity_description: ProtectSwitchEntityDescription
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
     """A UniFi Protect Switch."""
 
     device: Camera
+    entity_description: ProtectSwitchEntityDescription
 
     def __init__(
         self,
@@ -533,7 +531,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # do not add extra state attribute on initialize
         if self.entity_id:

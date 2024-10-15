@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
+    DEV_ALERT,
     DEV_HUB,
     DEV_LEAK_DETECTOR,
     DEV_PROTECTION_VALVE,
@@ -33,8 +34,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # Binary sensor type constants
+ALERT_SENSOR = "alert_sensor"
 LEAK_DETECTED = "leak"
 PENDING_NOTIFICATION = "pending_notification"
+POWER = "power"
 PUMP_STATUS = "pump"
 RESERVE_IN_USE = "reserve_in_use"
 SALT_LOW = "salt"
@@ -74,10 +77,23 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
         translation_key=PUMP_STATUS,
         value_fn=lambda device: device.drop_api.pump_status(),
     ),
+    DROPBinarySensorEntityDescription(
+        key=ALERT_SENSOR,
+        translation_key=ALERT_SENSOR,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda device: device.drop_api.sensor_high(),
+    ),
+    DROPBinarySensorEntityDescription(
+        key=POWER,
+        translation_key=None,  # Use name provided by binary sensor device class
+        device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda device: device.drop_api.power(),
+    ),
 ]
 
 # Defines which binary sensors are used by each device type
 DEVICE_BINARY_SENSORS: dict[str, list[str]] = {
+    DEV_ALERT: [ALERT_SENSOR, POWER],
     DEV_HUB: [LEAK_DETECTED, PENDING_NOTIFICATION],
     DEV_LEAK_DETECTOR: [LEAK_DETECTED],
     DEV_PROTECTION_VALVE: [LEAK_DETECTED],

@@ -18,7 +18,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -538,7 +538,7 @@ FITBIT_RESOURCES_KEYS: Final[list[str]] = [
     for desc in (*FITBIT_RESOURCES_LIST, FITBIT_RESOURCE_BATTERY, SLEEP_START_TIME)
 ]
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES

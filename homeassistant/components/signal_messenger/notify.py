@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ DATA_SCHEMA = vol.Any(
     DATA_URLS_SCHEMA,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
@@ -166,12 +166,11 @@ class SignalNotificationService(BaseNotificationService):
                     and int(str(resp.headers.get("Content-Length")))
                     > attachment_size_limit
                 ):
-                    raise ValueError(
-                        "Attachment too large (Content-Length reports {}). Max size: {}"
-                        " bytes".format(
-                            int(str(resp.headers.get("Content-Length"))),
-                            CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
-                        )
+                    content_length = int(str(resp.headers.get("Content-Length")))
+                    raise ValueError(  # noqa: TRY301
+                        "Attachment too large (Content-Length reports "
+                        f"{content_length}). Max size: "
+                        f"{CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                     )
 
                 size = 0
@@ -179,7 +178,7 @@ class SignalNotificationService(BaseNotificationService):
                 for chunk in resp.iter_content(1024):
                     size += len(chunk)
                     if size > attachment_size_limit:
-                        raise ValueError(
+                        raise ValueError(  # noqa: TRY301
                             f"Attachment too large (Stream reports {size}). "
                             f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                         )

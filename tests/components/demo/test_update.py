@@ -11,7 +11,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_TITLE,
-    DOMAIN,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
 )
@@ -41,7 +41,9 @@ async def update_only() -> None:
 @pytest.fixture(autouse=True)
 async def setup_demo_update(hass: HomeAssistant, update_only) -> None:
     """Initialize setup demo update entity."""
-    assert await async_setup_component(hass, DOMAIN, {"update": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, UPDATE_DOMAIN, {"update": {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -140,7 +142,7 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.demo.update.FAKE_INSTALL_SLEEP_TIME", new=0):
         await hass.services.async_call(
-            DOMAIN,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
             blocking=True,
@@ -184,7 +186,7 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
         pytest.raises(RuntimeError),
     ):
         await hass.services.async_call(
-            DOMAIN,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
             blocking=True,

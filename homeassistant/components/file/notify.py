@@ -5,7 +5,6 @@ from __future__ import annotations
 from functools import partial
 import logging
 import os
-from types import MappingProxyType
 from typing import Any, TextIO
 
 import voluptuous as vol
@@ -13,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
@@ -34,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # The legacy platform schema uses a filename, after import
 # The full file path is stored in the config entry
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILENAME): cv.string,
         vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
@@ -109,7 +108,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up notify entity."""
     unique_id = entry.entry_id
-    async_add_entities([FileNotifyEntity(unique_id, entry.data)])
+    async_add_entities([FileNotifyEntity(unique_id, {**entry.data, **entry.options})])
 
 
 class FileNotifyEntity(NotifyEntity):
@@ -118,7 +117,7 @@ class FileNotifyEntity(NotifyEntity):
     _attr_icon = FILE_ICON
     _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, unique_id: str, config: MappingProxyType[str, Any]) -> None:
+    def __init__(self, unique_id: str, config: dict[str, Any]) -> None:
         """Initialize the service."""
         self._file_path: str = config[CONF_FILE_PATH]
         self._add_timestamp: bool = config.get(CONF_TIMESTAMP, False)

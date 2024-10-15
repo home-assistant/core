@@ -17,7 +17,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from .common import SUPPORT_LANGUAGES, MockProvider, MockTTS
+from .common import SUPPORT_LANGUAGES, MockTTS, MockTTSProvider
 
 from tests.common import (
     MockModule,
@@ -75,7 +75,9 @@ async def test_invalid_platform(
 
 
 async def test_platform_setup_without_provider(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_provider: MockProvider
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Test platform setup without provider returned."""
 
@@ -109,7 +111,7 @@ async def test_platform_setup_without_provider(
 async def test_platform_setup_with_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Test platform setup with an error during setup."""
 
@@ -123,7 +125,7 @@ async def test_platform_setup_with_error(
             discovery_info: DiscoveryInfoType | None = None,
         ) -> Provider:
             """Raise exception during platform setup."""
-            raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+            raise Exception("Setup error")  # noqa: TRY002
 
     mock_integration(hass, MockModule(domain="bad_tts"))
     mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider))

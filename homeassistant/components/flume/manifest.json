@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/flume",
   "iot_class": "cloud_polling",
   "loggers": ["pyflume"],
-  "requirements": ["PyFlume==0.8.7"]
+  "requirements": ["PyFlume==0.6.5"]
 }

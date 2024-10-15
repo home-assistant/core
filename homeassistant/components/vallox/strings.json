@@ -87,6 +87,9 @@
       },
       "efficiency": {
         "name": "Efficiency"
+      },
+      "profile_duration": {
+        "name": "Profile duration"
       }
     },
     "switch": {
@@ -129,6 +132,31 @@
           "name": "Fan speed",
           "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
+      }
+    },
+    "set_profile": {
+      "name": "Activate profile for duration",
+      "description": "Activate a profile and optionally set duration.",
+      "fields": {
+        "profile": {
+          "name": "Profile",
+          "description": "Profile to activate"
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Activation duration, if omitted device uses stored duration. Duration of 65535 activates profile without timeout. Duration only applies to Boost, Fireplace and Extra profiles."
+        }
+      }
+    }
+  },
+  "selector": {
+    "profile": {
+      "options": {
+        "home": "Home",
+        "away": "Away",
+        "boost": "Boost",
+        "fireplace": "Fireplace",
+        "extra": "Extra"
       }
     }
   }

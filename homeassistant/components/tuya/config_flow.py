@@ -146,7 +146,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             data=entry_data,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Tuya."""
         self.__reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

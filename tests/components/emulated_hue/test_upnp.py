@@ -1,6 +1,7 @@
 """The tests for the emulated Hue component."""
 
 from asyncio import AbstractEventLoop
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 import unittest
@@ -10,7 +11,6 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import setup
 from homeassistant.components import emulated_hue

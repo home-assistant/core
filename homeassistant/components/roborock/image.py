@@ -1,17 +1,18 @@
 """Support for Roborock image."""
 
 import asyncio
+from datetime import datetime
 import io
 from itertools import chain
 
 from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.drawable import Drawable
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -19,35 +20,42 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
+from . import RoborockConfigEntry
+from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .entity import RoborockCoordinatedEntityV1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
 
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
+    drawables = [
+        drawable
+        for drawable, default_value in DEFAULT_DRAWABLES.items()
+        if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
     ]
     entities = list(
         chain.from_iterable(
             await asyncio.gather(
-                *(create_coordinator_maps(coord) for coord in coordinators.values())
+                *(
+                    create_coordinator_maps(coord, drawables)
+                    for coord in config_entry.runtime_data.v1
+                )
             )
         )
     )
     async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
+class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
+    image_last_updated: datetime
 
     def __init__(
         self,
@@ -56,13 +64,14 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         map_flag: int,
         starting_map: bytes,
         map_name: str,
+        drawables: list[Drawable],
     ) -> None:
         """Initialize a Roborock map."""
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
         self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(), IMAGE_DRAWABLES, ImageConfig(), []
+            ColorsPalette(), Sizes(), drawables, ImageConfig(), []
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
@@ -76,7 +85,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Determines if the entity is available."""
         return self.cached_map != b""
 
@@ -98,7 +107,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
         )
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
@@ -138,7 +147,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 
 
 async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator,
+    coord: RoborockDataUpdateCoordinator, drawables: list[Drawable]
 ) -> list[RoborockMap]:
     """Get the starting map information for all maps for this device.
 
@@ -146,7 +155,6 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
@@ -173,11 +181,12 @@ async def create_coordinator_maps(
         api_data: bytes = map_update[0] if isinstance(map_update[0], bytes) else b""
         entities.append(
             RoborockMap(
-                f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_info.name}",
+                f"{slugify(coord.duid)}_map_{map_info.name}",
                 coord,
                 map_flag,
                 api_data,
                 map_info.name,
+                drawables,
             )
         )
     if len(coord.maps) != 1:

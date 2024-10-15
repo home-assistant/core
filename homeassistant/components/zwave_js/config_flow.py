@@ -29,6 +29,7 @@ from homeassistant.config_entries import (
     ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
+    ConfigFlowContext,
     ConfigFlowResult,
     OptionsFlow,
     OptionsFlowManager,
@@ -38,6 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import VolDictType
 
 from . import disconnect_client
 from .addon import get_addon_manager
@@ -191,7 +193,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
+    def flow_manager(self) -> FlowManager[ConfigFlowContext, ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(
@@ -345,11 +347,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _title: str
+
     def __init__(self) -> None:
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
-        self._title: str | None = None
         self._usb_discovery = False
 
     @property
@@ -364,18 +367,6 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
-
-    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle imported data.
-
-        This step will be used when importing data
-        during Z-Wave to Z-Wave JS migration.
-        """
-        # Note that the data comes from the zwave integration.
-        # So we don't use our constants here.
-        self.s0_legacy_key = data.get("network_key")
-        self.usb_path = data.get("usb_path")
-        return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -405,6 +396,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual({CONF_URL: self.ws_address})
 
         assert self.ws_address
+        assert self.unique_id
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
@@ -639,7 +631,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
 
-        schema = {
+        schema: VolDictType = {
             vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
             vol.Optional(
                 CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key

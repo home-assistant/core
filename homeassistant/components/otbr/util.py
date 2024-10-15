@@ -7,8 +7,9 @@ import dataclasses
 from functools import wraps
 import logging
 import random
-from typing import Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
+import aiohttp
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
@@ -21,11 +22,15 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +50,10 @@ INSECURE_PASSPHRASES = (
     # Thread documentation default
     "J01NME",
 )
+
+
+class GetBorderAgentIdNotSupported(HomeAssistantError):
+    """Raised from python_otbr_api.GetBorderAgentIdNotSupportedError."""
 
 
 def compose_default_network_name(pan_id: int) -> str:
@@ -67,7 +76,7 @@ def _handle_otbr_error[**_P, _R](
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except python_otbr_api.OTBRError as exc:
+        except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
     return _func
@@ -82,7 +91,7 @@ class OTBRData:
     entry_id: str
 
     @_handle_otbr_error
-    async def factory_reset(self) -> None:
+    async def factory_reset(self, hass: HomeAssistant) -> None:
         """Reset the router."""
         try:
             await self.api.factory_reset()
@@ -91,14 +100,19 @@ class OTBRData:
                 "OTBR does not support factory reset, attempting to delete dataset"
             )
             await self.delete_active_dataset()
+        await update_unique_id(
+            hass,
+            hass.config_entries.async_get_entry(self.entry_id),
+            await self.get_border_agent_id(),
+        )
 
     @_handle_otbr_error
-    async def get_border_agent_id(self) -> bytes | None:
+    async def get_border_agent_id(self) -> bytes:
         """Get the border agent ID or None if not supported by the router."""
         try:
             return await self.api.get_border_agent_id()
-        except python_otbr_api.GetBorderAgentIdNotSupportedError:
-            return None
+        except python_otbr_api.GetBorderAgentIdNotSupportedError as exc:
+            raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
@@ -257,3 +271,18 @@ async def update_issues(
     """Raise or clear repair issues related to network settings."""
     await _warn_on_channel_collision(hass, otbrdata, dataset_tlvs)
     _warn_on_default_network_settings(hass, otbrdata, dataset_tlvs)
+
+
+async def update_unique_id(
+    hass: HomeAssistant, entry: OTBRConfigEntry | None, border_agent_id: bytes
+) -> None:
+    """Update the config entry's unique_id if not matching."""
+    border_agent_id_hex = border_agent_id.hex()
+    if entry and entry.source == SOURCE_USER and entry.unique_id != border_agent_id_hex:
+        _LOGGER.debug(
+            "Updating unique_id of entry %s from %s to %s",
+            entry.entry_id,
+            entry.unique_id,
+            border_agent_id_hex,
+        )
+        hass.config_entries.async_update_entry(entry, unique_id=border_agent_id_hex)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -29,4 +30,4 @@ async def async_get_config_entry_diagnostics(
 
     assert coordinator.yale
     get_all_data = await hass.async_add_executor_job(coordinator.yale.get_all)
-    return async_redact_data(get_all_data, TO_REDACT)
+    return async_redact_data(asdict(get_all_data), TO_REDACT)

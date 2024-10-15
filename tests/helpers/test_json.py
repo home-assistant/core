@@ -13,10 +13,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.helpers import json as json_helper
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
     find_paths_unserializable_data,
+    json_bytes_sorted,
     json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
@@ -25,9 +27,14 @@ from homeassistant.helpers.json import (
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
-from homeassistant.util.json import SerializationError, load_json
+from homeassistant.util.json import (
+    JSON_DECODE_EXCEPTIONS,
+    JSON_ENCODE_EXCEPTIONS,
+    SerializationError,
+    load_json,
+)
 
-from tests.common import json_round_trip
+from tests.common import import_and_test_deprecated_constant, json_round_trip
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
@@ -99,6 +106,14 @@ def test_json_dumps_sorted() -> None:
     assert json_dumps_sorted(data) == json.dumps(
         data, sort_keys=True, separators=(",", ":")
     )
+
+
+def test_json_bytes_sorted() -> None:
+    """Test the json bytes sorted function."""
+    data = {"c": 3, "a": 1, "b": 2}
+    assert json_bytes_sorted(data) == json.dumps(
+        data, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
 
 
 def test_json_dumps_float_subclass() -> None:
@@ -335,3 +350,50 @@ def test_find_unserializable_data() -> None:
         BadData(),
         dump=partial(json.dumps, cls=MockJSONEncoder),
     ) == {"$(BadData).bla": bad_data}
+
+
+def test_deprecated_json_loads(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated json_loads function.
+
+    It was moved from helpers to util in #88099
+    """
+    json_helper.json_loads("{}")
+    assert (
+        "json_loads is a deprecated function which will be removed in "
+        "HA Core 2025.8. Use homeassistant.util.json.json_loads instead"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "JSON_DECODE_EXCEPTIONS",
+            "homeassistant.util.json.JSON_DECODE_EXCEPTIONS",
+            JSON_DECODE_EXCEPTIONS,
+        ),
+        (
+            "JSON_ENCODE_EXCEPTIONS",
+            "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS",
+            JSON_ENCODE_EXCEPTIONS,
+        ),
+    ],
+)
+def test_deprecated_aliases(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated JSON_DECODE_EXCEPTIONS and JSON_ENCODE_EXCEPTIONS constants.
+
+    They were moved from helpers to util in #88099
+    """
+    import_and_test_deprecated_constant(
+        caplog,
+        json_helper,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2025.8",
+    )

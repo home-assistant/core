@@ -1,9 +1,10 @@
 """OralB session fixtures."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest import mock
 
 import pytest
-from typing_extensions import Generator
 
 
 class MockServices:
@@ -19,7 +20,7 @@ class MockBleakClient:
 
     services = MockServices()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock BleakClient."""
 
     async def __aenter__(self, *args, **kwargs):

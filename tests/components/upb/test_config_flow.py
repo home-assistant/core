@@ -1,10 +1,11 @@
 """Test the UPB Control config flow."""
 
 from asyncio import TimeoutError
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.upb.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -15,17 +16,20 @@ def mocked_upb(sync_complete=True, config_ok=True):
     def _upb_lib_connect(callback):
         callback()
 
-    upb_mock = MagicMock()
+    upb_mock = AsyncMock()
     type(upb_mock).network_id = PropertyMock(return_value="42")
     type(upb_mock).config_ok = PropertyMock(return_value=config_ok)
+    type(upb_mock).disconnect = MagicMock()
     if sync_complete:
-        upb_mock.connect.side_effect = _upb_lib_connect
+        upb_mock.async_connect.side_effect = _upb_lib_connect
     return patch(
         "homeassistant.components.upb.config_flow.upb_lib.UpbPim", return_value=upb_mock
     )
 
 
-async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
+async def valid_tcp_flow(
+    hass: HomeAssistant, sync_complete: bool = True, config_ok: bool = True
+) -> ConfigFlowResult:
     """Get result dict that are standard for most tests."""
 
     with (
@@ -109,43 +113,4 @@ async def test_form_user_with_already_configured(hass: HomeAssistant) -> None:
     result2 = await valid_tcp_flow(hass)
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-    await hass.async_block_till_done()
-
-
-async def test_form_import(hass: HomeAssistant) -> None:
-    """Test we get the form with import source."""
-
-    with (
-        mocked_upb(),
-        patch(
-            "homeassistant.components.upb.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "tcp://42.4.2.42", "file_path": "upb.upe"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "UPB"
-
-    assert result["data"] == {"host": "tcp://42.4.2.42", "file_path": "upb.upe"}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_junk_input(hass: HomeAssistant) -> None:
-    """Test we get the form with import source."""
-
-    with mocked_upb():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"foo": "goo", "goo": "foo"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
     await hass.async_block_till_done()

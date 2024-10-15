@@ -1,14 +1,13 @@
 """Test wake_word component setup."""
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow

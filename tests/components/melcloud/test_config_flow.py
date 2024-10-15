@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -74,6 +73,10 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.melcloud.config.abort.cannot_connect"],
+)
 @pytest.mark.parametrize(
     ("error", "reason"),
     [(ClientError(), "cannot_connect"), (TimeoutError(), "cannot_connect")],
@@ -95,6 +98,15 @@ async def test_form_errors(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    [
+        [
+            "component.melcloud.config.abort.cannot_connect",
+            "component.melcloud.config.abort.invalid_auth",
+        ],
+    ],
+)
 @pytest.mark.parametrize(
     ("error", "message"),
     [
@@ -166,15 +178,7 @@ async def test_token_reauthentication(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -212,15 +216,7 @@ async def test_form_errors_reauthentication(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
@@ -270,15 +266,7 @@ async def test_client_errors_reauthentication(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
@@ -328,15 +316,7 @@ async def test_reconfigure_flow(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
 
@@ -395,15 +375,7 @@ async def test_form_errors_reconfigure(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",

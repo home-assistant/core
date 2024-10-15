@@ -1,10 +1,10 @@
 """Test the SFR Box setup process."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
-from typing_extensions import Generator
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState

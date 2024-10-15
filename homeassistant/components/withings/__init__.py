@@ -48,6 +48,7 @@ from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsDeviceDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
@@ -73,6 +74,7 @@ class WithingsData:
     goals_coordinator: WithingsGoalsDataUpdateCoordinator
     activity_coordinator: WithingsActivityDataUpdateCoordinator
     workout_coordinator: WithingsWorkoutDataUpdateCoordinator
+    device_coordinator: WithingsDeviceDataUpdateCoordinator
     coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -84,6 +86,7 @@ class WithingsData:
             self.goals_coordinator,
             self.activity_coordinator,
             self.workout_coordinator,
+            self.device_coordinator,
         }
 
 
@@ -122,6 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
         activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
         workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
+        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, client),
     )
 
     for coordinator in withings_data.coordinators:

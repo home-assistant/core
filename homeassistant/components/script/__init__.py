@@ -5,10 +5,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
-from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -43,6 +43,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -50,6 +55,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    ScriptRunResult,
     script_stack_cv,
 )
 from homeassistant.helpers.service import async_set_service_schema
@@ -59,7 +65,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
-from .config import ScriptConfig
+from .config import ScriptConfig, ValidationStatus
 from .const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
@@ -82,7 +88,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
@@ -287,7 +293,8 @@ class ScriptEntityConfig:
     key: str
     raw_blueprint_inputs: ConfigType | None
     raw_config: ConfigType | None
-    validation_failed: bool
+    validation_error: str | None
+    validation_status: ValidationStatus
 
 
 async def _prepare_script_config(
@@ -302,11 +309,17 @@ async def _prepare_script_config(
     for key, config_block in conf.items():
         raw_config = cast(ScriptConfig, config_block).raw_config
         raw_blueprint_inputs = cast(ScriptConfig, config_block).raw_blueprint_inputs
-        validation_failed = cast(ScriptConfig, config_block).validation_failed
+        validation_error = cast(ScriptConfig, config_block).validation_error
+        validation_status = cast(ScriptConfig, config_block).validation_status
 
         script_configs.append(
             ScriptEntityConfig(
-                config_block, key, raw_blueprint_inputs, raw_config, validation_failed
+                config_block,
+                key,
+                raw_blueprint_inputs,
+                raw_config,
+                validation_error,
+                validation_status,
             )
         )
 
@@ -320,11 +333,13 @@ async def _create_script_entities(
     entities: list[BaseScriptEntity] = []
 
     for script_config in script_configs:
-        if script_config.validation_failed:
+        if script_config.validation_status != ValidationStatus.OK:
             entities.append(
                 UnavailableScriptEntity(
                     script_config.key,
                     script_config.raw_config,
+                    cast(str, script_config.validation_error),
+                    script_config.validation_status,
                 )
             )
             continue
@@ -369,11 +384,11 @@ async def _async_process_config(
         config_matches: set[int] = set()
 
         for script_idx, script in enumerate(scripts):
-            for config_idx, config in enumerate(script_configs):
+            for config_idx, script_config in enumerate(script_configs):
                 if config_idx in config_matches:
                     # Only allow a script config to match at most once
                     continue
-                if script_matches_config(script, config):
+                if script_matches_config(script, script_config):
                     script_matches.add(script_idx)
                     config_matches.add(config_idx)
                     # Only allow a script to match at most once
@@ -456,11 +471,15 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self,
         key: str,
         raw_config: ConfigType | None,
+        validation_error: str,
+        validation_status: ValidationStatus,
     ) -> None:
         """Initialize a script entity."""
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
+        self._validation_error = validation_error
+        self._validation_status = validation_status
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -492,14 +511,47 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return a set of referenced entities."""
         return set()
 
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self.entity_id}_validation_{self._validation_status}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=f"validation_{self._validation_status}",
+            translation_placeholders={
+                "edit": f"/config/script/edit/{self.unique_id}",
+                "entity_id": self.entity_id,
+                "error": self._validation_error,
+                "name": self._attr_name or self.entity_id,
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
+        )
+
 
 class ScriptEntity(BaseScriptEntity, RestoreEntity):
     """Representation of a script entity."""
 
     icon = None
     _attr_should_poll = False
+    _attr_unique_id: str
 
-    def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        key: str,
+        cfg: ConfigType,
+        raw_config: ConfigType | None,
+        blueprint_inputs: ConfigType | None,
+    ) -> None:
         """Initialize the script."""
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
@@ -529,7 +581,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_name = self.script.name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         script = self.script
         attrs = {
@@ -544,7 +596,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return attrs
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if script is on."""
         return self.script.is_running
 
@@ -564,11 +616,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return self.script.referenced_areas
 
     @property
-    def referenced_blueprint(self):
+    def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
             return None
-        return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        path: str = self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        return path
 
     @cached_property
     def referenced_devices(self) -> set[str]:
@@ -581,24 +634,24 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return self.script.referenced_entities
 
     @callback
-    def async_change_listener(self):
+    def async_change_listener(self) -> None:
         """Update state."""
         self.async_write_ha_state()
         self._changed.set()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the script.
 
         Depending on the script's run mode, this may do nothing, restart the script or
         fire an additional parallel run.
         """
-        variables = kwargs.get("variables")
-        context = kwargs.get("context")
-        wait = kwargs.get("wait", True)
+        variables: dict[str, Any] | None = kwargs.get("variables")
+        context: Context = kwargs["context"]
+        wait: bool = kwargs.get("wait", True)
         await self._async_start_run(variables, context, wait)
 
     async def _async_start_run(
-        self, variables: dict, context: Context, wait: bool
+        self, variables: dict[str, Any] | None, context: Context, wait: bool
     ) -> ServiceResponse:
         """Start the run of a script."""
         self.async_set_context(context)
@@ -633,10 +686,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         await self._changed.wait()
         return None
 
-    async def _async_run(self, variables, context):
+    async def _async_run(
+        self, variables: dict[str, Any] | None, context: Context
+    ) -> ScriptRunResult | None:
         with trace_script(
             self.hass,
-            self.unique_id,
+            self._attr_unique_id,
             self.raw_config,
             self._blueprint_inputs,
             context,
@@ -651,7 +706,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop running the script.
 
         If multiple runs are in progress, all will be stopped.
@@ -696,12 +751,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
 
         # remove service
-        self.hass.services.async_remove(DOMAIN, self.unique_id)
+        self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})

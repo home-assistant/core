@@ -20,7 +20,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -427,7 +427,7 @@ async def test_auth_create_token_approval_declined_task_canceled(
     class CanceledAwaitableMock(AsyncMock):
         """A canceled awaitable mock."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__()
             self.done = Mock(return_value=False)
             self.cancel = Mock()
@@ -861,12 +861,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         ),
         patch("homeassistant.components.hyperion.async_setup_entry", return_value=True),
     ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_REAUTH,
-            data=config_data,
-        )
-        await hass.async_block_till_done()
+        result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
 
         result = await _configure_flow(
@@ -886,18 +881,13 @@ async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
         CONF_PORT: TEST_PORT,
     }
 
-    add_test_config_entry(hass, data=config_data)
+    config_entry = add_test_config_entry(hass, data=config_data)
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_REAUTH,
-            data=config_data,
-        )
-        await hass.async_block_till_done()
+        result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"

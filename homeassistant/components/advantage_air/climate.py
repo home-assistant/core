@@ -206,7 +206,8 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
         if hvac_mode == HVACMode.HEAT_COOL and self.preset_mode != ADVANTAGE_AIR_MYAUTO:
             raise ServiceValidationError("Heat/Cool is not supported in this mode")
         await self.async_update_ac(

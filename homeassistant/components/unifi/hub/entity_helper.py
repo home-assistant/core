@@ -146,8 +146,8 @@ class UnifiDeviceCommand:
             """Execute previously queued commands."""
             queue = self._command_queue.copy()
             self._command_queue.clear()
-            for device_id, device_commands in queue.items():
-                device = self.api.devices[device_id]
+            for dev_id, device_commands in queue.items():
+                device = self.api.devices[dev_id]
                 commands = list(device_commands.items())
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)

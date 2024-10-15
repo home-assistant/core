@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.model import MowerModes
+from aioautomower.model import MowerModes, MowerStates
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -73,18 +73,50 @@ async def test_next_start_sensor(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.test_mower_1_next_start")
     assert state is not None
-    assert state.state == "2023-06-05T19:00:00+00:00"
+    assert state.state == "2023-06-05T17:00:00+00:00"
 
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
-    values[TEST_MOWER_ID].planner.next_start_datetime = None
+    values[TEST_MOWER_ID].planner.next_start_datetime_naive = None
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_next_start")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_work_area_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the work area sensor."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.test_mower_1_work_area")
+    assert state is not None
+    assert state.state == "Front lawn"
+
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].mower.work_area_id = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_work_area")
+    assert state.state == "no_work_area_active"
+
+    values[TEST_MOWER_ID].mower.work_area_id = 0
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_work_area")
+    assert state.state == "my_lawn"
 
 
 @pytest.mark.parametrize(
@@ -131,11 +163,15 @@ async def test_error_sensor(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, expected_state in (
-        (None, "no_error"),
-        ("can_error", "can_error"),
+    for state, error_key, expected_state in (
+        (MowerStates.IN_OPERATION, None, "no_error"),
+        (MowerStates.ERROR, "can_error", "can_error"),
+        (MowerStates.ERROR, None, MowerStates.ERROR.lower()),
+        (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
+        (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
     ):
-        values[TEST_MOWER_ID].mower.error_key = state
+        values[TEST_MOWER_ID].mower.state = state
+        values[TEST_MOWER_ID].mower.error_key = error_key
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)

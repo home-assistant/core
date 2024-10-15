@@ -63,7 +63,12 @@ async def test_assume_button(
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
 async def test_swing_button(
-    hass: HomeAssistant, entity, swing, mock_bridge, mock_api, monkeypatch
+    hass: HomeAssistant,
+    entity,
+    swing,
+    mock_bridge,
+    mock_api,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test vertical swing on/off button."""
     monkeypatch.setattr(DEVICE, "remote_id", "ELEC7022")
@@ -88,7 +93,7 @@ async def test_swing_button(
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
 async def test_control_device_fail(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test control device fail."""
     await init_integration(hass)

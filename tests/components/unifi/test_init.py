@@ -1,6 +1,5 @@
 """Test UniFi Network integration setup process."""
 
-from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -13,29 +12,25 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import DEFAULT_CONFIG_ENTRY_ID
+from .conftest import (
+    DEFAULT_CONFIG_ENTRY_ID,
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+)
 
 from tests.common import flush_store
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
-async def test_setup_with_no_config(hass: HomeAssistant) -> None:
-    """Test that we do not discover anything or try to set up a hub."""
-    assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
-    assert UNIFI_DOMAIN not in hass.data
-
-
 async def test_setup_entry_fails_config_entry_not_ready(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
@@ -48,7 +43,7 @@ async def test_setup_entry_fails_config_entry_not_ready(
 
 
 async def test_setup_entry_fails_trigger_reauth_flow(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with (
@@ -86,7 +81,7 @@ async def test_setup_entry_fails_trigger_reauth_flow(
 async def test_wireless_clients(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> None:
     """Verify wireless clients class."""
     hass_storage[unifi.STORAGE_KEY] = {
@@ -170,13 +165,11 @@ async def test_wireless_clients(
 )
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     client_payload: list[dict[str, Any]],
     device_payload: list[dict[str, Any]],
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Verify removing a device manually."""

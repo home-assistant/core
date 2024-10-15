@@ -7,14 +7,18 @@ import logging
 from typing import TypedDict
 
 from opendata_transport import OpendataTransport
-from opendata_transport.exceptions import OpendataTransportError
+from opendata_transport.exceptions import (
+    OpendataTransportConnectionError,
+    OpendataTransportError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +35,7 @@ class DataConnection(TypedDict):
     train_number: str
     transfers: int
     delay: int
+    line: str
 
 
 def calculate_duration_in_seconds(duration_text: str) -> int | None:
@@ -54,7 +59,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=90),
+            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
 
@@ -74,14 +79,21 @@ class SwissPublicTransportDataUpdateCoordinator(
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
+        return await self.fetch_connections(limit=CONNECTIONS_COUNT)
+
+    async def fetch_connections(self, limit: int) -> list[DataConnection]:
+        """Fetch connections using the opendata api."""
+        self._opendata.limit = limit
         try:
             await self._opendata.async_get_data()
+        except OpendataTransportConnectionError as e:
+            _LOGGER.warning("Connection to transport.opendata.ch cannot be established")
+            raise UpdateFailed from e
         except OpendataTransportError as e:
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )
             raise UpdateFailed from e
-
         connections = self._opendata.connections
         return [
             DataConnection(
@@ -94,7 +106,28 @@ class SwissPublicTransportDataUpdateCoordinator(
                 destination=self._opendata.to_name,
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),
                 delay=connections[i]["delay"],
+                line=connections[i]["line"],
             )
-            for i in range(SENSOR_CONNECTIONS_COUNT)
+            for i in range(limit)
             if len(connections) > i and connections[i] is not None
+        ]
+
+    async def fetch_connections_as_json(self, limit: int) -> list[JsonValueType]:
+        """Fetch connections using the opendata api."""
+        return [
+            {
+                "departure": connection["departure"].isoformat()
+                if connection["departure"]
+                else None,
+                "duration": connection["duration"],
+                "platform": connection["platform"],
+                "remaining_time": connection["remaining_time"],
+                "start": connection["start"],
+                "destination": connection["destination"],
+                "train_number": connection["train_number"],
+                "transfers": connection["transfers"],
+                "delay": connection["delay"],
+                "line": connection["line"],
+            }
+            for connection in await self.fetch_connections(limit)
         ]

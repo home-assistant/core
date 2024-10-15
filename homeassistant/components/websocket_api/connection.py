@@ -223,7 +223,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("extra keys not allowed")
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))

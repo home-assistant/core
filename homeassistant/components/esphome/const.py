@@ -18,3 +18,5 @@ PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
 }
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
+
+DATA_FFMPEG_PROXY = f"{DOMAIN}.ffmpeg_proxy"

@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
-from functools import cached_property
 import importlib
 import logging
 import os
@@ -26,6 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from propcache import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -101,6 +101,23 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # https://github.com/sh00t2kill/dolphin-robot/issues/185
     "mydolphin_plus": BlockedIntegration(
         AwesomeVersion("1.0.13"), "crashes Home Assistant"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/gcobb321/icloud3/issues/349
+    # Note: Current version 3.0.5.2, the fixed version is a guesstimate,
+    # as no solution is available at time of writing.
+    "icloud3": BlockedIntegration(
+        AwesomeVersion("3.0.5.3"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/custom-components/places/issues/289
+    "places": BlockedIntegration(
+        AwesomeVersion("2.7.1"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/enkama/hass-variables/issues/120
+    "variable": BlockedIntegration(
+        AwesomeVersion("3.4.4"), "prevents recorder from working"
     ),
 }
 
@@ -189,7 +206,7 @@ class USBMatcherOptional(TypedDict, total=False):
 
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
-    """Matcher for the bluetooth integration."""
+    """Matcher for the USB integration."""
 
 
 @dataclass(slots=True)
@@ -928,7 +945,7 @@ class Integration:
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    "Unable to resolve dependencies for %s: unable to resolve"
                     " (sub)dependency %s"
                 ),
                 self.domain,
@@ -937,7 +954,7 @@ class Integration:
         except CircularDependency as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    "Unable to resolve dependencies for %s: it contains a circular"
                     " dependency: %s -> %s"
                 ),
                 self.domain,
@@ -1540,7 +1557,7 @@ class Components:
         report(
             (
                 f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                " This is deprecated and will stop working in Home Assistant 2025.3, it"
                 f" should be updated to import functions used from {comp_name} directly"
             ),
             error_if_core=False,
@@ -1569,7 +1586,7 @@ class Helpers:
         report(
             (
                 f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.11, it"
+                " This is deprecated and will stop working in Home Assistant 2025.5, it"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             error_if_core=False,

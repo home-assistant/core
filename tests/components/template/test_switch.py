@@ -1,8 +1,10 @@
 """The tests for the  Template switch platform."""
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
+from homeassistant.components import template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,9 +15,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, mock_component, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_component,
+    mock_restore_cache,
+)
 
 OPTIMISTIC_SWITCH_CONFIG = {
     "turn_on": {
@@ -33,6 +41,38 @@ OPTIMISTIC_SWITCH_CONFIG = {
         },
     },
 }
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the config flow."""
+
+    hass.states.async_set(
+        "switch.one",
+        "on",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "value_template": "{{ states('switch.one') }}",
+            "template_type": SWITCH_DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.my_template")
+    assert state is not None
+    assert state == snapshot
 
 
 async def test_template_state_text(hass: HomeAssistant) -> None:
@@ -655,3 +695,42 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("switch")) == 1
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for Template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "value_template": "{{ true }}",
+            "template_type": "switch",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("switch.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id

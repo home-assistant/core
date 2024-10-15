@@ -1,18 +1,32 @@
 """Test the integration init functionality."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests import HTTPError
 import requests_mock
 
-from homeassistant.components.home_connect.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.home_connect import SCAN_INTERVAL
+from homeassistant.components.home_connect.const import (
+    BSH_CHILD_LOCK_STATE,
+    BSH_OPERATION_STATE,
+    BSH_POWER_STATE,
+    BSH_REMOTE_START_ALLOWANCE_STATE,
+    COOKING_LIGHTING,
+    DOMAIN,
+    OAUTH2_TOKEN,
+)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     CLIENT_ID,
@@ -117,8 +131,8 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 }
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_api_setup(
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -137,9 +151,38 @@ async def test_api_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_exception_handling(
-    bypass_throttle: Generator[None, Any, None],
+async def test_update_throttle(
+    appliance: Mock,
+    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+) -> None:
+    """Test to check Throttle functionality."""
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+    get_appliances_call_count = get_appliances.call_count
+
+    # First re-load after 1 minute is not blocked.
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    freezer.tick(SCAN_INTERVAL.seconds + 0.1)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert get_appliances.call_count == get_appliances_call_count + 1
+
+    # Second re-load is blocked by Throttle.
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    freezer.tick(SCAN_INTERVAL.seconds - 0.1)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert get_appliances.call_count == get_appliances_call_count + 1
+
+
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_exception_handling(
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
@@ -154,8 +197,8 @@ async def test_exception_handling(
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_token_refresh_success(
-    bypass_throttle: Generator[None, Any, None],
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -192,44 +235,8 @@ async def test_token_refresh_success(
     )
 
 
-async def test_setup(
-    hass: HomeAssistant,
-    integration_setup: Callable[[], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-) -> None:
-    """Test setting up the integration."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-
-async def test_update_throttle(
-    appliance: Mock,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    platforms: list[Platform],
-    get_appliances: MagicMock,
-) -> None:
-    """Test to check Throttle functionality."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert get_appliances.call_count == 0
-
-
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_http_error(
-    bypass_throttle: Generator[None, Any, None],
-    hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
@@ -247,9 +254,9 @@ async def test_http_error(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_services(
     service_call: list[dict[str, Any]],
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -279,8 +286,8 @@ async def test_services(
     )
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_services_exception(
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -300,3 +307,68 @@ async def test_services_exception(
 
     with pytest.raises(ValueError):
         await hass.services.async_call(**service_call)
+
+
+async def test_entity_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_v1_1: MockConfigEntry,
+    appliance: Mock,
+    platforms: list[Platform],
+) -> None:
+    """Test entity migration."""
+
+    config_entry_v1_1.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_v1_1.entry_id,
+        identifiers={(DOMAIN, appliance.haId)},
+    )
+
+    test_entities = [
+        (
+            SENSOR_DOMAIN,
+            "Operation State",
+            BSH_OPERATION_STATE,
+        ),
+        (
+            SWITCH_DOMAIN,
+            "ChildLock",
+            BSH_CHILD_LOCK_STATE,
+        ),
+        (
+            SWITCH_DOMAIN,
+            "Power",
+            BSH_POWER_STATE,
+        ),
+        (
+            BINARY_SENSOR_DOMAIN,
+            "Remote Start",
+            BSH_REMOTE_START_ALLOWANCE_STATE,
+        ),
+        (
+            LIGHT_DOMAIN,
+            "Light",
+            COOKING_LIGHTING,
+        ),
+    ]
+
+    for domain, old_unique_id_suffix, _ in test_entities:
+        entity_registry.async_get_or_create(
+            domain,
+            DOMAIN,
+            f"{appliance.haId}-{old_unique_id_suffix}",
+            device_id=device_entry.id,
+            config_entry=config_entry_v1_1,
+        )
+
+    with patch("homeassistant.components.home_connect.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
+        await hass.async_block_till_done()
+
+    for domain, _, expected_unique_id_suffix in test_entities:
+        assert entity_registry.async_get_entity_id(
+            domain, DOMAIN, f"{appliance.haId}-{expected_unique_id_suffix}"
+        )
+    assert config_entry_v1_1.minor_version == 2

@@ -1,4 +1,4 @@
-"""Tests for the AirGradient button platform."""
+"""Tests for the AirGradient number platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
@@ -7,7 +7,7 @@ from airgradient import Config
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.airgradient import DOMAIN
+from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,

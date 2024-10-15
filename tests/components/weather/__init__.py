@@ -61,7 +61,7 @@ class MockWeatherTest(WeatherPlatform.MockWeather):
 
 async def create_entity(
     hass: HomeAssistant,
-    mock_weather: WeatherPlatform.MockWeather,
+    mock_weather: type[WeatherPlatform.MockWeather],
     manifest_extra: dict[str, Any] | None,
     **kwargs,
 ) -> WeatherPlatform.MockWeather:

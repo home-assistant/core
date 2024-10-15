@@ -14,6 +14,7 @@ from aioairzone_cloud.const import (
     AZD_FLOOR_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
+    AZD_THERMOSTAT_BATTERY_LOW,
     AZD_WARNINGS,
     AZD_ZONES,
 )
@@ -89,6 +90,10 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         translation_key="air_quality_active",
     ),
     AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY_LOW,
+    ),
+    AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_FLOOR_DEMAND,
         translation_key="floor_demand",
@@ -155,6 +160,11 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     """Define an Airzone Cloud binary sensor."""
 
     entity_description: AirzoneBinarySensorEntityDescription
+
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud binary sensor availability."""
+        return super().available and self.is_on is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDConfigEntry
-from .const import ATTR_DURATION, ATTR_FADE, ATTR_TARGET_BRIGHTNESS, ATTR_UDP_PORT
+from .const import ATTR_DURATION, ATTR_TARGET_BRIGHTNESS, ATTR_UDP_PORT
 from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
@@ -62,7 +62,6 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         state = self.coordinator.data.state
         return {
             ATTR_DURATION: state.nightlight.duration,
-            ATTR_FADE: state.nightlight.fade,
             ATTR_TARGET_BRIGHTNESS: state.nightlight.target_brightness,
         }
 
@@ -171,7 +170,7 @@ class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
         """Return True if entity is available."""
         try:
             self.coordinator.data.state.segments[self._segment]
-        except IndexError:
+        except KeyError:
             return False
 
         return super().available
@@ -199,7 +198,11 @@ def async_update_segments(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
+    segment_ids = {
+        segment.segment_id
+        for segment in coordinator.data.state.segments.values()
+        if segment.segment_id is not None
+    }
 
     new_entities: list[WLEDReverseSwitch] = []
 

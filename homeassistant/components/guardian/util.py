@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import LOGGER
 
 if TYPE_CHECKING:
-    from . import GuardianEntity
+    from .entity import GuardianEntity
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
@@ -55,7 +55,7 @@ def async_finish_entity_domain_replacements(
             continue
 
         old_entity_id = registry_entry.entity_id
-        LOGGER.info('Removing old entity: "%s"', old_entity_id)
+        LOGGER.debug('Removing old entity: "%s"', old_entity_id)
         ent_reg.async_remove(old_entity_id)
 
 

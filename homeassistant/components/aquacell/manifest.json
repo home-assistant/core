@@ -1,6 +1,6 @@
 {
   "domain": "aquacell",
-  "name": "Aquacell",
+  "name": "AquaCell",
   "codeowners": ["@Jordi1990"],
   "config_flow": true,
   "dependencies": ["http", "network"],
@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["aioaquacell"],
-  "requirements": ["aioaquacell==0.1.7"]
+  "requirements": ["aioaquacell==0.2.0"]
 }

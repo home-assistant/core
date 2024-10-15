@@ -31,17 +31,19 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import VolDictType
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
     ATTR_CHANGED_BY_TIME,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
-DISPLAY_MESSAGE_SERVICE_SCHEMA = {
+DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
     vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional("beep", default=False): cv.boolean,
     vol.Optional("timeout", default=0): vol.All(

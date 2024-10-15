@@ -1,18 +1,46 @@
 {
   "services": {
-    "send_message": "mdi:send",
-    "send_photo": "mdi:camera",
-    "send_sticker": "mdi:sticker",
-    "send_animation": "mdi:animation",
-    "send_video": "mdi:video",
-    "send_voice": "mdi:microphone",
-    "send_document": "mdi:file-document",
-    "send_location": "mdi:map-marker",
-    "send_poll": "mdi:poll",
-    "edit_message": "mdi:pencil",
-    "edit_caption": "mdi:pencil",
-    "edit_replymarkup": "mdi:pencil",
-    "answer_callback_query": "mdi:check",
-    "delete_message": "mdi:delete"
+    "send_message": {
+      "service": "mdi:send"
+    },
+    "send_photo": {
+      "service": "mdi:camera"
+    },
+    "send_sticker": {
+      "service": "mdi:sticker"
+    },
+    "send_animation": {
+      "service": "mdi:animation"
+    },
+    "send_video": {
+      "service": "mdi:video"
+    },
+    "send_voice": {
+      "service": "mdi:microphone"
+    },
+    "send_document": {
+      "service": "mdi:file-document"
+    },
+    "send_location": {
+      "service": "mdi:map-marker"
+    },
+    "send_poll": {
+      "service": "mdi:poll"
+    },
+    "edit_message": {
+      "service": "mdi:pencil"
+    },
+    "edit_caption": {
+      "service": "mdi:pencil"
+    },
+    "edit_replymarkup": {
+      "service": "mdi:pencil"
+    },
+    "answer_callback_query": {
+      "service": "mdi:check"
+    },
+    "delete_message": {
+      "service": "mdi:delete"
+    }
   }
 }

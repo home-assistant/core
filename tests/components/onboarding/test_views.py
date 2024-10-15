@@ -1,13 +1,13 @@
 """Test the onboarding views."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import os
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
@@ -28,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})
@@ -69,7 +69,7 @@ async def no_rpi_fixture(
 
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(
-    aioclient_mock: AiohttpClientMocker,
+    aioclient_mock: AiohttpClientMocker, store_info
 ) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -109,10 +109,6 @@ async def mock_supervisor_fixture(
         ),
         patch(
             "homeassistant.components.hassio.HassIO.get_host_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_store",
             return_value={},
         ),
         patch(

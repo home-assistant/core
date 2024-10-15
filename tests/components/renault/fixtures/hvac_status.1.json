@@ -2,6 +2,6 @@
   "data": {
     "type": "Car",
     "id": "VF1AAAAA555777999",
-    "attributes": { "externalTemperature": 8.0, "hvacStatus": 1 }
+    "attributes": { "externalTemperature": 8.0, "hvacStatus": "off" }
   }
 }

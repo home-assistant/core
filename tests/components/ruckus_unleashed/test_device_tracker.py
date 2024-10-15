@@ -1,4 +1,4 @@
-"""The sensor tests for the Ruckus Unleashed platform."""
+"""The sensor tests for the Ruckus platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock

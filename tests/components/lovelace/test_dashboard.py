@@ -1,11 +1,11 @@
 """Test the Lovelace initialization."""
 
+from collections.abc import Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard

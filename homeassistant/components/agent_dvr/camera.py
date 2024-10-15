@@ -59,7 +59,7 @@ async def async_setup_entry(
 
     platform = async_get_current_platform()
     for service, method in CAMERA_SERVICES.items():
-        platform.async_register_entity_service(service, {}, method)
+        platform.async_register_entity_service(service, None, method)
 
 
 class AgentCamera(MjpegCamera):

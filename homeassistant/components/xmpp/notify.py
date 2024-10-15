@@ -24,7 +24,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -56,7 +56,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 DEFAULT_RESOURCE = "home-assistant"
 XEP_0363_TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -190,13 +190,13 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.debug("Timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
 
-                _LOGGER.info("Upload success")
+                _LOGGER.debug("Upload success")
                 for recipient in recipients:
                     if room:
-                        _LOGGER.info("Sending file to %s", room)
+                        _LOGGER.debug("Sending file to %s", room)
                         message = self.Message(sto=room, stype="groupchat")
                     else:
-                        _LOGGER.info("Sending file to %s", recipient)
+                        _LOGGER.debug("Sending file to %s", recipient)
                         message = self.Message(sto=recipient, stype="chat")
                     message["body"] = url
                     message["oob"]["url"] = url
@@ -264,7 +264,7 @@ async def async_send_message(  # noqa: C901
 
             uploaded via XEP_0363 and HTTP and returns the resulting URL
             """
-            _LOGGER.info("Getting file from %s", url)
+            _LOGGER.debug("Getting file from %s", url)
 
             def get_url(url):
                 """Return result for GET request to url."""
@@ -295,7 +295,7 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.debug("Got %s extension", extension)
                 filename = self.get_random_filename(None, extension=extension)
 
-            _LOGGER.info("Uploading file from URL, %s", filename)
+            _LOGGER.debug("Uploading file from URL, %s", filename)
 
             return await self["xep_0363"].upload_file(
                 filename,
@@ -305,16 +305,20 @@ async def async_send_message(  # noqa: C901
                 timeout=timeout,
             )
 
-        async def upload_file_from_path(self, path, timeout=None):
+        def _read_upload_file(self, path: str) -> bytes:
+            """Read file from path."""
+            with open(path, "rb") as upfile:
+                _LOGGER.debug("Reading file %s", path)
+                return upfile.read()
+
+        async def upload_file_from_path(self, path: str, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s", path)
+            _LOGGER.debug("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
                 raise PermissionError("Could not access file. Path not allowed")
 
-            with open(path, "rb") as upfile:
-                _LOGGER.debug("Reading file %s", path)
-                input_file = upfile.read()
+            input_file = await hass.async_add_executor_job(self._read_upload_file, path)
             filesize = len(input_file)
             _LOGGER.debug("Filesize is %s bytes", filesize)
 
@@ -370,6 +374,6 @@ async def async_send_message(  # noqa: C901
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
-            _LOGGER.info("Ignoring invalid SSL certificate as requested")
+            _LOGGER.debug("Ignoring invalid SSL certificate as requested")
 
     SendNotificationBot()

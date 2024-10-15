@@ -1,9 +1,9 @@
 """Configuration for Deutscher Wetterdienst (DWD) Weather Warnings tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.dwd_weather_warnings.const import (
     ADVANCE_WARNING_SENSOR,

@@ -1,0 +1,757 @@
+# serializer version: 1
+# name: test_service_set_ac_schedule[zoe_40]
+  list([
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 1,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 1,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': True,
+      'friday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'readyAtTime': 'T15:15Z',
+      }),
+      'id': 2,
+      'monday': None,
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'id': 2,
+        'wednesday': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'readyAtTime': 'T15:15Z',
+      }),
+    }),
+    dict({
+      'activated': False,
+      'friday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'id': 3,
+      'monday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'raw_data': dict({
+        'activated': False,
+        'friday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'id': 3,
+        'monday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'saturday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'sunday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'thursday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'tuesday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'wednesday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+      }),
+      'saturday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'sunday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'thursday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'tuesday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'wednesday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 4,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 4,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 5,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 5,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+  ])
+# ---
+# name: test_service_set_ac_schedule_multi[zoe_40]
+  list([
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 1,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 1,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': True,
+      'friday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'readyAtTime': 'T15:15Z',
+      }),
+      'id': 2,
+      'monday': None,
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'id': 2,
+        'wednesday': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T15:15Z',
+        }),
+        'readyAtTime': 'T15:15Z',
+      }),
+    }),
+    dict({
+      'activated': True,
+      'friday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T12:00Z',
+        }),
+        'readyAtTime': 'T12:00Z',
+      }),
+      'id': 3,
+      'monday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T12:00Z',
+        }),
+        'readyAtTime': 'T12:00Z',
+      }),
+      'raw_data': dict({
+        'activated': False,
+        'friday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'id': 3,
+        'monday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'saturday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'sunday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'thursday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'tuesday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'wednesday': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+      }),
+      'saturday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T12:00Z',
+        }),
+        'readyAtTime': 'T12:00Z',
+      }),
+      'sunday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T12:00Z',
+        }),
+        'readyAtTime': 'T12:00Z',
+      }),
+      'thursday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T23:30Z',
+        }),
+        'readyAtTime': 'T23:30Z',
+      }),
+      'tuesday': dict({
+        'raw_data': dict({
+          'readyAtTime': 'T12:00Z',
+        }),
+        'readyAtTime': 'T12:00Z',
+      }),
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 4,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 4,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 5,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 5,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+  ])
+# ---
+# name: test_service_set_charge_schedule[zoe_40]
+  list([
+    dict({
+      'activated': True,
+      'friday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'id': 1,
+      'monday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'id': 1,
+        'monday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'saturday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'sunday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'thursday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'tuesday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'wednesday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+      }),
+      'saturday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'sunday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'thursday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'tuesday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'wednesday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+    }),
+    dict({
+      'activated': True,
+      'friday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'id': 2,
+      'monday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'id': 2,
+        'monday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'saturday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'sunday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'thursday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'tuesday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'wednesday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+      }),
+      'saturday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'sunday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'thursday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'tuesday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'wednesday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 3,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 3,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 4,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 4,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 5,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 5,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+  ])
+# ---
+# name: test_service_set_charge_schedule_multi[zoe_40]
+  list([
+    dict({
+      'activated': True,
+      'friday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'id': 1,
+      'monday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'id': 1,
+        'monday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'saturday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'sunday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'thursday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'tuesday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'wednesday': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+      }),
+      'saturday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'sunday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'thursday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'tuesday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+      'wednesday': dict({
+        'duration': 450,
+        'raw_data': dict({
+          'duration': 450,
+          'startTime': 'T00:00Z',
+        }),
+        'startTime': 'T00:00Z',
+      }),
+    }),
+    dict({
+      'activated': True,
+      'friday': dict({
+        'duration': 30,
+        'raw_data': dict({
+          'duration': 30,
+          'startTime': 'T12:00Z',
+        }),
+        'startTime': 'T12:00Z',
+      }),
+      'id': 2,
+      'monday': dict({
+        'duration': 30,
+        'raw_data': dict({
+          'duration': 30,
+          'startTime': 'T12:00Z',
+        }),
+        'startTime': 'T12:00Z',
+      }),
+      'raw_data': dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'id': 2,
+        'monday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'saturday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'sunday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'thursday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'tuesday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'wednesday': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+      }),
+      'saturday': dict({
+        'duration': 30,
+        'raw_data': dict({
+          'duration': 30,
+          'startTime': 'T12:00Z',
+        }),
+        'startTime': 'T12:00Z',
+      }),
+      'sunday': dict({
+        'duration': 30,
+        'raw_data': dict({
+          'duration': 30,
+          'startTime': 'T12:00Z',
+        }),
+        'startTime': 'T12:00Z',
+      }),
+      'thursday': dict({
+        'duration': 15,
+        'raw_data': dict({
+          'duration': 15,
+          'startTime': 'T23:30Z',
+        }),
+        'startTime': 'T23:30Z',
+      }),
+      'tuesday': dict({
+        'duration': 30,
+        'raw_data': dict({
+          'duration': 30,
+          'startTime': 'T12:00Z',
+        }),
+        'startTime': 'T12:00Z',
+      }),
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 3,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 3,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 4,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 4,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+    dict({
+      'activated': False,
+      'friday': None,
+      'id': 5,
+      'monday': None,
+      'raw_data': dict({
+        'activated': False,
+        'id': 5,
+      }),
+      'saturday': None,
+      'sunday': None,
+      'thursday': None,
+      'tuesday': None,
+      'wednesday': None,
+    }),
+  ])
+# ---

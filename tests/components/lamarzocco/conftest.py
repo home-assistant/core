@@ -1,6 +1,6 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +9,6 @@ from lmcloud.const import FirmwareType, MachineModel, SteamLevel
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoDeviceInfo
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
@@ -25,7 +24,7 @@ def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         version=2,
@@ -38,8 +37,25 @@ def mock_config_entry(
         },
         unique_id=mock_lamarzocco.serial_number,
     )
-    entry.add_to_hass(hass)
-    return entry
+
+
+@pytest.fixture
+def mock_config_entry_no_local_connection(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=2,
+        data=USER_INPUT
+        | {
+            CONF_MODEL: mock_lamarzocco.model,
+            CONF_TOKEN: "token",
+            CONF_NAME: "GS3",
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
 
 
 @pytest.fixture
@@ -129,26 +145,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
         lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
         lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
 
-        async def websocket_connect_mock(
-            notify_callback: Callable | None,
-        ) -> None:
-            """Mock the websocket connect method."""
-            return None
-
-        lamarzocco.websocket_connect = websocket_connect_mock
-
         yield lamarzocco
-
-
-@pytest.fixture
-def remove_local_connection(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Remove the local connection."""
-    data = mock_config_entry.data.copy()
-    del data[CONF_HOST]
-    hass.config_entries.async_update_entry(mock_config_entry, data=data)
-    return mock_config_entry
 
 
 @pytest.fixture(autouse=True)

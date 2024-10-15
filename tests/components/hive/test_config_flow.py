@@ -246,14 +246,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_password"}
@@ -305,14 +298,7 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_password"}

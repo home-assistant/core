@@ -10,8 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -37,12 +37,12 @@ def get_scanner(
     _hass: HomeAssistant, config: ConfigType
 ) -> HitronCODADeviceScanner | None:
     """Validate the configuration and return a Hitron CODA-4582U scanner."""
-    scanner = HitronCODADeviceScanner(config[DOMAIN])
+    scanner = HitronCODADeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name"])
+Device = namedtuple("Device", ["mac", "name"])  # noqa: PYI024
 
 
 class HitronCODADeviceScanner(DeviceScanner):
@@ -66,7 +66,6 @@ class HitronCODADeviceScanner(DeviceScanner):
         self._userid = None
 
         self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -82,7 +81,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _login(self):
         """Log in to the router. This is required for subsequent api calls."""
-        _LOGGER.info("Logging in to CODA")
+        _LOGGER.debug("Logging in to CODA")
 
         try:
             data = [("user", self._username), (self._type, self._password)]
@@ -102,7 +101,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Get ARP from router."""
-        _LOGGER.info("Fetching")
+        _LOGGER.debug("Fetching")
 
         if self._userid is None and not self._login():
             _LOGGER.error("Could not obtain a user ID from the router")
@@ -137,5 +136,5 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info("Request successful")
+        _LOGGER.debug("Request successful")
         return True

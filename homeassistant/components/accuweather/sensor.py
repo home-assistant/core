@@ -18,6 +18,7 @@ from homeassistant.const import (
     UV_INDEX,
     UnitOfIrradiance,
     UnitOfLength,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -27,7 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AccuWeatherConfigEntry
 from .const import (
     API_METRIC,
     ATTR_CATEGORY,
@@ -40,6 +40,7 @@ from .const import (
     MAX_FORECAST_DAYS,
 )
 from .coordinator import (
+    AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
@@ -280,6 +281,15 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="realfeel_temperature_shade",
     ),
     AccuWeatherSensorDescription(
+        key="RelativeHumidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: cast(int, data),
+        translation_key="humidity",
+    ),
+    AccuWeatherSensorDescription(
         key="Precipitation",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -289,6 +299,16 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="precipitation",
     ),
     AccuWeatherSensorDescription(
+        key="Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="pressure",
+    ),
+    AccuWeatherSensorDescription(
         key="PressureTendency",
         device_class=SensorDeviceClass.ENUM,
         options=["falling", "rising", "steady"],
@@ -296,8 +316,18 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="pressure_tendency",
     ),
     AccuWeatherSensorDescription(
+        key="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
+        translation_key="temperature",
+    ),
+    AccuWeatherSensorDescription(
         key="UVIndex",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),
         attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"]},
@@ -324,6 +354,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Wind",
         device_class=SensorDeviceClass.WIND_SPEED,
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),

@@ -1,6 +1,6 @@
 """Entities for FYTA integration."""
 
-from typing import Any
+from fyta_cli.fyta_models import Plant
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -32,13 +32,13 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
             manufacturer="Fyta",
             model="Plant",
             identifiers={(DOMAIN, f"{entry.entry_id}-{plant_id}")},
-            name=self.plant.get("name"),
-            sw_version=self.plant.get("sw_version"),
+            name=self.plant.name,
+            sw_version=self.plant.sw_version,
         )
         self.entity_description = description
 
     @property
-    def plant(self) -> dict[str, Any]:
+    def plant(self) -> Plant:
         """Get plant data."""
         return self.coordinator.data[self.plant_id]
 

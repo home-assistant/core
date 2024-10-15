@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -18,12 +19,12 @@ from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from .core import EventStateChangedData
+    from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -41,6 +42,7 @@ class Platform(StrEnum):
 
     AIR_QUALITY = "air_quality"
     ALARM_CONTROL_PANEL = "alarm_control_panel"
+    ASSIST_SATELLITE = "assist_satellite"
     BINARY_SENSOR = "binary_sensor"
     BUTTON = "button"
     CALENDAR = "calendar"
@@ -60,7 +62,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
@@ -75,9 +76,9 @@ class Platform(StrEnum):
     TIME = "time"
     TODO = "todo"
     TTS = "tts"
+    UPDATE = "update"
     VACUUM = "vacuum"
     VALVE = "valve"
-    UPDATE = "update"
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
@@ -113,6 +114,7 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 # #### CONFIG ####
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
+CONF_ACTION: Final = "action"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
@@ -221,6 +223,7 @@ CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
 CONF_MODEL: Final = "model"
+CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
@@ -280,6 +283,8 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGER: Final = "trigger"
+CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
 CONF_TYPE: Final = "type"
@@ -321,7 +326,7 @@ EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
-EVENT_STATE_REPORTED: Final = "state_reported"
+EVENT_STATE_REPORTED: EventType[EventStateReportedData] = EventType("state_reported")
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -484,14 +489,38 @@ STATE_ALARM_PENDING: Final = "pending"
 STATE_ALARM_ARMING: Final = "arming"
 STATE_ALARM_DISARMING: Final = "disarming"
 STATE_ALARM_TRIGGERED: Final = "triggered"
-STATE_LOCKED: Final = "locked"
-STATE_UNLOCKED: Final = "unlocked"
-STATE_LOCKING: Final = "locking"
-STATE_UNLOCKING: Final = "unlocking"
-STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+
+# #### LOCK STATES ####
+# STATE_* below are deprecated as of 2024.10
+# use the LockState enum instead.
+_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
+    "locked",
+    "LockState.LOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
+    "unlocked",
+    "LockState.UNLOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
+    "locking",
+    "LockState.LOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
+    "unlocking",
+    "LockState.UNLOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
+    "jammed",
+    "LockState.JAMMED",
+    "2025.10",
+)
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -564,6 +593,7 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_MODEL_ID: Final = "model_id"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
@@ -670,19 +700,36 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
 
-    GIGA_JOULE = "GJ"
-    KILO_WATT_HOUR = "kWh"
+    JOULE = "J"
+    KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
-    MEGA_WATT_HOUR = "MWh"
+    GIGA_JOULE = "GJ"
     WATT_HOUR = "Wh"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(
@@ -850,6 +897,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
+    NAUTICAL_MILES = "nmi"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(
@@ -1130,20 +1178,35 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 """Deprecated: please use UnitOfMass.POUNDS"""
 
 
-# Conductivity units
-class UnitOfConductivity(StrEnum):
+class UnitOfConductivity(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+    },
+):
     """Conductivity units."""
 
+    SIEMENS_PER_CM = "S/cm"
+    MICROSIEMENS_PER_CM = "µS/cm"
+    MILLISIEMENS_PER_CM = "mS/cm"
+
+    # Deprecated aliases
     SIEMENS = "S/cm"
+    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
     MICROSIEMENS = "µS/cm"
+    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
+    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
 
 
 _DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS,
-    "2025.6",
+    UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "2025.11",
 )
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -1252,10 +1315,12 @@ class UnitOfSpeed(StrEnum):
 
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
+    INCHES_PER_SECOND = "in/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
+    MILLIMETERS_PER_SECOND = "mm/s"
 
 
 _DEPRECATED_SPEED_FEET_PER_SECOND: Final = DeprecatedConstantEnum(

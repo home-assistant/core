@@ -101,8 +101,9 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
+        if speaker_name := discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME):
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": speaker_name}
 
         try:
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
@@ -172,9 +173,11 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"name": self._name}
         )
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._webfsapi_url = config[CONF_WEBFSAPI_URL]
+        self._webfsapi_url = entry_data[CONF_WEBFSAPI_URL]
 
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

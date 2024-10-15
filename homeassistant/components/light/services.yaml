@@ -199,45 +199,6 @@ turn_on:
       example: "[255, 100, 100]"
       selector:
         color_rgb:
-    rgbw_color: &rgbw_color
-      filter: *color_support
-      advanced: true
-      example: "[255, 100, 100, 50]"
-      selector:
-        object:
-    rgbww_color: &rgbww_color
-      filter: *color_support
-      advanced: true
-      example: "[255, 100, 100, 50, 70]"
-      selector:
-        object:
-    color_name: &color_name
-      filter: *color_support
-      advanced: true
-      selector:
-        select:
-          translation_key: color_name
-          options: *named_colors
-    hs_color: &hs_color
-      filter: *color_support
-      advanced: true
-      example: "[300, 70]"
-      selector:
-        object:
-    xy_color: &xy_color
-      filter: *color_support
-      advanced: true
-      example: "[0.52, 0.43]"
-      selector:
-        object:
-    color_temp: &color_temp
-      filter: *color_temp_support
-      advanced: true
-      selector:
-        color_temp:
-          unit: "mired"
-          min: 153
-          max: 500
     kelvin: &kelvin
       filter: *color_temp_support
       selector:
@@ -245,13 +206,6 @@ turn_on:
           unit: "kelvin"
           min: 2000
           max: 6500
-    brightness: &brightness
-      filter: *brightness_support
-      advanced: true
-      selector:
-        number:
-          min: 0
-          max: 255
     brightness_pct: &brightness_pct
       filter: *brightness_support
       selector:
@@ -259,13 +213,6 @@ turn_on:
           min: 0
           max: 100
           unit_of_measurement: "%"
-    brightness_step:
-      filter: *brightness_support
-      advanced: true
-      selector:
-        number:
-          min: -225
-          max: 255
     brightness_step_pct:
       filter: *brightness_support
       selector:
@@ -273,39 +220,84 @@ turn_on:
           min: -100
           max: 100
           unit_of_measurement: "%"
-    white: &white
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.WHITE
-      advanced: true
-      selector:
-        constant:
-          value: true
-          label: Enabled
-    profile: &profile
-      advanced: true
-      example: relax
-      selector:
-        text:
-    flash: &flash
-      filter:
-        supported_features:
-          - light.LightEntityFeature.FLASH
-      advanced: true
-      selector:
-        select:
-          options:
-            - label: "Long"
-              value: "long"
-            - label: "Short"
-              value: "short"
     effect: &effect
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT
       selector:
         text:
+    advanced_fields:
+      collapsed: true
+      fields:
+        rgbw_color: &rgbw_color
+          filter: *color_support
+          example: "[255, 100, 100, 50]"
+          selector:
+            object:
+        rgbww_color: &rgbww_color
+          filter: *color_support
+          example: "[255, 100, 100, 50, 70]"
+          selector:
+            object:
+        color_name: &color_name
+          filter: *color_support
+          selector:
+            select:
+              translation_key: color_name
+              options: *named_colors
+        hs_color: &hs_color
+          filter: *color_support
+          example: "[300, 70]"
+          selector:
+            object:
+        xy_color: &xy_color
+          filter: *color_support
+          example: "[0.52, 0.43]"
+          selector:
+            object:
+        color_temp: &color_temp
+          filter: *color_temp_support
+          selector:
+            color_temp:
+              unit: "mired"
+              min: 153
+              max: 500
+        brightness: &brightness
+          filter: *brightness_support
+          selector:
+            number:
+              min: 0
+              max: 255
+        brightness_step:
+          filter: *brightness_support
+          selector:
+            number:
+              min: -225
+              max: 255
+        white: &white
+          filter:
+            attribute:
+              supported_color_modes:
+                - light.ColorMode.WHITE
+          selector:
+            constant:
+              value: true
+              label: Enabled
+        profile: &profile
+          example: relax
+          selector:
+            text:
+        flash: &flash
+          filter:
+            supported_features:
+              - light.LightEntityFeature.FLASH
+          selector:
+            select:
+              options:
+                - label: "Long"
+                  value: "long"
+                - label: "Short"
+                  value: "short"
 
 turn_off:
   target:
@@ -313,7 +305,10 @@ turn_off:
       domain: light
   fields:
     transition: *transition
-    flash: *flash
+    advanced_fields:
+      collapsed: true
+      fields:
+        flash: *flash
 
 toggle:
   target:
@@ -322,16 +317,19 @@ toggle:
   fields:
     transition: *transition
     rgb_color: *rgb_color
-    rgbw_color: *rgbw_color
-    rgbww_color: *rgbww_color
-    color_name: *color_name
-    hs_color: *hs_color
-    xy_color: *xy_color
-    color_temp: *color_temp
     kelvin: *kelvin
-    brightness: *brightness
     brightness_pct: *brightness_pct
-    white: *white
-    profile: *profile
-    flash: *flash
     effect: *effect
+    advanced_fields:
+      collapsed: true
+      fields:
+        rgbw_color: *rgbw_color
+        rgbww_color: *rgbww_color
+        color_name: *color_name
+        hs_color: *hs_color
+        xy_color: *xy_color
+        color_temp: *color_temp
+        brightness: *brightness
+        white: *white
+        profile: *profile
+        flash: *flash

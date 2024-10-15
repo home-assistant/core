@@ -7,6 +7,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from .const import ConversationEntityFeature
 from .models import ConversationInput, ConversationResult
 
 
@@ -14,6 +15,7 @@ class ConversationEntity(RestoreEntity):
     """Entity that supports conversations."""
 
     _attr_should_poll = False
+    _attr_supported_features = ConversationEntityFeature(0)
     __last_activity: str | None = None
 
     @property

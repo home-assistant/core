@@ -1,5 +1,7 @@
 """Tests for the Risco binary sensors."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -40,7 +42,13 @@ async def test_cloud_setup(
     assert entity_registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def _check_cloud_state(hass, zones, bypassed, entity_id, zone_id):
+async def _check_cloud_state(
+    hass: HomeAssistant,
+    zones: dict[int, Any],
+    bypassed: bool,
+    entity_id: str,
+    zone_id: int,
+) -> None:
     with patch.object(
         zones[zone_id],
         "bypassed",
@@ -117,7 +125,14 @@ async def test_local_setup(
     assert entity_registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def _check_local_state(hass, zones, bypassed, entity_id, zone_id, callback):
+async def _check_local_state(
+    hass: HomeAssistant,
+    zones: dict[int, Any],
+    bypassed: bool,
+    entity_id: str,
+    zone_id: int,
+    callback: Callable,
+) -> None:
     with patch.object(
         zones[zone_id],
         "bypassed",

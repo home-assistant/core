@@ -9,8 +9,8 @@ from openwrt.ubus import Ubus
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -24,7 +24,7 @@ CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -38,14 +38,16 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return an ubus scanner."""
-    dhcp_sw = config[DOMAIN][CONF_DHCP_SOFTWARE]
+    config = config[DEVICE_TRACKER_DOMAIN]
+
+    dhcp_sw = config[CONF_DHCP_SOFTWARE]
     scanner: DeviceScanner
     if dhcp_sw == "dnsmasq":
-        scanner = DnsmasqUbusDeviceScanner(config[DOMAIN])
+        scanner = DnsmasqUbusDeviceScanner(config)
     elif dhcp_sw == "odhcpd":
-        scanner = OdhcpdUbusDeviceScanner(config[DOMAIN])
+        scanner = OdhcpdUbusDeviceScanner(config)
     else:
-        scanner = UbusDeviceScanner(config[DOMAIN])
+        scanner = UbusDeviceScanner(config)
 
     return scanner if scanner.success_init else None
 
@@ -121,7 +123,7 @@ class UbusDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Checking hostapd")
+        _LOGGER.debug("Checking hostapd")
 
         if not self.hostapd:
             hostapd = self.ubus.get_hostapd()

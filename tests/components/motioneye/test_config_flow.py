@@ -7,6 +7,7 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuthError,
     MotionEyeClientRequestError,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
@@ -264,14 +265,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
@@ -397,6 +391,10 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.motioneye.config.abort.already_in_progress"],
+)
 async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
     """Test Supervisor discovered flow aborts if user flow in progress."""
     result = await hass.config_entries.flow.async_init(

@@ -1,51 +1,4 @@
 # serializer version: 1
-# name: test_sensor[button.nettigo_air_monitor_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.nettigo_air_monitor_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': 'Restart',
-    'platform': 'nam',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff-restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[button.nettigo_air_monitor_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Nettigo Air Monitor Restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.nettigo_air_monitor_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -97,7 +50,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '45.7',
+    'state': '45.69',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_pressure-entry]
@@ -151,7 +104,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1011.012',
+    'state': '1011.0117',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_temperature-entry]
@@ -205,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.6',
+    'state': '7.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_pressure-entry]
@@ -259,7 +212,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1032.012',
+    'state': '1032.0118',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_temperature-entry]
@@ -313,7 +266,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.6',
+    'state': '7.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_pressure-entry]
@@ -367,7 +320,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1022.012',
+    'state': '1022.0118',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_temperature-entry]
@@ -421,7 +374,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.6',
+    'state': '5.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_humidity-entry]
@@ -475,7 +428,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '46.2',
+    'state': '46.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_temperature-entry]
@@ -529,7 +482,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.3',
+    'state': '6.26',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_ds18b20_temperature-entry]
@@ -583,7 +536,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.6',
+    'state': '12.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_humidity-entry]
@@ -637,7 +590,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '49.97',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_temperature-entry]
@@ -691,7 +644,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8.0',
+    'state': '7.95',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_last_restart-entry]
@@ -1224,7 +1177,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18.6',
+    'state': '18.65',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-entry]
@@ -1278,7 +1231,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.0',
+    'state': '11.03',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_humidity-entry]
@@ -1332,7 +1285,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '34.7',
+    'state': '34.69',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_temperature-entry]
@@ -1386,7 +1339,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.3',
+    'state': '6.28',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_signal_strength-entry]
@@ -1602,7 +1555,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.2',
+    'state': '31.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-entry]
@@ -1656,7 +1609,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.2',
+    'state': '21.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-entry]
@@ -1710,7 +1663,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '34.3',
+    'state': '34.32',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-entry]
@@ -1763,6 +1716,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.7',
+    'state': '24.72',
   })
 # ---

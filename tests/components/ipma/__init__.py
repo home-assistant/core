@@ -108,6 +108,7 @@ class MockLocation:
                     location=Forecast_Location(0, "", 0, 0, 0, "", (0, 0)),
                 ),
             ]
+        raise ValueError(f"Unknown forecast period: {period}")
 
     name = "HomeTown"
     station = "HomeTown Station"

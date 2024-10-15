@@ -1,9 +1,9 @@
 """Common fixtures for the NEW_NAME tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

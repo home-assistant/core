@@ -55,6 +55,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
         ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
+        ("pytest.CaptureFixture[str]", 1, ("pytest.CaptureFixture", "str")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -312,7 +313,9 @@ def test_invalid_config_flow_step(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
+    type_hint_checker.linter.config.ignore_missing_annotations = True
+
+    class_node, func_node, arg_node, func_node2 = astroid.extract_node(
         """
     class FlowHandler():
         pass
@@ -326,6 +329,12 @@ def test_invalid_config_flow_step(
         async def async_step_zeroconf( #@
             self,
             device_config: dict #@
+        ):
+            pass
+
+        async def async_step_custom( #@
+            self,
+            user_input
         ):
             pass
     """,
@@ -352,6 +361,15 @@ def test_invalid_config_flow_step(
             col_offset=4,
             end_line=11,
             end_col_offset=33,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node2,
+            args=("ConfigFlowResult", "async_step_custom"),
+            line=17,
+            col_offset=4,
+            end_line=17,
+            end_col_offset=31,
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
@@ -1264,6 +1282,7 @@ def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) 
     def sample_fixture( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         aiohttp_server: Callable[[], TestServer],
         unused_tcp_port_factory: Callable[[], int],
         enable_custom_integrations: None,

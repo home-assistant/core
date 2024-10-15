@@ -8,6 +8,7 @@ import httpx
 from PIL import Image
 import pytest
 import respx
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components.input_text import (
@@ -15,12 +16,13 @@ from homeassistant.components.input_text import (
     DOMAIN as INPUT_TEXT_DOMAIN,
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
+from homeassistant.components.template import DOMAIN
 from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
 from tests.typing import ClientSessionGenerator
 
 _DEFAULT = object()
@@ -72,6 +74,39 @@ async def _assert_state(
     assert resp.status == expected_status
     body = await resp.read()
     assert body == expected_image
+
+
+@respx.mock
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    imgbytes_jpg,
+) -> None:
+    """Test the config flow."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "http://example.com",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.my_template")
+    assert state is not None
+    assert state.state == "2024-07-09T00:00:00+00:00"
 
 
 @respx.mock
@@ -503,3 +538,47 @@ async def test_trigger_image_custom_entity_picture(
         imgbytes_jpg,
         expected_entity_picture="http://example2.com",
     )
+
+
+@respx.mock
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for image template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "image",
+            "url": "http://example.com",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("image.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id

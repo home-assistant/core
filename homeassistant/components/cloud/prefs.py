@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
 
-from hass_nabucasa.voice import MAP_VOICE
+from hass_nabucasa.voice import MAP_VOICE, Gender
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -91,8 +91,8 @@ class CloudPreferencesStore(Store):
                 # The new second item is the voice name.
                 default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
                 if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
-                    "female",
-                    "male",
+                    Gender.FEMALE,
+                    Gender.MALE,
                 ):
                     language: str = default_tts_voice[0]
                     if voice := MAP_VOICE.get((language, voice_item_two)):
@@ -180,24 +180,28 @@ class CloudPreferences:
         """Update user preferences."""
         prefs = {**self._prefs}
 
-        for key, value in (
-            (PREF_ENABLE_GOOGLE, google_enabled),
-            (PREF_ENABLE_ALEXA, alexa_enabled),
-            (PREF_ENABLE_REMOTE, remote_enabled),
-            (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
-            (PREF_CLOUDHOOKS, cloudhooks),
-            (PREF_CLOUD_USER, cloud_user),
-            (PREF_ALEXA_REPORT_STATE, alexa_report_state),
-            (PREF_GOOGLE_REPORT_STATE, google_report_state),
-            (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
-            (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
-            (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
-            (PREF_REMOTE_DOMAIN, remote_domain),
-            (PREF_GOOGLE_CONNECTED, google_connected),
-            (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
-        ):
-            if value is not UNDEFINED:
-                prefs[key] = value
+        prefs.update(
+            {
+                key: value
+                for key, value in (
+                    (PREF_ENABLE_GOOGLE, google_enabled),
+                    (PREF_ENABLE_ALEXA, alexa_enabled),
+                    (PREF_ENABLE_REMOTE, remote_enabled),
+                    (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
+                    (PREF_CLOUDHOOKS, cloudhooks),
+                    (PREF_CLOUD_USER, cloud_user),
+                    (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+                    (PREF_GOOGLE_REPORT_STATE, google_report_state),
+                    (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
+                    (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
+                    (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
+                    (PREF_REMOTE_DOMAIN, remote_domain),
+                    (PREF_GOOGLE_CONNECTED, google_connected),
+                    (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
+                )
+                if value is not UNDEFINED
+            }
+        )
 
         await self._save_prefs(prefs)
 

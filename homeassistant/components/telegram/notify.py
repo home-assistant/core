@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.components.telegram_bot import (
@@ -40,7 +40,9 @@ ATTR_DOCUMENT = "document"
 
 CONF_CHAT_ID = "chat_id"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_CHAT_ID): vol.Coerce(int)}
+)
 
 
 def get_service(

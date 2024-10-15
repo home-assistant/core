@@ -40,7 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from .const import (
     ATTR_COMMAND_CLASS,
@@ -343,20 +343,18 @@ def async_get_nodes_from_area_id(
         }
     )
     # Add devices in an area that are Z-Wave JS devices
-    for device in dr.async_entries_for_area(dev_reg, area_id):
-        if next(
-            (
-                config_entry_id
-                for config_entry_id in device.config_entries
-                if cast(
-                    ConfigEntry,
-                    hass.config_entries.async_get_entry(config_entry_id),
-                ).domain
-                == DOMAIN
-            ),
-            None,
-        ):
-            nodes.add(async_get_node_from_device_id(hass, device.id, dev_reg))
+    nodes.update(
+        async_get_node_from_device_id(hass, device.id, dev_reg)
+        for device in dr.async_entries_for_area(dev_reg, area_id)
+        if any(
+            cast(
+                ConfigEntry,
+                hass.config_entries.async_get_entry(config_entry_id),
+            ).domain
+            == DOMAIN
+            for config_entry_id in device.config_entries
+        )
+    )
 
     return nodes
 
@@ -479,7 +477,9 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
+def get_value_state_schema(
+    value: ZwaveValue,
+) -> VolSchemaType | vol.Coerce | vol.In | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min

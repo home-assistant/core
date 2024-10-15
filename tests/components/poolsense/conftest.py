@@ -1,10 +1,10 @@
 """Common fixtures for the Poolsense tests."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

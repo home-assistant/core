@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
 
@@ -29,9 +30,6 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if not bluetooth.async_scanner_count(self.hass, connectable=False):
             return self.async_abort(reason="bluetooth_not_available")
 
@@ -81,7 +79,7 @@ class IBeaconOptionsFlow(OptionsFlow):
                 data = {CONF_ALLOW_NAMELESS_UUIDS: list(updated_uuids)}
                 return self.async_create_entry(title="", data=data)
 
-        schema = {
+        schema: VolDictType = {
             vol.Optional(
                 "new_uuid",
                 description={"suggested_value": new_uuid},

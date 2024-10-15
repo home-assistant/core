@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
@@ -51,6 +51,8 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
             except SFRBoxError:
                 errors["base"] = "cannot_connect"
             else:
+                if TYPE_CHECKING:
+                    assert system_info is not None
                 await self.async_set_unique_id(system_info.mac_addr)
                 self._abort_if_unique_id_configured()
                 self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})

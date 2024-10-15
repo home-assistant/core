@@ -10,7 +10,7 @@ from homeassistant.components.honeywell.const import (
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -120,6 +120,10 @@ async def test_create_option_entry(
     }
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.honeywell.config.abort.reauth_successful"],
+)
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a successful reauth flow."""
 
@@ -129,21 +133,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": mock_entry.unique_id,
-                "entry_id": mock_entry.entry_id,
-            },
-            data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-        )
-
-    await hass.async_block_till_done()
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -177,16 +167,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-    )
-    await hass.async_block_till_done()
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -226,17 +207,7 @@ async def test_reauth_flow_connnection_error(
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-    )
-    await hass.async_block_till_done()
-
+    result = await mock_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}

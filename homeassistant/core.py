@@ -23,7 +23,6 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
-from functools import cached_property
 import inspect
 import logging
 import os
@@ -45,6 +44,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from propcache import cached_property, under_cached_property
 from typing_extensions import TypeVar
 import voluptuous as vol
 import yarl
@@ -96,11 +96,12 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import UNDEFINED, UndefinedType, VolSchemaType
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
     create_eager_task,
+    get_scheduled_timer_handles,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -158,12 +159,29 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
+class EventStateEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    old_state: State | None
     new_state: State | None
+
+
+class EventStateChangedData(EventStateEventData):
+    """EVENT_STATE_CHANGED data.
+
+    A state changed event is fired when on state write the state is changed.
+    """
+
+    old_state: State | None
+
+
+class EventStateReportedData(EventStateEventData):
+    """EVENT_STATE_REPORTED data.
+
+    A state reported event is fired when on state write the state is unchanged.
+    """
+
+    old_last_reported: datetime.datetime
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
@@ -317,6 +335,8 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
+    __slots__ = ("target", "name", "_cancel_on_shutdown", "_cache")
+
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -329,12 +349,13 @@ class HassJob[**_P, _R_co]:
         self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
+        self._cache: dict[str, Any] = {}
         if job_type:
             # Pre-set the cached_property so we
             # avoid the function call
-            self.__dict__["job_type"] = job_type
+            self._cache["job_type"] = job_type
 
-    @cached_property
+    @under_cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
         return get_hassjob_callable_job_type(self.target)
@@ -433,9 +454,7 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.loop_thread_id = getattr(
-            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
-        )
+        self.loop_thread_id = getattr(self.loop, "_thread_id")
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
@@ -1210,8 +1229,7 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
-        for handle in handles:
+        for handle in get_scheduled_timer_handles(self.loop):
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # noqa: SLF001
@@ -1229,6 +1247,8 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
+    __slots__ = ("id", "user_id", "parent_id", "origin_event", "_cache")
+
     def __init__(
         self,
         user_id: str | None = None,
@@ -1240,6 +1260,7 @@ class Context:
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event[Any] | None = None
+        self._cache: dict[str, Any] = {}
 
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
@@ -1253,7 +1274,7 @@ class Context:
         """Create a deep copy of this context."""
         return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
 
-    @cached_property
+    @under_cached_property
     def _as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context.
 
@@ -1270,12 +1291,12 @@ class Context:
         """Return a ReadOnlyDict representation of the context."""
         return self._as_read_only_dict
 
-    @cached_property
+    @under_cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a ReadOnlyDict representation of the context."""
         return ReadOnlyDict(self._as_dict)
 
-    @cached_property
+    @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
         return json_fragment(json_bytes(self._as_dict))
@@ -1291,9 +1312,23 @@ class EventOrigin(enum.Enum):
         """Return the event."""
         return self.value
 
+    @cached_property
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
+
 
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
+
+    __slots__ = (
+        "event_type",
+        "data",
+        "origin",
+        "time_fired_timestamp",
+        "context",
+        "_cache",
+    )
 
     def __init__(
         self,
@@ -1313,13 +1348,14 @@ class Event(Generic[_DataT]):
         self.context = context
         if not context.origin_event:
             context.origin_event = self
+        self._cache: dict[str, Any] = {}
 
-    @cached_property
+    @under_cached_property
     def time_fired(self) -> datetime.datetime:
         """Return time fired as a timestamp."""
         return dt_util.utc_from_timestamp(self.time_fired_timestamp)
 
-    @cached_property
+    @under_cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -1344,7 +1380,7 @@ class Event(Generic[_DataT]):
         """
         return self._as_read_only_dict
 
-    @cached_property
+    @under_cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a ReadOnlyDict representation of this Event."""
         as_dict = self._as_dict
@@ -1360,7 +1396,7 @@ class Event(Generic[_DataT]):
             as_dict["context"] = ReadOnlyDict(context)
         return ReadOnlyDict(as_dict)
 
-    @cached_property
+    @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return an event as a JSON fragment."""
         return json_fragment(json_bytes(self._as_dict))
@@ -1604,26 +1640,7 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            # Special case for EVENT_STATE_REPORTED, we also want to listen to
-            # EVENT_STATE_CHANGED
-            self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
-            self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
-            return functools.partial(
-                self._async_remove_multiple_listeners,
-                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
-                filterable_job,
-            )
         return self._async_listen_filterable_job(event_type, filterable_job)
-
-    @callback
-    def _async_remove_multiple_listeners(
-        self,
-        keys: Iterable[EventType[_DataT] | str],
-        filterable_job: _FilterableJobType[Any],
-    ) -> None:
-        """Remove multiple listeners for specific event_types."""
-        for key in keys:
-            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
@@ -1750,6 +1767,21 @@ class State:
     object_id: Object id of this state.
     """
 
+    __slots__ = (
+        "entity_id",
+        "state",
+        "attributes",
+        "last_changed",
+        "last_reported",
+        "last_updated",
+        "context",
+        "state_info",
+        "domain",
+        "object_id",
+        "last_updated_timestamp",
+        "_cache",
+    )
+
     def __init__(
         self,
         entity_id: str,
@@ -1764,6 +1796,7 @@ class State:
         last_updated_timestamp: float | None = None,
     ) -> None:
         """Initialize a new state."""
+        self._cache: dict[str, Any] = {}
         state = str(state)
 
         if validate_entity_id and not valid_entity_id(entity_id):
@@ -1797,31 +1830,31 @@ class State:
             last_updated_timestamp = last_updated.timestamp()
         self.last_updated_timestamp = last_updated_timestamp
         if self.last_changed == last_updated:
-            self.__dict__["last_changed_timestamp"] = last_updated_timestamp
+            self._cache["last_changed_timestamp"] = last_updated_timestamp
         # If last_reported is the same as last_updated async_set will pass
         # the same datetime object for both values so we can use an identity
         # check here.
         if self.last_reported is last_updated:
-            self.__dict__["last_reported_timestamp"] = last_updated_timestamp
+            self._cache["last_reported_timestamp"] = last_updated_timestamp
 
-    @cached_property
+    @under_cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
 
-    @cached_property
+    @under_cached_property
     def last_changed_timestamp(self) -> float:
         """Timestamp of last change."""
         return self.last_changed.timestamp()
 
-    @cached_property
+    @under_cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
         return self.last_reported.timestamp()
 
-    @cached_property
+    @under_cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the State.
 
@@ -1862,7 +1895,7 @@ class State:
         """
         return self._as_read_only_dict
 
-    @cached_property
+    @under_cached_property
     def _as_read_only_dict(
         self,
     ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
@@ -1877,17 +1910,17 @@ class State:
             as_dict["context"] = ReadOnlyDict(context)
         return ReadOnlyDict(as_dict)
 
-    @cached_property
+    @under_cached_property
     def as_dict_json(self) -> bytes:
         """Return a JSON string of the State."""
         return json_bytes(self._as_dict)
 
-    @cached_property
+    @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the State."""
         return json_fragment(self.as_dict_json)
 
-    @cached_property
+    @under_cached_property
     def as_compressed_state(self) -> CompressedState:
         """Build a compressed dict of a state for adds.
 
@@ -1915,7 +1948,7 @@ class State:
             )
         return compressed_state
 
-    @cached_property
+    @under_cached_property
     def as_compressed_state_json(self) -> bytes:
         """Build a compressed JSON key value pair of a state for adds.
 
@@ -2240,16 +2273,45 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        new_state = str(new_state)
-        attributes = attributes or {}
-        old_state = self._states_data.get(entity_id)
-        if old_state is None:
-            # If the state is missing, try to convert the entity_id to lowercase
-            # and try again.
-            entity_id = entity_id.lower()
-            old_state = self._states_data.get(entity_id)
+        self.async_set_internal(
+            entity_id.lower(),
+            str(new_state),
+            attributes or {},
+            force_update,
+            context,
+            state_info,
+            timestamp or time.time(),
+        )
 
-        if old_state is None:
+    @callback
+    def async_set_internal(
+        self,
+        entity_id: str,
+        new_state: str,
+        attributes: Mapping[str, Any] | None,
+        force_update: bool,
+        context: Context | None,
+        state_info: StateInfo | None,
+        timestamp: float,
+    ) -> None:
+        """Set the state of an entity, add entity if it does not exist.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking changes to this function in the future and it
+        should not be used in integrations.
+
+        This method must be run in the event loop.
+        """
+        # Most cases the key will be in the dict
+        # so we optimize for the happy path as
+        # python 3.11+ has near zero overhead for
+        # try when it does not raise an exception.
+        old_state: State | None
+        try:
+            old_state = self._states_data[entity_id]
+        except KeyError:
+            old_state = None
             same_state = False
             same_attr = False
             last_changed = None
@@ -2269,16 +2331,18 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        if timestamp is None:
-            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
+
+        if context is None:
+            context = Context(id=ulid_at_time(timestamp))
 
         if same_state and same_attr:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
-            old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
-            self._bus.async_fire_internal(
+            old_state._cache["last_reported_timestamp"] = timestamp  # type: ignore[union-attr] # noqa: SLF001
+            # Avoid creating an EventStateReportedData
+            self._bus.async_fire_internal(  # type: ignore[misc]
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
@@ -2289,9 +2353,6 @@ class StateMachine:
                 time_fired=timestamp,
             )
             return
-
-        if context is None:
-            context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
             if TYPE_CHECKING:
@@ -2355,7 +2416,7 @@ class Service:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None,
+        schema: VolSchemaType | None,
         domain: str,
         service: str,
         context: Context | None = None,
@@ -2503,7 +2564,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:
@@ -2530,7 +2591,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:

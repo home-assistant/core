@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from aiomealie import (
     MealieAuthenticationError,
@@ -11,55 +12,128 @@ from aiomealie import (
     MealieConnectionError,
     Mealplan,
     MealplanEntryType,
+    ShoppingItem,
+    ShoppingList,
+    Statistics,
 )
 
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import LOGGER
 
-if TYPE_CHECKING:
-    from . import MealieConfigEntry
-
 WEEK = timedelta(days=7)
 
 
-class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]):
-    """Class to manage fetching Mealie data."""
+@dataclass
+class MealieData:
+    """Mealie data type."""
+
+    client: MealieClient
+    mealplan_coordinator: MealieMealplanCoordinator
+    shoppinglist_coordinator: MealieShoppingListCoordinator
+    statistics_coordinator: MealieStatisticsCoordinator
+
+
+type MealieConfigEntry = ConfigEntry[MealieData]
+
+
+class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base coordinator."""
 
     config_entry: MealieConfigEntry
+    _name: str
+    _update_interval: timedelta
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize coordinator."""
+    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
+        """Initialize the Mealie data coordinator."""
         super().__init__(
-            hass, logger=LOGGER, name="Mealie", update_interval=timedelta(hours=1)
+            hass,
+            LOGGER,
+            name=self._name,
+            update_interval=self._update_interval,
         )
-        self.client = MealieClient(
-            self.config_entry.data[CONF_HOST],
-            token=self.config_entry.data[CONF_API_TOKEN],
-            session=async_get_clientsession(hass),
-        )
+        self.client = client
 
-    async def _async_update_data(self) -> dict[MealplanEntryType, list[Mealplan]]:
-        next_week = dt_util.now() + WEEK
+    async def _async_update_data(self) -> _DataT:
+        """Fetch data from Mealie."""
         try:
-            data = (
-                await self.client.get_mealplans(dt_util.now().date(), next_week.date())
-            ).items
+            return await self._async_update_internal()
         except MealieAuthenticationError as error:
-            raise ConfigEntryError("Authentication failed") from error
+            raise ConfigEntryAuthFailed from error
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
+
+    @abstractmethod
+    async def _async_update_internal(self) -> _DataT:
+        """Fetch data from Mealie."""
+
+
+class MealieMealplanCoordinator(
+    MealieDataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]
+):
+    """Class to manage fetching Mealie data."""
+
+    _name = "MealieMealplan"
+    _update_interval = timedelta(hours=1)
+
+    async def _async_update_internal(self) -> dict[MealplanEntryType, list[Mealplan]]:
+        next_week = dt_util.now() + WEEK
+        current_date = dt_util.now().date()
+        next_week_date = next_week.date()
+        response = await self.client.get_mealplans(current_date, next_week_date)
         res: dict[MealplanEntryType, list[Mealplan]] = {
-            MealplanEntryType.BREAKFAST: [],
-            MealplanEntryType.LUNCH: [],
-            MealplanEntryType.DINNER: [],
-            MealplanEntryType.SIDE: [],
+            type_: [] for type_ in MealplanEntryType
         }
-        for meal in data:
+        for meal in response.items:
             res[meal.entry_type].append(meal)
         return res
+
+
+@dataclass
+class ShoppingListData:
+    """Data class for shopping list data."""
+
+    shopping_list: ShoppingList
+    items: list[ShoppingItem]
+
+
+class MealieShoppingListCoordinator(
+    MealieDataUpdateCoordinator[dict[str, ShoppingListData]]
+):
+    """Class to manage fetching Mealie Shopping list data."""
+
+    _name = "MealieShoppingList"
+    _update_interval = timedelta(minutes=5)
+
+    async def _async_update_internal(
+        self,
+    ) -> dict[str, ShoppingListData]:
+        shopping_list_items = {}
+        shopping_lists = (await self.client.get_shopping_lists()).items
+        for shopping_list in shopping_lists:
+            shopping_list_id = shopping_list.list_id
+
+            shopping_items = (
+                await self.client.get_shopping_items(shopping_list_id)
+            ).items
+
+            shopping_list_items[shopping_list_id] = ShoppingListData(
+                shopping_list=shopping_list, items=shopping_items
+            )
+        return shopping_list_items
+
+
+class MealieStatisticsCoordinator(MealieDataUpdateCoordinator[Statistics]):
+    """Class to manage fetching Mealie Statistics data."""
+
+    _name = "MealieStatistics"
+    _update_interval = timedelta(minutes=15)
+
+    async def _async_update_internal(
+        self,
+    ) -> Statistics:
+        return await self.client.get_statistics()

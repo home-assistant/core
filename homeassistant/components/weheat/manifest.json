@@ -1,0 +1,10 @@
+{
+  "domain": "weheat",
+  "name": "Weheat",
+  "codeowners": ["@jesperraemaekers"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/weheat",
+  "iot_class": "cloud_polling",
+  "requirements": ["weheat==2024.09.23"]
+}

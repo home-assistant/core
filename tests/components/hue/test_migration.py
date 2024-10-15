@@ -1,10 +1,11 @@
 """Test Hue migration logic."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.json import JsonArrayType
 
 from tests.common import MockConfigEntry
 
@@ -51,9 +52,9 @@ async def test_light_entity_migration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_bridge_v2,
-    mock_config_entry_v2,
-    v2_resources_test_data,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test if entity schema for lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
@@ -98,9 +99,9 @@ async def test_sensor_entity_migration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_bridge_v2,
-    mock_config_entry_v2,
-    v2_resources_test_data,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test if entity schema for sensors migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
@@ -159,9 +160,9 @@ async def test_sensor_entity_migration(
 async def test_group_entity_migration_with_v1_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_bridge_v2,
-    mock_config_entry_v2,
-    v2_resources_test_data,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
@@ -194,9 +195,9 @@ async def test_group_entity_migration_with_v1_id(
 async def test_group_entity_migration_with_v2_group_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_bridge_v2,
-    mock_config_entry_v2,
-    v2_resources_test_data,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v2: MockConfigEntry,
+    v2_resources_test_data: JsonArrayType,
 ) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2

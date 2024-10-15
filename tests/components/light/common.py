@@ -33,6 +33,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 from tests.common import MockToggleEntity
@@ -40,24 +41,24 @@ from tests.common import MockToggleEntity
 
 @bind_hass
 def turn_on(
-    hass,
-    entity_id=ENTITY_MATCH_ALL,
-    transition=None,
-    brightness=None,
-    brightness_pct=None,
-    rgb_color=None,
-    rgbw_color=None,
-    rgbww_color=None,
-    xy_color=None,
-    hs_color=None,
-    color_temp=None,
-    kelvin=None,
-    profile=None,
-    flash=None,
-    effect=None,
-    color_name=None,
-    white=None,
-):
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    brightness: int | None = None,
+    brightness_pct: float | None = None,
+    rgb_color: tuple[int, int, int] | None = None,
+    rgbw_color: tuple[int, int, int, int] | None = None,
+    rgbww_color: tuple[int, int, int, int, int] | None = None,
+    xy_color: tuple[float, float] | None = None,
+    hs_color: tuple[float, float] | None = None,
+    color_temp: int | None = None,
+    kelvin: int | None = None,
+    profile: str | None = None,
+    flash: str | None = None,
+    effect: str | None = None,
+    color_name: str | None = None,
+    white: bool | None = None,
+) -> None:
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on,
@@ -82,24 +83,24 @@ def turn_on(
 
 
 async def async_turn_on(
-    hass,
-    entity_id=ENTITY_MATCH_ALL,
-    transition=None,
-    brightness=None,
-    brightness_pct=None,
-    rgb_color=None,
-    rgbw_color=None,
-    rgbww_color=None,
-    xy_color=None,
-    hs_color=None,
-    color_temp=None,
-    kelvin=None,
-    profile=None,
-    flash=None,
-    effect=None,
-    color_name=None,
-    white=None,
-):
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    brightness: int | None = None,
+    brightness_pct: float | None = None,
+    rgb_color: tuple[int, int, int] | None = None,
+    rgbw_color: tuple[int, int, int, int] | None = None,
+    rgbww_color: tuple[int, int, int, int, int] | None = None,
+    xy_color: tuple[float, float] | None = None,
+    hs_color: tuple[float, float] | None = None,
+    color_temp: int | None = None,
+    kelvin: int | None = None,
+    profile: str | None = None,
+    flash: str | None = None,
+    effect: str | None = None,
+    color_name: str | None = None,
+    white: bool | None = None,
+) -> None:
     """Turn all or specified light on."""
     data = {
         key: value
@@ -128,12 +129,22 @@ async def async_turn_on(
 
 
 @bind_hass
-def turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flash=None):
+def turn_off(
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    flash: str | None = None,
+) -> None:
     """Turn all or specified light off."""
     hass.add_job(async_turn_off, hass, entity_id, transition, flash)
 
 
-async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flash=None):
+async def async_turn_off(
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    flash: str | None = None,
+) -> None:
     """Turn all or specified light off."""
     data = {
         key: value
@@ -150,21 +161,21 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flas
 
 @bind_hass
 def toggle(
-    hass,
-    entity_id=ENTITY_MATCH_ALL,
-    transition=None,
-    brightness=None,
-    brightness_pct=None,
-    rgb_color=None,
-    xy_color=None,
-    hs_color=None,
-    color_temp=None,
-    kelvin=None,
-    profile=None,
-    flash=None,
-    effect=None,
-    color_name=None,
-):
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    brightness: int | None = None,
+    brightness_pct: float | None = None,
+    rgb_color: tuple[int, int, int] | None = None,
+    xy_color: tuple[float, float] | None = None,
+    hs_color: tuple[float, float] | None = None,
+    color_temp: int | None = None,
+    kelvin: int | None = None,
+    profile: str | None = None,
+    flash: str | None = None,
+    effect: str | None = None,
+    color_name: str | None = None,
+) -> None:
     """Toggle all or specified light."""
     hass.add_job(
         async_toggle,
@@ -186,21 +197,21 @@ def toggle(
 
 
 async def async_toggle(
-    hass,
-    entity_id=ENTITY_MATCH_ALL,
-    transition=None,
-    brightness=None,
-    brightness_pct=None,
-    rgb_color=None,
-    xy_color=None,
-    hs_color=None,
-    color_temp=None,
-    kelvin=None,
-    profile=None,
-    flash=None,
-    effect=None,
-    color_name=None,
-):
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    transition: float | None = None,
+    brightness: int | None = None,
+    brightness_pct: float | None = None,
+    rgb_color: tuple[int, int, int] | None = None,
+    xy_color: tuple[float, float] | None = None,
+    hs_color: tuple[float, float] | None = None,
+    color_temp: int | None = None,
+    kelvin: int | None = None,
+    profile: str | None = None,
+    flash: str | None = None,
+    effect: str | None = None,
+    color_name: str | None = None,
+) -> None:
     """Turn all or specified light on."""
     data = {
         key: value

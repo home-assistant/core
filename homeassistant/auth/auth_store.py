@@ -105,14 +105,18 @@ class AuthStore:
             "perm_lookup": self._perm_lookup,
         }
 
-        for attr_name, value in (
-            ("is_owner", is_owner),
-            ("is_active", is_active),
-            ("local_only", local_only),
-            ("system_generated", system_generated),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs.update(
+            {
+                attr_name: value
+                for attr_name, value in (
+                    ("is_owner", is_owner),
+                    ("is_active", is_active),
+                    ("local_only", local_only),
+                    ("system_generated", system_generated),
+                )
+                if value is not None
+            }
+        )
 
         new_user = models.User(**kwargs)
 
@@ -295,6 +299,14 @@ class AuthStore:
         else:
             refresh_token.expire_at = None
             self._async_schedule_save()
+
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        credentials.data = data
+        self._async_schedule_save()
 
     async def async_load(self) -> None:  # noqa: C901
         """Load the users."""

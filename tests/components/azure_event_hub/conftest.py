@@ -1,5 +1,6 @@
 """Test fixtures for AEH."""
 
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -8,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.eventhub.aio import EventHubProducerClient
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.azure_event_hub.const import (
     CONF_FILTER,

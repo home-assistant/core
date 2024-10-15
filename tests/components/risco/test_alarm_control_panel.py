@@ -1,5 +1,7 @@
 """Tests for the Risco alarm control panel device."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
@@ -180,8 +182,13 @@ async def test_cloud_setup(
 
 
 async def _check_cloud_state(
-    hass, partitions, property, state, entity_id, partition_id
-):
+    hass: HomeAssistant,
+    partitions: dict[int, Any],
+    property: str,
+    state: str,
+    entity_id: str,
+    partition_id: int,
+) -> None:
     with patch.object(partitions[partition_id], property, return_value=True):
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
@@ -256,7 +263,9 @@ async def test_cloud_states(
             )
 
 
-async def _call_alarm_service(hass, service, entity_id, **kwargs):
+async def _call_alarm_service(
+    hass: HomeAssistant, service: str, entity_id: str, **kwargs: Any
+) -> None:
     data = {"entity_id": entity_id, **kwargs}
 
     await hass.services.async_call(
@@ -265,16 +274,27 @@ async def _call_alarm_service(hass, service, entity_id, **kwargs):
 
 
 async def _test_cloud_service_call(
-    hass, service, method, entity_id, partition_id, *args, **kwargs
-):
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition_id: int,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
     with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_awaited_once_with(partition_id, *args)
 
 
 async def _test_cloud_no_service_call(
-    hass, service, method, entity_id, partition_id, **kwargs
-):
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition_id: int,
+    **kwargs: Any,
+) -> None:
     with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_not_awaited()
@@ -531,8 +551,14 @@ async def test_local_setup(
 
 
 async def _check_local_state(
-    hass, partitions, property, state, entity_id, partition_id, callback
-):
+    hass: HomeAssistant,
+    partitions: dict[int, Any],
+    property: str,
+    state: str,
+    entity_id: str,
+    partition_id: int,
+    callback: Callable,
+) -> None:
     with patch.object(partitions[partition_id], property, return_value=True):
         await callback(partition_id, partitions[partition_id])
 
@@ -629,16 +655,27 @@ async def test_local_states(
 
 
 async def _test_local_service_call(
-    hass, service, method, entity_id, partition, *args, **kwargs
-):
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition: int,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
     with patch.object(partition, method, AsyncMock()) as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_awaited_once_with(*args)
 
 
 async def _test_local_no_service_call(
-    hass, service, method, entity_id, partition, **kwargs
-):
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition: int,
+    **kwargs: Any,
+) -> None:
     with patch.object(partition, method, AsyncMock()) as set_mock:
         await _call_alarm_service(hass, service, entity_id, **kwargs)
         set_mock.assert_not_awaited()

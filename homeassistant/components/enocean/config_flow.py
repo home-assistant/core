@@ -1,8 +1,10 @@
 """Config flows for the ENOcean integration."""
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 
 from . import dongle
@@ -20,31 +22,32 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self.dongle_path = None
         self.discovery_info = None
 
-    async def async_step_import(self, data=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
 
-        if not await self.validate_enocean_conf(data):
+        if not await self.validate_enocean_conf(import_data):
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path",
-                data[CONF_DEVICE],
+                import_data[CONF_DEVICE],
             )
             return self.async_abort(reason="invalid_dongle_path")
 
-        return self.create_enocean_entry(data)
+        return self.create_enocean_entry(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle an EnOcean config flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_detect()
 
-    async def async_step_detect(self, user_input=None):
+    async def async_step_detect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
         errors = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
-                return await self.async_step_manual(None)
+                return await self.async_step_manual()
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
@@ -60,7 +63,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Request manual USB dongle path."""
         default_value = None
         errors = {}
