@@ -15,7 +15,12 @@ from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    snapshot_platform,
+)
 
 POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
 
@@ -36,42 +41,13 @@ async def init_integration(
     return mock_config_entry
 
 
-async def test_device_connected_status(
+async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a connection status is reported."""
-    entity = hass.states.get("sensor.test_poe_switch_device_status")
-    assert entity is not None
-    assert entity == snapshot
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
-
-
-async def test_device_cpu_usage(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test a CPU usage is reported correctly."""
-    entity = hass.states.get("sensor.test_router_cpu_usage")
-    assert entity is not None
-    assert entity.state == "16"
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
-
-
-async def test_device_mem_usage(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test a Memory usage is reported correctly."""
-    entity = hass.states.get("sensor.test_poe_switch_memory_usage")
-    assert entity is not None
-    assert entity.state == "20"
+    """Test the creation of the TP-Link Omada sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
@@ -94,6 +70,7 @@ async def test_device_specific_status(
     )
 
     freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
@@ -119,6 +96,7 @@ async def test_device_category_status(
     )
 
     freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
