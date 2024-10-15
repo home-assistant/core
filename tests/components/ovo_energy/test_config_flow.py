@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ovo_energy.const import CONF_ACCOUNT, DOMAIN
@@ -172,6 +173,10 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "connection_error"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.ovo_energy.config.abort.reauth_successful"],
+)
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
     mock_config = MockConfigEntry(

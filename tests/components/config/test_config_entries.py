@@ -500,6 +500,10 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.bla"],
+)
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
@@ -2351,6 +2355,10 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.reconfigure_successful"],
+)
 @pytest.mark.usefixtures("enable_custom_integrations", "freezer")
 async def test_supports_reconfigure(
     hass: HomeAssistant,
