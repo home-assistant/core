@@ -1212,8 +1212,10 @@ class PipelineRun:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         timestamp_ms = 0
         async for chunk in audio_stream:
-            if self.audio_settings.volume_multiplier != 1.0:
-                chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
+            # Define a small epsilon value for floating-point comparison
+            epsilon = 1e-3  # Adjust based on precision requirements
+        if abs(self.audio_settings.volume_multiplier - 1.0) > epsilon:
+            # Your logic when the volume_multiplier is not approximately equal to 1.0
 
             for sub_chunk in chunk_samples(
                 chunk, BYTES_PER_CHUNK, self.audio_chunking_buffer
