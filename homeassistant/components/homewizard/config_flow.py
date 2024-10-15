@@ -90,7 +90,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             or CONF_PRODUCT_TYPE not in discovery_info.properties
             or CONF_SERIAL not in discovery_info.properties
         ):
-            return self.async_abort(reason="unsupported_api_version")
+            return self.async_abort(reason="invalid_discovery_parameters")
 
         if (discovery_info.properties[CONF_PATH]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")

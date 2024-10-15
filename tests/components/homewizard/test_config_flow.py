@@ -234,7 +234,7 @@ async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> No
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unsupported_api_version"
+    assert result["reason"] == "invalid_discovery_parameters"
 
 
 async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
