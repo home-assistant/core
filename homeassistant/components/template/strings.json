@@ -57,6 +57,21 @@
         },
         "title": "Template image"
       },
+      "lock": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "lock": "Actions to take on lock",
+          "unlock": "Actions to take on unlock",
+          "code_format": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::code_format::name%]",
+          "optimistic": "Optimistic mode"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template lock"
+      },
       "number": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -107,6 +122,7 @@
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
           "image": "Template an image",
+          "lock": "Template a lock",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
@@ -181,6 +197,21 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "lock": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "lock": "[%key:component::template::config::step::lock::data::lock%]",
+          "unlock": "[%key:component::template::config::step::lock::data::unlock%]",
+          "code_format": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::code_format::name%]",
+          "optimistic": "[%key:component::template::config::step::lock::data::optimistic%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::lock::title%]"
       },
       "number": {
         "data": {

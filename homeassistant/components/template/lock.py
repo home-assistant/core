@@ -11,6 +11,7 @@ from homeassistant.components.lock import (
     LockEntity,
     LockState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_DEVICE_ID,
@@ -130,6 +131,26 @@ async def async_setup_platform(
             discovery_info["entities"],
             discovery_info["unique_id"],
         )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = LOCK_CONFIG_SCHEMA(_options)
+    async_add_entities(
+        [
+            TemplateLock(
+                hass,
+                validated_config,
+                config_entry.entry_id,
+            )
+        ]
     )
 
 
