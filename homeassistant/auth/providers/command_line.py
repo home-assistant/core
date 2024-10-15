@@ -88,22 +88,28 @@ class CommandLineAuthProvider(AuthProvider):
             )
             raise InvalidAuthError
 
-        if self.config[CONF_META]:
-            meta: dict[str, str] = {}
-            for _line in stdout.splitlines():
-                try:
-                    line = _line.decode().lstrip()
-                except ValueError:
-                    # malformed line
-                    continue
-                if line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip()
-                if key in self.ALLOWED_META_KEYS:
-                    meta[key] = value
-            self._user_meta[username] = meta
+        if not self.config[CONF_META]:
+            return
+
+        meta: dict[str, str] = {}
+        for _line in stdout.splitlines():
+            key, _, value = self._safe_decode_and_partition(_line)
+            if key.strip() in self.ALLOWED_META_KEYS:
+                meta[key.strip()] = value.strip()
+
+        self._user_meta[username] = meta
+
+    def _safe_decode_and_partition(self, _line: bytes) -> tuple[str, str, str]:
+        """Safely decode and partition a line."""
+        try:
+            line = _line.decode().lstrip()
+            return (
+                line.partition("=")
+                if "=" in line and not line.startswith("#")
+                else ("", "", "")
+            )
+        except (ValueError, AttributeError):
+            return ("", "", "")
 
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
