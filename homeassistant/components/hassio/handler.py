@@ -293,29 +293,12 @@ class HassIO:
         return self.send_command("/core/stats", method="get")
 
     @api_data
-    def get_addon_stats(self, addon: str) -> Coroutine:
-        """Return stats for an Add-on.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/addons/{addon}/stats", method="get")
-
-    @api_data
     def get_supervisor_stats(self) -> Coroutine:
         """Return stats for the supervisor.
 
         This method returns a coroutine.
         """
         return self.send_command("/supervisor/stats", method="get")
-
-    def get_addon_changelog(self, addon: str) -> Coroutine:
-        """Return changelog for an Add-on.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            f"/addons/{addon}/changelog", method="get", return_text=True
-        )
 
     @api_data
     def get_ingress_panels(self) -> Coroutine:

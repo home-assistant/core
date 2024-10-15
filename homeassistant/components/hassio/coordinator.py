@@ -511,8 +511,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
-            changelog = await self.hassio.get_addon_changelog(slug)
-        except HassioAPIError as err:
+            changelog = await self.hassio.client.store.addon_changelog(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
             return (slug, None)
         return (slug, changelog)
