@@ -80,12 +80,15 @@ async def websocket_network_url(
     msg: dict[str, Any],
 ) -> None:
     """Get the internal URL."""
+    if msg["url_type"] not in ["internal", "external", "cloud"]:
+        connection.send_error(msg["id"], "invalid_url_type", "Invalid URL type")
+        return
     connection.send_result(
         msg["id"],
         get_url(
             hass,
             allow_internal=msg["url_type"] == "internal",
-            allow_external=msg["url_type"] == "external",
-            allow_cloud=msg["url_type"] == "cloud",
+            allow_external=msg["url_type"] in ["external", "cloud"],
+            require_cloud=msg["url_type"] == "cloud",
         ),
     )

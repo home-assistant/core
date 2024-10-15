@@ -886,3 +886,43 @@ async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) ->
         "172.16.1.5",
         "fe80::dead:beef:dead:beef",
     ]
+
+
+async def test_websocket_network_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the network/url websocket command."""
+    assert await async_setup_component(hass, "network", {})
+
+    client = await hass_ws_client(hass)
+
+    # Test internal URL
+    with patch(
+        "homeassistant.helpers.network._get_internal_url", return_value="internal"
+    ):
+        await client.send_json({"id": 1, "type": "network/url", "url_type": "internal"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == "internal"
+
+    # Test external URL
+    with patch(
+        "homeassistant.helpers.network._get_external_url", return_value="external"
+    ):
+        await client.send_json({"id": 2, "type": "network/url", "url_type": "external"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == "external"
+
+    # Test cloud URL
+    with patch("homeassistant.helpers.network._get_cloud_url", return_value="cloud"):
+        await client.send_json({"id": 3, "type": "network/url", "url_type": "cloud"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == "cloud"
+
+    # Test invalid URL type
+    await client.send_json({"id": 4, "type": "network/url", "url_type": "invalid"})
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_url_type"
