@@ -74,7 +74,9 @@ def setup_services(hass: HomeAssistant) -> None:
         )
         limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
         try:
-            connections = await config_entry.fetch_connections_as_json(limit=int(limit))
+            connections = await config_entry.runtime_data.fetch_connections_as_json(
+                limit=int(limit)
+            )
         except UpdateFailed as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
