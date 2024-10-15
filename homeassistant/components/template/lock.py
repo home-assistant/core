@@ -94,11 +94,17 @@ def rewrite_legacy_to_modern_conf(hass: HomeAssistant, cfg: dict[str, dict]) -> 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(LEGACY_LOCK_SCHEMA.schema)
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass, config, unique_id_prefix=None):
     """Create the Template lock."""
-    config = rewrite_legacy_to_modern_conf(hass, config)
-    lock_entity = TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))
-    return [lock_entity]
+    locks = []
+
+    for entity_config in config:
+        unique_id = entity_config.get(CONF_UNIQUE_ID)
+        if unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+        locks.append(TemplateLock(hass, entity_config, unique_id))
+
+    return locks
 
 
 async def async_setup_platform(
@@ -108,7 +114,22 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template lock."""
-    async_add_entities(await _async_create_entities(hass, config))
+    if discovery_info is None:
+        async_add_entities(
+            await _async_create_entities(
+                hass,
+                [rewrite_legacy_to_modern_conf(hass, config)],
+            )
+        )
+        return
+
+    async_add_entities(
+        await _async_create_entities(
+            hass,
+            discovery_info["entities"],
+            discovery_info["unique_id"],
+        )
+    )
 
 
 class TemplateLock(TemplateEntity, LockEntity):
