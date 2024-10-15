@@ -35,13 +35,13 @@ blueprint:
 mode: restart
 max_exceeded: silent
 
-trigger:
+triggers:
   trigger: state
   entity_id: !input motion_entity
   from: "off"
   to: "on"
 
-action:
+actions:
   - alias: "Turn on the light"
     action: light.turn_on
     target: !input light_target
