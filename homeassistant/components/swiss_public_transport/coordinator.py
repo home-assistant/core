@@ -18,12 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    CONNECTION_DATETIME_STR_FORMAT,
-    CONNECTIONS_COUNT,
-    DEFAULT_UPDATE_TIME,
-    DOMAIN,
-)
+from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,9 +116,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         """Fetch connections using the opendata api."""
         return [
             {
-                "departure": connection["departure"].strftime(
-                    CONNECTION_DATETIME_STR_FORMAT
-                )
+                "departure": connection["departure"].isoformat()
                 if connection["departure"]
                 else None,
                 "duration": connection["duration"],
