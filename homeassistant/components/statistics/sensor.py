@@ -455,9 +455,7 @@ class StatisticsSensor(SensorEntity):
         """Register callbacks."""
         await self._async_stats_sensor_startup()
 
-    def _add_state_to_queue(
-        self, new_state: State, calc_attributes: bool = True
-    ) -> None:
+    def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
 
         # Attention: it is not safe to store the new_state object,
@@ -488,12 +486,11 @@ class StatisticsSensor(SensorEntity):
             )
             return
 
-        if calc_attributes:
-            (
-                self._attr_native_unit_of_measurement,
-                self._attr_device_class,
-                self._attr_state_class,
-            ) = self._calculate_attributes(new_state)
+        (
+            self._attr_native_unit_of_measurement,
+            self._attr_device_class,
+            self._attr_state_class,
+        ) = self._calculate_attributes(new_state)
 
     def _calculate_attributes(
         self, new_state: State
@@ -721,7 +718,7 @@ class StatisticsSensor(SensorEntity):
             self._fetch_states_from_database
         ):
             for state in reversed(states):
-                self._add_state_to_queue(state, False)
+                self._add_state_to_queue(state)
                 (
                     self._attr_native_unit_of_measurement,
                     self._attr_device_class,
