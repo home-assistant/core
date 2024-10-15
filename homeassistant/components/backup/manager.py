@@ -271,12 +271,10 @@ class BackupManager:
 
         def _write_restore_file() -> None:
             """Write the restore file."""
-            with open(
-                self.hass.config.path(RESTORE_BACKUP_FILE),
-                mode="w",
+            Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
+                f"{backup.path.as_posix()};",
                 encoding="utf-8",
-            ) as restore_fp:
-                restore_fp.write(f"{backup.path.as_posix()};")
+            )
 
         await self.hass.async_add_executor_job(_write_restore_file)
         await self.hass.services.async_call("homeassistant", "restart", {})

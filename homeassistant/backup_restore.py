@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 import json
 import logging
-import os
 from pathlib import Path
 import shutil
 import sys
@@ -37,12 +36,14 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
 
 def _clear_configuration_directory(config_dir: Path) -> None:
     """Delete all files and directories in the config directory except for the backups directory."""
+    keep_paths = [config_dir.joinpath(path) for path in KEEP_PATHS]
     config_contents = sorted(
-        [entry for entry in os.listdir(config_dir) if entry not in KEEP_PATHS]
+        [entry for entry in config_dir.iterdir() if entry not in keep_paths]
     )
 
     for entry in config_contents:
         entrypath = config_dir.joinpath(entry)
+
         if entrypath.is_file():
             entrypath.unlink()
         elif entrypath.is_dir():
@@ -60,11 +61,8 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
         ) as ostf,
     ):
         ostf.extractall(Path(tempdir, "extracted"))
-        with open(
-            Path(tempdir, "extracted", "backup.json"),
-            encoding="utf8",
-        ) as backup_meta_file:
-            backup_meta = json.load(backup_meta_file)
+        backup_meta_file = Path(tempdir, "extracted", "backup.json")
+        backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
 
         with securetar.SecureTarFile(
             Path(
