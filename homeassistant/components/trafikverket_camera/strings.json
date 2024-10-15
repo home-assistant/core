@@ -26,6 +26,20 @@
         "data": {
           "id": "Choose camera"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "[%key:component::trafikverket_camera::config::step::user::data_description::location%]"
+        }
       }
     }
   },

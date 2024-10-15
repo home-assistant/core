@@ -246,10 +246,10 @@ async def test_raise_addon_task_in_progress(
 
     install_addon_original_side_effect = install_addon.side_effect
 
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
+    async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
         await install_event.wait()
-        await install_addon_original_side_effect(hass, slug)
+        await install_addon_original_side_effect(slug)
 
     install_addon.side_effect = install_addon_side_effect
 
@@ -337,7 +337,7 @@ async def test_install_addon(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_matter_server")
 

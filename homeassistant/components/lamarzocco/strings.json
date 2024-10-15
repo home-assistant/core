@@ -47,7 +47,7 @@
           "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

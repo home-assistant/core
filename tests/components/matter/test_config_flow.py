@@ -418,7 +418,7 @@ async def test_zeroconf_not_onboarded_not_installed(
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 2
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_args == call("core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -733,7 +733,7 @@ async def test_supervisor_discovery_addon_not_installed(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -827,6 +827,10 @@ async def test_addon_running(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.matter.config.abort.cannot_connect"],
+)
 @pytest.mark.parametrize(
     (
         "discovery_info",
@@ -1291,7 +1295,7 @@ async def test_addon_not_installed(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
@@ -1338,7 +1342,7 @@ async def test_addon_not_installed_failures(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert addon_info.call_count == 0
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -1362,7 +1366,7 @@ async def test_addon_not_installed_failures_zeroconf(
     )
     await hass.async_block_till_done()
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert addon_info.call_count == 0
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -1410,7 +1414,7 @@ async def test_addon_not_installed_already_configured(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
 
