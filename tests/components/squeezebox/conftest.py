@@ -120,6 +120,7 @@ async def mock_async_browse(
     """Mock the async_browse method of pysqueezebox.Player."""
     child_types = {
         "favorites": "favorites",
+        "new music": "album",
         "albums": "album",
         "album": "track",
         "genres": "genre",
