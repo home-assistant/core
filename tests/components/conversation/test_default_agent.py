@@ -2602,10 +2602,7 @@ async def test_custom_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from custom_sentences have priority over builtin intents/sentences.
-
-    Also test that they follow proper selection logic.
-    """
+    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
     with tempfile.NamedTemporaryFile(
         mode="w+",
         encoding="utf-8",
@@ -2618,11 +2615,7 @@ async def test_custom_sentences_priority(
             {
                 "language": "en",
                 "intents": {
-                    "CustomIntent": {"data": [{"sentences": ["turn on <name>"]}]},
-                    "WorseCustomIntent": {
-                        "data": [{"sentences": ["turn on the lamp"]}]
-                    },
-                    "FakeCustomIntent": {"data": [{"sentences": ["turn on <name>"]}]},
+                    "CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}
                 },
             },
             custom_sentences_file,
@@ -2639,20 +2632,10 @@ async def test_custom_sentences_priority(
             "intent_script",
             {
                 "intent_script": {
-                    "CustomIntent": {"speech": {"text": "custom response"}},
-                    "WorseCustomIntent": {"speech": {"text": "worse custom response"}},
-                    "FakeCustomIntent": {"speech": {"text": "fake custom response"}},
+                    "CustomIntent": {"speech": {"text": "custom response"}}
                 }
             },
         )
-
-        # Fake intent not being custom
-        intents = (
-            await conversation.async_get_agent(hass).async_get_or_load_intents(
-                hass.config.language
-            )
-        ).intents.intents
-        intents["FakeCustomIntent"].data[0].metadata[METADATA_CUSTOM_SENTENCE] = False
 
         # Ensure that a "lamp" exists so that we can verify the custom intent
         # overrides the builtin sentence.
@@ -2676,7 +2659,10 @@ async def test_config_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from configuration.yaml have priority over builtin intents/sentences."""
+    """Test that user intents from configuration.yaml have priority over builtin intents/sentences.
+
+    Also test that they follow proper selection logic.
+    """
     # Add a custom sentence that would match a builtin sentence.
     # Custom sentences have priority.
     assert await async_setup_component(hass, "homeassistant", {})
@@ -2684,13 +2670,36 @@ async def test_config_sentences_priority(
     assert await async_setup_component(
         hass,
         "conversation",
-        {"conversation": {"intents": {"CustomIntent": ["turn on the lamp"]}}},
+        {
+            "conversation": {
+                "intents": {
+                    "CustomIntent": ["turn on <name>"],
+                    "WorseCustomIntent": ["turn on the lamp"],
+                    "FakeCustomIntent": ["turn on <name>"],
+                }
+            }
+        },
     )
+
+    # Fake intent not being custom
+    intents = (
+        await conversation.async_get_agent(hass).async_get_or_load_intents(
+            hass.config.language
+        )
+    ).intents.intents
+    intents["FakeCustomIntent"].data[0].metadata[METADATA_CUSTOM_SENTENCE] = False
+
     assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "intent_script",
-        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+        {
+            "intent_script": {
+                "CustomIntent": {"speech": {"text": "custom response"}},
+                "WorseCustomIntent": {"speech": {"text": "worse custom response"}},
+                "FakeCustomIntent": {"speech": {"text": "fake custom response"}},
+            }
+        },
     )
 
     # Ensure that a "lamp" exists so that we can verify the custom intent
