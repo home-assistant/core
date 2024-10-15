@@ -75,6 +75,10 @@ class BaseBackupManager(abc.ABC):
         """Generate a backup."""
 
     @abc.abstractmethod
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+        """Restpre a backup."""
+
+    @abc.abstractmethod
     async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Get backups.
 
@@ -298,9 +302,9 @@ class BackupManager(BaseBackupManager):
 
         return tar_file_path.stat().st_size
 
-    async def restore_backup(self, slug: str) -> None:
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
         """Restore a backup."""
-        if (backup := await self.get_backup(slug)) is None:
+        if (backup := await self.async_get_backup(slug=slug)) is None:
             raise HomeAssistantError(f"Backup {slug} not found")
 
         def _write_restore_file() -> None:
