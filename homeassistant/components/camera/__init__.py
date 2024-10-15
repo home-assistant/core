@@ -179,7 +179,7 @@ class CameraCapabilities:
         """Return a dict that can be used by the frontend."""
 
         return {
-            "frontentStreamTypes": self.frontend_stream_types,
+            "frontendStreamTypes": self.frontend_stream_types,
         }
 
 

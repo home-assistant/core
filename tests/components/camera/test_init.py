@@ -1138,7 +1138,7 @@ async def _test_capbilities(
     # Assert WebSocket response
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {"frontentStreamTypes": list(expected_stream_types)}
+    assert msg["result"] == {"frontendStreamTypes": list(expected_stream_types)}
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
