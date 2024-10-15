@@ -92,11 +92,9 @@ class WyomingConversationEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        conversation.async_set_agent(self.hass, self.entry, self)
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
-        conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
     @property

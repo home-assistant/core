@@ -19,9 +19,7 @@ from . import MockAsyncTcpClient
 
 async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> None:
     """Test when an intent is recognized."""
-    agent = conversation.async_get_agent(hass, init_wyoming_intent.entry_id)
-    assert agent is not None
-    assert agent.supported_languages == ["en-US"]
+    agent_id = "conversation.test_intent"
 
     conversation_id = "conversation-1234"
     test_intent = Intent(
@@ -46,14 +44,13 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([test_intent.event()]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=conversation_id,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -66,8 +63,7 @@ async def test_intent_handle_error(
     hass: HomeAssistant, init_wyoming_intent: ConfigEntry
 ) -> None:
     """Test error during handling when an intent is recognized."""
-    agent = conversation.async_get_agent(hass, init_wyoming_intent.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_intent"
 
     test_intent = Intent(name="TestIntent", entities=[], text="success")
 
@@ -86,14 +82,13 @@ async def test_intent_handle_error(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([test_intent.event()]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=None,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -104,21 +99,19 @@ async def test_not_recognized(
     hass: HomeAssistant, init_wyoming_intent: ConfigEntry
 ) -> None:
     """Test when an intent is not recognized."""
-    agent = conversation.async_get_agent(hass, init_wyoming_intent.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_intent"
 
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([NotRecognized(text="failure").event()]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=None,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -129,8 +122,7 @@ async def test_not_recognized(
 
 async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> None:
     """Test when an intent is handled."""
-    agent = conversation.async_get_agent(hass, init_wyoming_handle.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_handle"
 
     conversation_id = "conversation-1234"
 
@@ -138,14 +130,13 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([Handled(text="success").event()]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=conversation_id,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -158,21 +149,19 @@ async def test_not_handled(
     hass: HomeAssistant, init_wyoming_handle: ConfigEntry
 ) -> None:
     """Test when an intent is not handled."""
-    agent = conversation.async_get_agent(hass, init_wyoming_handle.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_handle"
 
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([NotHandled(text="failure").event()]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=None,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -185,21 +174,19 @@ async def test_connection_lost(
     hass: HomeAssistant, init_wyoming_handle: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test connection to client is lost."""
-    agent = conversation.async_get_agent(hass, init_wyoming_handle.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_handle"
 
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
         MockAsyncTcpClient([None]),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=None,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -212,8 +199,7 @@ async def test_oserror(
     hass: HomeAssistant, init_wyoming_handle: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test connection error."""
-    agent = conversation.async_get_agent(hass, init_wyoming_handle.entry_id)
-    assert agent is not None
+    agent_id = "conversation.test_handle"
 
     mock_client = MockAsyncTcpClient([Transcript("success").event()])
 
@@ -223,14 +209,13 @@ async def test_oserror(
         ),
         patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
     ):
-        result = await agent.async_process(
-            conversation.ConversationInput(
-                "test text",
-                Context(),
-                conversation_id=None,
-                device_id=None,
-                language=hass.config.language,
-            )
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
