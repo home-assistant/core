@@ -29,6 +29,10 @@ BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.spotify.config.abort.missing_credentials"],
+)
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow aborts when no configuration is present."""
     result = await hass.config_entries.flow.async_init(
