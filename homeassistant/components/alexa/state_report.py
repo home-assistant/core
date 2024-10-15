@@ -246,6 +246,24 @@ class AlexaResponse:
         return self._response
 
 
+def _check_alexa_entity_interfaces(
+    alexa_changed_entity: AlexaEntity,
+) -> tuple[bool, bool]:
+    """Check interfaces of the Alexa entity to determine reporting flags."""
+    should_report = False
+    should_doorbell = False
+
+    for interface in alexa_changed_entity.interfaces():
+        if not should_report and interface.properties_proactively_reported():
+            should_report = True
+
+        if interface.name() == "Alexa.DoorbellEventSource":
+            should_doorbell = True
+            break
+
+    return should_report, should_doorbell
+
+
 async def async_enable_proactive_mode(
     hass: HomeAssistant, smart_home_config: AbstractConfig
 ) -> CALLBACK_TYPE | None:
@@ -304,13 +322,9 @@ async def async_enable_proactive_mode(
         should_report = False
         should_doorbell = False
 
-        for interface in alexa_changed_entity.interfaces():
-            if not should_report and interface.properties_proactively_reported():
-                should_report = True
-
-            if interface.name() == "Alexa.DoorbellEventSource":
-                should_doorbell = True
-                break
+        should_report, should_doorbell = _check_alexa_entity_interfaces(
+            alexa_changed_entity
+        )
 
         if not should_report and not should_doorbell:
             return
