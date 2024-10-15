@@ -150,6 +150,11 @@
     "type": "Sensor",
     "category": "Debug"
   },
+  "check_latest_firmware": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Info"
+  },
   "thermostat_mode": {
     "value": "off",
     "type": "Sensor",
@@ -194,6 +199,16 @@
     "value": false,
     "type": "BinarySensor",
     "category": "Primary"
+  },
+  "alarm": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "reboot": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
   },
   "test_alarm": {
     "value": "<Action>",

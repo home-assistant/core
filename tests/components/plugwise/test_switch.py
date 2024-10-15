@@ -11,11 +11,12 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +50,7 @@ async def test_adam_climate_switch_negative_testing(
 
     assert mock_smile_adam.set_switch_state.call_count == 1
     mock_smile_adam.set_switch_state.assert_called_with(
-        "78d1126fc4c743db81b61c20e88342a7", None, "relay", "off"
+        "78d1126fc4c743db81b61c20e88342a7", None, "relay", STATE_OFF
     )
 
     with pytest.raises(HomeAssistantError):
@@ -62,7 +63,7 @@ async def test_adam_climate_switch_negative_testing(
 
     assert mock_smile_adam.set_switch_state.call_count == 2
     mock_smile_adam.set_switch_state.assert_called_with(
-        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "on"
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", STATE_ON
     )
 
 
@@ -79,7 +80,7 @@ async def test_adam_climate_switch_changes(
 
     assert mock_smile_adam.set_switch_state.call_count == 1
     mock_smile_adam.set_switch_state.assert_called_with(
-        "78d1126fc4c743db81b61c20e88342a7", None, "relay", "off"
+        "78d1126fc4c743db81b61c20e88342a7", None, "relay", STATE_OFF
     )
 
     await hass.services.async_call(
@@ -91,7 +92,7 @@ async def test_adam_climate_switch_changes(
 
     assert mock_smile_adam.set_switch_state.call_count == 2
     mock_smile_adam.set_switch_state.assert_called_with(
-        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "off"
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", STATE_OFF
     )
 
     await hass.services.async_call(
@@ -103,7 +104,7 @@ async def test_adam_climate_switch_changes(
 
     assert mock_smile_adam.set_switch_state.call_count == 3
     mock_smile_adam.set_switch_state.assert_called_with(
-        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", "on"
+        "a28f588dc4a049a483fd03a30361ad3a", None, "relay", STATE_ON
     )
 
 
@@ -132,7 +133,7 @@ async def test_stretch_switch_changes(
     )
     assert mock_stretch.set_switch_state.call_count == 1
     mock_stretch.set_switch_state.assert_called_with(
-        "e1c884e7dede431dadee09506ec4f859", None, "relay", "off"
+        "e1c884e7dede431dadee09506ec4f859", None, "relay", STATE_OFF
     )
 
     await hass.services.async_call(
@@ -143,7 +144,7 @@ async def test_stretch_switch_changes(
     )
     assert mock_stretch.set_switch_state.call_count == 2
     mock_stretch.set_switch_state.assert_called_with(
-        "cfe95cf3de1948c0b8955125bf754614", None, "relay", "off"
+        "cfe95cf3de1948c0b8955125bf754614", None, "relay", STATE_OFF
     )
 
     await hass.services.async_call(
@@ -154,7 +155,7 @@ async def test_stretch_switch_changes(
     )
     assert mock_stretch.set_switch_state.call_count == 3
     mock_stretch.set_switch_state.assert_called_with(
-        "cfe95cf3de1948c0b8955125bf754614", None, "relay", "on"
+        "cfe95cf3de1948c0b8955125bf754614", None, "relay", STATE_ON
     )
 
 

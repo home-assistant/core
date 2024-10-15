@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.lock import LockState
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -29,14 +30,12 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_CLOSED,
     STATE_CLOSING,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UV_INDEX,
     Platform,
     UnitOfApparentPower,
@@ -451,8 +450,8 @@ UOM_FRIENDLY_NAME = {
 
 UOM_TO_STATES = {
     "11": {  # Deadbolt Status
-        0: STATE_UNLOCKED,
-        100: STATE_LOCKED,
+        0: LockState.UNLOCKED,
+        100: LockState.LOCKED,
         101: STATE_UNKNOWN,
         102: STATE_PROBLEM,
     },

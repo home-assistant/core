@@ -110,6 +110,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.flume.config.abort.reauth_successful"],
+)
 @pytest.mark.usefixtures("access_token")
 async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we can reauth."""
@@ -124,11 +128,7 @@ async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "unique_id": "test@test.org"},
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

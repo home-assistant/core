@@ -10,16 +10,38 @@
     }
   },
   "services": {
-    "addon_start": "mdi:play",
-    "addon_restart": "mdi:restart",
-    "addon_stdin": "mdi:console",
-    "addon_stop": "mdi:stop",
-    "addon_update": "mdi:update",
-    "host_reboot": "mdi:restart",
-    "host_shutdown": "mdi:power",
-    "backup_full": "mdi:content-save",
-    "backup_partial": "mdi:content-save",
-    "restore_full": "mdi:backup-restore",
-    "restore_partial": "mdi:backup-restore"
+    "addon_start": {
+      "service": "mdi:play"
+    },
+    "addon_restart": {
+      "service": "mdi:restart"
+    },
+    "addon_stdin": {
+      "service": "mdi:console"
+    },
+    "addon_stop": {
+      "service": "mdi:stop"
+    },
+    "addon_update": {
+      "service": "mdi:update"
+    },
+    "host_reboot": {
+      "service": "mdi:restart"
+    },
+    "host_shutdown": {
+      "service": "mdi:power"
+    },
+    "backup_full": {
+      "service": "mdi:content-save"
+    },
+    "backup_partial": {
+      "service": "mdi:content-save"
+    },
+    "restore_full": {
+      "service": "mdi:backup-restore"
+    },
+    "restore_partial": {
+      "service": "mdi:backup-restore"
+    }
   }
 }

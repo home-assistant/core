@@ -21,3 +21,10 @@ MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
 
 UNIT_TASKS = "tasks"
+
+ATTR_CONFIG_ENTRY = "config_entry"
+ATTR_SKILL = "skill"
+ATTR_TASK = "task"
+SERVICE_CAST_SKILL = "cast_skill"
+
+DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"

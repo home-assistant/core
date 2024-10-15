@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 from typing import Any, Final
 
@@ -17,6 +16,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
+from propcache import cached_property
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,

@@ -69,9 +69,9 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         return None
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Re Authenticate a user."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+        data = {CONF_API_KEY: entry_data[CONF_API_KEY]}
         return await self.async_step_user(data)

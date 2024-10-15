@@ -6,8 +6,10 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.knx import DOMAIN
-from homeassistant.components.knx.const import CONF_KNX_TELEGRAM_LOG_SIZE
+from homeassistant.components.knx.const import (
+    CONF_KNX_TELEGRAM_LOG_SIZE,
+    KNX_MODULE_KEY,
+)
 from homeassistant.components.knx.telegrams import TelegramDict
 from homeassistant.core import HomeAssistant
 
@@ -39,7 +41,7 @@ MOCK_TELEGRAMS = [
         "dpt_name": None,
         "payload": [1, 2, 3, 4],
         "source": "0.0.0",
-        "source_name": "",
+        "source_name": "Home Assistant",
         "telegramtype": "GroupValueWrite",
         "timestamp": MOCK_TIMESTAMP,
         "unit": None,
@@ -76,7 +78,7 @@ async def test_store_telegam_history(
     )
     await knx.assert_write("2/2/2", (1, 2, 3, 4))
 
-    assert len(hass.data[DOMAIN].telegrams.recent_telegrams) == 2
+    assert len(hass.data[KNX_MODULE_KEY].telegrams.recent_telegrams) == 2
     with pytest.raises(KeyError):
         hass_storage["knx/telegrams_history.json"]
 
@@ -93,7 +95,7 @@ async def test_load_telegam_history(
     """Test telegram history restoration."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
     await knx.setup_integration({})
-    loaded_telegrams = hass.data[DOMAIN].telegrams.recent_telegrams
+    loaded_telegrams = hass.data[KNX_MODULE_KEY].telegrams.recent_telegrams
     assert assert_telegram_history(loaded_telegrams)
     # TelegramDict "payload" is a tuple, this shall be restored when loading from JSON
     assert isinstance(loaded_telegrams[1]["payload"], tuple)
@@ -114,4 +116,4 @@ async def test_remove_telegam_history(
     await knx.setup_integration({}, add_entry_to_hass=False)
     # Store.async_remove() is mocked by hass_storage - check that data was removed.
     assert "knx/telegrams_history.json" not in hass_storage
-    assert not hass.data[DOMAIN].telegrams.recent_telegrams
+    assert not hass.data[KNX_MODULE_KEY].telegrams.recent_telegrams

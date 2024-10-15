@@ -17,6 +17,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
 from homeassistant.components import recorder
+from homeassistant.components.lock import LockState
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
@@ -69,8 +70,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.helpers import (
@@ -166,11 +165,10 @@ async def test_shutdown_before_startup_finishes(
         await hass.async_block_till_done()
         await hass.async_stop()
 
-    def _run_information_with_session():
-        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
-        return run_information_with_session(session)
-
-    run_info = await instance.async_add_executor_job(_run_information_with_session)
+    # The database executor is shutdown so we must run the
+    # query in the main thread for testing
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    run_info = run_information_with_session(session)
 
     assert run_info.run_id == 1
     assert run_info.start is not None
@@ -216,8 +214,7 @@ async def test_shutdown_closes_connections(
     instance = recorder.get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
-    pool = instance.engine.pool
-    pool.shutdown = Mock()
+    pool = instance.engine
 
     def _ensure_connected():
         with session_scope(hass=hass, read_only=True) as session:
@@ -225,10 +222,11 @@ async def test_shutdown_closes_connections(
 
     await instance.async_add_executor_job(_ensure_connected)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-    await hass.async_block_till_done()
+    with patch.object(pool, "dispose", wraps=pool.dispose) as dispose:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
 
-    assert len(pool.shutdown.mock_calls) == 1
+    assert len(dispose.mock_calls) == 1
     with pytest.raises(RuntimeError):
         assert instance.get_session()
 
@@ -835,8 +833,8 @@ async def test_saving_state_and_removing_entity(
 ) -> None:
     """Test saving the state of a removed entity."""
     entity_id = "lock.mine"
-    hass.states.async_set(entity_id, STATE_LOCKED)
-    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, LockState.LOCKED)
+    hass.states.async_set(entity_id, LockState.UNLOCKED)
     hass.states.async_remove(entity_id)
 
     await async_wait_recording_done(hass)
@@ -849,9 +847,9 @@ async def test_saving_state_and_removing_entity(
         )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
-        assert states[0].state == STATE_LOCKED
+        assert states[0].state == LockState.LOCKED
         assert states[1].entity_id == entity_id
-        assert states[1].state == STATE_UNLOCKED
+        assert states[1].state == LockState.UNLOCKED
         assert states[2].entity_id == entity_id
         assert states[2].state is None
 

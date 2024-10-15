@@ -4,7 +4,6 @@ import logging
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
-from blebox_uniapi.feature import Feature
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 from .helpers import get_maybe_authenticated_session
@@ -75,29 +72,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class BleBoxEntity[_FeatureT: Feature](Entity):
-    """Implements a common class for entities representing a BleBox feature."""
-
-    def __init__(self, feature: _FeatureT) -> None:
-        """Initialize a BleBox entity."""
-        self._feature = feature
-        self._attr_name = feature.full_name
-        self._attr_unique_id = feature.unique_id
-        product = feature.product
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, product.unique_id)},
-            manufacturer=product.brand,
-            model=product.model,
-            name=product.name,
-            sw_version=product.firmware_version,
-            configuration_url=f"http://{product.address}",
-        )
-
-    async def async_update(self) -> None:
-        """Update the entity state."""
-        try:
-            await self._feature.async_update()
-        except Error as ex:
-            _LOGGER.error("Updating '%s' failed: %s", self.name, ex)

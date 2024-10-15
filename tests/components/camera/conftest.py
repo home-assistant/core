@@ -1,7 +1,7 @@
 """Test helpers for camera."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 
-from .common import WEBRTC_ANSWER
+from .common import STREAM_SOURCE, WEBRTC_ANSWER
 
 
 @pytest.fixture(autouse=True)
@@ -111,3 +111,19 @@ def mock_camera_with_no_name_fixture(mock_camera_with_device: None) -> Generator
         new_callable=PropertyMock(return_value=None),
     ):
         yield
+
+
+@pytest.fixture(name="mock_stream")
+async def mock_stream_fixture(hass: HomeAssistant) -> None:
+    """Initialize a demo camera platform with streaming."""
+    assert await async_setup_component(hass, "stream", {"stream": {}})
+
+
+@pytest.fixture(name="mock_stream_source")
+def mock_stream_source_fixture() -> Generator[AsyncMock]:
+    """Fixture to create an RTSP stream source."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value=STREAM_SOURCE,
+    ) as mock_stream_source:
+        yield mock_stream_source

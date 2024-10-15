@@ -84,6 +84,7 @@ from .const import (
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
@@ -113,8 +114,7 @@ from .const import (
     SERVICE_SET_WIFI_LED_ON,
     SUCCESS,
 )
-from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
-from .gateway import XiaomiGatewayDevice
+from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
 from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,6 +200,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_2H: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C: FEATURE_FLAGS_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A: FEATURE_FLAGS_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
@@ -236,7 +237,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_BUZZER,
         feature=FEATURE_SET_BUZZER,
-        name="Buzzer",
+        translation_key=ATTR_BUZZER,
         icon="mdi:volume-high",
         method_on="async_set_buzzer_on",
         method_off="async_set_buzzer_off",
@@ -245,7 +246,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
         feature=FEATURE_SET_CHILD_LOCK,
-        name="Child lock",
+        translation_key=ATTR_CHILD_LOCK,
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
@@ -254,7 +255,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DISPLAY,
         feature=FEATURE_SET_DISPLAY,
-        name="Display",
+        translation_key=ATTR_DISPLAY,
         icon="mdi:led-outline",
         method_on="async_set_display_on",
         method_off="async_set_display_off",
@@ -263,7 +264,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
         feature=FEATURE_SET_DRY,
-        name="Dry mode",
+        translation_key=ATTR_DRY,
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
@@ -272,7 +273,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
         feature=FEATURE_SET_CLEAN,
-        name="Clean mode",
+        translation_key=ATTR_CLEAN,
         icon="mdi:shimmer",
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
@@ -282,7 +283,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
         feature=FEATURE_SET_LED,
-        name="LED",
+        translation_key=ATTR_LED,
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
@@ -291,7 +292,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
         feature=FEATURE_SET_LEARN_MODE,
-        name="Learn mode",
+        translation_key=ATTR_LEARN_MODE,
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
@@ -300,7 +301,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
         feature=FEATURE_SET_AUTO_DETECT,
-        name="Auto detect",
+        translation_key=ATTR_AUTO_DETECT,
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
         entity_category=EntityCategory.CONFIG,
@@ -308,7 +309,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_IONIZER,
         feature=FEATURE_SET_IONIZER,
-        name="Ionizer",
+        translation_key=ATTR_IONIZER,
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
@@ -317,7 +318,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_ANION,
         feature=FEATURE_SET_ANION,
-        name="Ionizer",
+        translation_key=ATTR_ANION,
         icon="mdi:shimmer",
         method_on="async_set_anion_on",
         method_off="async_set_anion_off",
@@ -326,7 +327,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_PTC,
         feature=FEATURE_SET_PTC,
-        name="Auxiliary heat",
+        translation_key=ATTR_PTC,
         icon="mdi:radiator",
         method_on="async_set_ptc_on",
         method_off="async_set_ptc_off",

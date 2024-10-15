@@ -6,7 +6,6 @@ from __future__ import annotations
 import difflib
 import importlib
 from operator import itemgetter
-import os
 from pathlib import Path
 import pkgutil
 import re
@@ -15,7 +14,7 @@ import tomllib
 from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 # Requirements which can't be installed on all systems because they rely on additional
 # system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
@@ -82,8 +81,8 @@ URL_PIN = (
 )
 
 
-CONSTRAINT_PATH = os.path.join(
-    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+CONSTRAINT_PATH = (
+    Path(__file__).parent.parent / "homeassistant" / "package_constraints.txt"
 )
 CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
@@ -97,9 +96,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.59.0
-grpcio-status==1.59.0
-grpcio-reflection==1.59.0
+grpcio==1.66.2
+grpcio-status==1.66.2
+grpcio-reflection==1.66.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -119,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.4.0
+anyio==4.6.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -128,13 +127,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.0
-
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
+numpy==1.26.4
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -145,7 +138,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.17
+pydantic==1.10.18
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -164,7 +157,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.4
+protobuf==5.28.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -262,8 +255,7 @@ def explore_module(package: str, explore_children: bool) -> list[str]:
 
 def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
-    with open("pyproject.toml", "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
     return dependencies
 
@@ -276,7 +268,9 @@ def gather_recursive_requirements(
         seen = set()
 
     seen.add(domain)
-    integration = Integration(Path(f"homeassistant/components/{domain}"))
+    integration = Integration(
+        Path(f"homeassistant/components/{domain}"), _get_hassfest_config()
+    )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
@@ -342,7 +336,8 @@ def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(Path("homeassistant/components"))
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -531,7 +526,7 @@ def diff_file(filename: str, content: str) -> list[str]:
 
 def main(validate: bool, ci: bool) -> int:
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return 1
 
@@ -588,6 +583,17 @@ def main(validate: bool, ci: bool) -> int:
         Path(filename).write_text(content)
 
     return 0
+
+
+def _get_hassfest_config() -> Config:
+    """Get hassfest config."""
+    return Config(
+        root=Path().absolute(),
+        specific_integrations=None,
+        action="validate",
+        requirements=True,
+        core_integrations_path=Path("homeassistant/components"),
+    )
 
 
 if __name__ == "__main__":

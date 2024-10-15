@@ -69,9 +69,9 @@ class JuiceNetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

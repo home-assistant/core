@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioambient"],
-  "requirements": ["aioambient==2024.01.0"]
+  "requirements": ["aioambient==2024.08.0"]
 }

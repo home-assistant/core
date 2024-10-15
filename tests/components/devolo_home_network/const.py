@@ -171,3 +171,5 @@ PLCNET_ATTACHED = LogicalNetwork(
         },
     ],
 )
+
+UPTIME = 100

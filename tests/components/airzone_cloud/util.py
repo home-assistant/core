@@ -24,12 +24,17 @@ from aioairzone_cloud.const import (
     API_CELSIUS,
     API_CONFIG,
     API_CONNECTION_DATE,
+    API_CONSUMPTION_UE,
     API_CPU_WS,
     API_DEVICE_ID,
     API_DEVICES,
+    API_DISCH_COMP_TEMP_UE,
     API_DISCONNECTION_DATE,
     API_DOUBLE_SET_POINT,
     API_ERRORS,
+    API_EXCH_HEAT_TEMP_IU,
+    API_EXCH_HEAT_TEMP_UE,
+    API_EXT_TEMP,
     API_FAH,
     API_FREE,
     API_FREE_MEM,
@@ -46,6 +51,8 @@ from aioairzone_cloud.const import (
     API_MODE_AVAIL,
     API_NAME,
     API_OLD_ID,
+    API_PC_UE,
+    API_PE_UE,
     API_POWER,
     API_POWERFUL_MODE,
     API_RAD_ACTIVE,
@@ -69,6 +76,7 @@ from aioairzone_cloud.const import (
     API_RANGE_SP_MIN_HOT_AIR,
     API_RANGE_SP_MIN_STOP_AIR,
     API_RANGE_SP_MIN_VENT_AIR,
+    API_RETURN_TEMP,
     API_SETPOINT,
     API_SP_AIR_AUTO,
     API_SP_AIR_COOL,
@@ -94,6 +102,7 @@ from aioairzone_cloud.const import (
     API_THERMOSTAT_TYPE,
     API_TYPE,
     API_WARNINGS,
+    API_WORK_TEMP,
     API_WS_CONNECTED,
     API_WS_FW,
     API_WS_ID,
@@ -266,6 +275,18 @@ GET_WEBSERVER_MOCK_AIDOO_PRO = {
 def mock_get_device_config(device: Device) -> dict[str, Any]:
     """Mock API device config."""
 
+    if device.get_id() == "aidoo_pro":
+        return {
+            API_CONSUMPTION_UE: 3,
+            API_DISCH_COMP_TEMP_UE: {API_CELSIUS: 121, API_FAH: -250},
+            API_EXCH_HEAT_TEMP_IU: {API_CELSIUS: 26, API_FAH: 79},
+            API_EXCH_HEAT_TEMP_UE: {API_CELSIUS: -25, API_FAH: -13},
+            API_EXT_TEMP: {API_CELSIUS: 29, API_FAH: 84},
+            API_PC_UE: 0.15,
+            API_PE_UE: 0.02,
+            API_RETURN_TEMP: {API_CELSIUS: 26, API_FAH: 79},
+            API_WORK_TEMP: {API_CELSIUS: 25, API_FAH: 77},
+        }
     if device.get_id() == "system1":
         return {
             API_SYSTEM_FW: "3.35",

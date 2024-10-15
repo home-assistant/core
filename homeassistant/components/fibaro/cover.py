@@ -18,8 +18,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -35,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroCover(FibaroDevice, CoverEntity):
+class FibaroCover(FibaroEntity, CoverEntity):
     """Representation a Fibaro Cover."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:

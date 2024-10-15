@@ -164,13 +164,18 @@ async def test_options(
     )
     options = await hass.config_entries.options.async_configure(
         options_flow["flow_id"],
-        {ollama.CONF_PROMPT: "test prompt", ollama.CONF_MAX_HISTORY: 100},
+        {
+            ollama.CONF_PROMPT: "test prompt",
+            ollama.CONF_MAX_HISTORY: 100,
+            ollama.CONF_NUM_CTX: 32768,
+        },
     )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"] == {
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
+        ollama.CONF_NUM_CTX: 32768,
     }
 
 
@@ -199,6 +204,10 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     assert result2["errors"] == {"base": error}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.ollama.config.abort.download_failed"],
+)
 async def test_download_error(hass: HomeAssistant) -> None:
     """Test we handle errors while downloading a model."""
     result = await hass.config_entries.flow.async_init(

@@ -198,13 +198,7 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
 async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) -> None:
     """Test reconfigure flow."""
-    reconfigure_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    reconfigure_result = await mock_config.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "reconfigure"
 
@@ -228,13 +222,7 @@ async def test_reconfigure_invalid_config_entry(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
@@ -265,13 +253,7 @@ async def test_reconfigure_invalid_api_key(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
@@ -301,13 +283,7 @@ async def test_reconfigure_transport_error(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
@@ -337,13 +313,7 @@ async def test_reconfigure_timeout(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(

@@ -50,6 +50,10 @@ async def test_user_selection(
     assert result == snapshot
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.gardena_bluetooth.config.abort.cannot_connect"],
+)
 async def test_failed_connect(
     hass: HomeAssistant,
     mock_client: Mock,

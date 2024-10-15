@@ -929,6 +929,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -968,6 +969,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -1933,6 +1935,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -1972,6 +1975,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -2665,6 +2669,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -2704,6 +2709,7 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),

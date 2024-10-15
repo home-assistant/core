@@ -14,7 +14,7 @@ import logging
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -140,7 +140,6 @@ from .const import (
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
-    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_BAUDRATE,
     CONF_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_CONSIDER_UNAVAILABLE_MAINS,
@@ -150,6 +149,7 @@ from .const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_ENABLE_MAINS_STARTUP_POLLING,
     CONF_ENABLE_QUIRKS,
     CONF_FLOW_CONTROL,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
@@ -170,10 +170,7 @@ if TYPE_CHECKING:
     from .entity import ZHAEntity
     from .update import ZHAFirmwareUpdateCoordinator
 
-    _LogFilterType = Filter | Callable[[LogRecord], bool]
-
-_P = ParamSpec("_P")
-_EntityT = TypeVar("_EntityT", bound="ZHAEntity")
+    type _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -620,9 +617,11 @@ class ZHAGatewayProxy(EventBase):
                     ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
-                    ATTR_MODEL: event.device_info.model
-                    if event.device_info.model
-                    else UNKNOWN_MODEL,
+                    ATTR_MODEL: (
+                        event.device_info.model
+                        if event.device_info.model
+                        else UNKNOWN_MODEL
+                    ),
                     ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                     ATTR_SIGNATURE: event.device_info.signature,
                 },
@@ -802,21 +801,24 @@ class ZHAGatewayProxy(EventBase):
                 )
 
     def _cleanup_group_entity_registry_entries(
-        self, zigpy_group: zigpy.group.Group
+        self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
         """Remove entity registry entries for group entities when the groups are removed from HA."""
         # first we collect the potential unique ids for entities that could be created from this group
         possible_entity_unique_ids = [
-            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
         ]
 
         # then we get all group entity entries tied to the coordinator
         entity_registry = er.async_get(self.hass)
-        assert self.coordinator_zha_device
+        assert self.gateway.coordinator_zha_device
+        coordinator_proxy = self.device_proxies[
+            self.gateway.coordinator_zha_device.ieee
+        ]
         all_group_entity_entries = er.async_entries_for_device(
             entity_registry,
-            self.coordinator_zha_device.device_id,
+            coordinator_proxy.device_id,
             include_disabled_entities=True,
         )
 
@@ -922,9 +924,7 @@ class LogRelayHandler(logging.Handler):
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
         self.paths_re = re.compile(
-            r"(?:{})/(.*)".format(
-                "|".join([re.escape(x) for x in (hass_path, config_dir)])
-            )
+            rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
     def emit(self, record: LogRecord) -> None:
@@ -1012,16 +1012,12 @@ def async_get_zha_device_proxy(hass: HomeAssistant, device_id: str) -> ZHADevice
         _LOGGER.error("Device id `%s` not found in registry", device_id)
         raise KeyError(f"Device id `{device_id}` not found in registry.")
     zha_gateway_proxy = get_zha_gateway_proxy(hass)
-    try:
-        ieee_address = list(registry_device.identifiers)[0][1]
-        ieee = EUI64.convert(ieee_address)
-    except (IndexError, ValueError) as ex:
-        _LOGGER.error(
-            "Unable to determine device IEEE for device with device id `%s`", device_id
-        )
-        raise KeyError(
-            f"Unable to determine device IEEE for device with device id `{device_id}`."
-        ) from ex
+    ieee_address = next(
+        identifier
+        for domain, identifier in registry_device.identifiers
+        if domain == DOMAIN
+    )
+    ieee = EUI64.convert(ieee_address)
     return zha_gateway_proxy.device_proxies[ieee]
 
 
@@ -1029,9 +1025,9 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
     """Convert a cluster command schema to a voluptuous schema."""
     return vol.Schema(
         {
-            vol.Optional(field.name)
-            if field.optional
-            else vol.Required(field.name): schema_type_to_vol(field.type)
+            (
+                vol.Optional(field.name) if field.optional else vol.Required(field.name)
+            ): schema_type_to_vol(field.type)
             for field in schema.fields
         }
     )
@@ -1111,7 +1107,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 
 
 @callback
-async def async_add_entities(
+def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
     entity_class: type[ZHAEntity],
     entities: list[EntityData],
@@ -1156,7 +1152,6 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
-        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
         vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
@@ -1167,7 +1162,9 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
             CONF_CONSIDER_UNAVAILABLE_BATTERY,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
         ): cv.positive_int,
-    }
+        vol.Required(CONF_ENABLE_MAINS_STARTUP_POLLING, default=True): cv.boolean,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 CONF_ZHA_ALARM_SCHEMA = vol.Schema(
@@ -1231,13 +1228,13 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         enable_light_transitioning_flag=zha_options.get(
             CONF_ENABLE_LIGHT_TRANSITIONING_FLAG
         ),
-        always_prefer_xy_color_mode=zha_options.get(CONF_ALWAYS_PREFER_XY_COLOR_MODE),
         group_members_assume_state=zha_options.get(CONF_GROUP_MEMBERS_ASSUME_STATE),
     )
     device_options: DeviceOptions = DeviceOptions(
         enable_identify_on_join=zha_options.get(CONF_ENABLE_IDENTIFY_ON_JOIN),
         consider_unavailable_mains=zha_options.get(CONF_CONSIDER_UNAVAILABLE_MAINS),
         consider_unavailable_battery=zha_options.get(CONF_CONSIDER_UNAVAILABLE_BATTERY),
+        enable_mains_startup_polling=zha_options.get(CONF_ENABLE_MAINS_STARTUP_POLLING),
     )
     acp_options: AlarmControlPanelOptions = AlarmControlPanelOptions(
         master_code=ha_acp_options.get(CONF_ALARM_MASTER_CODE),
@@ -1278,7 +1275,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-def convert_zha_error_to_ha_error(
+def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""

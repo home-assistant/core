@@ -151,7 +151,7 @@ async def setup_device(
         )
     if device.pv == "A01":
         return await setup_device_a01(hass, user_data, device, product_info)
-    _LOGGER.info(
+    _LOGGER.warning(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
         device.pv,
@@ -168,7 +168,9 @@ async def setup_device_v1(
     home_data_rooms: list[HomeDataRoom],
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
-    mqtt_client = RoborockMqttClientV1(user_data, DeviceData(device, product_info.name))
+    mqtt_client = await hass.async_add_executor_job(
+        RoborockMqttClientV1, user_data, DeviceData(device, product_info.name)
+    )
     try:
         networking = await mqtt_client.get_networking()
         if networking is None:

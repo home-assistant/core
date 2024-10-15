@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
-    DOMAIN,
+    DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     SERVICE_SEND_MESSAGE,
     BaseNotificationService,
@@ -115,7 +115,10 @@ class GroupNotifyPlatform(BaseNotificationService):
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
-                        DOMAIN, entity[CONF_ACTION], sending_payload, blocking=True
+                        NOTIFY_DOMAIN,
+                        entity[CONF_ACTION],
+                        sending_payload,
+                        blocking=True,
                     )
                 )
             )
@@ -172,7 +175,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to all members of the group."""
         await self.hass.services.async_call(
-            DOMAIN,
+            NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
                 ATTR_MESSAGE: message,

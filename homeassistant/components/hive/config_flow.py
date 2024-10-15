@@ -163,11 +163,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user(data)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import user."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     @staticmethod
     @callback

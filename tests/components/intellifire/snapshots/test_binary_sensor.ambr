@@ -1,0 +1,717 @@
+# serializer version: 1
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_accessory_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Accessory error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'accessory_error',
+    'unique_id': 'error_accessory_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Accessory error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_accessory_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_disabled_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Disabled error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disabled_error',
+    'unique_id': 'error_disabled_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Disabled error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_disabled_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_ecm_offline_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'ECM offline error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ecm_offline_error',
+    'unique_id': 'error_ecm_offline_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire ECM offline error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_ecm_offline_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_fan_delay_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Fan delay error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_delay_error',
+    'unique_id': 'error_fan_delay_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Fan delay error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_fan_delay_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_fan_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Fan error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_error',
+    'unique_id': 'error_fan_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Fan error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_fan_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.intellifire_flame',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flame',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flame',
+    'unique_id': 'on_off_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'friendly_name': 'IntelliFire Flame',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_flame',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_flame_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Flame Error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flame_error',
+    'unique_id': 'error_flame_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Flame Error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_flame_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_lights_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Lights error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lights_error',
+    'unique_id': 'error_lights_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Lights error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_lights_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_maintenance_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Maintenance error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'maintenance_error',
+    'unique_id': 'error_maintenance_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Maintenance error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_maintenance_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_offline_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Offline error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'offline_error',
+    'unique_id': 'error_offline_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Offline error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_offline_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_pilot_flame_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Pilot flame error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pilot_flame_error',
+    'unique_id': 'error_pilot_flame_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Pilot flame error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_pilot_flame_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.intellifire_pilot_light_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pilot light on',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pilot_light_on',
+    'unique_id': 'pilot_light_on_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'friendly_name': 'IntelliFire Pilot light on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_pilot_light_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.intellifire_soft_lock_out_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Soft lock out error',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'soft_lock_out_error',
+    'unique_id': 'error_soft_lock_out_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'problem',
+      'friendly_name': 'IntelliFire Soft lock out error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_soft_lock_out_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.intellifire_thermostat_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat on',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'thermostat_on',
+    'unique_id': 'thermostat_on_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'friendly_name': 'IntelliFire Thermostat on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_thermostat_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.intellifire_timer_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer on',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_on',
+    'unique_id': 'timer_on_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'friendly_name': 'IntelliFire Timer on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.intellifire_timer_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

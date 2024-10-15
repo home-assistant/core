@@ -22,6 +22,10 @@ CLIENT_SECRET = "6789"
 DOMAIN = "yolink"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.yolink.config.abort.missing_credentials"],
+)
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -172,15 +176,7 @@ async def test_reauthentication(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

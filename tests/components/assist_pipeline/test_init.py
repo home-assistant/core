@@ -22,8 +22,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BYTES_ONE_SECOND,
-    MockSttProvider,
-    MockSttProviderEntity,
+    MockSTTProvider,
+    MockSTTProviderEntity,
     MockTTSProvider,
     MockWakeWordEntity,
     make_10ms_chunk,
@@ -47,7 +47,7 @@ def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
 
 async def test_pipeline_from_audio_stream_auto(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -80,15 +80,15 @@ async def test_pipeline_from_audio_stream_auto(
     )
 
     assert process_events(events) == snapshot
-    assert len(mock_stt_provider.received) == 2
-    assert mock_stt_provider.received[0].startswith(b"part1")
-    assert mock_stt_provider.received[1].startswith(b"part2")
+    assert len(mock_stt_provider_entity.received) == 2
+    assert mock_stt_provider_entity.received[0].startswith(b"part1")
+    assert mock_stt_provider_entity.received[1].startswith(b"part2")
 
 
 async def test_pipeline_from_audio_stream_legacy(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -153,7 +153,7 @@ async def test_pipeline_from_audio_stream_legacy(
 async def test_pipeline_from_audio_stream_entity(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -218,7 +218,7 @@ async def test_pipeline_from_audio_stream_entity(
 async def test_pipeline_from_audio_stream_no_stt(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -281,7 +281,7 @@ async def test_pipeline_from_audio_stream_no_stt(
 async def test_pipeline_from_audio_stream_unknown_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -319,7 +319,7 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
 
 async def test_pipeline_from_audio_stream_wake_word(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     snapshot: SnapshotAssertion,
@@ -381,21 +381,21 @@ async def test_pipeline_from_audio_stream_wake_word(
     # 2. queued audio (from mock wake word entity)
     # 3. part1
     # 4. part2
-    assert len(mock_stt_provider.received) > 3
+    assert len(mock_stt_provider_entity.received) > 3
 
     first_chunk = bytes(
-        [c_byte for c in mock_stt_provider.received[:-3] for c_byte in c]
+        [c_byte for c in mock_stt_provider_entity.received[:-3] for c_byte in c]
     )
     assert first_chunk == wake_chunk_1[len(wake_chunk_1) // 2 :] + wake_chunk_2
 
-    assert mock_stt_provider.received[-3] == b"queued audio"
-    assert mock_stt_provider.received[-2].startswith(b"part1")
-    assert mock_stt_provider.received[-1].startswith(b"part2")
+    assert mock_stt_provider_entity.received[-3] == b"queued audio"
+    assert mock_stt_provider_entity.received[-2].startswith(b"part1")
+    assert mock_stt_provider_entity.received[-1].startswith(b"part2")
 
 
 async def test_pipeline_save_audio(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -474,7 +474,7 @@ async def test_pipeline_save_audio(
 
 async def test_pipeline_saved_audio_with_device_id(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -529,7 +529,7 @@ async def test_pipeline_saved_audio_with_device_id(
 
 async def test_pipeline_saved_audio_write_error(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -578,7 +578,7 @@ async def test_pipeline_saved_audio_write_error(
 
 async def test_pipeline_saved_audio_empty_queue(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -641,7 +641,7 @@ async def test_pipeline_saved_audio_empty_queue(
 
 async def test_wake_word_detection_aborted(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
@@ -788,13 +788,12 @@ async def test_tts_audio_output(
         assert len(extra_options) == 0, extra_options
 
 
-async def test_tts_supports_preferred_format(
+async def test_tts_wav_preferred_format(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_tts_provider: MockTTSProvider,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that preferred format options are given to the TTS system if supported."""
     client = await hass_client()
@@ -829,6 +828,7 @@ async def test_tts_supports_preferred_format(
             tts.ATTR_PREFERRED_FORMAT,
             tts.ATTR_PREFERRED_SAMPLE_RATE,
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES,
         ]
     )
 
@@ -850,6 +850,80 @@ async def test_tts_supports_preferred_format(
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
 
         # We should have received preferred format options in get_tts_audio
-        assert tts.ATTR_PREFERRED_FORMAT in options
-        assert tts.ATTR_PREFERRED_SAMPLE_RATE in options
-        assert tts.ATTR_PREFERRED_SAMPLE_CHANNELS in options
+        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 16000
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 1
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
+
+
+async def test_tts_dict_preferred_format(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_provider: MockTTSProvider,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that preferred format options are given to the TTS system if supported."""
+    client = await hass_client()
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        tts_input="This is a test.",
+        conversation_id=None,
+        device_id=None,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.TTS,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=events.append,
+            tts_audio_output={
+                tts.ATTR_PREFERRED_FORMAT: "flac",
+                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
+                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
+                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            },
+        ),
+    )
+    await pipeline_input.validate()
+
+    # Make the TTS provider support preferred format options
+    supported_options = list(mock_tts_provider.supported_options or [])
+    supported_options.extend(
+        [
+            tts.ATTR_PREFERRED_FORMAT,
+            tts.ATTR_PREFERRED_SAMPLE_RATE,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES,
+        ]
+    )
+
+    with (
+        patch.object(mock_tts_provider, "_supported_options", supported_options),
+        patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio,
+    ):
+        await pipeline_input.execute()
+
+        for event in events:
+            if event.type == assist_pipeline.PipelineEventType.TTS_END:
+                # We must fetch the media URL to trigger the TTS
+                assert event.data
+                media_id = event.data["tts_output"]["media_id"]
+                resolved = await media_source.async_resolve_media(hass, media_id, None)
+                await client.get(resolved.url)
+
+        assert mock_get_tts_audio.called
+        options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
+
+        # We should have received preferred format options in get_tts_audio
+        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "flac"
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 48000
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 2
+        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2

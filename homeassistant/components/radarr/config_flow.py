@@ -10,6 +10,7 @@ from aiopyarr import exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -26,7 +27,9 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     entry: RadarrConfigEntry | None = None
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
@@ -52,6 +55,12 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = dict(self.entry.data) if self.entry else None
 
         else:
+            # aiopyarr defaults to the service port if one isn't given
+            # this is counter to standard practice  where http = 80
+            # and https = 443.
+            url = URL(user_input[CONF_URL])
+            user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+
             try:
                 if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]

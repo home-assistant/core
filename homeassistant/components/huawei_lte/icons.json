@@ -53,7 +53,11 @@
     }
   },
   "services": {
-    "resume_integration": "mdi:play-pause",
-    "suspend_integration": "mdi:pause"
+    "resume_integration": {
+      "service": "mdi:play-pause"
+    },
+    "suspend_integration": {
+      "service": "mdi:pause"
+    }
   }
 }

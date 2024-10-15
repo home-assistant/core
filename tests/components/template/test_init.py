@@ -51,7 +51,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_p
         },
     ],
 )
-async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -102,7 +103,8 @@ async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_can_remove(hass: HomeAssistant) -> None:
     """Test that we can reload and remove all template sensors."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -132,9 +134,8 @@ async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_stops_on_invalid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     """Test we stop the reload if configuration.yaml is completely broken."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -162,9 +163,8 @@ async def test_reloadable_stops_on_invalid_config(
         },
     ],
 )
-async def test_reloadable_handles_partial_valid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -195,7 +195,8 @@ async def test_reloadable_handles_partial_valid_config(
         },
     ],
 )
-async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await async_setup_component(
@@ -239,8 +240,9 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> N
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_reload_sensors_that_reference_other_template_sensors(
-    hass: HomeAssistant, start_ha
+    hass: HomeAssistant,
 ) -> None:
     """Test that we can reload sensor that reference other template sensors."""
     await async_yaml_patch_helper(hass, "ref_configuration.yaml")
@@ -319,15 +321,25 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "template_type": "number",
                 "name": "My template",
                 "state": "{{ 10 }}",
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "state": "{{ 11 }}",
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
@@ -443,4 +455,41 @@ async def test_change_device(
             device_registry, template_config_entry.entry_id
         )
         == []
+    )
+
+
+async def test_fail_non_numerical_number_settings(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that non numerical number options causes config entry setup to fail.
+
+    Support for non numerical max, min and step was added in HA Core 2024.9.0 and
+    removed in HA Core 2024.9.1.
+    """
+
+    options = {
+        "template_type": "number",
+        "name": "My template",
+        "state": "{{ 10 }}",
+        "min": "{{ 0 }}",
+        "max": "{{ 100 }}",
+        "step": "{{ 0.1 }}",
+        "set_value": {
+            "action": "input_number.set_value",
+            "target": {"entity_id": "input_number.test"},
+            "data": {"value": "{{ value }}"},
+        },
+    }
+    # Setup the config entry
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options=options,
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(template_config_entry.entry_id)
+    assert (
+        "The 'My template' number template needs to be reconfigured, "
+        "max must be a number, got '{{ 100 }}'" in caplog.text
     )

@@ -22,7 +22,7 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
-from functools import cached_property
+from propcache import cached_property
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report
@@ -221,12 +221,20 @@ type LoaderType = FastSafeLoader | PythonSafeLoader
 def load_yaml(
     fname: str | os.PathLike[str], secrets: Secrets | None = None
 ) -> JSON_TYPE | None:
-    """Load a YAML file."""
+    """Load a YAML file.
+
+    If opening the file raises an OSError it will be wrapped in a HomeAssistantError,
+    except for FileNotFoundError which will be re-raised.
+    """
     try:
         with open(fname, encoding="utf-8") as conf_file:
             return parse_yaml(conf_file, secrets)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
+        raise HomeAssistantError(exc) from exc
+    except FileNotFoundError:
+        raise
+    except OSError as exc:
         raise HomeAssistantError(exc) from exc
 
 
@@ -377,7 +385,7 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
-            f"{node.start_mark}: Unable to read file {fname}."
+            f"{node.start_mark}: Unable to read file {fname}"
         ) from exc
 
 

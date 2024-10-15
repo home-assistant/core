@@ -72,7 +72,7 @@ async def test_block_restored_number(
 ) -> None:
     """Test block restored number."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     capabilities = {
         "min": 0,
         "max": 100,
@@ -86,6 +86,7 @@ async def test_block_restored_number(
         "device_0-valvePos",
         entry,
         capabilities,
+        device_id=device.id,
     )
     extra_data = {
         "native_max_value": 100,
@@ -118,7 +119,7 @@ async def test_block_restored_number_no_last_state(
 ) -> None:
     """Test block restored number missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     capabilities = {
         "min": 0,
         "max": 100,
@@ -132,6 +133,7 @@ async def test_block_restored_number_no_last_state(
         "device_0-valvePos",
         entry,
         capabilities,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)

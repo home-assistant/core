@@ -17,6 +17,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -499,6 +500,10 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.bla"],
+)
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
@@ -791,9 +796,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.OK
     data2 = await resp2.json()
@@ -829,9 +832,7 @@ async def test_get_progress_flow_unauth(
 
     hass_admin_user.groups = []
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.UNAUTHORIZED
 
@@ -1321,8 +1322,27 @@ async def test_disable_entry_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
+@pytest.mark.parametrize(
+    (
+        "flow_context",
+        "entry_discovery_keys",
+    ),
+    [
+        (
+            {},
+            {},
+        ),
+        (
+            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
+            {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
+        ),
+    ],
+)
 async def test_ignore_flow(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    flow_context: dict,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
 ) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
@@ -1345,7 +1365,7 @@ async def test_ignore_flow(
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_USER}
+            "test", context={"source": core_ce.SOURCE_USER} | flow_context
         )
         assert result["type"] is FlowResultType.FORM
 
@@ -1367,6 +1387,8 @@ async def test_ignore_flow(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Test Integration"
+    assert entry.data == {}
+    assert entry.discovery_keys == entry_discovery_keys
 
 
 async def test_ignore_flow_nonexisting(
@@ -2333,6 +2355,10 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.reconfigure_successful"],
+)
 @pytest.mark.usefixtures("enable_custom_integrations", "freezer")
 async def test_supports_reconfigure(
     hass: HomeAssistant,
@@ -2344,6 +2370,9 @@ async def test_supports_reconfigure(
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1")
+    entry.add_to_hass(hass)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -2358,8 +2387,10 @@ async def test_supports_reconfigure(
                 return self.async_show_form(
                     step_id="reconfigure", data_schema=vol.Schema({})
                 )
-            return self.async_create_entry(
-                title="Test Entry", data={"secret": "account_token"}
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title="Test Entry",
+                data={"secret": "account_token"},
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -2395,36 +2426,12 @@ async def test_supports_reconfigure(
     assert len(entries) == 1
 
     data = await resp.json()
-    timestamp = utcnow().timestamp()
     data.pop("flow_id")
     assert data == {
         "handler": "test",
-        "title": "Test Entry",
-        "type": "create_entry",
-        "version": 1,
-        "result": {
-            "created_at": timestamp,
-            "disabled_by": None,
-            "domain": "test",
-            "entry_id": entries[0].entry_id,
-            "error_reason_translation_key": None,
-            "error_reason_translation_placeholders": None,
-            "modified_at": timestamp,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "reason": None,
-            "source": core_ce.SOURCE_RECONFIGURE,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_options": False,
-            "supports_reconfigure": True,
-            "supports_remove_device": False,
-            "supports_unload": False,
-            "title": "Test Entry",
-        },
-        "description": None,
+        "reason": "reconfigure_successful",
+        "type": "abort",
         "description_placeholders": None,
-        "options": {},
-        "minor_version": 1,
     }
 
 
