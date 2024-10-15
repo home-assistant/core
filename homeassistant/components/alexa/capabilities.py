@@ -1141,6 +1141,18 @@ class AlexaThermostatController(AlexaCapability):
         """Return True if properties can be retrieved."""
         return True
 
+    def _get_temp(self, name: str) -> Any | None:
+        if name == "targetSetpoint":
+            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
+        elif name == "lowerSetpoint":
+            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
+        elif name == "upperSetpoint":
+            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
+        else:
+            raise UnsupportedProperty(name)
+
+        return temp
+
     def get_property(self, name: str) -> Any:
         """Read and return a property."""
         if self.entity.state == STATE_UNAVAILABLE:
@@ -1169,14 +1181,7 @@ class AlexaThermostatController(AlexaCapability):
             return mode
 
         unit = self.hass.config.units.temperature_unit
-        if name == "targetSetpoint":
-            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
-        elif name == "lowerSetpoint":
-            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
-        elif name == "upperSetpoint":
-            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
-        else:
-            raise UnsupportedProperty(name)
+        temp = self._get_temp(name)
 
         if temp is None:
             return None
