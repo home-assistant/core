@@ -175,13 +175,6 @@ class CameraCapabilities:
 
     frontend_stream_types: set[StreamType]
 
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-
-        return {
-            "frontendStreamTypes": self.frontend_stream_types,
-        }
-
 
 @bind_hass
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
@@ -890,7 +883,7 @@ async def ws_camera_capabilities(
     try:
         camera = get_camera_from_entity_id(hass, msg["entity_id"])
         capabilities = camera.get_camera_capabilities()
-        connection.send_result(msg["id"], capabilities.to_frontend_dict())
+        connection.send_result(msg["id"], asdict(capabilities))
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting camera capabilities: %s", ex)
         connection.send_error(msg["id"], "camera_capabilities_failed", str(ex))
