@@ -20,7 +20,9 @@
           "use_knowledgebase": "Activate Knowledgebase",
           "model_id": "Model",
           "prompt_context": "Prompt Context",
-          "knowledgebase_id": "Knowledge Base"
+          "knowledgebase_id": "Knowledge Base",
+          "agent_id": "Agent",
+          "agent_alias_id": "AliasId"
         }
       }
     },
@@ -39,7 +41,9 @@
         "data": {
           "model_id": "Model",
           "prompt_context": "Prompt Context",
-          "knowledgebase_id": "Knowledge Base"
+          "knowledgebase_id": "Knowledge Base",
+          "agent_id": "Agent",
+          "agent_alias_id": "AliasId"
         }
       }
     }

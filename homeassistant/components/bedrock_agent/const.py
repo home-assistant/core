@@ -9,6 +9,8 @@ CONST_KEY_SECRET: Final = "key_secret"
 CONST_REGION: Final = "region"
 CONST_MODEL_ID: Final = "model_id"
 CONST_KNOWLEDGEBASE_ID: Final = "knowledgebase_id"
+CONST_AGENT_ID: Final = "agent_id"
+CONST_AGENT_ALIAS_ID: Final = "agent_alias_id"
 CONST_TITLE: Final = "title"
 
 CONST_PROMPT_CONTEXT: Final = "prompt_context"

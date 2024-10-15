@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.error import HTTPError
 from urllib.request import urlopen
+import uuid
 
 import boto3
 from botocore.exceptions import ClientError
@@ -32,6 +33,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
 
 from .const import (
+    CONST_AGENT_ALIAS_ID,
+    CONST_AGENT_ID,
     CONST_KEY_ID,
     CONST_KEY_SECRET,
     CONST_KNOWLEDGEBASE_ID,
@@ -229,13 +232,38 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         """Return a list of supported models."""
         return CONST_MODEL_LIST
 
-    async def async_call_bedrock(self, question) -> str:
+    async def async_call_bedrock(
+        self, question, conversation_id=uuid.uuid4().hex
+    ) -> str:
         """Return result from Amazon Bedrock."""
 
         question = self.entry.options[CONST_PROMPT_CONTEXT] + question
 
         modelId = self.entry.options[CONST_MODEL_ID]
         knowledgebaseId = self.entry.options.get(CONST_KNOWLEDGEBASE_ID) or ""
+        configAgentId = self.entry.options.get(CONST_AGENT_ID) or ""
+        configAgentAliasId = (
+            self.entry.options.get(CONST_AGENT_ALIAS_ID) or "TSTALIASID"
+        )
+
+        if configAgentId != "":
+            bedrock_agent_response = await self.hass.async_add_executor_job(
+                partial(
+                    self.bedrock_agent.invoke_agent,
+                    agentId=configAgentId,
+                    agentAliasId=configAgentAliasId,
+                    sessionId=conversation_id,
+                    inputText=question,
+                ),
+            )
+
+            completion = ""
+
+            for event in bedrock_agent_response.get("completion"):
+                chunk = event["chunk"]
+                completion = completion + chunk["bytes"].decode()
+
+            return completion
 
         if knowledgebaseId != "":
             agent_input = {"text": question}
@@ -282,6 +310,8 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         """Process a sentence."""
         response = IntentResponse(language=user_input.language)
 
+        conversatioin_id = user_input.conversation_id or uuid.uuid4().hex
+
         try:
             answer = await self.async_call_bedrock(user_input.text)
             response.async_set_speech(answer)
@@ -290,4 +320,6 @@ class BedrockAgent(conversation.AbstractConversationAgent):
                 IntentResponseErrorCode.FAILED_TO_HANDLE, error.args[0]
             )
 
-        return agent_manager.ConversationResult(conversation_id=None, response=response)
+        return agent_manager.ConversationResult(
+            conversation_id=conversatioin_id, response=response
+        )

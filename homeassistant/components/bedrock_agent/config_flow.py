@@ -21,6 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import (
+    CONST_AGENT_ALIAS_ID,
+    CONST_AGENT_ID,
     CONST_KEY_ID,
     CONST_KEY_SECRET,
     CONST_KNOWLEDGEBASE_ID,
@@ -53,6 +55,7 @@ STEP_MODELCONFIG_DATA_SCHEMA = vol.Schema(
             selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
         ),
         vol.Optional(CONST_KNOWLEDGEBASE_ID): str,
+        vol.Optional(CONST_AGENT_ID): str,
     }
 )
 
@@ -114,6 +117,31 @@ async def get_knowledgebases_selectOptionDict(
     return knowledgebases_list
 
 
+async def get_agents_selectOptionDict(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> Sequence[selector.SelectOptionDict]:
+    """Return available knowledgebases."""
+
+    bedrock_agent = boto3.client(
+        service_name="bedrock-agent",
+        region_name=data.get(CONST_REGION),
+        aws_access_key_id=data.get(CONST_KEY_ID),
+        aws_secret_access_key=data.get(CONST_KEY_SECRET),
+    )
+
+    response = await hass.async_add_executor_job(bedrock_agent.list_agents)
+    agents = response.get("agentSummaries")
+    agents_list = [
+        selector.SelectOptionDict(
+            {"value": a.get("agentId"), "label": a.get("agentName")}
+        )
+        for a in agents
+    ]
+    agents_list.insert(0, selector.SelectOptionDict({"value": "", "label": "None"}))
+
+    return agents_list
+
+
 class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Bedrock Agent."""
 
@@ -156,6 +184,8 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass, self.config_data
         )
 
+        agents = await get_agents_selectOptionDict(self.hass, self.config_data)
+
         modelconfig_schema = vol.Schema(
             {
                 vol.Optional(
@@ -168,6 +198,13 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONST_KNOWLEDGEBASE_ID): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=knowledgebases),
                 ),
+                vol.Optional(CONST_AGENT_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=agents),
+                ),
+                vol.Optional(
+                    CONST_AGENT_ALIAS_ID,
+                    default="",
+                ): str,
             }
         )
 
@@ -217,6 +254,10 @@ class OptionsFlowHandler(OptionsFlow):
             self.hass, self.config_entry.data.copy()
         )
 
+        agents = await get_agents_selectOptionDict(
+            self.hass, self.config_entry.data.copy()
+        )
+
         options_schema = vol.Schema(
             {
                 vol.Required(
@@ -242,6 +283,22 @@ class OptionsFlowHandler(OptionsFlow):
                     },
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=knowledgebases),
+                ),
+                vol.Optional(
+                    CONST_AGENT_ID,
+                    description={
+                        "suggested_value": self.config_entry.options.get(CONST_AGENT_ID)
+                    },
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=agents),
+                ),
+                vol.Optional(
+                    CONST_AGENT_ALIAS_ID,
+                    default=self.config_entry.options.get(CONST_AGENT_ALIAS_ID) or "",
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT, multiline=False
+                    )
                 ),
             }
         )
