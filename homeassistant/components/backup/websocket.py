@@ -58,7 +58,7 @@ async def handle_details(
     msg: dict[str, Any],
 ) -> None:
     """Get backup details for a specific slug."""
-    backup = await hass.data[DATA_MANAGER].get_backup(msg["slug"])
+    backup = await hass.data[DATA_MANAGER].async_get_backup(slug=msg["slug"])
     connection.send_result(
         msg["id"],
         {

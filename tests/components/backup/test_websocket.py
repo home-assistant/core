@@ -81,7 +81,7 @@ async def test_details(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.get_backup",
+        "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         return_value=backup_content,
     ):
         await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
