@@ -498,7 +498,7 @@ async def _ensure_translation_exists(
     ):
         return
 
-    raise ValueError(
+    pytest.fail(
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
@@ -556,7 +556,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
 
     unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
     if unused_ignore:
-        raise ValueError(
+        pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
