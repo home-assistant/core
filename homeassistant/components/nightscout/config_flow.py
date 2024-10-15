@@ -8,16 +8,21 @@ from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, MG_DL, MMOL_L
 from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
-
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): str,
+        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In([MG_DL, MMOL_L]),
+    }
+)
 
 async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""

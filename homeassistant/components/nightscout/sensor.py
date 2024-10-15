@@ -11,11 +11,11 @@ from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_DATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN, MMOL_L, MG_DL
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -31,18 +31,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    unit = entry.data.get(CONF_UNIT_OF_MEASUREMENT, MG_DL)
+    async_add_entities(
+        [NightscoutSensor(api, "Blood Sugar", entry.unique_id, unit)], True
+    )
 
 
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    _attr_native_unit_of_measurement = "mg/dL"
     _attr_icon = "mdi:cloud-question"
 
-    def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:
+    def __init__(
+        self, api: NightscoutAPI, name: str, unique_id: str | None, unit: str
+    ) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
+        self._attr_native_unit_of_measurement = unit
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_extra_state_attributes: dict[str, Any] = {}
@@ -67,7 +72,10 @@ class NightscoutSensor(SensorEntity):
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
-            self._attr_native_value = value.sgv
+            if self._attr_native_unit_of_measurement == MMOL_L:
+                self._attr_native_value = round(value.sgv * 0.0555, 1)
+            else:
+                self._attr_native_value = value.sgv
             self._attr_icon = self._parse_icon(value.direction)
         else:
             self._attr_available = False
