@@ -77,7 +77,7 @@ class LinkTagParser(HTMLParser):
             self.found.append(attributes.get("href"))
 
 
-async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
+async def fetch_redirect_uris(url: str) -> list[str]:
     """Find link tag with redirect_uri values.
 
     IndieAuth 4.2.2

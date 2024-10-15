@@ -104,6 +104,8 @@ if TYPE_CHECKING:
 
     from . import StoreResultType
 
+# Define a constant at the top of the file or in an appropriate constants module
+INVALID_FLOW_MESSAGE = "Invalid flow specified"
 
 @callback
 def async_setup(
@@ -346,7 +348,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Do not allow getting status of a flow in progress."""
-        return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
+        return self.json_message(INVALID_FLOW_MESSAGE, HTTPStatus.NOT_FOUND)
 
     @RequestDataValidator(
         vol.Schema(
@@ -371,7 +373,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
+            return self.json_message(INVALID_FLOW_MESSAGE, HTTPStatus.NOT_FOUND)
         except vol.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
@@ -382,6 +384,6 @@ class LoginFlowResourceView(LoginFlowBaseView):
         try:
             self._flow_mgr.async_abort(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
+            return self.json_message(INVALID_FLOW_MESSAGE, HTTPStatus.NOT_FOUND)
 
         return self.json_message("Flow aborted")

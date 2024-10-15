@@ -170,6 +170,7 @@ type RetrieveResultType = Callable[[str, str], Credentials | None]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 DELETE_CURRENT_TOKEN_DELAY = 2
+INVALID_CODE_MESSAGE = "Invalid code"
 
 
 @bind_hass
@@ -179,8 +180,8 @@ def create_auth_code(
     """Create an authorization code to fetch tokens."""
     return cast(StoreResultType, hass.data[DOMAIN])(client_id, credential)
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+# No references on this one
+async def async_setup(hass: HomeAssistant) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
@@ -289,7 +290,7 @@ class TokenView(HomeAssistantView):
 
         if (code := data.get("code")) is None:
             return self.json(
-                {"error": "invalid_request", "error_description": "Invalid code"},
+                {"error": "invalid_request", "error_description": INVALID_CODE_MESSAGE},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
@@ -297,7 +298,7 @@ class TokenView(HomeAssistantView):
 
         if credential is None or not isinstance(credential, Credentials):
             return self.json(
-                {"error": "invalid_request", "error_description": "Invalid code"},
+                {"error": "invalid_request", "error_description": INVALID_CODE_MESSAGE},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
@@ -427,7 +428,7 @@ class LinkUserView(HomeAssistantView):
         credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
-            return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
+            return self.json_message(INVALID_CODE_MESSAGE, status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(credentials)
         if linked_user != user and linked_user is not None:
