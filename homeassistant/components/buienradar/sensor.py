@@ -162,7 +162,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windforce",
         translation_key="windforce",
         native_unit_of_measurement="Bft",
-        icon="WEATHER_WINDY_ICON",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="winddirection",
