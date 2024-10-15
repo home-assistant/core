@@ -59,6 +59,7 @@ from .const import (
 )
 from .util import BrData
 
+NO_FORECAST_WARNING = "No forecast for fcday=%s"
 _MDI_COMPASS_OUTLINE_ICON = "mdi:compass-outline"
 _MDI_GAUGE_ICON = "mdi:gauge"
 _MDI_WEATHER_POURING_ICON = "mdi:weather-pouring"
@@ -166,13 +167,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="winddirection",
         translation_key="winddirection",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth",
         translation_key="windazimuth",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="pressure",
@@ -507,57 +508,57 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="winddirection_1d",
         translation_key="winddirection_1d",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_2d",
         translation_key="winddirection_2d",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_3d",
         translation_key="winddirection_3d",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_4d",
         translation_key="winddirection_4d",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="winddirection_5d",
         translation_key="winddirection_5d",
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_1d",
         translation_key="windazimuth_1d",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_2d",
         translation_key="windazimuth_2d",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_3d",
         translation_key="windazimuth_3d",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_4d",
         translation_key="windazimuth_4d",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="windazimuth_5d",
         translation_key="windazimuth_5d",
         native_unit_of_measurement=DEGREE,
-        icon= _MDI_COMPASS_OUTLINE_ICON,
+        icon=_MDI_COMPASS_OUTLINE_ICON,
     ),
     SensorEntityDescription(
         key="condition_1d",
@@ -767,6 +768,8 @@ def _get_forecast_state(data, sensor_type: str, fcday: int):
 
         return new_state, img
 
+    return None, None  # Explicit return statement
+
 
 def _get_weather_state(data, sensor_type: str):
     if condition := data.get(CONDITION):
@@ -785,6 +788,8 @@ def _get_weather_state(data, sensor_type: str):
         img = condition.get(IMAGE)
 
         return new_state, img
+
+    return None, None  # Explicit return statement
 
 
 class BrSensor(SensorEntity):
@@ -820,7 +825,7 @@ class BrSensor(SensorEntity):
             self.async_write_ha_state()
 
     def update_forecast_state(self, data, sensor_type: str):
-        # update forecasting sensors:
+        """Update the forecast state for a given sensor type."""
         fcday = _map_fcday(sensor_type)
 
         # update weather symbol & status text
@@ -828,7 +833,7 @@ class BrSensor(SensorEntity):
             new_state, img = _get_forecast_state(data, sensor_type, fcday)
 
             if new_state is None:
-                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                _LOGGER.warning(NO_FORECAST_WARNING, fcday)  # Refactored Here
                 return False
 
             if new_state != self.state or img != self.entity_picture:
@@ -844,7 +849,7 @@ class BrSensor(SensorEntity):
                     sensor_type[:-3]
                 )
             except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                _LOGGER.warning(NO_FORECAST_WARNING, fcday)  # Refactored Here
                 return False
 
             if self.state is not None:
@@ -853,16 +858,14 @@ class BrSensor(SensorEntity):
 
         # update all other sensors
         try:
-            self._attr_native_value = data.get(FORECAST)[fcday].get(
-                sensor_type[:-3]
-            )
+            self._attr_native_value = data.get(FORECAST)[fcday].get(sensor_type[:-3])
         except IndexError:
-            _LOGGER.warning("No forecast for fcday=%s", fcday)
+            _LOGGER.warning(NO_FORECAST_WARNING, fcday)  # Refactored Here
             return False
         return True
 
     def update_weather_state(self, data, sensor_type):
-        # update weather symbol & status text
+        """Update the weather state for a given sensor type."""
         new_state, img = _get_weather_state(data, sensor_type)
 
         if new_state != self.state or img != self.entity_picture:
