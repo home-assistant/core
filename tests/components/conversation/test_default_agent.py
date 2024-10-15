@@ -14,6 +14,7 @@ import yaml
 from homeassistant.components import conversation, cover, media_player
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -2551,13 +2552,15 @@ async def test_light_area_same_name(
     device_registry.async_update_device(device.id, area_id=kitchen_area.id)
 
     kitchen_light = entity_registry.async_get_or_create(
-        "light", "demo", "1234", original_name="kitchen light"
+        "light", "demo", "1234", original_name="light in the kitchen"
     )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, area_id=kitchen_area.id
     )
     hass.states.async_set(
-        kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        kitchen_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "light in the kitchen"},
     )
 
     ceiling_light = entity_registry.async_get_or_create(
@@ -2570,12 +2573,19 @@ async def test_light_area_same_name(
         ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
     )
 
+    bathroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "9012", original_name="light"
+    )
+    hass.states.async_set(
+        bathroom_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "light"}
+    )
+
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on kitchen light"},
+        {conversation.ATTR_TEXT: "turn on light in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2592,7 +2602,10 @@ async def test_custom_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
+    """Test that user intents from custom_sentences have priority over builtin intents/sentences.
+
+    Also test that they follow proper selection logic.
+    """
     with tempfile.NamedTemporaryFile(
         mode="w+",
         encoding="utf-8",
@@ -2605,7 +2618,11 @@ async def test_custom_sentences_priority(
             {
                 "language": "en",
                 "intents": {
-                    "CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}
+                    "CustomIntent": {"data": [{"sentences": ["turn on <name>"]}]},
+                    "WorseCustomIntent": {
+                        "data": [{"sentences": ["turn on the lamp"]}]
+                    },
+                    "FakeCustomIntent": {"data": [{"sentences": ["turn on <name>"]}]},
                 },
             },
             custom_sentences_file,
@@ -2622,10 +2639,20 @@ async def test_custom_sentences_priority(
             "intent_script",
             {
                 "intent_script": {
-                    "CustomIntent": {"speech": {"text": "custom response"}}
+                    "CustomIntent": {"speech": {"text": "custom response"}},
+                    "WorseCustomIntent": {"speech": {"text": "worse custom response"}},
+                    "FakeCustomIntent": {"speech": {"text": "fake custom response"}},
                 }
             },
         )
+
+        # Fake intent not being custom
+        intents = (
+            await conversation.async_get_agent(hass).async_get_or_load_intents(
+                hass.config.language
+            )
+        ).intents.intents
+        intents["FakeCustomIntent"].data[0].metadata[METADATA_CUSTOM_SENTENCE] = False
 
         # Ensure that a "lamp" exists so that we can verify the custom intent
         # overrides the builtin sentence.
