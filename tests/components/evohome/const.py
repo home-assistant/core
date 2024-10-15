@@ -18,3 +18,5 @@ TEST_INSTALLS: Final = (
     "sys_004",  # RoundModulation
 )
 #   "botched",  # as default: but with activeFaults, ghost zones & unknown types
+
+TEST_INSTALLS_WITH_DHW: Final = ("default",)

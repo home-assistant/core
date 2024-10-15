@@ -4,8 +4,8 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohasupervisor==0.1.0
-aiohttp==3.10.8
+aiohasupervisor==0.2.0b0
+aiohttp==3.10.10
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.1.1
 aiozoneinfo==0.2.1
@@ -20,15 +20,14 @@ ciso8601==2.3.1
 fnv-hash-fast==1.0.2
 hass-nabucasa==0.81.1
 httpx==0.27.2
-home-assistant-bluetooth==1.12.2
+home-assistant-bluetooth==1.13.0
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
-mashumaro==3.13.1
 PyJWT==2.9.0
 cryptography==43.0.1
 Pillow==10.4.0
-propcache==0.1.0
+propcache==0.2.0
 pyOpenSSL==24.2.1
 orjson==3.10.7
 packaging>=23.1
@@ -44,4 +43,4 @@ uv==0.4.17
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.13.1
+yarl==1.15.2
