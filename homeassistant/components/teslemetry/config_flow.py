@@ -22,6 +22,7 @@ from .const import DOMAIN, LOGGER
 
 TESLEMETRY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
+    "name": "Teslemetry",
     "short_url": "teslemetry.com/console",
     "url": "[teslemetry.com/console](https://teslemetry.com/console)",
 }
@@ -79,7 +80,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reauth_confirm()
+        return await self.async_step_reauth_confirm(entry_data)
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
