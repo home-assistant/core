@@ -1406,7 +1406,7 @@ mozart-api==4.1.1.116.0
 mullvad-api==1.0.0
 
 # homeassistant.components.mass
-music-assistant==2.1.3
+music-assistant==2.2.4
 
 # homeassistant.components.tts
 mutagen==1.47.0

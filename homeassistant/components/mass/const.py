@@ -19,7 +19,4 @@ ATTR_MASS_PLAYER_ID = "mass_player_id"
 ATTR_MASS_PLAYER_TYPE = "mass_player_type"
 ATTR_STREAM_TITLE = "stream_title"
 
-CONF_ASSIST_AUTO_EXPOSE_PLAYERS = "expose_players_assist"
-CONF_PRE_ANNOUNCE_TTS = "pre_announce_tts"
-
 LOGGER = logging.getLogger(__package__)
