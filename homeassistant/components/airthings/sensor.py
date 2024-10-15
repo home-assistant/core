@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
@@ -160,7 +162,12 @@ class AirthingsHeaterEnergySensor(
     @property
     def available(self) -> bool:
         """Check if device and sensor is available in data."""
+        current_epoch_time = int(time.time())
         return (
             super().available
             and self.entity_description.key in self.coordinator.data[self._id].sensors
+            # Most AirThings sensors collect data at interval of max 10 minutes.
+            # If we don't hear from them for 60 minutes they're offline.
+            and current_epoch_time - self.coordinator.data[self._id].sensors.get("time")
+            < 3600
         )
