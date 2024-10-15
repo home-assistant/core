@@ -327,7 +327,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._away:
+        if self._away and self._is_hold():
             return PRESET_AWAY
         if self._is_hold():
             return PRESET_HOLD
