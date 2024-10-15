@@ -1,5 +1,7 @@
 """Tests for the todo intents."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import conversation
@@ -92,5 +94,31 @@ async def test_complete_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
             {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+
+
+async def test_complete_item_intent_ha_errors(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test error handling of HA errors with the complete item intent."""
+    test_entity._attr_name = "List 1"
+    test_entity.entity_id = "todo.list_1"
+    await create_mock_platform(hass, [test_entity])
+
+    # Mock the get_entity method to return None
+    with (
+        patch(
+            "homeassistant.helpers.entity_component.EntityComponent.get_entity",
+            return_value=None,
+        ),
+        pytest.raises(intent.IntentHandleError),
+    ):
+        await intent.async_handle(
+            hass,
+            DOMAIN,
+            todo_intent.INTENT_LIST_COMPLETE_ITEM,
+            {ATTR_ITEM: {"value": "wine"}, ATTR_NAME: {"value": "List 1"}},
             assistant=conversation.DOMAIN,
         )
