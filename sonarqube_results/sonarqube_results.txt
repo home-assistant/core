@@ -1,6 +1,8 @@
-Results from sonarqube: 
+Results from sonarqube:
 
-auth                        - 9 issues, 3h7min effort 
+auth                        - 3 issues, 49min effort
+auth/permissions/           - 2 issues, 10 min effort
+auth/providers/             - 4 issues, 2h8min effort 
 components/alexa/           - 14 issues, 3h38min effort
 components/buienradar/      - 7 issues, 2h23min effort
 components/assist_pipeline  - 12 issues, 2h3min effort
