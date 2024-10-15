@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from Tami4EdgeAPI.device import Device
 from Tami4EdgeAPI.device_metadata import DeviceMetadata
+from Tami4EdgeAPI.drink import Drink
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -114,8 +115,19 @@ def mock_get_device(
         device_firmware="v1.1",
     )
 
+    drinks = [
+        Drink(
+            id="1",
+            name="MyTestDrink",
+            settings=["a", "b"],
+            vessel="testVessel",
+            include_in_customer_statistics=False,
+            default_drink=True,
+        )
+    ]
+
     device = Device(
-        water_quality=water_quality, device_metadata=device_metadata, drinks=[]
+        water_quality=water_quality, device_metadata=device_metadata, drinks=drinks
     )
 
     with patch(
@@ -164,3 +176,16 @@ def mock_submit_otp(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         side_effect=side_effect,
     ) as mock_submit_otp:
         yield mock_submit_otp
+
+
+@pytest.fixture
+def mock_prepare_drink(request: pytest.FixtureRequest) -> Generator[None]:
+    """Mock prepare drink empty response."""
+    side_effect = getattr(request, "param", None)
+
+    with patch(
+        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI.prepare_drink",
+        return_value="",
+        side_effect=side_effect,
+    ):
+        yield

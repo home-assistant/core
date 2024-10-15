@@ -1,0 +1,19 @@
+get_drinks:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: tami4
+
+prepare_drink:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: tami4
+    drink_id:
+      required: true
+      selector:
+        text:
