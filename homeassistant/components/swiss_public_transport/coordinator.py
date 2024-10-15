@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
@@ -109,4 +110,24 @@ class SwissPublicTransportDataUpdateCoordinator(
             )
             for i in range(limit)
             if len(connections) > i and connections[i] is not None
+        ]
+
+    async def fetch_connections_as_json(self, limit: int) -> list[JsonValueType]:
+        """Fetch connections using the opendata api."""
+        return [
+            {
+                "departure": connection["departure"].isoformat()
+                if connection["departure"]
+                else None,
+                "duration": connection["duration"],
+                "platform": connection["platform"],
+                "remaining_time": connection["remaining_time"],
+                "start": connection["start"],
+                "destination": connection["destination"],
+                "train_number": connection["train_number"],
+                "transfers": connection["transfers"],
+                "delay": connection["delay"],
+                "line": connection["line"],
+            }
+            for connection in await self.fetch_connections(limit)
         ]

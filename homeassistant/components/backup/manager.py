@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
@@ -51,15 +52,52 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BackupManager:
-    """Backup manager for the Backup integration."""
+class BaseBackupManager(abc.ABC):
+    """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_dir = Path(hass.config.path("backups"))
-        self.backing_up = False
         self.backups: dict[str, Backup] = {}
+        self.backing_up = False
+
+    async def async_post_backup_actions(self, **kwargs: Any) -> None:
+        """Post backup actions."""
+
+    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
+        """Pre backup actions."""
+
+    @abc.abstractmethod
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
+        """Generate a backup."""
+
+    @abc.abstractmethod
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
+        """Get backups.
+
+        Return a dictionary of Backup instances keyed by their slug.
+        """
+
+    @abc.abstractmethod
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
+        """Get a backup."""
+
+    @abc.abstractmethod
+    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Remove a backup."""
+
+    @abc.abstractmethod
+    async def async_sync_backup(self, *, backup: Backup, **kwargs: Any) -> None:
+        """Sync a backup."""
+
+
+class BackupManager(BaseBackupManager):
+    """Backup manager for the Backup integration."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the backup manager."""
+        super().__init__(hass=hass)
+        self.backup_dir = Path(hass.config.path("backups"))
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.sync_agents: dict[str, BackupSyncAgent] = {}
         self.syncing = False
@@ -96,7 +134,7 @@ class BackupManager:
             {f"{integration_domain}.{agent.name}": agent for agent in agents}
         )
 
-    async def pre_backup_actions(self) -> None:
+    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
         """Perform pre backup actions."""
         if not self.loaded_platforms:
             await self.load_platforms()
@@ -112,7 +150,7 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def post_backup_actions(self) -> None:
+    async def async_post_backup_actions(self, **kwargs: Any) -> None:
         """Perform post backup actions."""
         if not self.loaded_platforms:
             await self.load_platforms()
@@ -128,7 +166,7 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def sync_backup(self, backup: Backup) -> None:
+    async def async_sync_backup(self, *, backup: Backup, **kwargs: Any) -> None:
         """Sync a backup."""
         await self.load_platforms()
 
@@ -204,14 +242,14 @@ class BackupManager:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 
-    async def get_backups(self) -> dict[str, Backup]:
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Return backups."""
         if not self.loaded_backups:
             await self.load_backups()
 
         return self.backups
 
-    async def get_backup(self, slug: str) -> Backup | None:
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
         """Return a backup."""
         if not self.loaded_backups:
             await self.load_backups()
@@ -233,23 +271,23 @@ class BackupManager:
 
         return backup
 
-    async def remove_backup(self, slug: str) -> None:
+    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        if (backup := await self.get_backup(slug)) is None:
+        if (backup := await self.async_get_backup(slug=slug)) is None:
             return
 
         await self.hass.async_add_executor_job(backup.path.unlink, True)
         LOGGER.debug("Removed backup located at %s", backup.path)
         self.backups.pop(slug)
 
-    async def generate_backup(self) -> Backup:
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
         try:
             self.backing_up = True
-            await self.pre_backup_actions()
+            await self.async_pre_backup_actions()
             backup_name = f"Core {HAVERSION}"
             date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -282,7 +320,7 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
-            await self.post_backup_actions()
+            await self.async_post_backup_actions()
 
     def _mkdir_and_generate_backup_contents(
         self,

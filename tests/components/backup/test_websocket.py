@@ -7,6 +7,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -53,8 +54,47 @@ async def test_info(
             "homeassistant.components.backup.manager.BackupManager.load_backups",
             AsyncMock(),
         ),
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backups",
+            return_value={TEST_BACKUP.slug: TEST_BACKUP},
+        ),
     ):
         await client.send_json_auto_id({"type": "backup/info"})
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "backup_content",
+    [
+        pytest.param(TEST_BACKUP, id="with_backup_content"),
+        pytest.param(None, id="without_backup_content"),
+    ],
+)
+@pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_details(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+    backup_content: BaseBackup | None,
+) -> None:
+    """Test getting backup info."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        return_value=backup_content,
+    ):
+        await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
         assert await client.receive_json() == snapshot
 
 
@@ -78,7 +118,7 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.remove_backup",
+        "homeassistant.components.backup.manager.BackupManager.async_remove_backup",
     ):
         await client.send_json_auto_id({"type": "backup/remove", "slug": "abc123"})
         assert await client.receive_json() == snapshot
@@ -105,7 +145,7 @@ async def test_generate(
 
     with (
         patch(
-            "homeassistant.components.backup.manager.BackupManager.generate_backup",
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
             return_value=TEST_BACKUP,
         ),
     ):
@@ -140,7 +180,7 @@ async def test_backup_end(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.post_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.async_post_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/end"})
         assert await client.receive_json() == snapshot
@@ -173,7 +213,7 @@ async def test_backup_start(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.pre_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.async_pre_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/start"})
         assert await client.receive_json() == snapshot
@@ -201,7 +241,7 @@ async def test_backup_end_excepion(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.post_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.async_post_backup_actions",
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/end"})
@@ -230,7 +270,7 @@ async def test_backup_start_excepion(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.pre_backup_actions",
+        "homeassistant.components.backup.manager.BackupManager.async_pre_backup_actions",
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/start"})
