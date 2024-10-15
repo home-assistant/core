@@ -75,6 +75,11 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
         self.code_verifier, self.code_challenge = _generateCodeChallengePair()
 
     @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self._name or self.client_id
+
+    @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {
