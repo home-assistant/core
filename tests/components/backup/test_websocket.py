@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.backup.manager import Backup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -50,6 +51,41 @@ async def test_info(
     ):
         await client.send_json_auto_id({"type": "backup/info"})
         assert snapshot == await client.receive_json()
+
+
+@pytest.mark.parametrize(
+    "backup_content",
+    [
+        pytest.param(TEST_BACKUP, id="with_backup_content"),
+        pytest.param(None, id="without_backup_content"),
+    ],
+)
+@pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_details(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+    backup_content: Backup | None,
+) -> None:
+    """Test getting backup info."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        return_value=backup_content,
+    ):
+        await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
