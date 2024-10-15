@@ -80,7 +80,6 @@ async def mock_mqtt_flow(
 
     Creates an entry if does not exist.
     Updates an entry if it exists, and there is an updated payload.
-    Removess an entry if an empty payload is received.
     """
 
     class TestFlow(config_entries.ConfigFlow):
@@ -90,21 +89,17 @@ async def mock_mqtt_flow(
             """Test mqtt step."""
             await asyncio.sleep(0)
             mqtt_data_flow_calls.append(discovery_info)
-            # Abort a flow if there is an update a d update the existing entry or
-            # remove the entry is the payload is empty.
+            # Abort a flow if there is an update for the existing entry
             if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
                 "comp", discovery_info.topic
             ):
-                if discovery_info.payload:
-                    hass.config_entries.async_update_entry(
-                        entry,
-                        data={
-                            "name": discovery_info.topic,
-                            "payload": discovery_info.payload,
-                        },
-                    )
-                else:
-                    await hass.config_entries.async_remove(entry.entry_id)
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        "name": discovery_info.topic,
+                        "payload": discovery_info.payload,
+                    },
+                )
                 raise AbortFlow("already_configured")
             await self.async_set_unique_id(discovery_info.topic)
             return self.async_create_entry(
@@ -1607,12 +1602,14 @@ async def test_mqtt_discovery_flow_starts_once(
 
         assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
+        # Test the initial flow
         async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mqtt_data_flow_calls) == 1
         assert mqtt_data_flow_calls[0].topic == "comp/discovery/bla/config1"
         assert mqtt_data_flow_calls[0].payload == "initial message"
 
+        # Test we can ignore updates if they are the same
         with caplog.at_level(logging.DEBUG):
             async_fire_mqtt_message(
                 hass, "comp/discovery/bla/config1", "initial message"
@@ -1621,6 +1618,7 @@ async def test_mqtt_discovery_flow_starts_once(
             assert "Ignoring already processed discovery message" in caplog.text
             assert len(mqtt_data_flow_calls) == 1
 
+        # Test we can apply updates
         async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "update message")
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1628,6 +1626,7 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[1].topic == "comp/discovery/bla/config1"
         assert mqtt_data_flow_calls[1].payload == "update message"
 
+        # Test we set up multiple entries
         async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "initial message")
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1635,6 +1634,7 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[2].topic == "comp/discovery/bla/config2"
         assert mqtt_data_flow_calls[2].payload == "initial message"
 
+        # Test we update multiple entries
         async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "update message")
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1642,7 +1642,7 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[3].topic == "comp/discovery/bla/config2"
         assert mqtt_data_flow_calls[3].payload == "update message"
 
-        # An empty message triggers a flow to allow cleanup
+        # Test an empty message triggers a flow to allow cleanup (if needed)
         async_fire_mqtt_message(hass, "comp/discovery/bla/config2", "")
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1650,12 +1650,17 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[4].topic == "comp/discovery/bla/config2"
         assert mqtt_data_flow_calls[4].payload == ""
 
-        assert not mqtt_client_mock.unsubscribe.called
-
+        # Cleanup the the second entry
+        assert (
+            entry := hass.config_entries.async_entry_for_domain_unique_id(
+                "comp", "comp/discovery/bla/config2"
+            )
+        ) is not None
+        await hass.config_entries.async_remove(entry.entry_id)
         assert len(hass.config_entries.async_entries(domain="comp")) == 1
 
-        # Remove remaining entry1 and assert this triggers a
-        # re-discovery flow with latest config
+        # Remove remaining entry1 and assert this triggers an
+        # automatic re-discovery flow with latest config
         assert (
             entry := hass.config_entries.async_entry_for_domain_unique_id(
                 "comp", "comp/discovery/bla/config1"
@@ -1673,6 +1678,8 @@ async def test_mqtt_discovery_flow_starts_once(
 
         # Re-discovery triggered the config flow
         assert len(hass.config_entries.async_entries(domain="comp")) == 1
+
+        assert not mqtt_client_mock.unsubscribe.called
 
 
 async def test_clear_config_topic_disabled_entity(
