@@ -58,7 +58,7 @@ class AuthStore:
         self._loaded = False
         self._users: dict[str, models.User] = None  # type: ignore[assignment]
         self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
-        self._perm_lookup: Optional[PermissionLookup] = None  # type: ignore[assignment]
+        self._perm_lookup: Optional[PermissionLookup] = None
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
@@ -308,7 +308,7 @@ class AuthStore:
         credentials.data = data
         self._async_schedule_save()
 
-    def _create_auth_groups(self, data):
+    def _create_auth_groups(self, data) -> tuple[dict[str, models.Group], bool, bool, bool, str | None]:
         groups: dict[str, models.Group] = {}
 
         has_admin_group = False
@@ -364,7 +364,7 @@ class AuthStore:
                 has_read_only_group,
                 group_without_policy)
 
-    def _create_users(self, data, perm_lookup, groups, group_without_policy, migrate_users_to_admin_group):
+    def _create_users(self, data, perm_lookup, groups, group_without_policy, migrate_users_to_admin_group) -> dict[str, models.User]:
         users: dict[str, models.User] = {}
 
         for user_dict in data["users"]:
@@ -394,7 +394,7 @@ class AuthStore:
 
         return users
 
-    def _refresh_tokens(self, data, users, credentials):
+    def _refresh_tokens(self, data, users, credentials) -> None:
         for rt_dict in data["refresh_tokens"]:
             # Filter out the old keys that don't have jwt_key (pre-0.76)
             if "jwt_key" not in rt_dict:

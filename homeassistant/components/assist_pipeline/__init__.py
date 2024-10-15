@@ -98,7 +98,7 @@ class StageSettings:
     start_stage: PipelineStage
     end_stage: PipelineStage
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.start_stage = self.start_stage or PipelineStage.STT
         self.end_stage = self.end_stage or PipelineStage.TTS
 
