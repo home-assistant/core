@@ -170,11 +170,13 @@ DISCOVERY_SOURCES = {
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_HARDWARE,
+    SOURCE_HASSIO,
     SOURCE_HOMEKIT,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_MQTT,
     SOURCE_SSDP,
+    SOURCE_SYSTEM,
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
@@ -527,10 +529,21 @@ class ConfigEntry(Generic[_DataT]):
         integration: loader.Integration | None = None,
     ) -> None:
         """Set up an entry."""
-        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
+        current_entry.set(self)
+        try:
+            await self.__async_setup_with_context(hass, integration)
+        finally:
+            current_entry.set(None)
+
+    async def __async_setup_with_context(
+        self,
+        hass: HomeAssistant,
+        integration: loader.Integration | None,
+    ) -> None:
+        """Set up an entry, with current_entry set."""
         if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
@@ -2761,11 +2774,30 @@ class ConfigFlow(ConfigEntryBaseFlow):
         unique_id: str | None | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
-        """Update config entry, reload config entry and finish config flow."""
+        """Update config entry, reload config entry and finish config flow.
+
+        :param data: replace the entry data with new data
+        :param data_updates: add items from data_updates to entry data - existing keys
+        are overridden
+        :param options: replace the entry options with new options
+        :param title: replace the title of the entry
+        :param unique_id: replace the unique_id of the entry
+
+        :param reason: set the reason for the abort, defaults to
+        `reauth_successful` or `reconfigure_successful` based on flow source
+
+        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
+        should not be reloaded if it is unchanged
+        """
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = entry.data | data_updates
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,

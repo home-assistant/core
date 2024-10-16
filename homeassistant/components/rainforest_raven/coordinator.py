@@ -20,6 +20,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type RAVEnConfigEntry = ConfigEntry[RAVEnDataCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,14 +69,14 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
 
     _raven_device: RAVEnSerialDevice | None = None
     _device_info: RAVEnDeviceInfo | None = None
+    config_entry: RAVEnConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: RAVEnConfigEntry) -> None:
         """Initialize the data object."""
-        self.entry = entry
-
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
@@ -142,7 +144,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         try:
             device = await self._get_device()
             async with asyncio.timeout(5):
-                return await _get_all_data(device, self.entry.data[CONF_MAC])
+                return await _get_all_data(device, self.config_entry.data[CONF_MAC])
         except RAVEnConnectionError as err:
             await self._cleanup_device()
             raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
@@ -159,7 +161,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         if self._raven_device is not None:
             return self._raven_device
 
-        device = RAVEnSerialDevice(self.entry.data[CONF_DEVICE])
+        device = RAVEnSerialDevice(self.config_entry.data[CONF_DEVICE])
 
         try:
             async with asyncio.timeout(5):

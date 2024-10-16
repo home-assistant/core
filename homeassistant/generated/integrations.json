@@ -958,7 +958,8 @@
       "name": "Cloudflare",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "cmus": {
       "name": "cmus",
@@ -1160,7 +1161,8 @@
     "demo": {
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "denon": {
       "name": "Denon",
@@ -1403,7 +1405,8 @@
       "name": "Duotecno",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "duquesne_light": {
       "name": "Duquesne Light",
@@ -1461,7 +1464,8 @@
       "name": "ecobee",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "ecoforest": {
       "name": "Ecoforest",
@@ -1659,7 +1663,8 @@
       "name": "EnOcean",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "enphase_envoy": {
       "name": "Enphase Envoy",
@@ -2470,7 +2475,8 @@
       "name": "Home Assistant Supervisor",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "havana_shade": {
       "name": "Havana Shade",
@@ -2737,7 +2743,8 @@
       "name": "Jandy iAqualink",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "ibm": {
       "name": "IBM",
@@ -2866,7 +2873,8 @@
       "name": "Insteon",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "intellifire": {
       "name": "IntelliFire",
@@ -2965,7 +2973,8 @@
       "name": "International Space Station (ISS)",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "ista_ecotrend": {
       "name": "ista EcoTrend",
@@ -3104,7 +3113,8 @@
       "name": "Everything but the Kitchen Sink",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "calculated"
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "kiwi": {
       "name": "KIWI",
@@ -3218,7 +3228,8 @@
       "name": "Launch Library",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "laundrify": {
       "name": "laundrify",
@@ -3360,7 +3371,8 @@
       "name": "LiteJet",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "litterrobot": {
       "name": "Litter-Robot",
@@ -3394,7 +3406,8 @@
     "local_ip": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "local_todo": {
       "integration_type": "hub",
@@ -4245,7 +4258,8 @@
       "name": "NZBGet",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "oasa_telematics": {
       "name": "OASA Telematics",
@@ -4293,7 +4307,8 @@
       "name": "Hayward Omnilogic",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "oncue": {
       "name": "Oncue by Kohler",
@@ -4305,7 +4320,8 @@
       "name": "Ondilo ICO",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "onewire": {
       "name": "1-Wire",
@@ -4513,7 +4529,8 @@
       "name": "OwnTracks",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "p1_monitor": {
       "name": "P1 Monitor",
@@ -4728,7 +4745,8 @@
     "profiler": {
       "name": "Profiler",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "progettihwsw": {
       "name": "ProgettiHWSW Automation",
@@ -4943,7 +4961,8 @@
       "name": "Radio Browser",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "radiotherm": {
       "name": "Radio Thermostat",
@@ -5118,7 +5137,8 @@
       "name": "Rhasspy",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "ridwell": {
       "name": "Ridwell",
@@ -7294,7 +7314,6 @@
       "iot_class": "calculated"
     },
     "history_stats": {
-      "name": "History Stats",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7356,7 +7375,6 @@
       "config_flow": false
     },
     "statistics": {
-      "name": "Statistics",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7417,6 +7435,7 @@
     "google_travel_time",
     "group",
     "growatt_server",
+    "history_stats",
     "holiday",
     "homekit_controller",
     "input_boolean",
@@ -7442,6 +7461,7 @@
     "schedule",
     "season",
     "shopping_list",
+    "statistics",
     "sun",
     "switch_as_x",
     "threshold",
