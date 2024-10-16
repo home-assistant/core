@@ -194,10 +194,10 @@ jobs:
 
           mariadb_groups="[]"
           postgresql_groups="[]"
-          integrations_glob: {gardena_bluetooth}
+          integrations_glob: "{gardena_bluetooth}"
           test_groups: '["gardena_bluetooth"]'
           tests: '["gardena_bluetooth"]'
-          tests_glob: {gardena_bluetooth}
+          tests_glob: "{gardena_bluetooth}"
           test_group_count=1
           test_full_suite="false"
 
