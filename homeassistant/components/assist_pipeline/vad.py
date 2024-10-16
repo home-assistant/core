@@ -134,47 +134,56 @@ class VoiceCommandSegmenter:
 
         self._timeout_seconds_left -= chunk_seconds
         if self._timeout_seconds_left <= 0:
-            _LOGGER.warning(
-                "VAD end of speech detection timed out after %s seconds",
-                self.timeout_seconds,
-            )
-            self.reset()
-            self.timed_out = True
-            return False
+            return self._handle_timeout()
 
         if not self.in_command:
-            if is_speech:
+            return self._handle_not_in_command(is_speech, chunk_seconds)
+        return self._handle_in_command(is_speech, chunk_seconds)
+
+    def _handle_timeout(self) -> bool:
+        """Handle the timeout logic."""
+        _LOGGER.warning(
+            "VAD end of speech detection timed out after %s seconds",
+            self.timeout_seconds,
+        )
+        self.reset()
+        self.timed_out = True
+        return False
+
+    def _handle_not_in_command(
+        self, is_speech: bool | None, chunk_seconds: float
+    ) -> bool:
+        """Handle the case when not in a voice command."""
+        if is_speech:
+            self._speech_seconds_left -= chunk_seconds
+            if self._speech_seconds_left <= 0:
+                # Inside voice command
+                self.in_command = True
+                self._command_seconds_left = self.command_seconds - self.speech_seconds
+                self._silence_seconds_left = self.silence_seconds
+                _LOGGER.debug("Voice command started")
+        else:
+            # Reset if enough silence
+            self._reset_seconds_left -= chunk_seconds
+            if self._reset_seconds_left <= 0:
+                self._speech_seconds_left = self.speech_seconds
                 self._reset_seconds_left = self.reset_seconds
-                self._speech_seconds_left -= chunk_seconds
-                if self._speech_seconds_left <= 0:
-                    # Inside voice command
-                    self.in_command = True
-                    self._command_seconds_left = (
-                        self.command_seconds - self.speech_seconds
-                    )
-                    self._silence_seconds_left = self.silence_seconds
-                    _LOGGER.debug("Voice command started")
-            else:
-                # Reset if enough silence
-                self._reset_seconds_left -= chunk_seconds
-                if self._reset_seconds_left <= 0:
-                    self._speech_seconds_left = self.speech_seconds
-                    self._reset_seconds_left = self.reset_seconds
-        elif not is_speech:
+
+        return True
+
+    def _handle_in_command(self, is_speech: bool | None, chunk_seconds: float) -> bool:
+        """Handle the case when inside a voice command."""
+        self._command_seconds_left -= chunk_seconds
+        if not is_speech:
             # Silence in command
-            self._reset_seconds_left = self.reset_seconds
             self._silence_seconds_left -= chunk_seconds
-            self._command_seconds_left -= chunk_seconds
-            if (self._silence_seconds_left <= 0) and (self._command_seconds_left <= 0):
-                # Command finished successfully
+            if self._silence_seconds_left <= 0 and self._command_seconds_left <= 0:
                 self.reset()
                 _LOGGER.debug("Voice command finished")
                 return False
         else:
-            # Speech in command.
-            # Reset silence counter if enough speech.
+            # Speech in command
             self._reset_seconds_left -= chunk_seconds
-            self._command_seconds_left -= chunk_seconds
             if self._reset_seconds_left <= 0:
                 self._silence_seconds_left = self.silence_seconds
                 self._reset_seconds_left = self.reset_seconds
