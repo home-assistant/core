@@ -1,9 +1,10 @@
 """The Assist pipeline integration."""
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 from collections.abc import AsyncIterable
 from typing import Any
+from dataclasses import dataclass  # noqa: F401
 
 import voluptuous as vol
 
@@ -92,6 +93,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class PipelineSettings:
+    """Group related settings for the pipeline."""
+
+    wake_word_settings: WakeWordSettings | None = None
+    audio_settings: AudioSettings | None = None
+    tts_audio_output: str | dict[str, Any] | None = None  # noqa: UP006
+    pipeline_id: str | None = None
+    conversation_id: str | None = None
+    device_id: str | None = None
+
+
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
     *,
@@ -99,13 +112,8 @@ async def async_pipeline_from_audio_stream(
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
+    settings: PipelineSettings,
     wake_word_phrase: str | None = None,
-    pipeline_id: str | None = None,
-    conversation_id: str | None = None,
-    tts_audio_output: str | dict[str, Any] | None = None,
-    wake_word_settings: WakeWordSettings | None = None,
-    audio_settings: AudioSettings | None = None,
-    device_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
 ) -> None:
@@ -114,21 +122,21 @@ async def async_pipeline_from_audio_stream(
     Raises PipelineNotFound if no pipeline is found.
     """
     pipeline_input = PipelineInput(
-        conversation_id=conversation_id,
-        device_id=device_id,
+        conversation_id=settings.conversation_id,
+        device_id=settings.device_id,
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
         wake_word_phrase=wake_word_phrase,
         run=PipelineRun(
             hass,
             context=context,
-            pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
+            pipeline=async_get_pipeline(hass, pipeline_id=settings.pipeline_id),
             start_stage=start_stage,
             end_stage=end_stage,
             event_callback=event_callback,
-            tts_audio_output=tts_audio_output,
-            wake_word_settings=wake_word_settings,
-            audio_settings=audio_settings or AudioSettings(),
+            tts_audio_output=settings.tts_audio_output,
+            wake_word_settings=settings.wake_word_settings,
+            audio_settings=settings.audio_settings or AudioSettings(),
         ),
     )
     await pipeline_input.validate()
