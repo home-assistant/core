@@ -60,7 +60,7 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[PalazzettiData]):
         try:
             available = await self.palazzetti.update_state()
         except (CommunicationError, ValidationError) as err:
-            LOGGER.warning(err)
+            LOGGER.exception(err)
             available = False
 
         data: PalazzettiData = {

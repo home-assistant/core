@@ -32,8 +32,8 @@ class PalazzettiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         palazzetti = PalazzettiClient(hostname=host)
         try:
             success = await palazzetti.connect()
-        except CommunicationError as err:
-            LOGGER.warning("Communication error", err)
+        except CommunicationError:
+            LOGGER.exception("Communication error")
             success = False
 
         if not success:
