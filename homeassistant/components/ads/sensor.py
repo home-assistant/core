@@ -25,6 +25,7 @@ from .entity import AdsEntity
 from .hub import AdsHub
 
 DEFAULT_NAME = "ADS sensor"
+CONF_OPTIONS = "options"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -53,6 +54,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -73,6 +75,10 @@ def setup_platform(
     device_class: SensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     state_class: SensorStateClass | None = config.get(CONF_STATE_CLASS)
     unit_of_measurement: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    options: list[str] | None = config.get(CONF_OPTIONS, [])
+
+    if device_class == SensorDeviceClass.ENUM and not options:
+        raise ValueError("Options must be provided for ENUM device class")
 
     entity = AdsSensor(
         ads_hub,
@@ -83,6 +89,7 @@ def setup_platform(
         device_class,
         state_class,
         unit_of_measurement,
+        options,
     )
 
     add_entities([entity])
@@ -101,6 +108,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
+        options: list[str] | None,
     ) -> None:
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
@@ -109,6 +117,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = unit_of_measurement
+        self._options = options or []
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
@@ -122,4 +131,9 @@ class AdsSensor(AdsEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._state_dict[STATE_KEY_STATE]
+        state = self._state_dict.get(STATE_KEY_STATE)
+        if self._attr_device_class == SensorDeviceClass.ENUM:
+            if isinstance(state, int) and 0 <= state < len(self._options):
+                return self._options[state]
+            return None
+        return state
