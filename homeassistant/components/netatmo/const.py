@@ -47,9 +47,11 @@ NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
+NETATMO_CREATE_OPENING_SENSOR = "netatmo_create_opening_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
+NETATMO_CREATE_SIREN_SENSOR = "netatmo_create_siren_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
@@ -126,6 +128,8 @@ EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
 EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
+# Siren Tag
+EVENT_TYPE_HOME_ALARM = "home_alarm"
 
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_CAMERA_ANIMAL,
