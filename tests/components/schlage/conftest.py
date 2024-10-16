@@ -91,6 +91,7 @@ def mock_lock_attrs() -> dict[str, Any]:
         "is_locked": False,
         "is_jammed": False,
         "battery_level": 20,
+        "auto_lock_time": 15,
         "firmware_version": "1.0",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
