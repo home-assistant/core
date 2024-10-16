@@ -437,6 +437,10 @@ async def test_multiple_config_entries(
     assert len(entries) == 2
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.google.config.abort.missing_credentials"],
+)
 async def test_missing_configuration(
     hass: HomeAssistant,
 ) -> None:
