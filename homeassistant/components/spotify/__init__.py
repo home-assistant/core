@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -58,15 +57,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     spotify.authenticate(session.token[CONF_ACCESS_TOKEN])
 
-    refresh_lock = asyncio.Lock()
-
     async def _refresh_token() -> str:
-        async with refresh_lock:
-            await session.async_ensure_token_valid()
-            token = session.token[CONF_ACCESS_TOKEN]
-            if TYPE_CHECKING:
-                assert isinstance(token, str)
-            return token
+        await session.async_ensure_token_valid()
+        token = session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
 
     spotify.refresh_token_function = _refresh_token
 
