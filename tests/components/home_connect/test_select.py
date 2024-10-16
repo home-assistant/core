@@ -43,9 +43,9 @@ async def test_select(
 ) -> None:
     """Test select entity."""
     get_appliances.side_effect = get_all_appliances
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -77,9 +77,9 @@ async def test_select_functionality(
     appliance.get_programs_available.return_value = [PROGRAM]
     get_appliances.return_value = [appliance]
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     appliance.status.update(status)
     await hass.services.async_call(
@@ -122,9 +122,9 @@ async def test_switch_exception_handling(
     problematic_appliance.get_programs_available.return_value = [PROGRAM]
     get_appliances.return_value = [problematic_appliance]
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):
