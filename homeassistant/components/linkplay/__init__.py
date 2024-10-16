@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONTROLLER, DOMAIN, PLATFORMS
+from .const import CONTROLLER, CONTROLLER_KEY, DOMAIN, PLATFORMS
 from .utils import async_get_client_session
 
 
@@ -42,12 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
         ) from exception
 
     # setup the controller and discover multirooms
-    controller = None
+    controller: LinkPlayController | None = None
+    hass.data.setdefault(DOMAIN, {})
     if CONTROLLER not in hass.data[DOMAIN]:
         controller = LinkPlayController(session)
-        hass.data[DOMAIN][CONTROLLER] = controller
+        hass.data[DOMAIN][CONTROLLER_KEY] = controller
     else:
-        controller = hass.data[DOMAIN][CONTROLLER]
+        controller = hass.data[DOMAIN][CONTROLLER_KEY]
 
     await controller.add_bridge(bridge)
     await controller.discover_multirooms()
