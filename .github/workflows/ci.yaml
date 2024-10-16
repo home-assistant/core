@@ -143,17 +143,15 @@ jobs:
           tests="[]"
           tests_glob=""
           skip_coverage=""
-          integration_changes="${{ steps.integrations.outputs.changes }}"
-          integration_changes=["gardena_bluetooth"]
 
-          if [[ "${integration_changes}" != "[]" ]];
+          if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo '${integration_changes}' | jq -cSr '. | join(",")')
+            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo '${integration_changes}' | jq -cSr '.[]')
+            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
               do
@@ -177,6 +175,31 @@ jobs:
             postgresql_groups="[]"
             test_full_suite="false"
           fi
+
+          # We need to run the full suite on certain branches.
+          # Or, in case core files are touched, for the full suite as well.
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
+            || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
+            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
+            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
+          then
+            mariadb_groups=${MARIADB_VERSIONS}
+            postgresql_groups=${POSTGRESQL_VERSIONS}
+            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+            test_group_count=10
+            test_full_suite="true"
+          fi
+
+          mariadb_groups="[]"
+          postgresql_groups="[]"
+          integrations_glob: {gardena_bluetooth}
+          test_groups: '["gardena_bluetooth"]'
+          tests: '["gardena_bluetooth"]'
+          tests_glob: {gardena_bluetooth}
+          test_group_count=1
+          test_full_suite="false"
 
           if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
