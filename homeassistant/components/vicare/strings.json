@@ -234,28 +234,40 @@
         "name": "DHW gas consumption last seven days"
       },
       "energy_summary_consumption_heating_currentday": {
-        "name": "Heating energy consumption today"
+        "name": "Heating electricity consumption today"
       },
       "energy_summary_consumption_heating_currentmonth": {
-        "name": "Heating energy consumption this month"
+        "name": "Heating electricity consumption this month"
       },
       "energy_summary_consumption_heating_currentyear": {
-        "name": "Heating energy consumption this year"
+        "name": "Heating electricity consumption this year"
       },
       "energy_summary_consumption_heating_lastsevendays": {
-        "name": "Heating energy consumption last seven days"
+        "name": "Heating electricity consumption last seven days"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
-        "name": "DHW energy consumption today"
+        "name": "DHW electricity consumption today"
       },
       "energy_dhw_summary_consumption_heating_currentmonth": {
-        "name": "DHW energy consumption this month"
+        "name": "DHW electricity consumption this month"
       },
       "energy_dhw_summary_consumption_heating_currentyear": {
-        "name": "DHW energy consumption this year"
+        "name": "DHW electricity consumption this year"
       },
       "energy_summary_dhw_consumption_heating_lastsevendays": {
-        "name": "DHW energy consumption last seven days"
+        "name": "DHW electricity consumption last seven days"
+      },
+      "power_consumption_today": {
+        "name": "Electricity consumption today"
+      },
+      "power_consumption_this_week": {
+        "name": "Electricity consumption this week"
+      },
+      "power_consumption_this_month": {
+        "name": "Electricity consumption this month"
+      },
+      "power_consumption_this_year": {
+        "name": "Electricity consumption this year"
       },
       "power_production_current": {
         "name": "Power production current"
@@ -289,18 +301,6 @@
       },
       "solar_power_production_this_year": {
         "name": "Solar energy production this year"
-      },
-      "power_consumption_today": {
-        "name": "Energy consumption today"
-      },
-      "power_consumption_this_week": {
-        "name": "Power consumption this week"
-      },
-      "power_consumption_this_month": {
-        "name": "Energy consumption this month"
-      },
-      "power_consumption_this_year": {
-        "name": "Energy consumption this year"
       },
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
