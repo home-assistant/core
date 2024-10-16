@@ -540,6 +540,18 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         # Gets set to False on first run, and to True on subsequent runs
         setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
+            return result
+
         if result["type"] is FlowResultType.ABORT:
             # We don't need translations for a discovery flow which immediately
             # aborts, since such flows won't be seen by users
