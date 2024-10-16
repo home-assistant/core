@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator[Forecast] = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=f"{DOMAIN}_{entry.data[CONF_ZONE]}",
         update_interval=SCAN_INTERVAL,
         update_method=async_update_forecast,

@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator_forecast = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"Météo-France forecast for city {entry.title}",
         update_method=_async_update_data_forecast_forecast,
         update_interval=SCAN_INTERVAL,
@@ -80,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_rain = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"Météo-France rain for city {entry.title}",
             update_method=_async_update_data_rain,
             update_interval=SCAN_INTERVAL_RAIN,
@@ -105,6 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coordinator_alert = DataUpdateCoordinator(
                 hass,
                 _LOGGER,
+                config_entry=entry,
                 name=f"Météo-France alert for department {department}",
                 update_method=_async_update_data_alert,
                 update_interval=SCAN_INTERVAL,
