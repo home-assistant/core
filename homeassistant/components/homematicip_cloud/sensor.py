@@ -237,34 +237,26 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the icon."""
         if super().icon:
             return super().icon
-        if hasattr(
-            self._device.functionalChannels[self._channel],
-            "valveState",
-        ):
-            if (
-                self._device.functionalChannels[self._channel].valveState
-                != ValveState.ADAPTION_DONE
-            ):
-                return "mdi:alert"
-            return "mdi:heating-coil"
-        return None
+        channel = next(
+            channel
+            for channel in self._device.functionalChannels
+            if channel.index == self._channel
+        )
+        if channel.valveState != ValveState.ADAPTION_DONE:
+            return "mdi:alert"
+        return "mdi:heating-coil"
 
     @property
     def native_value(self) -> int | None:
         """Return the state of the floor terminal block mechanical channel valve position."""
-        if hasattr(
-            self._device.functionalChannels[self._channel],
-            "valveState",
-        ):
-            if (
-                self._device.functionalChannels[self._channel].valveState
-                != ValveState.ADAPTION_DONE
-            ):
-                return None
-            return round(
-                self._device.functionalChannels[self._channel].valvePosition * 100
-            )
-        return None
+        channel = next(
+            channel
+            for channel in self._device.functionalChannels
+            if channel.index == self._channel
+        )
+        if channel.valveState != ValveState.ADAPTION_DONE:
+            return None
+        return round(channel.valvePosition * 100)
 
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
