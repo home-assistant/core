@@ -188,7 +188,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     _feature_map: int | None = None
     _enable_turn_on_off_backwards_compatibility = False
-    _postfix_translation_key = "thermostat"
+    _platform_translation_key = "thermostat"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

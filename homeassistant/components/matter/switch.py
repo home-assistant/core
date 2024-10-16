@@ -35,7 +35,7 @@ async def async_setup_entry(
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
-    _postfix_translation_key: str | None = "switch"
+    _platform_translation_key = "switch"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""

@@ -40,7 +40,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
-    _postfix_translation_key: str | None = "lock"
+    _platform_translation_key = "lock"
 
     @property
     def code_format(self) -> str | None:

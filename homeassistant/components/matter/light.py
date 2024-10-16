@@ -89,7 +89,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
-    _postfix_translation_key = "light"
+    _platform_translation_key = "light"
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
