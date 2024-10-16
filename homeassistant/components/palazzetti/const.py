@@ -9,7 +9,6 @@ PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
 ACTION_NOT_UNAVAILABLE = "action_not_available"
-C = "action_not_available"
 
 API_NAME: Final = "LABEL"
 API_HOST: Final = "IP"
