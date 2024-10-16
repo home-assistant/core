@@ -4,27 +4,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
-
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,11 +45,6 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a Niko light."""
-        return False
-
     def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
         self._hub = hub
@@ -73,6 +60,11 @@ class NikoHomeControlLight(LightEntity):
             model=f"{hub.model}-light",
             name=light.name,
         )
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for a Niko light."""
+        return False
 
     @property
     def id(self):
@@ -125,6 +117,6 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         _LOGGER.debug("Update state: %s", self.name)
         _LOGGER.debug("State: %s", state)
         self._light.state = state
-        self._attr_is_on = state != 0
+        self._attr_is_on = state > 0
         self._attr_brightness = state * 2.55
         self.async_write_ha_state()

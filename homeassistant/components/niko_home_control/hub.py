@@ -9,6 +9,7 @@ from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -28,12 +29,13 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class Hub:
+class Hub(DeviceScanner):
     """The niko home control hub."""
 
     manufacturer = "Niko"
     website = "https://niko.eu"
     model = "P.O.M"  # Peace Of Mind
+    version = "1.0" # The Niko Home Control controller version
 
     def __init__(self, hass: HomeAssistant, name: str, host: str, port: int) -> None:
         """Init niko home control hub."""
@@ -43,24 +45,36 @@ class Hub:
         self._name = name
         self._id = name
         self._listen_task = None
+
         self.entities: list[
             NikoHomeControlLight | NikoHomeControlDimmableLight | NikoHomeControlCover
         ] = []
         self._actions: list[Action] = []
         try:
             self.connection = NikoHomeControlConnection(self._host, self._port)
+            self._is_connected = True
             for action in self.list_actions():
                 self._actions.append(Action(action, self))
 
         except asyncio.TimeoutError as ex:
+            self._is_connected = False
             raise ConfigEntryNotReady(
                 f"Timeout while connecting to {self._host}:{self._port}"
             ) from ex
 
         except BaseException as ex:
+            self._is_connected = False
             raise ConfigEntryNotReady(
                 f"Timeout while connecting to {self._host}:{self._port}"
             ) from ex
+
+    @property
+    def ip_address(self) -> str:
+        return self._host
+
+    @property
+    def is_connected(self) -> bool:
+        return self._is_connected
 
     @property
     def hub_id(self) -> str:

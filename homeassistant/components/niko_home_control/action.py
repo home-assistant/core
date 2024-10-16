@@ -10,14 +10,18 @@ class Action:
         self._action_id = action["id"]
         self._type = action["type"]
         self._name = action["name"]
-        self._attr_is_on = action["value1"] != 0
-        self._callbacks = set()
+        self._attr_is_on = action["value1"] > 0
         self._hub = hub
         if self._type == "2":
             self._attr_brightness = action["value1"] * 2.55
-        if self._type == "4":
+        elif self._type == "3":
+            self._attr_percentage = action["value1"]
+            self._attr_is_on = action["value1"] > 0
+        elif self._type == "4":
             self._attr_current_cover_position = action["value1"]
             self._attr_is_closed = action["value1"] == 0
+        elif self._type != "1":
+            raise NotImplementedError(f"Unknown action type: {self._type}, value1: {action['value1']}, value2: {action['value2']}")
 
     @property
     def name(self):
@@ -54,10 +58,6 @@ class Action:
 
         return self.turn_on()
 
-    def is_cover(self) -> bool:
-        """Is a cover."""
-        return self.action_type == 4
-
     def is_light(self) -> bool:
         """Is a light."""
         return self.action_type == 1
@@ -65,3 +65,11 @@ class Action:
     def is_dimmable(self) -> bool:
         """Is a dimmable light."""
         return self.action_type == 2
+
+    def is_fan(self) -> bool:
+        """Is a fan."""
+        return self.action_type == 3
+
+    def is_cover(self) -> bool:
+        """Is a cover."""
+        return self.action_type == 4

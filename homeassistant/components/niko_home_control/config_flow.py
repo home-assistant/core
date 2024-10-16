@@ -1,9 +1,7 @@
 """Config flow for the Niko home control integration."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
+import ipaddress
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -12,8 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .hub import Hub
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -24,25 +20,31 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
     """Validate the user input allows us to connect."""
+    name = data[CONF_NAME]
+    host = data[CONF_HOST]
+    port = data[CONF_PORT]
+    hub = Hub(hass, name, host, port)
 
-    hub = Hub(hass, data["name"], data["host"], data["port"])
+    try:
+      ipaddress.ip_address(host)
+    except ValueError:
+      raise InvalidHost
+
+    if port < 0 or port > 65535:
+      raise InvalidPort
 
     if not hub:
-        # should check if the port and host are valid
-        # If there is an error, raise an exception to notify HA that there was a
-        # problem. The UI will also show there was a problem
         raise CannotConnect
-    return {"name": data["name"], "host": data["host"], "port": data["port"]}
+
+    return {"name": name, "host": host, "port": port}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
-
     VERSION = 1
-
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -54,14 +56,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
-                errors["host"] = "cannot_connect"
+                errors["host"] = "invalid_host"
             except InvalidPort:
-                errors["port"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["port"] = "invalid_port"
+            except Exception:
+                errors["base"] = "unexpected_exception"
 
-        # # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
+        # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
