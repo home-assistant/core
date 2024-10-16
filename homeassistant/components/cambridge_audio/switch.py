@@ -48,10 +48,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Cambridge Audio switch entities based on a config entry."""
     async_add_entities(
-        [
-            CambridgeAudioSwitch(entry.runtime_data, description)
-            for description in CONTROL_ENTITIES
-        ]
+        CambridgeAudioSwitch(entry.runtime_data, description)
+        for description in CONTROL_ENTITIES
     )
 
 
