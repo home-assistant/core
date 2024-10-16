@@ -63,6 +63,8 @@ NO_FORECAST_WARNING = "No forecast for fcday=%s"
 _MDI_COMPASS_OUTLINE_ICON = "mdi:compass-outline"
 _MDI_GAUGE_ICON = "mdi:gauge"
 _MDI_WEATHER_POURING_ICON = "mdi:weather-pouring"
+WEATHER_PARTLY_CLOUDY_ICON = "mdi:weather-partly-cloudy"
+WEATHER_WINDY_ICON = "mdi:weather-windy"
 _LOGGER = logging.getLogger(__name__)
 
 MEASURED_LABEL = "Measured"
@@ -162,7 +164,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windforce",
         translation_key="windforce",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="winddirection",
@@ -419,61 +421,61 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="sunchance_1d",
         translation_key="sunchance_1d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=WEATHER_PARTLY_CLOUDY_ICON,
     ),
     SensorEntityDescription(
         key="sunchance_2d",
         translation_key="sunchance_2d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=WEATHER_PARTLY_CLOUDY_ICON,
     ),
     SensorEntityDescription(
         key="sunchance_3d",
         translation_key="sunchance_3d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=WEATHER_PARTLY_CLOUDY_ICON,
     ),
     SensorEntityDescription(
         key="sunchance_4d",
         translation_key="sunchance_4d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=WEATHER_PARTLY_CLOUDY_ICON,
     ),
     SensorEntityDescription(
         key="sunchance_5d",
         translation_key="sunchance_5d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=WEATHER_PARTLY_CLOUDY_ICON,
     ),
     SensorEntityDescription(
         key="windforce_1d",
         translation_key="windforce_1d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="windforce_2d",
         translation_key="windforce_2d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="windforce_3d",
         translation_key="windforce_3d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="windforce_4d",
         translation_key="windforce_4d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="windforce_5d",
         translation_key="windforce_5d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY_ICON,
     ),
     SensorEntityDescription(
         key="windspeed_1d",
