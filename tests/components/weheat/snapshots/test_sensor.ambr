@@ -175,6 +175,60 @@
     'state': '4.5',
   })
 # ---
+# name: test_all_entities[sensor.test_model_current_room_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_current_room_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Current room temperature',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'thermostat_room_temperature',
+    'unique_id': '0000-1111-2222-3333_thermostat_room_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_current_room_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test Model Current room temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_current_room_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_dhw_bottom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -496,7 +550,7 @@
     'state': '44',
   })
 # ---
-# name: test_all_entities[sensor.test_model_power_output-entry]
+# name: test_all_entities[sensor.test_model_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -510,7 +564,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_model_power_output',
+    'entity_id': 'sensor.test_model_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -520,34 +574,34 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'power output',
+    'original_name': 'Room temperature setpoint',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'power_output',
-    'unique_id': '0000-1111-2222-3333_power_output',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'translation_key': 'thermostat_room_temperature_setpoint',
+    'unique_id': '0000-1111-2222-3333_thermostat_room_temperature_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.test_model_power_output-state]
+# name: test_all_entities[sensor.test_model_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Model power output',
+      'device_class': 'temperature',
+      'friendly_name': 'Test Model Room temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_model_power_output',
+    'entity_id': 'sensor.test_model_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '77',
+    'state': '21',
   })
 # ---
 # name: test_all_entities[sensor.test_model_water_inlet_temperature-entry]
@@ -656,5 +710,59 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_water_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_water_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Water target temperature',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'thermostat_water_setpoint',
+    'unique_id': '0000-1111-2222-3333_thermostat_water_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_water_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test Model Water target temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_water_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
   })
 # ---

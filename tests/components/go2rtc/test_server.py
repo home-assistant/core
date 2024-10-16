@@ -36,6 +36,8 @@ def mock_process() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.go2rtc.server.asyncio.create_subprocess_exec"
     ) as mock_popen:
+        mock_popen.return_value.terminate = MagicMock()
+        mock_popen.return_value.kill = MagicMock()
         mock_popen.return_value.returncode = None
         yield mock_popen
 

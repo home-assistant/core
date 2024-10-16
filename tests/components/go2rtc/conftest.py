@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
 from homeassistant.components.go2rtc.server import Server
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 
 from tests.common import MockConfigEntry
 
@@ -56,5 +56,5 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
-        data={CONF_HOST: "http://localhost:1984/", CONF_BINARY: "/usr/bin/go2rtc"},
+        data={CONF_URL: "http://localhost:1984/", CONF_BINARY: "/usr/bin/go2rtc"},
     )

@@ -23,7 +23,7 @@ from homeassistant.components.camera.webrtc import (
     async_register_webrtc_provider,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(server.stop)
         await server.start()
 
-    provider = WebRTCProvider(hass, entry.data[CONF_HOST])
+    provider = WebRTCProvider(hass, entry.data[CONF_URL])
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
     return True
 

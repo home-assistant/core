@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
+requires = ["setuptools==75.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -73,7 +73,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.15.2",
+    "yarl==1.15.3",
 ]
 
 [project.urls]
