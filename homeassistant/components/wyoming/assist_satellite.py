@@ -65,7 +65,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up VoIP Assist satellite entity."""
+    """Set up Wyoming Assist satellite entity."""
     domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     assert domain_data.device is not None
 
