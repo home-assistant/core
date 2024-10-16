@@ -93,7 +93,6 @@ NO_IOT_CLASS = [
     "my",
     "onboarding",
     "panel_custom",
-    "panel_iframe",
     "plant",
     "profiler",
     "proxy",
