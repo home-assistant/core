@@ -224,7 +224,7 @@ class GrowattData:
                 self.data = {
                     **tlx_system_status,
                     **tlx_energy_overview,
-                    **tlx_details,
+                    **tlx_details["data"],
                 }
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
