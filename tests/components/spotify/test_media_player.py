@@ -1,13 +1,16 @@
 """Tests for the Spotify media player platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from spotipy import SpotifyException
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
@@ -27,6 +30,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.spotify import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -35,13 +39,19 @@ from homeassistant.const import (
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_SET,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_value_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -374,6 +384,30 @@ async def test_play_media(
 
 
 @pytest.mark.usefixtures("setup_credentials")
+async def test_add_unsupported_media_to_queue(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player add unsupported media to queue."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(
+        ValueError, match="Media type playlist is not supported when enqueue is ADD"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
+                ATTR_MEDIA_CONTENT_TYPE: "spotify://playlist",
+                ATTR_MEDIA_CONTENT_ID: "spotify:playlist:74Yus6IHfa3tWZzXXAYtS2",
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_credentials")
 async def test_play_unsupported_media(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
@@ -415,3 +449,110 @@ async def test_select_source(
     mock_spotify.return_value.transfer_playback.assert_called_with(
         "21dac6b0e0a1f181870fdc9749b2656466557666", True
     )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_source_devices(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Spotify media player available source devices."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["DESKTOP-BKC5SIK"]
+
+    mock_spotify.return_value.devices.side_effect = SpotifyException(
+        404, "Not Found", "msg"
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["DESKTOP-BKC5SIK"]
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_no_source_devices(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with no source devices."""
+    mock_spotify.return_value.devices.return_value = None
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+
+    assert ATTR_INPUT_SOURCE_LIST not in state.attributes
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_paused_playback(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with paused playback."""
+    mock_spotify.return_value.current_playback.return_value["is_playing"] = False
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.state == MediaPlayerState.PAUSED
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_fallback_show_image(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with a fallback image."""
+    playback = load_json_value_fixture("playback_episode.json", DOMAIN)
+    playback["item"]["images"] = []
+    mock_spotify.return_value.current_playback.return_value = playback
+    with patch("secrets.token_hex", return_value="mock-token"):
+        await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert (
+        state.attributes[ATTR_ENTITY_PICTURE]
+        == "/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=16ff384dbae94fea"
+    )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_no_episode_images(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with no episode images."""
+    playback = load_json_value_fixture("playback_episode.json", DOMAIN)
+    playback["item"]["images"] = []
+    playback["item"]["show"]["images"] = []
+    mock_spotify.return_value.current_playback.return_value = playback
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_no_album_images(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with no album images."""
+    mock_spotify.return_value.current_playback.return_value["item"]["album"][
+        "images"
+    ] = []
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert ATTR_ENTITY_PICTURE not in state.attributes
