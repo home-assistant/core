@@ -41,7 +41,12 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    UndefinedType,
+    VolDictType,
+)
 
 from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
 
@@ -69,7 +74,7 @@ FRAME_BOUNDARY = "frame-boundary"
 FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
 LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
-IMAGE_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): cv.template}
+IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
 
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
