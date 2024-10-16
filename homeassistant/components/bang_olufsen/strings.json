@@ -1,4 +1,8 @@
 {
+  "common": {
+    "jid_options_name": "JID options",
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JID) are used directly. JIDs can be found in the state attributes of the media player entity."
+  },
   "config": {
     "error": {
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
@@ -34,6 +38,12 @@
           "name": "Beolink JID",
           "description": "Manually specify Beolink JID to join."
         }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     },
     "beolink_expand": {
@@ -48,6 +58,12 @@
           "name": "Beolink JIDs",
           "description": "Specify which Beolink JIDs will join current Beolink experience."
         }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     },
     "beolink_unexpand": {
@@ -57,6 +73,12 @@
         "beolink_jids": {
           "name": "Beolink JIDs",
           "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
         }
       }
     },

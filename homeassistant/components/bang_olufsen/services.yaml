@@ -6,11 +6,14 @@ beolink_join:
     device:
       integration: bang_olufsen
   fields:
-    beolink_jid:
-      required: false
-      example: 1111.2222222.33333333@products.bang-olufsen.com
-      selector:
-        text:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jid:
+          required: false
+          example: 1111.2222222.33333333@products.bang-olufsen.com
+          selector:
+            text:
 
 beolink_expand:
   target:
@@ -25,15 +28,18 @@ beolink_expand:
       example: false
       selector:
         boolean:
-    beolink_jids:
-      required: false
-      example: >-
-        [
-          1111.2222222.33333333@products.bang-olufsen.com,
-          4444.5555555.66666666@products.bang-olufsen.com
-        ]
-      selector:
-        object:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jids:
+          required: false
+          example: >-
+            [
+              1111.2222222.33333333@products.bang-olufsen.com,
+              4444.5555555.66666666@products.bang-olufsen.com
+            ]
+          selector:
+            object:
 
 beolink_unexpand:
   target:
@@ -43,15 +49,18 @@ beolink_unexpand:
     device:
       integration: bang_olufsen
   fields:
-    beolink_jids:
-      required: true
-      example: >-
-        [
-          1111.2222222.33333333@products.bang-olufsen.com,
-          4444.5555555.66666666@products.bang-olufsen.com
-        ]
-      selector:
-        object:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jids:
+          required: true
+          example: >-
+            [
+              1111.2222222.33333333@products.bang-olufsen.com,
+              4444.5555555.66666666@products.bang-olufsen.com
+            ]
+          selector:
+            object:
 
 beolink_leave:
   target:
