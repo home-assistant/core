@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from spotifyaio import (
     Device,
     Episode,
+    Item,
     ItemType,
     PlaybackState,
     ProductType,
@@ -84,6 +86,19 @@ async def async_setup_entry(
     async_add_entities([spotify])
 
 
+def ensure_item[_R](
+    func: Callable[[SpotifyMediaPlayer, Item], _R],
+) -> Callable[[SpotifyMediaPlayer], _R | None]:
+    """Ensure that the currently playing item is available."""
+
+    def wrapper(self: SpotifyMediaPlayer) -> _R | None:
+        if not self.currently_playing or not self.currently_playing.item:
+            return None
+        return func(self, self.currently_playing.item)
+
+    return wrapper
+
+
 class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
@@ -145,29 +160,22 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return self.currently_playing.device.volume_percent / 100
 
     @property
-    def media_content_id(self) -> str | None:
+    @ensure_item
+    def media_content_id(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media URL."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-        return self.currently_playing.item.uri
+        return item.uri
 
     @property
-    def media_content_type(self) -> str | None:
+    @ensure_item
+    def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media type."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-        return (
-            MediaType.PODCAST
-            if self.currently_playing.item.type == MediaType.EPISODE
-            else MediaType.MUSIC
-        )
+        return MediaType.PODCAST if item.type == MediaType.EPISODE else MediaType.MUSIC
 
     @property
-    def media_duration(self) -> int | None:
+    @ensure_item
+    def media_duration(self, item: Item) -> int:  # noqa: PLR0206
         """Duration of current playing media in seconds."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-        return self.currently_playing.item.duration_ms / 1000
+        return item.duration_ms / 1000
 
     @property
     def media_position(self) -> int | None:
@@ -184,12 +192,9 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return self.coordinator.data.position_updated_at
 
     @property
-    def media_image_url(self) -> str | None:
+    @ensure_item
+    def media_image_url(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media image URL."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-
-        item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
@@ -205,19 +210,15 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return item.album.images[0].url
 
     @property
-    def media_title(self) -> str | None:
+    @ensure_item
+    def media_title(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media title."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-        return self.currently_playing.item.name
+        return item.name
 
     @property
-    def media_artist(self) -> str | None:
+    @ensure_item
+    def media_artist(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media artist."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-
-        item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
@@ -228,12 +229,9 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return ", ".join(artist.name for artist in item.artists)
 
     @property
-    def media_album_name(self) -> str | None:
+    @ensure_item
+    def media_album_name(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media album."""
-        if not self.currently_playing or not self.currently_playing.item:
-            return None
-
-        item = self.currently_playing.item
         if item.type == ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
@@ -244,17 +242,14 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return item.album.name
 
     @property
-    def media_track(self) -> int | None:
+    @ensure_item
+    def media_track(self, item: Item) -> int | None:  # noqa: PLR0206
         """Track number of current playing media, music track only."""
-        if (
-            not self.currently_playing
-            or not self.currently_playing.item
-            or self.currently_playing.item.type == ItemType.EPISODE
-        ):
+        if item.type == ItemType.EPISODE:
             return None
         if TYPE_CHECKING:
-            assert isinstance(self.currently_playing.item, Track)
-        return self.currently_playing.item.track_number
+            assert isinstance(item, Track)
+        return item.track_number
 
     @property
     def media_playlist(self) -> str | None:
