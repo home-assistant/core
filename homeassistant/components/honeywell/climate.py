@@ -331,8 +331,6 @@ class HoneywellUSThermostat(ClimateEntity):
             return PRESET_AWAY
         if self._is_hold():
             return PRESET_HOLD
-        if self._away:
-            self._away = False
         return PRESET_NONE
 
     @property
