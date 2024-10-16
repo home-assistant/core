@@ -120,6 +120,11 @@ def mock_test_firmware_platform(
         yield
 
 
+@pytest.fixture(autouse=True)
+async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
+    """Mock supervisor client in tests."""
+
+
 def delayed_side_effect() -> Callable[..., Awaitable[None]]:
     """Slows down eager tasks by delaying for an event loop tick."""
 

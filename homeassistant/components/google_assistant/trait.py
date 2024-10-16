@@ -109,61 +109,42 @@ from .error import ChallengeNeeded, SmartHomeError
 _LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = "action.devices.traits."
-TRAIT_CAMERA_STREAM = f"{PREFIX_TRAITS}CameraStream"
-TRAIT_ONOFF = f"{PREFIX_TRAITS}OnOff"
-TRAIT_DOCK = f"{PREFIX_TRAITS}Dock"
-TRAIT_STARTSTOP = f"{PREFIX_TRAITS}StartStop"
+TRAIT_ARM_DISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_BRIGHTNESS = f"{PREFIX_TRAITS}Brightness"
-TRAIT_COLOR_SETTING = f"{PREFIX_TRAITS}ColorSetting"
-TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
-TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
-TRAIT_TEMPERATURE_CONTROL = f"{PREFIX_TRAITS}TemperatureControl"
-TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
-TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
-TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
-TRAIT_INPUTSELECTOR = f"{PREFIX_TRAITS}InputSelector"
-TRAIT_OBJECTDETECTION = f"{PREFIX_TRAITS}ObjectDetection"
-TRAIT_OPENCLOSE = f"{PREFIX_TRAITS}OpenClose"
-TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
-TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
-TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
-TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
-TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_CAMERA_STREAM = f"{PREFIX_TRAITS}CameraStream"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
+TRAIT_COLOR_SETTING = f"{PREFIX_TRAITS}ColorSetting"
+TRAIT_DOCK = f"{PREFIX_TRAITS}Dock"
+TRAIT_ENERGY_STORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_FAN_SPEED = f"{PREFIX_TRAITS}FanSpeed"
+TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
+TRAIT_INPUT_SELECTOR = f"{PREFIX_TRAITS}InputSelector"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
-TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_LOCK_UNLOCK = f"{PREFIX_TRAITS}LockUnlock"
+TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
+TRAIT_OBJECT_DETECTION = f"{PREFIX_TRAITS}ObjectDetection"
+TRAIT_ON_OFF = f"{PREFIX_TRAITS}OnOff"
+TRAIT_OPEN_CLOSE = f"{PREFIX_TRAITS}OpenClose"
+TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
 TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
+TRAIT_START_STOP = f"{PREFIX_TRAITS}StartStop"
+TRAIT_TEMPERATURE_CONTROL = f"{PREFIX_TRAITS}TemperatureControl"
+TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
+TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
+TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 
 PREFIX_COMMANDS = "action.devices.commands."
-COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
-COMMAND_GET_CAMERA_STREAM = f"{PREFIX_COMMANDS}GetCameraStream"
-COMMAND_DOCK = f"{PREFIX_COMMANDS}Dock"
-COMMAND_STARTSTOP = f"{PREFIX_COMMANDS}StartStop"
-COMMAND_PAUSEUNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
-COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
-COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
 COMMAND_ACTIVATE_SCENE = f"{PREFIX_COMMANDS}ActivateScene"
-COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
-COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
-    f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
-)
-COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
-    f"{PREFIX_COMMANDS}ThermostatTemperatureSetRange"
-)
-COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
-COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
-COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
-COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
-COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
-COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_ARM_DISARM = f"{PREFIX_COMMANDS}ArmDisarm"
+COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
+COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
+COMMAND_DOCK = f"{PREFIX_COMMANDS}Dock"
+COMMAND_GET_CAMERA_STREAM = f"{PREFIX_COMMANDS}GetCameraStream"
+COMMAND_LOCK_UNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
-COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
-COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
-COMMAND_OPENCLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
-COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
-COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
-COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
-COMMAND_ARMDISARM = f"{PREFIX_COMMANDS}ArmDisarm"
 COMMAND_MEDIA_NEXT = f"{PREFIX_COMMANDS}mediaNext"
 COMMAND_MEDIA_PAUSE = f"{PREFIX_COMMANDS}mediaPause"
 COMMAND_MEDIA_PREVIOUS = f"{PREFIX_COMMANDS}mediaPrevious"
@@ -172,11 +153,30 @@ COMMAND_MEDIA_SEEK_RELATIVE = f"{PREFIX_COMMANDS}mediaSeekRelative"
 COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
+COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
+COMMAND_OPEN_CLOSE = f"{PREFIX_COMMANDS}OpenClose"
+COMMAND_ON_OFF = f"{PREFIX_COMMANDS}OnOff"
+COMMAND_OPEN_CLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
+COMMAND_PAUSE_UNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
 COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
-COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
+COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
-COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
-COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
+COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
+COMMAND_SET_FAN_SPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
+COMMAND_SET_FAN_SPEED_RELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
+COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
+COMMAND_SET_INPUT = f"{PREFIX_COMMANDS}SetInput"
+COMMAND_SET_MODES = f"{PREFIX_COMMANDS}SetModes"
+COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
+COMMAND_START_STOP = f"{PREFIX_COMMANDS}StartStop"
+COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
+COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
+    f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
+)
+COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
+    f"{PREFIX_COMMANDS}ThermostatTemperatureSetRange"
+)
+COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
 
 TRAITS: list[type[_Trait]] = []
 
@@ -415,7 +415,7 @@ class ObjectDetection(_Trait):
     https://developers.google.com/actions/smarthome/traits/objectdetection
     """
 
-    name = TRAIT_OBJECTDETECTION
+    name = TRAIT_OBJECT_DETECTION
     commands = []
 
     @staticmethod
@@ -473,8 +473,8 @@ class OnOffTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/onoff
     """
 
-    name = TRAIT_ONOFF
-    commands = [COMMAND_ONOFF]
+    name = TRAIT_ON_OFF
+    commands = [COMMAND_ON_OFF]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -793,7 +793,7 @@ class EnergyStorageTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/energystorage
     """
 
-    name = TRAIT_ENERGYSTORAGE
+    name = TRAIT_ENERGY_STORAGE
     commands = [COMMAND_CHARGE]
 
     @staticmethod
@@ -848,8 +848,8 @@ class StartStopTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/startstop
     """
 
-    name = TRAIT_STARTSTOP
-    commands = [COMMAND_STARTSTOP, COMMAND_PAUSEUNPAUSE]
+    name = TRAIT_START_STOP
+    commands = [COMMAND_START_STOP, COMMAND_PAUSE_UNPAUSE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -913,7 +913,7 @@ class StartStopTrait(_Trait):
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
-        if command == COMMAND_STARTSTOP:
+        if command == COMMAND_START_STOP:
             if params["start"]:
                 await self.hass.services.async_call(
                     self.state.domain,
@@ -930,7 +930,7 @@ class StartStopTrait(_Trait):
                     blocking=not self.config.should_report_state,
                     context=data.context,
                 )
-        elif command == COMMAND_PAUSEUNPAUSE:
+        elif command == COMMAND_PAUSE_UNPAUSE:
             if params["pause"]:
                 await self.hass.services.async_call(
                     self.state.domain,
@@ -951,7 +951,7 @@ class StartStopTrait(_Trait):
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
-        if command == COMMAND_STARTSTOP:
+        if command == COMMAND_START_STOP:
             if params["start"] is False:
                 if self.state.state in (
                     COVER_VALVE_STATES[domain]["closing"],
@@ -1504,8 +1504,8 @@ class LockUnlockTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/lockunlock
     """
 
-    name = TRAIT_LOCKUNLOCK
-    commands = [COMMAND_LOCKUNLOCK]
+    name = TRAIT_LOCK_UNLOCK
+    commands = [COMMAND_LOCK_UNLOCK]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1553,8 +1553,8 @@ class ArmDisArmTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/armdisarm
     """
 
-    name = TRAIT_ARMDISARM
-    commands = [COMMAND_ARMDISARM]
+    name = TRAIT_ARM_DISARM
+    commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
         STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
@@ -1694,8 +1694,8 @@ class FanSpeedTrait(_Trait):
     https://developers.google.com/actions/smarthome/traits/fanspeed
     """
 
-    name = TRAIT_FANSPEED
-    commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
+    name = TRAIT_FAN_SPEED
+    commands = [COMMAND_SET_FAN_SPEED, COMMAND_REVERSE]
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
@@ -1840,7 +1840,7 @@ class FanSpeedTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a smart home command."""
-        if command == COMMAND_FANSPEED:
+        if command == COMMAND_SET_FAN_SPEED:
             await self.execute_fanspeed(data, params)
         elif command == COMMAND_REVERSE:
             await self.execute_reverse(data, params)
@@ -1854,7 +1854,7 @@ class ModesTrait(_Trait):
     """
 
     name = TRAIT_MODES
-    commands = [COMMAND_MODES]
+    commands = [COMMAND_SET_MODES]
 
     SYNONYMS = {
         "preset mode": ["preset mode", "mode", "preset"],
@@ -2088,8 +2088,8 @@ class InputSelectorTrait(_Trait):
     https://developers.google.com/assistant/smarthome/traits/inputselector
     """
 
-    name = TRAIT_INPUTSELECTOR
-    commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
+    name = TRAIT_INPUT_SELECTOR
+    commands = [COMMAND_SET_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
     SYNONYMS: dict[str, list[str]] = {}
 
@@ -2124,7 +2124,7 @@ class InputSelectorTrait(_Trait):
         sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
         source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
 
-        if command == COMMAND_INPUT:
+        if command == COMMAND_SET_INPUT:
             requested_source = params.get("newInput")
         elif command == COMMAND_NEXT_INPUT:
             requested_source = _next_selected(sources, source)
@@ -2162,8 +2162,8 @@ class OpenCloseTrait(_Trait):
         cover.CoverDeviceClass.GATE,
     )
 
-    name = TRAIT_OPENCLOSE
-    commands = [COMMAND_OPENCLOSE, COMMAND_OPENCLOSE_RELATIVE]
+    name = TRAIT_OPEN_CLOSE
+    commands = [COMMAND_OPEN_CLOSE, COMMAND_OPEN_CLOSE_RELATIVE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -2263,7 +2263,7 @@ class OpenCloseTrait(_Trait):
         if domain in COVER_VALVE_DOMAINS:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
             should_verify = False
-            if command == COMMAND_OPENCLOSE_RELATIVE:
+            if command == COMMAND_OPEN_CLOSE_RELATIVE:
                 position = self.state.attributes.get(
                     COVER_VALVE_CURRENT_POSITION[domain]
                 )

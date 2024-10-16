@@ -3,20 +3,27 @@
 from collections.abc import Mapping
 import logging
 from typing import Any
+import uuid
 
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 
-from . import get_auth_agent_id
-from .const import CONF_2FA, DOMAIN
+from . import get_auth_user_agent
+from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +32,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
+STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
 UNKNOWN_RING_ACCOUNT = "unknown_ring_account"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, hardware_id: str, data: dict[str, str]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    user_agent, hardware_id = await get_auth_agent_id(hass)
+    user_agent = get_auth_user_agent()
     auth = Auth(
         user_agent,
         http_client_session=async_get_clientsession(hass),
@@ -56,8 +67,10 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ring."""
 
     VERSION = 1
+    MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
 
     user_pass: dict[str, Any] = {}
+    hardware_id: str | None = None
     reauth_entry: ConfigEntry | None = None
 
     async def async_step_dhcp(
@@ -87,8 +100,10 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
+            if not self.hardware_id:
+                self.hardware_id = str(uuid.uuid4())
             try:
-                token = await validate_input(self.hass, user_input)
+                token = await validate_input(self.hass, self.hardware_id, user_input)
             except Require2FA:
                 self.user_pass = user_input
 
@@ -101,7 +116,11 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
-                    data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},
+                    data={
+                        CONF_DEVICE_ID: self.hardware_id,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_TOKEN: token,
+                    },
                 )
 
         return self.async_show_form(
@@ -143,8 +162,13 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             user_input[CONF_USERNAME] = self.reauth_entry.data[CONF_USERNAME]
+            # Reauth will use the same hardware id and re-authorise an existing
+            # authorised device.
+            if not self.hardware_id:
+                self.hardware_id = self.reauth_entry.data[CONF_DEVICE_ID]
+                assert self.hardware_id
             try:
-                token = await validate_input(self.hass, user_input)
+                token = await validate_input(self.hass, self.hardware_id, user_input)
             except Require2FA:
                 self.user_pass = user_input
                 return await self.async_step_2fa()
@@ -157,6 +181,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_TOKEN: token,
+                    CONF_DEVICE_ID: self.hardware_id,
                 }
                 self.hass.config_entries.async_update_entry(
                     self.reauth_entry, data=data
@@ -169,7 +194,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self.reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: self.reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: self.reauth_entry.data[CONF_USERNAME],
             },
         )
 
