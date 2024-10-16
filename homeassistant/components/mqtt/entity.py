@@ -590,6 +590,7 @@ async def cleanup_device_registry(
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and device_id not in device_registry.deleted_devices
         and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
@@ -671,6 +672,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
+        self._migrate_discovery: str | None = None
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
@@ -703,12 +705,63 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
     ) -> None:
         """Handle discovery update."""
         discovery_hash = get_discovery_hash(self._discovery_data)
+        # Start discovery migration or rollback if migrate_discovery flag is set
+        # and the discovery topic is valid and not yet migrating
+        if (
+            discovery_payload.migrate_discovery
+            and self._migrate_discovery is None
+            and self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            == discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            if discovery_payload.device_discovery:
+                _LOGGER.info(
+                    "Rollback started for device based discovery migration "
+                    "on topic %s. Publish a component based "
+                    "discovery update for component %s to roll back",
+                    self._migrate_discovery,
+                    discovery_hash,
+                )
+            else:
+                _LOGGER.info(
+                    "Migration to device based discovery started "
+                    "on topic %s. Publish a device based discovery update "
+                    "including component %s",
+                    self._migrate_discovery,
+                    discovery_hash,
+                )
+            # Cleanup platform resources
+            await self.async_tear_down()
+            # Unregister and clean discovery
+            stop_discovery_updates(
+                self.hass, self._discovery_data, self._remove_discovery_updated
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         _LOGGER.debug(
             "Got update for %s with hash: %s '%s'",
             self.log_name,
             discovery_hash,
             discovery_payload,
         )
+        new_discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+
+        # Abort early if there is no normal update
+        if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
+            # Prevent illegal updates
+            _LOGGER.warning(
+                "Illegal discovery payload "
+                "for %s on topic %s detected, "
+                "ignoring update, discovery registered to %s",
+                discovery_hash,
+                new_discovery_topic,
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         if (
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
@@ -805,6 +858,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
@@ -862,7 +916,12 @@ class MqttDiscoveryUpdateMixin(Entity):
         if TYPE_CHECKING:
             assert self._discovery_data
         self._cleanup_discovery_on_remove()
-        await self._async_remove_state_and_registry_entry()
+        if self._migrate_discovery is None:
+            # Unload and cleanup registry
+            await self._async_remove_state_and_registry_entry()
+        else:
+            # Only unload the entity
+            await self.async_remove(force_remove=True)
         send_discovery_done(self.hass, self._discovery_data)
 
     @callback
@@ -877,18 +936,77 @@ class MqttDiscoveryUpdateMixin(Entity):
         """
         if TYPE_CHECKING:
             assert self._discovery_data
-        discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_hash = get_discovery_hash(self._discovery_data)
+        # Start discovery migration or rollback if migrate_discovery flag is set
+        # and the discovery topic is valid and not yet migrating
+        if (
+            payload.migrate_discovery
+            and self._migrate_discovery is None
+            and self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            == payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            if self.unique_id is None or self.device_info is None:
+                _LOGGER.error(
+                    "Discovery migration is not possible for "
+                    "for entity %s on topic %s. A unique_id "
+                    "and device context is required, got unique_id: %s, device: %s",
+                    self.entity_id,
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                    self.unique_id,
+                    self.device_info,
+                )
+                send_discovery_done(self.hass, self._discovery_data)
+                return
+
+            self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            if payload.device_discovery:
+                _LOGGER.info(
+                    "Rollback started for device based discovery migration "
+                    "for entity %s on topic %s. Publish a component based "
+                    "discovery update for component %s to roll back",
+                    self.entity_id,
+                    self._migrate_discovery,
+                    discovery_hash,
+                )
+            else:
+                _LOGGER.info(
+                    "Migration to device based discovery started "
+                    "for entity %s on topic %s. Publish a device based discovery update "
+                    "including component %s",
+                    self.entity_id,
+                    self._migrate_discovery,
+                    discovery_hash,
+                )
+        old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         _LOGGER.debug(
             "Got update for entity with hash: %s '%s'",
             discovery_hash,
             payload,
         )
-        old_payload: DiscoveryInfoType
-        old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+        new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        # Abort early if there is no normal update
+        if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
+            # Prevent illegal updates
+            _LOGGER.warning(
+                "Illegal discovery payload "
+                "for entity %s %s on topic %s detected, "
+                "ignoring update, discovery registered to %s",
+                self.entity_id,
+                discovery_hash,
+                new_discovery_topic,
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
-            _LOGGER.info("Removing component: %s", self.entity_id)
+            if self._migrate_discovery is None:
+                _LOGGER.info("Removing component: %s", self.entity_id)
+            else:
+                _LOGGER.info("Unloading component: %s", self.entity_id)
             self.hass.async_create_task(
                 self._async_process_discovery_update_and_remove()
             )
