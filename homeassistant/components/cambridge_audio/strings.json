@@ -25,11 +25,12 @@
   },
   "entity": {
     "select": {
-      "audio_output": {
-        "name": "Audio output",
+      "display_brightness": {
+        "name": "Display brightness",
         "state": {
-          "cloud": "Cloud",
-          "local": "Local"
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
         }
       }
     }
