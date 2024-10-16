@@ -143,16 +143,16 @@ jobs:
           tests="[]"
           tests_glob=""
           skip_coverage=""
-          integration_changes='["gardena_bluetooth"]'
+          steps.integrations.outputs.changes="['gardena_bluetooth']"
 
-          if [[ "${{ integration_changes }}" != "[]" ]];
+          if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo '${{ integration_changes }}' | jq -cSr '. | join(",")')
+            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo '${{ integration_changes }}' | jq -cSr '.[]')
+            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
               do
