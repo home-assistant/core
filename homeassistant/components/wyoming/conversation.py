@@ -52,7 +52,6 @@ class WyomingConversationEntity(
         """Set up provider."""
         super().__init__()
 
-        self.entry = config_entry
         self.service = service
 
         self._intent_service: IntentProgram | None = None
