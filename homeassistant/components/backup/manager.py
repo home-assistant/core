@@ -297,7 +297,11 @@ class BackupManager(BaseBackupManager):
         return tar_file_path.stat().st_size
 
     async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
-        """Restore a backup."""
+        """Restore a backup.
+
+        This will write the restore information to .HA_RESTORE which
+        will be handled during startup by the restore_backup module.
+        """
         if (backup := await self.async_get_backup(slug=slug)) is None:
             raise HomeAssistantError(f"Backup {slug} not found")
 
