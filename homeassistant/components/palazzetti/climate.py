@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from palazzetti_sdk_local_api.exceptions import InvalidStateTransitionError
+from pypalazzetti.exceptions import CommunicationError, ValidationError
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -10,8 +10,8 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,19 +19,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ACTION_NOT_UNAVAILABLE,
-    API_HW_VERSION,
-    API_NAME,
-    API_SW_VERSION,
     AVAILABLE,
     DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
-    FAN_MODE,
     FAN_MODES,
     FAN_SILENT,
-    HEATING_STATUSES,
-    MAC,
-    MODE,
+    FAN_SPEED,
+    IS_HEATING,
     PALAZZETTI,
     ROOM_TEMPERATURE,
     TARGET_TEMPERATURE,
@@ -43,9 +38,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Palazzetti climates based on a config entry."""
-    coordinator: PalazzettiDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PalazzettiDataUpdateCoordinator = entry.runtime_data["coordinator"]
     entities: list[PalazzettiClimateEntity] = []
-    await coordinator.async_config_entry_first_refresh()
     if coordinator.data[AVAILABLE]:
         entities.append(PalazzettiClimateEntity(coordinator=coordinator))
         async_add_entities(entities)
@@ -70,61 +64,61 @@ class PalazzettiClimateEntity(
     ) -> None:
         """Initialize Palazzetti climate."""
         super().__init__(coordinator=coordinator)
-        self.hub = coordinator.hub
+        self.palazzetti = coordinator.palazzetti
 
-        # TURN_OFF and TURN_ON are not always available. An update coordinator listener will add them when possible.
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-        )
-        coordinator.async_add_listener(self._coordinator_update)
-
-        name = self.hub.product.response_json[API_NAME]
-        self._attr_unique_id = coordinator.entry.data[MAC]
+        name = self.palazzetti.name
+        self._attr_unique_id = coordinator.entry.data[CONF_MAC]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.entry.data[MAC])},
+            identifiers={(DOMAIN, coordinator.entry.data[CONF_MAC])},
             name=PALAZZETTI,
             manufacturer=PALAZZETTI,
-            sw_version=self.hub.product.response_json[API_SW_VERSION],
-            hw_version=self.hub.product.response_json[API_HW_VERSION],
+            sw_version=self.palazzetti.sw_version,
+            hw_version=self.palazzetti.hw_version,
         )
         self._attr_name = name
-
-    @callback
-    def _coordinator_update(self) -> None:
-        available = (
-            self.coordinator.data["available"]
-            and self.hub
-            and self.hub.hub_online
-            and self.hub.product
-            and self.hub.product_online
+        self._attr_fan_modes = list(
+            str(range(self.palazzetti.fan_speed_min, self.palazzetti.fan_speed_max + 1))
         )
-        self._attr_available = available
-        if available:
-            if self.hub.product.get_data_config_object().flag_has_switch_on_off:
-                self._attr_supported_features |= (
-                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-                )
-                self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-            else:
-                self._attr_supported_features &= ~(
-                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-                )
-                self._attr_hvac_modes = [self.hvac_mode]
+        if self.palazzetti.has_fan_silent:
+            self._attr_fan_modes.insert(0, FAN_SILENT)
+        if self.palazzetti.has_fan_high:
+            self._attr_fan_modes.append(FAN_HIGH)
+        if self.palazzetti.has_fan_auto:
+            self._attr_fan_modes.append(FAN_AUTO)
+
+    @property
+    def available(self) -> bool:
+        """Is the entity available."""
+        return self.coordinator.data["available"] and self.palazzetti
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Supported features."""
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if self.palazzetti.has_on_off_switch:
+            features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        return features
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """List the hvac modes."""
+        if self.palazzetti.has_on_off_switch:
+            return [HVACMode.OFF, HVACMode.HEAT]
+        return [self.hvac_mode]
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat or off mode."""
-        api_state = self.coordinator.data[MODE]
-        return HVACMode.HEAT if api_state in HEATING_STATUSES else HVACMode.OFF
+        is_heating = bool(self.coordinator.data[IS_HEATING])
+        return HVACMode.HEAT if is_heating else HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
-            if hvac_mode == HVACMode.OFF:
-                self.hass.async_add_executor_job(self.hub.product.power_off)
-            else:
-                self.hass.async_add_executor_job(self.hub.product.power_on)
-        except InvalidStateTransitionError as err:
+            await self.palazzetti.set_on(hvac_mode != HVACMode.OFF)
+        except (CommunicationError, ValidationError) as err:
             raise ServiceValidationError(
                 err, translation_domain=DOMAIN, translation_key=ACTION_NOT_UNAVAILABLE
             ) from err
@@ -144,21 +138,21 @@ class PalazzettiClimateEntity(
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
-        await self.hub.product.async_set_setpoint(int(temperature))
+        await self.palazzetti.set_target_temperature(int(temperature))
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan mode."""
-        api_state = self.coordinator.data[FAN_MODE]
+        api_state = self.coordinator.data[FAN_SPEED]
         return FAN_MODES[api_state]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode == FAN_SILENT:
-            await self.hub.product.async_set_fan_silent_mode()
+            await self.palazzetti.set_fan_silent()
         elif fan_mode == FAN_HIGH:
-            await self.hub.product.async_set_fan_high_mode()
+            await self.palazzetti.set_fan_high()
         elif fan_mode == FAN_AUTO:
-            await self.hub.product.async_set_fan_auto_mode()
+            await self.palazzetti.set_fan_auto()
         else:
-            await self.hub.product.async_set_fan(fan=1, value=FAN_MODES.index(fan_mode))
+            await self.palazzetti.set_fan_speed(FAN_MODES.index(fan_mode))

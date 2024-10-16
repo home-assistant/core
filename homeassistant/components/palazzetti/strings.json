@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter the host name or the ip address of the Palazzetti CBox",
+        "description": "Enter the host name or the IP address of the Palazzetti CBox",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }

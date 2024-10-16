@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pypalazzetti.exceptions import CommunicationError, ValidationError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from .const import DOMAIN
 from .coordinator import PalazzettiDataUpdateCoordinator
@@ -17,17 +20,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     coordinator = PalazzettiDataUpdateCoordinator(hass, entry)
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    try:
+        await coordinator.palazzetti.connect()
+        await coordinator.palazzetti.update_state()
+    except (CommunicationError, ValidationError) as err:
+        raise ConfigEntryError(
+            err, translation_domain=DOMAIN, translation_key="unknown"
+        ) from err
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = {"coordinator": coordinator}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok

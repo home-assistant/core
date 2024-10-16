@@ -9,6 +9,7 @@ PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
 ACTION_NOT_UNAVAILABLE = "action_not_available"
+C = "action_not_available"
 
 API_NAME: Final = "LABEL"
 API_HOST: Final = "IP"
@@ -30,63 +31,11 @@ MAC: Final = "mac"
 AVAILABLE: Final = "available"
 TARGET_TEMPERATURE: Final = "target_temperature"
 ROOM_TEMPERATURE: Final = "room_temperature"
-OUTPUT_TEMPERATURE: Final = "output_temperature"
+OUTLET_TEMPERATURE: Final = "outlet_temperature"
 EXHAUST_TEMPERATURE: Final = "exhaust_temperature"
 PELLET_QUANTITY: Final = "pellet_quantity"
-FAN_MODE: Final = "fan_mode"
-MODE: Final = "mode"
-
-STATUSES: Final = {
-    0: "OFF",
-    1: "OFF_TIMER",
-    2: "TESTFIRE",
-    3: "HEATUP",
-    4: "FUELING",
-    5: "IGNTEST",
-    6: "BURNING",
-    7: "BURNINGMOD",
-    8: "UNKNOWN",
-    9: "COOLFLUID",
-    10: "FIRESTOP",
-    11: "CLEANFIRE",
-    12: "COOL",
-    50: "CLEANUP",
-    51: "ECOMODE",
-    241: "CHIMNEY_ALARM",
-    243: "GRATE_ERROR",
-    244: "PELLET_WATER_ERROR",
-    245: "T05_ERROR",
-    247: "HATCH_DOOR_OPEN",
-    248: "PRESSURE_ERROR",
-    249: "MAIN_PROBE_FAILURE",
-    250: "FLUE_PROBE_FAILURE",
-    252: "EXHAUST_TEMP_HIGH",
-    253: "PELLET_FINISHED",
-    501: "OFF",
-    502: "FUELING",
-    503: "IGNTEST",
-    504: "BURNING",
-    505: "FIREWOOD_FINISHED",
-    506: "COOLING",
-    507: "CLEANFIRE",
-    1000: "GENERAL_ERROR",
-    1001: "GENERAL_ERROR",
-    1239: "DOOR_OPEN",
-    1240: "TEMP_TOO_HIGH",
-    1241: "CLEANING_WARNING",
-    1243: "FUEL_ERROR",
-    1244: "PELLET_WATER_ERROR",
-    1245: "T05_ERROR",
-    1247: "HATCH_DOOR_OPEN",
-    1248: "PRESSURE_ERROR",
-    1249: "MAIN_PROBE_FAILURE",
-    1250: "FLUE_PROBE_FAILURE",
-    1252: "EXHAUST_TEMP_HIGH",
-    1253: "PELLET_FINISHED",
-    1508: "GENERAL_ERROR",
-}
-
-HEATING_STATUSES = [2, 3, 4, 5, 6, 7, 51, 502, 503, 504]
+FAN_SPEED: Final = "fan_speed"
+IS_HEATING: Final = "is_heating"
 
 FAN_SILENT: Final = "SILENT"
 FAN_HIGH: Final = "HIGH"
