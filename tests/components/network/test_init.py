@@ -896,33 +896,32 @@ async def test_websocket_network_url(
 
     client = await hass_ws_client(hass)
 
-    # Test internal URL
-    with patch(
-        "homeassistant.helpers.network._get_internal_url", return_value="internal"
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
+        patch("homeassistant.helpers.network._get_cloud_url", return_value="cloud"),
     ):
-        await client.send_json({"id": 1, "type": "network/url", "url_type": "internal"})
+        await client.send_json({"id": 1, "type": "network/url"})
         msg = await client.receive_json()
         assert msg["success"]
-        assert msg["result"] == "internal"
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": "cloud",
+            "cloud": "cloud",
+        }
 
-    # Test external URL
-    with patch(
-        "homeassistant.helpers.network._get_external_url", return_value="external"
+    # Test with no cloud URL
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
     ):
-        await client.send_json({"id": 2, "type": "network/url", "url_type": "external"})
+        await client.send_json({"id": 2, "type": "network/url"})
         msg = await client.receive_json()
         assert msg["success"]
-        assert msg["result"] == "external"
-
-    # Test cloud URL
-    with patch("homeassistant.helpers.network._get_cloud_url", return_value="cloud"):
-        await client.send_json({"id": 3, "type": "network/url", "url_type": "cloud"})
-        msg = await client.receive_json()
-        assert msg["success"]
-        assert msg["result"] == "cloud"
-
-    # Test invalid URL type
-    await client.send_json({"id": 4, "type": "network/url", "url_type": "invalid"})
-    msg = await client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_format"
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": None,
+            "cloud": None,
+        }

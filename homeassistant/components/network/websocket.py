@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -9,14 +10,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import (
-    ATTR_ADAPTERS,
-    ATTR_CONFIGURED_ADAPTERS,
-    NETWORK_CONFIG_SCHEMA,
-    URL_TYPES,
-)
+from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, NETWORK_CONFIG_SCHEMA
 from .network import async_get_network
 
 
@@ -75,7 +71,6 @@ async def websocket_network_adapters_configure(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "network/url",
-        vol.Required("url_type"): vol.In(URL_TYPES),
     }
 )
 @websocket_api.async_response
@@ -84,13 +79,26 @@ async def websocket_network_url(
     connection: ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get the internal URL."""
+    """Get the internal, external, and cloud URLs."""
+    internal_url = None
+    external_url = None
+    cloud_url = None
+    with suppress(NoURLAvailableError):
+        internal_url = get_url(
+            hass, allow_internal=True, allow_external=False, allow_cloud=False
+        )
+    with suppress(NoURLAvailableError):
+        external_url = get_url(
+            hass, allow_internal=False, allow_external=True, prefer_external=True
+        )
+    with suppress(NoURLAvailableError):
+        cloud_url = get_url(hass, allow_internal=False, require_cloud=True)
+
     connection.send_result(
         msg["id"],
-        get_url(
-            hass,
-            allow_internal=msg["url_type"] == "internal",
-            allow_external=msg["url_type"] in ["external", "cloud"],
-            require_cloud=msg["url_type"] == "cloud",
-        ),
+        {
+            "internal": internal_url,
+            "external": external_url,
+            "cloud": cloud_url,
+        },
     )
