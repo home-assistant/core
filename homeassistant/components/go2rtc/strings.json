@@ -1,12 +1,12 @@
 {
   "config": {
     "step": {
-      "host": {
+      "url": {
         "data": {
-          "host": "[%key:common::config_flow::data::url%]"
+          "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "host": "The URL of your go2rtc instance."
+          "url": "The URL of your go2rtc instance."
         }
       }
     },
