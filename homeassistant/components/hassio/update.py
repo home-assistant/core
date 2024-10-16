@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import StoreAddonUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -30,6 +31,7 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
+from .coordinator import HassioDataUpdateCoordinator
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
@@ -97,6 +99,23 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         | UpdateEntityFeature.BACKUP
         | UpdateEntityFeature.RELEASE_NOTES
     )
+
+    def __init__(
+        self,
+        coordinator: HassioDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        addon: dict[str, Any],
+    ) -> None:
+        """Initialize object."""
+        super().__init__(coordinator, entity_description, addon)
+        self._client: SupervisorClient | None = None
+
+    @property
+    def _supervisor_client(self) -> SupervisorClient:
+        """Get supervisor client."""
+        if not self._client:
+            self._client = get_supervisor_client(self.hass)
+        return self._client
 
     @property
     def _addon_data(self) -> dict:
@@ -166,9 +185,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        supervisor_client = get_supervisor_client(self.hass)
         try:
-            await supervisor_client.store.update_addon(
+            await self._supervisor_client.store.update_addon(
                 self._addon_slug, StoreAddonUpdate(backup=backup)
             )
         except SupervisorError as err:
