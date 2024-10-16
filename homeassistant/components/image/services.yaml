@@ -7,6 +7,6 @@ snapshot:
   fields:
     filename:
       required: true
-      example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
+      example: "/tmp/snapshot_{{ entity_id }}.jpg"
       selector:
         text:
