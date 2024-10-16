@@ -660,4 +660,16 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatLocalTemperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            measurement_to_ha=lambda x: x / 100,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
+    ),
 ]
