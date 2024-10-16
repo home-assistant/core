@@ -138,7 +138,7 @@
     'version': 1,
   })
 # ---
-# name: test_failed_connect
+# name: test_failed_connect[component.gardena_bluetooth.config.abort.cannot_connect]
   FlowResultSnapshot({
     'data_schema': list([
       dict({
@@ -163,7 +163,7 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_failed_connect.1
+# name: test_failed_connect[component.gardena_bluetooth.config.abort.cannot_connect].1
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
@@ -178,7 +178,7 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_failed_connect.2
+# name: test_failed_connect[component.gardena_bluetooth.config.abort.cannot_connect].2
   FlowResultSnapshot({
     'description_placeholders': dict({
       'error': 'something went wrong',

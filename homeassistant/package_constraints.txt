@@ -3,7 +3,7 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.1.0
+aiohasupervisor==0.2.0b0
 aiohttp-fast-zlib==0.1.1
 aiohttp==3.10.10
 aiohttp_cors==0.7.0
@@ -64,7 +64,7 @@ uv==0.4.17
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.14.0
+yarl==1.15.3
 zeroconf==0.135.0
 
 # Constrain pycryptodome to avoid vulnerability
