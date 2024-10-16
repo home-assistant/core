@@ -854,7 +854,7 @@ jobs:
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: pytest_buckets
+          name: pytest_buckets-${{ matrix.python-version }}
           path: pytest_buckets.txt
           overwrite: true
 
@@ -919,7 +919,7 @@ jobs:
       - name: Download pytest_buckets
         uses: actions/download-artifact@v4.1.8
         with:
-          name: pytest_buckets
+          name: pytest_buckets-${{ matrix.python-version }}
       - name: Compile English translations
         run: |
           . venv/bin/activate

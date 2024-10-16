@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
+import pytest
 
 from homeassistant.components import ssdp
 from homeassistant.components.hyperion.const import (
@@ -823,6 +824,10 @@ async def test_options_effect_show_list(hass: HomeAssistant) -> None:
         assert result["data"][CONF_EFFECT_HIDE_LIST] == ["effect2"]
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.hyperion.options.abort.cannot_connect"],
+)
 async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistant) -> None:
     """Check an options flow effect hide list with a failed connection."""
 

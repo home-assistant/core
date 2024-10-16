@@ -10,7 +10,7 @@ from go2rtc_client import Go2RtcClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -55,28 +55,28 @@ class Go2RTCConfigFlow(ConfigFlow, domain=DOMAIN):
         if is_docker_env() and (binary := self._get_binary()):
             return self.async_create_entry(
                 title=DOMAIN,
-                data={CONF_BINARY: binary, CONF_HOST: "http://localhost:1984/"},
+                data={CONF_BINARY: binary, CONF_URL: "http://localhost:1984/"},
             )
 
-        return await self.async_step_host()
+        return await self.async_step_url()
 
-    async def async_step_host(
+    async def async_step_url(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step to use selfhosted go2rtc server."""
         errors = {}
         if user_input is not None:
-            if error := await _validate_url(self.hass, user_input[CONF_HOST]):
-                errors[CONF_HOST] = error
+            if error := await _validate_url(self.hass, user_input[CONF_URL]):
+                errors[CONF_URL] = error
             else:
                 return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
-            step_id="host",
+            step_id="url",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_HOST): selector.TextSelector(
+                        vol.Required(CONF_URL): selector.TextSelector(
                             selector.TextSelectorConfig(
                                 type=selector.TextSelectorType.URL
                             )
