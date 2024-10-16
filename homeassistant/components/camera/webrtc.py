@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
@@ -281,19 +282,27 @@ async def ws_webrtc_offer(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
     @callback
-    def send_message(message: WebRTCMessages | dict[str, Any]) -> None:
+    def send_message(message: WebRTCMessages) -> None:
         """Push a value to websocket."""
-        value = message if isinstance(message, dict) else message.to_frontend_dict()
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                value,
+                message.to_frontend_dict(),
             )
         )
 
     send_message(WebRTCSessionId(session_id))
 
-    await camera.async_handle_webrtc_offer(offer, session_id, send_message)
+    try:
+        await camera.async_handle_webrtc_offer(offer, session_id, send_message)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error handling WebRTC offer: %s", ex)
+        send_message(
+            WebRTCError(
+                "webrtc_offer_failed",
+                str(ex),
+            )
+        )
 
 
 @websocket_api.websocket_command(

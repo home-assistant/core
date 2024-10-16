@@ -193,7 +193,7 @@ async def test_async_register_ice_server(
     assert config.configuration.ice_servers == []
 
 
-@pytest.mark.usefixtures("mock_camera_web_rtc")
+@pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_ws_get_client_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -210,7 +210,10 @@ async def test_ws_get_client_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "configuration": {"iceServers": [{"urls": "stun:stun.home-assistant.io:3478"}]}
+        "configuration": {
+            "iceServers": [{"urls": "stun:stun.home-assistant.io:3478"}],
+        },
+        "getCandidatesUpfront": False,
     }
 
 
@@ -231,6 +234,6 @@ async def test_ws_get_client_config_no_rtc_camera(
     assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
     assert msg["error"] == {
-        "code": "web_rtc_offer_failed",
+        "code": "webrtc_get_client_config_failed",
         "message": "Camera does not support WebRTC, frontend_stream_type=hls",
     }

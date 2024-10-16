@@ -607,7 +607,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._webrtc_sync_offer:
             try:
                 answer = await self.async_handle_web_rtc_offer(offer_sdp)
-            except (HomeAssistantError, ValueError) as ex:
+            except ValueError as ex:
                 _LOGGER.error("Error handling WebRTC offer: %s", ex)
                 send_message(
                     WebRTCError(
@@ -632,7 +632,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     send_message(
                         WebRTCError(
                             "webrtc_offer_failed",
-                            "No answer",
+                            "No answer on WebRTC offer",
                         )
                     )
         elif (
@@ -649,9 +649,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             send_message(WebRTCAnswer(answer))
         else:
-            raise HomeAssistantError(
-                "WebRTC offer was not accepted by the supported providers"
-            )
+            raise HomeAssistantError("Camera does not support WebRTC")
 
     def camera_image(
         self, width: int | None = None, height: int | None = None

@@ -16,10 +16,17 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera import CameraState, StreamType
+from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.webrtc import (
+    WebRTCAnswer,
+    WebRTCError,
+    WebRTCSendMessage,
+)
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -577,11 +584,10 @@ async def test_refresh_expired_stream_failure(
         assert create_stream.called
 
 
+@pytest.mark.usefixtures("webrtc_camera_device")
 async def test_camera_web_rtc(
     hass: HomeAssistant,
     auth,
-    hass_ws_client: WebSocketGenerator,
-    webrtc_camera_device,
     setup_platform,
 ) -> None:
     """Test a basic camera that supports web rtc."""
@@ -605,32 +611,19 @@ async def test_camera_web_rtc(
     assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.my_camera",
-            "offer": "a=recvonly",
-        }
-    )
-
-    msg = await client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
+    camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    send_message.assert_called_once_with(WebRTCAnswer("v=0\r\ns=-\r\n"))
 
     # Nest WebRTC cameras return a placeholder
     await async_get_image(hass)
     await async_get_image(hass, width=1024, height=768)
 
 
+@pytest.mark.usefixtures("auth", "camera_device")
 async def test_camera_web_rtc_unsupported(
     hass: HomeAssistant,
-    auth,
-    hass_ws_client: WebSocketGenerator,
-    camera_device,
     setup_platform,
 ) -> None:
     """Test a basic camera that supports web rtc."""
@@ -642,29 +635,18 @@ async def test_camera_web_rtc_unsupported(
     assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.my_camera",
-            "offer": "a=recvonly",
-        }
+    camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    send_message.assert_called_once_with(
+        WebRTCError("webrtc_offer_failed", "No answer on WebRTC offer")
     )
 
-    msg = await client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == "web_rtc_offer_failed"
-    assert msg["error"]["message"].startswith("Camera does not support WebRTC")
 
-
+@pytest.mark.usefixtures("webrtc_camera_device")
 async def test_camera_web_rtc_offer_failure(
     hass: HomeAssistant,
     auth,
-    hass_ws_client: WebSocketGenerator,
-    webrtc_camera_device,
     setup_platform,
 ) -> None:
     """Test a basic camera that supports web rtc."""
@@ -678,31 +660,24 @@ async def test_camera_web_rtc_offer_failure(
     assert cam is not None
     assert cam.state == CameraState.STREAMING
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.my_camera",
-            "offer": "a=recvonly",
-        }
-    )
-
-    msg = await client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == "web_rtc_offer_failed"
-    assert msg["error"]["message"].startswith("Nest API error")
+    camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    with pytest.raises(
+        HomeAssistantError,
+        match="Nest API error: Bad Request",
+    ):
+        await camera_obj.async_handle_webrtc_offer(
+            "a=recvonly", "session_id", send_message
+        )
+    send_message.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_create_stream")
 async def test_camera_multiple_streams(
     hass: HomeAssistant,
     auth,
-    hass_ws_client: WebSocketGenerator,
     create_device,
     setup_platform,
-    mock_create_stream,
 ) -> None:
     """Test a camera supporting multiple stream types."""
     expiration = utcnow() + datetime.timedelta(seconds=100)
@@ -750,18 +725,7 @@ async def test_camera_multiple_streams(
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     # WebRTC stream
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.my_camera",
-            "offer": "a=recvonly",
-        }
-    )
-
-    msg = await client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
+    camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    send_message.assert_called_once_with(WebRTCAnswer("v=0\r\ns=-\r\n"))

@@ -1,10 +1,11 @@
 """The tests for the go2rtc component."""
 
 from collections.abc import Callable
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
-from go2rtc_client import Stream, WebRTCSdpAnswer, WebRTCSdpOffer
+from go2rtc_client import Stream
 from go2rtc_client.models import Producer
+from go2rtc_client.ws import WebRTCAnswer, WebRTCOffer
 import pytest
 
 from homeassistant.components.camera import (
@@ -14,6 +15,10 @@ from homeassistant.components.camera import (
 )
 from homeassistant.components.camera.const import StreamType
 from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.webrtc import (
+    WebRTCAnswer as HAWebRTCAnswer,
+    WebRTCSendMessage,
+)
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -139,45 +144,57 @@ async def _test_setup(
     await setup_integration(hass, mock_config_entry)
     after_setup_fn()
 
-    mock_client.webrtc.forward_whep_sdp_offer.return_value = WebRTCSdpAnswer(ANSWER_SDP)
+    with patch(
+        "homeassistant.components.go2rtc.Go2RtcWsClient", autospec=True
+    ) as ws_client_mock:
+        ws_client = ws_client_mock.return_value
+        result_mock = Mock(spec_set=WebRTCSendMessage)
 
-    answer = await camera.async_handle_web_rtc_offer(OFFER_SDP)
-    assert answer == ANSWER_SDP
+        async def test() -> None:
+            await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", result_mock)
+            ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+            ws_client.subscribe.assert_called_once()
 
-    mock_client.webrtc.forward_whep_sdp_offer.assert_called_once_with(
-        entity_id, WebRTCSdpOffer(OFFER_SDP)
-    )
-    mock_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+            # Simulate the answer from the go2rtc server
+            callback = ws_client.subscribe.call_args[0][0]
+            callback(WebRTCAnswer(ANSWER_SDP))
 
-    # If the stream is already added, the stream should not be added again.
-    mock_client.streams.add.reset_mock()
-    mock_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://stream")])
-    }
+            result_mock.assert_called_once_with(HAWebRTCAnswer(ANSWER_SDP))
 
-    answer = await camera.async_handle_web_rtc_offer(OFFER_SDP)
-    assert answer == ANSWER_SDP
-    mock_client.streams.add.assert_not_called()
-    assert mock_client.webrtc.forward_whep_sdp_offer.call_count == 2
-    assert isinstance(camera._webrtc_providers[0], WebRTCProvider)
+        await test()
 
-    # Set stream source to None and provider should be skipped
-    mock_client.streams.list.return_value = {}
-    camera.set_stream_source(None)
-    with pytest.raises(
-        HomeAssistantError,
-        match="WebRTC offer was not accepted by the supported providers",
-    ):
-        await camera.async_handle_web_rtc_offer(OFFER_SDP)
+        mock_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
 
-    # Remove go2rtc config entry
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+        # If the stream is already added, the stream should not be added again.
+        mock_client.streams.add.reset_mock()
+        mock_client.streams.list.return_value = {
+            entity_id: Stream([Producer("rtsp://stream")])
+        }
 
-    assert camera._webrtc_providers == []
-    assert camera.frontend_stream_type == StreamType.HLS
+        result_mock.reset_mock()
+        ws_client.reset_mock()
+        await test()
+
+        mock_client.streams.add.assert_not_called()
+        assert isinstance(camera._webrtc_provider, WebRTCProvider)
+
+        # Set stream source to None and provider should be skipped
+        mock_client.streams.list.return_value = {}
+        camera.set_stream_source(None)
+        with pytest.raises(
+            HomeAssistantError,
+            match="Camera does not support WebRTC",
+        ):
+            await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", result_mock)
+
+        # Remove go2rtc config entry
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        await hass.config_entries.async_remove(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+        assert camera._webrtc_provider is None
+        assert camera.frontend_stream_type == StreamType.HLS
 
 
 @pytest.mark.usefixtures("init_test_integration")

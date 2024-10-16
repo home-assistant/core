@@ -4,22 +4,23 @@ from __future__ import annotations
 
 import base64
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 import rtsp_to_webrtc
 
+from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
-from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 # The webrtc component does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -86,12 +87,10 @@ async def test_setup_communication_failure(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_for_stream_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test successful response from RTSPtoWebRTC server."""
@@ -102,22 +101,10 @@ async def test_offer_for_stream_source(
         json={"sdp64": base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")},
     )
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.demo_camera",
-            "offer": OFFER_SDP,
-        }
-    )
-    response = await client.receive_json()
-    assert response.get("id") == 1
-    assert response.get("type") == TYPE_RESULT
-    assert response.get("success")
-    assert "result" in response
-    assert response["result"].get("answer") == ANSWER_SDP
-    assert "error" not in response
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", send_message)
+    send_message.assert_called_once_with(WebRTCAnswer(ANSWER_SDP))
 
     # Validate request parameters were sent correctly
     assert len(aioclient_mock.mock_calls) == 1
@@ -127,12 +114,10 @@ async def test_offer_for_stream_source(
     }
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test a transient failure talking to RTSPtoWebRTC server."""
@@ -143,21 +128,11 @@ async def test_offer_failure(
         exc=aiohttp.ClientError,
     )
 
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "camera/web_rtc_offer",
-            "entity_id": "camera.demo_camera",
-            "offer": OFFER_SDP,
-        }
-    )
-    response = await client.receive_json()
-    assert response.get("id") == 2
-    assert response.get("type") == TYPE_RESULT
-    assert "success" in response
-    assert not response.get("success")
-    assert "error" in response
-    assert response["error"].get("code") == "web_rtc_offer_failed"
-    assert "message" in response["error"]
-    assert "RTSPtoWebRTC server communication failure" in response["error"]["message"]
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    with pytest.raises(
+        HomeAssistantError,
+        match="RTSPtoWebRTC server communication failure: ",
+    ):
+        await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", send_message)
+    send_message.assert_not_called()

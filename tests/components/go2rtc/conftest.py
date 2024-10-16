@@ -28,10 +28,10 @@ def mock_client() -> Generator[AsyncMock]:
     """Mock a go2rtc client."""
     with (
         patch(
-            "homeassistant.components.go2rtc.Go2RtcClient",
+            "homeassistant.components.go2rtc.Go2RtcRestClient",
         ) as mock_client,
         patch(
-            "homeassistant.components.go2rtc.config_flow.Go2RtcClient",
+            "homeassistant.components.go2rtc.config_flow.Go2RtcRestClient",
             new=mock_client,
         ),
     ):
