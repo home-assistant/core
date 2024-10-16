@@ -163,7 +163,7 @@ class Data:
         Raises InvalidAuth if auth invalid.
         """
         username = self.normalize_username(username)
-        dummy = b"$2b$12$CiuFGszHx9eNHxPuQcwBWez4CwDTOcLTX5CbOpV6gef2nYuXkY7BO"
+        dummy = bcrypt.hashpw ( b"dummy_password", bcrypt.gensalt())
         found = None
 
         # Compare all users to avoid timing attacks.
@@ -173,7 +173,7 @@ class Data:
 
         if found is None:
             # check a hash to make timing the same as if user was found
-            bcrypt.checkpw(b"foo", dummy)
+            bcrypt.checkpw(b"dummy", dummy)
             raise InvalidAuth
 
         user_hash = base64.b64decode(found["password"])
