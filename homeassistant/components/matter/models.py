@@ -113,6 +113,10 @@ class MatterDiscoverySchema:
     # NOTE: only works for list values
     value_contains: Any | None = None
 
+    # [optional] the primary attribute's cluster featuremap must contain this value
+    # for example for the DoorSensor on a DoorLock Cluster
+    featuremap_contains: int | None = None
+
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False

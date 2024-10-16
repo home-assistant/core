@@ -46,6 +46,8 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
+FEATUREMAP_ATTRIBUTE_ID = 65532
+
 
 @callback
 def iter_schemas() -> Generator[MatterDiscoverySchema]:
@@ -127,6 +129,21 @@ def async_discover_entities(
             or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
             or not isinstance(value, list)
             or schema.value_contains not in value
+        ):
+            continue
+
+        # check for required value in cluster featuremap
+        if schema.featuremap_contains is not None and (
+            (primary_attribute := next((x for x in schema.required_attributes), None))
+            is None
+            or not bool(
+                int(
+                    endpoint.get_attribute_value(
+                        primary_attribute.cluster_id, FEATUREMAP_ATTRIBUTE_ID
+                    )
+                )
+                & schema.featuremap_contains
+            )
         ):
             continue
 
