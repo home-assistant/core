@@ -22,5 +22,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "select": {
+      "audio_output": {
+        "name": "Audio output",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      }
+    }
   }
 }
