@@ -13,7 +13,6 @@ import pytest
 
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
-    SOURCE_SYSTEM,
     ConfigEntriesFlowManager,
     FlowResult,
 )
@@ -540,9 +539,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         if result["type"] is FlowResultType.ABORT:
             # We don't need translations for a discovery flow which immediately
             # aborts, since such flows won't be seen by users
-            if not flow.__flow_seen_before and (
-                flow.source == SOURCE_SYSTEM or flow.source in DISCOVERY_SOURCES
-            ):
+            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
                 return result
             await _ensure_translation_exists(
                 flow.hass,
