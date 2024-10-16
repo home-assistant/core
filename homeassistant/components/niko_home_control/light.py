@@ -47,7 +47,6 @@ class NikoHomeControlLight(LightEntity):
 
     def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
-        self._hub = hub
         self._light = light
         self._attr_name = light.name
         self._attr_is_on = light.is_on
@@ -100,6 +99,13 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_brightness = light.state * 2.55
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.action_id)},
+            manufacturer=hub.manufacturer,
+            model=f"{hub.model}-dimmable-light",
+            name=light.name,
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

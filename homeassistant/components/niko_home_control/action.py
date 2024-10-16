@@ -58,6 +58,10 @@ class Action:
 
         return self.turn_on()
 
+    def set_fan_speed(self, percentage):
+        """Set percentage."""
+        return self._hub.execute_actions(self.action_id, percentage)
+
     def is_light(self) -> bool:
         """Is a light."""
         return self.action_type == 1

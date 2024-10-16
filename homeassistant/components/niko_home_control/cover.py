@@ -49,7 +49,6 @@ class NikoHomeControlCover(CoverEntity):
 
     def __init__(self, cover, hub) -> None:
         """Set up the Niko Home Control cover."""
-        self._hub = hub
         self._cover = cover
         self._attr_unique_id = f"cover-{cover.action_id}"
         self._attr_name = cover.name

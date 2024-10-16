@@ -4,8 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from .action import Action
+from typing import Any
 from .const import DOMAIN
 
 async def async_setup_entry(
@@ -38,6 +37,8 @@ class NikoHomeControlFan(FanEntity):
         self._attr_name = action.name
         self._attr_is_on = action.is_on
         self._attr_unique_id = f"fan-{action.action_id}"
+        self._fan_speed = action.state
+
         self._attr_action_info = DeviceInfo(
             identifiers={(DOMAIN, action.action_id)},
             manufacturer=hub.manufacturer,
@@ -45,6 +46,7 @@ class NikoHomeControlFan(FanEntity):
             name=action.name,
         )
         self._attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+        self._preset_modes = ["low", "medium", "high", "very_high"]
 
     @property
     def should_poll(self) -> bool:
@@ -58,17 +60,15 @@ class NikoHomeControlFan(FanEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.debug("Turn on: %s", self.name)
         self._action.turn_on(ATTR_PERCENTAGE)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        _LOGGER.debug("Turn off: %s", self.name)
         self._action.turn_off()
 
     @property
     def preset_mode(self) -> str:
-        return self._action.fan_speed
+        return self._fan_speed
 
     @property
     def supported_features(self):
@@ -77,12 +77,26 @@ class NikoHomeControlFan(FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the fan speed preset based on a given percentage"""
-        self._action.set_fan_speed(self._gateway, percentage_to_ordered_list_item(self._preset_modes, percentage))
+        mode = percentage_to_ordered_list_item(self._preset_modes, percentage)
+        if mode == "low":
+            self._action.set_fan_speed(0)
+        elif mode == "medium":
+            self._action.set_fan_speed(1)
+        elif mode == "high":
+            self._action.set_fan_speed(2)
+        elif mode == "very_high":
+            self._action.set_fan_speed(3)
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        self._action.set_fan_speed(self._gateway, preset_mode)
         self.schedule_update_ha_state()
 
-    async def async_set_percentage(self, percentage: int) -> None:
-        self._action.set_fan_speed(self._gateway, percentage_to_ordered_list_item(self._preset_modes, percentage))
+    def set_preset_mode(self, preset_mode: str) -> None:
+        if preset_mode == "low":
+            self._action.set_fan_speed(0)
+        elif preset_mode == "medium":
+            self._action.set_fan_speed(1)
+        elif preset_mode == "high":
+            self._action.set_fan_speed(2)
+        elif preset_mode == "very_high":
+            self._action.set_fan_speed(3)
+
         self.schedule_update_ha_state()
