@@ -145,14 +145,14 @@ jobs:
           skip_coverage=""
           integration_changes='["gardena_bluetooth"]'
 
-          if [[ integration_changes != "[]" ]];
+          if [[ "${integration_changes}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo 'integration_changes' | jq -cSr '. | join(",")')
+            integrations_glob=$(echo '${integration_changes}' | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo 'integration_changes' | jq -cSr '.[]')
+            possible_integrations=$(echo '${integration_changes}' | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
               do
