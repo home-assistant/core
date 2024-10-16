@@ -36,6 +36,7 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
+from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
@@ -92,7 +93,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension
+from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -1885,6 +1886,10 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
 
     with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
         yield calls
+
+
+# Override default finish to detect unused snapshots despite xdist
+SnapshotSession.finish = override_syrupy_finish
 
 
 @pytest.fixture

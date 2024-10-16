@@ -5,14 +5,22 @@ from __future__ import annotations
 from contextlib import suppress
 import dataclasses
 from enum import IntFlag
+import json
+import os
 from pathlib import Path
 from typing import Any
 
 import attr
 import attrs
+import pytest
+from syrupy.constants import EXIT_STATUS_FAIL_UNUSED
+from syrupy.data import Snapshot, SnapshotCollection, SnapshotCollections
 from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
 from syrupy.location import PyTestLocation
+from syrupy.report import SnapshotReport
+from syrupy.session import ItemStatus, SnapshotSession
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
+from syrupy.utils import is_xdist_controller, is_xdist_worker
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -246,3 +254,166 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
         """
         test_dir = Path(test_location.filepath).parent
         return str(test_dir.joinpath("snapshots"))
+
+
+class _customObject:
+    """Fake object."""
+
+    def __init__(self, collected_item: dict[str, str]) -> None:
+        """Initialise fake object."""
+        self.__module__ = collected_item["modulename"]
+        self.__name__ = collected_item["methodname"]
+
+
+class _customItem:
+    """Fake pytest.Item object."""
+
+    def __init__(self, collected_item: dict[str, str]) -> None:
+        """Initialise fake pytest.Item object."""
+        self.nodeid = collected_item["nodeid"]
+        self.name = collected_item["name"]
+        self.path = Path(collected_item["path"])
+        self.obj = _customObject(collected_item)
+
+
+def _dump_collections(collections: SnapshotCollections) -> dict[str, Any]:
+    return {
+        k: [c.name for c in v] for k, v in collections._snapshot_collections.items()
+    }
+
+
+def _dump_report(
+    report: SnapshotReport,
+    collected_items: set[pytest.Item],
+    selected_items: dict[str, ItemStatus],
+) -> dict[str, Any]:
+    return {
+        "discovered": _dump_collections(report.discovered),
+        "created": _dump_collections(report.created),
+        "failed": _dump_collections(report.failed),
+        "matched": _dump_collections(report.matched),
+        "updated": _dump_collections(report.updated),
+        "used": _dump_collections(report.used),
+        "_collected_items": [
+            {
+                "nodeid": c.nodeid,
+                "name": c.name,
+                "path": str(c.path),
+                "modulename": c.obj.__module__,
+                "methodname": c.obj.__name__,
+            }
+            for c in list(collected_items)
+        ],
+        "_selected_items": {
+            key: status.value for key, status in selected_items.items()
+        },
+    }
+
+
+def _update_collections(
+    collections: SnapshotCollections, json_data: dict[str, list[str]]
+) -> None:
+    if not json_data:
+        return
+    for location, names in json_data.items():
+        snapshot_collection = SnapshotCollection(location=location)
+        for name in names:
+            snapshot_collection.add(Snapshot(name))
+        collections.update(snapshot_collection)
+
+
+def _update_report(report: SnapshotReport, json_data: dict[str, Any]) -> None:
+    _update_collections(report.discovered, json_data["discovered"])
+    _update_collections(report.created, json_data["created"])
+    _update_collections(report.failed, json_data["failed"])
+    _update_collections(report.matched, json_data["matched"])
+    _update_collections(report.updated, json_data["updated"])
+    _update_collections(report.used, json_data["used"])
+    for collected_item in json_data["_collected_items"]:
+        custom_item = _customItem(collected_item)
+        if not any(
+            t.nodeid == custom_item.nodeid and t.name == custom_item.nodeid
+            for t in report.collected_items
+        ):
+            report.collected_items.add(custom_item)
+    for key, selected_item in json_data["_selected_items"].items():
+        if key in report.selected_items:
+            status = ItemStatus(selected_item)
+            if status != ItemStatus.NOT_RUN:
+                report.selected_items[key] = status
+        else:
+            report.selected_items[key] = ItemStatus(selected_item)
+
+
+def override_syrupy_finish(self: SnapshotSession) -> int:
+    """Override the finish method to allow for custom handling."""
+    exitstatus = 0
+    self.flush_snapshot_write_queue()
+    self.report = SnapshotReport(
+        base_dir=self.pytest_session.config.rootpath,
+        collected_items=self._collected_items,
+        selected_items=self._selected_items,
+        assertions=self._assertions,
+        options=self.pytest_session.config.option,
+    )
+
+    if is_xdist_worker():
+        xdist_worker = os.getenv("PYTEST_XDIST_WORKER")
+        xdist_worker_count = os.getenv("PYTEST_XDIST_WORKER_COUNT")
+        dump = _dump_report(self.report, self._collected_items, self._selected_items)
+        # {
+        # "_collected_items": [{"nodeid": c.nodeid, "name": c.name} for c in list(self._collected_items)],
+        # "_selected_items": {key: status.value for key, status in self._selected_items.items()},
+        # "_assertions": [{
+        #    "location": assertion.test_location.filepath,
+        #    "name": assertion.name,
+        #    "num_executions":assertion.num_executions,
+        #    } for assertion in self._assertions]
+        # "_collected_items": self._dump(self.report[{"nodeid": c.nodeid, "name": c.name} for c in list(self._collected_items)],
+        # }
+        with open(
+            "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(xdist_worker_count)
+        with open(
+            f"/workspaces/home-assistant-core/xdist_{xdist_worker}.txt",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(dump, f, indent=2)
+        return exitstatus
+    if is_xdist_controller():
+        return exitstatus
+
+    worker_count = None
+    try:
+        with open(
+            "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
+            encoding="utf-8",
+        ) as f:
+            worker_count = f.read()
+        os.remove("/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt")
+    except FileNotFoundError:
+        pass
+
+    if worker_count:
+        for i in range(int(worker_count)):
+            with open(
+                f"/workspaces/home-assistant-core/xdist_gw{i}.txt",
+                encoding="utf-8",
+            ) as f:
+                json_data = json.load(f)
+                _update_report(self.report, json_data)
+            os.remove(f"/workspaces/home-assistant-core/xdist_gw{i}.txt")
+
+    if self.report.num_unused:
+        if self.update_snapshots:
+            self.remove_unused_snapshots(
+                unused_snapshot_collections=self.report.unused,
+                used_snapshot_collections=self.report.used,
+            )
+        elif not self.warn_unused_snapshots:
+            exitstatus |= EXIT_STATUS_FAIL_UNUSED
+    return exitstatus
