@@ -269,3 +269,22 @@
     'type': 'result',
   })
 # ---
+# name: test_restore[with_hassio]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_restore[without_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
