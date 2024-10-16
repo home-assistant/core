@@ -144,7 +144,7 @@ jobs:
           tests_glob=""
           skip_coverage=""
           integration_changes="${{ steps.integrations.outputs.changes }}"
-          integration_changes="[gardena_bluetooth]"
+          integration_changes="[\"gardena_bluetooth\"]"
 
           if [[ "${integration_changes}" != "[]" ]];
           then
