@@ -54,10 +54,10 @@ class LyricLocalOAuth2Implementation(
         data["client_id"] = self.client_id
 
         if self.client_secret is not None:
-            data["client_secret"] = self.client_secret
+            data["client_secret"] = self.client_secret or ""
 
         headers = {
-            "Authorization": BasicAuth(self.client_id, self.client_secret).encode(),
+            "Authorization": BasicAuth(self.client_id, self.client_secret or "").encode(),
             "Content-Type": "application/x-www-form-urlencoded",
         }
 

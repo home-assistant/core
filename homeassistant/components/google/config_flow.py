@@ -126,7 +126,7 @@ class OAuth2FlowHandler(
                 device_flow = await async_create_device_flow(
                     self.hass,
                     self.flow_impl.client_id,
-                    self.flow_impl.client_secret,
+                    self.flow_impl.client_secret or "",
                     calendar_access,
                 )
             except TimeoutError as err:

@@ -118,7 +118,7 @@ async def new_subscriber(
         aiohttp_client.async_get_clientsession(hass),
         config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation),
         implementation.client_id,
-        implementation.client_secret,
+        implementation.client_secret or "",
     )
     return GoogleNestSubscriber(auth, entry.data[CONF_PROJECT_ID], subscriber_id)
 
