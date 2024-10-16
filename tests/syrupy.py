@@ -256,7 +256,14 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
         return str(test_dir.joinpath("snapshots"))
 
 
-class _customObject:
+# Classes and Methods to override default finish behavior in syrupy
+# This is needed to handle the xdist plugin in pytest
+# The default implementation does not handle the xdist plugin
+# and will not work correctly when running tests in parallel
+# with pytest-xdist.
+
+
+class _FakePytestObject:
     """Fake object."""
 
     def __init__(self, collected_item: dict[str, str]) -> None:
@@ -265,7 +272,7 @@ class _customObject:
         self.__name__ = collected_item["methodname"]
 
 
-class _customItem:
+class _FakePytestItem:
     """Fake pytest.Item object."""
 
     def __init__(self, collected_item: dict[str, str]) -> None:
@@ -273,27 +280,27 @@ class _customItem:
         self.nodeid = collected_item["nodeid"]
         self.name = collected_item["name"]
         self.path = Path(collected_item["path"])
-        self.obj = _customObject(collected_item)
+        self.obj = _FakePytestObject(collected_item)
 
 
-def _dump_collections(collections: SnapshotCollections) -> dict[str, Any]:
+def _serialize_collections(collections: SnapshotCollections) -> dict[str, Any]:
     return {
         k: [c.name for c in v] for k, v in collections._snapshot_collections.items()
     }
 
 
-def _dump_report(
+def _serialize_report(
     report: SnapshotReport,
     collected_items: set[pytest.Item],
     selected_items: dict[str, ItemStatus],
 ) -> dict[str, Any]:
     return {
-        "discovered": _dump_collections(report.discovered),
-        "created": _dump_collections(report.created),
-        "failed": _dump_collections(report.failed),
-        "matched": _dump_collections(report.matched),
-        "updated": _dump_collections(report.updated),
-        "used": _dump_collections(report.used),
+        "discovered": _serialize_collections(report.discovered),
+        "created": _serialize_collections(report.created),
+        "failed": _serialize_collections(report.failed),
+        "matched": _serialize_collections(report.matched),
+        "updated": _serialize_collections(report.updated),
+        "used": _serialize_collections(report.used),
         "_collected_items": [
             {
                 "nodeid": c.nodeid,
@@ -310,7 +317,7 @@ def _dump_report(
     }
 
 
-def _update_collections(
+def _merge_serialized_collections(
     collections: SnapshotCollections, json_data: dict[str, list[str]]
 ) -> None:
     if not json_data:
@@ -322,15 +329,15 @@ def _update_collections(
         collections.update(snapshot_collection)
 
 
-def _update_report(report: SnapshotReport, json_data: dict[str, Any]) -> None:
-    _update_collections(report.discovered, json_data["discovered"])
-    _update_collections(report.created, json_data["created"])
-    _update_collections(report.failed, json_data["failed"])
-    _update_collections(report.matched, json_data["matched"])
-    _update_collections(report.updated, json_data["updated"])
-    _update_collections(report.used, json_data["used"])
+def _merge_serialized_report(report: SnapshotReport, json_data: dict[str, Any]) -> None:
+    _merge_serialized_collections(report.discovered, json_data["discovered"])
+    _merge_serialized_collections(report.created, json_data["created"])
+    _merge_serialized_collections(report.failed, json_data["failed"])
+    _merge_serialized_collections(report.matched, json_data["matched"])
+    _merge_serialized_collections(report.updated, json_data["updated"])
+    _merge_serialized_collections(report.used, json_data["used"])
     for collected_item in json_data["_collected_items"]:
-        custom_item = _customItem(collected_item)
+        custom_item = _FakePytestItem(collected_item)
         if not any(
             t.nodeid == custom_item.nodeid and t.name == custom_item.nodeid
             for t in report.collected_items
@@ -358,31 +365,24 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
     )
 
     if is_xdist_worker():
-        xdist_worker = os.getenv("PYTEST_XDIST_WORKER")
-        xdist_worker_count = os.getenv("PYTEST_XDIST_WORKER_COUNT")
-        dump = _dump_report(self.report, self._collected_items, self._selected_items)
-        # {
-        # "_collected_items": [{"nodeid": c.nodeid, "name": c.name} for c in list(self._collected_items)],
-        # "_selected_items": {key: status.value for key, status in self._selected_items.items()},
-        # "_assertions": [{
-        #    "location": assertion.test_location.filepath,
-        #    "name": assertion.name,
-        #    "num_executions":assertion.num_executions,
-        #    } for assertion in self._assertions]
-        # "_collected_items": self._dump(self.report[{"nodeid": c.nodeid, "name": c.name} for c in list(self._collected_items)],
-        # }
         with open(
             "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
             "w",
             encoding="utf-8",
         ) as f:
-            f.write(xdist_worker_count)
+            f.write(os.getenv("PYTEST_XDIST_WORKER_COUNT"))
         with open(
-            f"/workspaces/home-assistant-core/xdist_{xdist_worker}.txt",
+            f"/workspaces/home-assistant-core/xdist_{os.getenv("PYTEST_XDIST_WORKER")}.txt",
             "w",
             encoding="utf-8",
         ) as f:
-            json.dump(dump, f, indent=2)
+            json.dump(
+                _serialize_report(
+                    self.report, self._collected_items, self._selected_items
+                ),
+                f,
+                indent=2,
+            )
         return exitstatus
     if is_xdist_controller():
         return exitstatus
@@ -404,8 +404,7 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
                 f"/workspaces/home-assistant-core/xdist_gw{i}.txt",
                 encoding="utf-8",
             ) as f:
-                json_data = json.load(f)
-                _update_report(self.report, json_data)
+                _merge_serialized_report(self.report, json.load(f))
             os.remove(f"/workspaces/home-assistant-core/xdist_gw{i}.txt")
 
     if self.report.num_unused:
