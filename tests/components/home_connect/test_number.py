@@ -46,9 +46,9 @@ async def test_number(
 ) -> None:
     """Test number entity."""
     get_appliances.side_effect = get_all_appliances
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize("appliance", ["Refrigerator"], indirect=True)
@@ -103,9 +103,9 @@ async def test_number_entity_functionality(
     current_value = min_value
     appliance.status.update({setting_key: {ATTR_VALUE: current_value}})
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.is_state(entity_id, str(current_value))
     state = hass.states.get(entity_id)
     assert state.attributes["min"] == min_value
@@ -152,10 +152,10 @@ async def test_number_entity_error(
     """Test number entity error."""
     get_appliances.return_value = [problematic_appliance]
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     problematic_appliance.status.update({setting_key: {}})
     assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
