@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from spotipy import SpotifyException
+from spotifyaio import SpotifyConnectionError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -33,8 +33,8 @@ async def test_setup(
 @pytest.mark.parametrize(
     "method",
     [
-        "me",
-        "devices",
+        "get_current_user",
+        "get_devices",
     ],
 )
 async def test_setup_with_required_calls_failing(
@@ -44,22 +44,7 @@ async def test_setup_with_required_calls_failing(
     method: str,
 ) -> None:
     """Test the Spotify setup with required calls failing."""
-    getattr(mock_spotify.return_value, method).side_effect = SpotifyException(
-        400, "Bad Request", "Bad Request"
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_no_current_user(
-    hass: HomeAssistant,
-    mock_spotify: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Spotify setup with required calls failing."""
-    mock_spotify.return_value.me.return_value = None
+    getattr(mock_spotify.return_value, method).side_effect = SpotifyConnectionError
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
