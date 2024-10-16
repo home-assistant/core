@@ -2,6 +2,8 @@
 
 from typing import Any
 
+#Fixing code issues for assignment 2b
+TYPE_CONSTANT = "@type"
 
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
@@ -195,6 +197,8 @@ class AlexaGlobalCatalog:
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
 
+
+
 class AlexaCapabilityResource:
     """Base class for Alexa capabilityResources, modeResources, and presetResources.
 
@@ -235,10 +239,10 @@ class AlexaCapabilityResource:
         label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label_dict = {"@type": "asset", "value": {"assetId": label}}
+                label_dict = {TYPE_CONSTANT: "asset", "value": {"assetId": label}}
             else:
                 label_dict = {
-                    "@type": "text",
+                    TYPE_CONSTANT: "text",
                     "value": {"text": label, "locale": "en-US"},
                 }
 
@@ -401,7 +405,7 @@ class AlexaSemantics:
     def add_states_to_value(self, states: list[str], value: Any) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
-            {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
+            {TYPE_CONSTANT: self.STATES_TO_VALUE, "states": states, "value": value}
         )
 
     def add_states_to_range(
@@ -410,7 +414,7 @@ class AlexaSemantics:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
-                "@type": self.STATES_TO_RANGE,
+                TYPE_CONSTANT: self.STATES_TO_RANGE,
                 "states": states,
                 "range": {"minimumValue": min_value, "maximumValue": max_value},
             }
@@ -422,7 +426,7 @@ class AlexaSemantics:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
-                "@type": self.ACTIONS_TO_DIRECTIVE,
+                TYPE_CONSTANT: self.ACTIONS_TO_DIRECTIVE,
                 "actions": actions,
                 "directive": {"name": directive, "payload": payload},
             }
