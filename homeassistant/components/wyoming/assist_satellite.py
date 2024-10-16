@@ -79,7 +79,7 @@ async def async_setup_entry(
 
 
 class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
-    """Assist satellite for VoIP devices."""
+    """Assist satellite for Wyoming devices."""
 
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
