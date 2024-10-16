@@ -384,8 +384,6 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
                 indent=2,
             )
         return exitstatus
-    if is_xdist_controller():
-        return exitstatus
 
     worker_count = None
     try:
