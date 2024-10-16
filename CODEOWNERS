@@ -169,6 +169,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/avea/ @pattyland
 /homeassistant/components/awair/ @ahayworth @danielsjf
 /tests/components/awair/ @ahayworth @danielsjf
+/homeassistant/components/axion_dmx/ @Vrncanac
+/tests/components/axion_dmx/ @Vrncanac
 /homeassistant/components/axis/ @Kane610
 /tests/components/axis/ @Kane610
 /homeassistant/components/azure_data_explorer/ @kaareseras

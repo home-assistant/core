@@ -593,6 +593,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "axion_dmx": {
+      "name": "Axion Lighting",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "axis": {
       "name": "Axis",
       "integration_type": "device",
