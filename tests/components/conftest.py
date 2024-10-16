@@ -498,7 +498,7 @@ async def _ensure_translation_exists(
     ):
         return
 
-    raise ValueError(
+    pytest.fail(
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
