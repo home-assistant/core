@@ -75,6 +75,7 @@ async def async_converse(
     language: str | None = None,
     agent_id: str | None = None,
     device_id: str | None = None,
+    extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
     agent = async_get_agent(hass, agent_id)
@@ -99,6 +100,7 @@ async def async_converse(
         device_id=device_id,
         language=language,
         agent_id=agent_id,
+        extra_system_prompt=extra_system_prompt,
     )
     with async_conversation_trace() as trace:
         trace.add_event(
