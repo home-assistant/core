@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
     FlowResult,
+    OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -529,6 +530,9 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         if isinstance(self, ConfigEntriesFlowManager):
             category = "config"
             component = flow.handler
+        elif isinstance(self, OptionsFlowManager):
+            category = "options"
+            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
         else:
             return result
 
