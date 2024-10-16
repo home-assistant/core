@@ -5,6 +5,8 @@
     }
   },
   "services": {
-    "snapshot": "mdi:camera"
+    "snapshot": {
+      "service": "mdi:camera"
+    }
   }
 }
