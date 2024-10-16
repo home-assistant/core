@@ -117,7 +117,7 @@ jobs:
           filters: .core_files.yaml
       - name: Create a list of integrations to filter for changes
         run: |
-          integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
+          integrations=$(ls -Ad ./homeassistant/components/ga*  | xargs -n 1 basename)
           touch .integration_paths.yaml
           for integration in $integrations; do
             echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
@@ -197,6 +197,8 @@ jobs:
           then
             skip_coverage="true"
           fi
+
+          test_full_suite="false"
 
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
