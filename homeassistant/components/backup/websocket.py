@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_MANAGER, LOCAL_DATA_MANAGER, LOGGER
+from .const import DATA_MANAGER, LOGGER
 from .models import BaseBackup
 
 
@@ -198,7 +198,7 @@ async def backup_agents_info(
     msg: dict[str, Any],
 ) -> None:
     """Return backup agents info."""
-    manager = hass.data[LOCAL_DATA_MANAGER]
+    manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
     connection.send_result(
         msg["id"],
@@ -218,7 +218,7 @@ async def backup_agents_list_synced_backups(
     msg: dict[str, Any],
 ) -> None:
     """Return a list of synced backups."""
-    manager = hass.data[LOCAL_DATA_MANAGER]
+    manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
     await manager.load_platforms()
     for agent_id, agent in manager.sync_agents.items():
@@ -243,7 +243,7 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download a synced backup."""
-    manager = hass.data[LOCAL_DATA_MANAGER]
+    manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
     if not (agent := manager.sync_agents.get(msg["agent"])):

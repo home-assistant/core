@@ -533,11 +533,17 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         else:
             return result
 
-        if (
-            result["type"] is FlowResultType.ABORT
-            and flow.source != SOURCE_SYSTEM
-            and flow.source not in DISCOVERY_SOURCES
-        ):
+        # Check if this flow has been seen before
+        # Gets set to False on first run, and to True on subsequent runs
+        setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+        if result["type"] is FlowResultType.ABORT:
+            # We don't need translations for a discovery flow which immediately
+            # aborts, since such flows won't be seen by users
+            if not flow.__flow_seen_before and (
+                flow.source == SOURCE_SYSTEM or flow.source in DISCOVERY_SOURCES
+            ):
+                return result
             await _ensure_translation_exists(
                 flow.hass,
                 _ignore_translations,

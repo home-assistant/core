@@ -31,7 +31,7 @@ from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
-_T = TypeVar("_T")
+_BackupType = TypeVar("_BackupType")
 
 
 @dataclass(slots=True)
@@ -55,57 +55,18 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BaseBackupManager(abc.ABC, Generic[_T]):
+class BaseBackupManager(abc.ABC, Generic[_BackupType]):
     """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backups: dict[str, _T] = {}
         self.backing_up = False
-
-    async def async_post_backup_actions(self, **kwargs: Any) -> None:
-        """Post backup actions."""
-
-    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
-        """Pre backup actions."""
-
-    @abc.abstractmethod
-    async def async_create_backup(self, **kwargs: Any) -> _T:
-        """Generate a backup."""
-
-    @abc.abstractmethod
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, _T]:
-        """Get backups.
-
-        Return a dictionary of Backup instances keyed by their slug.
-        """
-
-    @abc.abstractmethod
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _T | None:
-        """Get a backup."""
-
-    @abc.abstractmethod
-    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Remove a backup."""
-
-    @abc.abstractmethod
-    async def async_sync_backup(self, *, backup: _T, **kwargs: Any) -> None:
-        """Sync a backup."""
-
-
-class BackupManager(BaseBackupManager[Backup]):
-    """Backup manager for the Backup integration."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the backup manager."""
-        super().__init__(hass=hass)
-        self.backup_dir = Path(hass.config.path("backups"))
+        self.backups: dict[str, _BackupType] = {}
+        self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.sync_agents: dict[str, BackupSyncAgent] = {}
         self.syncing = False
-        self.loaded_backups = False
-        self.loaded_platforms = False
 
     @callback
     def _add_platform_pre_post_handlers(
@@ -169,6 +130,59 @@ class BackupManager(BaseBackupManager[Backup]):
             if isinstance(result, Exception):
                 raise result
 
+    async def load_platforms(self) -> None:
+        """Load backup platforms."""
+        if self.loaded_platforms:
+            return
+        await integration_platform.async_process_integration_platforms(
+            self.hass,
+            DOMAIN,
+            self._add_platform_pre_post_handlers,
+            wait_for_platforms=True,
+        )
+        await integration_platform.async_process_integration_platforms(
+            self.hass,
+            DOMAIN,
+            self._async_add_platform_agents,
+            wait_for_platforms=True,
+        )
+        LOGGER.debug("Loaded %s platforms", len(self.platforms))
+        LOGGER.debug("Loaded %s agents", len(self.sync_agents))
+        self.loaded_platforms = True
+
+    @abc.abstractmethod
+    async def async_create_backup(self, **kwargs: Any) -> _BackupType:
+        """Generate a backup."""
+
+    @abc.abstractmethod
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupType]:
+        """Get backups.
+
+        Return a dictionary of Backup instances keyed by their slug.
+        """
+
+    @abc.abstractmethod
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _BackupType | None:
+        """Get a backup."""
+
+    @abc.abstractmethod
+    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Remove a backup."""
+
+    @abc.abstractmethod
+    async def async_sync_backup(self, *, backup: _BackupType, **kwargs: Any) -> None:
+        """Sync a backup."""
+
+
+class BackupManager(BaseBackupManager[Backup]):
+    """Backup manager for the Backup integration."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the backup manager."""
+        super().__init__(hass=hass)
+        self.backup_dir = Path(hass.config.path("backups"))
+        self.loaded_backups = False
+
     async def async_sync_backup(self, *, backup: Backup, **kwargs: Any) -> None:
         """Sync a backup."""
         await self.load_platforms()
@@ -204,26 +218,6 @@ class BackupManager(BaseBackupManager[Backup]):
         LOGGER.debug("Loaded %s local backups", len(backups))
         self.backups = backups
         self.loaded_backups = True
-
-    async def load_platforms(self) -> None:
-        """Load backup platforms."""
-        if self.loaded_platforms:
-            return
-        await integration_platform.async_process_integration_platforms(
-            self.hass,
-            DOMAIN,
-            self._add_platform_pre_post_handlers,
-            wait_for_platforms=True,
-        )
-        await integration_platform.async_process_integration_platforms(
-            self.hass,
-            DOMAIN,
-            self._async_add_platform_agents,
-            wait_for_platforms=True,
-        )
-        LOGGER.debug("Loaded %s platforms", len(self.platforms))
-        LOGGER.debug("Loaded %s agents", len(self.sync_agents))
-        self.loaded_platforms = True
 
     def _read_backups(self) -> dict[str, Backup]:
         """Read backups from disk."""
