@@ -150,10 +150,10 @@ async def reload_satellite(
             return_value=SATELLITE_INFO,
         ),
         patch(
-            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
         ) as _run_mock,
     ):
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_reload(config_entry_id)
 
-    return hass.data[DOMAIN][config_entry_id].satellite.device
+    return hass.data[DOMAIN][config_entry_id].device

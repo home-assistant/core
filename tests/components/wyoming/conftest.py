@@ -152,7 +152,7 @@ async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntr
             return_value=SATELLITE_INFO,
         ),
         patch(
-            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
         ) as _run_mock,
     ):
         # _run_mock: satellite task does not actually run
@@ -164,4 +164,4 @@ async def satellite_device(
     hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite.device
+    return hass.data[DOMAIN][satellite_config_entry.entry_id].device
