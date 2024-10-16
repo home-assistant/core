@@ -6,10 +6,27 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common import custom_clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
+
+
+@pytest.mark.usefixtures("matter_devices")
+async def test_numbers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test numbers."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])

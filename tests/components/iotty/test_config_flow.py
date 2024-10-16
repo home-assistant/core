@@ -45,6 +45,10 @@ def current_request_with_host(current_request: MagicMock) -> None:
     )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.iotty.config.abort.missing_credentials"],
+)
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
