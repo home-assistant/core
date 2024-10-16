@@ -102,17 +102,12 @@ def restore_backup(config_dir_path: str) -> bool:
     if not (restore_content := restore_backup_file_content(config_dir)):
         return False
 
-    if (
-        not restore_content.backup_file_path.exists()
-        or not restore_content.backup_file_path.is_file()
-    ):
-        raise ValueError(
-            f"Backup file {restore_content.backup_file_path} does not exist"
-        )
-
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     backup_file_path = restore_content.backup_file_path
     _LOGGER.info("Restoring %s", backup_file_path)
-    _extract_backup(config_dir, backup_file_path)
+    try:
+        _extract_backup(config_dir, backup_file_path)
+    except FileNotFoundError as err:
+        raise ValueError(f"Backup file {backup_file_path} does not exist") from err
     _LOGGER.info("Restore complete, restarting")
     return True
