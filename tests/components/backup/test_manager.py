@@ -300,13 +300,17 @@ async def test_syncing_backup(
     backup = await _mock_backup_generation(manager)
 
     with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
         patch.object(BackupSyncAgentTest, "async_upload_backup") as mocked_upload,
         patch(
             "homeassistant.components.backup.manager.HAVERSION",
             "2025.1.0",
         ),
     ):
-        await manager.async_sync_backup(backup=backup)
+        await manager.async_sync_backup(slug=backup.slug)
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
@@ -351,6 +355,10 @@ async def test_syncing_backup_with_exception(
     backup = await _mock_backup_generation(manager)
 
     with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
         patch.object(
             ModifiedBackupSyncAgentTest,
             "async_upload_backup",
@@ -361,7 +369,7 @@ async def test_syncing_backup_with_exception(
         ),
     ):
         mocked_upload.side_effect = HomeAssistantError("Test exception")
-        await manager.async_sync_backup(backup=backup)
+        await manager.async_sync_backup(slug=backup.slug)
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
@@ -398,7 +406,7 @@ async def test_syncing_backup_no_agents(
     with patch(
         "homeassistant.components.backup.sync_agent.BackupSyncAgent.async_upload_backup"
     ) as mocked_async_upload_backup:
-        await manager.async_sync_backup(backup=backup)
+        await manager.async_sync_backup(slug=backup.slug)
         assert mocked_async_upload_backup.call_count == 0
 
 

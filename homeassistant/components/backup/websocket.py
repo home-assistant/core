@@ -9,7 +9,6 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
-from .models import BaseBackup
 
 
 @callback
@@ -101,10 +100,8 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    manager = hass.data[DATA_MANAGER]
-    backup = await manager.async_create_backup()
+    backup = await hass.data[DATA_MANAGER].async_create_backup()
     connection.send_result(msg["id"], backup)
-    await manager.async_sync_backup(backup=backup)
 
 
 @websocket_api.ws_require_user(only_supervisor=True)
@@ -155,10 +152,7 @@ async def handle_backup_end(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/sync",
-        vol.Required("backup"): {
-            vol.Required("date"): str,
-            vol.Required("name"): str,
-            vol.Required("size"): float,
+        vol.Required("data"): {
             vol.Required("slug"): str,
         },
     }
@@ -171,17 +165,10 @@ async def handle_backup_sync(
 ) -> None:
     """Backup sync notification."""
     LOGGER.debug("Backup sync notification")
-    backup = msg["backup"]
+    data = msg["data"]
 
     try:
-        await hass.data[DATA_MANAGER].async_sync_backup(
-            backup=BaseBackup(
-                date=backup["date"],
-                name=backup["name"],
-                size=backup["size"],
-                slug=backup["slug"],
-            )
-        )
+        await hass.data[DATA_MANAGER].async_sync_backup(slug=data["slug"])
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_sync_failed", str(err))
         return

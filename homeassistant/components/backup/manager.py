@@ -31,7 +31,7 @@ from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
-_BackupType = TypeVar("_BackupType")
+_BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
 
 
 @dataclass(slots=True)
@@ -55,14 +55,14 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BaseBackupManager(abc.ABC, Generic[_BackupType]):
+class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
         self.backing_up = False
-        self.backups: dict[str, _BackupType] = {}
+        self.backups: dict[str, _BackupT] = {}
         self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.sync_agents: dict[str, BackupSyncAgent] = {}
@@ -151,18 +151,18 @@ class BaseBackupManager(abc.ABC, Generic[_BackupType]):
         self.loaded_platforms = True
 
     @abc.abstractmethod
-    async def async_create_backup(self, **kwargs: Any) -> _BackupType:
+    async def async_create_backup(self, **kwargs: Any) -> _BackupT:
         """Generate a backup."""
 
     @abc.abstractmethod
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupType]:
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupT]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their slug.
         """
 
     @abc.abstractmethod
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _BackupType | None:
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _BackupT | None:
         """Get a backup."""
 
     @abc.abstractmethod
@@ -170,7 +170,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupType]):
         """Remove a backup."""
 
     @abc.abstractmethod
-    async def async_sync_backup(self, *, backup: _BackupType, **kwargs: Any) -> None:
+    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Sync a backup."""
 
 
@@ -183,11 +183,14 @@ class BackupManager(BaseBackupManager[Backup]):
         self.backup_dir = Path(hass.config.path("backups"))
         self.loaded_backups = False
 
-    async def async_sync_backup(self, *, backup: Backup, **kwargs: Any) -> None:
+    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Sync a backup."""
         await self.load_platforms()
 
         if not self.sync_agents:
+            return
+
+        if not (backup := await self.async_get_backup(slug=slug)):
             return
 
         self.syncing = True

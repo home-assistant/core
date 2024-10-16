@@ -251,10 +251,7 @@ async def test_backup_sync(
         await client.send_json_auto_id(
             {
                 "type": "backup/sync",
-                "backup": {
-                    "date": "1970-01-01T00:00:00+00:00",
-                    "name": "Awesome backup",
-                    "size": 12.12,
+                "data": {
                     "slug": "abc123",
                 },
             }
@@ -319,10 +316,7 @@ async def test_backup_sync_excepion(
         await client.send_json_auto_id(
             {
                 "type": "backup/sync",
-                "backup": {
-                    "date": "1970-01-01T00:00:00+00:00",
-                    "name": "Awesome backup",
-                    "size": 12.12,
+                "data": {
                     "slug": "abc123",
                 },
             }
