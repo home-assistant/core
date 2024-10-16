@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from .conftest import (
+from . import setup_platform
+from .const import (
     DEVICE_1_ICON,
     DEVICE_1_ID,
     DEVICE_1_NAME,
@@ -28,7 +29,6 @@ from .conftest import (
     DEVICE_2_ID,
     DEVICE_2_NAME,
     MONITOR_ID,
-    setup_platform,
 )
 
 from tests.common import async_fire_time_changed
