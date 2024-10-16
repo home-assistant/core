@@ -41,3 +41,40 @@ def test_reading_the_instruction_contents(
             Path(get_test_config_dir())
         )
         assert read_content == expected
+
+
+def test_restoring_backup_that_does_not_exist() -> None:
+    """Test restoring a backup that does not exist."""
+    backup_file_path = Path(get_test_config_dir("backups", "test"))
+    with (
+        mock.patch(
+            "homeassistant.backup_restore.restore_backup_file_content",
+            return_value=backup_restore.RestoreBackupFileContent(
+                backup_file_path=backup_file_path
+            ),
+        ),
+        mock.patch("pathlib.Path.exists", return_value=False),
+        pytest.raises(
+            ValueError, match=f"Backup file {backup_file_path} does not exist"
+        ),
+    ):
+        assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
+
+
+def test_restoring_backup_that_is_not_a_file() -> None:
+    """Test restoring a backup that is not a file."""
+    backup_file_path = Path(get_test_config_dir("backups", "test"))
+    with (
+        mock.patch(
+            "homeassistant.backup_restore.restore_backup_file_content",
+            return_value=backup_restore.RestoreBackupFileContent(
+                backup_file_path=backup_file_path
+            ),
+        ),
+        mock.patch("pathlib.Path.exists", return_value=True),
+        mock.patch("pathlib.Path.is_file", return_value=False),
+        pytest.raises(
+            ValueError, match=f"Backup file {backup_file_path} does not exist"
+        ),
+    ):
+        assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
