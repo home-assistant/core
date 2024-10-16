@@ -63,9 +63,25 @@ class CommandLineAuthProvider(AuthProvider):
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
+
+
+
+
+
     async def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
         env = {"username": username, "password": password}
+        process = await self.start_auth_process(env)
+        stdout = await self._handle_process_output(username, process)
+
+        if self.config[CONF_META]:
+            meta = self._parse_meta_data(stdout)
+            self._user_meta[username] = meta
+
+
+            # Start authentecation subprocess
+    async def start_auth_process(self, env: dict[str, str]):
+
         try:
             process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
@@ -74,11 +90,18 @@ class CommandLineAuthProvider(AuthProvider):
                 stdout=asyncio.subprocess.PIPE if self.config[CONF_META] else None,
                 close_fds=False,  # required for posix_spawn
             )
-            stdout, _ = await process.communicate()
+            return process
+        
+
         except OSError as err:
             # happens when command doesn't exist or permission is denied
-            _LOGGER.error("Error while authenticating %r: %s", username, err)
+            _LOGGER.error("Error while authenticating %r: %s", env['username'], err)
             raise InvalidAuthError from err
+
+
+            #handle process out put and validate the result.
+    async def handle_process_output(self, username: str, process):
+        stdout, _ = await process.communicate()
 
         if process.returncode != 0:
             _LOGGER.error(
@@ -87,23 +110,42 @@ class CommandLineAuthProvider(AuthProvider):
                 process.returncode,
             )
             raise InvalidAuthError
+        return stdout
+    
+            #Parse the meta data from process output.
+    def parse_meta_data(self, stdout: bytes) -> dict [str,str]:
 
-        if self.config[CONF_META]:
-            meta: dict[str, str] = {}
-            for _line in stdout.splitlines():
-                try:
-                    line = _line.decode().lstrip()
-                except ValueError:
-                    # malformed line
-                    continue
-                if line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip()
-                if key in self.ALLOWED_META_KEYS:
-                    meta[key] = value
-            self._user_meta[username] = meta
+        meta ={}
+        for _line in stdout.splitlines():
+            line = self.decode_and_strip_line(_line)
+            if not self.is_valid_meta_line(line):
+                continue
+            key, value = self.extract_key_value(line)
+            if key in self.ALLOWED_META_KEYS:
+                meta[key] = value
+        return meta
+    
+
+            # Decode and strip a line from stdout.
+    def decode_and_strip_line(self, _line: bytes) -> str:
+        try:
+            return _line.decode().lstrip()
+        except ValueError:
+            return ''  # return and empty string for invalid line.
+        
+            # Check if the line is a valid meta line.
+    def is_valid_meta_line(self, line: str) -> bool:
+        return bool(line and not line.startswith("#") and "=" in line)
+    
+            # Extract key and value from a valid meta line.
+    def extract_key_value(self, line: str) -> tuple[str, str]:
+        key, _, value = line.partition("=")
+        return key.strip(), value.strip()
+
+
+
+
+
 
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
