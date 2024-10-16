@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry, LinkPlayData
-from .const import CONTROLLER, DOMAIN
+from .const import CONTROLLER_KEY, DOMAIN
 from .utils import MANUFACTURER_GENERIC, get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
@@ -297,7 +297,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
-        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER]
+        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
         multiroom = self._bridge.multiroom
         if multiroom is None:
             multiroom = LinkPlayMultiroom(self._bridge)
@@ -352,7 +352,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     @exception_wrap
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER]
+        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
 
         multiroom = self._bridge.multiroom
         if multiroom is not None:
