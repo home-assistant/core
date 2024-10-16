@@ -35,7 +35,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'current_position': 100,
+      'current_position': 0,
       'device_class': 'awning',
       'friendly_name': 'Markise',
       'supported_features': <CoverEntityFeature: 15>,
@@ -45,6 +45,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
