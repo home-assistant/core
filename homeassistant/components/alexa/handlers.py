@@ -101,6 +101,12 @@ SERVICE_SET_TEMPERATURE = {
     water_heater.DOMAIN: water_heater.SERVICE_SET_TEMPERATURE,
 }
 
+# Define the constant for "Alexa.ThermostatController"
+ALEXA_THERMOSTAT_CONTROLLER = "Alexa.ThermostatController"
+
+# Define the constant for "Alexa.SecurityPanelController"
+ALEXA_SECURITY_PANEL_CONTROLLER = "Alexa.SecurityPanelController"
+
 HANDLERS: Registry[
     tuple[str, str],
     Callable[
@@ -830,7 +836,7 @@ def temperature_from_object(
     return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))
+@HANDLERS.register((ALEXA_THERMOSTAT_CONTROLLER, "SetTargetTemperature"))
 async def async_api_set_target_temp(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -857,7 +863,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "targetSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": temp, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -869,7 +875,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "lowerSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": temp_low, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -881,7 +887,7 @@ async def async_api_set_target_temp(
         response.add_context_property(
             {
                 "name": "upperSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": temp_high, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -899,7 +905,7 @@ async def async_api_set_target_temp(
     return response
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "AdjustTargetTemperature"))
+@HANDLERS.register((ALEXA_THERMOSTAT_CONTROLLER, "AdjustTargetTemperature"))
 async def async_api_adjust_target_temp(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -940,14 +946,14 @@ async def async_api_adjust_target_temp(
         response.add_context_property(
             {
                 "name": "upperSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": target_temp_high, "scale": API_TEMP_UNITS[unit]},
             }
         )
         response.add_context_property(
             {
                 "name": "lowerSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": target_temp_low, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -967,7 +973,7 @@ async def async_api_adjust_target_temp(
         response.add_context_property(
             {
                 "name": "targetSetpoint",
-                "namespace": "Alexa.ThermostatController",
+                "namespace": ALEXA_THERMOSTAT_CONTROLLER,
                 "value": {"value": target_temp, "scale": API_TEMP_UNITS[unit]},
             }
         )
@@ -985,7 +991,7 @@ async def async_api_adjust_target_temp(
     return response
 
 
-@HANDLERS.register(("Alexa.ThermostatController", "SetThermostatMode"))
+@HANDLERS.register((ALEXA_THERMOSTAT_CONTROLLER, "SetThermostatMode"))
 async def async_api_set_thermostat_mode(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -1051,7 +1057,7 @@ async def async_api_set_thermostat_mode(
     response.add_context_property(
         {
             "name": "thermostatMode",
-            "namespace": "Alexa.ThermostatController",
+            "namespace": ALEXA_THERMOSTAT_CONTROLLER,
             "value": mode,
         }
     )
@@ -1070,7 +1076,7 @@ async def async_api_reportstate(
     return directive.response(name="StateReport")
 
 
-@HANDLERS.register(("Alexa.SecurityPanelController", "Arm"))
+@HANDLERS.register((ALEXA_SECURITY_PANEL_CONTROLLER, "Arm"))
 async def async_api_arm(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -1104,13 +1110,13 @@ async def async_api_arm(
     payload: dict[str, Any] = {"exitDelayInSeconds": 0}
 
     response = directive.response(
-        name="Arm.Response", namespace="Alexa.SecurityPanelController", payload=payload
+        name="Arm.Response", namespace=ALEXA_SECURITY_PANEL_CONTROLLER, payload=payload
     )
 
     response.add_context_property(
         {
             "name": "armState",
-            "namespace": "Alexa.SecurityPanelController",
+            "namespace": ALEXA_SECURITY_PANEL_CONTROLLER,
             "value": arm_state,
         }
     )
@@ -1118,7 +1124,7 @@ async def async_api_arm(
     return response
 
 
-@HANDLERS.register(("Alexa.SecurityPanelController", "Disarm"))
+@HANDLERS.register((ALEXA_SECURITY_PANEL_CONTROLLER, "Disarm"))
 async def async_api_disarm(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -1149,7 +1155,7 @@ async def async_api_disarm(
     response.add_context_property(
         {
             "name": "armState",
-            "namespace": "Alexa.SecurityPanelController",
+            "namespace": ALEXA_SECURITY_PANEL_CONTROLLER,
             "value": "DISARMED",
         }
     )
@@ -1157,7 +1163,12 @@ async def async_api_disarm(
     return response
 
 
-@HANDLERS.register(("Alexa.ModeController", "SetMode"))
+# Define constants for common domains and attributes
+ALEXA_MODE_CONTROLLER = "Alexa.ModeController"
+PRESET_MODE = "preset_mode"
+MODE = "mode"
+
+@HANDLERS.register((ALEXA_MODE_CONTROLLER, "SetMode"))
 async def async_api_set_mode(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
@@ -1168,104 +1179,78 @@ async def async_api_set_mode(
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
-    mode = directive.payload["mode"]
+    mode = directive.payload[MODE]
+    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    # Fan Direction
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        direction = mode.split(".")[1]
-        if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
-            service = fan.SERVICE_SET_DIRECTION
-            data[fan.ATTR_DIRECTION] = direction
+    mode_action_map = {
+        f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}": {
+            "attr": fan.ATTR_DIRECTION,
+            "valid_modes": [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD],
+            "service": fan.SERVICE_SET_DIRECTION,
+        },
+        f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}": {
+            "attr": fan.ATTR_PRESET_MODE,
+            "valid_modes": entity.attributes.get(fan.ATTR_PRESET_MODES),
+            "service": fan.SERVICE_SET_PRESET_MODE,
+            "error_message": f"Entity '{entity.entity_id}' does not support Preset '{mode}'"
+        },
+        f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}": {
+            "attr": humidifier.ATTR_MODE,
+            "valid_modes": entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES),
+            "service": humidifier.SERVICE_SET_MODE,
+            "error_message": f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+        },
+        f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}": {
+            "attr": remote.ATTR_ACTIVITY,
+            "valid_modes": entity.attributes.get(remote.ATTR_ACTIVITY_LIST),
+            "service": remote.SERVICE_TURN_ON,
+            "error_message": f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+        },
+        f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}": {
+            "attr": water_heater.ATTR_OPERATION_MODE,
+            "valid_modes": entity.attributes.get(water_heater.ATTR_OPERATION_LIST),
+            "service": water_heater.SERVICE_SET_OPERATION_MODE,
+            "error_message": f"Entity '{entity.entity_id}' does not support Operation mode '{mode}'"
+        },
+        f"{cover.DOMAIN}.{cover.ATTR_POSITION}": {
+            "actions": {
+                cover.STATE_CLOSED: cover.SERVICE_CLOSE_COVER,
+                cover.STATE_OPEN: cover.SERVICE_OPEN_COVER,
+                "custom": cover.SERVICE_STOP_COVER,
+            }
+        },
+        f"{valve.DOMAIN}.state": {
+            "actions": {
+                valve.STATE_CLOSED: valve.SERVICE_CLOSE_VALVE,
+                valve.STATE_OPEN: valve.SERVICE_OPEN_VALVE,
+            }
+        }
+    }
 
-    # Fan preset_mode
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
-        preset_mode = mode.split(".")[1]
-        preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
-        if (
-            preset_mode != PRESET_MODE_NA
-            and preset_modes
-            and preset_mode in preset_modes
-        ):
-            service = fan.SERVICE_SET_PRESET_MODE
-            data[fan.ATTR_PRESET_MODE] = preset_mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Humidifier mode
-    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
-        mode = mode.split(".")[1]
-        modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
-        if mode != PRESET_MODE_NA and modes and mode in modes:
-            service = humidifier.SERVICE_SET_MODE
-            data[humidifier.ATTR_MODE] = mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Remote Activity
-    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
-        activity = mode.split(".")[1]
-        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
-        if activity != PRESET_MODE_NA and activities and activity in activities:
-            service = remote.SERVICE_TURN_ON
-            data[remote.ATTR_ACTIVITY] = activity
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Water heater operation mode
-    elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
-        operation_mode = mode.split(".")[1]
-        operation_modes: list[str] | None = entity.attributes.get(
-            water_heater.ATTR_OPERATION_LIST
-        )
-        if (
-            operation_mode != PRESET_MODE_NA
-            and operation_modes
-            and operation_mode in operation_modes
-        ):
-            service = water_heater.SERVICE_SET_OPERATION_MODE
-            data[water_heater.ATTR_OPERATION_MODE] = operation_mode
-        else:
-            msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
-            raise AlexaInvalidValueError(msg)
-
-    # Cover Position
-    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        position = mode.split(".")[1]
-
-        if position == cover.STATE_CLOSED:
-            service = cover.SERVICE_CLOSE_COVER
-        elif position == cover.STATE_OPEN:
-            service = cover.SERVICE_OPEN_COVER
-        elif position == "custom":
-            service = cover.SERVICE_STOP_COVER
-
-    # Valve position state
-    elif instance == f"{valve.DOMAIN}.state":
-        position = mode.split(".")[1]
-
-        if position == valve.STATE_CLOSED:
-            service = valve.SERVICE_CLOSE_VALVE
-        elif position == valve.STATE_OPEN:
-            service = valve.SERVICE_OPEN_VALVE
+    if instance in mode_action_map:
+        config = mode_action_map[instance]
+        if "valid_modes" in config:
+            mode_value = mode.split(".")[1]
+            if mode_value != PRESET_MODE_NA and config["valid_modes"] and mode_value in config["valid_modes"]:
+                service = config["service"]
+                data[config["attr"]] = mode_value
+            else:
+                raise AlexaInvalidValueError(config["error_message"])
+        elif "actions" in config:
+            action_mode = mode.split(".")[1]
+            service = config["actions"].get(action_mode)
 
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
-    )
+    await hass.services.async_call(domain, service, data, blocking=False, context=context)
 
     response = directive.response()
     response.add_context_property(
         {
-            "namespace": "Alexa.ModeController",
+            "namespace": ALEXA_MODE_CONTROLLER,
             "instance": instance,
-            "name": "mode",
+            "name": MODE,
             "value": mode,
         }
     )
@@ -1376,113 +1361,115 @@ async def async_api_toggle_off(
     return response
 
 
-@HANDLERS.register(("Alexa.RangeController", "SetRangeValue"))
+ALEXA_RANGE_CONTROLLER = "Alexa.RangeController"
+SUPPORTED_ACTIONS = {
+    f"{cover.DOMAIN}.{cover.ATTR_POSITION}": {
+        "features": [cover.CoverEntityFeature.CLOSE, cover.CoverEntityFeature.OPEN],
+        "services": {
+            0: cover.SERVICE_CLOSE_COVER,
+            100: cover.SERVICE_OPEN_COVER,
+        },
+        "set_service": cover.SERVICE_SET_COVER_POSITION,
+        "set_attr": cover.ATTR_POSITION,
+    },
+    f"{cover.DOMAIN}.tilt": {
+        "features": [cover.CoverEntityFeature.CLOSE_TILT, cover.CoverEntityFeature.OPEN_TILT],
+        "services": {
+            0: cover.SERVICE_CLOSE_COVER_TILT,
+            100: cover.SERVICE_OPEN_COVER_TILT,
+        },
+        "set_service": cover.SERVICE_SET_COVER_TILT_POSITION,
+        "set_attr": cover.ATTR_TILT_POSITION,
+    },
+    f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": {
+        "services": {
+            0: fan.SERVICE_TURN_OFF,
+        },
+        "set_service": fan.SERVICE_SET_PERCENTAGE,
+        "set_attr": fan.ATTR_PERCENTAGE,
+        "feature": fan.FanEntityFeature.SET_SPEED,
+        "turn_on_service": fan.SERVICE_TURN_ON,
+    },
+    f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": {
+        "set_service": humidifier.SERVICE_SET_HUMIDITY,
+        "set_attr": humidifier.ATTR_HUMIDITY,
+    },
+    f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": {
+        "set_service": input_number.SERVICE_SET_VALUE,
+        "set_attr": input_number.ATTR_VALUE,
+        "min_attr": input_number.ATTR_MIN,
+        "max_attr": input_number.ATTR_MAX,
+    },
+    f"{number.DOMAIN}.{number.ATTR_VALUE}": {
+        "set_service": number.SERVICE_SET_VALUE,
+        "set_attr": number.ATTR_VALUE,
+        "min_attr": number.ATTR_MIN,
+        "max_attr": number.ATTR_MAX,
+    },
+    f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": {
+        "set_service": vacuum.SERVICE_SET_FAN_SPEED,
+        "speed_list_attr": vacuum.ATTR_FAN_SPEED_LIST,
+        "set_attr": vacuum.ATTR_FAN_SPEED,
+    },
+    f"{valve.DOMAIN}.{valve.ATTR_POSITION}": {
+        "features": [valve.ValveEntityFeature.CLOSE, valve.ValveEntityFeature.OPEN],
+        "services": {
+            0: valve.SERVICE_CLOSE_VALVE,
+            100: valve.SERVICE_OPEN_VALVE,
+        },
+        "set_service": valve.SERVICE_SET_VALVE_POSITION,
+        "set_attr": valve.ATTR_POSITION,
+    },
+}
+
+@HANDLERS.register((ALEXA_RANGE_CONTROLLER, "SetRangeValue"))
 async def async_api_set_range(
     hass: ha.HomeAssistant,
     config: AbstractConfig,
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a next request."""
+    """Process a SetRangeValue request."""
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-    # Cover Position
-    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        range_value = int(range_value)
-        if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
-            service = cover.SERVICE_CLOSE_COVER
-        elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
-            service = cover.SERVICE_OPEN_COVER
-        else:
-            service = cover.SERVICE_SET_COVER_POSITION
-            data[cover.ATTR_POSITION] = range_value
-
-    # Cover Tilt
-    elif instance == f"{cover.DOMAIN}.tilt":
-        range_value = int(range_value)
-        if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
-            service = cover.SERVICE_CLOSE_COVER_TILT
-        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
-            service = cover.SERVICE_OPEN_COVER_TILT
-        else:
-            service = cover.SERVICE_SET_COVER_TILT_POSITION
-            data[cover.ATTR_TILT_POSITION] = range_value
-
-    # Fan Speed
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        range_value = int(range_value)
-        if range_value == 0:
-            service = fan.SERVICE_TURN_OFF
-        elif supported & fan.FanEntityFeature.SET_SPEED:
-            service = fan.SERVICE_SET_PERCENTAGE
-            data[fan.ATTR_PERCENTAGE] = range_value
-        else:
-            service = fan.SERVICE_TURN_ON
-
-    # Humidifier target humidity
-    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
-        range_value = int(range_value)
-        service = humidifier.SERVICE_SET_HUMIDITY
-        data[humidifier.ATTR_HUMIDITY] = range_value
-
-    # Input Number Value
-    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
-        range_value = float(range_value)
-        service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
-        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
-
-    # Input Number Value
-    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
-        range_value = float(range_value)
-        service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
-        data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
-
-    # Vacuum Fan Speed
-    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-        service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-        speed = next(
-            (v for i, v in enumerate(speed_list) if i == int(range_value)), None
-        )
-
-        if not speed:
-            msg = "Entity does not support value"
-            raise AlexaInvalidValueError(msg)
-
-        data[vacuum.ATTR_FAN_SPEED] = speed
-
-    # Valve Position
-    elif instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
-        range_value = int(range_value)
-        if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
-            service = valve.SERVICE_CLOSE_VALVE
-        elif supported & valve.ValveEntityFeature.OPEN and range_value == 100:
-            service = valve.SERVICE_OPEN_VALVE
-        else:
-            service = valve.SERVICE_SET_VALVE_POSITION
-            data[valve.ATTR_POSITION] = range_value
-
-    else:
+    if instance not in SUPPORTED_ACTIONS:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
-    )
+    action = SUPPORTED_ACTIONS[instance]
+    range_value = int(range_value) if "speed_list_attr" not in action else float(range_value)
+
+    # Handle features and services mapping
+    if "features" in action and supported & action["features"][0] and range_value == 0:
+        service = action["services"][0]
+    elif "features" in action and supported & action["features"][1] and range_value == 100:
+        service = action["services"][100]
+    else:
+        service = action.get("set_service")
+        if service:
+            if "min_attr" in action and "max_attr" in action:
+                min_value = float(entity.attributes[action["min_attr"]])
+                max_value = float(entity.attributes[action["max_attr"]])
+                data[action["set_attr"]] = min(max_value, max(min_value, range_value))
+            elif "speed_list_attr" in action:
+                speed_list = entity.attributes[action["speed_list_attr"]]
+                speed = next((v for i, v in enumerate(speed_list) if i == int(range_value)), None)
+                if not speed:
+                    raise AlexaInvalidValueError("Entity does not support value")
+                data[action["set_attr"]] = speed
+            else:
+                data[action["set_attr"]] = range_value
+
+    await hass.services.async_call(domain, service, data, blocking=False, context=context)
 
     response = directive.response()
     response.add_context_property(
         {
-            "namespace": "Alexa.RangeController",
+            "namespace": ALEXA_RANGE_CONTROLLER,
             "instance": instance,
             "name": "rangeValue",
             "value": range_value,
@@ -1492,6 +1479,79 @@ async def async_api_set_range(
     return response
 
 
+# Mapping structure for entity handling
+INSTANCE_MAP = {
+    f"{cover.DOMAIN}.{cover.ATTR_POSITION}": {
+        "attr": cover.ATTR_CURRENT_POSITION,
+        "set_attr": cover.ATTR_POSITION,
+        "services": {
+            100: cover.SERVICE_OPEN_COVER,
+            0: cover.SERVICE_CLOSE_COVER,
+            "set": cover.SERVICE_SET_COVER_POSITION,
+        },
+        "delta_default_multiplier": 20,
+    },
+    f"{cover.DOMAIN}.tilt": {
+        "attr": cover.ATTR_TILT_POSITION,
+        "set_attr": cover.ATTR_TILT_POSITION,
+        "services": {
+            100: cover.SERVICE_OPEN_COVER_TILT,
+            0: cover.SERVICE_CLOSE_COVER_TILT,
+            "set": cover.SERVICE_SET_COVER_TILT_POSITION,
+        },
+        "delta_default_multiplier": 20,
+    },
+    f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}": {
+        "attr": fan.ATTR_PERCENTAGE,
+        "set_attr": fan.ATTR_PERCENTAGE,
+        "services": {
+            0: fan.SERVICE_TURN_OFF,
+            "set": fan.SERVICE_SET_PERCENTAGE,
+        },
+        "delta_default_multiplier": 20,
+        "percentage_step_attr": fan.ATTR_PERCENTAGE_STEP,
+        "turn_on_service": fan.SERVICE_TURN_ON,
+    },
+    f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}": {
+        "attr": humidifier.ATTR_HUMIDITY,
+        "set_attr": humidifier.ATTR_HUMIDITY,
+        "services": {"set": humidifier.SERVICE_SET_HUMIDITY},
+        "min_value_attr": humidifier.ATTR_MIN_HUMIDITY,
+        "max_value_attr": humidifier.ATTR_MAX_HUMIDITY,
+        "delta_default_multiplier": 5,
+    },
+    f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}": {
+        "attr": None,
+        "set_attr": input_number.ATTR_VALUE,
+        "services": {"set": input_number.SERVICE_SET_VALUE},
+        "min_value_attr": input_number.ATTR_MIN,
+        "max_value_attr": input_number.ATTR_MAX,
+    },
+    f"{number.DOMAIN}.{number.ATTR_VALUE}": {
+        "attr": None,
+        "set_attr": number.ATTR_VALUE,
+        "services": {"set": number.SERVICE_SET_VALUE},
+        "min_value_attr": number.ATTR_MIN,
+        "max_value_attr": number.ATTR_MAX,
+    },
+    f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}": {
+        "attr": vacuum.ATTR_FAN_SPEED,
+        "set_attr": vacuum.ATTR_FAN_SPEED,
+        "services": {"set": vacuum.SERVICE_SET_FAN_SPEED},
+        "speed_list_attr": vacuum.ATTR_FAN_SPEED_LIST,
+    },
+    f"{valve.DOMAIN}.{valve.ATTR_POSITION}": {
+        "attr": valve.ATTR_POSITION,
+        "set_attr": valve.ATTR_POSITION,
+        "services": {
+            100: valve.SERVICE_OPEN_VALVE,
+            0: valve.SERVICE_CLOSE_VALVE,
+            "set": valve.SERVICE_SET_VALVE_POSITION,
+        },
+        "delta_default_multiplier": 20,
+    },
+}
+
 @HANDLERS.register(("Alexa.RangeController", "AdjustRangeValue"))
 async def async_api_adjust_range(
     hass: ha.HomeAssistant,
@@ -1499,145 +1559,53 @@ async def async_api_adjust_range(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a next request."""
+    """Process an AdjustRangeValue request."""
     entity = directive.entity
     instance = directive.instance
-    domain = entity.domain
-    service = None
-    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
-    response_value: int | None = 0
+    domain = entity.domain
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    # Cover Position
-    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
-            msg = f"Unable to determine {entity.entity_id} current position"
-            raise AlexaInvalidValueError(msg)
-        position = response_value = min(100, max(0, range_delta + current))
-        if position == 100:
-            service = cover.SERVICE_OPEN_COVER
-        elif position == 0:
-            service = cover.SERVICE_CLOSE_COVER
-        else:
-            data[cover.ATTR_POSITION] = position
-
-    # Cover Tilt
-    elif instance == f"{cover.DOMAIN}.tilt":
-        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = SERVICE_SET_COVER_TILT_POSITION
-        current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        if not current:
-            msg = f"Unable to determine {entity.entity_id} current tilt position"
-            raise AlexaInvalidValueError(msg)
-        tilt_position = response_value = min(100, max(0, range_delta + current))
-        if tilt_position == 100:
-            service = cover.SERVICE_OPEN_COVER_TILT
-        elif tilt_position == 0:
-            service = cover.SERVICE_CLOSE_COVER_TILT
-        else:
-            data[cover.ATTR_TILT_POSITION] = tilt_position
-
-    # Fan speed percentage
-    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
-        range_delta = (
-            int(range_delta * percentage_step)
-            if range_delta_default
-            else int(range_delta)
-        )
-        service = fan.SERVICE_SET_PERCENTAGE
-        if not (current := entity.attributes.get(fan.ATTR_PERCENTAGE)):
-            msg = f"Unable to determine {entity.entity_id} current fan speed"
-            raise AlexaInvalidValueError(msg)
-        percentage = response_value = min(100, max(0, range_delta + current))
-        if percentage:
-            data[fan.ATTR_PERCENTAGE] = percentage
-        else:
-            service = fan.SERVICE_TURN_OFF
-
-    # Humidifier target humidity
-    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
-        percentage_step = 5
-        range_delta = (
-            int(range_delta * percentage_step)
-            if range_delta_default
-            else int(range_delta)
-        )
-        service = humidifier.SERVICE_SET_HUMIDITY
-        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
-            msg = f"Unable to determine {entity.entity_id} current target humidity"
-            raise AlexaInvalidValueError(msg)
-        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
-        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
-        percentage = response_value = min(
-            max_value, max(min_value, range_delta + current)
-        )
-        if percentage:
-            data[humidifier.ATTR_HUMIDITY] = percentage
-
-    # Input Number Value
-    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
-        range_delta = float(range_delta)
-        service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
-        current = float(entity.state)
-        data[input_number.ATTR_VALUE] = response_value = min(
-            max_value, max(min_value, range_delta + current)
-        )
-
-    # Number Value
-    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
-        range_delta = float(range_delta)
-        service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
-        current = float(entity.state)
-        data[number.ATTR_VALUE] = response_value = min(
-            max_value, max(min_value, range_delta + current)
-        )
-
-    # Vacuum Fan Speed
-    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-        range_delta = int(range_delta)
-        service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-        current_speed = entity.attributes[vacuum.ATTR_FAN_SPEED]
-        current_speed_index = next(
-            (i for i, v in enumerate(speed_list) if v == current_speed), 0
-        )
-        new_speed_index = min(
-            len(speed_list) - 1, max(0, current_speed_index + range_delta)
-        )
-        speed = next(
-            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
-        )
-        data[vacuum.ATTR_FAN_SPEED] = response_value = speed
-
-    # Valve Position
-    elif instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
-        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = valve.SERVICE_SET_VALVE_POSITION
-        if not (current := entity.attributes.get(valve.ATTR_POSITION)):
-            msg = f"Unable to determine {entity.entity_id} current position"
-            raise AlexaInvalidValueError(msg)
-        position = response_value = min(100, max(0, range_delta + current))
-        if position == 100:
-            service = valve.SERVICE_OPEN_VALVE
-        elif position == 0:
-            service = valve.SERVICE_CLOSE_VALVE
-        else:
-            data[valve.ATTR_POSITION] = position
-
-    else:
+    # Validate if instance is supported
+    if instance not in INSTANCE_MAP:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
-    )
+    # Get configuration for the instance
+    config = INSTANCE_MAP[instance]
+
+    # Get current attribute and range delta adjustment
+    current = entity.attributes.get(config["attr"]) if config["attr"] else float(entity.state)
+    if current is None:
+        raise AlexaInvalidValueError(f"Unable to determine {entity.entity_id} current value")
+
+    # Adjust range delta if default is true
+    if range_delta_default and "delta_default_multiplier" in config:
+        range_delta *= config["delta_default_multiplier"]
+    range_delta = int(range_delta)
+
+    # Handle min and max limits, if applicable
+    if "min_value_attr" in config and "max_value_attr" in config:
+        min_value = float(entity.attributes.get(config["min_value_attr"], 0))
+        max_value = float(entity.attributes.get(config["max_value_attr"], 100))
+        response_value = min(max_value, max(min_value, range_delta + current))
+    else:
+        response_value = min(100, max(0, range_delta + current))
+
+    # Determine the service to call
+    service = config["services"].get(response_value) or config["services"]["set"]
+    data[config["set_attr"]] = response_value
+
+    # Handle special vacuum fan speed case
+    if "speed_list_attr" in config:
+        speed_list = entity.attributes[config["speed_list_attr"]]
+        current_speed_index = next(
+            (i for i, v in enumerate(speed_list) if v == current), 0
+        )
+        new_speed_index = min(len(speed_list) - 1, max(0, current_speed_index + range_delta))
+        data[config["set_attr"]] = speed_list[new_speed_index]
+
+    await hass.services.async_call(domain, service, data, blocking=False, context=context)
 
     response = directive.response()
     response.add_context_property(

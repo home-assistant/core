@@ -3,6 +3,8 @@
 from typing import Any
 
 
+# Probably ideally use a global class to store all the static variables?
+# But will stop it here for this assignment
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
 
@@ -194,6 +196,9 @@ class AlexaGlobalCatalog:
     # Quick Wash, Fast Wash, Wash Quickly, Speed Wash
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
+    # Define a constant for "@type"
+    TYPE_KEY = "@type"
+
 
 class AlexaCapabilityResource:
     """Base class for Alexa capabilityResources, modeResources, and presetResources.
@@ -235,10 +240,13 @@ class AlexaCapabilityResource:
         label_dict: dict[str, Any]
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label_dict = {"@type": "asset", "value": {"assetId": label}}
+                label_dict = {
+                    AlexaGlobalCatalog.TYPE_KEY: "asset",
+                    "value": {"assetId": label},
+                }
             else:
                 label_dict = {
-                    "@type": "text",
+                    AlexaGlobalCatalog.TYPE_KEY: "text",
                     "value": {"text": label, "locale": "en-US"},
                 }
 
@@ -401,7 +409,11 @@ class AlexaSemantics:
     def add_states_to_value(self, states: list[str], value: Any) -> None:
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
-            {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
+            {
+                AlexaGlobalCatalog.TYPE_KEY: self.STATES_TO_VALUE,
+                "states": states,
+                "value": value,
+            }
         )
 
     def add_states_to_range(
@@ -410,7 +422,7 @@ class AlexaSemantics:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
-                "@type": self.STATES_TO_RANGE,
+                AlexaGlobalCatalog.TYPE_KEY: self.STATES_TO_RANGE,
                 "states": states,
                 "range": {"minimumValue": min_value, "maximumValue": max_value},
             }
@@ -422,7 +434,7 @@ class AlexaSemantics:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
-                "@type": self.ACTIONS_TO_DIRECTIVE,
+                AlexaGlobalCatalog.TYPE_KEY: self.ACTIONS_TO_DIRECTIVE,
                 "actions": actions,
                 "directive": {"name": directive, "payload": payload},
             }

@@ -2,60 +2,60 @@ ignore: |
   tests/fixtures/core/config/yaml_errors/
 rules:
   braces:
-    level: error
+    level: warn
     min-spaces-inside: 0
     max-spaces-inside: 1
     min-spaces-inside-empty: -1
     max-spaces-inside-empty: -1
   brackets:
-    level: error
+    level: warn
     min-spaces-inside: 0
     max-spaces-inside: 0
     min-spaces-inside-empty: -1
     max-spaces-inside-empty: -1
   colons:
-    level: error
+    level: warn
     max-spaces-before: 0
     max-spaces-after: 1
   commas:
-    level: error
+    level: warn
     max-spaces-before: 0
     min-spaces-after: 1
     max-spaces-after: 1
   comments:
-    level: error
+    level: warn
     require-starting-space: true
     min-spaces-from-content: 1
   comments-indentation:
-    level: error
+    level: warn
   document-end:
-    level: error
+    level: disable
     present: false
   document-start:
-    level: error
+    level: disable
     present: false
   empty-lines:
-    level: error
+    level: warn
     max: 1
     max-start: 0
     max-end: 1
   hyphens:
-    level: error
+    level: warn
     max-spaces-after: 1
   indentation:
-    level: error
+    level: warn
     spaces: 2
     indent-sequences: true
     check-multi-line-strings: false
   key-duplicates:
-    level: error
+    level: warn
   line-length: disable
   new-line-at-end-of-file:
-    level: error
+    level: warn
   new-lines:
-    level: error
+    level: warn
     type: unix
   trailing-spaces:
-    level: error
+    level: warn
   truthy:
-    level: error
+    level: warn

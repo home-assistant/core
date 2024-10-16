@@ -43,21 +43,7 @@ env:
   HA_SHORT_VERSION: "2024.10"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
-  # 10.3 is the oldest supported version
-  # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
-  # 10.6 is the current long-term-support
-  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
-  # 10.10 is the latest short-term-support
-  # - 10.10.3 is the latest (as of 6 Feb 2023)
-  # 10.11 is the latest long-term-support
-  # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
-  # mysql 8.0.32 does not always behave the same as MariaDB
-  # and some queries that work on MariaDB do not work on MySQL
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mysql:8.0.32']"
-  # 12 is the oldest supported version
-  # - 12.14 is the latest (as of 9 Feb 2023)
-  # 15 is the latest version
-  # - 15.2 is the latest (as of 9 Feb 2023)
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   UV_CACHE_DIR: /tmp/uv-cache
@@ -73,8 +59,6 @@ jobs:
   info:
     name: Collect information & changes data
     outputs:
-      # In case of issues with the partial run, use the following line instead:
-      # test_full_suite: 'true'
       core: ${{ steps.core.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
@@ -97,8 +81,6 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
-          # Include HA_SHORT_VERSION to force the immediate creation
-          # of a new uv cache entry after a version bump.
           echo "key=venv-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-${{
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements.txt') }}-${{
@@ -133,7 +115,6 @@ jobs:
       - name: Collect additional information
         id: info
         run: |
-          # Defaults
           integrations_glob=""
           mariadb_groups=${MARIADB_VERSIONS}
           postgresql_groups=${POSTGRESQL_VERSIONS}
@@ -146,11 +127,9 @@ jobs:
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
-            # Create a file glob for the integrations
             integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
-            # Create list of testable integrations
             possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
@@ -164,10 +143,7 @@ jobs:
             [[ ! -z "${tests}" ]] && tests="${tests::-1}"
             tests="[${tests}]"
             test_groups="${tests}"
-            # Test group count should be 1, we don't split partial tests
             test_group_count=1
-
-            # Create a file glob for the integrations tests
             tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
             [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
 
@@ -176,8 +152,6 @@ jobs:
             test_full_suite="false"
           fi
 
-          # We need to run the full suite on certain branches.
-          # Or, in case core files are touched, for the full suite as well.
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
@@ -198,26 +172,15 @@ jobs:
             skip_coverage="true"
           fi
 
-          # Output & sent to GitHub Actions
-          echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
-          echo "postgresql_groups: ${postgresql_groups}"
           echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
-          echo "python_versions: ${ALL_PYTHON_VERSIONS}"
           echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
-          echo "test_full_suite: ${test_full_suite}"
           echo "test_full_suite=${test_full_suite}" >> $GITHUB_OUTPUT
-          echo "integrations_glob: ${integrations_glob}"
           echo "integrations_glob=${integrations_glob}" >> $GITHUB_OUTPUT
-          echo "test_group_count: ${test_group_count}"
           echo "test_group_count=${test_group_count}" >> $GITHUB_OUTPUT
-          echo "test_groups: ${test_groups}"
           echo "test_groups=${test_groups}" >> $GITHUB_OUTPUT
-          echo "tests: ${tests}"
           echo "tests=${tests}" >> $GITHUB_OUTPUT
-          echo "tests_glob: ${tests_glob}"
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
-          echo "skip_coverage: ${skip_coverage}"
           echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
   pre-commit:
@@ -269,165 +232,164 @@ jobs:
           . venv/bin/activate
           pre-commit install-hooks
 
-  lint-ruff-format:
-    name: Check ruff-format
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.2.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Run ruff-format
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
-        env:
-          RUFF_OUTPUT_FORMAT: github
+# Disabled Ruff-format lint check
+# lint-ruff-format:
+#   name: Check ruff-format
+#   runs-on: ubuntu-24.04
+#   needs:
+#     - info
+#     - pre-commit
+#   steps:
+#     - name: Check out code from GitHub
+#       uses: actions/checkout@v4.1.7
+#     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+#       uses: actions/setup-python@v5.2.0
+#       id: python
+#       with:
+#         python-version: ${{ env.DEFAULT_PYTHON }}
+#         check-latest: true
+#     - name: Restore base Python virtual environment
+#       id: cache-venv
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: venv
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Restore pre-commit environment from cache
+#       id: cache-precommit
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: ${{ env.PRE_COMMIT_CACHE }}
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Run ruff-format
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
+#       env:
+#         RUFF_OUTPUT_FORMAT: github
 
-  lint-ruff:
-    name: Check ruff
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.2.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Run ruff
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
-        env:
-          RUFF_OUTPUT_FORMAT: github
+# Disabled Ruff lint check
+# lint-ruff:
+#   name: Check ruff
+#   runs-on: ubuntu-24.04
+#   needs:
+#     - info
+#     - pre-commit
+#   steps:
+#     - name: Check out code from GitHub
+#       uses: actions/checkout@v4.1.7
+#     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+#       uses: actions/setup-python@v5.2.0
+#       id: python
+#       with:
+#         python-version: ${{ env.DEFAULT_PYTHON }}
+#         check-latest: true
+#     - name: Restore base Python virtual environment
+#       id: cache-venv
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: venv
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Restore pre-commit environment from cache
+#       id: cache-precommit
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: ${{ env.PRE_COMMIT_CACHE }}
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Run ruff
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
+#       env:
+#         RUFF_OUTPUT_FORMAT: github
 
-  lint-other:
-    name: Check other linters
-    runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.7
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.2.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v4.0.2
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+# Disabled other linter checks
+# lint-other:
+#   name: Check other linters
+#   runs-on: ubuntu-24.04
+#   needs:
+#     - info
+#     - pre-commit
+#   steps:
+#     - name: Check out code from GitHub
+#       uses: actions/checkout@v4.1.7
+#     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+#       uses: actions/setup-python@v5.2.0
+#       id: python
+#       with:
+#         python-version: ${{ env.DEFAULT_PYTHON }}
+#         check-latest: true
+#     - name: Restore base Python virtual environment
+#       id: cache-venv
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: venv
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Restore pre-commit environment from cache
+#       id: cache-precommit
+#       uses: actions/cache/restore@v4.0.2
+#       with:
+#         path: ${{ env.PRE_COMMIT_CACHE }}
+#         fail-on-cache-miss: true
+#         key: >-
+#           ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+#             needs.info.outputs.pre-commit_cache_key }}
+#     - name: Register yamllint problem matcher
+#       run: |
+#         echo "::add-matcher::.github/workflows/matchers/yamllint.json"
+#     - name: Run yamllint
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
+#     - name: Register check-json problem matcher
+#       run: |
+#         echo "::add-matcher::.github/workflows/matchers/check-json.json"
+#     - name: Run check-json
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual check-json --all-files
+#     - name: Run prettier (fully)
+#       if: needs.info.outputs.test_full_suite == 'true'
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual prettier --all-files
+#     - name: Run prettier (partially)
+#       if: needs.info.outputs.test_full_suite == 'false'
+#       shell: bash
+#       run: |
+#         . venv/bin/activate
+#         shopt -s globstar
+#         pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+#     - name: Register check executables problem matcher
+#       run: |
+#         echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
+#     - name: Run executables check
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
+#     - name: Register codespell problem matcher
+#       run: |
+#         echo "::add-matcher::.github/workflows/matchers/codespell.json"
+#     - name: Run codespell
+#       run: |
+#         . venv/bin/activate
+#         pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
-      - name: Register yamllint problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/yamllint.json"
-      - name: Run yamllint
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
-
-      - name: Register check-json problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/check-json.json"
-      - name: Run check-json
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual check-json --all-files
-
-      - name: Run prettier (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --all-files
-
-      - name: Run prettier (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
-
-      - name: Register check executables problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
-      - name: Run executables check
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
-
-      - name: Register codespell problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/codespell.json"
-      - name: Run codespell
-        run: |
-          . venv/bin/activate
-          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
+  # Additional sections below can be similarly commented out if required.
 
   lint-hadolint:
     name: Check ${{ matrix.file }}

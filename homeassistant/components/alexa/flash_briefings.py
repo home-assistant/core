@@ -3,6 +3,7 @@
 import hmac
 from http import HTTPStatus
 import logging
+from typing import Any, Optional
 import uuid
 
 from aiohttp.web_response import StreamResponse
@@ -60,66 +61,58 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
-        if request.query.get(API_PASSWORD) is None:
-            err = "No password provided for Alexa flash briefing: %s"
-            _LOGGER.error(err, briefing_id)
-            return b"", HTTPStatus.UNAUTHORIZED
-
-        if not hmac.compare_digest(
-            request.query[API_PASSWORD].encode("utf-8"),
-            self.flash_briefings[CONF_PASSWORD].encode("utf-8"),
-        ):
-            err = "Wrong password for Alexa flash briefing: %s"
-            _LOGGER.error(err, briefing_id)
+        if not self._validate_password(request.query.get(API_PASSWORD), briefing_id):
             return b"", HTTPStatus.UNAUTHORIZED
 
         if not isinstance(self.flash_briefings.get(briefing_id), list):
-            err = "No configured Alexa flash briefing was found for: %s"
-            _LOGGER.error(err, briefing_id)
+            _LOGGER.error(
+                "No configured Alexa flash briefing was found for: %s", briefing_id
+            )
             return b"", HTTPStatus.NOT_FOUND
 
-        briefing = []
-
-        for item in self.flash_briefings.get(briefing_id, []):
-            output = {}
-            if item.get(CONF_TITLE) is not None:
-                if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
-
-            if item.get(CONF_TEXT) is not None:
-                if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
-
-            if (uid := item.get(CONF_UID)) is None:
-                uid = str(uuid.uuid4())
-            output[ATTR_UID] = uid
-
-            if item.get(CONF_AUDIO) is not None:
-                if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
-
-            if item.get(CONF_DISPLAY_URL) is not None:
-                if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
-                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render(
-                        parse_result=False
-                    )
-                else:
-                    output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
-
-            output[ATTR_UPDATE_DATE] = dt_util.utcnow().strftime(DATE_FORMAT)
-
-            briefing.append(output)
+        briefing = [
+            self._process_briefing_item(item)
+            for item in self.flash_briefings.get(briefing_id, [])
+        ]
 
         return self.json(briefing)
+
+    def _validate_password(
+        self, request_password: str | None, briefing_id: str
+    ) -> bool:
+        """Validate the provided password."""
+        if request_password is None:
+            _LOGGER.error(
+                "No password provided for Alexa flash briefing: %s", briefing_id
+            )
+            return False
+
+        if not hmac.compare_digest(
+            request_password.encode("utf-8"),
+            self.flash_briefings[CONF_PASSWORD].encode("utf-8"),
+        ):
+            _LOGGER.error("Wrong password for Alexa flash briefing: %s", briefing_id)
+            return False
+
+        return True
+
+    def _process_briefing_item(self, item: dict) -> dict:
+        """Process a single flash briefing item."""
+        return {
+            ATTR_TITLE_TEXT: self._render_or_get(item.get(CONF_TITLE)),
+            ATTR_MAIN_TEXT: self._render_or_get(item.get(CONF_TEXT)),
+            ATTR_UID: item.get(CONF_UID, str(uuid.uuid4())),
+            ATTR_STREAM_URL: self._render_or_get(item.get(CONF_AUDIO)),
+            ATTR_REDIRECTION_URL: self._render_or_get(item.get(CONF_DISPLAY_URL)),
+            ATTR_UPDATE_DATE: dt_util.utcnow().strftime(DATE_FORMAT),
+        }
+
+
+    def _render_or_get(self, value: Any) -> Any | None:
+        """Render a template or return the value as-is."""
+        if value is None:
+            return None
+        if isinstance(value, template.Template):
+            return value.async_render(parse_result=False)
+        return value
+
