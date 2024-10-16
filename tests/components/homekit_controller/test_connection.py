@@ -439,3 +439,33 @@ async def test_manual_poll_all_chars(
         await time_changed(hass, DEBOUNCE_COOLDOWN)
         await hass.async_block_till_done()
         assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1
+
+
+async def test_device_has_broken_subscribe(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test device that does not support subscribe."""
+
+    def _create_accessory(accessory: Accessory) -> Service:
+        service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
+
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = 0
+
+        brightness = service.add_char(CharacteristicsTypes.BRIGHTNESS)
+        brightness.value = 0
+
+        return service
+
+    helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
+    helper.pairing.supports_subscribe = False
+
+    with mock.patch.object(
+        helper.pairing,
+        "get_characteristics",
+        wraps=helper.pairing.get_characteristics,
+    ) as mock_get_characteristics:
+        # Initial state is that the light is off
+        await helper.poll_and_get_state()
+        # Verify everything is polled because subscribe is not supported
+        assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1
