@@ -2,28 +2,22 @@
 
 from typing import TypedDict
 
-from palazzetti_sdk_local_api import Hub
+from pypalazzetti.client import PalazzettiClient
+from pypalazzetti.exceptions import CommunicationError, ValidationError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    API_EXHAUST_TEMPERATURE,
-    API_FAN_MODE,
-    API_MODE,
-    API_OUTPUT_TEMPERATURE,
-    API_PELLET_QUANTITY,
-    API_ROOM_TEMPERATURE,
-    API_TARGET_TEMPERATURE,
     AVAILABLE,
     DOMAIN,
     EXHAUST_TEMPERATURE,
-    FAN_MODE,
-    HOST,
+    FAN_SPEED,
+    IS_HEATING,
     LOGGER,
-    MODE,
-    OUTPUT_TEMPERATURE,
+    OUTLET_TEMPERATURE,
     PELLET_QUANTITY,
     ROOM_TEMPERATURE,
     SCAN_INTERVAL,
@@ -35,20 +29,20 @@ class PalazzettiData(TypedDict):
     """Class for defining data in dict."""
 
     available: bool
-    mode: int
+    is_heating: bool
     target_temperature: int
     room_temperature: float
-    output_temperature: float
+    outlet_temperature: float
     exhaust_temperature: float
     pellet_quantity: int
-    fan_mode: int
+    fan_speed: int
 
 
 class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[PalazzettiData]):
     """Class to manage fetching Palazzetti data from a Palazzetti hub."""
 
     entry: ConfigEntry
-    hub: Hub
+    palazzetti: PalazzettiClient
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize global Palazzetti data updater."""
@@ -59,26 +53,24 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[PalazzettiData]):
             update_interval=SCAN_INTERVAL,
         )
         self.entry = entry
-        self.hub = Hub(host=entry.data[HOST], isbiocc=False)
+        self.palazzetti = PalazzettiClient(entry.data[CONF_HOST])
 
     async def _async_update_data(self) -> PalazzettiData:
         """Fetch data from Palazzetti."""
-        await self.hub.async_update(discovery=True, deep=True)
-        available = (
-            self.hub
-            and self.hub.hub_online
-            and self.hub.product
-            and self.hub.product_online
-        )
-        api_data = self.hub.product.get_attributes() if available else {}
+        try:
+            available = await self.palazzetti.update_state()
+        except (CommunicationError, ValidationError) as err:
+            LOGGER.warning(err)
+            available = False
+
         data: PalazzettiData = {
             AVAILABLE: available,
-            MODE: api_data.get(API_MODE, 0),
-            TARGET_TEMPERATURE: api_data.get(API_TARGET_TEMPERATURE, 0),
-            ROOM_TEMPERATURE: api_data.get(API_ROOM_TEMPERATURE, 0),
-            OUTPUT_TEMPERATURE: api_data.get(API_OUTPUT_TEMPERATURE, 0),
-            EXHAUST_TEMPERATURE: api_data.get(API_EXHAUST_TEMPERATURE, 0),
-            PELLET_QUANTITY: api_data.get(API_PELLET_QUANTITY, 0),
-            FAN_MODE: api_data.get(API_FAN_MODE, 0),
+            IS_HEATING: self.palazzetti.is_heating,
+            TARGET_TEMPERATURE: self.palazzetti.target_temperature,
+            ROOM_TEMPERATURE: self.palazzetti.room_temperature,
+            OUTLET_TEMPERATURE: self.palazzetti.outlet_temperature,
+            EXHAUST_TEMPERATURE: self.palazzetti.exhaust_temperature,
+            PELLET_QUANTITY: self.palazzetti.pellet_quantity,
+            FAN_SPEED: self.palazzetti.fan_speed,
         }
         return data

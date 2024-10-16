@@ -1571,9 +1571,6 @@ p1monitor==3.1.0
 # homeassistant.components.mqtt
 paho-mqtt==1.6.1
 
-# homeassistant.components.palazzetti
-palazzetti-sdk-local-api==1.0.14
-
 # homeassistant.components.panasonic_bluray
 panacotta==0.2
 
@@ -2141,6 +2138,9 @@ pyoverkiz==1.14.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
+
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.4
 
 # homeassistant.components.elv
 pypca==0.0.7

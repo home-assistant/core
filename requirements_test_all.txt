@@ -1295,9 +1295,6 @@ p1monitor==3.1.0
 # homeassistant.components.mqtt
 paho-mqtt==1.6.1
 
-# homeassistant.components.palazzetti
-palazzetti-sdk-local-api==1.0.14
-
 # homeassistant.components.panasonic_viera
 panasonic-viera==0.4.2
 
@@ -1725,6 +1722,9 @@ pyoverkiz==1.14.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
+
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.4
 
 # homeassistant.components.lcn
 pypck==0.7.24
