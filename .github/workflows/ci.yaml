@@ -143,8 +143,7 @@ jobs:
           tests="[]"
           tests_glob=""
           skip_coverage=""
-          integration_changes=${{ steps.integrations.outputs.changes }}
-          #  integration_changes=
+          integration_changes="${{ steps.integrations.outputs.changes }}"
 
           if [[ "${integration_changes}" != "[]" ]];
           then
