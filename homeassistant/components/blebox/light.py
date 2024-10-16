@@ -82,7 +82,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     @property
     def color_temp(self):
         """Return color temperature."""
-        return self._feature.color_temp
+        return self._color_temp_from_native_scale(self._feature.color_temp)
 
     @property
     def color_mode(self):
@@ -132,23 +132,36 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
+    def _color_temp_to_native_scale(self, x):
+        """Convert color temperature from mireds to native Blebox temperature scale."""
+        scaled = ((x - self.min_mireds) / (self.max_mireds - self.min_mireds)) * 255
+        bounded = max(min(scaled, 255), 0)
+        return int(bounded)
+
+    def _color_temp_from_native_scale(self, x):
+        """Convert color temperature from native Blebox temperature scale to mireds."""
+        scaled = (x / 255) * (self.max_mireds - self.min_mireds) + self.min_mireds
+        bounded = max(min(scaled, self.max_mireds), self.min_mireds)
+        return int(bounded)
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         rgbww = kwargs.get(ATTR_RGBWW_COLOR)
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+
         feature = self._feature
         value = feature.sensible_on_value
-        rgb = kwargs.get(ATTR_RGB_COLOR)
 
         if rgbw is not None:
             value = list(rgbw)
+
         if color_temp is not None:
             value = feature.return_color_temp_with_brightness(
-                int(color_temp), self.brightness
+                self._color_temp_to_native_scale(color_temp), self.brightness
             )
 
         if rgbww is not None:
