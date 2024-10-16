@@ -89,14 +89,6 @@ class WyomingConversationEntity(
         self._supported_languages = list(model_languages)
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """When entity will be removed from Home Assistant."""
-        await super().async_will_remove_from_hass()
-
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
