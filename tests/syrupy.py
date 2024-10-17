@@ -20,7 +20,7 @@ from syrupy.location import PyTestLocation
 from syrupy.report import SnapshotReport
 from syrupy.session import ItemStatus, SnapshotSession
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
-from syrupy.utils import is_xdist_worker
+from syrupy.utils import is_xdist_controller, is_xdist_worker
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -379,6 +379,8 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
                 f,
                 indent=2,
             )
+        return exitstatus
+    if is_xdist_controller():
         return exitstatus
 
     worker_count = None
