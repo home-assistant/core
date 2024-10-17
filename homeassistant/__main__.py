@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from contextlib import suppress
 import faulthandler
-import os
+from pathlib import Path
 import sys
 import threading
 
@@ -35,17 +35,17 @@ def validate_python() -> None:
         sys.exit(1)
 
 
-def ensure_config_path(config_dir: str) -> None:
+def ensure_config_path(config_dir: Path) -> None:
     """Validate the configuration directory."""
     # pylint: disable-next=import-outside-toplevel
     from . import config as config_util
 
-    lib_dir = os.path.join(config_dir, "deps")
+    lib_dir = config_dir / "deps"
 
     # Test if configuration directory exists
-    if not os.path.isdir(config_dir):
+    if not config_dir.is_dir():
         if config_dir != config_util.get_default_config_dir():
-            if os.path.exists(config_dir):
+            if config_dir.exists():
                 reason = "is not a directory"
             else:
                 reason = "does not exist"
@@ -56,7 +56,7 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
         try:
-            os.mkdir(config_dir)
+            config_dir.mkdir()
         except OSError as ex:
             print(
                 "Fatal Error: Unable to create default configuration "
@@ -66,9 +66,9 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
     # Test if library directory exists
-    if not os.path.isdir(lib_dir):
+    if not lib_dir.is_dir():
         try:
-            os.mkdir(lib_dir)
+            lib_dir.mkdir()
         except OSError as ex:
             print(
                 f"Fatal Error: Unable to create library directory {lib_dir}: {ex}",
@@ -181,7 +181,7 @@ def main() -> int:
 
         return scripts.run(args.script)
 
-    config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
+    config_dir: Path = (Path.cwd() / args.config).resolve()
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel
@@ -203,16 +203,16 @@ def main() -> int:
         safe_mode=safe_mode,
     )
 
-    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
-    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
+    fault_file_name = config_dir / FAULT_LOG_FILENAME
+    with fault_file_name.open(mode="a", encoding="utf8") as fault_file:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
 
     # It's possible for the fault file to disappear, so suppress obvious errors
     with suppress(FileNotFoundError):
-        if os.path.getsize(fault_file_name) == 0:
-            os.remove(fault_file_name)
+        if fault_file_name.stat().st_size == 0:
+            fault_file_name.unlink()
 
     check_threads()
 

@@ -25,8 +25,7 @@ import enum
 import functools
 import inspect
 import logging
-import os
-import pathlib
+from pathlib import Path
 import re
 import threading
 import time
@@ -416,7 +415,7 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls, config_dir: str) -> Self:
+    def __new__(cls, config_dir: str | Path) -> Self:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
@@ -426,7 +425,7 @@ class HomeAssistant:
         """Return the representation."""
         return f"<HomeAssistant {self.state}>"
 
-    def __init__(self, config_dir: str) -> None:
+    def __init__(self, config_dir: str | Path) -> None:
         """Initialize new Home Assistant object."""
         # pylint: disable-next=import-outside-toplevel
         from . import loader
@@ -2894,7 +2893,7 @@ class Config:
 
     _store: Config._ConfigStore
 
-    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_dir: str | Path) -> None:
         """Initialize a new config object."""
         # pylint: disable-next=import-outside-toplevel
         from .components.zone import DEFAULT_RADIUS
@@ -2946,7 +2945,7 @@ class Config:
         self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
-        self.config_dir: str = config_dir
+        self.config_dir: str = str(config_dir)
 
         # List of allowed external dirs to access
         self.allowlist_external_dirs: set[str] = set()
@@ -2983,12 +2982,12 @@ class Config:
             UnitOfLength.METERS,
         )
 
-    def path(self, *path: str) -> str:
+    def path(self, *path: str | Path) -> str:
         """Generate path to the file within the configuration directory.
 
         Async friendly.
         """
-        return os.path.join(self.config_dir, *path)
+        return str(Path(self.config_dir).joinpath(*path))
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
@@ -3000,7 +2999,7 @@ class Config:
             if parsed_url.startswith(allowed)
         )
 
-    def is_allowed_path(self, path: str) -> bool:
+    def is_allowed_path(self, path: str | Path) -> bool:
         """Check if the path is valid for access from outside.
 
         This function does blocking I/O and should not be called from the event loop.
@@ -3008,7 +3007,7 @@ class Config:
         """
         assert path is not None
 
-        thepath = pathlib.Path(path)
+        thepath = Path(path)
         try:
             # The file path does not have to exist (it's parent should)
             if thepath.exists():

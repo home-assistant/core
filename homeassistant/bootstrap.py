@@ -12,6 +12,7 @@ from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 import mimetypes
 from operator import contains, itemgetter
 import os
+from pathlib import Path
 import platform
 import sys
 import threading
@@ -533,7 +534,7 @@ async def async_enable_logging(
     hass: core.HomeAssistant,
     verbose: bool = False,
     log_rotate_days: int | None = None,
-    log_file: str | None = None,
+    log_file: Path | None = None,
     log_no_color: bool = False,
 ) -> None:
     """Set up the logging.
@@ -600,12 +601,12 @@ async def async_enable_logging(
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
-        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
+        err_log_path = Path(hass.config.path(ERROR_LOG_FILENAME))
     else:
-        err_log_path = os.path.abspath(log_file)
+        err_log_path = log_file.resolve()
 
-    err_path_exists = os.path.isfile(err_log_path)
-    err_dir = os.path.dirname(err_log_path)
+    err_path_exists = err_log_path.is_file()
+    err_dir = err_log_path.parent
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
@@ -623,7 +624,7 @@ async def async_enable_logging(
         logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
         # Save the log file location for access by other components.
-        hass.data[DATA_LOGGING] = err_log_path
+        hass.data[DATA_LOGGING] = str(err_log_path)
     else:
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
 
@@ -631,7 +632,7 @@ async def async_enable_logging(
 
 
 def _create_log_file(
-    err_log_path: str, log_rotate_days: int | None
+    err_log_path: Path, log_rotate_days: int | None
 ) -> RotatingFileHandler | TimedRotatingFileHandler:
     """Create log file and do roll over."""
     err_handler: RotatingFileHandler | TimedRotatingFileHandler
@@ -665,14 +666,14 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         return False
 
 
-async def async_mount_local_lib_path(config_dir: str) -> str:
+async def async_mount_local_lib_path(config_dir: Path) -> Path:
     """Add local library to Python Path.
 
     This function is a coroutine.
     """
-    deps_dir = os.path.join(config_dir, "deps")
-    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
-        sys.path.insert(0, lib_dir)
+    deps_dir = config_dir / "deps"
+    if str(lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
+        sys.path.insert(0, str(lib_dir))
     return deps_dir
 
 

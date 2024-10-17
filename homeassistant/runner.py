@@ -7,6 +7,7 @@ from asyncio import events
 import dataclasses
 import logging
 import os
+from pathlib import Path
 import subprocess
 import threading
 from time import monotonic
@@ -41,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
-    config_dir: str
+    config_dir: Path
     skip_pip: bool = False
     skip_pip_packages: list[str] = dataclasses.field(default_factory=list)
     recovery_mode: bool = False
@@ -49,7 +50,7 @@ class RuntimeConfig:
     verbose: bool = False
 
     log_rotate_days: int | None = None
-    log_file: str | None = None
+    log_file: Path | None = None
     log_no_color: bool = False
 
     debug: bool = False

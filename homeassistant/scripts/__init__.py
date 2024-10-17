@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import importlib
 import logging
 import os
+from pathlib import Path
 import sys
 
 from homeassistant import runner
@@ -68,13 +69,13 @@ def run(args: list[str]) -> int:
     return script.run(args[1:])
 
 
-def extract_config_dir(args: Sequence[str] | None = None) -> str:
+def extract_config_dir(args: Sequence[str] | None = None) -> Path:
     """Extract the config dir from the arguments or get the default."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-c", "--config", default=None)
     parsed_args = parser.parse_known_args(args)[0]
     return (
-        os.path.join(os.getcwd(), parsed_args.config)
+        Path.cwd() / parsed_args.config
         if parsed_args.config
         else get_default_config_dir()
     )
