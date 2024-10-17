@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import Repository, StoreAddon, StoreInfo
 import pytest
@@ -194,7 +194,9 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
 
 
 @pytest.fixture(name="addon_manager")
-def addon_manager_fixture(hass: HomeAssistant) -> AddonManager:
+def addon_manager_fixture(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> AddonManager:
     """Return an AddonManager instance."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_manager
@@ -468,8 +470,20 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.handler.HassIO.client",
-            new=PropertyMock(return_value=supervisor_client),
+            "homeassistant.components.hassio.discovery.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.update.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=supervisor_client,
         ),
     ):
         yield supervisor_client

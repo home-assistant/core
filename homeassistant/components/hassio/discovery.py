@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from aiohasupervisor import SupervisorError
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
@@ -19,7 +20,7 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID, DOMAIN
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, HassioAPIError, get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +89,7 @@ class HassIODiscovery(HomeAssistantView):
         """Initialize WebView."""
         self.hass = hass
         self.hassio = hassio
+        self._supervisor_client = get_supervisor_client(hass)
 
     async def post(self, request: web.Request, uuid: str) -> web.Response:
         """Handle new discovery requests."""
@@ -126,8 +128,8 @@ class HassIODiscovery(HomeAssistantView):
 
         # Read additional Add-on info
         try:
-            addon_info = await self.hassio.client.addons.addon_info(slug)
-        except HassioAPIError as err:
+            addon_info = await self._supervisor_client.addons.addon_info(slug)
+        except SupervisorError as err:
             _LOGGER.error("Can't read add-on info: %s", err)
             return
 

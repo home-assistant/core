@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import StoreAddonUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -108,14 +108,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     ) -> None:
         """Initialize object."""
         super().__init__(coordinator, entity_description, addon)
-        self._client: SupervisorClient | None = None
-
-    @property
-    def _supervisor_client(self) -> SupervisorClient:
-        """Get supervisor client."""
-        if not self._client:
-            self._client = get_supervisor_client(self.hass)
-        return self._client
+        self._supervisor_client = get_supervisor_client(self.hass)
 
     @property
     def _addon_data(self) -> dict:
