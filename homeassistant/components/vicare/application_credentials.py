@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import logging
 import os
 import re
 from typing import Any
@@ -18,10 +19,13 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def _generateCodeChallengePair() -> tuple:
     # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
-    code_verifier = base64.urlsafe_b64encode(os.urandom(128)).decode("utf-8")
+    # code challenge must not be larger than 128 chars
+    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8")
     code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
 
     code_challenge = base64.urlsafe_b64encode(
@@ -97,3 +101,15 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
                 "code_verifier": self.code_verifier,  # PKCE
             }
         )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        _LOGGER.warning("REFRESHING TOKEN {token}")
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
