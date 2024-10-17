@@ -13,9 +13,9 @@ import pytest
 
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
-    SOURCE_SYSTEM,
     ConfigEntriesFlowManager,
     FlowResult,
+    OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -530,6 +530,9 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         if isinstance(self, ConfigEntriesFlowManager):
             category = "config"
             component = flow.handler
+        elif isinstance(self, OptionsFlowManager):
+            category = "options"
+            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
         else:
             return result
 
@@ -537,12 +540,22 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         # Gets set to False on first run, and to True on subsequent runs
         setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
+            return result
+
         if result["type"] is FlowResultType.ABORT:
             # We don't need translations for a discovery flow which immediately
             # aborts, since such flows won't be seen by users
-            if not flow.__flow_seen_before and (
-                flow.source == SOURCE_SYSTEM or flow.source in DISCOVERY_SOURCES
-            ):
+            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
                 return result
             await _ensure_translation_exists(
                 flow.hass,
