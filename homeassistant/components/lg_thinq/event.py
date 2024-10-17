@@ -98,21 +98,16 @@ class ThinQEventEntity(ThinQEntity, EventEntity):
         """Update status itself."""
         super()._update_status()
 
-        # Handle an event.
-        if (value := self.data.value) is None or value not in self.event_types:
-            return
-
-        self._async_handle_update(value)
-        if self.entity_description.key == ThinQPropertyEx.NOTIFICATION:
-            self.coordinator.api.update_notification(None)
-
-        _LOGGER.warning(
-            "[%s:%s] update status:%s, event_types:%s",
+        _LOGGER.debug(
+            "[%s:%s] update status: %s, event_types=%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.value,
             self.event_types,
         )
+        # Handle an event.
+        if (value := self.data.value) is not None and value in self.event_types:
+            self._async_handle_update(value)
 
     def _async_handle_update(self, value: str) -> None:
         """Handle the event."""
