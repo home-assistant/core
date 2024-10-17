@@ -15,12 +15,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_last_service_info,
 )
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import CONF_ASSOCIATION_DATA, DOMAIN
@@ -38,8 +33,6 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dormakaba dKey."""
 
     VERSION = 1
-
-    _reauth_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -126,7 +119,6 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthorization request."""
-        self._reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -138,7 +130,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if (
                 discovery_info := async_last_service_info(
-                    self.hass, self._reauth_entry.data[CONF_ADDRESS], True
+                    self.hass, self._get_reauth_entry().data[CONF_ADDRESS], True
                 )
             ) is None:
                 errors = {"base": "no_longer_in_range"}
@@ -185,11 +177,9 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ASSOCIATION_DATA: association_data.to_json(),
             }
             if self.source == SOURCE_REAUTH:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=data
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=data
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             return self.async_create_entry(
                 title=lock.device_info.device_name

@@ -100,7 +100,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
 
         if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
             raise vol.Invalid(
-                f"The option `{CONF_OPTIONS}` can only be used "
+                f"The option `{CONF_OPTIONS}` must be used "
                 f"together with device class `{SensorDeviceClass.ENUM}`, "
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
             )
