@@ -21,8 +21,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONNECTIONS_COUNT, DOMAIN
-from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
-from .types import SwissPublicTransportConfigEntry
+from .coordinator import (
+    DataConnection,
+    SwissPublicTransportConfigEntry,
+    SwissPublicTransportDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
     SERVICE_FETCH_CONNECTIONS,
 )
-from .types import SwissPublicTransportConfigEntry
+from .coordinator import SwissPublicTransportConfigEntry
 
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
