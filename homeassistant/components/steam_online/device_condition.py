@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     condition,
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -58,10 +59,14 @@ def async_condition_from_config(
         list(dr.async_get(hass).async_get(config[ATTR_DEVICE_ID]).config_entries)[0]
     )
 
-    primary_user = config_entry.data[CONF_ACCOUNT]
-    # FIXME: We need to fetch this dynamically
-    primary_user_entity_id = f"sensor.steam_{primary_user}"  # <-- works live
-    primary_user_entity_id = f"steam_online.test_{primary_user}"  # <-- works tests
+    # Find the primary entity id that's linked to the account on initial setup
+    primary_user_entity_id = next(
+        entity
+        for entity in er.async_entries_for_device(
+            er.async_get(hass), config[ATTR_DEVICE_ID]
+        )
+        if entity.unique_id == config_entry.data[CONF_ACCOUNT]
+    ).entity_id
 
     @callback
     def default_checker_method(
@@ -81,9 +86,6 @@ def async_condition_from_config(
         to_game = to_state.attributes.get("game_id")
 
         primary_game = hass.states.get(primary_user_entity_id).attributes.get("game_id")
-
-        print("primary_game", primary_game)
-        print("to_game", to_game)
 
         return primary_game is not None and primary_game == to_game
 
