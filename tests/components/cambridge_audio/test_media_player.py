@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
     RepeatMode,
@@ -31,6 +32,9 @@ from homeassistant.const import (
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
@@ -216,12 +220,12 @@ async def test_media_next_previous_track(
     mock_stream_magic_client.previous_track.assert_called_once()
 
 
-async def test_shuffle_repeat(
+async def test_shuffle_repeat_set(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_stream_magic_client: AsyncMock,
 ) -> None:
-    """Test shuffle and repeat service."""
+    """Test shuffle and repeat set service."""
     await setup_integration(hass, mock_config_entry)
 
     mock_stream_magic_client.now_playing.controls = [
@@ -264,6 +268,36 @@ async def test_shuffle_repeat(
     mock_stream_magic_client.set_repeat.assert_called_with(CambridgeRepeatMode.ALL)
 
 
+async def test_shuffle_repeat_get(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test shuffle and repeat get service."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_stream_magic_client.play_state.mode_shuffle = None
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
+
+    mock_stream_magic_client.play_state.mode_shuffle = ShuffleMode.ALL
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is True
+
+    mock_stream_magic_client.play_state.mode_repeat = CambridgeRepeatMode.ALL
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ALL
+
+
 async def test_power_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -302,3 +336,40 @@ async def test_media_seek(
     )
 
     mock_stream_magic_client.media_seek.assert_called_once_with(100)
+
+
+async def test_media_volume(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test volume service."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_stream_magic_client.state.pre_amp_mode = True
+
+    # Test volume up
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+
+    mock_stream_magic_client.volume_up.assert_called_once()
+
+    # Test volume down
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+
+    mock_stream_magic_client.volume_down.assert_called_once()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+    )
+
+    mock_stream_magic_client.set_volume.assert_called_once_with(30)
