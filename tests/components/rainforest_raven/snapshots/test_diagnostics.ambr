@@ -40,7 +40,7 @@
           'PriceCluster': dict({
             'currency': dict({
               '__type': "<enum 'Currency'>",
-              'repr': "<Currency.usd: 'USD'>",
+              'repr': "<Currency.USD: 'USD'>",
             }),
             'device_mac_id': '**REDACTED**',
             'meter_mac_id': '**REDACTED**',
