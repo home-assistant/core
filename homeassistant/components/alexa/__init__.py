@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN in config:
         config = config[DOMAIN]
 
-        intent.async_setup(hass)
+        intent.async_setup(hass, config)
 
         if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
             flash_briefings.async_setup(hass, flash_briefings_config)

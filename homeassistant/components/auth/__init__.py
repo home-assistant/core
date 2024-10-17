@@ -180,8 +180,9 @@ def create_auth_code(
     """Create an authorization code to fetch tokens."""
     return cast(StoreResultType, hass.data[DOMAIN])(client_id, credential)
 
+
 # No references on this one
-async def async_setup(hass: HomeAssistant) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
@@ -428,7 +429,9 @@ class LinkUserView(HomeAssistantView):
         credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
-            return self.json_message(INVALID_CODE_MESSAGE, status_code=HTTPStatus.BAD_REQUEST)
+            return self.json_message(
+                INVALID_CODE_MESSAGE, status_code=HTTPStatus.BAD_REQUEST
+            )
 
         linked_user = await hass.auth.async_get_user_by_credentials(credentials)
         if linked_user != user and linked_user is not None:

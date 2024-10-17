@@ -11,6 +11,7 @@ from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
@@ -42,7 +43,7 @@ class CardType(enum.StrEnum):
 
 
 @callback
-def async_setup(hass: HomeAssistant) -> None:
+def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Activate Alexa component."""
     hass.http.register_view(AlexaIntentsView)
 

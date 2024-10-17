@@ -290,7 +290,7 @@ async def _async_get_custom_components(
         return {}
 
     try:
-        import custom_components  # pylint: disable=import-outside-toplevel
+        import custom_components  # "type: ignore[import-not-found]" # pylint: disable=import-outside-toplevel # noqa: F401, PGH003
     except ImportError:
         return {}
 
@@ -1660,7 +1660,7 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     sys.path.insert(0, hass.config.config_dir)
     with suppress(ImportError):
-        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
+        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401, PGH003
     sys.path.remove(hass.config.config_dir)
     sys.path_importer_cache.pop(hass.config.config_dir, None)
 

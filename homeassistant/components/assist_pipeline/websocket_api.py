@@ -143,85 +143,74 @@ async def websocket_run(
     end_stage = PipelineStage(msg["end_stage"])
     handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
-    wake_word_settings: WakeWordSettings | None = None
-    audio_settings: AudioSettings | None = None
 
     # Arguments to PipelineInput
-    input_args: dict[str, Any] = {
+    input_args = _prepare_input_args(msg)
+
+    if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
+        handler_id, unregister_handler, audio_settings = await _handle_audio_stages(
+            hass, connection, msg, input_args, start_stage, pipeline
+        )
+    elif start_stage == PipelineStage.INTENT:
+        input_args["intent_input"] = msg["input"]["text"]
+    elif start_stage == PipelineStage.TTS:
+        input_args["tts_input"] = msg["input"]["text"]
+
+    input_args["run"] = _prepare_pipeline_run(
+        hass,
+        connection,
+        msg,
+        pipeline,
+        start_stage,
+        end_stage,
+        handler_id,
+        timeout,
+    )
+
+    pipeline_input = PipelineInput(**input_args)
+
+    try:
+        await pipeline_input.validate()
+    except PipelineError as error:
+        connection.send_error(msg["id"], error.code, error.message)
+        return
+
+    connection.send_result(msg["id"])
+
+    run_task = hass.async_create_task(pipeline_input.execute())
+
+    connection.subscriptions[msg["id"]] = run_task.cancel
+
+    try:
+        async with asyncio.timeout(timeout):
+            await run_task
+    except TimeoutError:
+        _handle_timeout_error(pipeline_input)
+    finally:
+        if unregister_handler is not None:
+            unregister_handler()
+
+
+def _prepare_input_args(msg: dict[str, Any]) -> dict[str, Any]:
+    """Prepare input arguments for PipelineInput."""
+    return {
         "conversation_id": msg.get("conversation_id"),
         "device_id": msg.get("device_id"),
     }
 
-    if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
-        # Audio pipeline that will receive audio as binary websocket messages
-        msg_input = msg["input"]
-        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        incoming_sample_rate = msg_input["sample_rate"]
-        wake_word_phrase: str | None = None
 
-        if start_stage == PipelineStage.WAKE_WORD:
-            wake_word_settings = WakeWordSettings(
-                timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
-                audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
-            )
-        elif start_stage == PipelineStage.STT:
-            wake_word_phrase = msg["input"].get("wake_word_phrase")
-
-        async def stt_stream() -> AsyncGenerator[bytes]:
-            state = None
-
-            # Yield until we receive an empty chunk
-            while chunk := await audio_queue.get():
-                if incoming_sample_rate != SAMPLE_RATE:
-                    chunk, state = audioop.ratecv(
-                        chunk,
-                        SAMPLE_WIDTH,
-                        SAMPLE_CHANNELS,
-                        incoming_sample_rate,
-                        SAMPLE_RATE,
-                        state,
-                    )
-                yield chunk
-
-        def handle_binary(
-            _hass: HomeAssistant,
-            _connection: websocket_api.ActiveConnection,
-            data: bytes,
-        ) -> None:
-            # Forward to STT audio stream
-            audio_queue.put_nowait(data)
-
-        handler_id, unregister_handler = connection.async_register_binary_handler(
-            handle_binary
-        )
-
-        # Audio input must be raw PCM at 16Khz with 16-bit mono samples
-        input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=pipeline.stt_language or pipeline.language,
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        )
-        input_args["stt_stream"] = stt_stream()
-        input_args["wake_word_phrase"] = wake_word_phrase
-
-        # Audio settings
-        audio_settings = AudioSettings(
-            noise_suppression_level=msg_input.get("noise_suppression_level", 0),
-            auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
-            volume_multiplier=msg_input.get("volume_multiplier", 1.0),
-            is_vad_enabled=not msg_input.get("no_vad", False),
-        )
-    elif start_stage == PipelineStage.INTENT:
-        # Input to conversation agent
-        input_args["intent_input"] = msg["input"]["text"]
-    elif start_stage == PipelineStage.TTS:
-        # Input to text-to-speech system
-        input_args["tts_input"] = msg["input"]["text"]
-
-    input_args["run"] = PipelineRun(
+def _prepare_pipeline_run(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    pipeline: Any,
+    start_stage: PipelineStage,
+    end_stage: PipelineStage,
+    handler_id: int | None,
+    timeout: float,
+) -> PipelineRun:
+    """Prepare PipelineRun instance."""
+    return PipelineRun(
         hass,
         context=connection.context(msg),
         pipeline=pipeline,
@@ -232,42 +221,83 @@ async def websocket_run(
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
         },
-        wake_word_settings=wake_word_settings,
-        audio_settings=audio_settings or AudioSettings(),
     )
 
-    pipeline_input = PipelineInput(**input_args)
 
-    try:
-        await pipeline_input.validate()
-    except PipelineError as error:
-        # Report more specific error when possible
-        connection.send_error(msg["id"], error.code, error.message)
-        return
+async def _handle_audio_stages(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    input_args: dict[str, Any],
+    start_stage: PipelineStage,
+    pipeline: Any,
+) -> tuple[int | None, Callable[[], None] | None, AudioSettings | None]:
+    """Handle the audio stages: WAKE_WORD or STT."""
+    msg_input = msg["input"]
+    audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
+    incoming_sample_rate = msg_input["sample_rate"]
+    wake_word_settings = None
 
-    # Confirm subscription
-    connection.send_result(msg["id"])
-
-    run_task = hass.async_create_task(pipeline_input.execute())
-
-    # Cancel pipeline if user unsubscribes
-    connection.subscriptions[msg["id"]] = run_task.cancel
-
-    try:
-        # Task contains a timeout
-        async with asyncio.timeout(timeout):
-            await run_task
-    except TimeoutError:
-        pipeline_input.run.process_event(
-            PipelineEvent(
-                PipelineEventType.ERROR,
-                {"code": "timeout", "message": "Timeout running pipeline"},
-            )
+    if start_stage == PipelineStage.WAKE_WORD:
+        wake_word_settings = WakeWordSettings(
+            timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
+            audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
         )
-    finally:
-        if unregister_handler is not None:
-            # Unregister binary handler
-            unregister_handler()
+        input_args["wake_word_settings"] = wake_word_settings
+
+    async def stt_stream() -> AsyncGenerator[bytes]:
+        state = None
+        while chunk := await audio_queue.get():
+            if incoming_sample_rate != SAMPLE_RATE:
+                chunk, state = audioop.ratecv(
+                    chunk,
+                    SAMPLE_WIDTH,
+                    SAMPLE_CHANNELS,
+                    incoming_sample_rate,
+                    SAMPLE_RATE,
+                    state,
+                )
+            yield chunk
+
+    def handle_binary(
+        _hass: HomeAssistant,
+        _connection: websocket_api.ActiveConnection,
+        data: bytes,
+    ) -> None:
+        audio_queue.put_nowait(data)
+
+    handler_id, unregister_handler = connection.async_register_binary_handler(
+        handle_binary
+    )
+
+    input_args["stt_metadata"] = stt.SpeechMetadata(
+        language=pipeline.stt_language or pipeline.language,
+        format=stt.AudioFormats.WAV,
+        codec=stt.AudioCodecs.PCM,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    input_args["stt_stream"] = stt_stream()
+
+    audio_settings = AudioSettings(
+        noise_suppression_level=msg_input.get("noise_suppression_level", 0),
+        auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
+        volume_multiplier=msg_input.get("volume_multiplier", 1.0),
+        is_vad_enabled=not msg_input.get("no_vad", False),
+    )
+
+    return handler_id, unregister_handler, audio_settings
+
+
+def _handle_timeout_error(pipeline_input: PipelineInput) -> None:
+    """Handle timeout error during pipeline execution."""
+    pipeline_input.run.process_event(
+        PipelineEvent(
+            PipelineEventType.ERROR,
+            {"code": "timeout", "message": "Timeout running pipeline"},
+        )
+    )
 
 
 @callback
@@ -379,6 +409,19 @@ def websocket_get_run(
     )
 
 
+def _get_supported_languages(
+    language_tags: set[str], pipeline_languages: set[str] | None
+) -> set[str]:
+    """Return the set of supported languages after processing language tags."""
+    languages = set()
+    for language_tag in language_tags:
+        dialect = language_util.Dialect.parse(language_tag)
+        languages.add(dialect.language)
+    if pipeline_languages is not None:
+        return language_util.intersect(pipeline_languages, languages)
+    return languages
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_pipeline/language/list",
@@ -401,31 +444,17 @@ def websocket_list_languages(
     pipeline_languages: set[str] | None = None
 
     if conv_language_tags and conv_language_tags != MATCH_ALL:
-        languages = set()
-        for language_tag in conv_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(conv_language_tags, None)
 
     if stt_language_tags:
-        languages = set()
-        for language_tag in stt_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(
+            stt_language_tags, pipeline_languages
+        )
 
     if tts_language_tags:
-        languages = set()
-        for language_tag in tts_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(
+            tts_language_tags, pipeline_languages
+        )
 
     connection.send_result(
         msg["id"],
