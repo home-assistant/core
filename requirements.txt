@@ -35,7 +35,7 @@ psutil-home-assistant==0.0.1
 python-slugify==8.0.4
 PyYAML==6.0.2
 requests==2.32.3
-SQLAlchemy==2.0.31
+SQLAlchemy==2.0.35
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
