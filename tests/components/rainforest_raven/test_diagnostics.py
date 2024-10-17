@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -36,7 +37,7 @@ async def test_entry_diagnostics_no_meters(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_entry_no_meters
     )
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_entry_diagnostics(
@@ -48,4 +49,4 @@ async def test_entry_diagnostics(
     """Test RAVEn diagnostics."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
 
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))

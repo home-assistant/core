@@ -2,7 +2,6 @@
 # name: test_entry_diagnostics
   dict({
     'config_entry': dict({
-      'created_at': '2024-10-17T18:56:19.553912+00:00',
       'data': dict({
         'device': '/dev/ttyACM0',
         'mac': '**REDACTED**',
@@ -13,7 +12,6 @@
       'domain': 'rainforest_raven',
       'entry_id': '01JADXBJSPYEBAFPKGXDJWZBQ8',
       'minor_version': 1,
-      'modified_at': '2024-10-17T18:56:19.553915+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -71,7 +69,6 @@
 # name: test_entry_diagnostics_no_meters
   dict({
     'config_entry': dict({
-      'created_at': '2024-10-17T18:56:19.449644+00:00',
       'data': dict({
         'device': '/dev/ttyACM0',
         'mac': '**REDACTED**',
@@ -82,7 +79,6 @@
       'domain': 'rainforest_raven',
       'entry_id': '01JADXBJSPYEBAFPKGXDJWZBQ8',
       'minor_version': 1,
-      'modified_at': '2024-10-17T18:56:19.449648+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
