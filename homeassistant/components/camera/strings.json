@@ -42,7 +42,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::camera::issues::deprecated_filename_template::title%]",
-            "description": "The pre-defined template variable `entity_id` was used when calling service `camera.{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `camera.{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue."
+            "description": "The pre-defined template variable `entity_id` was used when performing action `camera.{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `camera.{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue."
           }
         }
       }
