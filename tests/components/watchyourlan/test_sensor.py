@@ -2,14 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.watchyourlan.const import DOMAIN
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 
-
-async def test_setup_sensors(hass: HomeAssistant) -> None:
+async def test_setup_sensors(hass: HomeAssistant, mock_config_entry) -> None:
     """Test setup of the WatchYourLAN sensors with valid API response."""
     devices = [
         {
@@ -41,14 +37,8 @@ async def test_setup_sensors(hass: HomeAssistant) -> None:
         "homeassistant.components.watchyourlan.coordinator.WatchYourLANClient.get_all_hosts",
         AsyncMock(return_value=devices),  # Ensure it returns a coroutine
     ):
-        mock_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={CONF_URL: "http://127.0.0.1:8840"},
-        )
-        mock_entry.add_to_hass(hass)
-
-        # Set up the sensor platform
-        await hass.config_entries.async_setup(mock_entry.entry_id)
+        # mock_config_entry fixture is now used, no need to manually create the config entry
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Check device attributes (IP sensor)

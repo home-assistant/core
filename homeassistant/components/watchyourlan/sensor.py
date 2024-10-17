@@ -1,9 +1,7 @@
 """Support for the WatchYourLAN service."""
 
-from collections.abc import Sequence
 from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -32,15 +30,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WatchYourLAN sensors."""
-    coordinator: WatchYourLANUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    entities: Sequence[SensorEntity | BinarySensorEntity] = [
+    async_add_entities(
         WatchYourLANGenericSensor(coordinator, device, description)
         for device in coordinator.data
         for description in ENTITY_DESCRIPTIONS
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class WatchYourLANGenericSensor(
@@ -65,7 +61,7 @@ class WatchYourLANGenericSensor(
                 self.device.get("Name")
                 or f"WatchYourLAN {self.device.get('ID', 'Unknown')}"
             ),
-            default_manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
+            default_manufacturer=self.device.get("Hw", "Unknown manufacturer"),
         )
 
     @property

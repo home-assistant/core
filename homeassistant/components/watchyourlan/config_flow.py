@@ -35,10 +35,8 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Set unique ID (use the URL as the unique ID)
-            await self.async_set_unique_id(user_input[CONF_URL])
             # Abort if the unique ID is already configured
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match()
 
             # Use the WatchYourLANClient to validate the connection
             api_client = WatchYourLANClient(
@@ -47,16 +45,18 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
 
+            hosts = None
             try:
                 hosts = await api_client.get_all_hosts()
-                if not hosts:
-                    errors["base"] = "cannot_connect"
             except (ConnectError, HTTPStatusError) as exc:
                 _LOGGER.error("Connection error during setup: %s", exc)
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected error during WatchYourLAN setup")
                 errors["base"] = "unknown"
+
+            if not hosts and not errors.get("base"):
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 # Successful connection, create the config entry

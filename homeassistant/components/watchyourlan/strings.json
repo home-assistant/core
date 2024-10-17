@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::host%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "data_desctipion": "Enter the IP address of the WatchYourLAN server"
         }
       }
     },
@@ -19,9 +20,6 @@
   },
   "entity": {
     "sensor": {
-      "online_status": {
-        "name": "Online Status"
-      },
       "ip_address": {
         "name": "IP Address"
       },
