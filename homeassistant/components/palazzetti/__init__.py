@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: PalazzettiConfigEntry) -> bool:
     """Set up Palazzetti from a config entry."""
 
-    coordinator = PalazzettiDataUpdateCoordinator(hass, entry)
+    coordinator = PalazzettiDataUpdateCoordinator(hass)
     try:
         await coordinator.client.connect()
         await coordinator.client.update_state()
