@@ -1,6 +1,8 @@
 """Test camera WebRTC."""
 
 from collections.abc import AsyncGenerator, Generator
+import logging
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -13,6 +15,9 @@ from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
     RTCIceServer,
     WebRTCAnswer,
+    WebRTCCandidate,
+    WebRTCError,
+    WebRTCMessages,
     WebRTCSendMessage,
     async_register_rtsp_to_web_rtc_provider,
     async_register_webrtc_provider,
@@ -329,6 +334,87 @@ async def test_websocket_webrtc_offer(
         "answer": WEBRTC_ANSWER,
     }
 
+    # Unsubscribe/Close session
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": subscription_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_frontend_message"),
+    [
+        (WebRTCCandidate("candidate"), {"type": "candidate", "candidate": "candidate"}),
+        (
+            WebRTCError("webrtc_offer_failed", "error"),
+            {"type": "error", "code": "webrtc_offer_failed", "message": "error"},
+        ),
+        (WebRTCAnswer("answer"), {"type": "answer", "answer": "answer"}),
+    ],
+    ids=["candidate", "error", "answer"],
+)
+@pytest.mark.usefixtures("mock_stream_source", "mock_camera")
+async def test_websocket_webrtc_offer_webrtc_provider(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    register_test_provider: TestProvider,
+    message: WebRTCMessages,
+    expected_frontend_message: dict[str, Any],
+) -> None:
+    """Test initiating a WebRTC stream with a webrtc provider."""
+    client = await hass_ws_client(hass)
+    with (
+        patch.object(
+            register_test_provider, "async_handle_webrtc_offer", autospec=True
+        ) as mock_async_handle_webrtc_offer,
+        patch.object(
+            register_test_provider, "async_close_session", autospec=True
+        ) as mock_async_close_session,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "camera/webrtc/offer",
+                "entity_id": "camera.demo_camera",
+                "offer": WEBRTC_OFFER,
+            }
+        )
+        response = await client.receive_json()
+        assert response["type"] == TYPE_RESULT
+        assert response["success"]
+        subscription_id = response["id"]
+        mock_async_handle_webrtc_offer.assert_called_once()
+        assert mock_async_handle_webrtc_offer.call_args[0][1] == WEBRTC_OFFER
+        send_message: WebRTCSendMessage = mock_async_handle_webrtc_offer.call_args[0][3]
+
+        # Session id
+        response = await client.receive_json()
+        assert response["id"] == subscription_id
+        assert response["type"] == "event"
+        assert response["event"]["type"] == "session_id"
+        session_id = response["event"]["sessionId"]
+
+        send_message(message)
+
+        response = await client.receive_json()
+        assert response["id"] == subscription_id
+        assert response["type"] == "event"
+        assert response["event"] == expected_frontend_message
+
+        # Unsubscribe/Close session
+        await client.send_json_auto_id(
+            {
+                "type": "unsubscribe_events",
+                "subscription": subscription_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        mock_async_close_session.assert_called_once_with(session_id)
+
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_websocket_webrtc_offer_invalid_entity(
@@ -372,9 +458,20 @@ async def test_websocket_webrtc_offer_missing_offer(
     assert response["error"]["code"] == "invalid_format"
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_message"),
+    [
+        (ValueError("value error"), "value error"),
+        (HomeAssistantError("offer failed"), "offer failed"),
+        (TimeoutError(), "Timeout handling WebRTC offer"),
+    ],
+)
 @pytest.mark.usefixtures("mock_camera_webrtc_frontendtype_only")
 async def test_websocket_webrtc_offer_failure(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    error: Exception,
+    expected_message: str,
 ) -> None:
     """Test WebRTC stream that fails handling the offer."""
     client = await hass_ws_client(hass)
@@ -384,7 +481,7 @@ async def test_websocket_webrtc_offer_failure(
 
     with patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        side_effect=HomeAssistantError("offer failed"),
+        side_effect=error,
     ):
         await client.send_json_auto_id(
             {
@@ -405,22 +502,22 @@ async def test_websocket_webrtc_offer_failure(
     assert response["type"] == "event"
     assert response["event"]["type"] == "session_id"
 
-    # Answer
+    # Error
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
     assert response["event"] == {
         "type": "error",
         "code": "webrtc_offer_failed",
-        "message": "offer failed",
+        "message": expected_message,
     }
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc_frontendtype_only")
-async def test_websocket_webrtc_offer_timeout(
+async def test_websocket_webrtc_offer_sync(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test WebRTC stream with timeout handling the offer."""
+    """Test sync WebRTC stream offer."""
     client = await hass_ws_client(hass)
 
     camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
@@ -428,7 +525,49 @@ async def test_websocket_webrtc_offer_timeout(
 
     with patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        side_effect=TimeoutError(),
+        return_value=WEBRTC_ANSWER,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "camera/webrtc/offer",
+                "entity_id": "camera.demo_camera",
+                "offer": WEBRTC_OFFER,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    subscription_id = response["id"]
+
+    # Session id
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"]["type"] == "session_id"
+
+    # Answer
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"] == {"type": "answer", "answer": WEBRTC_ANSWER}
+
+
+@pytest.mark.usefixtures("mock_camera_webrtc_frontendtype_only")
+async def test_websocket_webrtc_offer_sync_no_answer(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sync WebRTC stream offer with no answer."""
+    client = await hass_ws_client(hass)
+
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    camera_obj._webrtc_sync_offer = True  # Setting it to True to simulate async_handle_web_rtc_offer would be overwritten
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+        return_value=None,
     ):
         await client.send_json_auto_id(
             {
@@ -456,8 +595,13 @@ async def test_websocket_webrtc_offer_timeout(
     assert response["event"] == {
         "type": "error",
         "code": "webrtc_offer_failed",
-        "message": "Timeout handling WebRTC offer",
+        "message": "No answer on WebRTC offer",
     }
+    assert (
+        "homeassistant.components.camera",
+        logging.ERROR,
+        "Error handling WebRTC offer: No answer",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.usefixtures("mock_camera")
@@ -705,6 +849,29 @@ async def test_ws_webrtc_candidate(
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(session_id, candidate)
+
+
+@pytest.mark.usefixtures("mock_camera_webrtc")
+async def test_ws_webrtc_candidate_not_supported(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test ws webrtc candidate command is raising if not supported."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/candidate",
+            "entity_id": "camera.demo_camera",
+            "session_id": "session_id",
+            "candidate": "candidate",
+        }
+    )
+    response = await client.receive_json()
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": "Cannot handle WebRTC candidate",
+    }
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")

@@ -73,12 +73,13 @@ class RTCConfiguration:
 
     def to_frontend_dict(self) -> dict[str, Any]:
         """Return a dict that can be used by the frontend."""
-        if not self.ice_servers:
-            return {}
+        data = {}
+        if self.ice_servers:
+            data["iceServers"] = [
+                server.to_frontend_dict() for server in self.ice_servers
+            ]
 
-        return {
-            "iceServers": [server.to_frontend_dict() for server in self.ice_servers]
-        }
+        return data
 
 
 @dataclass(kw_only=True)

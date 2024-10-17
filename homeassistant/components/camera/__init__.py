@@ -592,7 +592,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Integrations can override with a native WebRTC implementation.
         """
-        return None
 
     async def async_handle_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
