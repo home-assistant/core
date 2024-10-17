@@ -69,3 +69,9 @@ MAWAQIT_ALL_MOSQUES_NN = "all_mosques_NN"
 MAWAQIT_MY_MOSQUE_NN = "my_mosque_NN"
 MAWAQIT_PRAY_TIME = "pray_time"
 MAWAQIT_MOSQ_LIST_DATA = "mosq_list_data"
+
+# Error messages
+
+NO_MOSQUE_FOUND_KEYWORD = "no_mosque_found_keyword"
+CANNOT_CONNECT_TO_SERVER = "cannot_connect_to_server"
+WRONG_CREDENTIAL = "wrong_credential"

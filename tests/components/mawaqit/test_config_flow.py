@@ -10,6 +10,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.mawaqit import DOMAIN, config_flow
 from homeassistant.components.mawaqit.const import (
+    CANNOT_CONNECT_TO_SERVER,
     CONF_CALC_METHOD,
     CONF_SEARCH,
     CONF_TYPE_SEARCH,
@@ -17,6 +18,8 @@ from homeassistant.components.mawaqit.const import (
     CONF_TYPE_SEARCH_KEYWORD,
     MAWAQIT_STORAGE_VERSION,
     MAWAQIT_TEST_STORAGE_KEY,
+    NO_MOSQUE_FOUND_KEYWORD,
+    WRONG_CREDENTIAL,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.core import HomeAssistant
@@ -222,7 +225,7 @@ async def test_async_step_user_connection_error(
 
         errors = result.get("errors")
         assert errors is not None and "base" in errors
-        assert errors["base"] == "cannot_connect_to_server"
+        assert errors["base"] == CANNOT_CONNECT_TO_SERVER
 
 
 @pytest.mark.asyncio
@@ -255,7 +258,7 @@ async def test_async_step_user_invalid_credentials(
 
         errors = result.get("errors")
         assert errors is not None and "base" in errors
-        assert errors["base"] == "wrong_credential"
+        assert errors["base"] == WRONG_CREDENTIAL
 
 
 @pytest.mark.asyncio
@@ -513,7 +516,7 @@ async def test_async_step_keyword_search_with_keyword_no_mosque_found(
 
         errors = result.get("errors")
         assert errors is not None and "base" in errors
-        assert errors["base"] == "no_mosque_found_keyword"
+        assert errors["base"] == NO_MOSQUE_FOUND_KEYWORD
 
 
 @pytest.mark.asyncio

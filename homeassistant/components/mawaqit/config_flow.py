@@ -15,6 +15,7 @@ from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
 from .const import (
+    CANNOT_CONNECT_TO_SERVER,
     CONF_CALC_METHOD,
     CONF_CHOICE,
     CONF_CHOICE_TRANSLATION_KEY,
@@ -29,6 +30,8 @@ from .const import (
     DOMAIN,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
+    NO_MOSQUE_FOUND_KEYWORD,
+    WRONG_CREDENTIAL,
 )
 from .utils import (
     create_data_folder,
@@ -85,7 +88,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid = await mawaqit_wrapper.test_credentials(username, password)
         # if we have an error connecting to the server :
         except ClientConnectorError:
-            self._errors["base"] = "cannot_connect_to_server"
+            self._errors["base"] = CANNOT_CONNECT_TO_SERVER
             return await self._show_config_form(user_input)
 
         if valid:
@@ -97,7 +100,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_search_method()
 
-        self._errors["base"] = "wrong_credential"
+        self._errors["base"] = WRONG_CREDENTIAL
 
         return await self._show_config_form(user_input)
 
@@ -208,7 +211,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         search_keyword=keyword, token=mawaqit_token
                     )
                 except NoMosqueFound:
-                    self._errors["base"] = "no_mosque_found_keyword"
+                    self._errors["base"] = NO_MOSQUE_FOUND_KEYWORD
                     return await self._show_search_keyword_form(user_input, None)
 
                 await write_all_mosques_NN_file(result_mosques, self.store)
