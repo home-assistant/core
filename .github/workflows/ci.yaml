@@ -178,22 +178,6 @@ jobs:
             test_full_suite="false"
           fi
 
-          # We need to run the full suite on certain branches.
-          # Or, in case core files are touched, for the full suite as well.
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
-            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
-            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
-          then
-            #mariadb_groups=${MARIADB_VERSIONS}
-            #postgresql_groups=${POSTGRESQL_VERSIONS}
-            #test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-            #test_group_count=10
-            #test_full_suite="true"
-          fi
-
           if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
           then
