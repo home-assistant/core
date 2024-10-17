@@ -16,6 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -45,7 +46,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
 from .const import (
     ATTR_OBSERVATIONS,
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
@@ -61,6 +61,8 @@ from .const import (
     CONF_TO_STATE,
     DEFAULT_NAME,
     DEFAULT_PROBABILITY_THRESHOLD,
+    DOMAIN,
+    PLATFORMS,
 )
 from .helpers import Observation
 from .issues import raise_mirrored_entries, raise_no_prob_given_false
@@ -192,9 +194,16 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Bayesian Binary sensor."""
+    """Set up the Bayesian Binary sensor from a yaml config."""
+    # In some cases async_setup_platform is called with an empty config
+    if config == {}:
+        return
+    _LOGGER.debug(
+        "Setting up config entry for Bayesian sensor: '%s' with %s observations",
+        config[CONF_NAME],
+        len(config.get(CONF_OBSERVATIONS, [])),
+    )
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -211,6 +220,41 @@ async def async_setup_platform(
             _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
             broken_observations.append(observation)
     observations = [x for x in observations if x not in broken_observations]
+
+    async_add_entities(
+        [
+            BayesianBinarySensor(
+                name,
+                unique_id,
+                prior,
+                observations,
+                probability_threshold,
+                device_class,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Bayesian Binary sensor from a config entry."""
+    _LOGGER.debug(
+        "Setting up config entry for Bayesian sensor: '%s' with %s observations",
+        config_entry.options[CONF_NAME],
+        len(config_entry.options.get(CONF_OBSERVATIONS, [])),
+    )
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    config = config_entry.options
+    name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
+    observations: list[ConfigType] = config[CONF_OBSERVATIONS]
+    prior: float = config[CONF_PRIOR]
+    probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     async_add_entities(
         [
@@ -427,7 +471,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                     1 - observation.prob_given_false,
                 )
                 continue
-            # observation.observed is None
+            # Entity exists but observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
                     (
@@ -490,7 +534,10 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self._observations:
             if observation.value_template is None:
                 continue
-
+            if isinstance(observation.value_template, str):
+                observation.value_template = Template(
+                    observation.value_template, hass=self.hass
+                )
             template = observation.value_template
             observations_by_template.setdefault(template, []).append(observation)
 
