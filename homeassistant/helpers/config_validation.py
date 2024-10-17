@@ -1380,38 +1380,53 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
 
 
-def _raise_on_templated_service(
-    domain: str, _service: str, schema: VolDictType | None
-) -> None:
-    if not schema:
-        return
-    for key, val in schema.items():
-        if val in (dynamic_template, template, template_complex):
-            raise ValueError(
-                f"Template in service data is not allowed! {domain}.{_service}:{key}"
-            )
-        if isinstance(val, (vol.All, vol.Any)):
-            for subval in val.validators:
-                raise_on_templated_service(domain, _service, subval)
-
-
 def raise_on_templated_service(
     domain: str, _service: str, schema: VolDictType | VolSchemaType | None
+) -> None:
+    """Raise if service schema explicitly allows templates."""
+    return _raise_on_templated_service(domain, _service, schema, [])
+
+
+def _raise_on_templated_service(
+    domain: str,
+    _service: str,
+    schema: Any,
+    _path: list[str | int],
 ) -> None:
     """Raise if service schema explicitly allows templates."""
     if not schema:
         return
     if isinstance(schema, dict):
-        _raise_on_templated_service(domain, _service, schema)
+        for key, val in schema.items():
+            _raise_on_templated_service(domain, _service, val, [*_path, key])
         return
-    if isinstance(schema, (vol.All, vol.Any)):
-        for val in schema.validators:
-            raise_on_templated_service(domain, _service, val)
+    if isinstance(schema, list):
+        for pos, val in enumerate(schema):
+            _raise_on_templated_service(domain, _service, val, [*_path, pos])
+        return
+    if isinstance(schema, vol.All):
+        for pos, val in enumerate(schema.validators):
+            _raise_on_templated_service(domain, _service, val, [*_path, "All", pos])
+    if isinstance(schema, vol.Any):
+        for pos, val in enumerate(schema.validators):
+            _raise_on_templated_service(domain, _service, val, [*_path, "Any", pos])
     if isinstance(schema, (vol.Schema)):
-        raise_on_templated_service(domain, _service, schema.schema)
+        _raise_on_templated_service(domain, _service, schema.schema, _path)
+    if _path[-5:] == ["All", 0, "entity_id", "Any", 1]:
+        return
+    if _path[-7:] == ["All", 0, "entity_id", "Any", 2, "All", 1]:
+        return
+    if _path[-10:] == ["All", 0, "device_id", "Any", 1, "All", 1, 0, "Any", 0]:
+        return
+    if _path[-10:] == ["All", 0, "area_id", "Any", 1, "All", 1, 0, "Any", 0]:
+        return
+    if _path[-10:] == ["All", 0, "floor_id", "Any", 1, "All", 1, 0, "Any", 0]:
+        return
+    if _path[-10:] == ["All", 0, "label_id", "Any", 1, "All", 1, 0, "Any", 0]:
+        return
     if schema in (dynamic_template, template, template_complex):
         raise ValueError(
-            f"Template in service data is not allowed! {domain}.{_service}"
+            f"Template in service data is not allowed! {domain}.{_service}:{_path}"
         )
 
 
