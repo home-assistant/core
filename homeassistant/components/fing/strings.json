@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fing Agent Setup",
+        "data": {
+          "name": "Agent name",
+          "agent_ip": "[%key:common::config_flow::data::ip%]",
+          "agent_port": "[%key:common::config_flow::data::port%]",
+          "agent_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect]",
+      "unexpected_error": "[%key:common::config_flow::error::unknown]",
+      "url_error": "[%key:common::config_flow::error::invalid_host]",
+      "http_status_error": "Http request failed -> {message}",
+      "api_version_error": "Network ID parameter is empty. Use the latest API."
+    }
+  }
+}
