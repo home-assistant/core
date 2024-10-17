@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aioraven.data import DeviceInfo as RAVenDeviceInfo
+from aioraven.device import RAVEnConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,3 +56,28 @@ async def test_device_registry(
     entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     assert len(entries) == device_count
     assert entries == snapshot
+
+
+async def test_synchronize_error(hass: HomeAssistant, mock_device: AsyncMock) -> None:
+    """Test handling of an error parsing or reading raw device data."""
+    entry = create_mock_entry()
+    entry.add_to_hass(hass)
+
+    mock_device.synchronize.side_effect = RAVEnConnectionError
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_get_network_info_error(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test handling of a device error during initialization."""
+    entry = create_mock_entry()
+    entry.add_to_hass(hass)
+
+    mock_device.get_network_info.side_effect = RAVEnConnectionError
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

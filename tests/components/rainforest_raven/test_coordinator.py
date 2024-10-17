@@ -18,30 +18,16 @@ async def test_coordinator_cache_device(
 ) -> None:
     """Test that the device isn't re-opened for subsequent refreshes."""
     entry = create_mock_entry()
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    entry._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+    coordinator = RAVEnDataCoordinator(hass, entry)
 
+    await coordinator.async_config_entry_first_refresh()
     assert mock_device.get_network_info.call_count == 1
     assert mock_device.open.call_count == 1
 
-    coordinator: RAVEnDataCoordinator = entry.runtime_data
     await coordinator.async_refresh()
-
     assert mock_device.get_network_info.call_count == 2
     assert mock_device.open.call_count == 1
-
-
-async def test_coordinator_device_error_setup(
-    hass: HomeAssistant, mock_device: AsyncMock
-) -> None:
-    """Test handling of a device error during initialization."""
-    entry = create_mock_entry()
-    entry.add_to_hass(hass)
-
-    mock_device.get_network_info.side_effect = RAVEnConnectionError
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_device_error_update(
@@ -49,10 +35,10 @@ async def test_coordinator_device_error_update(
 ) -> None:
     """Test handling of a device error during an update."""
     entry = create_mock_entry()
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    entry._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+    coordinator = RAVEnDataCoordinator(hass, entry)
 
-    coordinator: RAVEnDataCoordinator = entry.runtime_data
+    await coordinator.async_config_entry_first_refresh()
     assert coordinator.last_update_success is True
 
     mock_device.get_network_info.side_effect = RAVEnConnectionError
@@ -65,10 +51,10 @@ async def test_coordinator_device_timeout_update(
 ) -> None:
     """Test handling of a device timeout during an update."""
     entry = create_mock_entry()
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    entry._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+    coordinator = RAVEnDataCoordinator(hass, entry)
 
-    coordinator: RAVEnDataCoordinator = entry.runtime_data
+    await coordinator.async_config_entry_first_refresh()
     assert coordinator.last_update_success is True
 
     mock_device.get_network_info.side_effect = functools.partial(asyncio.sleep, 10)
@@ -76,19 +62,4 @@ async def test_coordinator_device_timeout_update(
         "homeassistant.components.rainforest_raven.coordinator._DEVICE_TIMEOUT", 0.1
     ):
         await coordinator.async_refresh()
-
     assert coordinator.last_update_success is False
-
-
-async def test_coordinator_comm_error(
-    hass: HomeAssistant, mock_device: AsyncMock
-) -> None:
-    """Test handling of an error parsing or reading raw device data."""
-    entry = create_mock_entry()
-    entry.add_to_hass(hass)
-
-    mock_device.synchronize.side_effect = RAVEnConnectionError
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
