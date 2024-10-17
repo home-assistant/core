@@ -6,6 +6,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -14,6 +15,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -96,6 +98,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
     [
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
         (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
+        (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
         (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
         (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY),
         (SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE),
@@ -122,6 +125,7 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     [
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
         (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
+        (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
         (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
     ],
 )
