@@ -9,9 +9,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, CONF_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,8 +38,16 @@ async def async_setup_entry(
     coordinator: PalazzettiDataUpdateCoordinator = entry.runtime_data
     entities: list[PalazzettiClimateEntity] = []
     if coordinator.client.connected:
-        entities.append(PalazzettiClimateEntity(coordinator=coordinator))
+        entities.append(
+            PalazzettiClimateEntity(
+                coordinator=coordinator,
+                name=entry.data[CONF_NAME],
+                unique_id=entry.data[CONF_MAC],
+            )
+        )
         async_add_entities(entities)
+    else:
+        raise ConfigEntryNotReady
 
 
 class PalazzettiClimateEntity(
@@ -55,18 +63,15 @@ class PalazzettiClimateEntity(
     _attr_translation_key = DOMAIN
 
     def __init__(
-        self,
-        *,
-        coordinator: PalazzettiDataUpdateCoordinator,
+        self, *, coordinator: PalazzettiDataUpdateCoordinator, name: str, unique_id: str
     ) -> None:
         """Initialize Palazzetti climate."""
         super().__init__(coordinator=coordinator)
         client = coordinator.client
-        name = client.name
-        self._attr_unique_id = coordinator.config_entry.data[CONF_MAC]
+        self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.data[CONF_MAC])},
-            name=PALAZZETTI,
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
             manufacturer=PALAZZETTI,
             sw_version=client.sw_version,
             hw_version=client.hw_version,
