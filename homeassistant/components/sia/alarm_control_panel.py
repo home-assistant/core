@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
-from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+from .entity import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

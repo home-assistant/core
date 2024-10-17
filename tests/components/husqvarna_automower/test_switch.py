@@ -15,7 +15,14 @@ from homeassistant.components.husqvarna_automower.const import (
     EXECUTION_TIME_DELAY,
 )
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -31,6 +38,7 @@ from tests.common import (
 )
 
 TEST_ZONE_ID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789101"
+TEST_AREA_ID = 0
 
 
 async def test_switch_states(
@@ -61,9 +69,9 @@ async def test_switch_states(
 @pytest.mark.parametrize(
     ("service", "aioautomower_command"),
     [
-        ("turn_off", "park_until_further_notice"),
-        ("turn_on", "resume_schedule"),
-        ("toggle", "park_until_further_notice"),
+        (SERVICE_TURN_OFF, "park_until_further_notice"),
+        (SERVICE_TURN_ON, "resume_schedule"),
+        (SERVICE_TOGGLE, "park_until_further_notice"),
     ],
 )
 async def test_switch_commands(
@@ -76,9 +84,9 @@ async def test_switch_commands(
     """Test switch commands."""
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
-        domain="switch",
+        domain=SWITCH_DOMAIN,
         service=service,
-        service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
+        service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
     mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
@@ -90,9 +98,9 @@ async def test_switch_commands(
         match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
-            domain="switch",
+            domain=SWITCH_DOMAIN,
             service=service,
-            service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
+            service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2
@@ -101,9 +109,9 @@ async def test_switch_commands(
 @pytest.mark.parametrize(
     ("service", "boolean", "excepted_state"),
     [
-        ("turn_off", False, "off"),
-        ("turn_on", True, "on"),
-        ("toggle", True, "on"),
+        (SERVICE_TURN_OFF, False, "off"),
+        (SERVICE_TURN_ON, True, "on"),
+        (SERVICE_TOGGLE, True, "on"),
     ],
 )
 async def test_stay_out_zone_switch_commands(
@@ -126,9 +134,9 @@ async def test_stay_out_zone_switch_commands(
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "switch_stay_out_zone", mocked_method)
     await hass.services.async_call(
-        domain="switch",
+        domain=SWITCH_DOMAIN,
         service=service,
-        service_data={"entity_id": entity_id},
+        service_data={ATTR_ENTITY_ID: entity_id},
         blocking=False,
     )
     freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
@@ -145,9 +153,64 @@ async def test_stay_out_zone_switch_commands(
         match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
-            domain="switch",
+            domain=SWITCH_DOMAIN,
             service=service,
-            service_data={"entity_id": entity_id},
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert len(mocked_method.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("service", "boolean", "excepted_state"),
+    [
+        (SERVICE_TURN_OFF, False, "off"),
+        (SERVICE_TURN_ON, True, "on"),
+        (SERVICE_TOGGLE, True, "on"),
+    ],
+)
+async def test_work_area_switch_commands(
+    hass: HomeAssistant,
+    service: str,
+    boolean: bool,
+    excepted_state: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switch commands."""
+    entity_id = "switch.test_mower_1_my_lawn"
+    await setup_integration(hass, mock_config_entry)
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].work_areas[TEST_AREA_ID].enabled = boolean
+    mock_automower_client.get_status.return_value = values
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
+    await hass.services.async_call(
+        domain=SWITCH_DOMAIN,
+        service=service,
+        service_data={ATTR_ENTITY_ID: entity_id},
+        blocking=False,
+    )
+    freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_AREA_ID, enabled=boolean)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == excepted_state
+
+    mocked_method.side_effect = ApiException("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
+        await hass.services.async_call(
+            domain=SWITCH_DOMAIN,
+            service=service,
+            service_data={ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2

@@ -199,7 +199,10 @@ class FroniusSolarNet:
                 name=_inverter_name,
                 inverter_info=_inverter_info,
             )
-            await _coordinator.async_config_entry_first_refresh()
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                await _coordinator.async_refresh()
+            else:
+                await _coordinator.async_config_entry_first_refresh()
             self.inverter_coordinators.append(_coordinator)
 
             # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry

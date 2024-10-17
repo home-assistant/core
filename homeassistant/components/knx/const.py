@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
-from homeassistant.components.climate import HVACAction, HVACMode
+from homeassistant.components.climate import FAN_AUTO, FAN_OFF, HVACAction, HVACMode
 from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
@@ -127,6 +127,13 @@ class ColorTempModes(Enum):
     ABSOLUTE = "7.600"
     ABSOLUTE_FLOAT = "9"
     RELATIVE = "5.001"
+
+
+class FanZeroMode(StrEnum):
+    """Enum for setting the fan zero mode."""
+
+    OFF = FAN_OFF
+    AUTO = FAN_AUTO
 
 
 SUPPORTED_PLATFORMS_YAML: Final = {

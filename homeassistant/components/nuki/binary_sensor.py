@@ -14,8 +14,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiEntity, NukiEntryData
+from . import NukiEntryData
 from .const import DOMAIN as NUKI_DOMAIN
+from .entity import NukiEntity
 
 
 async def async_setup_entry(

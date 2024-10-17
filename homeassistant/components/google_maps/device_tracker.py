@@ -100,7 +100,7 @@ class GoogleMapsScanner:
                 self.max_gps_accuracy is not None
                 and person.accuracy > self.max_gps_accuracy
             ):
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Ignoring %s update because expected GPS "
                         "accuracy %s is not met: %s"

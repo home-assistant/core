@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, Mock
 
-from homeconnect.api import HomeConnectError
+from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
 from homeassistant.components.home_connect.const import (
@@ -12,6 +12,8 @@ from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_ENABLED,
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_POWER,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -65,7 +67,7 @@ async def test_light(
     ("entity_id", "status", "service", "service_data", "state", "appliance"),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -77,7 +79,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -90,7 +92,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
                 COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
@@ -101,7 +103,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": None,
@@ -114,7 +116,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -127,7 +129,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
                 BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
@@ -138,7 +140,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
@@ -147,6 +149,19 @@ async def test_light(
             {},
             STATE_ON,
             "Hood",
+        ),
+        (
+            "light.fridgefreezer_external_light",
+            {
+                REFRIGERATION_EXTERNAL_LIGHT_POWER: {
+                    "value": True,
+                },
+                REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS: {"value": 75},
+            },
+            SERVICE_TURN_ON,
+            {},
+            STATE_ON,
+            "FridgeFreezer",
         ),
     ],
     indirect=["appliance"],
@@ -166,7 +181,14 @@ async def test_light_functionality(
     get_appliances: MagicMock,
 ) -> None:
     """Test light functionality."""
-    appliance.status.update(SETTINGS_STATUS)
+    appliance.status.update(
+        HomeConnectAppliance.json2dict(
+            load_json_object_fixture("home_connect/settings.json")
+            .get(appliance.name)
+            .get("data")
+            .get("settings")
+        )
+    )
     get_appliances.return_value = [appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -196,7 +218,7 @@ async def test_light_functionality(
     ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": False,
@@ -209,7 +231,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -223,7 +245,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
             },
@@ -234,7 +256,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -248,7 +270,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,

@@ -30,6 +30,25 @@
         "name": "Charge stop"
       }
     },
+    "number": {
+      "led_max_brightness": {
+        "name": "Led brightness"
+      },
+      "dynamic_limit": {
+        "name": "Dynamic limit"
+      }
+    },
+    "select": {
+      "load_balancing_mode": {
+        "name": "Load balancing mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "power": "Power",
+          "hybrid": "Hybrid",
+          "green": "Green"
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
@@ -62,7 +81,10 @@
           "schedule": "Schedule",
           "em_offline": "EM offline",
           "em": "EM",
-          "ocpp": "OCPP"
+          "ocpp": "OCPP",
+          "overtemperature": "Overtemperature",
+          "switching_phases": "Switching phases",
+          "1p_charging_disabled": "1p charging disabled"
         }
       },
       "breaker_current": {

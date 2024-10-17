@@ -22,6 +22,12 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       },
+      "storm_mode_active": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "on": "mdi:weather-lightning-rainy"
+        }
+      },
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },

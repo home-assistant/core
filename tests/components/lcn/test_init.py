@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import (
     MockConfigEntry,
     MockPchkConnectionManager,
+    create_config_entry,
     init_integration,
     setup_component,
 )
@@ -125,3 +126,19 @@ async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
         await setup_component(hass)
 
         assert async_setup_entry.await_count == 2
+
+
+@patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
+async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
+    """Test migration config entry."""
+    entry_v1_1 = create_config_entry("pchk_v1_1", version=(1, 1))
+    entry_v1_1.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry_v1_1.entry_id)
+    await hass.async_block_till_done()
+
+    entry_migrated = hass.config_entries.async_get_entry(entry_v1_1.entry_id)
+    assert entry_migrated.state is ConfigEntryState.LOADED
+    assert entry_migrated.version == 1
+    assert entry_migrated.minor_version == 2
+    assert entry_migrated.data == entry.data

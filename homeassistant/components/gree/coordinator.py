@@ -138,7 +138,7 @@ class DiscoveryService(Listener):
         except DeviceTimeoutError:
             _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Adding Gree device %s at %s:%i",
             device.device_info.name,
             device.device_info.ip,

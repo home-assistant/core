@@ -5,15 +5,18 @@ from dataclasses import dataclass
 from typing import Any
 
 from lmcloud.const import BoilerType
+from lmcloud.exceptions import RequestNotSuccessful
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
 
@@ -77,12 +80,26 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        await self.entity_description.control_fn(self.coordinator.device, True)
+        try:
+            await self.entity_description.control_fn(self.coordinator.device, True)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={"key": self.entity_description.key},
+            ) from exc
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        await self.entity_description.control_fn(self.coordinator.device, False)
+        try:
+            await self.entity_description.control_fn(self.coordinator.device, False)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={"name": self.entity_description.key},
+            ) from exc
         self.async_write_ha_state()
 
     @property
@@ -114,7 +131,14 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
             self._identifier
         ]
         wake_up_sleep_entry.enabled = state
-        await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
+        try:
+            await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auto_on_off_error",
+                translation_placeholders={"id": self._identifier, "state": str(state)},
+            ) from exc
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

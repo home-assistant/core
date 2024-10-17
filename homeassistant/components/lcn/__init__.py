@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
+    CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
     CONF_SK_NUM_TRIES,
     CONNECTION,
@@ -73,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+        "ACKNOWLEDGE": config_entry.data[CONF_ACKNOWLEDGE],
     }
 
     # connect to PCHK
@@ -134,6 +136,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await register_panel_and_ws_api(hass)
 
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        new_data = {**config_entry.data}
+
+        if config_entry.minor_version < 2:
+            new_data[CONF_ACKNOWLEDGE] = False
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2, version=1
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True
 
 

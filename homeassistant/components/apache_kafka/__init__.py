@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
     conf = config[DOMAIN]
 
-    kafka = hass.data[DOMAIN] = KafkaManager(
+    kafka = KafkaManager(
         hass,
         conf[CONF_IP_ADDRESS],
         conf[CONF_PORT],

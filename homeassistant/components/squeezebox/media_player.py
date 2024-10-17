@@ -220,11 +220,23 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
+        _manufacturer = None
+        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
+            _manufacturer = "Ralph Irving"
+        elif (
+            "Squeezebox" in player.model
+            or "Transporter" in player.model
+            or "Slim" in player.model
+        ):
+            _manufacturer = "Logitech"
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
             via_device=(DOMAIN, server.uuid),
+            model=player.model,
+            manufacturer=_manufacturer,
         )
 
     @property

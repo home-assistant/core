@@ -419,6 +419,9 @@
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
+    },
+    "update_options_failed": {
+      "message": "Failed to update Roborock options"
     }
   },
   "services": {

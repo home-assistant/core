@@ -93,7 +93,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             },
             name=device.sku,
             manufacturer=MANUFACTURER,
-            model=device.sku,
+            model_id=device.sku,
             serial_number=device.fingerprint,
         )
 

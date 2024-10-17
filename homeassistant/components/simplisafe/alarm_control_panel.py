@@ -40,7 +40,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import (
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
@@ -54,6 +54,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .entity import SimpliSafeEntity
 from .typing import SystemType
 
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"

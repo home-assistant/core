@@ -6,6 +6,7 @@ import enum
 from functools import partial
 import logging
 import os
+import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import threading
 from typing import Any
@@ -1841,7 +1842,7 @@ async def test_nested_trigger_list() -> None:
                     "event_type": "trigger_3",
                 },
                 {
-                    "platform": "event",
+                    "trigger": "event",
                     "event_type": "trigger_4",
                 },
             ],
@@ -1891,7 +1892,39 @@ async def test_nested_trigger_list_extra() -> None:
 
     validated_triggers = TRIGGER_SCHEMA(trigger_config)
 
-    assert validated_triggers == trigger_config
+    assert validated_triggers == [
+        {
+            "platform": "other",
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_1",
+                },
+                {
+                    "platform": "event",
+                    "event_type": "trigger_2",
+                },
+            ],
+        },
+    ]
+
+
+async def test_trigger_backwards_compatibility() -> None:
+    """Test triggers with backwards compatibility."""
+
+    assert cv._trigger_pre_validator("str") == "str"
+    assert cv._trigger_pre_validator({"platform": "abc"}) == {"platform": "abc"}
+    assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+    ):
+        cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
+    with pytest.raises(
+        vol.Invalid,
+        match=re.escape("required key not provided @ data['trigger']"),
+    ):
+        cv._trigger_pre_validator({})
 
 
 async def test_is_entity_service_schema(

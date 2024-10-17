@@ -46,7 +46,36 @@ SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     # We were told this is just some legacy inheritance from zigbee specs.
     # In the list below specify tuples of (vendorid, productid) of devices for
     # which we just need a single setpoint to control both heating and cooling.
+    (0x1209, 0x8000),
+    (0x1209, 0x8001),
+    (0x1209, 0x8002),
+    (0x1209, 0x8003),
+    (0x1209, 0x8004),
+    (0x1209, 0x8005),
+    (0x1209, 0x8006),
     (0x1209, 0x8007),
+    (0x1209, 0x8008),
+    (0x1209, 0x8009),
+    (0x1209, 0x800A),
+    (0x1209, 0x800B),
+    (0x1209, 0x800C),
+    (0x1209, 0x800D),
+    (0x1209, 0x800E),
+    (0x1209, 0x8010),
+    (0x1209, 0x8011),
+    (0x1209, 0x8012),
+    (0x1209, 0x8013),
+    (0x1209, 0x8014),
+    (0x1209, 0x8020),
+    (0x1209, 0x8021),
+    (0x1209, 0x8022),
+    (0x1209, 0x8023),
+    (0x1209, 0x8024),
+    (0x1209, 0x8025),
+    (0x1209, 0x8026),
+    (0x1209, 0x8027),
+    (0x1209, 0x8028),
+    (0x1209, 0x8029),
 }
 
 SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
@@ -55,7 +84,36 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # support dry mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x1209, 0x8000),
+    (0x1209, 0x8001),
+    (0x1209, 0x8002),
+    (0x1209, 0x8003),
+    (0x1209, 0x8004),
+    (0x1209, 0x8005),
+    (0x1209, 0x8006),
     (0x1209, 0x8007),
+    (0x1209, 0x8008),
+    (0x1209, 0x8009),
+    (0x1209, 0x800A),
+    (0x1209, 0x800B),
+    (0x1209, 0x800C),
+    (0x1209, 0x800D),
+    (0x1209, 0x800E),
+    (0x1209, 0x8010),
+    (0x1209, 0x8011),
+    (0x1209, 0x8012),
+    (0x1209, 0x8013),
+    (0x1209, 0x8014),
+    (0x1209, 0x8020),
+    (0x1209, 0x8021),
+    (0x1209, 0x8022),
+    (0x1209, 0x8023),
+    (0x1209, 0x8024),
+    (0x1209, 0x8025),
+    (0x1209, 0x8026),
+    (0x1209, 0x8027),
+    (0x1209, 0x8028),
+    (0x1209, 0x8029),
 }
 
 SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
@@ -64,7 +122,36 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x1209, 0x8000),
+    (0x1209, 0x8001),
+    (0x1209, 0x8002),
+    (0x1209, 0x8003),
+    (0x1209, 0x8004),
+    (0x1209, 0x8005),
+    (0x1209, 0x8006),
     (0x1209, 0x8007),
+    (0x1209, 0x8008),
+    (0x1209, 0x8009),
+    (0x1209, 0x800A),
+    (0x1209, 0x800B),
+    (0x1209, 0x800C),
+    (0x1209, 0x800D),
+    (0x1209, 0x800E),
+    (0x1209, 0x8010),
+    (0x1209, 0x8011),
+    (0x1209, 0x8012),
+    (0x1209, 0x8013),
+    (0x1209, 0x8014),
+    (0x1209, 0x8020),
+    (0x1209, 0x8021),
+    (0x1209, 0x8022),
+    (0x1209, 0x8023),
+    (0x1209, 0x8024),
+    (0x1209, 0x8025),
+    (0x1209, 0x8026),
+    (0x1209, 0x8027),
+    (0x1209, 0x8028),
+    (0x1209, 0x8029),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -190,48 +277,56 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # if the mains power is off - treat it as if the HVAC mode is off
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = None
-            return
-
-        # update hvac_mode from SystemMode
-        system_mode_value = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
-        )
-        match system_mode_value:
-            case SystemModeEnum.kAuto:
-                self._attr_hvac_mode = HVACMode.HEAT_COOL
-            case SystemModeEnum.kDry:
-                self._attr_hvac_mode = HVACMode.DRY
-            case SystemModeEnum.kFanOnly:
-                self._attr_hvac_mode = HVACMode.FAN_ONLY
-            case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
-                self._attr_hvac_mode = HVACMode.COOL
-            case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
-                self._attr_hvac_mode = HVACMode.HEAT
-            case SystemModeEnum.kFanOnly:
-                self._attr_hvac_mode = HVACMode.FAN_ONLY
-            case SystemModeEnum.kDry:
-                self._attr_hvac_mode = HVACMode.DRY
-            case _:
-                self._attr_hvac_mode = HVACMode.OFF
-        # running state is an optional attribute
-        # which we map to hvac_action if it exists (its value is not None)
-        self._attr_hvac_action = None
-        if running_state_value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.ThermostatRunningState
-        ):
-            match running_state_value:
-                case ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2:
-                    self._attr_hvac_action = HVACAction.HEATING
-                case ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2:
-                    self._attr_hvac_action = HVACAction.COOLING
-                case (
-                    ThermostatRunningState.Fan
-                    | ThermostatRunningState.FanStage2
-                    | ThermostatRunningState.FanStage3
-                ):
-                    self._attr_hvac_action = HVACAction.FAN
+        else:
+            # update hvac_mode from SystemMode
+            system_mode_value = int(
+                self.get_matter_attribute_value(
+                    clusters.Thermostat.Attributes.SystemMode
+                )
+            )
+            match system_mode_value:
+                case SystemModeEnum.kAuto:
+                    self._attr_hvac_mode = HVACMode.HEAT_COOL
+                case SystemModeEnum.kDry:
+                    self._attr_hvac_mode = HVACMode.DRY
+                case SystemModeEnum.kFanOnly:
+                    self._attr_hvac_mode = HVACMode.FAN_ONLY
+                case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
+                    self._attr_hvac_mode = HVACMode.COOL
+                case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
+                    self._attr_hvac_mode = HVACMode.HEAT
+                case SystemModeEnum.kFanOnly:
+                    self._attr_hvac_mode = HVACMode.FAN_ONLY
+                case SystemModeEnum.kDry:
+                    self._attr_hvac_mode = HVACMode.DRY
                 case _:
-                    self._attr_hvac_action = HVACAction.OFF
+                    self._attr_hvac_mode = HVACMode.OFF
+            # running state is an optional attribute
+            # which we map to hvac_action if it exists (its value is not None)
+            self._attr_hvac_action = None
+            if running_state_value := self.get_matter_attribute_value(
+                clusters.Thermostat.Attributes.ThermostatRunningState
+            ):
+                match running_state_value:
+                    case (
+                        ThermostatRunningState.Heat
+                        | ThermostatRunningState.HeatStage2
+                    ):
+                        self._attr_hvac_action = HVACAction.HEATING
+                    case (
+                        ThermostatRunningState.Cool
+                        | ThermostatRunningState.CoolStage2
+                    ):
+                        self._attr_hvac_action = HVACAction.COOLING
+                    case (
+                        ThermostatRunningState.Fan
+                        | ThermostatRunningState.FanStage2
+                        | ThermostatRunningState.FanStage3
+                    ):
+                        self._attr_hvac_action = HVACAction.FAN
+                    case _:
+                        self._attr_hvac_action = HVACAction.OFF
+
         # update target temperature high/low
         supports_range = (
             self._attr_supported_features

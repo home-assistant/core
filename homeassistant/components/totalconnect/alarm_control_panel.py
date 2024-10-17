@@ -158,11 +158,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not disarm"
+                translation_domain=DOMAIN,
+                translation_key="disarm_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to disarm {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="disarm_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -178,11 +181,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not arm home"
+                translation_domain=DOMAIN,
+                translation_key="arm_home_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="arm_home_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -198,11 +204,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not arm away"
+                translation_domain=DOMAIN,
+                translation_key="arm_away_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="arm_away_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -218,11 +227,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not arm night"
+                translation_domain=DOMAIN,
+                translation_key="arm_night_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm night {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="arm_night_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -237,11 +249,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not arm home instant"
+                translation_domain=DOMAIN,
+                translation_key="arm_home_instant_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home instant {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="arm_home_instant_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -256,11 +271,14 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "TotalConnect usercode is invalid. Did not arm away instant"
+                translation_domain=DOMAIN,
+                translation_key="arm_away_instant_invalid_code",
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away instant {self.device.name}."
+                translation_domain=DOMAIN,
+                translation_key="arm_away_instant_failed",
+                translation_placeholders={"device": self.device.name},
             ) from error
         await self.coordinator.async_request_refresh()
 
