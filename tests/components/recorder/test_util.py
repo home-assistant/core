@@ -1134,19 +1134,32 @@ Retryable = OperationalError(None, None, BaseException(RETRYABLE_MYSQL_ERRORS[0]
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "dialect", "expected_result", "num_calls"),
+    ("side_effect", "dialect", "retval", "expected_result", "num_calls"),
     [
-        (None, SupportedDialect.MYSQL, does_not_raise(), 1),
-        (ValueError, SupportedDialect.MYSQL, pytest.raises(ValueError), 1),
-        (NonRetryable, SupportedDialect.MYSQL, pytest.raises(OperationalError), 1),
-        (Retryable, SupportedDialect.MYSQL, pytest.raises(OperationalError), 5),
-        (NonRetryable, SupportedDialect.SQLITE, pytest.raises(OperationalError), 1),
-        (Retryable, SupportedDialect.SQLITE, pytest.raises(OperationalError), 1),
+        (None, SupportedDialect.MYSQL, None, does_not_raise(), 1),
+        (ValueError, SupportedDialect.MYSQL, None, pytest.raises(ValueError), 1),
+        (
+            NonRetryable,
+            SupportedDialect.MYSQL,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.MYSQL, None, pytest.raises(OperationalError), 5),
+        (
+            NonRetryable,
+            SupportedDialect.SQLITE,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.SQLITE, None, pytest.raises(OperationalError), 1),
     ],
 )
 def test_database_job_retry_wrapper(
     side_effect: Any,
     dialect: str,
+    retval: Any,
     expected_result: AbstractContextManager,
     num_calls: int,
 ) -> None:
@@ -1157,12 +1170,13 @@ def test_database_job_retry_wrapper(
     instance.engine.dialect.name = dialect
     mock_job = Mock(side_effect=side_effect)
 
-    @database_job_retry_wrapper(description="test")
+    @database_job_retry_wrapper("test", 5)
     def job(instance, *args, **kwargs) -> None:
         mock_job()
+        return retval
 
     with expected_result:
-        job(instance)
+        assert job(instance) == retval
 
     assert len(mock_job.mock_calls) == num_calls
 

@@ -189,6 +189,9 @@ async def test_delete_metadata_duplicates(
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
         patch(
             "homeassistant.components.recorder.core.create_engine",
             new=_create_engine_28,
@@ -305,6 +308,9 @@ async def test_delete_metadata_duplicates_many(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
             "homeassistant.components.recorder.core.create_engine",
