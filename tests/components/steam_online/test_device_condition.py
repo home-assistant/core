@@ -59,13 +59,18 @@ async def test_if_state(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
+
+    # Setting up the ID for the primary user for the config
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_ACCOUNT: PRIMARY_USER_ID})
     config_entry.add_to_hass(hass)
+
+    # Setting up the device
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1234")},
     )
 
+    # Setting up the primary sensor
     primary_sensor = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
@@ -73,6 +78,8 @@ async def test_if_state(
         device_id=device_entry.id,
         config_entry=config_entry,
     )
+
+    # Setting up the test sensor
     test_sensor = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
@@ -80,13 +87,6 @@ async def test_if_state(
         device_id=device_entry.id,
         config_entry=config_entry,
     )
-
-    # Creating and setting the states and attributes for the primary and secondary
-    hass.states.async_set(
-        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
-    )
-
-    hass.states.async_set(test_sensor.entity_id, STATE_ONLINE, attributes={})
 
     assert await async_setup_component(
         hass,
@@ -122,13 +122,52 @@ async def test_if_state(
         },
     )
 
+    hass.states.async_set(
+        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
+    )
+    await hass.async_block_till_done()
     assert len(service_calls) == 0
+
     hass.states.async_set(
         test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == f"is_same - state - {test_sensor.entity_id}"
+
+    hass.states.async_set(
+        test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "321"}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.states.async_set(
+        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "321"}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.states.async_set(
+        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": None}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.states.async_set(
+        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "456"}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "456"}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+    assert service_calls[0].data["some"] == f"is_same - state - {test_sensor.entity_id}"
+
     # assert service_calls[0].data["some"] == "is_same - event - test_event1"
 
     # hass.states.async_set("steam_online.entity", STATE_OFF)
