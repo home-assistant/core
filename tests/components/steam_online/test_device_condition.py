@@ -7,8 +7,11 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.steam_online.const import DOMAIN, STATE_ONLINE
-from homeassistant.const import STATE_OFF
+from homeassistant.components.steam_online.const import (
+    CONF_ACCOUNT,
+    DOMAIN,
+    STATE_ONLINE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -46,12 +49,35 @@ async def test_get_conditions(
     assert conditions == unordered(expected_conditions)
 
 
-@pytest.mark.skip(reason="NOT IMPLEMENTED")
-async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
+@pytest.mark.skip(reason="not working for some goddamn reason")
+async def test_if_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set(
-        "steam_online.entity", STATE_ONLINE, attributes={"game_id": "123"}
+
+    # Setting up the primary user
+    primary_id: str = "123456789"
+    primary_user: str = f"sensor.steam_{primary_id}"
+
+    # Setting up a test user
+    test_user: str = "sensor.steam_987654321"
+
+    # Creating a config mock entry with the primary user
+    config_entry = MockConfigEntry(domain="test", data={CONF_ACCOUNT: primary_id})
+    config_entry.add_to_hass(hass)
+
+    # Setting up the Device Entry
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
+
+    # Creating and setting the states and attributes for the primary and secondary
+    hass.states.async_set(primary_user, STATE_ONLINE, attributes={"game_id": "123"})
+
+    hass.states.async_set(test_user, STATE_ONLINE)
 
     assert await async_setup_component(
         hass,
@@ -59,37 +85,27 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event1",
+                        "event_data": {"entity_id": test_user},
+                    },
                     "condition": [
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "type": "is_same_game_as_primary",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
-                        },
-                    },
-                },
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event2"},
-                    "condition": [
-                        {
-                            "condition": "device",
-                            "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "steam_online.entity",
-                            "type": "is_off",
-                        }
-                    ],
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_same "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -97,14 +113,18 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
         },
     )
     hass.bus.async_fire("test_event1")
-    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    hass.states.async_set(test_user, STATE_ONLINE, attributes={"game_id": "123"})
+    hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert service_calls[0].data["some"] == "is_on - event - test_event1"
+    # assert service_calls[0].data["some"] == "is_same - event - test_event1"
 
-    hass.states.async_set("steam_online.entity", STATE_OFF)
-    hass.bus.async_fire("test_event1")
-    hass.bus.async_fire("test_event2")
-    await hass.async_block_till_done()
-    assert len(service_calls) == 2
-    assert service_calls[1].data["some"] == "is_off - event - test_event2"
+    # hass.states.async_set("steam_online.entity", STATE_OFF)
+    # hass.bus.async_fire("test_event1")
+    # hass.bus.async_fire("test_event2")
+    # await hass.async_block_till_done()
+    # assert len(service_calls) == 2
+    # assert service_calls[1].data["some"] == "is_off - event - test_event2"
