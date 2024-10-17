@@ -114,7 +114,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         super()._update_status()
 
         # Update state.
-        self._attr_state = ROBOT_STATUS_TO_HA[self.data.current_state]
+        self._attr_state = ROBOT_STATUS_TO_HA.get(self.data.current_state)
 
         # Update battery.
         if (level := self.data.battery) is not None:
