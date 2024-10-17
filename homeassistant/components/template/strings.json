@@ -45,6 +45,28 @@
         },
         "title": "Template button"
       },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "percentage": "[%key:component::fan::entity_component::_::state_attributes::percentage::name%]",
+          "preset_mode": "[%key:component::fan::entity_component::_::state_attributes::preset_mode::name%]",
+          "oscillating": "[%key:component::fan::entity_component::_::state_attributes::oscillating::name%]",
+          "direction": "[%key:component::fan::entity_component::_::state_attributes::direction::name%]",
+          "set_percentage": "Actions when setting speed",
+          "set_preset_mode": "Actions when setting preset mode",
+          "set_oscillating": "Actions when controlling oscilation",
+          "set_direction": "Actions when setting direction",
+          "speed_count": "Number of supported speeds"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template fan"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -106,6 +128,7 @@
           "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
+          "fan": "Template a fan",
           "image": "Template an image",
           "number": "Template a number",
           "select": "Template a select",
@@ -170,6 +193,27 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::button::title%]"
+      },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "percentage": "[%key:component::fan::entity_component::_::state_attributes::percentage::name%]",
+          "preset_mode": "[%key:component::fan::entity_component::_::state_attributes::preset_mode::name%]",
+          "oscillating": "[%key:component::fan::entity_component::_::state_attributes::oscillating::name%]",
+          "direction": "[%key:component::fan::entity_component::_::state_attributes::direction::name%]",
+          "set_percentage": "[%key:component::template::config::step::fan::data::set_percentage%]",
+          "set_preset_mode": "[%key:component::template::config::step::fan::data::set_preset_mode%]",
+          "set_oscillating": "[%key:component::template::config::step::fan::data::set_oscillating%]",
+          "set_direction": "[%key:component::template::config::step::fan::data::set_direction%]",
+          "speed_count": "[%key:component::template::config::step::fan::data::speed_count%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::fan::title%]"
       },
       "image": {
         "data": {
