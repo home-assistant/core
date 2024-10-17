@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property
+from propcache import cached_property, under_cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -461,6 +461,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __init__(self) -> None:
         """Initialize a camera."""
+        self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -724,6 +725,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         new_providers = await self._async_get_supported_webrtc_providers()
         self._webrtc_providers = new_providers
         if old_providers != new_providers:
+            self._invalidate_camera_capabilities_cache()
             self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_providers(
@@ -756,9 +758,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return config
 
-    @final
     @callback
-    def get_camera_capabilities(self) -> CameraCapabilities:
+    def _invalidate_camera_capabilities_cache(self) -> None:
+        """Invalidate the camera capabilities cache."""
+        self._cache.pop("camera_capabilities", None)
+
+    @final
+    @under_cached_property
+    def camera_capabilities(self) -> CameraCapabilities:
         """Return the camera capabilities."""
         frontend_stream_types = set()
         if CameraEntityFeature.STREAM in self.supported_features_compat:
@@ -882,8 +889,7 @@ async def ws_camera_capabilities(
     """
     try:
         camera = get_camera_from_entity_id(hass, msg["entity_id"])
-        capabilities = camera.get_camera_capabilities()
-        connection.send_result(msg["id"], asdict(capabilities))
+        connection.send_result(msg["id"], asdict(camera.camera_capabilities))
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting camera capabilities: %s", ex)
         connection.send_error(msg["id"], "camera_capabilities_failed", str(ex))

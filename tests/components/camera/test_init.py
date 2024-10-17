@@ -1,6 +1,6 @@
 """The tests for the camera component."""
 
-from collections.abc import Callable, Coroutine, Generator
+from collections.abc import Generator
 from http import HTTPStatus
 import io
 from types import ModuleType
@@ -1113,71 +1113,55 @@ async def _test_capbilities(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_id: str,
-    before_test_fn: Callable[[HomeAssistant], Coroutine[None, None, None]] | None,
     expected_stream_types: set[StreamType],
+    expected_stream_types_with_webrtc_provider: set[StreamType],
 ) -> None:
     """Test camera capabilities."""
     await async_setup_component(hass, "camera", {})
     await hass.async_block_till_done()
 
-    if before_test_fn:
-        await before_test_fn(hass)
+    async def test(expected_types: set[StreamType]) -> None:
+        camera_obj = get_camera_from_entity_id(hass, entity_id)
+        capabilities = camera_obj.camera_capabilities
+        assert capabilities == camera.CameraCapabilities(expected_types)
 
-    camera_obj = get_camera_from_entity_id(hass, entity_id)
-    capabilities = camera_obj.get_camera_capabilities()
+        # Request capabilities through WebSocket
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {"type": "camera/capabilities", "entity_id": entity_id}
+        )
+        msg = await client.receive_json()
 
-    assert capabilities == camera.CameraCapabilities(expected_stream_types)
+        # Assert WebSocket response
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"] == {"frontend_stream_types": list(expected_types)}
 
-    # Request capabilities through WebSocket
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "camera/capabilities", "entity_id": entity_id}
-    )
-    msg = await client.receive_json()
+    await test(expected_stream_types)
 
-    # Assert WebSocket response
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {"frontend_stream_types": list(expected_stream_types)}
+    # Test with WebRTC provider
+    await add_webrtc_provider(hass)
+    await test(expected_stream_types_with_webrtc_provider)
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
-@pytest.mark.parametrize(
-    ("before_test_fn", "expected_stream_types"),
-    [
-        (None, {StreamType.HLS}),
-        (add_webrtc_provider, {StreamType.HLS, StreamType.WEB_RTC}),
-    ],
-    ids=["without WebRTC provider", "with WebRTC provider"],
-)
 async def test_camera_capabilities_hls(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    before_test_fn: Callable[[HomeAssistant], Coroutine[None, None, None]] | None,
-    expected_stream_types: set[StreamType],
 ) -> None:
     """Test HLS camera capabilities."""
     await _test_capbilities(
         hass,
         hass_ws_client,
         "camera.demo_camera",
-        before_test_fn,
-        expected_stream_types,
+        {StreamType.HLS},
+        {StreamType.HLS, StreamType.WEB_RTC},
     )
 
 
-@pytest.mark.parametrize(
-    ("before_test_fn"),
-    [
-        (None),
-        (add_webrtc_provider),
-    ],
-    ids=["without WebRTC provider", "with WebRTC provider"],
-)
 async def test_camera_capabilities_webrtc(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    before_test_fn: Callable[[HomeAssistant], Coroutine[None, None, None]] | None,
 ) -> None:
     """Test WebRTC camera capabilities."""
 
@@ -1232,5 +1216,5 @@ async def test_camera_capabilities_webrtc(
         await hass.async_block_till_done()
 
     await _test_capbilities(
-        hass, hass_ws_client, "camera.test", before_test_fn, {StreamType.WEB_RTC}
+        hass, hass_ws_client, "camera.test", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
     )
