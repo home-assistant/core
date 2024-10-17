@@ -143,22 +143,15 @@ jobs:
           tests="[]"
           tests_glob=""
           skip_coverage=""
-          integration_changes=${{ steps.integrations.outputs.changes }}
 
-          force_single_integration="gardena_bluetooth"
-          if [[ "${force_single_integration}" != "" ]];
-          then
-            integration_changes="[\"${force_single_integration}\"]"
-          fi
-
-          if [[ "${integration_changes}" != "[]" ]];
+          if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo "${integration_changes}" | jq -cSr '. | join(",")')
+            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo "${integration_changes}" | jq -cSr '.[]')
+            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
               do
@@ -185,14 +178,12 @@ jobs:
 
           # We need to run the full suite on certain branches.
           # Or, in case core files are touched, for the full suite as well.
-          if [[ "${force_single_integration}" == "" ]] \
-            && ([[ "${{ github.ref }}" == "refs/heads/dev" ]] \
-              || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
-              || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
-              || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
-              || [[ "${{ github.event.inputs.full }}" == "true" ]] \
-              || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]]
-              );
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
+            || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
+            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
+            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}
@@ -954,7 +945,6 @@ jobs:
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
-            --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1077,7 +1067,6 @@ jobs:
             -qq \
             --timeout=20 \
             --numprocesses 1 \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
@@ -1204,7 +1193,6 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses 1 \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
@@ -1351,7 +1339,6 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses auto \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
