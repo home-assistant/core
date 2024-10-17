@@ -12,7 +12,7 @@ the offer/answer SDP protocol, other than as a signal path pass through.
 
 Other integrations may use this integration with these steps:
 - Check if this integration is loaded
-- Call is_suported_stream_source for compatibility
+- Call is_supported_stream_source for compatibility
 - Call async_offer_for_stream_source to get back an answer for a client offer
 """
 
@@ -20,16 +20,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
-import voluptuous as vol
 
-from homeassistant.components import camera, websocket_api
+from homeassistant.components import camera
+from homeassistant.components.camera.webrtc import RTCIceServer, register_ice_server
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -57,7 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (TimeoutError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER, "")
+    hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER)
+    if server := entry.options.get(CONF_STUN_SERVER):
+
+        async def get_server() -> RTCIceServer:
+            return RTCIceServer(urls=[server])
+
+        entry.async_on_unload(register_ice_server(hass, get_server))
 
     async def async_offer_for_stream_source(
         stream_source: str,
@@ -85,8 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    websocket_api.async_register_command(hass, ws_get_settings)
-
     return True
 
 
@@ -99,21 +102,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry when options change."""
-    if hass.data[DOMAIN][CONF_STUN_SERVER] != entry.options.get(CONF_STUN_SERVER, ""):
+    if hass.data[DOMAIN][CONF_STUN_SERVER] != entry.options.get(CONF_STUN_SERVER):
         await hass.config_entries.async_reload(entry.entry_id)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "rtsp_to_webrtc/get_settings",
-    }
-)
-@callback
-def ws_get_settings(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle the websocket command."""
-    connection.send_result(
-        msg["id"],
-        {CONF_STUN_SERVER: hass.data.get(DOMAIN, {}).get(CONF_STUN_SERVER, "")},
-    )

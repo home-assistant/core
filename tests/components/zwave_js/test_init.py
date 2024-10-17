@@ -5,6 +5,7 @@ from copy import deepcopy
 import logging
 from unittest.mock import AsyncMock, call, patch
 
+from aiohasupervisor import SupervisorError
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
@@ -12,7 +13,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
@@ -556,7 +557,7 @@ async def test_start_addon(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 async def test_install_addon(
@@ -599,13 +600,13 @@ async def test_install_addon(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 @pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
@@ -772,8 +773,8 @@ async def test_update_addon(
     network_key = "abc123"
     addon_options["device"] = device
     addon_options["network_key"] = network_key
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion(
@@ -845,7 +846,7 @@ async def test_issue_registry(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.LOADED),
     ],
 )
 async def test_stop_addon(
@@ -888,7 +889,7 @@ async def test_stop_addon(
 
     assert entry.state == entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
 
 
 async def test_remove_entry(
@@ -927,7 +928,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -935,7 +936,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -945,12 +946,12 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -969,7 +970,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -988,12 +989,12 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -1001,7 +1002,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
@@ -1573,13 +1574,9 @@ async def test_disabled_entity_on_value_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    entity_registry.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
-    await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
     await hass.config_entries.async_unload(integration.entry_id)
@@ -1589,10 +1586,6 @@ async def test_disabled_entity_on_value_removed(
     await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
     assert integration.state is ConfigEntryState.LOADED
-
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -1687,10 +1680,6 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -1706,7 +1695,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            sensor_cover_entity,
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities

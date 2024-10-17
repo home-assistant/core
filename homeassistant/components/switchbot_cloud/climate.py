@@ -95,7 +95,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
         new_fan_speed = _SWITCHBOT_FAN_MODES.get(
             fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
         )
-        await self.send_command(
+        await self.send_api_command(
             AirConditionerCommands.SET_ALL,
             parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
         )

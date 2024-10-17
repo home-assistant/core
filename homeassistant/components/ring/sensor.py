@@ -215,24 +215,36 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         translation_key="volume",
         value_fn=lambda device: device.volume,
         exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="doorbell_volume",
         translation_key="doorbell_volume",
         value_fn=lambda device: device.doorbell_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="mic_volume",
         translation_key="mic_volume",
         value_fn=lambda device: device.mic_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="voice_volume",
         translation_key="voice_volume",
         value_fn=lambda device: device.voice_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_category",

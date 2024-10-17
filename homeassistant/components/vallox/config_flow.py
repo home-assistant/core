@@ -86,20 +86,18 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the Vallox device host address."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
+        reconfigure_entry = self._get_reconfigure_entry()
         if not user_input:
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
-                    CONFIG_SCHEMA, {CONF_HOST: entry.data.get(CONF_HOST)}
+                    CONFIG_SCHEMA, {CONF_HOST: reconfigure_entry.data.get(CONF_HOST)}
                 ),
             )
 
         updated_host = user_input[CONF_HOST]
 
-        if entry.data.get(CONF_HOST) != updated_host:
+        if reconfigure_entry.data.get(CONF_HOST) != updated_host:
             self._async_abort_entries_match({CONF_HOST: updated_host})
 
         errors: dict[str, str] = {}
@@ -115,9 +113,7 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "unknown"
         else:
             return self.async_update_reload_and_abort(
-                entry,
-                data={**entry.data, CONF_HOST: updated_host},
-                reason="reconfigure_successful",
+                reconfigure_entry, data_updates={CONF_HOST: updated_host}
             )
 
         return self.async_show_form(

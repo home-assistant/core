@@ -131,6 +131,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
     _hass: HomeAssistant
+    _title: str
 
     def __init__(self) -> None:
         """Initialize flow instance."""
@@ -138,7 +139,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
-        self._title: str | None = None
 
     @property
     def hass(self) -> HomeAssistant:
@@ -153,7 +153,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        assert self._title is not None
         assert self._radio_mgr.radio_type is not None
         assert self._radio_mgr.device_path is not None
         assert self._radio_mgr.device_settings is not None

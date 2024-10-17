@@ -1,0 +1,19 @@
+{
+  "domain": "wmspro",
+  "name": "WMS WebControl pro",
+  "codeowners": ["@mback2k"],
+  "config_flow": true,
+  "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "0023D5*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/wmspro",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": ["pywmspro==0.2.1"]
+}

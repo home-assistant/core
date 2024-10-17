@@ -139,7 +139,7 @@ def _retrieve_list(host, token, **kwargs):
             _LOGGER.exception("No list in response from mi router. %s", result)
             return None
     else:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Receive wrong Xiaomi code %s, expected 0 in response %s",
             xiaomi_code,
             result,

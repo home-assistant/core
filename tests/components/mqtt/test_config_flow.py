@@ -8,14 +8,17 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.addon_manager import AddonError
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import (
+    AddonError,
+    HassioAPIError,
+    HassioServiceInfo,
+)
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -417,7 +420,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
@@ -452,8 +455,6 @@ async def test_hassio_confirm(
     mock_finish_setup: MagicMock,
 ) -> None:
     """Test we can finish a config flow."""
-    mock_try_connection.return_value = True
-
     result = await hass.config_entries.flow.async_init(
         "mqtt",
         data=HassioServiceInfo(
@@ -669,7 +670,7 @@ async def test_addon_not_running_api_error(
 
     Case: The Mosquitto add-on start fails on a API error.
     """
-    start_addon.side_effect = HassioAPIError()
+    start_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -756,7 +757,7 @@ async def test_addon_info_error(
 
     Case: The Mosquitto add-on info could not be retrieved.
     """
-    addon_info.side_effect = AddonError()
+    addon_info.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -1024,7 +1025,6 @@ async def test_bad_certificate(
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
     mqtt_mock = await mqtt_mock_entry()
-    mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
@@ -1273,7 +1273,7 @@ async def test_invalid_discovery_prefix(
 
 def get_default(schema: vol.Schema, key: str) -> Any | None:
     """Get default value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
@@ -1283,7 +1283,7 @@ def get_default(schema: vol.Schema, key: str) -> Any | None:
 
 def get_suggested(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if (
                 schema_key.description is None

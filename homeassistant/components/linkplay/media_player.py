@@ -20,8 +20,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
-)
-from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
 from homeassistant.core import HomeAssistant
@@ -177,9 +175,8 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
-        if model == MANUFACTURER_GENERIC:
-            model_id = None
-        else:
+        model_id = None
+        if model != MANUFACTURER_GENERIC:
             model_id = bridge.device.properties["project"]
 
         self._attr_device_info = dr.DeviceInfo(
@@ -236,6 +233,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._bridge.player.resume()
+
+    @exception_wrap
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._bridge.player.stop()
 
     @exception_wrap
     async def async_media_next_track(self) -> None:

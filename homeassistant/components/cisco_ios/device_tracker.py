@@ -52,7 +52,6 @@ class CiscoDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info("Initialized cisco_ios scanner")
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the firmware doesn't save the name of the wireless device."""

@@ -384,7 +384,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         platform = platforms[p_type]
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
         try:
             receiver_service = await platform.async_setup_platform(hass, bot, p_config)
             if receiver_service is False:

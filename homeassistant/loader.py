@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
-from functools import cached_property
 import importlib
 import logging
 import os
@@ -26,6 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from propcache import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -206,7 +206,7 @@ class USBMatcherOptional(TypedDict, total=False):
 
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
-    """Matcher for the bluetooth integration."""
+    """Matcher for the USB integration."""
 
 
 @dataclass(slots=True)
@@ -255,6 +255,7 @@ class Manifest(TypedDict, total=False):
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
+    overwrites_built_in: bool
     version: str
     codeowners: list[str]
     loggers: list[str]
@@ -451,6 +452,7 @@ async def async_get_integration_descriptions(
             "single_config_entry": integration.manifest.get(
                 "single_config_entry", False
             ),
+            "overwrites_built_in": integration.overwrites_built_in,
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -762,6 +764,7 @@ class Integration:
         self.file_path = file_path
         self.manifest = manifest
         manifest["is_built_in"] = self.is_built_in
+        manifest["overwrites_built_in"] = self.overwrites_built_in
 
         if self.dependencies:
             self._all_dependencies_resolved: bool | None = None
@@ -908,6 +911,16 @@ class Integration:
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
+    @property
+    def overwrites_built_in(self) -> bool:
+        """Return if package overwrites a built-in integration."""
+        if self.is_built_in:
+            return False
+        core_comp_path = (
+            pathlib.Path(__file__).parent / "components" / self.domain / "manifest.json"
+        )
+        return core_comp_path.is_file()
 
     @property
     def version(self) -> AwesomeVersion | None:
@@ -1586,7 +1599,7 @@ class Helpers:
         report(
             (
                 f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.11, it"
+                " This is deprecated and will stop working in Home Assistant 2025.5, it"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
             error_if_core=False,

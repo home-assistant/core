@@ -79,7 +79,8 @@ CONFIG_SCHEMA: Final = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# system mode schemas are built dynamically when the services are regiatered
+# system mode schemas are built dynamically when the services are registered
+# because supported modes can vary for edge-case systems
 
 RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_id}

@@ -27,8 +27,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+from .entity import BleBoxEntity
 
 SENSOR_TYPES = (
     SensorEntityDescription(

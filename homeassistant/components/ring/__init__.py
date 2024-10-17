@@ -10,15 +10,10 @@ import uuid
 from ring_doorbell import Auth, Ring, RingDevices
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import APPLICATION_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    instance_id,
-)
+from homeassistant.const import APPLICATION_NAME, CONF_DEVICE_ID, CONF_TOKEN
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
 from .coordinator import RingDataCoordinator, RingListenCoordinator
@@ -39,18 +34,12 @@ class RingData:
 type RingConfigEntry = ConfigEntry[RingData]
 
 
-async def get_auth_agent_id(hass: HomeAssistant) -> tuple[str, str]:
-    """Return user-agent and hardware id for Auth instantiation.
+def get_auth_user_agent() -> str:
+    """Return user-agent for Auth instantiation.
 
     user_agent will be the display name in the ring.com authorised devices.
-    hardware_id will uniquely describe the authorised HA device.
     """
-    user_agent = f"{APPLICATION_NAME}/{DOMAIN}-integration"
-
-    # Generate a new uuid from the instance_uuid to keep the HA one private
-    instance_uuid = uuid.UUID(hex=await instance_id.async_get(hass))
-    hardware_id = str(uuid.uuid5(instance_uuid, user_agent))
-    return user_agent, hardware_id
+    return f"{APPLICATION_NAME}/{DOMAIN}-integration"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
@@ -70,13 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
             data={**entry.data, CONF_LISTEN_CREDENTIALS: token},
         )
 
-    user_agent, hardware_id = await get_auth_agent_id(hass)
+    user_agent = get_auth_user_agent()
     client_session = async_get_clientsession(hass)
     auth = Auth(
         user_agent,
         entry.data[CONF_TOKEN],
         token_updater,
-        hardware_id=hardware_id,
+        hardware_id=entry.data[CONF_DEVICE_ID],
         http_client_session=client_session,
     )
     ring = Ring(auth)
@@ -100,45 +89,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, "update"):
-        return True
-
-    async def async_refresh_all(_: ServiceCall) -> None:
-        """Refresh all ring data."""
-        _LOGGER.warning(
-            "Detected use of service 'ring.update'. "
-            "This is deprecated and will stop working in Home Assistant 2024.10. "
-            "Use 'homeassistant.update_entity' instead which updates all ring entities",
-        )
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_service_ring_update",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_service_ring_update",
-        )
-        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            await loaded_entry.runtime_data.devices_coordinator.async_refresh()
-
-    # register service
-    hass.services.async_register(DOMAIN, "update", async_refresh_all)
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 1:
-        # This is the last loaded entry, clean up service
-        hass.services.async_remove(DOMAIN, "update")
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -167,8 +123,30 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
                     existing_entity_id,
                 )
                 return None
-            _LOGGER.info("Fixing non string unique id %s", entity_entry.unique_id)
+            _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
             return {"new_unique_id": new_unique_id}
         return None
 
     await er.async_migrate_entries(hass, entry_id, _async_migrator)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry."""
+    entry_version = entry.version
+    entry_minor_version = entry.minor_version
+
+    new_minor_version = 2
+    if entry_version == 1 and entry_minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry_version, entry_minor_version
+        )
+        hardware_id = str(uuid.uuid4())
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_DEVICE_ID: hardware_id},
+            minor_version=new_minor_version,
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s complete", entry_version, new_minor_version
+        )
+    return True

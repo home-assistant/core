@@ -1,6 +1,6 @@
 """Base class for Ring entity."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Concatenate, Generic, cast
 
@@ -72,6 +72,19 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
             raise HomeAssistantError(
                 f"Error communicating with API{async_func}: {err}"
             ) from err
+
+    return _wrap
+
+
+def refresh_after[_RingEntityT: RingEntity[Any], **_P](
+    func: Callable[Concatenate[_RingEntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_RingEntityT, _P], Coroutine[Any, Any, None]]:
+    """Define a wrapper to handle api call errors or refresh after success."""
+
+    @exception_wrap
+    async def _wrap(self: _RingEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        await func(self, *args, **kwargs)
+        await self.coordinator.async_request_refresh()
 
     return _wrap
 

@@ -15,6 +15,7 @@ from weheat.exceptions import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +25,6 @@ EXCEPTIONS = (
     ServiceException,
     NotFoundException,
     ForbiddenException,
-    UnauthorizedException,
     BadRequestException,
     ApiException,
 )
@@ -46,32 +46,34 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
-        self._heat_pump_info = heat_pump
-        self._heat_pump_data = HeatPump(API_URL, self._heat_pump_info.uuid)
+        self.heat_pump_info = heat_pump
+        self._heat_pump_data = HeatPump(API_URL, heat_pump.uuid)
 
         self.session = session
 
     @property
     def heatpump_id(self) -> str:
         """Return the heat pump id."""
-        return self._heat_pump_info.uuid
+        return self.heat_pump_info.uuid
 
     @property
     def readable_name(self) -> str | None:
         """Return the readable name of the heat pump."""
-        if self._heat_pump_info.name:
-            return self._heat_pump_info.name
-        return self._heat_pump_info.model
+        if self.heat_pump_info.name:
+            return self.heat_pump_info.name
+        return self.heat_pump_info.model
 
     @property
     def model(self) -> str:
         """Return the model of the heat pump."""
-        return self._heat_pump_info.model
+        return self.heat_pump_info.model
 
     def fetch_data(self) -> HeatPump:
         """Get the data from the API."""
         try:
             self._heat_pump_data.get_status(self.session.token[CONF_ACCESS_TOKEN])
+        except UnauthorizedException as error:
+            raise ConfigEntryAuthFailed from error
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 
