@@ -1,7 +1,4 @@
 # serializer version: 1
-# name: test_all_entities
-  None
-# ---
 # name: test_water_heater[water_heater.test_device-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

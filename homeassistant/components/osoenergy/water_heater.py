@@ -130,13 +130,9 @@ def _get_local_hour(utc_hour: int) -> dt.datetime:
         Datetime representation for the requested hour in local time for the day.
 
     """
-    now = dt_util.utcnow()
-    now_local = dt_util.now()
-    utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
-    local_hour = dt_util.as_local(utc_time)
-    return local_hour.replace(
-        year=now_local.year, month=now_local.month, day=now_local.day
-    )
+    utc_now = dt_util.utcnow()
+    utc_time = utc_now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
+    return dt_util.as_local(utc_time)
 
 
 def _convert_profile_to_local(values: list[float]) -> list[JsonValueType]:

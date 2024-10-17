@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, MagicMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
@@ -43,6 +44,7 @@ async def test_water_heater(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2024-10-10 00:00:00")
 async def test_get_profile(
     hass: HomeAssistant,
     mock_osoenergy_client: MagicMock,
@@ -57,34 +59,44 @@ async def test_get_profile(
         blocking=True,
         return_response=True,
     )
-    assert profile.get("water_heater.test_device").get("profile") == [
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-        10,
-        60,
-        60,
-        60,
-        60,
-        60,
-        60,
-    ]
+
+    # The profile is returned in UTC format from the server
+    # Each index represents an hour from the current day (0-23). For example index 2 - 02:00 UTC
+    # Depending on the time zone and the DST the UTC hour is converted to local time and the value is placed in the correct index
+    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 9 (09:00 UTC) will be converted to index 2 (02:00 Local)
+    assert profile == {
+        "water_heater.test_device": {
+            "profile": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+                10,
+                60,
+                60,
+                60,
+                60,
+                60,
+                60,
+            ],
+        },
+    }
 
 
+@pytest.mark.freeze_time("2024-10-10 00:00:00")
 async def test_set_profile(
     hass: HomeAssistant,
     mock_osoenergy_client: MagicMock,
@@ -99,6 +111,10 @@ async def test_set_profile(
         blocking=True,
     )
 
+    # The server expects to receive the profile in UTC format
+    # Each field represents an hour from the current day (0-23). For example field hour_01 - 01:00 Local time
+    # Depending on the time zone and the DST the Local hour is converted to UTC time and the value is placed in the correct index
+    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 1 (01:00 Local) will be converted to index 8 (08:00 Utc)
     mock_osoenergy_client().hotwater.set_profile.assert_called_once_with(
         ANY,
         [
