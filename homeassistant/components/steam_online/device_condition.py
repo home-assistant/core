@@ -19,9 +19,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import CONF_ACCOUNT, DOMAIN
+from .const import CONDITION_PRIMARY_GAME, CONF_ACCOUNT, DOMAIN
 
-CONDITION_TYPES = {"is_same_game_as_primary"}
+CONDITION_TYPES = {CONDITION_PRIMARY_GAME}
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
@@ -71,6 +71,8 @@ def async_condition_from_config(
     ) -> bool:
         """Test if an entity is a certain state."""
 
+        print("RUNNING test_is_same_game_as_primary", variables)
+
         trigger = variables.get("trigger")
 
         to_state: State = trigger.get("to_state")
@@ -82,7 +84,7 @@ def async_condition_from_config(
 
         return primary_game is not None and primary_game == to_game
 
-    if config[CONF_TYPE] == "is_same_game_as_primary":
+    if config[CONF_TYPE] == CONDITION_PRIMARY_GAME:
         test_method = test_is_same_game_as_primary
     else:
         test_method = default_checker_method
