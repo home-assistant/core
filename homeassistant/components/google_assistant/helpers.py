@@ -153,6 +153,11 @@ class AbstractConfig(ABC):
         """Return if states should be proactively reported."""
 
     @property
+    @abstractmethod
+    def should_fulfill_async(self):
+        """Return if intents should be executed asyncronously."""
+
+    @property
     def is_local_connected(self) -> bool:
         """Return if local is connected."""
         return (
