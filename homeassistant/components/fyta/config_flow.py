@@ -108,12 +108,13 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         reauth_entry = self._get_reauth_entry()
         if user_input and not (errors := await self.async_auth(user_input)):
+            user_input |= {
+                CONF_ACCESS_TOKEN: self.credentials.access_token,
+                CONF_EXPIRATION: self.credentials.expiration.isoformat(),
+            }
             return self.async_update_reload_and_abort(
                 reauth_entry,
-                data_updates={
-                    CONF_ACCESS_TOKEN: self.credentials.access_token,
-                    CONF_EXPIRATION: self.credentials.expiration.isoformat(),
-                },
+                data_updates=user_input,
             )
 
         data_schema = self.add_suggested_values_to_schema(
