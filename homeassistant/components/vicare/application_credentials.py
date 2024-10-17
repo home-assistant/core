@@ -1,6 +1,7 @@
 """application_credentials platform the Viessmann ViCare integration."""
 
 import base64
+import enum
 import hashlib
 import logging
 import os
@@ -22,20 +23,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _generateCodeChallengePair() -> tuple:
-    # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
-    # code challenge must not be larger than 128 chars
-    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8")
-    code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
-
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode("utf-8")).digest()
-    ).decode("utf-8")
-    code_challenge = code_challenge.replace("=", "")
-
-    return (code_verifier, code_challenge)
-
-
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
 ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
@@ -49,6 +36,13 @@ async def async_get_auth_implementation(
             token_url=TOKEN_URL,
         ),
     )
+
+
+class CodeChallengeMethod(enum.Enum):
+    """Possible options for OAuth2 code challenge method."""
+
+    plain = "plain"
+    s265 = "S256"
 
 
 class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -76,7 +70,8 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
         )
         self._name = credential.name
         # Init PKCE
-        self.code_verifier, self.code_challenge = _generateCodeChallengePair()
+        self.code_verifier, self.code_challenge = self._generateCodeChallengePair()
+        self.code_challenge_method = CodeChallengeMethod.s265
 
     @property
     def name(self) -> str:
@@ -87,8 +82,8 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "code_challenge_method": "S256",
             "code_challenge": self.code_challenge,  # PKCE
+            "code_challenge_method": self.code_challenge_method,
         }
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
@@ -102,14 +97,27 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
             }
         )
 
-    async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
-        _LOGGER.warning("REFRESHING TOKEN {token}")
-        new_token = await self._token_request(
-            {
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": token["refresh_token"],
-            }
-        )
-        return {**token, **new_token}
+    # async def _async_refresh_token(self, token: dict) -> dict:
+    #     """Refresh tokens."""
+    #     _LOGGER.warning("REFRESHING TOKEN {token}")
+    #     new_token = await self._token_request(
+    #         {
+    #             "grant_type": "refresh_token",
+    #             "client_id": self.client_id,
+    #             "refresh_token": token["refresh_token"],
+    #         }
+    #     )
+    #     return {**token, **new_token}
+
+    def _generateCodeChallengePair(self) -> tuple:
+        # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
+        # code challenge must not be larger than 128 chars
+        code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8")
+        code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
+
+        code_challenge = base64.urlsafe_b64encode(
+            hashlib.sha256(code_verifier.encode("utf-8")).digest()
+        ).decode("utf-8")
+        code_challenge = code_challenge.replace("=", "")
+
+        return (code_verifier, code_challenge)
