@@ -20,8 +20,6 @@ class Action:
         elif self._type == "4":
             self._attr_current_cover_position = action["value1"]
             self._attr_is_closed = action["value1"] == 0
-        elif self._type != "1":
-            raise NotImplementedError(f"Unknown action type: {self._type}, value1: {action['value1']}, value2: {action['value2']}")
 
     @property
     def name(self):
