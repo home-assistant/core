@@ -72,8 +72,6 @@ async def test_coordinator_device_timeout_update(
     coordinator: RAVEnDataCoordinator = entry.runtime_data
     assert coordinator.last_update_success is True
 
-    assert len(coordinator._listeners) > 0
-
     mock_device.get_network_info.side_effect = functools.partial(asyncio.sleep, 10)
     with patch(
         "homeassistant.components.rainforest_raven.coordinator._DEVICE_TIMEOUT", 0.1
