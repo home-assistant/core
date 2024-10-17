@@ -32,7 +32,7 @@ async def test_get_conditions(
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, f"steam_{PRIMARY_USER_ID}")},
+        identifiers={(DOMAIN, "1234")},
     )
     entity_registry.async_get_or_create(
         SENSOR_PLATFORM, DOMAIN, "5678", device_id=device_entry.id
@@ -59,11 +59,11 @@ async def test_if_state(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    config_entry = MockConfigEntry(domain="test", data={CONF_ACCOUNT: PRIMARY_USER_ID})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_ACCOUNT: PRIMARY_USER_ID})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={(DOMAIN, "1234")},
     )
 
     primary_sensor = entity_registry.async_get_or_create(
@@ -71,12 +71,14 @@ async def test_if_state(
         "test",
         PRIMARY_USER_ID,
         device_id=device_entry.id,
+        config_entry=config_entry,
     )
     test_sensor = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
         device_id=device_entry.id,
+        config_entry=config_entry,
     )
 
     # Creating and setting the states and attributes for the primary and secondary
@@ -107,13 +109,13 @@ async def test_if_state(
                     ],
                     "action": {
                         "service": "test.automation",
-                        # "data_template": {
-                        #     "some": (
-                        #         "is_same "
-                        #         "- {{ trigger.platform }} "
-                        #         "- {{ trigger.event.event_type }}"
-                        #     )
-                        # },
+                        "data_template": {
+                            "some": (
+                                "is_same "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }}"
+                            )
+                        },
                     },
                 },
             ]
@@ -126,6 +128,7 @@ async def test_if_state(
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == f"is_same - state - {test_sensor.entity_id}"
     # assert service_calls[0].data["some"] == "is_same - event - test_event1"
 
     # hass.states.async_set("steam_online.entity", STATE_OFF)

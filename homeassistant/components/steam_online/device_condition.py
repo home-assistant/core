@@ -58,6 +58,11 @@ def async_condition_from_config(
         list(dr.async_get(hass).async_get(config[ATTR_DEVICE_ID]).config_entries)[0]
     )
 
+    primary_user = config_entry.data[CONF_ACCOUNT]
+    # FIXME: We need to fetch this dynamically
+    primary_user_entity_id = f"sensor.steam_{primary_user}"  # <-- works live
+    primary_user_entity_id = f"steam_online.test_{primary_user}"  # <-- works tests
+
     @callback
     def default_checker_method(
         hass: HomeAssistant, variables: TemplateVarsType
@@ -70,16 +75,11 @@ def async_condition_from_config(
         hass: HomeAssistant, variables: TemplateVarsType
     ) -> bool:
         """Test if an entity is a certain state."""
-
-        print("RUNNING test_is_same_game_as_primary", variables)
-
         trigger = variables.get("trigger")
 
         to_state: State = trigger.get("to_state")
         to_game = to_state.attributes.get("game_id")
 
-        primary_user = config_entry.data[CONF_ACCOUNT]
-        primary_user_entity_id = f"sensor.steam_{primary_user}"
         primary_game = hass.states.get(primary_user_entity_id).attributes.get("game_id")
 
         print("primary_game", primary_game)
