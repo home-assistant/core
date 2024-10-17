@@ -73,6 +73,15 @@
         "default": "mdi:air-filter"
       }
     },
+    "climate": {
+      "climate_air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "default": "mdi:circle-medium"
+          }
+        }
+      }
+    },
     "event": {
       "error": {
         "default": "mdi:alert-circle-outline"
