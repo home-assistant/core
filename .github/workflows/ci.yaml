@@ -187,11 +187,12 @@ jobs:
           # Or, in case core files are touched, for the full suite as well.
           if [[ "${force_single_integration}" == "" ]] \
             && ([[ "${{ github.ref }}" == "refs/heads/dev" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
-            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
-            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]]);
+              || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
+              || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
+              || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
+              || [[ "${{ github.event.inputs.full }}" == "true" ]] \
+              || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]]
+              );
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}
