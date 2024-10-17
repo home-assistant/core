@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in GIT repository details",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "type": "Repository type",
+          "update_strategy": "Update strategy"
+        },
+        "data_description": {
+          "url": "E.g.: `https://github.com/user/awesome-component.git`",
+          "type": "Integrations are `custom_components` that are not part of Home Assistant.\nRepositories are frontend resources like themes, Lovelace plugins, etc.",
+          "update_strategy": "Determines which references from repository are reported as updates in Home Assistant.\nLatest tag will offer the latest stable version. Latest unstable tag will offer the latest tag, even if it is a dev, alpha, beta, or RC version. Latest commit will always follow the latest commit (this is the least stable option)."
+        }
+      },
+      "resource": {
+        "title": "Fill in resource details",
+        "description": "Frontend resources require URL from where to download compiled JS / CSS files when changes are detected within the repository.\n\nVariable `version` will be replaced with the corresponding GIT repository tag / commit hash (as configured in previous step).",
+        "data": {
+          "download_url": "[%key:common::config_flow::data::url%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "The URL is invalid.",
+      "invalid_template": "The template is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "install_failed": "Unable to install repository. See logs for details.",
+      "invalid_structure": "Repository has invalid structure. See logs for details.",
+      "already_configured": "The repository is already configured.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "repository": "Repository",
+        "integration": "Integration"
+      }
+    },
+    "update_strategy": {
+      "options": {
+        "latest_tag": "Latest tag",
+        "latest_unstable_tag": "Latest unstable tag (including dev, alpha, beta, RC versions)",
+        "latest_commit": "Latest commit"
+      }
+    }
+  },
+  "issues": {
+    "restart_required": {
+      "title": "Restart required",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Restart required",
+            "description": "Restart is required to finish {action} of `{name}`.",
+            "menu_options": {
+              "restart": "Restart"
+            }
+          }
+        }
+      }
+    }
+  }
+}
