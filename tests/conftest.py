@@ -149,6 +149,15 @@ def pytest_configure(config: pytest.Config) -> None:
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
 
+    # pylint: disable-next=import-outside-toplevel
+    from syrupy.session import SnapshotSession
+
+    # pylint: disable-next=import-outside-toplevel
+    from .syrupy import override_syrupy_finish
+
+    # Override default finish to detect unused snapshots despite xdist
+    SnapshotSession.finish = override_syrupy_finish
+
 
 def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
