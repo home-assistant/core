@@ -107,13 +107,3 @@ async def fetch_prayer_times(
         await client.close()
 
     return dict_calendar
-
-
-# def get_mawaqit_token_from_env():
-#     """Retrieve the MAWAQIT API token from environment variables."""
-#     return os.environ.get("MAWAQIT_API_KEY", "NA")
-
-
-# def set_mawaqit_token_from_env(mawaqit_token):
-#     """Set the MAWAQIT API token in environment variables."""
-#     os.environ["MAWAQIT_API_KEY"] = mawaqit_token

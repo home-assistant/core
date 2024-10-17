@@ -65,16 +65,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.store is None:
             self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
-        # lat = self.hass.config.latitude
-        # longi = self.hass.config.longitude
-
         # create data folder if does not exist
         create_data_folder()
 
         # if the data folder is empty, we can continue the configuration
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
         if await utils.is_another_instance(self.hass, self.store):
-            # return self.async_abort(reason="one_instance_allowed")
             return await self.async_step_keep_or_reset()
 
         if user_input is None:
@@ -173,11 +169,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await utils.async_write_in_data(
                 self.hass, CURRENT_DIR, "mosq_list_data", {"CALC_METHODS": CALC_METHODS}
-            )  # TODO deprecate this line and put instead  "await utils.write_mosq_list_data({"CALC_METHODS": CALC_METHODS}, self.store)" # pylint: disable=fixme
+            )  # TODO deprecate this line and put instead  utils.write_mosq_list_data # pylint: disable=fixme
 
             return await self.async_step_mosques_coordinates()
 
-            # return await self._show_config_form2()
+            # or return _show_config_form2
         if search_method == CONF_TYPE_SEARCH_KEYWORD:
             return await self.async_step_keyword_search()
 
@@ -369,7 +365,6 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, title=title_entry, data=data_entry
             )
-            # return self.config_entry
             return self.async_create_entry(title=None, data={})
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(

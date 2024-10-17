@@ -29,9 +29,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import now as ha_now
 
 from . import utils
-
-# from homeassistant.util.dt import now as ha_now
-# from homeassistant.helpers import aiohttp_client
 from .const import (
     CONF_CALC_METHOD,
     DATA_UPDATED,
@@ -142,7 +139,7 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await utils.cleare_storage_entry(store, MAWAQIT_MY_MOSQUE_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_PRAY_TIME)
-    # await utils.cleare_storage_entry(store, MAWAQIT_MOSQ_LIST_DATA)
+    # after adding MAWAQIT_MOSQ_LIST_DATA to storage we need to clear it here
 
     _LOGGER.debug("Finished clearing data folder")
 
@@ -217,8 +214,6 @@ class MawaqitPrayerClient:
 
         now = today.time().strftime("%H:%M")
 
-        # _LOGGER.debug("[;] Now : %s", today.time())
-
         tomorrow = (today + timedelta(days=1)).strftime("%Y-%m-%d")
         today = today.strftime("%Y-%m-%d")
 
@@ -239,8 +234,6 @@ class MawaqitPrayerClient:
             # # We never take in account shurouq in the calculation of next_salat
             if prayer_name == "Shurouq":
                 pray = tomorrow + " " + "23:59:59"
-
-            # _LOGGER.debug("[;] pray : %s", pray)
 
             prayers.append(pray)
 
@@ -394,9 +387,7 @@ class MawaqitPrayerClient:
     async def async_update(self, *_):
         """Update sensors with new prayer times."""
         try:
-            # prayer_times = await self.hass.async_add_executor_job(
-            #     self.get_new_prayer_times
-            # )
+            # should we use self.hass.async_add_executor_job to wrap get_new_prayer_times?
             prayer_times = await self.get_new_prayer_times()
             self.available = True
         except (BadCredentialsException, ConnError):
@@ -475,7 +466,7 @@ class MawaqitPrayerClient:
 
         try:
             await self.get_new_prayer_times()
-            # await self.hass.async_add_executor_job(self.get_new_prayer_times)
+            # should we use self.hass.async_add_executor_job to wrap get_new_prayer_times?
         except (BadCredentialsException, ConnError) as err:
             raise ConfigEntryNotReady from err
 

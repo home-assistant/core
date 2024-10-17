@@ -367,7 +367,7 @@ async def cleare_storage_entry(store, key):
         None,
     )
     _LOGGER.info("Cleared storage entry with key = %s", key)
-    # await store.async_remove()
+    # maybe use the async_remove() in the store object
 
 
 async def async_clear_data(hass, store, domain):

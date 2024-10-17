@@ -45,7 +45,7 @@ async def async_setup_entry(
             "Maghrib",
             "Isha",
             "Jumua",
-            "Jumua 2",  # "Aid", "Aid 2",
+            "Jumua 2",  # "Aid" and "Aid 2",
             "Fajr Iqama",
             "Shurouq Iqama",
             "Dhuhr Iqama",
@@ -88,15 +88,6 @@ class MawaqitPrayerTimeSensor(SensorEntity):
         """Icon to display in the front end."""
         return PRAYER_TIMES_ICON
 
-    # @property
-    # def state(self):
-    #     """Return the state of the sensor."""
-    #     return (
-    #         self.client.prayer_times_info.get(self.sensor_type)
-    #         .astimezone(dt_util.UTC)
-    #         .isoformat()
-    #     )
-
     @property
     def native_value(self):
         """Return the state of the sensor.  .astimezone(dt_util.UTC)."""
@@ -119,16 +110,13 @@ class MawaqitPrayerTimeSensor(SensorEntity):
             "Next Salat Preparation",
         ]:
             time = self.client.prayer_times_info.get(self.sensor_type)
-            # return self.client.prayer_times_info.get(self.sensor_type)
             _LOGGER.debug("[;] before %s Time: %s", self.sensor_type, time)
             if time is not None:
-                # time = time.astimezone(get_time_zone(self.client.hass.config.time_zone))
                 _LOGGER.debug(
                     "[;] %s Time: %s", self.sensor_type, time.astimezone(dt_util.UTC)
                 )
                 return time.astimezone(dt_util.UTC)
-                # return time
-                # return time.astimezone(get_default_time_zone())
+
             return None
 
         return self.client.prayer_times_info.get(self.sensor_type)
@@ -186,16 +174,8 @@ class MyMosqueSensor(SensorEntity):
             self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
         )
 
-    # @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data from the Mawaqit API."""
-        # current_dir = os.path.dirname(os.path.realpath(__file__))
-
-        # def read():
-        #     with open(f"{current_dir}/data/my_mosque_NN.txt", encoding="utf-8") as f:
-        #         return json.load(f)
-
-        # data_my_mosque_NN = await self.hass.async_add_executor_job(read)
         data_my_mosque_NN = await utils.read_my_mosque_NN_file(self.store)
 
         for k, v in data_my_mosque_NN.items():
