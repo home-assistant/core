@@ -188,6 +188,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     _feature_map: int | None = None
     _enable_turn_on_off_backwards_compatibility = False
+    _platform_translation_key = "thermostat"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -427,7 +428,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterThermostat",
-            translation_key="thermostat",
+            name=None,
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),

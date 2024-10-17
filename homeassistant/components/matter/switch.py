@@ -35,6 +35,8 @@ async def async_setup_entry(
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
+    _platform_translation_key = "switch"
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.matter_client.send_device_command(
@@ -66,7 +68,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=SwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
-            translation_key="switch",
+            name=None,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -106,7 +108,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=SwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
-            translation_key="switch",
+            name=None,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
