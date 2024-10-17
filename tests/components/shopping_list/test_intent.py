@@ -4,6 +4,33 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 
+async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
+    """Test complete item."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert hass.data["shopping_list"].items[0]["complete"]
+
+
+async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:
+    """Test complete item."""
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert (
+        response.speech["plain"]["speech"]
+        == "Item beer not found on your shopping list"
+    )
+
+
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
     """Test recent items."""
     await intent.async_handle(
