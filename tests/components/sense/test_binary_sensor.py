@@ -38,6 +38,7 @@ async def test_on_off_sensors(
 ) -> None:
     """Test the Sense binary sensors."""
     await setup_platform(hass, config_entry, BINARY_SENSOR_DOMAIN)
+    device_1, device_2 = mock_sense.devices
 
     state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}")
     assert state.state == STATE_UNAVAILABLE
@@ -54,6 +55,7 @@ async def test_on_off_sensors(
     state = hass.states.get(f"binary_sensor.{DEVICE_2_NAME.lower()}")
     assert state.state == STATE_OFF
 
+    device_1.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
     await hass.async_block_till_done()
 
@@ -63,11 +65,13 @@ async def test_on_off_sensors(
     state = hass.states.get(f"binary_sensor.{DEVICE_2_NAME.lower()}")
     assert state.state == STATE_OFF
 
+    device_1.is_on = False
+    device_2.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
     await hass.async_block_till_done()
 
     state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}")
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
 
     state = hass.states.get(f"binary_sensor.{DEVICE_2_NAME.lower()}")
     assert state.state == STATE_ON
