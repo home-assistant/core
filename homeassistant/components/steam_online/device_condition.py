@@ -82,6 +82,9 @@ def async_condition_from_config(
         primary_user_entity_id = f"sensor.steam_{primary_user}"
         primary_game = hass.states.get(primary_user_entity_id).attributes.get("game_id")
 
+        print("primary_game", primary_game)
+        print("to_game", to_game)
+
         return primary_game is not None and primary_game == to_game
 
     if config[CONF_TYPE] == CONDITION_PRIMARY_GAME:

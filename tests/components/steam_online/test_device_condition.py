@@ -67,10 +67,16 @@ async def test_if_state(
     )
 
     primary_sensor = entity_registry.async_get_or_create(
-        DOMAIN, "test", PRIMARY_USER_ID, device_id=device_entry.id
+        DOMAIN,
+        "test",
+        PRIMARY_USER_ID,
+        device_id=device_entry.id,
     )
     test_sensor = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
     )
 
     # Creating and setting the states and attributes for the primary and secondary
@@ -89,7 +95,7 @@ async def test_if_state(
                     # "trigger": {"platform": "event", "event_type": "test_event1"},
                     "trigger": {
                         "platform": "state",
-                        "entity_id": primary_sensor.entity_id,
+                        "entity_id": test_sensor.entity_id,
                     },
                     "condition": [
                         {
@@ -101,26 +107,23 @@ async def test_if_state(
                     ],
                     "action": {
                         "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "is_same "
-                                "- {{ trigger.platform }} "
-                                "- {{ trigger.event.event_type }}"
-                            )
-                        },
+                        # "data_template": {
+                        #     "some": (
+                        #         "is_same "
+                        #         "- {{ trigger.platform }} "
+                        #         "- {{ trigger.event.event_type }}"
+                        #     )
+                        # },
                     },
                 },
             ]
         },
     )
-    hass.bus.async_fire("test_event1")
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0
 
+    assert len(service_calls) == 0
     hass.states.async_set(
         test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
     )
-    hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     # assert service_calls[0].data["some"] == "is_same - event - test_event1"
