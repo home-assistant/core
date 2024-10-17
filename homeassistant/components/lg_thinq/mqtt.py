@@ -8,7 +8,13 @@ import json
 import logging
 from typing import Any
 
-from thinqconnect import ThinQApi, ThinQAPIException, ThinQMQTTClient
+from thinqconnect import (
+    DeviceType,
+    ThinQApi,
+    ThinQAPIErrorCodes,
+    ThinQAPIException,
+    ThinQMQTTClient,
+)
 
 from homeassistant.core import Event, HomeAssistant
 
@@ -68,7 +74,10 @@ class ThinQMQTT:
         # and is not actually fail.
         return sum(
             isinstance(result, (TypeError, ValueError))
-            or (isinstance(result, ThinQAPIException) and result.code != "1207")
+            or (
+                isinstance(result, ThinQAPIException)
+                and result.code != ThinQAPIErrorCodes.ALREADY_SUBSCRIBED_PUSH
+            )
             for result in results
         )
 
@@ -159,9 +168,12 @@ class ThinQMQTT:
     async def async_handle_device_event(self, message: dict) -> None:
         """Handle received mqtt message."""
         _LOGGER.debug("async_handle_device_event: message=%s", message)
-
-        device_id = message["deviceId"]
-        coordinator = self.coordinators.get(device_id)
+        unique_id = (
+            f"{message["deviceId"]}_{list(message["report"].keys())[0]}"
+            if (message["deviceType"]) == DeviceType.WASHTOWER
+            else message["deviceId"]
+        )
+        coordinator = self.coordinators.get(unique_id)
         if coordinator is None:
             _LOGGER.error("Failed to handle device event: No device")
             return
