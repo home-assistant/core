@@ -13,7 +13,6 @@ from opendata_transport.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -56,7 +55,7 @@ class SwissPublicTransportDataUpdateCoordinator(
 ):
     """A SwissPublicTransport Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
         """Initialize the SwissPublicTransport data coordinator."""

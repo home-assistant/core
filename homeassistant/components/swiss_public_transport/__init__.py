@@ -8,7 +8,7 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 
-from homeassistant import config_entries, core
+from homeassistant import core
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -84,14 +84,14 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, config_entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
