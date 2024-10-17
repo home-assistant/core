@@ -23,6 +23,7 @@ from .const import DOMAIN
 type RAVEnConfigEntry = ConfigEntry[RAVEnDataCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
+_DEVICE_TIMEOUT = 5
 
 
 async def _get_meter_data(
@@ -113,7 +114,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             device = await self._get_device()
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(_DEVICE_TIMEOUT):
                 return await _get_all_data(device, self.config_entry.data[CONF_MAC])
         except RAVEnConnectionError as err:
             await self._cleanup_device()
@@ -134,7 +135,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         device = RAVEnSerialDevice(self.config_entry.data[CONF_DEVICE])
 
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(_DEVICE_TIMEOUT):
                 await device.open()
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
