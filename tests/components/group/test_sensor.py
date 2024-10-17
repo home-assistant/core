@@ -32,6 +32,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -496,7 +497,7 @@ async def test_sensor_with_uoms_but_no_device_class(
     state = hass.states.get("sensor.test_sum")
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
-    assert state.attributes.get("unit_of_measurement") == "W"
+    assert state.attributes.get("unit_of_measurement") is None
     assert state.state == STATE_UNKNOWN
 
     assert (
@@ -650,10 +651,10 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 async def test_sensor_calculated_properties_not_convertible_device_class(
@@ -730,7 +731,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("device_class") == "humidity"
     assert state.attributes.get("state_class") == "measurement"
-    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.attributes.get("unit_of_measurement") is None
 
     assert (
         "Unable to use state. Only entities with correct unit of measurement is"
@@ -812,3 +813,202 @@ async def test_sensors_attributes_added_when_entity_info_available(
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
+
+
+async def test_sensor_state_class_no_uom_not_available(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor losing its UoM while having a state class it goes unavailable."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(sum(VALUES))
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") == "%"
+
+    assert (
+        "Unable to use state. Only entities with correct unit of measurement is"
+        " supported"
+    ) not in caplog.text
+
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") is None
+
+    assert (
+        "Unable to use state. Only entities with correct unit of measurement is"
+        " supported, entity sensor.test_3, value 15.3 with"
+        " device class None and unit of measurement None excluded from calculation"
+        " in sensor.test_sum"
+    ) in caplog.text
+
+
+async def test_sensor_different_attributes_ignore_non_numeric(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor handles different attributes ignoring non numeric."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("state_class") is None
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(VALUES[0]))
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.HUMIDITY,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(VALUES[0]))
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.TEMPERATURE,
+            "unit_of_measurement": UnitOfTemperature.CELSIUS,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(VALUES[0]))
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+
+    assert (
+        "Unable to use state. Only entities with correct unit of measurement is"
+        " supported"
+    ) in caplog.text
+
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.HUMIDITY,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(VALUES[0]))
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes.get("device_class") is None
+    )  # One sensor does not have a device class
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.HUMIDITY,
+            "unit_of_measurement": PERCENTAGE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(VALUES[0]))
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes.get("device_class") == SensorDeviceClass.HUMIDITY
+    )  # First sensor now has a device class
+    assert state.attributes.get("unit_of_measurement") == PERCENTAGE

@@ -37,7 +37,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -52,7 +51,6 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -337,7 +335,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._native_unit_of_measurement = unit_of_measurement
         self._valid_units: set[str | None] = set()
         self._can_convert: bool = False
-        self.calculate_attributes_later: CALLBACK_TYPE | None = None
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
@@ -352,28 +349,10 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
 
-    async def async_added_to_hass(self) -> None:
-        """When added to hass."""
-        for entity_id in self._entity_ids:
-            if self.hass.states.get(entity_id) is None:
-                self.calculate_attributes_later = async_track_state_change_event(
-                    self.hass, self._entity_ids, self.calculate_state_attributes
-                )
-                break
-        if not self.calculate_attributes_later:
-            await self.calculate_state_attributes()
-        await super().async_added_to_hass()
-
-    async def calculate_state_attributes(
+    def calculate_state_attributes(
         self, event: Event[EventStateChangedData] | None = None
     ) -> None:
         """Calculate state attributes."""
-        for entity_id in self._entity_ids:
-            if self.hass.states.get(entity_id) is None:
-                return
-        if self.calculate_attributes_later:
-            self.calculate_attributes_later()
-            self.calculate_attributes_later = None
         self._attr_state_class = self._calculate_state_class(self._state_class)
         self._attr_device_class = self._calculate_device_class(self._device_class)
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
@@ -384,7 +363,9 @@ class SensorGroup(GroupEntity, SensorEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
+        self.calculate_state_attributes()
         states: list[StateType] = []
+        valid_units = self._valid_units
         valid_states: list[bool] = []
         sensor_values: list[tuple[str, float, State]] = []
         for entity_id in self._entity_ids:
@@ -392,20 +373,18 @@ class SensorGroup(GroupEntity, SensorEntity):
                 states.append(state.state)
                 try:
                     numeric_state = float(state.state)
-                    if (
-                        self._valid_units
-                        and (uom := state.attributes["unit_of_measurement"])
-                        in self._valid_units
-                        and self._can_convert is True
-                    ):
+                    uom = state.attributes.get("unit_of_measurement")
+
+                    # Convert the state to the native unit of measurement when we have valid units
+                    # and a correct device class
+                    if valid_units and uom in valid_units and self._can_convert is True:
                         numeric_state = UNIT_CONVERTERS[self.device_class].convert(
                             numeric_state, uom, self.native_unit_of_measurement
                         )
-                    if (
-                        self._valid_units
-                        and (uom := state.attributes["unit_of_measurement"])
-                        not in self._valid_units
-                    ):
+
+                    # If we have valid units and incoming is not part of it
+                    # we should skip this state
+                    if valid_units and uom not in valid_units:
                         raise HomeAssistantError("Not a valid unit")  # noqa: TRY301
 
                     sensor_values.append((entity_id, numeric_state, state))
@@ -665,19 +644,19 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         If device class is set and compatible unit of measurements.
         If device class is not set, use one unit of measurement.
+        Only calculate valid units if there are no valid units set.
         """
-        if (
-            device_class := self.device_class
-        ) in UNIT_CONVERTERS and self.native_unit_of_measurement:
+        # If we once have a set of valid units we should not recalculate it
+        if valid_units := self._valid_units:
+            return valid_units
+
+        native_uom = self.native_unit_of_measurement
+        if (device_class := self.device_class) in UNIT_CONVERTERS and native_uom:
             self._can_convert = True
             return UNIT_CONVERTERS[device_class].VALID_UNITS
-        if (
-            device_class
-            and (device_class) in DEVICE_CLASS_UNITS
-            and self.native_unit_of_measurement
-        ):
+        if device_class and (device_class) in DEVICE_CLASS_UNITS and native_uom:
             valid_uoms: set = DEVICE_CLASS_UNITS[device_class]
             return valid_uoms
-        if device_class is None and self.native_unit_of_measurement:
-            return {self.native_unit_of_measurement}
+        if device_class is None and native_uom:
+            return {native_uom}
         return set()
