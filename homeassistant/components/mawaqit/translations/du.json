@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "no_mosque": "Sorry, er is geen MAWAQIT moskee in uw buurt.",
+      "one_instance_allowed": "Eén MAWAQIT invoer is noodzakelijk. Als u uw moskee wilt herconfigureren, kunt u op \"Configureren\" klikken naast de bestaande invoer.",
+      "configuration_kept": "U hebt ervoor gekozen de bestaande configuratie te behouden."
+    },
+    "step": {
+      "user": {
+        "description": "Registreer op https://mawaqit.net/ en verbind hieronder. De dichtstbijzijnde moskee bij u thuis zal worden gekozen, maar u kunt dit later wijzigen in de add-onparameters.",
+        "data": {
+          "username": "E-mail",
+          "password": "Wachtwoord",
+          "server": "Server"
+        },
+        "title": "Instellen van MAWAQIT Gebedstijden"
+      },
+      "keep_or_reset": {
+        "title": "Er is al een andere instantie van MAWAQIT geconfigureerd",
+        "data": {
+          "choice": "U kunt ervoor kiezen om de bestaande configuratie te behouden of te resetten:",
+          "keep": "Behoud de bestaande configuratie",
+          "reset": "Reset om een nieuwe moskee te configureren"
+        }
+      },
+      "keyword_search": {
+        "title": "Zoek naar uw moskee",
+        "description": "Zoek naar een moskee door een trefwoord in te voeren:",
+        "data": {
+          "Keyword": "Zoeken"
+        }
+      },
+      "search_method": {
+        "title": "Kies de methode om uw moskee te vinden",
+        "data": {
+          "search_method_choice": "kies de zoekmethode:"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Er zijn meerdere moskeeën beschikbaar rondom u, selecteer er een:",
+          "uuid": "Moskee"
+        },
+        "title": "Uw favoriete moskee"
+      }
+    }
+  },
+  "error": {
+    "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+    "wrong_credential": "Verkeerde login of wachtwoord, probeer het opnieuw.",
+    "no_mosque_found_keyword": "Geen moskee gevonden met dit trefwoord."
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Verander uw favoriete moskee"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Zoek naar de dichtstbijzijnde moskeeën bij uw locatie",
+        "search_method_keyword": "Zoek een moskee op trefwoord"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "Behoud de bestaande configuratie",
+        "reset": "Resetten om een nieuwe moskee te configureren"
+      }
+    }
+  },
+  "title": "MAWAQIT"
+}
