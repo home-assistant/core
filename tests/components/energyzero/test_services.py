@@ -150,7 +150,7 @@ async def test_service_called_with_unloaded_entry(
 
     data = {"config_entry": mock_config_entry.entry_id, "incl_vat": True}
 
-    with pytest.raises(ServiceValidationError, "unloaded_config_entry"):
+    with pytest.raises(ServiceValidationError, match="unloaded_config_entry"):
         await hass.services.async_call(
             DOMAIN,
             service,
