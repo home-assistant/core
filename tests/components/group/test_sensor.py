@@ -948,7 +948,7 @@ async def test_sensor_different_attributes_ignore_non_numeric(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(VALUES[0]))
+    assert state.state == str(float(sum([VALUES[0], VALUES[1]])))
     assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("unit_of_measurement") == PERCENTAGE
@@ -965,15 +965,10 @@ async def test_sensor_different_attributes_ignore_non_numeric(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(VALUES[0]))
+    assert state.state == str(float(sum(VALUES)))
     assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("unit_of_measurement") is None
-
-    assert (
-        "Unable to use state. Only entities with correct unit of measurement is"
-        " supported"
-    ) in caplog.text
 
     hass.states.async_set(
         entity_ids[2],
@@ -987,7 +982,7 @@ async def test_sensor_different_attributes_ignore_non_numeric(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(VALUES[0]))
+    assert state.state == str(float(sum(VALUES)))
     assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get("device_class") is None
@@ -1006,7 +1001,7 @@ async def test_sensor_different_attributes_ignore_non_numeric(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == str(float(VALUES[0]))
+    assert state.state == str(float(sum(VALUES)))
     assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get("device_class") == SensorDeviceClass.HUMIDITY

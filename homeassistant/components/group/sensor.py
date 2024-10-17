@@ -36,13 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import (
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-    State,
-    callback,
-)
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
@@ -349,21 +343,23 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
 
-    def calculate_state_attributes(
-        self, event: Event[EventStateChangedData] | None = None
-    ) -> None:
+    def calculate_state_attributes(self, valid_state_entities: list[str]) -> None:
         """Calculate state attributes."""
-        self._attr_state_class = self._calculate_state_class(self._state_class)
-        self._attr_device_class = self._calculate_device_class(self._device_class)
+        self._attr_state_class = self._calculate_state_class(
+            self._state_class, valid_state_entities
+        )
+        self._attr_device_class = self._calculate_device_class(
+            self._device_class, valid_state_entities
+        )
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
-            self._native_unit_of_measurement
+            self._native_unit_of_measurement, valid_state_entities
         )
         self._valid_units = self._get_valid_units()
 
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
-        self.calculate_state_attributes()
+        self.calculate_state_attributes(self._get_state_of_entities())
         states: list[StateType] = []
         valid_units = self._valid_units
         valid_states: list[bool] = []
@@ -459,7 +455,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         return None
 
     def _calculate_state_class(
-        self, state_class: SensorStateClass | None
+        self,
+        state_class: SensorStateClass | None,
+        valid_state_entities: list[str],
     ) -> SensorStateClass | None:
         """Calculate state class.
 
@@ -470,8 +468,18 @@ class SensorGroup(GroupEntity, SensorEntity):
         """
         if state_class:
             return state_class
+
+        if not valid_state_entities:
+            return None
+
+        if not self._ignore_non_numeric and len(valid_state_entities) < len(
+            self._entity_ids
+        ):
+            # Only return state class if all states are valid when not ignoring non numeric
+            return None
+
         state_classes: list[SensorStateClass] = []
-        for entity_id in self._entity_ids:
+        for entity_id in valid_state_entities:
             try:
                 _state_class = get_capability(self.hass, entity_id, "state_class")
             except HomeAssistantError:
@@ -502,7 +510,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         return None
 
     def _calculate_device_class(
-        self, device_class: SensorDeviceClass | None
+        self,
+        device_class: SensorDeviceClass | None,
+        valid_state_entities: list[str],
     ) -> SensorDeviceClass | None:
         """Calculate device class.
 
@@ -513,8 +523,18 @@ class SensorGroup(GroupEntity, SensorEntity):
         """
         if device_class:
             return device_class
+
+        if not valid_state_entities:
+            return None
+
+        if not self._ignore_non_numeric and len(valid_state_entities) < len(
+            self._entity_ids
+        ):
+            # Only return device class if all states are valid when not ignoring non numeric
+            return None
+
         device_classes: list[SensorDeviceClass] = []
-        for entity_id in self._entity_ids:
+        for entity_id in valid_state_entities:
             try:
                 _device_class = get_device_class(self.hass, entity_id)
             except HomeAssistantError:
@@ -547,7 +567,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         return None
 
     def _calculate_unit_of_measurement(
-        self, unit_of_measurement: str | None
+        self,
+        unit_of_measurement: str | None,
+        valid_state_entities: list[str],
     ) -> str | None:
         """Calculate the unit of measurement.
 
@@ -558,8 +580,17 @@ class SensorGroup(GroupEntity, SensorEntity):
         if unit_of_measurement:
             return unit_of_measurement
 
+        if not valid_state_entities:
+            return None
+
+        if not self._ignore_non_numeric and len(valid_state_entities) < len(
+            self._entity_ids
+        ):
+            # Only return device class if all states are valid when not ignoring non numeric
+            return None
+
         unit_of_measurements: list[str] = []
-        for entity_id in self._entity_ids:
+        for entity_id in valid_state_entities:
             try:
                 _unit_of_measurement = get_unit_of_measurement(self.hass, entity_id)
             except HomeAssistantError:
@@ -647,7 +678,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         Only calculate valid units if there are no valid units set.
         """
         # If we once have a set of valid units we should not recalculate it
-        if valid_units := self._valid_units:
+        # when all states needs to be considered
+        if (valid_units := self._valid_units) and not self._ignore_non_numeric:
             return valid_units
 
         native_uom = self.native_unit_of_measurement
@@ -660,3 +692,23 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class is None and native_uom:
             return {native_uom}
         return set()
+
+    def _get_state_of_entities(
+        self,
+    ) -> list[str]:
+        """Return if states are valid."""
+        state_of_entities: dict[str, bool] = {}
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is not None:
+                try:
+                    float(state.state)
+                    state_of_entities[entity_id] = True
+                except ValueError:
+                    state_of_entities[entity_id] = False
+            else:
+                state_of_entities[entity_id] = False
+        return [
+            entity_id
+            for entity_id, state_valid in state_of_entities.items()
+            if state_valid is True
+        ]
