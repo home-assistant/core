@@ -626,6 +626,23 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalEnergyMeasurementCumulativeEnergyExported",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
+            measurement_to_ha=lambda x: x.energy / 1000000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
+        ),
+    ),    
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="SmokeCOAlarmContaminationState",
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
