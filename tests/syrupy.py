@@ -365,6 +365,7 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
     )
 
     if is_xdist_worker():
+        print("xdist worker")  # noqa: T201
         with open(
             "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
             "w",
@@ -383,27 +384,28 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
                 f,
                 indent=2,
             )
-        return exitstatus
 
-    worker_count = None
-    try:
-        with open(
-            "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
-            encoding="utf-8",
-        ) as f:
-            worker_count = f.read()
-        os.remove("/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt")
-    except FileNotFoundError:
-        pass
-
-    if worker_count:
-        for i in range(int(worker_count)):
+    else:
+        print("not xdist worker")  # noqa: T201
+        worker_count = None
+        try:
             with open(
-                f"/workspaces/home-assistant-core/xdist_gw{i}.txt",
+                "/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt",
                 encoding="utf-8",
             ) as f:
-                _merge_serialized_report(self.report, json.load(f))
-            os.remove(f"/workspaces/home-assistant-core/xdist_gw{i}.txt")
+                worker_count = f.read()
+            os.remove("/workspaces/home-assistant-core/PYTEST_XDIST_WORKER_COUNT.txt")
+        except FileNotFoundError:
+            pass
+
+        if worker_count:
+            for i in range(int(worker_count)):
+                with open(
+                    f"/workspaces/home-assistant-core/xdist_gw{i}.txt",
+                    encoding="utf-8",
+                ) as f:
+                    _merge_serialized_report(self.report, json.load(f))
+                os.remove(f"/workspaces/home-assistant-core/xdist_gw{i}.txt")
 
     if self.report.num_unused:
         if self.update_snapshots:
