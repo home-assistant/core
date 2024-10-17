@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from aiostreammagic import (
     RepeatMode as CambridgeRepeatMode,
@@ -12,6 +13,7 @@ from aiostreammagic import (
 )
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -23,12 +25,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import media_browser
+from .const import LOGGER
 from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
-    MediaPlayerEntityFeature.SELECT_SOURCE
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 PREAMP_FEATURES = (
@@ -285,3 +291,32 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         if repeat in {RepeatMode.ALL, RepeatMode.ONE}:
             repeat_mode = CambridgeRepeatMode.ALL
         await self.client.set_repeat(repeat_mode)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the media browsing helper."""
+        return await media_browser.async_browse_media(
+            self.hass, self.client, media_content_id, media_content_type
+        )
+
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media on the Cambridge Audio device."""
+
+        if media_type != "preset_item_id":
+            LOGGER.debug(
+                "Unsupported media type for Cambridge Audio device: %s", media_type
+            )
+            return
+        preset_id = int(media_id)
+        preset = None
+        for _preset in self.client.preset_list.presets:
+            if _preset.preset_id == preset_id:
+                preset = _preset
+        if not preset:
+            raise ValueError(f"Missing preset for media_id: {media_id}")
+        LOGGER.info(f"Playing preset: {preset}")
