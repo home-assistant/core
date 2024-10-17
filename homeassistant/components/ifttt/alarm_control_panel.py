@@ -198,7 +198,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         """Push the alarm state to the given value."""
         if value in ALLOWED_STATES:
             _LOGGER.debug("Pushed the alarm state to %s", value)
-            self._attr_alarm_state = value
+            self._attr_alarm_state = value  # type: ignore[assignment] # https://github.com/python/mypy/issues/14688
 
     def _check_code(self, code: str | None) -> bool:
         return self._code is None or self._code == code

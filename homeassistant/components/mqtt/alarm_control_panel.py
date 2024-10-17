@@ -187,6 +187,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
+        assert isinstance(payload, str)
         self._attr_alarm_state = AlarmControlPanelState(payload)
 
     @callback
