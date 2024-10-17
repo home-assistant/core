@@ -194,15 +194,6 @@ jobs:
             test_full_suite="true"
           fi
 
-          mariadb_groups="[]"
-          postgresql_groups="[]"
-          integrations_glob="{gardena_bluetooth}"
-          test_groups='["gardena_bluetooth"]'
-          tests='["gardena_bluetooth"]'
-          tests_glob="{gardena_bluetooth}"
-          test_group_count=1
-          test_full_suite="false"
-
           if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
           then
