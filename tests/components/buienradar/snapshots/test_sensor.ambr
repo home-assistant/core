@@ -1,0 +1,1278 @@
+# serializer version: 1
+# name: test_sensor_values
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Barometer value',
+      'icon': 'mdi:gauge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216barometerfc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensor_values.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Barometer',
+      'icon': 'mdi:gauge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216barometerfcname',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Unstable',
+  })
+# ---
+# name: test_sensor_values.10
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'pressure',
+      'friendly_name': 'Pressure',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1020.0',
+  })
+# ---
+# name: test_sensor_values.11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Visibility',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216visibility',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.6',
+  })
+# ---
+# name: test_sensor_values.12
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind gust',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windgust',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.4',
+  })
+# ---
+# name: test_sensor_values.13
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'precipitation_intensity',
+      'friendly_name': 'Precipitation intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216precipitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.14
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation_intensity',
+      'friendly_name': 'Precipitation forecast average',
+      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216precipitation_forecast_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.15
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Precipitation forecast total',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216precipitation_forecast_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.16
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain last 24h',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainlast24hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2',
+  })
+# ---
+# name: test_sensor_values.17
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain last hour',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainlasthour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.18
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'irradiance',
+      'friendly_name': 'Irradiance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216irradiance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '526',
+  })
+# ---
+# name: test_sensor_values.19
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature 1d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.5',
+  })
+# ---
+# name: test_sensor_values.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/cc.png',
+      'friendly_name': 'Condition',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensor_values.20
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature 2d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26.5',
+  })
+# ---
+# name: test_sensor_values.21
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature 3d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.5',
+  })
+# ---
+# name: test_sensor_values.22
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature 4d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.5',
+  })
+# ---
+# name: test_sensor_values.23
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature 5d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.5',
+  })
+# ---
+# name: test_sensor_values.24
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Minimum temperature 1d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216mintemp_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.0',
+  })
+# ---
+# name: test_sensor_values.25
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Minimum temperature 2d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216mintemp_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.0',
+  })
+# ---
+# name: test_sensor_values.26
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Minimum temperature 3d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216mintemp_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.0',
+  })
+# ---
+# name: test_sensor_values.27
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Minimum temperature 4d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216mintemp_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.0',
+  })
+# ---
+# name: test_sensor_values.28
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Minimum temperature 5d',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216mintemp_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.0',
+  })
+# ---
+# name: test_sensor_values.29
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain 1d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_sensor_values.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/cc.png',
+      'friendly_name': 'Condition code',
+      'options': list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216conditioncode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'c',
+  })
+# ---
+# name: test_sensor_values.30
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain 2d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_sensor_values.31
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain 3d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.5',
+  })
+# ---
+# name: test_sensor_values.32
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain 4d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5',
+  })
+# ---
+# name: test_sensor_values.33
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Rain 5d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensor_values.34
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Minimum rain 1d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216minrain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.35
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Minimum rain 2d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216minrain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.36
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Minimum rain 3d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216minrain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensor_values.37
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Minimum rain 4d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216minrain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.38
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Minimum rain 5d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216minrain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor_values.39
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Maximum rain 1d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216maxrain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
+  })
+# ---
+# name: test_sensor_values.4
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'temperature',
+      'friendly_name': 'Feel temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216feeltemperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.5',
+  })
+# ---
+# name: test_sensor_values.40
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Maximum rain 2d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216maxrain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.0',
+  })
+# ---
+# name: test_sensor_values.41
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Maximum rain 3d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216maxrain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.0',
+  })
+# ---
+# name: test_sensor_values.42
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Maximum rain 4d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216maxrain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_sensor_values.43
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Maximum rain 5d',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216maxrain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensor_values.44
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainchance 1d',
+      'icon': 'mdi:weather-pouring',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainchance_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensor_values.45
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainchance 2d',
+      'icon': 'mdi:weather-pouring',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainchance_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensor_values.46
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainchance 3d',
+      'icon': 'mdi:weather-pouring',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainchance_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensor_values.47
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainchance 4d',
+      'icon': 'mdi:weather-pouring',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainchance_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensor_values.48
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainchance 5d',
+      'icon': 'mdi:weather-pouring',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216rainchance_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensor_values.49
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sunchance 1d',
+      'icon': 'mdi:weather-partly-cloudy',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216sunchance_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_sensor_values.5
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'temperature',
+      'friendly_name': 'Ground temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216groundtemperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.8',
+  })
+# ---
+# name: test_sensor_values.50
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sunchance 2d',
+      'icon': 'mdi:weather-partly-cloudy',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216sunchance_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensor_values.51
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sunchance 3d',
+      'icon': 'mdi:weather-partly-cloudy',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216sunchance_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensor_values.52
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sunchance 4d',
+      'icon': 'mdi:weather-partly-cloudy',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216sunchance_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensor_values.53
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sunchance 5d',
+      'icon': 'mdi:weather-partly-cloudy',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216sunchance_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensor_values.54
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind force 1d',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensor_values.55
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind force 2d',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensor_values.56
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind force 3d',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_values.57
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind force 4d',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensor_values.58
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind force 5d',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_values.59
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed 1d',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.4',
+  })
+# ---
+# name: test_sensor_values.6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.4',
+  })
+# ---
+# name: test_sensor_values.60
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed 2d',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
+# name: test_sensor_values.61
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed 3d',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.4',
+  })
+# ---
+# name: test_sensor_values.62
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed 4d',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
+# name: test_sensor_values.63
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Wind speed 5d',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windspeed_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.4',
+  })
+# ---
+# name: test_sensor_values.64
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind direction azimuth 1d',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_sensor_values.65
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind direction azimuth 2d',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensor_values.66
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind direction azimuth 3d',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '225',
+  })
+# ---
+# name: test_sensor_values.67
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind direction azimuth 4d',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '270',
+  })
+# ---
+# name: test_sensor_values.68
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wind direction azimuth 5d',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_sensor_values.69
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      'friendly_name': 'Condition 1d',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensor_values.7
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Wind force',
+      'icon': 'mdi:weather-windy',
+      'unit_of_measurement': 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windforce',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensor_values.70
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      'friendly_name': 'Condition 2d',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensor_values.71
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/q.png',
+      'friendly_name': 'Condition 3d',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rainy',
+  })
+# ---
+# name: test_sensor_values.72
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      'friendly_name': 'Condition 4d',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rainy',
+  })
+# ---
+# name: test_sensor_values.73
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      'friendly_name': 'Condition 5d',
+      'options': list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216condition_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rainy',
+  })
+# ---
+# name: test_sensor_values.74
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'humidity',
+      'friendly_name': 'Humidity',
+      'icon': 'mdi:water-percent',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '76',
+  })
+# ---
+# name: test_sensor_values.75
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Station name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216stationname',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Eindhoven (6370)',
+  })
+# ---
+# name: test_sensor_values.76
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.4',
+  })
+# ---
+# name: test_sensor_values.8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Wind direction',
+      'icon': 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216winddirection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NO',
+  })
+# ---
+# name: test_sensor_values.9
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Sat Aug 31 12:10:00 2024',
+      'Stationname': 'Eindhoven (6370)',
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Wind direction azimuth',
+      'icon': 'mdi:compass-outline',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.buienradar_51_5288505_400216windazimuth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38',
+  })
+# ---
