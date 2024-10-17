@@ -417,7 +417,6 @@ async def async_handle_snapshot_service(
     """Handle snapshot services calls."""
     hass = image.hass
     filename: Template = service_call.data[ATTR_FILENAME]
-    filename.hass = hass
 
     snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: image.entity_id})
 
