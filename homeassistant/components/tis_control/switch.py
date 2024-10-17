@@ -83,7 +83,7 @@ class TISSwitch(SwitchEntity):
         """Subscribe to events."""
 
         @callback
-        async def handle_event(event: Event):
+        def handle_event(event: Event):
             """Handle the event."""
             # check if event is for this switch
             if event.event_type == str(self.device_id):
@@ -112,8 +112,8 @@ class TISSwitch(SwitchEntity):
                 elif event.data["feedback_type"] == "offline_device":
                     self._state = STATE_UNKNOWN
 
-            await self.async_update_ha_state(True)
-            # self.schedule_update_ha_state()
+            # await self.async_update_ha_state(True)
+            self.schedule_update_ha_state()
 
         self.listener = self.hass.bus.async_listen(MATCH_ALL, handle_event)
         _ = await self.api.protocol.sender.send_packet(self.update_packet)
