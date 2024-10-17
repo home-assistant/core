@@ -63,17 +63,15 @@ class OAuth2FlowHandler(
         credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         email = await self.hass.async_add_executor_job(_get_profile)
 
+        await self.async_set_unique_id(email)
         if self.source != SOURCE_REAUTH:
-            await self.async_set_unique_id(email)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title=email, data=data)
 
         reauth_entry = self._get_reauth_entry()
-        if reauth_entry.unique_id == email:
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
-
-        return self.async_abort(
+        self._abort_if_unique_id_mismatch(
             reason="wrong_account",
             description_placeholders={"email": cast(str, reauth_entry.unique_id)},
         )
+        return self.async_update_reload_and_abort(reauth_entry, data=data)
