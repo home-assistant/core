@@ -49,7 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -957,6 +957,46 @@ async def websocket_update_prefs(
         connection.send_result(msg["id"], entity_prefs)
 
 
+class _TemplateCameraEntity:
+    """Class to warn when the `entity_id` template variable is accessed.
+
+    Can be removed in HA Core 2025.6.
+    """
+
+    def __init__(self, camera: Camera, service: str) -> None:
+        """Initialize."""
+        self._camera = camera
+        self._entity_id = camera.entity_id
+        self._hass = camera.hass
+        self._service = service
+
+    def _report_issue(self) -> None:
+        """Create a repair issue."""
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            f"deprecated_filename_template_{self._entity_id}_{self._service}",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_filename_template",
+            translation_placeholders={
+                "entity_id": self._entity_id,
+                "service": f"{DOMAIN}.{self._service}",
+            },
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        """Forward to the camera entity."""
+        self._report_issue()
+        return getattr(self._camera, name)
+
+    def __str__(self) -> str:
+        """Forward to the camera entity."""
+        self._report_issue()
+        return str(self._camera)
+
+
 async def async_handle_snapshot_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
@@ -964,7 +1004,9 @@ async def async_handle_snapshot_service(
     hass = camera.hass
     filename: Template = service_call.data[ATTR_FILENAME]
 
-    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    snapshot_file = filename.async_render(
+        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
+    )
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
@@ -1040,7 +1082,9 @@ async def async_handle_record_service(
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     filename = service_call.data[CONF_FILENAME]
-    video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    video_path = filename.async_render(
+        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_RECORD)}
+    )
 
     await stream.async_record(
         video_path,
