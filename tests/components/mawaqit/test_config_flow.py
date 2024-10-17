@@ -4,7 +4,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.consts import NoMosqueAround
+from mawaqit.consts import NoMosqueAround, NoMosqueFound
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -477,6 +477,43 @@ async def test_async_step_keyword_search_with_keyword(
         )
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
         assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_no_mosque_found(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided and no mosque was found."""
+
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            side_effect=NoMosqueFound,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "mosque_test_keyword"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+        errors = result.get("errors")
+        assert errors is not None and "base" in errors
+        assert errors["base"] == "no_mosque_found_keyword"
 
 
 @pytest.mark.asyncio

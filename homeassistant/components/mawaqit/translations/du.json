@@ -46,7 +46,9 @@
     }
   },
   "error": {
-    "wrong_credential": "Verkeerde gebruikersnaam of wachtwoord, probeer opnieuw."
+    "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+    "wrong_credential": "Verkeerde login of wachtwoord, probeer het opnieuw.",
+    "no_mosque_found_keyword": "Geen moskee gevonden met dit trefwoord."
   },
   "options": {
     "step": {

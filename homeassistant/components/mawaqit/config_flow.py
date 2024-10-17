@@ -4,7 +4,7 @@ import logging
 import os
 
 from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.consts import NoMosqueAround
+from mawaqit.consts import NoMosqueAround, NoMosqueFound
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -153,6 +153,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
 
+            nearest_mosques = []
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                     lat, longi, token=mawaqit_token
@@ -201,10 +202,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.previous_keyword_search = keyword
 
                 mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
+                result_mosques = []
+                try:
+                    result_mosques = await mawaqit_wrapper.all_mosques_by_keyword(
+                        search_keyword=keyword, token=mawaqit_token
+                    )
+                except NoMosqueFound:
+                    self._errors["base"] = "no_mosque_found_keyword"
+                    return await self._show_search_keyword_form(user_input, None)
 
-                result_mosques = await mawaqit_wrapper.all_mosques_by_keyword(
-                    search_keyword=keyword, token=mawaqit_token
-                )
                 await write_all_mosques_NN_file(result_mosques, self.store)
 
                 (

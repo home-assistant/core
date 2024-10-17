@@ -49,8 +49,9 @@
       }
     },
     "error": {
-      "wrong_credential": "Mauvais login ou mot de passe, veuillez réessayer.",
-      "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer."
+      "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer plus tard.",
+      "wrong_credential": "Identifiant ou mot de passe incorrect, veuillez réessayer.",
+      "no_mosque_found_keyword": "Aucune mosquée trouvée avec ce mot-clé."
     },
     "abort": {
       "no_mosque": "Désolé, il n'y a pas de mosquée MAWAQIT dans votre quartier.",

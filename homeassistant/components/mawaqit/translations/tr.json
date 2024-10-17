@@ -46,7 +46,9 @@
     }
   },
   "error": {
-    "wrong_credential": "Hatalı kullanıcı adı veya şifre, lütfen tekrar deneyin."
+    "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
+    "wrong_credential": "Yanlış kullanıcı adı veya şifre, lütfen tekrar deneyin.",
+    "no_mosque_found_keyword": "Bu anahtar kelime ile cami bulunamadı."
   },
   "options": {
     "step": {
