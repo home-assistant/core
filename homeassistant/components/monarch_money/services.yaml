@@ -1,0 +1,7 @@
+# Services.yaml for Monarch Money
+
+# Service ID
+get_holdings:
+  target:
+    entity:
+      domain: sensor
