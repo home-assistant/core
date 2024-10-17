@@ -176,7 +176,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     def __setattr__(self, __name: str, __value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if settings '_attr_state' directly
+        Deprecation warning if setting '_attr_state' directly
         unless already reported.
         """
         if __name == "_attr_state":
@@ -211,7 +211,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 "Entity %s (%s) is setting state directly"
                 " which will stop working in HA Core 2025.11."
                 " Entities should implement the 'alarm_state' property and"
-                " return it's state using the AlarmControlPanelState enum, please %s",
+                " return its state using the AlarmControlPanelState enum, please %s",
                 self.entity_id,
                 type(self),
                 report_issue,
@@ -229,7 +229,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current alarm control panel entity state.
 
-        Integrations should overwrite this or use the 'attr_alarm_state'
+        Integrations should overwrite this or use the '_attr_alarm_state'
         attribute to set the alarm status using the 'AlarmControlPanelState' enum.
         """
         return self._attr_alarm_state
