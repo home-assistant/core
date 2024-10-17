@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components.onkyo.const import DOMAIN, OPTION_INPUT_SOURCES
 from homeassistant.components.onkyo.receiver import Receiver, ReceiverInfo
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -22,14 +21,20 @@ def create_receiver_info(id: int) -> ReceiverInfo:
 
 def create_empty_config_entry() -> MockConfigEntry:
     """Create an empty config entry for use in unit tests."""
-    config = {CONF_HOST: ""}
-    options = {OPTION_INPUT_SOURCES: {}}
+    config = {
+        CONF_HOST: "",
+        "volume_resolution": 80,
+    }
+    options = {
+        "input_sources": {"12": "tv"},
+        "max_volume": 100,
+    }
 
     return MockConfigEntry(
         data=config,
         options=options,
         title="Unit test Onkyo",
-        domain=DOMAIN,
+        domain="onkyo",
         unique_id="onkyo_unique_id",
     )
 

@@ -14,9 +14,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from . import create_receiver_info
+from . import create_empty_config_entry, create_receiver_info, setup_integration
 
-from tests.common import Mock
+from tests.common import Mock, MockConfigEntry
 
 
 async def test_user_initial_menu(hass: HomeAssistant) -> None:
@@ -435,61 +435,29 @@ async def test_import_success(
         }
 
 
-# @pytest.mark.parametrize(
-#     ("user_input", "error"),
-#     [
-#         (
-#             {OPTION_SOURCES: ["list"]},
-#             "invalid_sources",
-#         ),
-#     ],
-# )
-# async def test_options_flow_failures(
-#     hass: HomeAssistant,
-#     config_entry: MockConfigEntry,
-#     user_input: dict[str, Any],
-#     error: str,
-# ) -> None:
-#     """Test load and unload entry."""
-#     await setup_integration(hass, config_entry)
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test options flow."""
 
-#     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-#     await hass.async_block_till_done()
+    receiver_info = create_receiver_info(1)
+    config_entry = create_empty_config_entry()
+    await setup_integration(hass, config_entry, receiver_info)
 
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-#     result = await hass.config_entries.options.async_configure(
-#         result["flow_id"],
-#         user_input={**user_input},
-#     )
-#     await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "max_volume": 42,
+            "TV": "television",
+        },
+    )
+    await hass.async_block_till_done()
 
-#     assert result["type"] is FlowResultType.FORM
-#     assert result["step_id"] == "init"
-#     assert result["errors"]["base"] == error
-
-
-# async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-#     """Test options flow."""
-#     await setup_integration(hass, config_entry)
-
-#     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     result = await hass.config_entries.options.async_configure(
-#         result["flow_id"],
-#         user_input={
-#             "receiver_max_volume": 200,
-#             "maximum_volume": 42,
-#             "sources": {},
-#         },
-#     )
-#     await hass.async_block_till_done()
-
-#     assert result["type"] is FlowResultType.CREATE_ENTRY
-#     assert result["data"] == {
-#         "receiver_max_volume": 200,
-#         "maximum_volume": 42,
-#         "sources": {},
-#     }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "max_volume": 42.0,
+        "input_sources": {
+            "12": "television",
+        },
+    }
