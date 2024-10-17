@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
 from .coordinator import WeatherUpdateCoordinator
 from .repairs import async_create_issue, async_delete_issue
+from .services import async_setup_services
 from .utils import build_data_and_options
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +66,8 @@ async def async_setup_entry(
     entry.runtime_data = OpenweathermapData(name, mode, weather_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await async_setup_services(hass, weather_coordinator)
 
     return True
 

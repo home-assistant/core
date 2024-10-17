@@ -17,6 +17,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,6 +32,7 @@ from .const import (
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_MINUTELY_FORECAST,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -94,6 +96,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             ATTR_API_CURRENT: current_weather,
+            ATTR_API_MINUTELY_FORECAST: (
+                self._get_minutely_weather_data(weather_report.minutely_forecast)
+                if weather_report.minutely_forecast is not None
+                else {}
+            ),
             ATTR_API_HOURLY_FORECAST: [
                 self._get_hourly_forecast_weather_data(item)
                 for item in weather_report.hourly_forecast
@@ -103,6 +110,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 for item in weather_report.daily_forecast
             ],
         }
+
+    def _get_minutely_weather_data(self, minutely_forecast):
+        forecasts = [
+            {"datetime": item.date_time, "precipitation": round(item.precipitation, 2)}
+            for item in minutely_forecast
+        ]
+
+        return {f"{Platform.WEATHER}.{DOMAIN}": {"forecast": forecasts}}
 
     def _get_current_weather_data(self, current_weather: CurrentWeather):
         return {
@@ -192,12 +207,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_precipitation_value(precipitation):
         """Get precipitation value from weather data."""
-        if "all" in precipitation:
-            return round(precipitation["all"], 2)
-        if "3h" in precipitation:
-            return round(precipitation["3h"], 2)
-        if "1h" in precipitation:
-            return round(precipitation["1h"], 2)
+        if precipitation is not None:
+            if "all" in precipitation:
+                return round(precipitation["all"], 2)
+            if "3h" in precipitation:
+                return round(precipitation["3h"], 2)
+            if "1h" in precipitation:
+                return round(precipitation["1h"], 2)
         return 0
 
     def _get_condition(self, weather_code, timestamp=None):
