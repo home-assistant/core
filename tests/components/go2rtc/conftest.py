@@ -10,6 +10,8 @@ from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
 from homeassistant.components.go2rtc.server import Server
 from homeassistant.const import CONF_URL
 
+from . import HomeAssistant, setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -24,8 +26,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_client() -> Generator[AsyncMock]:
-    """Mock a go2rtc client."""
+def rest_client() -> Generator[AsyncMock]:
+    """Mock a go2rtc rest client."""
     with (
         patch(
             "homeassistant.components.go2rtc.Go2RtcRestClient",
@@ -42,7 +44,7 @@ def mock_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_server() -> Generator[AsyncMock]:
+def server() -> Generator[AsyncMock]:
     """Mock a go2rtc server."""
     with patch(
         "homeassistant.components.go2rtc.Server", spec_set=Server
@@ -51,10 +53,30 @@ def mock_server() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
         data={CONF_URL: "http://localhost:1984/", CONF_BINARY: "/usr/bin/go2rtc"},
     )
+
+
+@pytest.fixture
+def ws_client() -> Generator[Mock]:
+    """Mock a go2rtc websocket client."""
+    with patch(
+        "homeassistant.components.go2rtc.Go2RtcWsClient", autospec=True
+    ) as ws_client_mock:
+        yield ws_client_mock.return_value
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    rest_client: AsyncMock,
+    server: Mock,
+) -> None:
+    """Initialize the go2rtc integration."""
+    await setup_integration(hass, config_entry)

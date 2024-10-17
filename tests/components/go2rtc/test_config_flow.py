@@ -13,13 +13,13 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
+@pytest.mark.usefixtures("rest_client", "mock_setup_entry")
 async def test_single_instance_allowed(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that flow will abort if already configured."""
-    mock_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -57,7 +57,7 @@ async def test_docker_with_binary(
         }
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
+@pytest.mark.usefixtures("mock_setup_entry", "rest_client")
 @pytest.mark.parametrize(
     ("is_docker_env", "shutil_which"),
     [
@@ -105,14 +105,12 @@ async def test_config_flow_url(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
-    mock_client: Mock,
+    rest_client: Mock,
 ) -> None:
     """Test flow errors."""
-    with (
-        patch(
-            "homeassistant.components.go2rtc.config_flow.is_docker_env",
-            return_value=False,
-        ),
+    with patch(
+        "homeassistant.components.go2rtc.config_flow.is_docker_env",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -136,7 +134,7 @@ async def test_flow_errors(
         assert result["errors"] == {"url": "invalid_url"}
 
         url = "http://go2rtc.local:1984/"
-        mock_client.streams.list.side_effect = Exception
+        rest_client.streams.list.side_effect = Exception
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: url},
@@ -144,7 +142,7 @@ async def test_flow_errors(
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"url": "cannot_connect"}
 
-        mock_client.streams.list.side_effect = None
+        rest_client.streams.list.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: url},

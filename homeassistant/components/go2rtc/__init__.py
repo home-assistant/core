@@ -126,6 +126,7 @@ class WebRTCProvider(CameraWebRTCProvider):
                     value = WebRTCError("go2rtc_webrtc_offer_failed", message.error)
                 case _:
                     _LOGGER.warning("Unknown message %s", message)
+                    return
 
             send_message(value)
 
@@ -140,7 +141,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         if ws_client := self._sessions.get(session_id):
             await ws_client.send(WebRTCCandidate(candidate))
         else:
-            _LOGGER.debug("Unknown session %s", session_id)
+            _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
 
     @callback
     def async_close_session(self, session_id: str) -> None:
