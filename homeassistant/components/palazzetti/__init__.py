@@ -7,9 +7,8 @@ from pypalazzetti.exceptions import CommunicationError, ValidationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -23,9 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PalazzettiConfigEntry) -
         await coordinator.client.connect()
         await coordinator.client.update_state()
     except (CommunicationError, ValidationError) as err:
-        raise ConfigEntryError(
-            err, translation_domain=DOMAIN, translation_key="invalid_host"
-        ) from err
+        raise ConfigEntryNotReady from err
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
