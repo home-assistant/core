@@ -67,7 +67,7 @@ async def test_light(
     ("entity_id", "status", "service", "service_data", "state", "appliance"),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -79,7 +79,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -92,7 +92,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
                 COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
@@ -103,7 +103,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": None,
@@ -116,7 +116,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -129,7 +129,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
                 BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
@@ -140,7 +140,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
@@ -218,7 +218,7 @@ async def test_light_functionality(
     ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": False,
@@ -231,7 +231,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -245,7 +245,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
             },
@@ -256,7 +256,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -270,7 +270,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,

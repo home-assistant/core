@@ -103,8 +103,6 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _entry: ConfigEntry
-
     def __init__(self) -> None:
         """Init Config Flow."""
         self._config: dict[str, Any] = {}
@@ -144,9 +142,9 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._entry = self._get_reconfigure_entry()
         return self.async_show_form(
-            step_id="user", data_schema=get_user_step_schema(self._entry.data.copy())
+            step_id="user",
+            data_schema=get_user_step_schema(self._get_reconfigure_entry().data),
         )
 
     async def async_step_origin_menu(self, _: None = None) -> ConfigFlowResult:
@@ -232,10 +230,9 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config.pop(CONF_DESTINATION_ENTITY_ID, None)
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_reload_and_abort(
-                    self._entry,
+                    self._get_reconfigure_entry(),
                     title=self._config[CONF_NAME],
                     data=self._config,
-                    reason="reconfigure_successful",
                 )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
@@ -277,7 +274,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config.pop(CONF_DESTINATION_LONGITUDE, None)
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_reload_and_abort(
-                    self._entry, data=self._config, reason="reconfigure_successful"
+                    self._get_reconfigure_entry(), data=self._config
                 )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
