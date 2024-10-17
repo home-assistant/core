@@ -69,6 +69,8 @@ from .const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -162,6 +164,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_MODE_REGISTER in config:
             mode_config = config[CONF_HVAC_MODE_REGISTER]
             self._hvac_mode_register = mode_config[CONF_ADDRESS]
+            self._hvac_on_value = config[CONF_HVAC_ON_VALUE]
+            self._hvac_off_value = config[CONF_HVAC_OFF_VALUE]
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
@@ -267,19 +271,25 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
-            # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
+            # Turn HVAC Off by writing self._hvac_off_value to the On/Off register, or self._hvac_on_value otherwise.
             if self._hvac_onoff_write_registers:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    [0 if hvac_mode == HVACMode.OFF else 1],
+                    [
+                        self._hvac_off_value
+                        if hvac_mode == HVACMode.OFF
+                        else self._hvac_on_value
+                    ],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    0 if hvac_mode == HVACMode.OFF else 1,
+                    self._hvac_off_value
+                    if hvac_mode == HVACMode.OFF
+                    else self._hvac_on_value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
@@ -477,7 +487,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             onoff = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
             )
-            if onoff == 0:
+            if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
 
         self.async_write_ha_state()
