@@ -155,7 +155,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     context: _FlowContextT
     data_schema: vol.Schema | None
     data: Mapping[str, Any]
-    description_placeholders: Mapping[str, str | None] | None
+    description_placeholders: Mapping[str, str] | None
     description: str | None
     errors: dict[str, str] | None
     extra: str
@@ -705,7 +705,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
