@@ -51,6 +51,13 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             off_key="off",
             entity_category=EntityCategory.CONFIG,
         ),
+        ThinQSwitchEntityDescription(
+            key=ThinQProperty.WARM_MODE,
+            translation_key=ThinQProperty.WARM_MODE,
+            on_key="warm_on",
+            off_key="warm_off",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceType.AIR_PURIFIER: (
         ThinQSwitchEntityDescription(
