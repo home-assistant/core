@@ -18,7 +18,6 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +38,7 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
     LitterBoxStatus.READY: STATE_DOCKED,
     LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-    LitterBoxStatus.OFF: STATE_OFF,
+    LitterBoxStatus.OFF: STATE_DOCKED,
 }
 
 LITTER_BOX_ENTITY = StateVacuumEntityDescription(

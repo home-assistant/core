@@ -176,10 +176,10 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.6
+aioairzone-cloud==0.6.7
 
 # homeassistant.components.airzone
-aioairzone==0.9.4
+aioairzone==0.9.5
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -380,7 +380,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.5.0
+aiostreammagic==2.7.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -945,7 +945,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.5
+gcal-sync==6.1.6
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -973,7 +973,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.4
 
 # homeassistant.components.gios
-gios==4.0.0
+gios==5.0.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1547,7 +1547,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.3
+opower==0.8.4
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1783,7 +1783,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.3
+pyblu==1.0.4
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1834,7 +1834,7 @@ pydanfossair==0.1.0
 pydeako==0.4.0
 
 # homeassistant.components.deconz
-pydeconz==116
+pydeconz==118
 
 # homeassistant.components.delijn
 pydelijn==1.1.0
@@ -1966,7 +1966,7 @@ pyintesishome==1.8.0
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.16.0
+pyipp==0.17.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -2682,7 +2682,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.1
+solarlog_cli==0.3.2
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -2700,7 +2700,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotipy==2.23.0
+spotifyaio==0.6.0
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2887,7 +2887,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.22
+universal-silabs-flasher==0.0.23
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -2957,6 +2957,9 @@ waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.0.6
+
+# homeassistant.components.cisco_webex_teams
+webexpythonsdk==2.0.1
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -3050,7 +3053,7 @@ zeroconf==0.135.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.34
+zha==0.0.35
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12

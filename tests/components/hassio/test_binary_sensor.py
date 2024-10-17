@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -177,6 +179,9 @@ def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed, store_info) -
     )
 
 
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
 @pytest.mark.parametrize(
     ("entity_id", "expected", "addon_state"),
     [

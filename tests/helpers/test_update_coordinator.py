@@ -551,6 +551,9 @@ async def test_async_config_entry_first_refresh_failure(
     a decreasing level of logging once the first message is logged.
     """
     entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
@@ -586,6 +589,9 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     a decreasing level of logging once the first message is logged.
     """
     entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
@@ -600,12 +606,55 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:
     """Test first refresh successfully."""
     entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     crd.setup_method = AsyncMock()
     await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is True
     crd.setup_method.assert_called_once()
+
+
+async def test_async_config_entry_first_refresh_invalid_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test first refresh fails due to invalid state."""
+    entry = MockConfigEntry()
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    crd.setup_method = AsyncMock()
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that uses `async_config_entry_first_refresh`, which "
+        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
+        "but it is in state ConfigEntryState.NOT_LOADED. This will stop working "
+        "in Home Assistant 2025.11. Please report this issue.",
+    ):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is True
+    crd.setup_method.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_config_entry_first_refresh_invalid_state_in_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test first refresh successfully, despite wrong state."""
+    entry = MockConfigEntry()
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    crd.setup_method = AsyncMock()
+
+    await crd.async_config_entry_first_refresh()
+    assert crd.last_update_success is True
+    crd.setup_method.assert_called()
+    assert (
+        "Detected that integration 'hue' uses `async_config_entry_first_refresh`, which "
+        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
+        "but it is in state ConfigEntryState.NOT_LOADED, This will stop working "
+        "in Home Assistant 2025.11"
+    ) in caplog.text
 
 
 async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) -> None:

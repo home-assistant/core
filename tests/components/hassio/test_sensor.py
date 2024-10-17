@@ -21,6 +21,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -204,6 +206,9 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
 
 
 @pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
     ("entity_id", "expected"),
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
@@ -261,6 +266,9 @@ async def test_sensor(
     assert state.state == expected
 
 
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
 @pytest.mark.parametrize(
     ("entity_id", "expected"),
     [

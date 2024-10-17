@@ -401,18 +401,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        entry_data = self._get_reconfigure_entry().data
-        self.host = entry_data[CONF_HOST]
-        self.port = entry_data.get(CONF_PORT, DEFAULT_HTTP_PORT)
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        self.host = reconfigure_entry.data[CONF_HOST]
+        self.port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -433,7 +425,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
