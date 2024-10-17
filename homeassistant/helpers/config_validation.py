@@ -1390,6 +1390,9 @@ def _raise_on_templated_service(
             raise ValueError(
                 f"Template in service data is not allowed! {domain}.{_service}:{key}"
             )
+        if isinstance(val, (vol.All, vol.Any)):
+            for subval in val.validators:
+                raise_on_templated_service(domain, _service, subval)
 
 
 def raise_on_templated_service(
@@ -1406,6 +1409,10 @@ def raise_on_templated_service(
             raise_on_templated_service(domain, _service, val)
     if isinstance(schema, (vol.Schema)):
         raise_on_templated_service(domain, _service, schema.schema)
+    if schema in (dynamic_template, template, template_complex):
+        raise ValueError(
+            f"Template in service data is not allowed! {domain}.{_service}"
+        )
 
 
 def make_entity_service_schema(
