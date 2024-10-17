@@ -94,7 +94,7 @@ def config_entry_data(
             {"config_entry": "incorrect entry"},
             {"incl_vat": True},
             ServiceValidationError,
-            "Invalid config entry.+",
+            "invalid_config_entry",
         ),
         (
             {"config_entry": True},
@@ -150,9 +150,7 @@ async def test_service_called_with_unloaded_entry(
 
     data = {"config_entry": mock_config_entry.entry_id, "incl_vat": True}
 
-    with pytest.raises(
-        ServiceValidationError, match=f"{mock_config_entry.title} is not loaded"
-    ):
+    with pytest.raises(ServiceValidationError, "unloaded_config_entry"):
         await hass.services.async_call(
             DOMAIN,
             service,
