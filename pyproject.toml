@@ -73,7 +73,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.15.3",
+    "yarl==1.15.4",
 ]
 
 [project.urls]
