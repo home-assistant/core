@@ -41,8 +41,6 @@ async def async_setup_entry(
         entities.append(
             PalazzettiClimateEntity(
                 coordinator=coordinator,
-                name=entry.data[CONF_NAME],
-                unique_id=entry.data[CONF_MAC],
             )
         )
         async_add_entities(entities)
@@ -62,21 +60,19 @@ class PalazzettiClimateEntity(
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
-    def __init__(
-        self, *, coordinator: PalazzettiDataUpdateCoordinator, name: str, unique_id: str
-    ) -> None:
+    def __init__(self, *, coordinator: PalazzettiDataUpdateCoordinator) -> None:
         """Initialize Palazzetti climate."""
         super().__init__(coordinator=coordinator)
         client = coordinator.client
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = coordinator.config_entry.data[CONF_MAC]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=name,
+            identifiers={(DOMAIN, coordinator.config_entry.data[CONF_MAC])},
+            name=coordinator.config_entry.data[CONF_NAME],
             manufacturer=PALAZZETTI,
             sw_version=client.sw_version,
             hw_version=client.hw_version,
         )
-        self._attr_name = name
+        self._attr_name = coordinator.config_entry.data[CONF_NAME]
         self._attr_fan_modes = list(
             str(range(client.fan_speed_min, client.fan_speed_max + 1))
         )
