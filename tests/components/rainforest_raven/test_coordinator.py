@@ -5,7 +5,6 @@ import functools
 from unittest.mock import AsyncMock, patch
 
 from aioraven.device import RAVEnConnectionError
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.rainforest_raven.coordinator import RAVEnDataCoordinator
@@ -34,7 +33,7 @@ async def test_coordinator_device_info(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_cache_device(
-    hass: HomeAssistant, mock_device: AsyncMock, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test that the device isn't re-opened for subsequent refreshes."""
     entry = create_mock_entry()
@@ -65,7 +64,7 @@ async def test_coordinator_device_error_setup(
 
 
 async def test_coordinator_device_error_update(
-    hass: HomeAssistant, mock_device: AsyncMock, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test handling of a device error during an update."""
     entry = create_mock_entry()
