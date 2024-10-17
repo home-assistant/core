@@ -1,8 +1,8 @@
 """Test Home Assistant secret substitution in YAML files."""
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -145,7 +145,7 @@ def test_secrets_logger_removed(
     filepaths: dict[str, Path],
     default_secrets: YamlFile,
 ) -> None:
-    """Ensure logger: debug was removed."""
+    """Ensure logger: debug gets removed from secrets file once logger is configured."""
     config_file = YamlFile(
         path=filepaths["config"] / YAML_CONFIG_FILE,
         contents="api_password: !secret logger",
@@ -154,17 +154,22 @@ def test_secrets_logger_removed(
         load_config_file(config_file.path, [config_file, default_secrets])
 
 
-@patch("homeassistant.util.yaml.loader._LOGGER.error")
-def test_bad_logger_value(mock_error: MagicMock, filepaths: dict[str, Path]) -> None:
-    """Ensure logger: debug was removed."""
+def test_bad_logger_value(
+    caplog: pytest.LogCaptureFixture, filepaths: dict[str, Path]
+) -> None:
+    """Ensure only logger: debug is allowed in secret file."""
     config_file = YamlFile(
         path=filepaths["config"] / YAML_CONFIG_FILE, contents="api_password: !secret pw"
     )
     secrets_file = YamlFile(
         path=filepaths["config"] / yaml.SECRET_YAML, contents="logger: info\npw: abc"
     )
-    load_config_file(config_file.path, [config_file, secrets_file])
-    assert mock_error.call_count == 1, "Expected an error about logger: value"
+    with caplog.at_level(logging.ERROR):
+        load_config_file(config_file.path, [config_file, secrets_file])
+        assert (
+            "Error in secrets.yaml: 'logger: debug' expected, but 'logger: info' found"
+            in caplog.messages
+        )
 
 
 def test_secrets_are_not_dict(
