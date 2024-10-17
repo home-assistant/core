@@ -86,7 +86,11 @@ async def test_if_state(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    # "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": primary_sensor.entity_id,
+                    },
                     "condition": [
                         {
                             "condition": "device",
