@@ -2273,6 +2273,9 @@ pysqueezebox==0.9.3
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
+# homeassistant.components.hwam
+pystove==0.2a1
+
 # homeassistant.components.suez_water
 pysuez==0.2.0
 
