@@ -2644,6 +2644,7 @@ async def test_full_config(hass: HomeAssistant, mock_client: mock.MagicMock) -> 
             "default_metric": "m",
             "override_metric": "m",
             "requires_auth": False,
+            "include_extra_labels": False,
             "component_config": {"fake.test": {"override_metric": "km"}},
             "component_config_glob": {"fake.time_*": {"override_metric": "h"}},
             "component_config_domain": {"climate": {"override_metric": "°C"}},
