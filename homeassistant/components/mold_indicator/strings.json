@@ -8,6 +8,7 @@
     },
     "step": {
       "user": {
+        "title": "Create Mold Indicator",  
         "description": "Add Mold indicator helper",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -43,6 +44,11 @@
           "calibration_factor": "[%key:component::mold_indicator::config::step::user::data_description::calibration_factor%]"
         }
       }
+    }
+  },
+  "component": {
+    "mold_indicator": {
+      "title": "Mold Indicator" 
     }
   }
 }
