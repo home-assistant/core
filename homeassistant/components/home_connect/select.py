@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from .api import ConfigEntryAuth, HomeConnectDevice
-from .const import APPLIANCES_WITH_PROGRAMS, ATTR_VALUE, BSH_ACTIVE_PROGRAM, DOMAIN
+from .const import APPLIANCES_WITH_PROGRAMS, ATTR_VALUE, BSH_SELECTED_PROGRAM, DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         super().__init__(
             device,
             SelectEntityDescription(
-                key="program",
+                key=BSH_SELECTED_PROGRAM,
                 translation_key="program",
             ),
         )
@@ -62,9 +62,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     async def async_update(self) -> None:
         """Update the program selection status."""
         self._attr_current_option = self.format_program(
-            self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {}).get(
-                ATTR_VALUE, None
-            )
+            self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE, None)
         )
         _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 
@@ -74,7 +72,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         _LOGGER.debug("Tried to select program: %s", bsh_key)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.start_program, bsh_key
+                self.device.appliance.select_program, bsh_key
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to select program %s: %s", bsh_key, err)

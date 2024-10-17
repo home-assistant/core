@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock
 from homeconnect.api import HomeConnectError
 import pytest
 
-from homeassistant.components.home_connect.const import BSH_ACTIVE_PROGRAM
+from homeassistant.components.home_connect.const import BSH_SELECTED_PROGRAM
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
@@ -53,7 +53,7 @@ async def test_select(
     [
         (
             "select.washer_program",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
+            {BSH_SELECTED_PROGRAM: {"value": PROGRAM}},
             SERVICE_SELECT_OPTION,
             "eco50",
         ),
@@ -96,10 +96,10 @@ async def test_select_functionality(
     [
         (
             "select.washer_program",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
+            {BSH_SELECTED_PROGRAM: {"value": PROGRAM}},
             SERVICE_SELECT_OPTION,
             "eco50",
-            "start_program",
+            "select_program",
         )
     ],
 )
