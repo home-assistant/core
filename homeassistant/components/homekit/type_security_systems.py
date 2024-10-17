@@ -153,6 +153,9 @@ class SecuritySystem(HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state = None
+        if new_state and new_state.state == "None":
+            # Bail out early for no state
+            return
         if new_state and new_state.state is not None:
             hass_state = AlarmControlPanelState(new_state.state)
         if (
