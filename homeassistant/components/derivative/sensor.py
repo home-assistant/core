@@ -161,7 +161,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._attr_native_value: float | int | Decimal = 0
+        self._attr_native_value = round(Decimal(0), round_digits)
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -272,11 +272,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = Decimal(0)
+                derivative = Decimal(0.00)
                 for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
-
             self._attr_native_value = round(derivative, self._round_digits)
             self.async_write_ha_state()
 
