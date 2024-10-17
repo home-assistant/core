@@ -16,7 +16,6 @@ type PalazzettiConfigEntry = ConfigEntry[PalazzettiDataUpdateCoordinator]
 class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Palazzetti data from a Palazzetti hub."""
 
-    config_entry: PalazzettiConfigEntry
     client: PalazzettiClient
 
     def __init__(
@@ -28,8 +27,8 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
-        self.config_entry = config_entry
         self.client = PalazzettiClient(config_entry.data[CONF_HOST])
 
     async def _async_update_data(self) -> None:
