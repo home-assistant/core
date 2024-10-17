@@ -77,7 +77,14 @@
       "climate_air_conditioner": {
         "state_attributes": {
           "fan_mode": {
-            "default": "mdi:circle-medium"
+            "state": {
+              "slow": "mdi:circle-medium",
+              "low": "mdi:circle-medium",
+              "mid": "mdi:circle-medium",
+              "high": "mdi:circle-medium",
+              "power": "mdi:circle-medium",
+              "auto": "mdi:circle-medium"
+            }
           }
         }
       }
