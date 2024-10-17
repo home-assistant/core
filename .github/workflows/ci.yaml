@@ -145,7 +145,7 @@ jobs:
           skip_coverage=""
           integration_changes=${{ steps.integrations.outputs.changes }}
 
-          force_single_integration=""
+          force_single_integration="gardena_bluetooth"
           if [[ "${force_single_integration}" != "" ]];
           then
             integration_changes="[\"${force_single_integration}\"]"
