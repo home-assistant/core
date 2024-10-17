@@ -164,7 +164,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.6
+aioairzone-cloud==0.6.7
 
 # homeassistant.components.airzone
 aioairzone==0.9.5
@@ -362,7 +362,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.5.0
+aiostreammagic==2.7.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -1451,7 +1451,7 @@ pybalboa==1.0.2
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.3
+pyblu==1.0.4
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1709,7 +1709,7 @@ pyopnsense==0.4.0
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.1
+pyotgw==2.2.2
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2146,7 +2146,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotipy==2.23.0
+spotifyaio==0.6.0
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2288,7 +2288,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.22
+universal-silabs-flasher==0.0.23
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -2430,7 +2430,7 @@ zeroconf==0.135.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.34
+zha==0.0.35
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.58.1
