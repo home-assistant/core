@@ -1247,7 +1247,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library
     app_config = copy.deepcopy(ha_zha_data.yaml_config.get(CONF_ZIGPY, {}))
-    database = app_config.get(
+    database = ha_zha_data.yaml_config.get(
         CONF_DATABASE,
         hass.config.path(DEFAULT_DATABASE_NAME),
     )
