@@ -1380,6 +1380,14 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
 
 
+def _raise_on_templated_service(schema: VolDictType | None) -> None:
+    if not schema:
+        return
+    for key, val in schema.items():
+        if val in (dynamic_template, template, template_complex):
+            raise ValueError(f"Template in service data is not allowed! {key}")
+
+
 def make_entity_service_schema(
     schema: dict | None, *, extra: int = vol.PREVENT_EXTRA
 ) -> VolSchemaType:
@@ -1389,6 +1397,7 @@ def make_entity_service_schema(
         # the base schema and avoid compiling a new schema which is the case
         # for ~50% of services.
         return BASE_ENTITY_SCHEMA
+    _raise_on_templated_service(schema)
     return _make_entity_service_schema(schema or {}, extra)
 
 
