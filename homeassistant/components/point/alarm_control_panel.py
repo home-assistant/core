@@ -9,13 +9,9 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 EVENT_MAP = {
-    "off": STATE_ALARM_DISARMED,
-    "alarm_silenced": STATE_ALARM_DISARMED,
-    "alarm_grace_period_expired": STATE_ALARM_TRIGGERED,
+    "off": AlarmControlPanelState.DISARMED,
+    "alarm_silenced": AlarmControlPanelState.DISARMED,
+    "alarm_grace_period_expired": AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -103,9 +99,11 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return state of the device."""
-        return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
+        return EVENT_MAP.get(
+            self._home["alarm_status"], AlarmControlPanelState.ARMED_AWAY
+        )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

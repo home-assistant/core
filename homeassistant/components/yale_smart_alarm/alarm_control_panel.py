@@ -13,12 +13,12 @@ from yalesmartalarmclient.const import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import YaleConfigEntry
 from .const import DOMAIN, STATE_MAP, YALE_ALL_ERRORS
@@ -106,6 +106,6 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         return super().available
 
     @property
-    def state(self) -> StateType:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         return STATE_MAP.get(self.coordinator.data["alarm"])
