@@ -409,6 +409,19 @@ def websocket_get_run(
     )
 
 
+def _get_supported_languages(
+    language_tags: set[str], pipeline_languages: set[str] | None
+) -> set[str]:
+    """Return the set of supported languages after processing language tags."""
+    languages = set()
+    for language_tag in language_tags:
+        dialect = language_util.Dialect.parse(language_tag)
+        languages.add(dialect.language)
+    if pipeline_languages is not None:
+        return language_util.intersect(pipeline_languages, languages)
+    return languages
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_pipeline/language/list",
@@ -431,31 +444,17 @@ def websocket_list_languages(
     pipeline_languages: set[str] | None = None
 
     if conv_language_tags and conv_language_tags != MATCH_ALL:
-        languages = set()
-        for language_tag in conv_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(conv_language_tags, None)
 
     if stt_language_tags:
-        languages = set()
-        for language_tag in stt_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(
+            stt_language_tags, pipeline_languages
+        )
 
     if tts_language_tags:
-        languages = set()
-        for language_tag in tts_language_tags:
-            dialect = language_util.Dialect.parse(language_tag)
-            languages.add(dialect.language)
-        if pipeline_languages is not None:
-            pipeline_languages = language_util.intersect(pipeline_languages, languages)
-        else:
-            pipeline_languages = languages
+        pipeline_languages = _get_supported_languages(
+            tts_language_tags, pipeline_languages
+        )
 
     connection.send_result(
         msg["id"],
