@@ -151,6 +151,8 @@ def pytest_configure(config: pytest.Config) -> None:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Override default finish to detect unused snapshots despite xdist
+    # Temporary workaround until it is finalised inside syrupy
+    # See https://github.com/syrupy-project/syrupy/pull/901
     SnapshotSession.finish = override_syrupy_finish
 
 
