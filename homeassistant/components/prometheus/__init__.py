@@ -819,22 +819,9 @@ class PrometheusMetrics:
                 ["state"],
             )
 
-            alarm_states = [
-                AlarmControlPanelState.ARMED_AWAY,
-                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-                AlarmControlPanelState.ARMED_HOME,
-                AlarmControlPanelState.ARMED_NIGHT,
-                AlarmControlPanelState.ARMED_VACATION,
-                AlarmControlPanelState.DISARMED,
-                AlarmControlPanelState.TRIGGERED,
-                AlarmControlPanelState.PENDING,
-                AlarmControlPanelState.ARMING,
-                AlarmControlPanelState.DISARMING,
-            ]
-
-            for alarm_state in alarm_states:
-                metric.labels(**dict(self._labels(state), state=alarm_state)).set(
-                    float(alarm_state == current_state)
+            for alarm_state in AlarmControlPanelState:
+                metric.labels(**dict(self._labels(state), state=alarm_state.value)).set(
+                    float(alarm_state.value == current_state)
                 )
 
 
