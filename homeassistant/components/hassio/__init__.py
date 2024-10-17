@@ -430,6 +430,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
+        supervisor_client = get_supervisor_client(hass)
 
         try:
             (
@@ -443,7 +444,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
-                create_eager_task(hassio.client.store.info()),
+                create_eager_task(supervisor_client.store.info()),
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),

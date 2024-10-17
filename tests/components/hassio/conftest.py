@@ -55,6 +55,7 @@ def hassio_stubs(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
 ) -> RefreshToken:
     """Create mock hassio http client."""
     with (

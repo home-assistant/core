@@ -10,7 +10,7 @@ from functools import partial, wraps
 import logging
 from typing import Any, Concatenate
 
-from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
     AddonsOptions,
     AddonState as SupervisorAddonState,
@@ -114,14 +114,7 @@ class AddonManager:
         self._restart_task: asyncio.Task | None = None
         self._start_task: asyncio.Task | None = None
         self._update_task: asyncio.Task | None = None
-        self._client: SupervisorClient | None = None
-
-    @property
-    def _supervisor_client(self) -> SupervisorClient:
-        """Get supervisor client."""
-        if not self._client:
-            self._client = get_supervisor_client(self._hass)
-        return self._client
+        self._supervisor_client = get_supervisor_client(hass)
 
     def task_in_progress(self) -> bool:
         """Return True if any of the add-on tasks are in progress."""

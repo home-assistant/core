@@ -21,11 +21,14 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_SUPERVISOR_CLIENT = "supervisor_client"
 
 
 class HassioAPIError(RuntimeError):
@@ -219,14 +222,11 @@ class HassIO:
         self._ip = ip
         base_url = f"http://{ip}"
         self._base_url = URL(base_url)
-        self._client = SupervisorClient(
-            base_url, os.environ.get("SUPERVISOR_TOKEN", ""), session=websession
-        )
 
     @property
-    def client(self) -> SupervisorClient:
-        """Return aiohasupervisor client."""
-        return self._client
+    def base_url(self) -> URL:
+        """Return base url for Supervisor."""
+        return self._base_url
 
     @_api_bool
     def is_connected(self) -> Coroutine:
@@ -480,7 +480,12 @@ class HassIO:
         raise HassioAPIError
 
 
+@singleton(KEY_SUPERVISOR_CLIENT)
 def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
     hassio: HassIO = hass.data[DOMAIN]
-    return hassio.client
+    return SupervisorClient(
+        hassio.base_url,
+        os.environ.get("SUPERVISOR_TOKEN", ""),
+        session=hassio.websession,
+    )
