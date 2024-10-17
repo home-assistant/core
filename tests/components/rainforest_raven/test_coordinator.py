@@ -32,6 +32,27 @@ async def test_coordinator_device_info(hass: HomeAssistant) -> None:
     assert coordinator.device_name == "RAVEn Device"
 
 
+async def test_coordinator_no_device_info(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test not reporting device information from the coordinator."""
+    mock_device.get_device_info.return_value = None
+
+    entry = create_mock_entry()
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    coordinator: RAVEnDataCoordinator = entry.runtime_data
+
+    assert coordinator.device_fw_version is None
+    assert coordinator.device_hw_version is None
+    assert coordinator.device_info is None
+    assert coordinator.device_mac_address is None
+    assert coordinator.device_manufacturer is None
+    assert coordinator.device_model is None
+    assert coordinator.device_name == "RAVEn Device"
+
+
 async def test_coordinator_cache_device(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
