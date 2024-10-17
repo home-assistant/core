@@ -60,6 +60,24 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "search": {
+      "name": "Search music library & players",
+      "description": "Search for items in the music library & players.",
+      "fields": {
+        "command": {
+          "name": "Items",
+          "description": "The items to search for on LMS."
+        },
+        "return_items": {
+          "name": "Number of Items",
+          "description": "The number of items to return."
+        },
+        "search_string": {
+          "name": "Search String",
+          "description": "Limit the search to items matching the search string."
+        }
+      }
     }
   },
   "entity": {
@@ -95,6 +113,19 @@
       },
       "other_player_count": {
         "name": "Player count off service"
+      }
+    }
+  },
+  "selector": {
+    "search_command_selector": {
+      "options": {
+        "albums": "Albums",
+        "artists": "Artists",
+        "tracks": "Tracks",
+        "playlists": "Playlists",
+        "genres": "Genres",
+        "favorites": "Favorites",
+        "players": "Players"
       }
     }
   }
