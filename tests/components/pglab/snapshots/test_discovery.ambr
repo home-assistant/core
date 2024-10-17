@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_device_update
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://192.168.1.16/',
+    'connections': set({
+      tuple(
+        'mac',
+        '80:34:28:1b:18:5a',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.8',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'pglab',
+        'E-Board-DD53AC85',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'PG LAB Electronics',
+    'model': 'E-Board',
+    'name': 'test',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.1',
+    'via_device_id': None,
+  })
+# ---
