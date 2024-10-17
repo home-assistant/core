@@ -38,8 +38,7 @@
   },
   "device_automation": {
     "trigger_type": {
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "friend_game_status_changed": "A friend changed their game"
     }
   }
 }

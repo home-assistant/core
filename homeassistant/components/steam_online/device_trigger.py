@@ -1,15 +1,17 @@
-from __future__ import annotations
+"""Device triggers for Steam integrations."""
 
-from collections.abc import Callable
+from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.steam_online.const import CONF_ACCOUNT, DOMAIN
-from homeassistant.components.steam_online.coordinator import SteamDataUpdateCoordinator
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+from .const import CONF_ACCOUNT, DOMAIN
+from .coordinator import SteamDataUpdateCoordinator
 
 # Define the trigger types
 TRIGGER_TYPES = {"friend_game_status_changed"}
@@ -27,6 +29,7 @@ async def async_get_triggers(
     """List device triggers for Steam devices."""
     triggers = []
     base_trigger = {
+        CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
@@ -38,13 +41,12 @@ async def async_get_triggers(
     return triggers
 
 
-@callback
 def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable,
-    trigger_info: dict,
-) -> callable:
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_id = config[CONF_DEVICE_ID]
 
