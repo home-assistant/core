@@ -198,14 +198,14 @@ class GamutType:
 
 
 def color_name_to_rgb(color_name: str) -> RGBColor:
-    """Convert color name to RGB hex value."""
+    """Convert color name to RGB color."""
     # COLORS map has no spaces in it, so make the color_name have no
     # spaces in it as well for matching purposes
-    hex_value = COLORS.get(color_name.replace(" ", "").lower())
-    if not hex_value:
+    rgb_color = COLORS.get(color_name.replace(" ", "").lower())
+    if not rgb_color:
         raise ValueError("Unknown color")
 
-    return hex_value
+    return rgb_color
 
 
 def color_RGB_to_xy(
@@ -490,7 +490,7 @@ def color_rgbww_to_rgb(
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
-    """Return a RGB color from a hex color string."""
+    """Return a hex color string from a RGB color."""
     return f"{round(r):02x}{round(g):02x}{round(b):02x}"
 
 
@@ -509,7 +509,7 @@ def color_temperature_to_hs(color_temperature_kelvin: float) -> tuple[float, flo
 
 def color_temperature_to_rgb(
     color_temperature_kelvin: float,
-) -> tuple[float, float, float]:
+) -> tuple[int, int, int]:
     """Return an RGB color from a color temperature in Kelvin.
 
     This is a rough approximation based on the formula provided by T. Helland
@@ -529,7 +529,7 @@ def color_temperature_to_rgb(
 
     blue = _get_blue(tmp_internal)
 
-    return red, green, blue
+    return round(red), round(green), round(blue)
 
 
 def color_temperature_to_rgbww(
