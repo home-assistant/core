@@ -98,15 +98,6 @@ async def test_form_errors(
     assert result["reason"] == reason
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    [
-        [
-            "component.melcloud.config.abort.cannot_connect",
-            "component.melcloud.config.abort.invalid_auth",
-        ],
-    ],
-)
 @pytest.mark.parametrize(
     ("error", "message"),
     [

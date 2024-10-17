@@ -88,7 +88,6 @@ NO_IOT_CLASS = [
     "logbook",
     "logger",
     "lovelace",
-    "map",
     "media_source",
     "my",
     "onboarding",
