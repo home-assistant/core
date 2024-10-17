@@ -319,4 +319,4 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
                 preset = _preset
         if not preset:
             raise ValueError(f"Missing preset for media_id: {media_id}")
-        LOGGER.info(f"Playing preset: {preset}")
+        await self.client.recall_preset(preset.preset_id)
