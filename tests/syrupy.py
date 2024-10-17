@@ -261,6 +261,8 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
 # The default implementation does not handle the xdist plugin
 # and will not work correctly when running tests in parallel
 # with pytest-xdist.
+# Temporary workaround until it is finalised inside syrupy
+# See https://github.com/syrupy-project/syrupy/pull/901
 
 
 class _FakePytestObject:
