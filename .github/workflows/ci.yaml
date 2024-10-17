@@ -134,7 +134,7 @@ jobs:
         id: info
         run: |
           # Allows overriding full suite
-          force_single_integration=""
+          force_integration_changes="[]"
 
           # Defaults
           integrations_glob=""
@@ -149,9 +149,9 @@ jobs:
 
           # Check if we have changes in integrations
           integration_changes=${{ steps.integrations.outputs.changes }}
-          if [[ "${force_single_integration}" != "" ]];
+          if [[ "${force_integration_changes}" != "[]" ]];
           then
-            integration_changes="[\"${force_single_integration}\"]"
+            integration_changes="${force_integration_changes}"
           fi
 
           if [[ "${integration_changes}" != "[]" ]];
@@ -188,7 +188,7 @@ jobs:
 
           # We need to run the full suite on certain branches.
           # Or, in case core files are touched, for the full suite as well.
-          if [[ "${force_single_integration}" == "" ]] \
+          if [[ "${force_integration_changes}" == "[]" ]] \
             && ([[ "${{ github.ref }}" == "refs/heads/dev" ]] \
               || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
               || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
