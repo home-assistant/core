@@ -362,7 +362,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.7.0
+aiostreammagic==2.8.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -1165,7 +1165,7 @@ motionblindsble==0.1.2
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.4.1.8.8
+mozart-api==4.1.1.116.0
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1709,7 +1709,7 @@ pyopnsense==0.4.0
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.1
+pyotgw==2.2.2
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2025,7 +2025,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.11
+reolink-aio==0.10.0
 
 # homeassistant.components.rflink
 rflink==0.0.66
