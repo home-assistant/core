@@ -522,6 +522,9 @@ aurorapy==0.2.7
 # homeassistant.components.autarco
 autarco==3.0.0
 
+# homeassistant.components.husqvarna_automower_ble
+automower-ble==0.1.35
+
 # homeassistant.components.avea
 # avea==1.5.1
 
