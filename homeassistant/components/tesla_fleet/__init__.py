@@ -5,7 +5,12 @@ from typing import Final
 
 from aiohttp.client_exceptions import ClientResponseError
 import jwt
-from tesla_fleet_api import EnergySpecific, TeslaFleetApi, VehicleSpecific
+from tesla_fleet_api import (
+    EnergySpecific,
+    TeslaFleetApi,
+    VehicleSigned,
+    VehicleSpecific,
+)
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
@@ -126,7 +131,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = VehicleSpecific(tesla.vehicle, vin)
+            signing = product["command_signing"] == "required"
+            if signing:
+                if not tesla.private_key:
+                    await tesla.get_private_key("config/tesla_fleet.key")
+                api = VehicleSigned(tesla.vehicle, vin)
+            else:
+                api = VehicleSpecific(tesla.vehicle, vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
 
             await coordinator.async_config_entry_first_refresh()
@@ -145,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     coordinator=coordinator,
                     vin=vin,
                     device=device,
-                    signing=product["command_signing"] == "required",
+                    signing=signing,
                 )
             )
         elif "energy_site_id" in product and hasattr(tesla, "energy"):
