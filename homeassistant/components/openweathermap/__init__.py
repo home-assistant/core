@@ -67,7 +67,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await async_setup_services(hass, weather_coordinator)
+    await async_setup_services(hass, mode, weather_coordinator)
 
     return True
 
