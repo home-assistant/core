@@ -27,8 +27,9 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "The Music Assistant server is not the correct version",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_in_progress": "Configuration flow is already in progress",
@@ -44,16 +45,6 @@
         "add": "Add to queue",
         "replace": "Play now and clear queue",
         "replace_next": "Play next and clear queue"
-      }
-    }
-  },
-  "options": {
-    "flow_title": "{name}",
-    "step": {
-      "init": {
-        "data": {
-          "url": "URL of the Music Assistant server"
-        }
       }
     }
   }
