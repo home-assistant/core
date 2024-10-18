@@ -744,6 +744,20 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
             if CONF_SELECTOR in field_info:
                 validator: Any = selector(field_info[CONF_SELECTOR])
+
+                # Default values need to match the validator.
+                # When they don't match, we will not enforce validation
+                if CONF_DEFAULT in field_info:
+                    try:
+                        validator(field_info[CONF_DEFAULT])
+                    except vol.Invalid:
+                        logging.getLogger(f"{__name__}.{self._attr_unique_id}").warning(
+                            "Field %s has invalid default value %s",
+                            field_name,
+                            field_info[CONF_DEFAULT],
+                        )
+                        validator = cv.match_all
+
             else:
                 validator = cv.match_all
 

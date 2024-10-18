@@ -559,7 +559,9 @@ async def test_reload_unchanged_script(
         assert len(calls) == 2
 
 
-async def test_service_schema(hass: HomeAssistant) -> None:
+async def test_service_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that service schema are defined correctly."""
     events = async_capture_events(hass, "test_event")
 
@@ -586,6 +588,10 @@ async def test_service_schema(hass: HomeAssistant) -> None:
                                 }
                             }
                         },
+                        "invalid_default": {
+                            "default": "invalid-value",
+                            "selector": {"number": {"min": 0, "max": 2}},
+                        },
                     },
                     "sequence": [
                         {
@@ -594,12 +600,17 @@ async def test_service_schema(hass: HomeAssistant) -> None:
                                 "param_with_default": "{{ param_with_default }}",
                                 "required_param": "{{ required_param }}",
                                 "selector_param": "{{ selector_param | default('not_set') }}",
+                                "invalid_default": "{{ invalid_default }}",
                             },
                         }
                     ],
                 }
             }
         },
+    )
+
+    assert (
+        "Field invalid_default has invalid default value invalid-value" in caplog.text
     )
 
     await hass.services.async_call(
@@ -612,6 +623,7 @@ async def test_service_schema(hass: HomeAssistant) -> None:
     assert events[0].data["param_with_default"] == "default_value"
     assert events[0].data["required_param"] == "required_value"
     assert events[0].data["selector_param"] == "not_set"
+    assert events[0].data["invalid_default"] == "invalid-value"
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -631,6 +643,7 @@ async def test_service_schema(hass: HomeAssistant) -> None:
             "param_with_default": "service_set_value",
             "required_param": "required_value",
             "selector_param": "one",
+            "invalid_default": "another-value",
         },
         blocking=True,
     )
@@ -638,6 +651,7 @@ async def test_service_schema(hass: HomeAssistant) -> None:
     assert events[1].data["param_with_default"] == "service_set_value"
     assert events[1].data["required_param"] == "required_value"
     assert events[1].data["selector_param"] == "one"
+    assert events[1].data["invalid_default"] == "another-value"
 
 
 async def test_service_descriptions(hass: HomeAssistant) -> None:
