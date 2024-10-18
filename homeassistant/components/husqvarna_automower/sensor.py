@@ -440,6 +440,7 @@ async def async_setup_entry(
     """Set up sensor platform."""
     coordinator = entry.runtime_data
     entities: list[SensorEntity] = []
+    current_work_areas = {}
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
@@ -452,12 +453,33 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                     if description.exists_fn(_work_areas[work_area_id])
                 )
+                current_work_areas[mower_id] = set(_work_areas)
         entities.extend(
             AutomowerSensorEntity(mower_id, coordinator, description)
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
     async_add_entities(entities)
+
+    def _async_work_area_listener() -> None:
+        """Listen for new work areas and add sensor entities if they did not exist."""
+        for mower_id in coordinator.data:
+            if coordinator.data[mower_id].capabilities.work_areas:
+                _work_areas = coordinator.data[mower_id].work_areas
+                if _work_areas is not None:
+                    received_work_areas = set(_work_areas)
+                    new_work_areas = received_work_areas - current_work_areas[mower_id]
+                    if new_work_areas:
+                        current_work_areas[mower_id].update(new_work_areas)
+                        async_add_entities(
+                            WorkAreaSensorEntity(
+                                mower_id, coordinator, description, work_area_id
+                            )
+                            for description in WORK_AREA_SENSOR_TYPES
+                            for work_area_id in new_work_areas
+                        )
+
+    coordinator.async_add_listener(_async_work_area_listener)
 
 
 class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
