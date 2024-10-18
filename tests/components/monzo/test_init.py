@@ -59,6 +59,7 @@ class WebhookSetupData:
     hass: HomeAssistant
     client: TestClient
     webhook_url: str
+    event_listener: Mock
 
 
 @pytest.fixture
@@ -74,8 +75,14 @@ async def webhook_setup(
     client = await hass_client_no_auth()
     webhook_id = next(iter(polling_config_entry.runtime_data.webhook_ids))
     webhook_url = async_generate_url(hass, webhook_id)
+    event_listener = Mock()
+    async_dispatcher_connect(
+        hass,
+        monzo_event_signal(EVENT_TRANSACTION_CREATED, TEST_ACCOUNTS[0]["id"]),
+        event_listener,
+    )
 
-    return WebhookSetupData(hass, client, webhook_url)
+    return WebhookSetupData(hass, client, webhook_url, event_listener)
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -84,12 +91,7 @@ async def test_webhook_fires_transaction_created(
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test calling a webhook fires transaction_created event."""
-    event_listener = Mock()
-    async_dispatcher_connect(
-        webhook_setup.hass,
-        monzo_event_signal(EVENT_TRANSACTION_CREATED, TEST_ACCOUNTS[0]["id"]),
-        event_listener,
-    )
+
     resp = await webhook_setup.client.post(
         urlparse(webhook_setup.webhook_url).path,
         json={
@@ -101,7 +103,7 @@ async def test_webhook_fires_transaction_created(
     await webhook_setup.hass.async_block_till_done()
 
     assert resp.ok
-    event_listener.assert_called_once()
+    webhook_setup.event_listener.assert_called_once()
 
     resp.close()
 
