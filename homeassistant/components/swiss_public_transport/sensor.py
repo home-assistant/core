@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import config_entries, core
+from homeassistant import core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,7 +21,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONNECTIONS_COUNT, DOMAIN
-from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
+from .coordinator import (
+    DataConnection,
+    SwissPublicTransportConfigEntry,
+    SwissPublicTransportDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,19 +85,17 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: SwissPublicTransportConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     unique_id = config_entry.unique_id
 
     if TYPE_CHECKING:
         assert unique_id
 
     async_add_entities(
-        SwissPublicTransportSensor(coordinator, description, unique_id)
+        SwissPublicTransportSensor(config_entry.runtime_data, description, unique_id)
         for description in SENSORS
     )
 
