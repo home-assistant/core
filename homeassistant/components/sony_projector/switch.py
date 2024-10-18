@@ -41,56 +41,45 @@ def setup_platform(
     host = config[CONF_HOST]
     name = config[CONF_NAME]
     sdcp_connection = pysdcp.Projector(host)
+    sensors = [SonyProjector(sdcp_connection, name)]
+    add_entities(sensors, update_before_add=False)
 
-    # Sanity check the connection
-    try:
-        sdcp_connection.get_power()
-    except ConnectionError:
-        _LOGGER.error("Failed to connect to projector '%s'", host)
-        return
-    _LOGGER.debug("Validated projector '%s' OK", host)
-    add_entities([SonyProjector(sdcp_connection, name)], True)
 
 
 class SonyProjector(SwitchEntity):
     """Represents a Sony Projector as a switch."""
 
     def __init__(self, sdcp_connection, name):
+        super().__init__()
         """Init of the Sony projector."""
+
+        # await ???
+        #self._sdcp = await sdcp_connection
         self._sdcp = sdcp_connection
+
         self._name = name
-        self._state = None
+        self._state = STATE_OFF
         self._available = False
         self._attributes = {}
-
-    @property
-    def available(self):
-        """Return if projector is available."""
-        return self._available
 
     @property
     def name(self):
         """Return name of the projector."""
         return self._name
 
-    @property
-    def is_on(self):
-        """Return if the projector is turned on."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return state attributes."""
-        return self._attributes
-
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest state from the projector."""
         try:
-            self._state = self._sdcp.get_power()
-            self._available = True
-        except ConnectionRefusedError:
-            _LOGGER.error("Projector connection refused")
+            if not self._available:
+                self._sdcp.get_power()     # neuer Versuch, falls fehler direkt nach exeption
+                self._state = STATE_ON
+                self._available = True
+
+        except ConnectionError:
+            # Handle the case when the projector is off or not reachable
             self._available = False
+            self._state = STATE_OFF
+            _LOGGER.warning("Projector '%s' is not reachable or is turned off", self._name)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
