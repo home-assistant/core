@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "no_mosque": "Entschuldigung, es gibt keine MAWAQIT Moschee in Ihrer Nachbarschaft.",
+      "one_instance_allowed": "Ein einzelner MAWAQIT-Eintrag ist notwendig. Wenn Sie Ihre Moschee neu konfigurieren möchten, können Sie neben dem bestehenden Eintrag auf \"Konfigurieren\" klicken.",
+      "configuration_kept": "Sie haben sich entschieden, die bestehende Konfiguration beizubehalten."
+    },
+    "step": {
+      "user": {
+        "description": "Registrieren Sie sich auf https://mawaqit.net/ und verbinden Sie sich unten. Die nächstgelegene Moschee zu Ihrem Zuhause wird ausgewählt, aber Sie können sie später in den Add-On-Parametern ändern.",
+        "data": {
+          "username": "E-Mail",
+          "password": "Passwort",
+          "server": "Server"
+        },
+        "title": "MAWAQIT Gebetszeiten einrichten"
+      },
+      "keep_or_reset": {
+        "title": "Eine weitere Instanz von MAWAQIT ist bereits konfiguriert",
+        "data": {
+          "choice": "Sie können wählen, ob Sie die vorhandene Konfiguration beibehalten oder zurücksetzen möchten:",
+          "keep": "Die vorhandene Konfiguration beibehalten",
+          "reset": "Zurücksetzen, um eine neue Moschee zu konfigurieren"
+        }
+      },
+      "keyword_search": {
+        "title": "Suchen Sie Ihre Moschee",
+        "description": "Suchen Sie eine Moschee, indem Sie ein Stichwort eingeben:",
+        "data": {
+          "Keyword": "Suchen"
+        }
+      },
+      "search_method": {
+        "title": "Wählen Sie die Methode zum Finden Ihrer Moschee",
+        "data": {
+          "search_method_choice": "wählen Sie die Suchmethode:"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Mehrere Moscheen sind in Ihrer Nähe verfügbar, wählen Sie eine aus:",
+          "uuid": "Moschee"
+        },
+        "title": "Ihre Lieblingsmoschee"
+      }
+    }
+  },
+  "error": {
+    "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte später erneut versuchen.",
+    "wrong_credential": "Falscher Benutzername oder Passwort, bitte erneut versuchen.",
+    "no_mosque_found_keyword": "Keine Moschee mit diesem Schlüsselwort gefunden."
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Ändern Sie Ihre Lieblingsmoschee"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Suchen Sie nach den nächstgelegenen Moscheen zu Ihrem Standort",
+        "search_method_keyword": "Suche nach einer Moschee per Stichwort"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "Die vorhandene Konfiguration beibehalten",
+        "reset": "Zurücksetzen, um eine neue Moschee zu konfigurieren"
+      }
+    }
+  },
+  "title": "MAWAQIT"
+}

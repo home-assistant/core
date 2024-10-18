@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "no_mosque": "Üzgünüz, mahallenizde bir MAWAQIT camisi yok.",
+      "one_instance_allowed": "Tek bir MAWAQIT girişi gerekli. Caminizi yeniden yapılandırmak istiyorsanız, mevcut girişin yanındaki \"Yapılandır\"a tıklayabilirsiniz.",
+      "configuration_kept": "Mevcut yapılandırmayı korumayı seçtiniz."
+    },
+    "step": {
+      "user": {
+        "description": "https://mawaqit.net/ adresine kaydolun ve aşağıya bağlanın. Evinizin en yakın camisi seçilecek ancak daha sonra eklenti parametrelerinde değiştirebilirsiniz.",
+        "data": {
+          "username": "E-posta",
+          "password": "Şifre",
+          "server": "Sunucu"
+        },
+        "title": "MAWAQIT Namaz Zamanları Kurulumu"
+      },
+      "keep_or_reset": {
+        "title": "MAWAQIT'in başka bir örneği zaten yapılandırılmış",
+        "data": {
+          "choice": "Mevcut yapılandırmayı koruyabilir veya sıfırlayabilirsiniz:",
+          "keep": "Mevcut yapılandırmayı koru",
+          "reset": "Yeni bir cami yapılandırmak için sıfırla"
+        }
+      },
+      "keyword_search": {
+        "title": "Caminizi arayın",
+        "description": "Anahtar kelime girerek cami arayın:",
+        "data": {
+          "Keyword": "Ara"
+        }
+      },
+      "search_method": {
+        "title": "Caminizi bulma yöntemini seçin",
+        "data": {
+          "search_method_choice": "arama yöntemini seçin:"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Etrafınızda birçok cami mevcut, birini seçin:",
+          "uuid": "Cami"
+        },
+        "title": "Favori caminiz"
+      }
+    }
+  },
+  "error": {
+    "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
+    "wrong_credential": "Yanlış kullanıcı adı veya şifre, lütfen tekrar deneyin.",
+    "no_mosque_found_keyword": "Bu anahtar kelime ile cami bulunamadı."
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Favori caminizi değiştirin"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Konumunuza en yakın camileri arayın",
+        "search_method_keyword": "Anahtar kelime ile cami arayın"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "Mevcut yapılandırmayı koru",
+        "reset": "Yeni bir cami yapılandırmak için sıfırlayın"
+      }
+    }
+  },
+  "title": "MAWAQIT"
+}
