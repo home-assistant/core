@@ -576,6 +576,14 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
     result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
     with (
@@ -618,6 +626,14 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
     result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
     with (
@@ -657,6 +673,14 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     result = await mock_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
@@ -708,6 +732,14 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
 
