@@ -7,7 +7,12 @@ import logging
 from typing import Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    LoginFirmwareError,
+    ReolinkError,
+)
 import voluptuous as vol
 
 from homeassistant.components import dhcp
@@ -233,6 +238,15 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginFirmwareError:
+                errors["base"] = "update_needed"
+                placeholders["current_firmware"] = host.api.sw_version
+                placeholders["needed_firmware"] = (
+                    host.api.sw_version_required.version_string
+                )
+                placeholders["download_center_url"] = (
+                    "https://reolink.com/download-center"
+                )
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
