@@ -94,7 +94,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
 
         if self.solarlog.extended_data:
             self._async_add_remove_devices(data)
-            _LOGGER.info("Add_remove_devices finished")
+            _LOGGER.debug("Add_remove_devices finished")
 
         return data
 
@@ -119,7 +119,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             for k, v in self._devices_last_update.items()
             if k not in current_devices
         }:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Removed device(s): %s", ", ".join(map(str, removed_devices.values()))
             )
             device_registry = dr.async_get(self.hass)
@@ -137,7 +137,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
                         device_id=device.id,
                         remove_config_entry_id=self.unique_id,
                     )
-                    _LOGGER.info("Device removed from device registry: %s", device.id)
+                    _LOGGER.debug("Device removed from device registry: %s", device.id)
 
         # add new devices
         if new_devices := {
@@ -145,7 +145,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             for k, v in current_devices.items()
             if k not in self._devices_last_update
         }:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "New device(s) found: %s", ", ".join(map(str, new_devices.values()))
             )
             for device_id in new_devices:
@@ -178,7 +178,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
                         device_id=device.id,
                         name=current_devices[device_id],
                     )
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Device in device registry renamed: %s -> %s",
                         self._devices_last_update[device_id],
                         current_devices[device_id],
