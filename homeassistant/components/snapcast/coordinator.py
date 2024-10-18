@@ -7,10 +7,7 @@ import logging
 from snapcast.control.server import Snapserver
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,16 +73,3 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
     def server(self) -> Snapserver:
         """Get the Snapserver object."""
         return self._server
-
-
-class SnapcastCoordinatorEntity(CoordinatorEntity[SnapcastUpdateCoordinator]):
-    """Coordinator entity for Snapcast."""
-
-    def __init__(self, coordinator: SnapcastUpdateCoordinator) -> None:
-        """Create a Snapcast entity with an update coordinator."""
-        super().__init__(coordinator)
-
-    @property
-    def available(self) -> bool:
-        """Check device availability."""
-        return self.coordinator.available

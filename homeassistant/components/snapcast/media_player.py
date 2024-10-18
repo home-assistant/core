@@ -42,7 +42,8 @@ from .const import (
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
-from .coordinator import SnapcastCoordinatorEntity, SnapcastUpdateCoordinator
+from .coordinator import SnapcastUpdateCoordinator
+from .entity import SnapcastCoordinatorEntity
 
 STREAM_STATUS = {
     "idle": MediaPlayerState.IDLE,
