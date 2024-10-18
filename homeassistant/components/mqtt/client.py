@@ -373,10 +373,10 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
 
-        self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
-            set
+        self._simple_subscriptions: defaultdict[str, list[Subscription]] = defaultdict(
+            list
         )
-        self._wildcard_subscriptions: set[Subscription] = set()
+        self._wildcard_subscriptions: list[Subscription] = []
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
@@ -752,9 +752,9 @@ class MQTT:
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
         if subscription.is_simple_match:
-            self._simple_subscriptions[subscription.topic].add(subscription)
+            self._simple_subscriptions[subscription.topic].append(subscription)
         else:
-            self._wildcard_subscriptions.add(subscription)
+            self._wildcard_subscriptions.append(subscription)
 
     @callback
     def _async_untrack_subscription(self, subscription: Subscription) -> None:
