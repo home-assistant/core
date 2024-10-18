@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import NETWORK_INFO
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_entry")
@@ -44,6 +44,7 @@ async def test_device_update_error(
     assert all(state.state != STATE_UNAVAILABLE for state in states)
 
     freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     states = hass.states.async_all()
@@ -51,8 +52,7 @@ async def test_device_update_error(
     assert all(state.state == STATE_UNAVAILABLE for state in states)
 
     freezer.tick(timedelta(seconds=60))
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass)
 
     states = hass.states.async_all()
     assert len(states) == 5
@@ -71,6 +71,7 @@ async def test_device_update_timeout(
     assert all(state.state != STATE_UNAVAILABLE for state in states)
 
     freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     states = hass.states.async_all()
@@ -78,8 +79,7 @@ async def test_device_update_timeout(
     assert all(state.state == STATE_UNAVAILABLE for state in states)
 
     freezer.tick(timedelta(seconds=60))
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass)
 
     states = hass.states.async_all()
     assert len(states) == 5
@@ -95,6 +95,7 @@ async def test_device_cache(
     assert mock_device.open.call_count == 1
 
     freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_device.get_network_info.call_count == 2
