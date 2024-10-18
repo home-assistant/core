@@ -56,6 +56,7 @@ PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
+securetar==2024.2.1
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
