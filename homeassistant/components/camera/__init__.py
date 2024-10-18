@@ -60,7 +60,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
@@ -143,7 +142,7 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): str}
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
@@ -151,7 +150,7 @@ CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
 }
 
 CAMERA_SERVICE_RECORD: VolDictType = {
-    vol.Required(CONF_FILENAME): cv.template,
+    vol.Required(CONF_FILENAME): str,
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
@@ -962,9 +961,9 @@ async def async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = camera.hass
-    filename: Template = service_call.data[ATTR_FILENAME]
+    filename: str = service_call.data[ATTR_FILENAME]
 
-    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    snapshot_file = filename
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
@@ -1040,7 +1039,7 @@ async def async_handle_record_service(
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     filename = service_call.data[CONF_FILENAME]
-    video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    video_path = filename
 
     await stream.async_record(
         video_path,
