@@ -443,8 +443,14 @@ async def test_remote_sensor_devices(
     freezer.tick(100)
     async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.values():
+        if device.name == "Remote Sensor 1":
+            remote_sensor_1_id = device.id
+        if device.name == "ecobee":
+            ecobee_id = device.id
     assert sorted(state.attributes.get("available_sensors")) == sorted(
-        ["Remote Sensor 1", "ecobee"]
+        [f"Remote Sensor 1 ({remote_sensor_1_id})", f"ecobee ({ecobee_id})"]
     )
 
 

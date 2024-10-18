@@ -602,15 +602,10 @@ class Thermostat(ClimateEntity):
     @property
     def remote_sensor_devices(self) -> list:
         """Return the remote sensor device name_by_user or name for the thermostat."""
-        sensors_info = self.thermostat.get("remoteSensors", [])
-
-        device_registry = dr.async_get(self._hass)
         return sorted(
             [
-                device.name_by_user if device.name_by_user else device.name
-                for device in device_registry.devices.values()
-                for sensor_info in sensors_info
-                if device.name == sensor_info["name"]
+                f'{item["name_by_user"]} ({item["id"]})'
+                for item in self.remote_sensor_ids_names
             ]
         )
 
