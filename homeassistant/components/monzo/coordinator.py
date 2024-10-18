@@ -18,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class MonzoData:
+class MonzoSensorData:
     """A dataclass for holding sensor data returned by the DataUpdateCoordinator."""
 
     accounts: list[dict[str, Any]]
     pots: list[dict[str, Any]]
 
 
-class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
+class MonzoCoordinator(DataUpdateCoordinator[MonzoSensorData]):
     """Class to manage fetching Monzo data from the API."""
 
     def __init__(self, hass: HomeAssistant, api: AuthenticatedMonzoAPI) -> None:
@@ -38,7 +38,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         )
         self.api = api
 
-    async def _async_update_data(self) -> MonzoData:
+    async def _async_update_data(self) -> MonzoSensorData:
         """Fetch data from Monzo API."""
         try:
             accounts = await self.api.user_account.accounts()
@@ -46,4 +46,4 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         except AuthorisationExpiredError as err:
             raise ConfigEntryAuthFailed from err
 
-        return MonzoData(accounts, pots)
+        return MonzoSensorData(accounts, pots)
