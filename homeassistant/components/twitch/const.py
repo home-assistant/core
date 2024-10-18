@@ -17,7 +17,5 @@ CONF_REFRESH_TOKEN = "refresh_token"
 
 DOMAIN = "twitch"
 CONF_CHANNELS = "channels"
-CLIENT = "client"
-SESSION = "session"
 
 OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS, AuthScope.USER_READ_FOLLOWS]
