@@ -1,16 +1,17 @@
 """Tests for the homewizard component."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload(
@@ -101,6 +102,7 @@ async def test_disablederror_reloads_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test DisabledError reloads integration."""
     mock_config_entry.add_to_hass(hass)
@@ -112,11 +114,12 @@ async def test_disablederror_reloads_integration(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 0
 
-    # Simulate DisabledError and reload to trigger reload
+    # Simulate DisabledError and wait for next update
     mock_homewizardenergy.device.side_effect = DisabledError()
 
-    with pytest.raises(UpdateFailed):
-        await mock_config_entry.runtime_data._async_update_data()
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # State should be setup retry and reauth flow should be active
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
