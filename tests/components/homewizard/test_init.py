@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -93,3 +94,36 @@ async def test_load_removes_reauth_flow(
     # Flow should be removed
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 0
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_disablederror_reloads_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test DisabledError reloads integration."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Make sure current state is loaded and not reauth flow is active
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
+
+    # Simulate DisabledError and reload to trigger reload
+    mock_homewizardenergy.device.side_effect = DisabledError()
+
+    with pytest.raises(UpdateFailed):
+        await mock_config_entry.runtime_data._async_update_data()
+
+    # State should be setup retry and reauth flow should be active
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
