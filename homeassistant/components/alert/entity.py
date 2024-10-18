@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.notify import (
@@ -44,6 +44,7 @@ class AlertEntity(Entity):
         done_message_template: Template | None,
         notifiers: list[str],
         can_ack: bool,
+        throttle: float,
         title_template: Template | None,
         data: dict[Any, Any],
     ) -> None:
@@ -60,6 +61,8 @@ class AlertEntity(Entity):
 
         self._notifiers = notifiers
         self._can_ack = can_ack
+        self._throttle = timedelta(throttle)
+        self._last_notification_time: datetime | None = None
 
         self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
@@ -138,6 +141,15 @@ class AlertEntity(Entity):
         if not self._firing:
             return
 
+        if self._last_notification_time is not None:
+            time_since_last_notification = now() - self._last_notification_time
+            if time_since_last_notification < self._throttle:
+                LOGGER.info(
+                    "Skipping notification for %s due to throttling", self._attr_name
+                )
+                await self._schedule_notify()
+                return
+
         if not self._ack:
             LOGGER.info("Alerting: %s", self._attr_name)
             self._send_done_message = True
@@ -148,6 +160,8 @@ class AlertEntity(Entity):
                 message = self._attr_name
 
             await self._send_notification_message(message)
+
+            self._last_notification_time = now()
         await self._schedule_notify()
 
     async def _notify_done_message(self) -> None:

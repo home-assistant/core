@@ -11,6 +11,7 @@ from homeassistant.components.alert.const import (
     CONF_DONE_MESSAGE,
     CONF_NOTIFIERS,
     CONF_SKIP_FIRST,
+    CONF_THROTTLE,
     CONF_TITLE,
     DOMAIN,
 )
@@ -51,6 +52,7 @@ TEST_CONFIG = {
             CONF_REPEAT: 30,
             CONF_SKIP_FIRST: False,
             CONF_NOTIFIERS: [NOTIFIER],
+            CONF_THROTTLE: 10,
             CONF_TITLE: TITLE,
             CONF_DATA: {},
         }
@@ -344,3 +346,45 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     await entity.end_alerting()
     await hass.async_block_till_done()
     assert entity._send_done_message is False
+
+
+async def test_throttling_prevents_immediate_notifications(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test throttling prevents immediate notifications."""
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_THROTTLE] = 10
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert len(mock_notifier) == 1
+
+
+async def test_throttling_allows_notifications_after_delay(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test throttling allows notifications after the throttle delay."""
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_THROTTLE] = 0
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Now, trigger the alert again
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert len(mock_notifier) == 2

@@ -26,9 +26,11 @@ from .const import (
     CONF_DONE_MESSAGE,
     CONF_NOTIFIERS,
     CONF_SKIP_FIRST,
+    CONF_THROTTLE,
     CONF_TITLE,
     DEFAULT_CAN_ACK,
     DEFAULT_SKIP_FIRST,
+    DEFAULT_THROTTLE,
     DOMAIN,
     LOGGER,
 )
@@ -47,6 +49,7 @@ ALERT_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
         vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+        vol.Optional(CONF_THROTTLE, default=DEFAULT_THROTTLE): vol.Coerce(float),
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
@@ -77,6 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         alert_state = cfg[CONF_STATE]
         repeat = cfg[CONF_REPEAT]
         skip_first = cfg[CONF_SKIP_FIRST]
+        throttle = cfg[CONF_THROTTLE]
         message_template = cfg.get(CONF_ALERT_MESSAGE)
         done_message_template = cfg.get(CONF_DONE_MESSAGE)
         notifiers = cfg[CONF_NOTIFIERS]
@@ -93,6 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 alert_state,
                 repeat,
                 skip_first,
+                throttle,
                 message_template,
                 done_message_template,
                 notifiers,
