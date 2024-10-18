@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "todo": {
+      "item_list": {
+        "default": "mdi:cart"
+      },
+      "additional_item_list": {
+        "default": "mdi:cart"
+      }
+    }
+  }
+}
