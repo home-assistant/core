@@ -294,6 +294,8 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 class SnapcastGroupDevice(SnapcastBaseDevice):
     """Representation of a Snapcast group device."""
 
+    _device: Snapgroup
+
     def __init__(
         self,
         coordinator: SnapcastUpdateCoordinator,
@@ -328,6 +330,8 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
 
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
+
+    _device: Snapclient
 
     def __init__(
         self,
