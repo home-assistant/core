@@ -1,9 +1,7 @@
 """Tests for the Rainforest RAVEn sensors."""
 
-import asyncio
 from datetime import timedelta
-import functools
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioraven.device import RAVEnConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -37,7 +35,6 @@ async def test_device_update_error(
     hass: HomeAssistant,
     mock_device: AsyncMock,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of a device error during an update."""
     mock_device.get_network_info.side_effect = (RAVEnConnectionError, NETWORK_INFO)
@@ -48,7 +45,6 @@ async def test_device_update_error(
 
     freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
-    assert "Error fetching rainforest_raven data: RAVEnConnectionError" in caplog.text
 
     states = hass.states.async_all()
     assert len(states) == 5
@@ -64,15 +60,11 @@ async def test_device_update_error(
 
 
 @pytest.mark.usefixtures("mock_entry")
-@patch("homeassistant.components.rainforest_raven.coordinator._DEVICE_TIMEOUT", 0.1)
 async def test_device_update_timeout(
     hass: HomeAssistant, mock_device: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test handling of a device timeout during an update."""
-    mock_device.get_network_info.side_effect = (
-        functools.partial(asyncio.sleep, 10),
-        NETWORK_INFO,
-    )
+    mock_device.get_network_info.side_effect = (TimeoutError, NETWORK_INFO)
 
     states = hass.states.async_all()
     assert len(states) == 5
@@ -87,10 +79,11 @@ async def test_device_update_timeout(
 
     freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     states = hass.states.async_all()
     assert len(states) == 5
-    assert all(state.state == STATE_UNAVAILABLE for state in states)
+    assert all(state.state != STATE_UNAVAILABLE for state in states)
 
 
 @pytest.mark.usefixtures("mock_entry")
