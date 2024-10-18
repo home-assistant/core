@@ -29,9 +29,6 @@
           "password": "[%key:common::config_flow::data::password%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
     },
     "error": {

@@ -327,15 +327,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
 
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user(dict(self._get_reauth_entry().data))
+        return await self.async_step_user(dict(entry_data))
 
     def _create_cloud_client(
         self, username: str, password: str, server: OverkizServer
