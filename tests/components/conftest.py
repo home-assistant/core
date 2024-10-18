@@ -475,12 +475,12 @@ async def _ensure_translation_exists(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
-    if full_key in ignore_translations:
-        ignore_translations[full_key] = "used"
-        return
-
     translations = await async_get_translations(hass, "en", category, [component])
     if full_key in translations:
+        return
+
+    if full_key in ignore_translations:
+        ignore_translations[full_key] = "used"
         return
 
     key_parts = key.split(".")
