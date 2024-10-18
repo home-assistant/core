@@ -39,6 +39,9 @@
   "device_automation": {
     "trigger_type": {
       "friend_game_status_changed": "A friend changed their game"
+    },
+    "condition_type": {
+      "is_same_game_as_primary": "Is playing same game as primary"
     }
   }
 }
