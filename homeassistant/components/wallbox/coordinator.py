@@ -218,21 +218,21 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         def create_description(event: dict[str, Any]) -> str:
             tzone = dt_util.get_default_time_zone()
-            description = f"Session ID: {event["id"]} "
-            description += f"Charger name: {event["attributes"]["charger_name"]} "
-            description += f"Serial number: {event["attributes"]["charger"]} "
-            description += f"Username: {event["attributes"]["user_name"]} "
+            description = f"Session ID: {event["id"]}\n"
+            description += f"Charger name: {event["attributes"]["charger_name"]}\n"
+            description += f"Serial number: {event["attributes"]["charger"]}\n"
+            description += f"Username: {event["attributes"]["user_name"]}\n"
             description += f"Start: {datetime.datetime.fromtimestamp(
                     event["attributes"]["start"], tzone
-                )} "
+                )}\n"
             description += f"End: {datetime.datetime.fromtimestamp(
                     event["attributes"]["end"], tzone
-                )} "
+                )}\n"
             description += f"Time: {datetime.datetime.fromtimestamp(
-                    event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)} "
-            description += f"Energy: {event["attributes"]["energy"]}KWh "
-            description += f"MID energy: {event["attributes"]["mid_energy"]}KWh "
-            description += f"Session cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]} "
+                    event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)}\n"
+            description += f"Energy: {event["attributes"]["energy"]}KWh\n"
+            description += f"MID energy: {event["attributes"]["mid_energy"]}KWh\n"
+            description += f"Session cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]}\n"
             return description
 
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
