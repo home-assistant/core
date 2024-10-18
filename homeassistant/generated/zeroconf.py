@@ -829,6 +829,11 @@ ZEROCONF = {
             "name": "uzg-01*",
         },
     ],
+    "_vemmio._tcp.local.": [
+        {
+            "domain": "vemmio",
+        },
+    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",

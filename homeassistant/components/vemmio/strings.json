@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add device",
+        "data": {
+          "host": "Device host",
+          "port": "Device port"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up the {type} at {host}?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
+    }
+  }
+}
