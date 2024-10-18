@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
+    BSH_AMBIENT_LIGHT_COLOR,
     BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
     BSH_AMBIENT_LIGHT_ENABLED,
     COOKING_LIGHTING,
@@ -151,6 +152,22 @@ async def test_light(
             "Hood",
         ),
         (
+            "light.hood_ambient_light",
+            {
+                BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
+                BSH_AMBIENT_LIGHT_COLOR: {
+                    "value": "",
+                },
+                BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
+            },
+            SERVICE_TURN_ON,
+            {
+                "rgb_color": [255, 255, 0],
+            },
+            STATE_ON,
+            "Hood",
+        ),
+        (
             "light.fridgefreezer_external_light",
             {
                 REFRIGERATION_EXTERNAL_LIGHT_POWER: {
@@ -280,7 +297,7 @@ async def test_light_functionality(
             SERVICE_TURN_ON,
             {"brightness": 200},
             "set_setting",
-            [HomeConnectError, None, HomeConnectError, HomeConnectError],
+            [HomeConnectError, None, HomeConnectError],
             "Hood",
         ),
     ],
