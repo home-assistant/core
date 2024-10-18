@@ -242,7 +242,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
         if not (state := await self.async_get_last_state()):
             return
-        if state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if state.state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
             return
         self._attr_is_on = state.state == STATE_ON
 
