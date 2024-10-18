@@ -4,11 +4,9 @@ from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import HeadlightModes
-from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,11 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_select_states(
@@ -28,11 +22,9 @@ async def test_select_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mower_values,
 ) -> None:
     """Test states of headlight mode select."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("select.test_mower_1_headlight_mode")
     assert state is not None
@@ -46,8 +38,8 @@ async def test_select_states(
         (HeadlightModes.ALWAYS_ON, "always_on"),
         (HeadlightModes.EVENING_AND_NIGHT, "evening_and_night"),
     ):
-        values[TEST_MOWER_ID].settings.headlight.mode = state
-        mock_automower_client.get_status.return_value = values
+        mower_values[TEST_MOWER_ID].settings.headlight.mode = state
+        mock_automower_client.get_status.return_value = mower_values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

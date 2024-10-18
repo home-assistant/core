@@ -4,7 +4,6 @@
       "type": "mower",
       "id": "c7233734-b219-4287-a173-08e3643f89f0",
       "attributes": {
-        "mower_tz": "Europe/Berlin",
         "system": {
           "name": "Test Mower 1",
           "model": "HUSQVARNA AUTOMOWER® 450XH",
@@ -212,7 +211,6 @@
       "type": "mower",
       "id": "1234",
       "attributes": {
-        "mower_tz": "Europe/Berlin",
         "system": {
           "name": "Test Mower 2",
           "model": "HUSQVARNA AUTOMOWER® Aspire R4",

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
 
 from aioautomower.model import (
     MowerAttributes,
@@ -25,7 +24,6 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -195,16 +193,16 @@ ERROR_STATES = {
 }
 
 RESTRICTED_REASONS: list = [
-    RestrictedReasons.ALL_WORK_AREAS_COMPLETED.lower(),
-    RestrictedReasons.DAILY_LIMIT.lower(),
-    RestrictedReasons.EXTERNAL.lower(),
-    RestrictedReasons.FOTA.lower(),
-    RestrictedReasons.FROST.lower(),
-    RestrictedReasons.NONE.lower(),
-    RestrictedReasons.NOT_APPLICABLE.lower(),
-    RestrictedReasons.PARK_OVERRIDE.lower(),
-    RestrictedReasons.SENSOR.lower(),
-    RestrictedReasons.WEEK_SCHEDULE.lower(),
+    RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
+    RestrictedReasons.DAILY_LIMIT,
+    RestrictedReasons.EXTERNAL,
+    RestrictedReasons.FOTA,
+    RestrictedReasons.FROST,
+    RestrictedReasons.NONE,
+    RestrictedReasons.NOT_APPLICABLE,
+    RestrictedReasons.PARK_OVERRIDE,
+    RestrictedReasons.SENSOR,
+    RestrictedReasons.WEEK_SCHEDULE,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
@@ -277,9 +275,9 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
-        option_fn=lambda data: [option.lower() for option in list(MowerModes)],
+        option_fn=lambda data: list(MowerModes),
         value_fn=(
-            lambda data: data.mower.mode.lower()
+            lambda data: data.mower.mode
             if data.mower.mode != MowerModes.UNKNOWN
             else None
         ),
@@ -369,7 +367,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_datetime_aware,
+        value_fn=lambda data: data.planner.next_start_datetime,
     ),
     AutomowerSensorEntityDescription(
         key="error",
@@ -383,7 +381,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
-        value_fn=lambda data: data.planner.restricted_reason.lower(),
+        value_fn=lambda data: data.planner.restricted_reason,
     ),
     AutomowerSensorEntityDescription(
         key="work_area",
@@ -418,9 +416,9 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.last_time_completed_aware is not None,
+        exists_fn=lambda data: data.last_time_completed is not None,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.last_time_completed_aware,
+        value_fn=lambda data: data.last_time_completed,
     ),
 )
 

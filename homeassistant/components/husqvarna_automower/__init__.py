@@ -2,9 +2,10 @@
 
 import logging
 from zoneinfo import ZoneInfo
+
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
-from homeassistant.util import dt as dt_util
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,6 +15,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.util import dt as dt_util
 
 from . import api
 from .const import DOMAIN

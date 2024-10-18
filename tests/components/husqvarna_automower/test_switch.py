@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
+import zoneinfo
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerModes
@@ -46,11 +47,10 @@ async def test_switch_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mower_values,
 ) -> None:
     """Test switch state."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
+    values = mower_values
     await setup_integration(hass, mock_config_entry)
 
     for mode, expected_state in (
@@ -127,7 +127,8 @@ async def test_stay_out_zone_switch_commands(
     entity_id = "switch.test_mower_1_avoid_danger_zone"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
+        load_json_value_fixture("mower.json", DOMAIN),
+        zoneinfo.ZoneInfo("Europe/Berlin"),
     )
     values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID].enabled = boolean
     mock_automower_client.get_status.return_value = values
@@ -182,7 +183,8 @@ async def test_work_area_switch_commands(
     entity_id = "switch.test_mower_1_my_lawn"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
+        load_json_value_fixture("mower.json", DOMAIN),
+        zoneinfo.ZoneInfo("Europe/Berlin"),
     )
     values[TEST_MOWER_ID].work_areas[TEST_AREA_ID].enabled = boolean
     mock_automower_client.get_status.return_value = values
@@ -221,19 +223,16 @@ async def test_zones_deleted(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mower_values,
 ) -> None:
     """Test if stay-out-zone is deleted after removed."""
-
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     current_entries = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    del values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID]
-    mock_automower_client.get_status.return_value = values
+    del mower_values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID]
+    mock_automower_client.get_status.return_value = mower_values
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(
