@@ -55,11 +55,10 @@ def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device_id = config[CONF_DEVICE_ID]
 
     # Get the config entry for the Steam account based on device_id
     config_entry = hass.config_entries.async_get_entry(
-        list(dr.async_get(hass).async_get(device_id).config_entries)[0]
+        list(dr.async_get(hass).async_get(config[CONF_DEVICE_ID]).config_entries)[0]
     )
 
     # Find the primary entity id that's linked to the account on initial setup
