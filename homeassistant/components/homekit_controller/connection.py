@@ -849,16 +849,15 @@ class HKDevice:
         """Poll state of all entities attached to this bridge/accessory."""
         to_poll = self.pollable_characteristics
         accessories = self.entity_map.accessories
-
+        pairing = self.pairing
         if (
             not self._full_update_requested
+            and pairing.supports_subscribe
             and len(accessories) == 1
             and self.available
             and not (to_poll - self.watchable_characteristics)
-            and self.pairing.is_available
-            and await self.pairing.controller.async_reachable(
-                self.unique_id, timeout=5.0
-            )
+            and pairing.is_available
+            and await pairing.controller.async_reachable(self.unique_id, timeout=5.0)
         ):
             # If its a single accessory and all chars are watchable,
             # only poll the firmware version to keep the connection alive
