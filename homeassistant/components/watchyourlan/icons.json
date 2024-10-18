@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "iface": {
+        "default": "mdi:ethernet"
+      }
+    }
+  }
+}
