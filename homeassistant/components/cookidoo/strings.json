@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "runner": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "captcha": "A captcha blocks the login requests. This is due to too many requests and will time out after about a day. Try again later.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "todo": {
+      "item_list": {
+        "name": "Items"
+      },
+      "additional_item_list": {
+        "name": "Additional Items"
+      }
+    }
+  },
+  "exceptions": {
+    "todo_save_item_failed": {
+      "message": "Failed to save item {name} to Cookidoo shopping list"
+    },
+    "todo_update_item_failed": {
+      "message": "Failed to update item {name} to Cookidoo shopping list"
+    },
+    "todo_rename_item_failed": {
+      "message": "Failed to rename item {name} to Cookidoo shopping list"
+    },
+    "todo_delete_item_failed": {
+      "message": "Failed to delete {count} item(s) from Cookidoo shopping list"
+    },
+    "setup_request_exception": {
+      "message": "Failed to connect to server, try again later"
+    },
+    "setup_parse_exception": {
+      "message": "Failed to parse server response, try again later"
+    },
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {email}, check your email and password"
+    }
+  }
+}
