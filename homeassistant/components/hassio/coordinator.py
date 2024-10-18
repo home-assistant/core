@@ -56,7 +56,7 @@ from .const import (
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, HassioAPIError, get_supervisor_client
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
@@ -318,6 +318,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
+        self._supervisor_client = get_supervisor_client(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -502,17 +503,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
-            stats = await self.hassio.get_addon_stats(slug)
-        except HassioAPIError as err:
+            stats = await self._supervisor_client.addons.addon_stats(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
             return (slug, None)
-        return (slug, stats)
+        return (slug, stats.to_dict())
 
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
-            changelog = await self.hassio.get_addon_changelog(slug)
-        except HassioAPIError as err:
+            changelog = await self._supervisor_client.store.addon_changelog(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
             return (slug, None)
         return (slug, changelog)
@@ -520,7 +521,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self.hassio.client.addons.addon_info(slug)
+            info = await self._supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)

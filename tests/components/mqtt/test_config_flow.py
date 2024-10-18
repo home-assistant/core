@@ -14,11 +14,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import (
-    AddonError,
-    HassioAPIError,
-    HassioServiceInfo,
-)
+from homeassistant.components.hassio import AddonError, HassioServiceInfo
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -253,7 +249,7 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mqtt_client_mock", "supervisor")
+@pytest.mark.usefixtures("mqtt_client_mock", "supervisor", "supervisor_client")
 async def test_user_connection_works_with_supervisor(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
@@ -856,7 +852,7 @@ async def test_addon_not_installed_failures(
 
     Case: The Mosquitto add-on install fails.
     """
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
