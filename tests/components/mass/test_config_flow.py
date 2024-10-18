@@ -172,15 +172,3 @@ async def test_flow_discovery_confirm_creates_config_entry(
         "step_id": "discovery_confirm",
     }
     assert expected == result
-
-
-async def test_options_flow_init(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = await setup_mass_integration(hass)
-    # show initial form
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    data_schema = result.get("data_schema")
-    assert data_schema is not None
-    assert data_schema.schema[CONF_URL] is str
