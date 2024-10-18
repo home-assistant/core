@@ -35,11 +35,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub switch entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusSwitch(broker, z)
-        for z in broker.client.zone_objs
+        GeniusSwitch(coordinator, z)
+        for z in coordinator.client.zone_objs
         if z.data.get("type") == GH_ON_OFF_ZONE
     )
 
