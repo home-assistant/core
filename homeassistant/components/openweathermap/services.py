@@ -17,7 +17,7 @@ async def async_setup_services(
 ) -> None:
     """Set up OpenWeatherMap services."""
 
-    def handle_get_minutely_forecast(call: ServiceCall) -> None:
+    def handle_get_minutely_forecasts(call: ServiceCall) -> None:
         """Handle the service action call."""
         return weather_coordinator.data[ATTR_API_MINUTELY_FORECAST]
 
@@ -25,7 +25,7 @@ async def async_setup_services(
         hass.services.async_register(
             domain=DOMAIN,
             service=SERVICE_GET_MINUTELY_FORECAST,
-            service_func=handle_get_minutely_forecast,
+            service_func=handle_get_minutely_forecasts,
             supports_response=SupportsResponse.ONLY,
         )
     else:
