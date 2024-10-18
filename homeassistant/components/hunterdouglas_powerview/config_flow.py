@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 HAP_SUFFIX = "._hap._tcp.local."
 POWERVIEW_G2_SUFFIX = "._powerview._tcp.local."
-POWERVIEW_G3_SUFFIX = "._powerview-g3._tcp.local."
+POWERVIEW_G3_SUFFIX = "._PowerView-G3._tcp.local."
 
 
 async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str]:

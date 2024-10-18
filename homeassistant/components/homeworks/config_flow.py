@@ -558,34 +558,24 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
 
     async def _validate_edit_controller(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any], reconfigure_entry: ConfigEntry
     ) -> dict[str, Any]:
         """Validate controller setup."""
         _validate_credentials(user_input)
         user_input[CONF_PORT] = int(user_input[CONF_PORT])
 
-        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert our_entry
-        other_entries = self._async_current_entries()
-        for entry in other_entries:
-            if entry.entry_id == our_entry.entry_id:
-                continue
-            if (
-                user_input[CONF_HOST] == entry.options[CONF_HOST]
-                and user_input[CONF_PORT] == entry.options[CONF_PORT]
-            ):
-                raise SchemaFlowError("duplicated_host_port")
+        if any(
+            entry.entry_id != reconfigure_entry.entry_id
+            and user_input[CONF_HOST] == entry.options[CONF_HOST]
+            and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            for entry in self._async_current_entries()
+        ):
+            raise SchemaFlowError("duplicated_host_port")
 
         await _try_connection(user_input)
         return user_input
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfigure flow."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
@@ -606,7 +596,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
             try:
-                await self._validate_edit_controller(user_input)
+                await self._validate_edit_controller(user_input, reconfigure_entry)
             except SchemaFlowError as err:
                 errors["base"] = str(err)
             else:
@@ -628,7 +618,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 DATA_SCHEMA_EDIT_CONTROLLER, suggested_values
             ),

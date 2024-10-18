@@ -104,3 +104,12 @@ def mock_action_call() -> Generator[AsyncMock]:
         fake_call,
     ) as mock_action_call:
         yield mock_action_call
+
+
+@pytest.fixture
+def mock_scene_call() -> Generator[AsyncMock]:
+    """Override Scene.__call__."""
+    with patch(
+        "wmspro.scene.Scene.__call__",
+    ) as mock_scene_call:
+        yield mock_scene_call

@@ -337,7 +337,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         if store_data:
             repositories = {
-                repo[ATTR_SLUG]: repo[ATTR_NAME]
+                repo.slug: repo.name
                 for repo in StoreInfo.from_dict(store_data).repositories
             }
         else:
