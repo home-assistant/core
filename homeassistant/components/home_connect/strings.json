@@ -349,6 +349,11 @@
       "door_assistant_freezer": {
         "name": "Freezer door assistant"
       }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      }
     }
   }
 }
