@@ -46,6 +46,9 @@ async def test_update_entities_initialized(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    states = hass.states.async_all()
+    assert len(states) == 1
+
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
@@ -67,6 +70,9 @@ async def test_update_available(
     with patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    states = hass.states.async_all()
+    assert len(states) == 1
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
@@ -95,6 +101,9 @@ async def test_available_update_can_be_installed(
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+        states = hass.states.async_all()
+        assert len(states) == 1
 
         await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
