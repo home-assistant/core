@@ -1,0 +1,13 @@
+reconnect_client:
+  fields:
+    # Key of the field
+    mac:
+      # Whether or not field is required (default = false)
+      required: true
+      # Advanced fields are only shown when the advanced mode is enabled for the user
+      # (default = false)
+      advanced: false
+      # Example value that can be passed for this field
+      example: "01-23-45-67-89-AB"
+      # The default field value
+      default: ""
