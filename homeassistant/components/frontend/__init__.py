@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache, partial
 import logging
 import os
 import pathlib
@@ -11,6 +11,7 @@ from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+from propcache import cached_property
 import voluptuous as vol
 from yarl import URL
 

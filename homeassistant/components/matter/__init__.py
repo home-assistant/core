@@ -139,6 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config.location_name or "Home"
         )
     except (NotConnected, MatterError) as err:
+        listen_task.cancel()
         raise ConfigEntryNotReady("Failed to set default fabric label") from err
 
     if DOMAIN not in hass.data:

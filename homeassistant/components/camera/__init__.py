@@ -9,7 +9,7 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import cached_property, partial
+from functools import partial
 import logging
 import os
 from random import SystemRandom
@@ -18,6 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -401,9 +402,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async def get_ice_server() -> RTCIceServer:
-        # The following servers will replaced before the next stable release with
-        # STUN server provided by Home Assistant. Used Google ones for testing purposes.
-        return RTCIceServer(urls="stun:stun.l.google.com:19302")
+        return RTCIceServer(urls="stun:stun.home-assistant.io:3478")
 
     register_ice_server(hass, get_ice_server)
     return True

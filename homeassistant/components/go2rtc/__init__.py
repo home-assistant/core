@@ -8,39 +8,41 @@ from homeassistant.components.camera.webrtc import (
     async_register_webrtc_provider,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BINARY
 from .server import Server
 
-_SUPPORTED_STREAMS = (
-    "bubble",
-    "dvrip",
-    "expr",
-    "ffmpeg",
-    "gopro",
-    "homekit",
-    "http",
-    "https",
-    "httpx",
-    "isapi",
-    "ivideon",
-    "kasa",
-    "nest",
-    "onvif",
-    "roborock",
-    "rtmp",
-    "rtmps",
-    "rtmpx",
-    "rtsp",
-    "rtsps",
-    "rtspx",
-    "tapo",
-    "tcp",
-    "webrtc",
-    "webtorrent",
+_SUPPORTED_STREAMS = frozenset(
+    (
+        "bubble",
+        "dvrip",
+        "expr",
+        "ffmpeg",
+        "gopro",
+        "homekit",
+        "http",
+        "https",
+        "httpx",
+        "isapi",
+        "ivideon",
+        "kasa",
+        "nest",
+        "onvif",
+        "roborock",
+        "rtmp",
+        "rtmps",
+        "rtmpx",
+        "rtsp",
+        "rtsps",
+        "rtspx",
+        "tapo",
+        "tcp",
+        "webrtc",
+        "webtorrent",
+    )
 )
 
 
@@ -48,11 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WebRTC from a config entry."""
     if binary := entry.data.get(CONF_BINARY):
         # HA will manage the binary
-        server = Server(binary)
-        entry.async_on_unload(server.stop)
-        server.start()
+        server = Server(hass, binary)
 
-    client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
+        entry.async_on_unload(server.stop)
+        await server.start()
+
+    client = Go2RtcClient(async_get_clientsession(hass), entry.data[CONF_URL])
 
     provider = WebRTCProvider(client)
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
