@@ -15,7 +15,7 @@
       },
       "manual": {
         "title": "Manually add Music Assistant Server",
-        "description": "Enter the URL to your already running Music Assistant Server. If you do not have the Music Assistant Sewrver running, you should install it first.",
+        "description": "Enter the URL to your already running Music Assistant Server. If you do not have the Music Assistant Server running, you should install it first.",
         "data": {
           "url": "URL of the Music Assistant server"
         }

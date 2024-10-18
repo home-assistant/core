@@ -874,6 +874,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
 /homeassistant/components/mass/ @music-assistant
+/tests/components/mass/ @music-assistant
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
