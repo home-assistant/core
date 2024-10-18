@@ -111,7 +111,7 @@
   },
   "issues": {
     "deprecated_service_calendar_list_events": {
-      "title": "Detected use of deprecated action `calendar.list_events`",
+      "title": "Detected use of deprecated action calendar.list_events",
       "fix_flow": {
         "step": {
           "confirm": {

@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
@@ -45,20 +44,19 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectLightEntityDescription(LightEntityDescription):
     """Light entity description."""
 
-    on_key: str
     brightness_key: str | None
 
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
     HomeConnectLightEntityDescription(
-        key="Internal Light",
-        on_key=REFRIGERATION_INTERNAL_LIGHT_POWER,
+        key=REFRIGERATION_INTERNAL_LIGHT_POWER,
         brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+        translation_key="internal_light",
     ),
     HomeConnectLightEntityDescription(
-        key="External Light",
-        on_key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
+        key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
         brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+        translation_key="external_light",
     ),
 )
 
@@ -74,11 +72,29 @@ async def async_setup_entry(
         """Get a list of entities."""
         entities: list[LightEntity] = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("light", [])
-            entity_list = [HomeConnectLight(**d) for d in entity_dicts]
-            device: HomeConnectDevice = device_dict[CONF_DEVICE]
-            # Auto-discover entities
+        for device in hc_api.devices:
+            if COOKING_LIGHTING in device.appliance.status:
+                entities.append(
+                    HomeConnectLight(
+                        device,
+                        LightEntityDescription(
+                            key=COOKING_LIGHTING,
+                            translation_key="cooking_lighting",
+                        ),
+                        False,
+                    )
+                )
+            if BSH_AMBIENT_LIGHT_ENABLED in device.appliance.status:
+                entities.append(
+                    HomeConnectLight(
+                        device,
+                        LightEntityDescription(
+                            key=BSH_AMBIENT_LIGHT_ENABLED,
+                            translation_key="ambient_light",
+                        ),
+                        True,
+                    )
+                )
             entities.extend(
                 HomeConnectCoolingLight(
                     device=device,
@@ -86,9 +102,8 @@ async def async_setup_entry(
                     entity_description=description,
                 )
                 for description in LIGHTS
-                if description.on_key in device.appliance.status
+                if description.key in device.appliance.status
             )
-            entities.extend(entity_list)
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
@@ -97,7 +112,14 @@ async def async_setup_entry(
 class HomeConnectLight(HomeConnectEntity, LightEntity):
     """Light for Home Connect."""
 
-    def __init__(self, device, desc, ambient) -> None:
+    entity_description: LightEntityDescription
+
+    def __init__(
+        self,
+        device: HomeConnectDevice,
+        desc: LightEntityDescription,
+        ambient: bool,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, desc)
         self._ambient = ambient
@@ -107,14 +129,12 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         self._color_key: str | None
         if ambient:
             self._brightness_key = BSH_AMBIENT_LIGHT_BRIGHTNESS
-            self._key = BSH_AMBIENT_LIGHT_ENABLED
             self._custom_color_key = BSH_AMBIENT_LIGHT_CUSTOM_COLOR
             self._color_key = BSH_AMBIENT_LIGHT_COLOR
             self._attr_color_mode = ColorMode.HS
             self._attr_supported_color_modes = {ColorMode.HS}
         else:
             self._brightness_key = COOKING_LIGHTING_BRIGHTNESS
-            self._key = COOKING_LIGHTING
             self._custom_color_key = None
             self._color_key = None
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -126,7 +146,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             _LOGGER.debug("Switching ambient light on for: %s", self.name)
             try:
                 await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting, self._key, True
+                    self.device.appliance.set_setting, self.bsh_key, True
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying to turn on ambient light: %s", err)
@@ -189,7 +209,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             _LOGGER.debug("Switching light on for: %s", self.name)
             try:
                 await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting, self._key, True
+                    self.device.appliance.set_setting, self.bsh_key, True
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying to turn on light: %s", err)
@@ -201,7 +221,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         _LOGGER.debug("Switching light off for: %s", self.name)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self._key, False
+                self.device.appliance.set_setting, self.bsh_key, False
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off light: %s", err)
@@ -209,9 +229,11 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_update(self) -> None:
         """Update the light's status."""
-        if self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is True:
+        if self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE) is True:
             self._attr_is_on = True
-        elif self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is False:
+        elif (
+            self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE) is False
+        ):
             self._attr_is_on = False
         else:
             self._attr_is_on = None
@@ -255,8 +277,7 @@ class HomeConnectCoolingLight(HomeConnectLight):
         entity_description: HomeConnectLightEntityDescription,
     ) -> None:
         """Initialize Cooling Light Entity."""
-        super().__init__(device, entity_description.key, ambient)
+        super().__init__(device, entity_description, ambient)
         self.entity_description = entity_description
-        self._key = entity_description.on_key
         self._brightness_key = entity_description.brightness_key
         self._percentage_scale = (1, 100)

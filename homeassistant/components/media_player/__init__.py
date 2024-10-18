@@ -9,7 +9,7 @@ from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
-from functools import cached_property, lru_cache
+from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
@@ -21,6 +21,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
+from propcache import cached_property
 import voluptuous as vol
 from yarl import URL
 

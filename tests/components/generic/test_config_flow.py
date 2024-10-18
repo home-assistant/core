@@ -92,9 +92,9 @@ async def test_form(
         assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         client = await hass_client()
-        preview_id = result1["flow_id"]
+        preview_url = result1["description_placeholders"]["preview_url"]
         # Check the preview image works.
-        resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}?t=1")
+        resp = await client.get(preview_url)
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
         result2 = await hass.config_entries.flow.async_configure(
@@ -118,7 +118,7 @@ async def test_form(
 
     await hass.async_block_till_done()
     # Check that the preview image is disabled after.
-    resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
+    resp = await client.get(preview_url)
     assert resp.status == HTTPStatus.NOT_FOUND
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -212,10 +212,10 @@ async def test_form_still_preview_cam_off(
         )
         assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
-        preview_id = result1["flow_id"]
+        preview_url = result1["description_placeholders"]["preview_url"]
         # Try to view the image, should be unavailable.
         client = await hass_client()
-        resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}?t=1")
+        resp = await client.get(preview_url)
     assert resp.status == HTTPStatus.SERVICE_UNAVAILABLE
 
 
@@ -637,6 +637,10 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.generic.config.error.Some message"],
+)
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_stream_worker_error(

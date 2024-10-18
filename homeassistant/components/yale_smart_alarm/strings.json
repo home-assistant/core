@@ -60,6 +60,16 @@
       "autolock": {
         "name": "Autolock"
       }
+    },
+    "select": {
+      "volume": {
+        "name": "Volume",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "off": "[%key:common::state::off%]"
+        }
+      }
     }
   },
   "exceptions": {

@@ -94,6 +94,52 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert state is not None
 
 
+async def test_calibration_factor_not_zero(hass: HomeAssistant) -> None:
+    """Test calibration factor is not zero."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_INDOOR_TEMP: "sensor.indoor_temp",
+            CONF_INDOOR_HUMIDITY: "sensor.indoor_humidity",
+            CONF_OUTDOOR_TEMP: "sensor.outdoor_temp",
+            CONF_CALIBRATION_FACTOR: 0.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "calibration_is_zero"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_INDOOR_TEMP: "sensor.indoor_temp",
+            CONF_INDOOR_HUMIDITY: "sensor.indoor_humidity",
+            CONF_OUTDOOR_TEMP: "sensor.outdoor_temp",
+            CONF_CALIBRATION_FACTOR: 1.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_INDOOR_TEMP: "sensor.indoor_temp",
+        CONF_INDOOR_HUMIDITY: "sensor.indoor_humidity",
+        CONF_OUTDOOR_TEMP: "sensor.outdoor_temp",
+        CONF_CALIBRATION_FACTOR: 1.0,
+    }
+
+
 async def test_entry_already_exist(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:

@@ -4,19 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-from functools import cached_property
 import itertools
 import logging
-from typing import Any
+from typing import Any, cast
 
+from propcache import under_cached_property
 import voluptuous as vol
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PATH,
+    CONF_VARIABLES,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
@@ -77,6 +80,7 @@ TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
         vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
@@ -287,12 +291,16 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
+            self._run_variables = {}
+            self._blueprint_inputs = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+            self._run_variables = config.get(CONF_VARIABLES, {})
+            self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -302,7 +310,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @cached_property
+            @under_cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -332,6 +340,18 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 )
 
     @callback
+    def _render_variables(self) -> dict:
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
+        )
+
+    @callback
     def _update_available(self, result: str | TemplateError) -> None:
         if isinstance(result, TemplateError):
             self._attr_available = True
@@ -359,6 +379,13 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         self.add_template_attribute(
             attribute_key, attribute_template, None, _update_attribute
         )
+
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     def add_template_attribute(
         self,
@@ -459,7 +486,10 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
-        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **self._render_variables(),
+        }
 
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, variables)
@@ -563,6 +593,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **self._render_variables(),
                 **run_variables,
             },
             context=context,

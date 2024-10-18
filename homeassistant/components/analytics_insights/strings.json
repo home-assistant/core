@@ -17,7 +17,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "no_integration_selected": "You must select at least one integration to track"
+      "no_integrations_selected": "You must select at least one integration to track"
     }
   },
   "options": {
@@ -37,13 +37,19 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
-      "no_integration_selected": "[%key:component::analytics_insights::config::error::no_integration_selected%]"
+      "no_integrations_selected": "[%key:component::analytics_insights::config::error::no_integrations_selected%]"
     }
   },
   "entity": {
     "sensor": {
       "custom_integrations": {
         "name": "{custom_integration_domain} (custom)"
+      },
+      "total_active_installations": {
+        "name": "Total active installations"
+      },
+      "total_reports_integrations": {
+        "name": "Total reported integrations"
       }
     }
   }

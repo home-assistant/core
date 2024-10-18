@@ -96,9 +96,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.66.1
-grpcio-status==1.66.1
-grpcio-reflection==1.66.1
+grpcio==1.66.2
+grpcio-status==1.66.2
+grpcio-reflection==1.66.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -118,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.4.0
+anyio==4.6.0
 h11==0.14.0
 httpcore==1.0.5
 
