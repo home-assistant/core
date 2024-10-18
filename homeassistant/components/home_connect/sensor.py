@@ -31,6 +31,8 @@ from .const import (
     COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
     COFFEE_EVENT_DRIP_TRAY_FULL,
     COFFEE_EVENT_WATER_TANK_EMPTY,
+    DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+    DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
     DOMAIN,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
@@ -218,6 +220,16 @@ EVENT_SENSORS = (
         default_value="off",
         translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        desc="Salt Nearly Empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        desc="Rinse Aid Nearly Empty",
+        appliance_types=("Dishwasher",),
     ),
 )
 
