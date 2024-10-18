@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from mozart_api.exceptions import NotFoundException
 from mozart_api.models import (
     BeolinkLeader,
-    BeolinkPeer,
+    BeolinkSelf,
     PlaybackContentMetadata,
     RenderingState,
     Source,
@@ -569,7 +569,7 @@ async def test_async_update_name_and_beolink(
 ) -> None:
     """Test _async_update_name_and_beolink."""
     # Change response to ensure device name is changed
-    mock_mozart_client.get_beolink_self.return_value = BeolinkPeer(
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
         friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_1
     )
 

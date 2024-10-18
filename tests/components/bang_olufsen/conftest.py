@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from mozart_api.models import (
     Action,
     BeolinkPeer,
+    BeolinkSelf,
     ContentItem,
     ListeningMode,
     ListeningModeFeatures,
@@ -35,6 +36,8 @@ from .const import (
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
+    TEST_HOST_3,
+    TEST_HOST_4,
     TEST_JID_1,
     TEST_JID_3,
     TEST_JID_4,
@@ -100,7 +103,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
 
         # REST API client methods
         client.get_beolink_self = AsyncMock()
-        client.get_beolink_self.return_value = BeolinkPeer(
+        client.get_beolink_self.return_value = BeolinkSelf(
             friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
         )
         client.get_softwareupdate_status = AsyncMock()
@@ -261,13 +264,29 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         }
         client.get_beolink_peers = AsyncMock()
         client.get_beolink_peers.return_value = [
-            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
-            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_3,
+                jid=TEST_JID_3,
+                ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
+            ),
         ]
         client.get_beolink_listeners = AsyncMock()
         client.get_beolink_listeners.return_value = [
-            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
-            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_3,
+                jid=TEST_JID_3,
+                ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
+            ),
         ]
 
         client.get_listening_mode_set = AsyncMock()

@@ -99,7 +99,6 @@ class OmadaGatewayPortBinarySensor(
     """Binary status of a property on an internet gateway."""
 
     entity_description: GatewayPortBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -17,7 +17,7 @@ from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -208,7 +208,7 @@ async def test_setup_go(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
-        data={CONF_HOST: "http://localhost:1984/"},
+        data={CONF_URL: "http://localhost:1984/"},
     )
 
     def after_setup() -> None:
