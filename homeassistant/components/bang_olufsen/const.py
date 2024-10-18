@@ -7,7 +7,11 @@ from typing import Final
 
 from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
-from homeassistant.components.media_player import MediaPlayerState, MediaType
+from homeassistant.components.media_player import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 
 
 class BangOlufsenSource:
@@ -34,6 +38,17 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "error": MediaPlayerState.IDLE,
     # A device's initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
+}
+
+# Dict used for translating Home Assistant settings to device repeat settings.
+BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+    RepeatMode.ALL: "all",
+    RepeatMode.ONE: "track",
+    RepeatMode.OFF: "none",
+}
+# Dict used for translating device repeat settings to Home Assistant settings.
+BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
 }
 
 
