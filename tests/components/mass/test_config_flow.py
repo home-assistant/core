@@ -184,17 +184,3 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
     data_schema = result.get("data_schema")
     assert data_schema is not None
     assert data_schema.schema[CONF_URL] is str
-
-
-async def test_options_flow_change_conversation_agent(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = await setup_mass_integration(hass)
-    # show initial form
-    _result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    # submit form with options
-    await hass.config_entries.options.async_configure(
-        _result["flow_id"],
-        user_input={
-            CONF_URL: "http://localhost:8095",
-        },
-    )
