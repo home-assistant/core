@@ -564,7 +564,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if states("switch.test")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
                             ),
                             "name": "Test2",
                         },
