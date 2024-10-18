@@ -306,4 +306,30 @@ class HabitipyTaskSensor(HabiticaBase, SensorEntity):
                     DOMAIN,
                     f"deprecated_task_entity_{self.entity_description.key}",
                 )
+
+            if (
+                self.enabled
+                and self.entity_description.key
+                in (HabitipySensorEntity.HABITS, HabitipySensorEntity.REWARDS)
+                and entity_used_in(self.hass, entity_id)
+            ):
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_state_attributes_{self.entity_description.key}",
+                    breaks_in_ha_version="2025.5.0",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_state_attributes",
+                    translation_placeholders={
+                        "task_name": str(self.name),
+                        "entity": entity_id,
+                    },
+                )
+            else:
+                async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_state_attributes_{self.entity_description.key}",
+                )
         await super().async_added_to_hass()

@@ -172,6 +172,10 @@
     "deprecated_task_entity": {
       "title": "The Habitica {task_name} sensor is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
+    },
+    "deprecated_state_attributes": {
+      "title": "The Habitica {task_name} sensor's attributes are deprecated",
+      "description": "The **attributes** of the Habitica entity `{entity}` are deprecated and will be removed in a future release.\nPlease update your automations and scripts."
     }
   },
   "services": {
