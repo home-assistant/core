@@ -15,7 +15,7 @@
             "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
             "examples": ["mobile_app"],
             "type": "string",
-            "pattern": "[a-z_]+"
+            "pattern": "[0-9a-z_]+"
           },
           "name": {
             "description": "The friendly name of the integration.",
@@ -44,7 +44,7 @@
             "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
             "examples": ["mobile_app"],
             "type": "string",
-            "pattern": "[a-z_]+"
+            "pattern": "[0-9a-z_]+"
           },
           "name": {
             "description": "The friendly name of the integration.",
