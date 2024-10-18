@@ -74,10 +74,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
                 # Do not reload when performing first refresh
                 if self.data is not None:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self.config_entry.entry_id
-                        )
+                    self.hass.config_entries.async_schedule_reload(
+                        self.config_entry.entry_id
+                    )
                     )
 
             raise UpdateFailed(ex) from ex
