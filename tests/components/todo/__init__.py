@@ -34,6 +34,13 @@ class MockTodoListEntity(TodoListEntity):
         """Delete an item in the To-do list."""
         self._attr_todo_items = [item for item in self.items if item.uid not in uids]
 
+    async def async_update_todo_item(self, item: TodoItem) -> None:
+        """Update an item in the To-do list."""
+        for idx, existing_item in enumerate(self.items):
+            if existing_item.uid == item.uid:
+                self._attr_todo_items[idx] = item
+                break
+
 
 async def create_mock_platform(
     hass: HomeAssistant,
