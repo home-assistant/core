@@ -66,6 +66,9 @@ def create_thermostat_service(accessory: Accessory) -> None:
     char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
     char.value = 0
 
+    char = service.add_char(CharacteristicsTypes.FAN_STATE_CURRENT)
+    char.value = 0
+
 
 def create_thermostat_service_min_max(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
@@ -647,6 +650,18 @@ async def test_hvac_mode_vs_hvac_action(
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
     assert state.attributes["hvac_action"] == "idle"
+
+    # Simulate the fan running while the heat/cool is idle
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_CURRENT: 2,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == "heat"
+    assert state.attributes["hvac_action"] == "fan"
 
     # Simulate that current temperature is below target temp
     # Heating might be on and hvac_action currently 'heat'
