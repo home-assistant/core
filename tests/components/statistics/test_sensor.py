@@ -26,7 +26,6 @@ from homeassistant.components.statistics.sensor import (
     CONF_SAMPLES_MAX_BUFFER_SIZE,
     CONF_STATE_CHARACTERISTIC,
     STAT_MEAN,
-    StatisticsSensor,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -539,7 +538,7 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == str(new_mean)
         assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1 / 4
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
         # Values expire over time. Only one is left
 
@@ -553,9 +552,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == str(new_mean)
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
-        # Values expire over time. Buffer is empty
+        # Values expire over time. Buffer has only one expired value
 
         current_time += timedelta(minutes=1)
         freezer.move_to(current_time)
@@ -564,9 +563,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         state = hass.states.get("sensor.test")
         assert state is not None
-        assert state.state == STATE_UNKNOWN
-        assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") is None
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
 
 async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> None:
@@ -626,7 +625,7 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         assert state is not None
         assert state.state == str(new_mean)
         assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1 / 4
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
         # Values expire over time. Only one is left
 
@@ -640,7 +639,7 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         assert state is not None
         assert state.state == str(new_mean)
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
         # Values expire over time. All values expired, but preserve expired last value
 
@@ -653,7 +652,7 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         assert state is not None
         assert state.state == str(float(VALUES_NUMERIC[-1]))
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
         # Indefinitely preserve expired last value
 
@@ -666,10 +665,12 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         assert state is not None
         assert state.state == str(float(VALUES_NUMERIC[-1]))
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
-        # New sensor value within max_age, preserved expired value should be dropped
-        last_update_val = 123.0
+        # Add a new sensor value within max_age
+        # the preserved expired value will be combined with the current one
+        # both values are visible within the interval
+        last_update_val = 8.0
         current_time += timedelta(minutes=1)
         freezer.move_to(current_time)
         async_fire_time_changed(hass, current_time)
@@ -682,9 +683,9 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
 
         state = hass.states.get("sensor.test")
         assert state is not None
-        assert state.state == str(last_update_val)
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.state == str((last_update_val + VALUES_NUMERIC[-1]) / 2)
+        assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 1.0
 
 
 async def test_precision(hass: HomeAssistant) -> None:
@@ -1028,7 +1029,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "average_timeless",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1036,7 +1037,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "change",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(0),
             "value_1": float(0),
             "value_9": float(round(VALUES_NUMERIC[-1] - VALUES_NUMERIC[0], 2)),
             "unit": "°C",
@@ -1072,7 +1073,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "count",
-            "value_0": 0,
+            "value_0": 1,  # this is the unchanged value before the interval
             "value_1": 1,
             "value_9": 9,
             "unit": None,
@@ -1080,7 +1081,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_newest",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=9)).isoformat(),
             "unit": None,
@@ -1088,7 +1089,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_oldest",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=1)).isoformat(),
             "unit": None,
@@ -1096,7 +1097,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_value_max",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=2)).isoformat(),
             "unit": None,
@@ -1104,7 +1105,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_value_min",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=5)).isoformat(),
             "unit": None,
@@ -1112,7 +1113,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "distance_95_percent_of_values",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(round(2 * 1.96 * statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1120,7 +1121,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "distance_99_percent_of_values",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(round(2 * 2.58 * statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1128,7 +1129,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "distance_absolute",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(0),
             "value_1": float(0),
             "value_9": float(max(VALUES_NUMERIC) - min(VALUES_NUMERIC)),
             "unit": "°C",
@@ -1136,7 +1137,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "mean",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1144,7 +1145,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "mean_circular",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": 10.76,
             "unit": "°C",
@@ -1152,7 +1153,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "median",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(statistics.median(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1160,7 +1161,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "noisiness",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)),
             "unit": "°C",
@@ -1168,7 +1169,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "percentile",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 6.0,
             "value_1": 6.0,
             "value_9": 9.2,
             "unit": "°C",
@@ -1176,7 +1177,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "standard_deviation",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(round(statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
@@ -1184,7 +1185,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "sum",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(sum(VALUES_NUMERIC)),
             "unit": "°C",
@@ -1192,7 +1193,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "sum_differences",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(
                 sum(
@@ -1213,7 +1214,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "sum_differences_nonnegative",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(
                 sum(
@@ -1234,7 +1235,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "total",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(sum(VALUES_NUMERIC)),
             "unit": "°C",
@@ -1242,7 +1243,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "value_max",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(max(VALUES_NUMERIC)),
             "unit": "°C",
@@ -1250,7 +1251,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "value_min",
-            "value_0": STATE_UNKNOWN,
+            "value_0": float(VALUES_NUMERIC[-1]),
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(min(VALUES_NUMERIC)),
             "unit": "°C",
@@ -1258,7 +1259,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "sensor",
             "name": "variance",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 0.0,
             "value_1": 0.0,
             "value_9": float(round(statistics.variance(VALUES_NUMERIC), 2)),
             "unit": "°C²",
@@ -1274,7 +1275,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "average_timeless",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 100.0,
             "value_1": 100.0,
             "value_9": float(
                 round(100 / len(VALUES_BINARY) * VALUES_BINARY.count("on"), 2)
@@ -1284,7 +1285,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "count",
-            "value_0": 0,
+            "value_0": 1,
             "value_1": 1,
             "value_9": len(VALUES_BINARY),
             "unit": None,
@@ -1292,7 +1293,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "count_on",
-            "value_0": 0,
+            "value_0": 1,
             "value_1": 1,
             "value_9": VALUES_BINARY.count("on"),
             "unit": None,
@@ -1308,7 +1309,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "datetime_newest",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=9)).isoformat(),
             "unit": None,
@@ -1316,7 +1317,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "datetime_oldest",
-            "value_0": STATE_UNKNOWN,
+            "value_0": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_1": (start_datetime + timedelta(minutes=9)).isoformat(),
             "value_9": (start_datetime + timedelta(minutes=1)).isoformat(),
             "unit": None,
@@ -1324,7 +1325,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         {
             "source_sensor_domain": "binary_sensor",
             "name": "mean",
-            "value_0": STATE_UNKNOWN,
+            "value_0": 100.0,
             "value_1": 100.0,
             "value_9": float(
                 round(100 / len(VALUES_BINARY) * VALUES_BINARY.count("on"), 2)
@@ -1561,18 +1562,12 @@ async def test_initialize_from_database_with_maxage(
     """Test initializing the statistics from the database."""
     current_time = dt_util.utcnow()
 
-    # Testing correct retrieval from recorder, thus we do not
-    # want purging to occur within the class itself.
-    def mock_purge(self, *args):
-        return
-
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     with (
         freeze_time(current_time) as freezer,
-        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
     ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(
@@ -1597,7 +1592,7 @@ async def test_initialize_from_database_with_maxage(
                         "entity_id": "sensor.test_monitored",
                         "state_characteristic": "datetime_newest",
                         "sampling_size": 100,
-                        "max_age": {"hours": 3},
+                        "max_age": {"hours": 12},
                     },
                 ]
             },
@@ -1606,7 +1601,8 @@ async def test_initialize_from_database_with_maxage(
 
     state = hass.states.get("sensor.test")
     assert state is not None
-    assert state.attributes.get("age_coverage_ratio") == round(2 / 3, 2)
+    # buffer is filled with 9 hours worth of data out of 12
+    assert state.attributes.get("age_coverage_ratio") == round(9 / 12, 2)
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
     assert current_time == datetime.strptime(
