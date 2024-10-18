@@ -191,7 +191,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         placeholders = {
-            "model": device[ATTR_MODEL_DESCRIPTION] or device[ATTR_MODEL],
+            "model": device[ATTR_MODEL_DESCRIPTION]
+            or device[ATTR_MODEL]
+            or "Magic Home",
             "id": mac_address[-6:],
             "ipaddr": device[ATTR_IPADDR],
         }

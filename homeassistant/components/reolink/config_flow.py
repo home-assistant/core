@@ -116,10 +116,12 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
-        self.context["title_placeholders"]["ip_address"] = entry_data[CONF_HOST]
-        self.context["title_placeholders"]["hostname"] = self.context[
-            "title_placeholders"
-        ]["name"]
+        placeholders = {
+            **self.context["title_placeholders"],
+            "ip_address": entry_data[CONF_HOST],
+            "hostname": self.context["title_placeholders"]["name"],
+        }
+        self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -134,16 +136,13 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert config_entry is not None
-        self._host = config_entry.data[CONF_HOST]
-        self._username = config_entry.data[CONF_USERNAME]
-        self._password = config_entry.data[CONF_PASSWORD]
+        entry_data = self._get_reconfigure_entry().data
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_user()
 
     async def async_step_dhcp(
@@ -258,17 +257,16 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
                 mac_address = format_mac(host.api.mac_address)
-                existing_entry = await self.async_set_unique_id(
-                    mac_address, raise_on_progress=False
-                )
-                if existing_entry and self.init_step in (
-                    SOURCE_REAUTH,
-                    SOURCE_RECONFIGURE,
-                ):
+                await self.async_set_unique_id(mac_address, raise_on_progress=False)
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        entry=existing_entry,
-                        data=user_input,
-                        reason=f"{self.init_step}_successful",
+                        entry=self._get_reauth_entry(), data=user_input
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        entry=self._get_reconfigure_entry(), data=user_input
                     )
                 self._abort_if_unique_id_configured(updates=user_input)
 
@@ -284,7 +282,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD, default=self._password): str,
             }
         )
-        if self._host is None or self.init_step == SOURCE_RECONFIGURE or errors:
+        if self._host is None or self.source == SOURCE_RECONFIGURE or errors:
             data_schema = data_schema.extend(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,

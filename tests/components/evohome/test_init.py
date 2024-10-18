@@ -23,8 +23,9 @@ async def test_entities(
     """Test entities and state after setup of a Honeywell TCC-compatible system."""
 
     # some extended state attrs are relative the current time
-    freezer.move_to("2024-07-10 12:00:00+00:00")
+    freezer.move_to("2024-07-10T12:00:00Z")
 
-    await setup_evohome(hass, config, install=install)
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
 
     assert hass.states.async_all() == snapshot

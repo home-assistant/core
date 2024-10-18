@@ -6,7 +6,6 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
-from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -14,6 +13,7 @@ from typing import Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
+from propcache import cached_property
 import requests
 from typing_extensions import TypeVar
 
@@ -29,6 +29,8 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
+from .frame import report
+from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -68,6 +70,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
+        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -84,7 +87,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        self.config_entry = config_entries.current_entry.get()
+        if config_entry is UNDEFINED:
+            self.config_entry = config_entries.current_entry.get()
+            # This should be deprecated once all core integrations are updated
+            # to pass in the config entry explicitly.
+        else:
+            self.config_entry = config_entry
         self.always_update = always_update
 
         # It's None before the first successful update.
@@ -277,6 +285,26 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
+        if self.config_entry is None:
+            report(
+                "uses `async_config_entry_first_refresh`, which is only supported "
+                "for coordinators with a config entry and will stop working in "
+                "Home Assistant 2025.11",
+                error_if_core=True,
+                error_if_integration=False,
+            )
+        elif (
+            self.config_entry.state
+            is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+        ):
+            report(
+                "uses `async_config_entry_first_refresh`, which is only supported "
+                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
+                f"but it is in state {self.config_entry.state}, "
+                "This will stop working in Home Assistant 2025.11",
+                error_if_core=True,
+                error_if_integration=False,
+            )
         if await self.__wrap_async_setup():
             await self._async_refresh(
                 log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True

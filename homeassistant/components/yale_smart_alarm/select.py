@@ -18,24 +18,24 @@ VOLUME_OPTIONS = {value.name.lower(): str(value.value) for value in YaleLockVolu
 async def async_setup_entry(
     hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Yale switch entry."""
+    """Set up the Yale select entry."""
 
     coordinator = entry.runtime_data
 
     async_add_entities(
-        YaleAutolockSwitch(coordinator, lock)
+        YaleLockVolumeSelect(coordinator, lock)
         for lock in coordinator.locks
         if lock.supports_lock_config()
     )
 
 
-class YaleAutolockSwitch(YaleLockEntity, SelectEntity):
-    """Representation of a Yale autolock switch."""
+class YaleLockVolumeSelect(YaleLockEntity, SelectEntity):
+    """Representation of a Yale lock volume select."""
 
     _attr_translation_key = "volume"
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator, lock: YaleLock) -> None:
-        """Initialize the Yale Autolock Switch."""
+        """Initialize the Yale volume select."""
         super().__init__(coordinator, lock)
         self._attr_unique_id = f"{lock.sid()}-volume"
         self._attr_current_option = self.lock_data.volume().name.lower()
