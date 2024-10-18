@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -18,7 +19,11 @@ from solarlog_cli.solarlog_models import SolarlogData
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import slugify
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +39,9 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         super().__init__(
             hass, _LOGGER, name="SolarLog", update_interval=timedelta(seconds=60)
         )
+
+        self.new_device_callbacks: list[Callable[[int], None]] = []
+        self._devices_last_update: dict[int, str] = {}
 
         host_entry = entry.data[CONF_HOST]
         password = entry.data.get("password", "")
@@ -84,7 +92,99 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
 
         _LOGGER.debug("Data successfully updated")
 
+        if self.solarlog.extended_data:
+            self._async_add_remove_devices(data)
+            _LOGGER.info("Add_remove_devices finished")
+
         return data
+
+    def _async_add_remove_devices(self, data: SolarlogData) -> None:
+        """Add new devices, remove non-existing devices."""
+        if not self._devices_last_update:
+            self._devices_last_update = {
+                k: self.solarlog.device_name(k) for k in data.inverter_data
+            }
+            return
+
+        if (
+            current_devices := {
+                k: self.solarlog.device_name(k) for k in data.inverter_data
+            }
+        ) == self._devices_last_update:
+            return
+
+        # remove old devices
+        if removed_devices := {
+            k: v
+            for k, v in self._devices_last_update.items()
+            if k not in current_devices
+        }:
+            _LOGGER.info(
+                "Removed device(s): %s", ", ".join(map(str, removed_devices.values()))
+            )
+            device_registry = dr.async_get(self.hass)
+
+            for device_id in removed_devices:
+                if device := device_registry.async_get_device(
+                    identifiers={
+                        (
+                            DOMAIN,
+                            f"{self.unique_id}_{slugify(self._devices_last_update[device_id])}",
+                        )
+                    }
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.unique_id,
+                    )
+                    _LOGGER.info("Device removed from device registry: %s", device.id)
+
+        # add new devices
+        if new_devices := {
+            k: v
+            for k, v in current_devices.items()
+            if k not in self._devices_last_update
+        }:
+            _LOGGER.info(
+                "New device(s) found: %s", ", ".join(map(str, new_devices.values()))
+            )
+            for device_id in new_devices:
+                for callback in self.new_device_callbacks:
+                    callback(device_id)
+
+        # devices with new names
+        if renamed_devices := {
+            k: v
+            for k, v in current_devices.items()
+            if k in self._devices_last_update
+            and current_devices[k] != self._devices_last_update.get(k)
+        }:
+            _LOGGER.info(
+                "Renamed device(s) found: %s",
+                ", ".join(map(str, renamed_devices.values())),
+            )
+            device_registry = dr.async_get(self.hass)
+
+            for device_id in renamed_devices:
+                if device := device_registry.async_get_device(
+                    identifiers={
+                        (
+                            DOMAIN,
+                            f"{self.unique_id}_{slugify(self._devices_last_update[device_id])}",
+                        )
+                    }
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        name=current_devices[device_id],
+                    )
+                    _LOGGER.info(
+                        "Device in device registry renamed: %s -> %s",
+                        self._devices_last_update[device_id],
+                        current_devices[device_id],
+                    )
+
+        self._devices_last_update = current_devices
 
     async def renew_authentication(self) -> bool:
         """Renew access token for SolarLog API."""
