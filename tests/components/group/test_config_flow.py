@@ -30,6 +30,7 @@ from tests.typing import WebSocketGenerator
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("button", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
+        ("climate", "off", "off", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         (
             "event",
@@ -138,6 +139,7 @@ async def test_config_flow(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("climate", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -217,6 +219,7 @@ def get_suggested(schema, key):
     [
         ("binary_sensor", "on", {"all": False}, {}),
         ("button", "2021-01-01T23:59:59.123+00:00", {}, {}),
+        ("climate", "off", {}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
@@ -403,6 +406,7 @@ async def test_all_options(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("climate", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -479,6 +483,19 @@ async def test_options_flow_hides_members(
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
+CLIMATE_ATTRS = [
+    {
+        "supported_features": 0,
+        "hvac_modes": [],
+        "max_temp": None,
+        "min_temp": None,
+    },
+    {
+        "assumed_state": True,
+        "current_temperature": None,
+        "hvac_action": "off",
+    },
+]
 COVER_ATTRS = [{"supported_features": 0}, {}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
 FAN_ATTRS = [{"supported_features": 0}, {}]
@@ -501,6 +518,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
         ("button", {}, ["", ""], "unknown", [{}, {}]),
+        ("climate", {}, ["heat", "off"], "heat", CLIMATE_ATTRS),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
@@ -612,6 +630,7 @@ async def test_config_flow_preview(
     [
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
         ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
+        ("climate", {}, {}, ["heat", "off"], "heat", CLIMATE_ATTRS),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),

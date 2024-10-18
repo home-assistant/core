@@ -64,6 +64,7 @@ SERVICE_REMOVE = "remove"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,

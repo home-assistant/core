@@ -24,6 +24,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .button import async_create_preview_button
+from .climate import async_create_preview_climate
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
@@ -149,6 +150,7 @@ async def light_switch_options_schema(
 GROUP_TYPES = [
     "binary_sensor",
     "button",
+    "climate",
     "cover",
     "event",
     "fan",
@@ -193,6 +195,11 @@ CONFIG_FLOW = {
         basic_group_config_schema("button"),
         preview="group",
         validate_user_input=set_group_type("button"),
+    ),
+    "climate": SchemaFlowFormStep(
+        basic_group_config_schema("climate"),
+        preview="group",
+        validate_user_input=set_group_type("climate"),
     ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
@@ -252,6 +259,10 @@ OPTIONS_FLOW = {
         partial(basic_group_options_schema, "button"),
         preview="group",
     ),
+    "climate": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "climate"),
+        preview="group",
+    ),
     "cover": SchemaFlowFormStep(
         partial(basic_group_options_schema, "cover"),
         preview="group",
@@ -298,6 +309,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
     "button": async_create_preview_button,
+    "climate": async_create_preview_climate,
     "cover": async_create_preview_cover,
     "event": async_create_preview_event,
     "fan": async_create_preview_fan,
