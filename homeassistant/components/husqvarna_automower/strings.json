@@ -118,6 +118,9 @@
           "docking_sensor_defect": "Docking sensor defect",
           "electronic_problem": "Electronic problem",
           "empty_battery": "Empty battery",
+          "error": "Error",
+          "error_at_power_up": "Error at power up",
+          "fatal_error": "Fatal error",
           "folding_cutting_deck_sensor_defect": "Folding cutting deck sensor defect",
           "folding_sensor_activated": "Folding sensor activated",
           "geofence_problem": "Geofence problem",
@@ -201,6 +204,12 @@
           "zone_generator_problem": "Zone generator problem"
         }
       },
+      "my_lawn_last_time_completed": {
+        "name": "My lawn last time completed"
+      },
+      "my_lawn_progress": {
+        "name": "My lawn progress"
+      },
       "number_of_charging_cycles": {
         "name": "Number of charging cycles"
       },
@@ -263,6 +272,12 @@
             "name": "Work area ID assignment"
           }
         }
+      },
+      "work_area_last_time_completed": {
+        "name": "{work_area} last time completed"
+      },
+      "work_area_progress": {
+        "name": "{work_area} progress"
       }
     },
     "switch": {

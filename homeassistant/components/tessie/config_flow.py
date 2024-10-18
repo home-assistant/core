@@ -19,7 +19,8 @@ from .const import DOMAIN
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
-    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)"
+    "name": "Tessie",
+    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)",
 }
 
 

@@ -34,8 +34,6 @@ def binary_sensor_platform() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("matter_devices")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -45,8 +43,6 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
@@ -68,8 +64,6 @@ async def test_occupancy_sensor(
     assert state.state == "off"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -100,8 +94,6 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
