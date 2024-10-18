@@ -26,7 +26,7 @@
       }),
       'manufacturer': 'Rainforest Automation, Inc.',
       'model': 'Z105-2-EMU2-LEDD_JM',
-      'model_id': None,
+      'model_id': 'Z105-2-EMU2-LEDD_JM',
       'name': 'RAVEn Device',
       'name_by_user': None,
       'primary_config_entry': <ANY>,

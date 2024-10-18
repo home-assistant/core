@@ -98,6 +98,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 identifiers={(DOMAIN, mac_address)},
                 manufacturer=device_info.manufacturer,
                 model=device_info.model_id,
+                model_id=device_info.model_id,
                 name="RAVEn Device",
                 sw_version=device_info.fw_version,
                 hw_version=device_info.hw_version,
