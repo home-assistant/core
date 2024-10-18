@@ -380,7 +380,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.7.0
+aiostreammagic==2.8.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -1399,7 +1399,7 @@ motionblindsble==0.1.2
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.4.1.8.8
+mozart-api==4.1.1.116.0
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -2543,7 +2543,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.11
+reolink-aio==0.10.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2552,7 +2552,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.7
+ring-doorbell==0.9.8
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
