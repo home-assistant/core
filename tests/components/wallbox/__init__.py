@@ -169,6 +169,13 @@ test_response_sessions = {
     ],
 }
 
+test_response_sessions_empty = {
+    "meta": {"count": 0},
+    "links": {
+        "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
+    },
+    "data": [],
+}
 
 authorisation_response = {
     "data": {
@@ -216,6 +223,36 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         mock_request.get(
             "https://api.wall-box.com/v4/sessions/stats",
             json=test_response_sessions,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
+            status_code=HTTPStatus.OK,
+        )
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_no_sessions(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class setup."""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions_empty,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(

@@ -83,6 +83,7 @@ class WallboxEventMixIn:
     currency: str
     session_type: str
     serial_number: int
+    time: int
     energy: float
     mid_energy: float
     cost_kw: float
@@ -214,6 +215,26 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         end_date: datetime.datetime,
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
+
+        def create_description(event: dict[str, Any]) -> str:
+            tzone = dt_util.get_default_time_zone()
+            description = f"Session ID: {event["id"]} "
+            description += f"Charger name: {event["attributes"]["charger_name"]} "
+            description += f"Serial number: {event["attributes"]["charger"]} "
+            description += f"Username: {event["attributes"]["user_name"]} "
+            description += f"Start: {datetime.datetime.fromtimestamp(
+                    event["attributes"]["start"], tzone
+                )} "
+            description += f"End: {datetime.datetime.fromtimestamp(
+                    event["attributes"]["end"], tzone
+                )} "
+            description += f"Time: {datetime.datetime.fromtimestamp(
+                    event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)} "
+            description += f"Energy: {event["attributes"]["energy"]}KWh "
+            description += f"MID energy: {event["attributes"]["mid_energy"]}KWh "
+            description += f"Session cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]} "
+            return description
+
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
         tzone = dt_util.get_default_time_zone()
         events: list[WallboxEvent] = [
@@ -224,6 +245,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 currency=event["attributes"]["currency"]["code"],
                 session_type="",
                 serial_number=event["attributes"]["charger"],
+                time=event["attributes"]["time"],
                 energy=event["attributes"]["energy"],
                 mid_energy=event["attributes"]["mid_energy"],
                 cost_kw=0,
@@ -233,6 +255,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ),
                 end=datetime.datetime.fromtimestamp(event["attributes"]["end"], tzone),
                 summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
+                description=create_description(event),
             )
             for event in data["data"]
             if event["type"] == "charger_log_session"

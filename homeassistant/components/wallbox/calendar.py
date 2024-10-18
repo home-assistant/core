@@ -87,6 +87,7 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
                 ].serial_number,
                 "energy": self.coordinator.data[CHARGER_LAST_EVENT].energy,
                 "mid_energy": self.coordinator.data[CHARGER_LAST_EVENT].mid_energy,
+                "time": self.coordinator.data[CHARGER_LAST_EVENT].time,
                 "cost_kw": self.coordinator.data[CHARGER_LAST_EVENT].cost_kw,
                 "session_cost": self.coordinator.data[CHARGER_LAST_EVENT].session_cost,
             }
