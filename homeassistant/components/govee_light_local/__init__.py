@@ -14,6 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from ._network import _async_get_all_source_ipv4_ips
 from .const import DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import GoveeLocalApiCoordinator
 
@@ -25,12 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee light local from a config entry."""
 
-    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(hass=hass)
+    # Get source IPs for all enabled adapters
+    source_ips = await _async_get_all_source_ipv4_ips(hass)
+
+    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
+        hass=hass, source_ips=source_ips
+    )
 
     async def await_cleanup():
-        cleanup_complete: asyncio.Event = coordinator.cleanup()
+        cleanup_complete_events: [asyncio.Event] = coordinator.cleanup()
         with suppress(TimeoutError):
-            await asyncio.wait_for(cleanup_complete.wait(), 1)
+            await asyncio.gather(
+                *[
+                    asyncio.wait_for(cleanup_complete_event.wait(), 1)
+                    for cleanup_complete_event in cleanup_complete_events
+                ]
+            )
 
     entry.async_on_unload(await_cleanup)
 
