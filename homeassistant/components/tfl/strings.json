@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "app_key": "Application Key"
+        },
+        "title": "Authentication",
+        "description": "Enter your TfL Application Key"
+      },
+      "stop_point": {
+        "data": {
+          "stop_point": "Stop Point",
+          "add_another": "Add another stop point?"
+        },
+        "title": "Stop Points",
+        "description": "Add your Stop Points"
+      },
+      "reconfigure": {
+        "data": {
+          "app_key": "Application Key"
+        },
+        "title": "Authentication",
+        "description": "Enter your TfL Application Key"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_stop_point": "The Stop Point {stop_point} is invalid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Configuration",
+        "description": "Update Stop Points",
+        "data": {
+          "stop_points": "Stop Point"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_stop_point": "The Stop Point {stop_point} is invalid"
+    }
+  }
+}
