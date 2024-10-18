@@ -34,7 +34,10 @@ async def test_sensors(
 
 @pytest.mark.usefixtures("mock_entry")
 async def test_device_update_error(
-    hass: HomeAssistant, mock_device: AsyncMock, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_device: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of a device error during an update."""
     mock_device.get_network_info.side_effect = (RAVEnConnectionError, NETWORK_INFO)
@@ -45,6 +48,7 @@ async def test_device_update_error(
 
     freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
+    assert "Error fetching rainforest_raven data: RAVEnConnectionError" in caplog.text
 
     states = hass.states.async_all()
     assert len(states) == 5
