@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_user_flow_auth_failed
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'app_key',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'app_secret',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_flow_auth_failed.1
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'auth',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_user_flow_auth_failed.2
+  FlowResultSnapshot({
+    'data_schema': list([
+      dict({
+        'name': 'phone',
+        'required': True,
+        'type': 'string',
+      }),
+      dict({
+        'name': 'password',
+        'required': True,
+        'type': 'string',
+      }),
+    ]),
+    'description_placeholders': None,
+    'errors': dict({
+      'base': 'invalid_auth',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'duwi',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'auth',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
