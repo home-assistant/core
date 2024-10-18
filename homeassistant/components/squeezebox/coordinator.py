@@ -14,9 +14,14 @@ from homeassistant.util import dt as dt_util
 from .const import (
     SENSOR_UPDATE_INTERVAL,
     STATUS_API_TIMEOUT,
+    STATUS_QUERY_VERSION,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEEDSRESTART,
     STATUS_SENSOR_RESCAN,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
+    UPDATE_PLUGINS_RELEASE_SUMMARY,
+    UPDATE_RELEASE_SUMMARY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +40,17 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             always_update=False,
         )
         self.lms = lms
-        self.newversion_regex = re.compile("<.*$")
+        self.can_server_restart = False
+        self.newversion_regex_leavefirstsentance = re.compile("\\.[^)]*$")
+
+    async def _async_setup(self) -> None:
+        """Query LMS capabilities."""
+        result = await self.lms.async_query("can", "restartserver", "?")
+        if result and "_can" in result and result["_can"] == 1:
+            _LOGGER.debug("Can restart %s", self.lms.name)
+            self.can_server_restart = True
+        else:
+            _LOGGER.warning("Can't query server capabilities %s", self.lms.name)
 
     async def _async_update_data(self) -> dict:
         """Fetch data fromn LMS status call.
@@ -66,6 +81,35 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             dt_util.utc_from_timestamp(int(data[STATUS_SENSOR_LASTSCAN]))
             if STATUS_SENSOR_LASTSCAN in data
             else None
+        )
+
+        # Updates
+        # newversion str not always present
+        # Sample text:-
+        # 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
+        # '<ul><li>Version %s - %s is available for installation.</li><li>Log in to your computer running Logitech Media Server (%s).</li><li>Execute <code>%s</code> and follow the instructions.</li></ul>'
+        data[UPDATE_RELEASE_SUMMARY] = (
+            self.newversion_regex_leavefirstsentance.sub(
+                ".", data[STATUS_UPDATE_NEWVERSION]
+            )
+            if STATUS_UPDATE_NEWVERSION in data
+            else None
+        )
+        data[STATUS_UPDATE_NEWVERSION] = (
+            "New Version"
+            if STATUS_UPDATE_NEWVERSION in data
+            else data[STATUS_QUERY_VERSION]
+        )
+
+        # newplugins str not always present
+        # newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
+        data[UPDATE_PLUGINS_RELEASE_SUMMARY] = (
+            data[STATUS_UPDATE_NEWPLUGINS] + ". "
+            if STATUS_UPDATE_NEWPLUGINS in data
+            else None
+        )
+        data[STATUS_UPDATE_NEWPLUGINS] = (
+            "Updates" if STATUS_UPDATE_NEWPLUGINS in data else "Current"
         )
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
