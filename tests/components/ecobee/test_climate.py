@@ -497,11 +497,11 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
     for device in device_registry.devices.values():
         if device.name == "Remote Sensor 1":
-            device_id = device.id
+            remote_sensor_1_id = device.id
         if device.name == "ecobee":
             ecobee_id = device.id
         if device.name == "Remote Sensor 2":
-            device_id_1 = device.id
+            remote_sensor_2_id = device.id
 
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
@@ -517,7 +517,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [device_id],
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -531,7 +531,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             "set_sensors_used_in_climate",
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_SENSOR_LIST: [device_id],
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -561,7 +561,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_PRESET_MODE: "InvalidClimate",
-                ATTR_SENSOR_LIST: [device_id],
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -591,7 +591,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [device_id_1],
+                ATTR_SENSOR_LIST: [remote_sensor_2_id],
             },
             blocking=True,
         )
@@ -603,7 +603,10 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [device_id, device_from_other_integration.id],
+                ATTR_SENSOR_LIST: [
+                    remote_sensor_1_id,
+                    device_from_other_integration.id,
+                ],
             },
             blocking=True,
         )
