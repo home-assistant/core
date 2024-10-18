@@ -19,11 +19,13 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
     entity_registry as er,
 )
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -58,13 +60,13 @@ def register_services() -> None:
     platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
     platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, handle_async_join
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
     )
-    platform.async_register_entity_service(SERVICE_UNJOIN, None, handle_async_unjoin)
+    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
-        handle_set_latency,
+        "async_set_latency",
     )
 
 
@@ -177,27 +179,6 @@ async def async_setup_entry(
     _check_entities()
 
 
-async def handle_async_join(entity, service_call) -> None:
-    """Handle the entity service join."""
-    if not isinstance(entity, SnapcastClientDevice):
-        raise TypeError("Entity is not a client. Can only join clients.")
-    await entity.async_join(service_call.data[ATTR_MASTER])
-
-
-async def handle_async_unjoin(entity, service_call) -> None:
-    """Handle the entity service unjoin."""
-    if not isinstance(entity, SnapcastClientDevice):
-        raise TypeError("Entity is not a client. Can only unjoin clients.")
-    await entity.async_unjoin()
-
-
-async def handle_set_latency(entity, service_call) -> None:
-    """Handle the entity service set_latency."""
-    if not isinstance(entity, SnapcastClientDevice):
-        raise TypeError("Latency can only be set for a Snapcast client.")
-    await entity.async_set_latency(service_call.data[ATTR_LATENCY])
-
-
 class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     """Base class representing a Snapcast device."""
 
@@ -290,6 +271,18 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         await self._device.restore()
         self.async_write_ha_state()
 
+    async def async_set_latency(self, latency) -> None:
+        """Handle the set_latency service."""
+        raise NotImplementedError
+
+    async def async_join(self, master) -> None:
+        """Handle the join service."""
+        raise NotImplementedError
+
+    async def async_unjoin(self) -> None:
+        """Handle the unjoin service."""
+        raise NotImplementedError
+
 
 class SnapcastGroupDevice(SnapcastBaseDevice):
     """Representation of a Snapcast group device."""
@@ -326,6 +319,18 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
         if self.is_volume_muted:
             return MediaPlayerState.IDLE
         return STREAM_STATUS.get(self._device.stream_status)
+
+    async def async_set_latency(self, latency) -> None:
+        """Handle the set_latency service."""
+        raise ServiceValidationError("Latency can only be set for a Snapcast client.")
+
+    async def async_join(self, master) -> None:
+        """Handle the join service."""
+        raise ServiceValidationError("Entity is not a client. Can only join clients.")
+
+    async def async_unjoin(self) -> None:
+        """Handle the unjoin service."""
+        raise ServiceValidationError("Entity is not a client. Can only unjoin clients.")
 
 
 class SnapcastClientDevice(SnapcastBaseDevice):
@@ -391,13 +396,15 @@ class SnapcastClientDevice(SnapcastBaseDevice):
 
     async def async_join(self, master) -> None:
         """Join the group of the master player."""
-        master_entity = next(
-            entity
-            for entity in self.hass.data[DOMAIN][self._entry_id].clients
-            if entity.entity_id == master
-        )
+        component: EntityComponent[MediaPlayerEntity] = self.hass.data[
+            MEDIA_PLAYER_DOMAIN
+        ]
+        master_entity = component.get_entity(master)
+
         if not isinstance(master_entity, SnapcastClientDevice):
-            raise TypeError("Master is not a client device. Can only join clients.")
+            raise ServiceValidationError(
+                "Master is not a client device. Can only join clients."
+            )
 
         master_group = next(
             group
