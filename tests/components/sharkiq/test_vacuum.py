@@ -35,11 +35,8 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     VacuumEntityFeature,
+    VacuumEntityState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -160,7 +157,7 @@ async def test_simple_properties(
 
     assert entity
     assert state
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumEntityState.CLEANING
     assert entity.unique_id == "AC000Wxxxxxxxxx"
 
 
@@ -189,10 +186,10 @@ async def test_initial_attributes(
 @pytest.mark.parametrize(
     ("service", "target_state"),
     [
-        (SERVICE_STOP, STATE_IDLE),
-        (SERVICE_PAUSE, STATE_PAUSED),
-        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        (SERVICE_START, STATE_CLEANING),
+        (SERVICE_STOP, VacuumEntityState.IDLE),
+        (SERVICE_PAUSE, VacuumEntityState.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumEntityState.RETURNING),
+        (SERVICE_START, VacuumEntityState.CLEANING),
     ],
 )
 async def test_cleaning_states(

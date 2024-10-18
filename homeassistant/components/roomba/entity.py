@@ -7,14 +7,11 @@ import logging
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
+    VacuumEntityState,
 )
-from homeassistant.const import ATTR_CONNECTIONS, STATE_IDLE, STATE_PAUSED
+from homeassistant.const import ATTR_CONNECTIONS
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -46,16 +43,16 @@ SUPPORT_IROBOT = (
 )
 
 STATE_MAP = {
-    "": STATE_IDLE,
-    "charge": STATE_DOCKED,
-    "evac": STATE_RETURNING,  # Emptying at cleanbase
-    "hmMidMsn": STATE_CLEANING,  # Recharging at the middle of a cycle
-    "hmPostMsn": STATE_RETURNING,  # Cycle finished
-    "hmUsrDock": STATE_RETURNING,
-    "pause": STATE_PAUSED,
-    "run": STATE_CLEANING,
-    "stop": STATE_IDLE,
-    "stuck": STATE_ERROR,
+    "": VacuumEntityState.IDLE,
+    "charge": VacuumEntityState.DOCKED,
+    "evac": VacuumEntityState.RETURNING,  # Emptying at cleanbase
+    "hmMidMsn": VacuumEntityState.CLEANING,  # Recharging at the middle of a cycle
+    "hmPostMsn": VacuumEntityState.RETURNING,  # Cycle finished
+    "hmUsrDock": VacuumEntityState.RETURNING,
+    "pause": VacuumEntityState.PAUSED,
+    "run": VacuumEntityState.CLEANING,
+    "stop": VacuumEntityState.IDLE,
+    "stuck": VacuumEntityState.ERROR,
 }
 
 
@@ -128,7 +125,7 @@ class IRobotEntity(Entity):
         return dt_util.utc_from_timestamp(ts)
 
     @property
-    def _robot_state(self):
+    def _robot_state(self) -> VacuumEntityState:
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -136,9 +133,12 @@ class IRobotEntity(Entity):
         try:
             state = STATE_MAP[phase]
         except KeyError:
-            return STATE_ERROR
-        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
-            state = STATE_PAUSED
+            return VacuumEntityState.ERROR
+        if cycle != "none" and state in (
+            VacuumEntityState.IDLE,
+            VacuumEntityState.DOCKED,
+        ):
+            state = VacuumEntityState.PAUSED
         return state
 
     async def async_added_to_hass(self):
@@ -169,7 +169,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def state(self):
+    def vacuum_state(self) -> VacuumEntityState:
         """Return the state of the vacuum cleaner."""
         return self._robot_state
 
@@ -189,7 +189,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumEntityState.CLEANING:
             # Get clean mission status
             (
                 state_attrs[ATTR_CLEANING_TIME],
@@ -243,7 +243,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
     async def async_start(self):
         """Start or resume the cleaning task."""
-        if self.state == STATE_PAUSED:
+        if self.vacuum_state == VacuumEntityState.PAUSED:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
         else:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
@@ -258,10 +258,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        if self.state == STATE_CLEANING:
+        if self.vacuum_state == VacuumEntityState.CLEANING:
             await self.async_pause()
             for _ in range(10):
-                if self.state == STATE_PAUSED:
+                if self.state == VacuumEntityState.PAUSED:
                     break
                 await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
