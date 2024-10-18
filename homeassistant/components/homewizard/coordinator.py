@@ -77,7 +77,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                     self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
                     )
-                    )
 
             raise UpdateFailed(ex) from ex
 
