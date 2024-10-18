@@ -98,6 +98,10 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     TPLinkSensorEntityDescription(
+        key="water_alert_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
