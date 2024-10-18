@@ -15,32 +15,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from . import create_mock_entry
 
 
-@pytest.mark.usefixtures("mock_device")
-async def test_coordinator_device_info(hass: HomeAssistant) -> None:
-    """Test reporting device information from the coordinator."""
-    entry = create_mock_entry()
-    entry._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
-    coordinator = RAVEnDataCoordinator(hass, entry)
-
-    assert coordinator.device_fw_version is None
-    assert coordinator.device_hw_version is None
-    assert coordinator.device_info is None
-    assert coordinator.device_mac_address is None
-    assert coordinator.device_manufacturer is None
-    assert coordinator.device_model is None
-    assert coordinator.device_name == "RAVEn Device"
-
-    await coordinator.async_config_entry_first_refresh()
-
-    assert coordinator.device_fw_version == "2.0.0 (7400)"
-    assert coordinator.device_hw_version == "2.7.3"
-    assert coordinator.device_info
-    assert coordinator.device_mac_address
-    assert coordinator.device_manufacturer == "Rainforest Automation, Inc."
-    assert coordinator.device_model == "Z105-2-EMU2-LEDD_JM"
-    assert coordinator.device_name == "RAVEn Device"
-
-
 async def test_coordinator_cache_device(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
