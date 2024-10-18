@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.dlna_dms.const import CONF_SOURCE_ID, DOMAIN
+from homeassistant.components.dlna_dms.const import CONF_RETRY, CONF_SOURCE_ID, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -392,3 +392,53 @@ async def test_ssdp_single_service(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_dms"
+
+
+async def test_options_flow_true(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test config flow options."""
+    config_entry_mock.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry_mock.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {}
+
+    # True
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_RETRY: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RETRY: True,
+    }
+
+
+async def test_options_flow_false(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test config flow options."""
+    config_entry_mock.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry_mock.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {}
+
+    # False
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_RETRY: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RETRY: False,
+    }

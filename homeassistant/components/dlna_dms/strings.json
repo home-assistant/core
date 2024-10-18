@@ -20,5 +20,15 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_dms": "Device is not a supported Media Server"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "DLNA Digital Media Server configuration",
+        "data": {
+          "retry": "Always try to connect to offline servers before browsing or playing media"
+        }
+      }
+    }
   }
 }
