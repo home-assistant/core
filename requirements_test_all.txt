@@ -1722,6 +1722,9 @@ pyoverkiz==1.14.1
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.5
+
 # homeassistant.components.lcn
 pypck==0.7.24
 
