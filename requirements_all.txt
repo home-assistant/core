@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.6
 
 # homeassistant.components.airzone
-aioairzone==0.9.3
+aioairzone==0.9.5
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -945,7 +945,7 @@ gardena-bluetooth==1.4.3
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.5
+gcal-sync==6.1.6
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1780,7 +1780,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.3
+pyblu==1.0.4
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1960,7 +1960,7 @@ pyintesishome==1.8.0
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.16.0
+pyipp==0.17.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -2119,7 +2119,7 @@ pyoppleio-legacy==1.0.8
 pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.1
+pyotgw==2.2.2
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2676,7 +2676,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.1
+solarlog_cli==0.3.2
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -3032,7 +3032,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.09.27
+yt-dlp==2024.10.07
 
 # homeassistant.components.zamg
 zamg==0.3.6
