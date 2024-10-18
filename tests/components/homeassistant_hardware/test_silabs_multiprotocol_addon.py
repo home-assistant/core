@@ -33,6 +33,11 @@ TEST_DOMAIN = "test"
 TEST_DOMAIN_2 = "test_2"
 
 
+@pytest.fixture(autouse=True)
+def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
+    """Mock supervisor client."""
+
+
 class FakeConfigFlow(ConfigFlow):
     """Handle a config flow for the silabs multiprotocol add-on."""
 

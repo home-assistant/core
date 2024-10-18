@@ -249,7 +249,7 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mqtt_client_mock", "supervisor")
+@pytest.mark.usefixtures("mqtt_client_mock", "supervisor", "supervisor_client")
 async def test_user_connection_works_with_supervisor(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
