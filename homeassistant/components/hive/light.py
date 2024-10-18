@@ -78,7 +78,13 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             get_new_color = kwargs[ATTR_HS_COLOR]
             hue = int(get_new_color[0])
             saturation = int(get_new_color[1])
-            new_color = (hue, saturation, 100)
+            brightness = int(
+                round(
+                    ((self.brightness if self.brightness is not None else 5) / 255)
+                    * 100
+                )
+            )
+            new_color = (hue, saturation, brightness)
 
         await self.hive.light.turnOn(
             self.device, new_brightness, new_color_temp, new_color
