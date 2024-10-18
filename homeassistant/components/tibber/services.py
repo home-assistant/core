@@ -47,6 +47,9 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
     for tibber_home in tibber_connection.get_homes(only_active=True):
         home_nickname = tibber_home.name
 
+        # sometimes there are no priceInfo, get fresh data with priceInfo
+        await tibber_home.update_info_and_price_info()
+
         price_info = tibber_home.info["viewer"]["home"]["currentSubscription"][
             "priceInfo"
         ]
