@@ -10,11 +10,8 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.monzo.const import (
-    DOMAIN,
-    EVENT_TRANSACTION_CREATED,
-    MONZO_EVENT,
-)
+from homeassistant.components.monzo import async_send_event
+from homeassistant.components.monzo.const import DOMAIN, EVENT_TRANSACTION_CREATED
 from homeassistant.components.monzo.device_trigger import (
     ACCOUNT_ID,
     async_validate_trigger_config,
@@ -107,7 +104,7 @@ async def test_transaction_created_triggers_automation(
                     "trigger": _make_trigger(account["id"], device.id),
                     "action": {
                         "service": "test.automation",
-                        "data": {"amount": "{{ trigger.event.data.data.amount }}"},
+                        "data": {"amount": "{{ data.data.amount }}"},
                     },
                 },
             ]
@@ -122,10 +119,7 @@ async def test_transaction_created_triggers_automation(
         ACCOUNT_ID: account["id"],
     }
 
-    hass.bus.async_fire(
-        event_type=MONZO_EVENT,
-        event_data=event_data,
-    )
+    async_send_event(hass, EVENT_TRANSACTION_CREATED, event_data)
     await hass.async_block_till_done()
 
     assert len(automation_calls) == 1

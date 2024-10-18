@@ -1,18 +1,33 @@
 """Tests for component initialisation."""
 
+from dataclasses import dataclass
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+from urllib.parse import urlparse
 
+from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import AuthorisationExpiredError
+import pytest
 
-from homeassistant.components.monzo.const import DOMAIN
+from homeassistant.components import cloud
+from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.components.monzo import MonzoConfigEntry, monzo_event_signal
+from homeassistant.components.monzo.const import DOMAIN, EVENT_TRANSACTION_CREATED
+from homeassistant.components.webhook import (
+    DOMAIN as WEBHOOK_DOMAIN,
+    async_generate_url,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import setup_integration
+from .conftest import TEST_ACCOUNTS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.cloud import mock_cloud
+from tests.typing import ClientSessionGenerator
 
 
 async def test_api_can_trigger_reauth(
@@ -35,35 +50,6 @@ async def test_api_can_trigger_reauth(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == SOURCE_REAUTH
-"""Tests for the Monzo component."""
-
-from dataclasses import dataclass
-from unittest.mock import AsyncMock, Mock, patch
-from urllib.parse import urlparse
-
-from aiohttp.test_utils import TestClient
-import pytest
-
-from homeassistant.components import cloud
-from homeassistant.components.cloud import CloudNotAvailable
-from homeassistant.components.monzo import MonzoConfigEntry
-from homeassistant.components.monzo.const import (
-    DOMAIN,
-    EVENT_TRANSACTION_CREATED,
-    MONZO_EVENT,
-)
-from homeassistant.components.webhook import (
-    DOMAIN as WEBHOOK_DOMAIN,
-    async_generate_url,
-)
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
-from .conftest import TEST_ACCOUNTS
-
-from tests.common import MockConfigEntry
-from tests.components.cloud import mock_cloud
-from tests.typing import ClientSessionGenerator
 
 
 @dataclass
@@ -73,7 +59,6 @@ class WebhookSetupData:
     hass: HomeAssistant
     client: TestClient
     webhook_url: str
-    event_listener: Mock
 
 
 @pytest.fixture
@@ -89,10 +74,8 @@ async def webhook_setup(
     client = await hass_client_no_auth()
     webhook_id = next(iter(polling_config_entry.runtime_data.webhook_ids))
     webhook_url = async_generate_url(hass, webhook_id)
-    event_listener = Mock()
-    hass.bus.async_listen(MONZO_EVENT, event_listener)
 
-    return WebhookSetupData(hass, client, webhook_url, event_listener)
+    return WebhookSetupData(hass, client, webhook_url)
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -101,7 +84,12 @@ async def test_webhook_fires_transaction_created(
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test calling a webhook fires transaction_created event."""
-
+    event_listener = Mock()
+    async_dispatcher_connect(
+        webhook_setup.hass,
+        monzo_event_signal(EVENT_TRANSACTION_CREATED, TEST_ACCOUNTS[0]["id"]),
+        event_listener,
+    )
     resp = await webhook_setup.client.post(
         urlparse(webhook_setup.webhook_url).path,
         json={
@@ -113,7 +101,7 @@ async def test_webhook_fires_transaction_created(
     await webhook_setup.hass.async_block_till_done()
 
     assert resp.ok
-    webhook_setup.event_listener.assert_called_once()
+    event_listener.assert_called_once()
 
     resp.close()
 

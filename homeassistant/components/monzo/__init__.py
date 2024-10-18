@@ -26,7 +26,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import get_url
 
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN, EVENT_TRANSACTION_CREATED, MONZO_EVENT
@@ -145,13 +144,8 @@ class MonzoWebhookManager:
                     self.entry.async_on_unload(self.unregister_webhooks)
 
     async def unregister_old_webhooks(self, coordinator: MonzoCoordinator) -> None:
-        """Unregister any old webhooks associated with this host."""
-        host = (
-            CLOUDHOOK_HOST
-            if cloud.async_active_subscription(self.hass)
-            else get_url(self.hass)
-        )
-        await coordinator.api.user_account.unregister_webhooks(host)
+        """Unregister any old webhooks associated with this client."""
+        await coordinator.api.user_account.unregister_webhooks()
 
     async def _async_cloudhook_generate_url(self, webhook_id: str) -> str:
         """Generate the full URL for a webhook_id."""
@@ -205,15 +199,16 @@ async def async_handle_webhook(
 def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
     """Send events."""
     _LOGGER.debug("%s: %s", event_type, data)
-    async_dispatcher_send(
-        hass,
-        f"signal-{DOMAIN}-webhook-{event_type}",
-        {"type": event_type, "data": data},
-    )
+    if "account_id" in data:
+        async_dispatcher_send(
+            hass,
+            monzo_event_signal(event_type, data["account_id"]),
+            {"data": data},
+        )
+    else:
+        _LOGGER.error("Webhook data does not contain account_id")
 
-    event_data = {"type": event_type, "data": data, "account_id": data["account_id"]}
 
-    hass.bus.async_fire(
-        event_type=MONZO_EVENT,
-        event_data=event_data,
-    )
+def monzo_event_signal(event_type: str, account_id: str) -> str:
+    """Generate a unique signal for a Monzo event."""
+    return f"{MONZO_EVENT}_{event_type}_{account_id}"
