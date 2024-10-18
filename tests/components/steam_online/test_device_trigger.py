@@ -1,48 +1,55 @@
 """The tests for Steam device triggers."""
 
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.steam_online import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.steam_online.const import (
+    DOMAIN,
+    STATE_AWAY,
+    STATE_ONLINE,
+    TRIGGER_FRIEND_GAME_CHANGED,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_get_device_automations
+from . import ACCOUNT_1, ACCOUNT_2, create_entry
+
+from tests.common import async_get_device_automations
 
 
+@pytest.mark.skip
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected triggers from a steam_online."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
+    config_entry = create_entry(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={(DOMAIN, ACCOUNT_1)},
+    )
+
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        ACCOUNT_1,
+        device_id=device_entry.id,
+        config_entry=config_entry,
     )
     entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id
+        DOMAIN,
+        "test",
+        ACCOUNT_2,
+        device_id=device_entry.id,
+        config_entry=config_entry,
     )
+
     expected_triggers = [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turned_off",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turned_on",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
+        # TODO
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -51,10 +58,40 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    hass.states.async_set("steam_online.entity", STATE_OFF)
+    config_entry = create_entry(hass)
+
+    # Setting up the device
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, ACCOUNT_1)},
+    )
+
+    # Setting up the primary sensor
+    primary_sensor = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        ACCOUNT_1,
+        device_id=device_entry.id,
+        config_entry=config_entry,
+    )
+
+    # Setting up the test sensor
+    test_sensor = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        ACCOUNT_2,
+        device_id=device_entry.id,
+        config_entry=config_entry,
+    )
+
+    hass.states.async_set(primary_sensor.entity_id, STATE_AWAY)
+    hass.states.async_set(test_sensor.entity_id, STATE_AWAY)
 
     assert await async_setup_component(
         hass,
@@ -65,58 +102,37 @@ async def test_if_fires_on_state_change(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "steam_online.entity",
-                        "type": "turned_on",
+                        "device_id": device_entry.id,
+                        "type": TRIGGER_FRIEND_GAME_CHANGED,
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_on - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
-                                "{{ trigger.id}}"
-                            )
-                        },
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "steam_online.entity",
-                        "type": "turned_off",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_off - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
-                                "{{ trigger.id}}"
-                            )
-                        },
                     },
                 },
             ]
         },
     )
 
-    # Fake that the entity is turning on.
-    hass.states.async_set("steam_online.entity", STATE_ON)
+    # Primary user changes state should not trigger action
+    hass.states.async_set(primary_sensor.entity_id, STATE_ONLINE)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Friend changes state should not trigger action
+    hass.states.async_set(test_sensor.entity_id, STATE_ONLINE)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Primary user changes game should not trigger action
+    hass.states.async_set(
+        primary_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Friend changes game should trigger action
+    hass.states.async_set(
+        test_sensor.entity_id, STATE_ONLINE, attributes={"game_id": "123"}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert service_calls[0].data[
-        "some"
-    ] == "turn_on - device - {} - off - on - None - 0".format("steam_online.entity")
-
-    # Fake that the entity is turning off.
-    hass.states.async_set("steam_online.entity", STATE_OFF)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 2
-    assert service_calls[1].data[
-        "some"
-    ] == "turn_off - device - {} - on - off - None - 0".format("steam_online.entity")

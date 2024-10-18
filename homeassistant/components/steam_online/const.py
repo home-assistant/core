@@ -39,3 +39,4 @@ STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
 STEAM_ICON_URL = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/"
 
 CONDITION_PRIMARY_GAME = "is_same_game_as_primary"
+TRIGGER_FRIEND_GAME_CHANGED = "friend_game_status_changed"

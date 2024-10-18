@@ -4,19 +4,26 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ACCOUNT, DOMAIN
-from .coordinator import SteamDataUpdateCoordinator
+from .const import CONF_ACCOUNT, DOMAIN, TRIGGER_FRIEND_GAME_CHANGED
 
 # Define the trigger types
-TRIGGER_TYPES = {"friend_game_status_changed"}
+TRIGGER_TYPES = {TRIGGER_FRIEND_GAME_CHANGED}
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
@@ -55,38 +62,34 @@ def async_attach_trigger(
         list(dr.async_get(hass).async_get(device_id).config_entries)[0]
     )
 
-    primary_user = config_entry.data[CONF_ACCOUNT]
-    primary_user_entity_id = f"sensor.steam_{primary_user}"
+    # Find the primary entity id that's linked to the account on initial setup
+    primary_user_entity_id = next(
+        entity
+        for entity in er.async_entries_for_device(
+            er.async_get(hass), config[ATTR_DEVICE_ID]
+        )
+        if entity.unique_id == config_entry.data[CONF_ACCOUNT]
+    ).entity_id
 
-    # Get Steam coordinator (to get friends' game data)
-    coordinator: SteamDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    # Get all sensor id's except the primary user
+    friends_entity_ids = [
+        entity.entity_id
+        for entity in er.async_entries_for_device(
+            er.async_get(hass), config[CONF_DEVICE_ID]
+        )
+        if entity.entity_id != primary_user_entity_id
+    ]
 
-    @callback
-    def check_friend_game_status_change(variables: TemplateVarsType) -> bool:
-        """Check if any friend has changed their game status."""
+    # Watch for game changes on all friends
+    state_config = {
+        state_trigger.CONF_PLATFORM: "device",
+        state_trigger.CONF_ENTITY_ID: friends_entity_ids,
+        state_trigger.CONF_ATTRIBUTE: "game_id",
+    }
 
-        # Fetch the current game for the primary user
-        primary_game = hass.states.get(primary_user_entity_id).attributes.get("game_id")
-        primary_state = hass.states.get(primary_user_entity_id).state
-
-        # Check for each friend if they change their game status
-        for friend_id, friend_data in coordinator.data.items():
-            if friend_id != primary_user:
-                friend_game = friend_data.get("game_id")
-                friend_state = friend_data.get(
-                    "state"
-                )  # Assuming this attribute holds current state
-
-                # Check if the friend's game state has changed
-                if friend_game != primary_game or friend_state != "offline":
-                    # Friend has changed their game status
-                    return True
-        return False
-
-    if config[CONF_TYPE] == "friend_game_status_changed":
-        trigger_method = check_friend_game_status_change
-
-    # Attach trigger to Steam API update
-    return coordinator.async_add_listener(
-        lambda: action({} if trigger_method({}) else {})
+    return state_trigger.async_attach_trigger(
+        hass,
+        state_config,
+        action,
+        trigger_info,
     )
