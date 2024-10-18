@@ -673,7 +673,7 @@ async def test_async_media_next_track(
         (BangOlufsenSource.DEEZER, does_not_raise(), 1),
         # Non seekable source, seek shouldn't work
         (BangOlufsenSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
-        # Malformed source
+        # Malformed source, seek shouldn't work
         (Source(), pytest.raises(HomeAssistantError), 0),
     ],
 )
