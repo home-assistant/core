@@ -35,5 +35,10 @@
     "error": {
       "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
     }
+  },
+  "device_automation": {
+    "condition_type": {
+      "is_same_game_as_primary": "Is playing same game as primary"
+    }
   }
 }
