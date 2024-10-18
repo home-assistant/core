@@ -12,7 +12,7 @@ from typing import Any
 import voluptuous as vol
 
 # from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 
 # from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -21,7 +21,10 @@ from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
 
 _LOGGER = logging.getLogger(__name__)
 
-SCOPES = ["IoT User"]
+SCOPES = [
+    "IoT User",
+    "offline_access",  # required to get a refresh_token
+]
 
 # REAUTH_SCHEMA = vol.Schema(
 #     {
@@ -51,6 +54,8 @@ class OAuth2FlowHandler(
     """Config flow to handle Viessmann ViCare OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    VERSION = 1
+    entry: ConfigEntry | None
 
     @property
     def logger(self) -> logging.Logger:
@@ -64,33 +69,32 @@ class OAuth2FlowHandler(
             "scope": " ".join(SCOPES),
         }
 
-    VERSION = 1
-    entry: ConfigEntry | None
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Invoke when a user initiates a flow via the user interface."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-    # async def async_step_user(
-    #     self, user_input: dict[str, Any] | None = None
-    # ) -> ConfigFlowResult:
-    #     """Invoke when a user initiates a flow via the user interface."""
-    #     if self._async_current_entries():
-    #         return self.async_abort(reason="single_instance_allowed")
+        #     errors: dict[str, str] = {}
 
-    #     errors: dict[str, str] = {}
+        #     if user_input is not None:
+        #         try:
+        #             await self.hass.async_add_executor_job(
+        #                 vicare_login, user_input
+        #             )
+        #         except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+        #             errors["base"] = "invalid_auth"
+        #         else:
+        #             return self.async_create_entry(title=VICARE_NAME, data=user_input)
 
-    #     if user_input is not None:
-    #         try:
-    #             await self.hass.async_add_executor_job(
-    #                 vicare_login, user_input
-    #             )
-    #         except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
-    #             errors["base"] = "invalid_auth"
-    #         else:
-    #             return self.async_create_entry(title=VICARE_NAME, data=user_input)
+        #     return self.async_show_form(
+        #         step_id="user",
+        #         data_schema=USER_SCHEMA,
+        #         errors=errors,
+        #     )
 
-    #     return self.async_show_form(
-    #         step_id="user",
-    #         data_schema=USER_SCHEMA,
-    #         errors=errors,
-    #     )
+        return await super().async_step_user(user_input)
 
     # async def async_step_reauth(
     #     self, entry_data: Mapping[str, Any]
