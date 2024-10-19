@@ -225,7 +225,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
             ATTR_MASS_PLAYER_ID: self.player_id,
             ATTR_MASS_PLAYER_TYPE: player.type.value,
             ATTR_GROUP_LEADER: player.synced_to,
-            ATTR_ACTIVE_QUEUE: player.active_source,
+            ATTR_ACTIVE_QUEUE: queue.queue_id if queue else None,
             ATTR_ACTIVE_GROUP: player.active_group,
             ATTR_QUEUE_ITEMS: queue.items if queue else None,
             ATTR_QUEUE_INDEX: queue.current_index if queue else None,
@@ -257,20 +257,23 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
         if not self.available:
             return
         player = self.player
-        if TYPE_CHECKING:
-            assert player.active_source is not None
-        queue = self.mass.player_queues.get(player.active_source)
+        active_queue_id = player.active_source or player.player_id
+        active_queue = self.mass.player_queues.get(active_queue_id)
         # update generic attributes
+        if player.powered and active_queue:
+            mapped_active_queue_state = STATE_MAPPING.get(active_queue.state)
+            if mapped_active_queue_state is None:
+                return
+            self._attr_state = MediaPlayerState(mapped_active_queue_state)
         if player.powered:
-            if TYPE_CHECKING:
-                assert player.state is not None
-            state_mapping = STATE_MAPPING.get(player.state)
-            if TYPE_CHECKING:
-                assert state_mapping is not None
-            self._attr_state = MediaPlayerState(state_mapping)
+            if player.state is None:
+                return
+            mapped_player_state = STATE_MAPPING.get(player.state)
+            if mapped_player_state is None:
+                return
+            self._attr_state = MediaPlayerState(mapped_player_state)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
-
         # translate MA group_childs to HA group_members as entity id's
         # find a way to optimize this a tiny bit more
         # e.g. by holding a lookup dict in memory on integration level
@@ -288,8 +291,11 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
             player.volume_level / 100 if player.volume_level is not None else None
         )
         self._attr_is_volume_muted = player.volume_muted
-        self._update_media_attributes(player, queue)
-        self._update_media_image_url(player, queue)
+        self._update_media_attributes(player, active_queue)
+        self._update_media_image_url(player, active_queue)
+        # some features can dynamically change
+        if PlayerFeature.SYNC in player.supported_features:
+            self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
 
     @catch_musicassistant_error
     async def async_media_play(self) -> None:
@@ -304,22 +310,12 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_pause(queue.queue_id)
-        else:
-            await self.mass.players.player_command_pause(self.player_id)
+        await self.mass.players.player_command_pause(self.player_id)
 
     @catch_musicassistant_error
     async def async_media_stop(self) -> None:
         """Send stop command to device."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_stop(queue.queue_id)
-        else:
-            await self.mass.players.player_command_stop(self.player_id)
+        await self.mass.players.player_command_stop(self.player_id)
 
     @catch_musicassistant_error
     async def async_media_next_track(self) -> None:

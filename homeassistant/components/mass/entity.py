@@ -78,9 +78,10 @@ class MassBaseEntity(Entity):
 
     async def __on_mass_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
-        if (
-            event.event == EventType.QUEUE_UPDATED
-            and event.object_id != self.player.active_source
+        if event.event == EventType.QUEUE_UPDATED and event.object_id not in (
+            self.player.active_source,
+            self.player.active_group,
+            self.player.player_id,
         ):
             return
         await self.async_on_update()
