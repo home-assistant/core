@@ -542,7 +542,10 @@ class BaseCoordinatorEntity[
         self.coordinator_context = context
 
         coordinator_entry = getattr(coordinator, "config_entry", None)
-        if config_entries.current_entry.get() != coordinator_entry:
+        if (
+            coordinator_entry
+            and config_entries.current_entry.get() != coordinator_entry
+        ):
             raise RuntimeError("Using a coordinator from a different config entry?")
 
     @cached_property
