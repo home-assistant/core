@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
+from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
@@ -42,7 +43,7 @@ def mock_scope() -> str:
 
 
 @pytest.fixture(name="mower_values")
-def mock_mower_values() -> str:
+def mock_mower_values() -> dict[str, MowerAttributes]:
     """Fixture to set correct scope for the token."""
     return mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),

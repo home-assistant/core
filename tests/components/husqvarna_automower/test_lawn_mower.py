@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerActivities, MowerStates
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -26,10 +26,9 @@ async def test_lawn_mower_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower state."""
-    values = mower_values
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("lawn_mower.test_mower_1")
     assert state is not None
@@ -45,9 +44,9 @@ async def test_lawn_mower_states(
             LawnMowerActivity.RETURNING,
         ),
     ):
-        values[TEST_MOWER_ID].mower.activity = activity
-        values[TEST_MOWER_ID].mower.state = state
-        mock_automower_client.get_status.return_value = values
+        mower_values[TEST_MOWER_ID].mower.activity = activity
+        mower_values[TEST_MOWER_ID].mower.state = state
+        mock_automower_client.get_status.return_value = mower_values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -252,13 +251,12 @@ async def test_lawn_mower_wrong_service_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    values = mower_values
-    values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
-    mock_automower_client.get_status.return_value = values
+    mower_values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
+    mock_automower_client.get_status.return_value = mower_values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

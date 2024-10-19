@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import HeadlightModes
+from aioautomower.model import HeadlightModes, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -22,7 +22,7 @@ async def test_select_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test states of headlight mode select."""
     await setup_integration(hass, mock_config_entry)

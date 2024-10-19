@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerModes
+from aioautomower.model import MowerAttributes, MowerModes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -47,7 +47,7 @@ async def test_switch_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch state."""
     values = mower_values
@@ -223,7 +223,7 @@ async def test_zones_deleted(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test if stay-out-zone is deleted after removed."""
     await setup_integration(hass, mock_config_entry)

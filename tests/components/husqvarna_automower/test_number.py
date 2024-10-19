@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
+from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -59,14 +60,13 @@ async def test_number_workarea_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test number commands."""
     entity_id = "number.test_mower_1_front_lawn_cutting_height"
     await setup_integration(hass, mock_config_entry)
-    values = mower_values
-    values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
-    mock_automower_client.get_status.return_value = values
+    mower_values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
+    mock_automower_client.get_status.return_value = mower_values
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
     await hass.services.async_call(

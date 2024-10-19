@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.model import MowerActivities
+from aioautomower.model import MowerActivities, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
@@ -22,10 +22,9 @@ async def test_binary_sensor_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test binary sensor states."""
-    values = mower_values
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.test_mower_1_charging")
     assert state is not None
@@ -42,8 +41,8 @@ async def test_binary_sensor_states(
         (MowerActivities.LEAVING, "test_mower_1_leaving_dock"),
         (MowerActivities.GOING_HOME, "test_mower_1_returning_to_dock"),
     ):
-        values[TEST_MOWER_ID].mower.activity = activity
-        mock_automower_client.get_status.return_value = values
+        mower_values[TEST_MOWER_ID].mower.activity = activity
+        mock_automower_client.get_status.return_value = mower_values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

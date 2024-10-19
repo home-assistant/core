@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
-from aioautomower.model import MowerModes, MowerStates
+from aioautomower.model import MowerAttributes, MowerModes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -25,7 +25,7 @@ async def test_sensor_unknown_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test a sensor which returns unknown."""
     await setup_integration(hass, mock_config_entry)
@@ -64,7 +64,7 @@ async def test_next_start_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test if this sensor is only added, if data is available."""
     await setup_integration(hass, mock_config_entry)
@@ -86,7 +86,7 @@ async def test_work_area_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test the work area sensor."""
     await setup_integration(hass, mock_config_entry)
@@ -129,7 +129,7 @@ async def test_statistics_not_available(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sensor_to_test: str,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test if this sensor is only added, if data is available."""
 
@@ -145,7 +145,7 @@ async def test_error_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values,
+    mower_values: dict[str, MowerAttributes],
 ) -> None:
     """Test error sensor."""
     await setup_integration(hass, mock_config_entry)
