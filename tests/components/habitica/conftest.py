@@ -1,8 +1,10 @@
 """Tests for the habitica component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from yarl import URL
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -19,6 +21,23 @@ def disable_plumbum():
     """
     with patch("plumbum.local"), patch("plumbum.colors"):
         yield
+
+
+def mock_called_with(
+    mock_client: AiohttpClientMocker,
+    method: str,
+    url: str,
+) -> tuple | None:
+    """Assert request mock was called with json data."""
+
+    return next(
+        (
+            call
+            for call in mock_client.mock_calls
+            if call[0] == method.upper() and call[1] == URL(url)
+        ),
+        None,
+    )
 
 
 @pytest.fixture
@@ -54,3 +73,12 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="00000000-0000-0000-0000-000000000000",
     )
+
+
+@pytest.fixture(autouse=True)
+def uuid_mock() -> Generator[None]:
+    """Mock the UUID."""
+    with patch(
+        "uuid.uuid4", return_value="5d1935ff-80c8-443c-b2e9-733c66b44745"
+    ) as uuid_mock:
+        yield uuid_mock.return_value

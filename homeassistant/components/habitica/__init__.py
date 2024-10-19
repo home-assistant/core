@@ -50,6 +50,8 @@ from .const import (
     SERVICE_CAST_SKILL,
 )
 from .coordinator import HabiticaDataUpdateCoordinator
+from .services import async_setup_services
+from .util import lookup_task
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -96,20 +98,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "smash": {"spellId": "smash", "cost": "10 MP"},
             "fireball": {"spellId": "fireball", "cost": "10 MP"},
         }
-        try:
-            task_id = next(
-                task["id"]
-                for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
-                or call.data[ATTR_TASK] == task["text"]
-            )
-        except StopIteration as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="task_not_found",
-                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
-            ) from e
-
+        task_id = lookup_task(
+            coordinator.data.tasks, call.data[ATTR_TASK], call.service
+        )["id"]
         try:
             response: dict[str, Any] = await coordinator.api.user.class_.cast[
                 skill[call.data[ATTR_SKILL]]["spellId"]
@@ -153,6 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SERVICE_CAST_SKILL_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+    async_setup_services(hass)
     return True
 
 
