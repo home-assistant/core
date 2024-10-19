@@ -117,10 +117,15 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
-                        data_updates={CONF_USER_DATA: login_data.as_dict()},
+                    reauth_entry = self._get_reauth_entry()
+                    self.hass.config_entries.async_update_entry(
+                        reauth_entry,
+                        data={
+                            **reauth_entry.data,
+                            CONF_USER_DATA: login_data.as_dict(),
+                        },
                     )
+                    return self.async_abort(reason="reauth_successful")
                 return self._create_entry(self._client, self._username, login_data)
 
         return self.async_show_form(
