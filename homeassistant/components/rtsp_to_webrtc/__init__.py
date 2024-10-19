@@ -25,14 +25,21 @@ from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
 
-from homeassistant.components import camera
-from homeassistant.components.camera.webrtc import RTCIceServer, register_ice_server
+from homeassistant.components.camera import Camera
+from homeassistant.components.camera.webrtc import (
+    CameraWebRTCProvider,
+    RTCIceServer,
+    async_register_webrtc_provider,
+    register_ice_server,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
+
+_RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DOMAIN = "rtsp_to_webrtc"
 DATA_SERVER_URL = "server_url"
@@ -64,33 +71,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         entry.async_on_unload(register_ice_server(hass, get_server))
 
-    async def async_offer_for_stream_source(
-        stream_source: str,
-        offer_sdp: str,
-        stream_id: str,
-    ) -> str:
-        """Handle the signal path for a WebRTC stream.
+    provider = WebRTCProvider(client)
+    entry.async_on_unload(async_register_webrtc_provider(hass, provider))
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-        This signal path is used to route the offer created by the client to the
-        proxy server that translates a stream to WebRTC. The communication for
-        the stream itself happens directly between the client and proxy.
-        """
+    return True
+
+
+class WebRTCProvider(CameraWebRTCProvider):
+    """WebRTC provider."""
+
+    def __init__(self, client: WebRTCClientInterface) -> None:
+        """Initialize the WebRTC provider."""
+        self._client = client
+
+    async def async_is_supported(self, stream_source: str) -> bool:
+        """Return if this provider is supports the Camera as source."""
+        return any(stream_source.startswith(prefix) for prefix in _RTSP_PREFIXES)
+
+    async def async_handle_web_rtc_offer(
+        self, camera: Camera, offer_sdp: str
+    ) -> str | None:
+        """Handle the WebRTC offer and return an answer."""
+        if not (stream_source := await camera.stream_source()):
+            return None
+        stream_id = camera.entity_id
         try:
             async with asyncio.timeout(TIMEOUT):
-                return await client.offer_stream_id(stream_id, offer_sdp, stream_source)
+                return await self._client.offer_stream_id(
+                    stream_id, offer_sdp, stream_source
+                )
         except TimeoutError as err:
             raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
         except ClientError as err:
             raise HomeAssistantError(str(err)) from err
-
-    entry.async_on_unload(
-        camera.async_register_rtsp_to_web_rtc_provider(
-            hass, DOMAIN, async_offer_for_stream_source
-        )
-    )
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
