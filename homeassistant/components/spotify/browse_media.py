@@ -253,7 +253,6 @@ async def async_browse_media(
     result = await async_browse_media_internal(
         hass,
         info.coordinator.client,
-        info.coordinator.current_user,
         media_content_type,
         media_content_id,
         can_play_artist=can_play_artist,
@@ -270,7 +269,6 @@ async def async_browse_media(
 async def async_browse_media_internal(
     hass: HomeAssistant,
     spotify: SpotifyClient,
-    current_user: dict[str, Any],
     media_content_type: str | None,
     media_content_id: str | None,
     *,
@@ -290,7 +288,6 @@ async def async_browse_media_internal(
     }
     response = await build_item_response(
         spotify,
-        current_user,
         payload,
         can_play_artist=can_play_artist,
     )
@@ -301,7 +298,6 @@ async def async_browse_media_internal(
 
 async def build_item_response(  # noqa: C901
     spotify: SpotifyClient,
-    user: dict[str, Any],
     payload: dict[str, str | None],
     *,
     can_play_artist: bool,
@@ -330,12 +326,13 @@ async def build_item_response(  # noqa: C901
                 for saved_album in saved_albums
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
-        if media := await spotify.get_saved_tracks():
+        if saved_tracks := await spotify.get_saved_tracks():
             items = [
-                _get_track_item_payload(saved_track.track) for saved_track in media
+                _get_track_item_payload(saved_track.track)
+                for saved_track in saved_tracks
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_SHOWS:
-        if media := await spotify.get_saved_shows():
+        if saved_shows := await spotify.get_saved_shows():
             items = [
                 {
                     "id": saved_show.show.show_id,
@@ -344,22 +341,26 @@ async def build_item_response(  # noqa: C901
                     "uri": saved_show.show.uri,
                     "thumbnail": fetch_image_url(saved_show.show.images),
                 }
-                for saved_show in media
+                for saved_show in saved_shows
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED:
-        if media := await spotify.get_recently_played_tracks():
-            items = [_get_track_item_payload(item.track) for item in media]
+        if recently_played_tracks := await spotify.get_recently_played_tracks():
+            items = [
+                _get_track_item_payload(item.track) for item in recently_played_tracks
+            ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_ARTISTS:
-        if media := await spotify.get_top_artists():
-            items = [_get_artist_item_payload(artist) for artist in media]
+        if top_artists := await spotify.get_top_artists():
+            items = [_get_artist_item_payload(artist) for artist in top_artists]
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
-        if media := await spotify.get_top_tracks():
-            items = [_get_track_item_payload(track) for track in media]
+        if top_tracks := await spotify.get_top_tracks():
+            items = [_get_track_item_payload(track) for track in top_tracks]
     elif media_content_type == BrowsableMedia.FEATURED_PLAYLISTS:
-        if media := await spotify.get_featured_playlists():
-            items = [_get_playlist_item_payload(playlist) for playlist in media]
+        if featured_playlists := await spotify.get_featured_playlists():
+            items = [
+                _get_playlist_item_payload(playlist) for playlist in featured_playlists
+            ]
     elif media_content_type == BrowsableMedia.CATEGORIES:
-        if media := await spotify.get_categories():
+        if categories := await spotify.get_categories():
             items = [
                 {
                     "id": category.category_id,
@@ -368,43 +369,45 @@ async def build_item_response(  # noqa: C901
                     "uri": category.category_id,
                     "thumbnail": category.icons[0].url if category.icons else None,
                 }
-                for category in media
+                for category in categories
             ]
     elif media_content_type == "category_playlists":
         if (
-            media := await spotify.get_category_playlists(category_id=media_content_id)
+            playlists := await spotify.get_category_playlists(
+                category_id=media_content_id
+            )
         ) and (category := await spotify.get_category(media_content_id)):
             title = category.name
             image = category.icons[0].url if category.icons else None
-            items = [_get_playlist_item_payload(playlist) for playlist in media]
+            items = [_get_playlist_item_payload(playlist) for playlist in playlists]
     elif media_content_type == BrowsableMedia.NEW_RELEASES:
-        if media := await spotify.get_new_releases():
-            items = [_get_album_item_payload(album) for album in media]
+        if new_releases := await spotify.get_new_releases():
+            items = [_get_album_item_payload(album) for album in new_releases]
     elif media_content_type == MediaType.PLAYLIST:
-        if media := await spotify.get_playlist(media_content_id):
-            title = media.name
-            image = media.images[0].url if media.images else None
+        if playlist := await spotify.get_playlist(media_content_id):
+            title = playlist.name
+            image = playlist.images[0].url if playlist.images else None
             items = [
                 _get_track_item_payload(playlist_track.track)
-                for playlist_track in media.tracks.items
+                for playlist_track in playlist.tracks.items
             ]
     elif media_content_type == MediaType.ALBUM:
-        if media := await spotify.get_album(media_content_id):
-            title = media.name
-            image = media.images[0].url if media.images else None
+        if album := await spotify.get_album(media_content_id):
+            title = album.name
+            image = album.images[0].url if album.images else None
             items = [
                 _get_track_item_payload(track, show_thumbnails=False)
-                for track in media.tracks
+                for track in album.tracks
             ]
     elif media_content_type == MediaType.ARTIST:
-        if (media := await spotify.get_artist_albums(media_content_id)) and (
+        if (artist_albums := await spotify.get_artist_albums(media_content_id)) and (
             artist := await spotify.get_artist(media_content_id)
         ):
             title = artist.name
             image = artist.images[0].url if artist.images else None
-            items = [_get_album_item_payload(album) for album in media]
+            items = [_get_album_item_payload(album) for album in artist_albums]
     elif media_content_type == MEDIA_TYPE_SHOW:
-        if (media := await spotify.get_show_episodes(media_content_id)) and (
+        if (show_episodes := await spotify.get_show_episodes(media_content_id)) and (
             show := await spotify.get_show(media_content_id)
         ):
             title = show.name
@@ -417,7 +420,7 @@ async def build_item_response(  # noqa: C901
                     "uri": episode.uri,
                     "thumbnail": fetch_image_url(episode.images),
                 }
-                for episode in media
+                for episode in show_episodes
             ]
 
     try:
