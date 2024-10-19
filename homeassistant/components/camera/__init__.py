@@ -634,14 +634,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                             "No answer on WebRTC offer",
                         )
                     )
-        elif (
+                return
+
+        if (
             self._webrtc_provider
             and await self._webrtc_provider.async_handle_webrtc_offer(
                 self, offer_sdp, session_id, send_message
             )
         ):
             return
-        elif self._legacy_webrtc_provider and (
+
+        if self._legacy_webrtc_provider and (
             answer := await self._legacy_webrtc_provider.async_handle_web_rtc_offer(
                 self, offer_sdp
             )
@@ -758,27 +761,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        # Avoid calling async_refresh_providers() in here because it
-        # it will write state a second time since state is always
-        # written when an entity is added to hass.
-        self._webrtc_provider = await self._async_get_supported_webrtc_provider(
-            async_get_supported_provider
-        )
-        if self._webrtc_provider is None:
-            # Only add the legacy provider if the new provider is not available
-            self._legacy_webrtc_provider = (
-                await self._async_get_supported_webrtc_provider(
-                    async_get_supported_legacy_provider
-                )
-            )
+        await self.async_refresh_providers(write_state=False)
 
-    async def async_refresh_providers(self) -> None:
+    async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
         This affects state attributes, so it should be invoked any time the registered
         providers or inputs to the state attributes change.
-
-        Returns True if any state was updated (and needs to be written)
         """
         old_provider = self._webrtc_provider
         new_provider = await self._async_get_supported_webrtc_provider(
@@ -796,7 +785,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
             self._webrtc_provider = new_provider
             self._legacy_webrtc_provider = new_legacy_provider
-            self.async_write_ha_state()
+            if write_state:
+                self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
