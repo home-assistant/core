@@ -22,6 +22,8 @@ DATA_LOCATION_CACHE: HassKey[
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
+MAX_SEARCH_DAYS = 367
+
 type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
@@ -87,7 +89,7 @@ def get_location_astral_event_next(
 
     mod = -1
     first_err = None
-    while mod < 367:
+    while mod < MAX_SEARCH_DAYS:
         try:
             next_dt = (
                 cast(_AstralSunEventCallable, getattr(location, event))(
