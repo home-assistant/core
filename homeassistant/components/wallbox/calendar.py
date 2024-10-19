@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CHARGER_CALENDAR,
     CHARGER_DATA_KEY,
     CHARGER_LAST_EVENT,
     CHARGER_SERIAL_NUMBER_KEY,
@@ -23,7 +24,7 @@ from .coordinator import WallboxCoordinator, WallboxEvent
 from .entity import WallboxEntity
 
 CALENDAR_TYPE = CalendarEntityDescription(
-    key="calendar",
+    key=CHARGER_CALENDAR,
     name=None,
 )
 
@@ -33,7 +34,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Radarr calendar entity."""
+    """Set up the Wallbox calendar entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([WallboxCalendarEntity(coordinator, CALENDAR_TYPE)])
 
@@ -44,7 +45,7 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
     def __init__(
         self, coordinator: WallboxCoordinator, description: CalendarEntityDescription
     ) -> None:
-        """Initialize a Wallbox sensor."""
+        """Initialize a Wallbox calendar."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
@@ -81,14 +82,11 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
                 "username": self.coordinator.data[CHARGER_LAST_EVENT].username,
                 "session_id": self.coordinator.data[CHARGER_LAST_EVENT].session_id,
                 "currency": self.coordinator.data[CHARGER_LAST_EVENT].currency,
-                "session_type": self.coordinator.data[CHARGER_LAST_EVENT].session_type,
                 "serial_number": self.coordinator.data[
                     CHARGER_LAST_EVENT
                 ].serial_number,
                 "energy": self.coordinator.data[CHARGER_LAST_EVENT].energy,
-                "mid_energy": self.coordinator.data[CHARGER_LAST_EVENT].mid_energy,
                 "time": self.coordinator.data[CHARGER_LAST_EVENT].time,
-                "cost_kw": self.coordinator.data[CHARGER_LAST_EVENT].cost_kw,
                 "session_cost": self.coordinator.data[CHARGER_LAST_EVENT].session_cost,
             }
         else:

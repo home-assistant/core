@@ -39,6 +39,7 @@ CHARGER_STATUS_ID_KEY = "status_id"
 CHARGER_STATUS_DESCRIPTION_KEY = "status_description"
 CHARGER_CONNECTIONS = "connections"
 CHARGER_LAST_EVENT = "last_event"
+CHARGER_CALENDAR = "calendar"
 
 
 class ChargerStatus(StrEnum):

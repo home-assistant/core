@@ -81,12 +81,9 @@ class WallboxEventMixIn:
     username: str
     session_id: str
     currency: str
-    session_type: str
     serial_number: int
     time: int
     energy: float
-    mid_energy: float
-    cost_kw: float
     session_cost: float
 
 
@@ -215,26 +212,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         end_date: datetime.datetime,
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
-
-        def create_description(event: dict[str, Any]) -> str:
-            tzone = dt_util.get_default_time_zone()
-            description = f"Session ID: {event["id"]}\n"
-            description += f"Charger name: {event["attributes"]["charger_name"]}\n"
-            description += f"Serial number: {event["attributes"]["charger"]}\n"
-            description += f"Username: {event["attributes"]["user_name"]}\n"
-            description += f"Start: {datetime.datetime.fromtimestamp(
-                    event["attributes"]["start"], tzone
-                )}\n"
-            description += f"End: {datetime.datetime.fromtimestamp(
-                    event["attributes"]["end"], tzone
-                )}\n"
-            description += f"Time: {datetime.datetime.fromtimestamp(
-                    event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)}\n"
-            description += f"Energy: {event["attributes"]["energy"]}KWh\n"
-            description += f"MID energy: {event["attributes"]["mid_energy"]}KWh\n"
-            description += f"Session cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]}\n"
-            return description
-
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
         tzone = dt_util.get_default_time_zone()
         events: list[WallboxEvent] = [
@@ -243,19 +220,19 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 username=event["attributes"]["user_name"],
                 session_id=event["id"],
                 currency=event["attributes"]["currency"]["code"],
-                session_type="",
                 serial_number=event["attributes"]["charger"],
                 time=event["attributes"]["time"],
-                energy=event["attributes"]["energy"],
-                mid_energy=event["attributes"]["mid_energy"],
-                cost_kw=0,
+                energy=event["attributes"]["mid_energy"]
+                if event["attributes"]["mid_energy"] > 0
+                else event["attributes"]["energy"],
                 session_cost=event["attributes"]["cost"],
                 start=datetime.datetime.fromtimestamp(
                     event["attributes"]["start"], tzone
                 ),
                 end=datetime.datetime.fromtimestamp(event["attributes"]["end"], tzone),
-                summary=f"Charger {event["attributes"]["charger_name"]}: {event["attributes"]["energy"]}KWh",
-                description=create_description(event),
+                summary=f"Charging session {event["id"]}: {event["attributes"]["energy"]}KWh",
+                location=event["attributes"]["charger_name"],
+                description=f"Session ID: {event["id"]}\nSerial number: {event["attributes"]["charger"]}\nUsername: {event["attributes"]["user_name"]}\nTime: {datetime.datetime.fromtimestamp(event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)}\nEnergy: {event["attributes"]["mid_energy"] if event["attributes"]["mid_energy"] > 0 else event["attributes"]["energy"]}KWh\nSession cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]}\n",
             )
             for event in data["data"]
             if event["type"] == "charger_log_session"
