@@ -541,6 +541,10 @@ class BaseCoordinatorEntity[
         self.coordinator = coordinator
         self.coordinator_context = context
 
+        coordinator_entry = getattr(coordinator, "config_entry", None)
+        if config_entries.current_entry.get() != coordinator_entry:
+            raise RuntimeError("Using a coordinator from a different config entry?")
+
     @cached_property
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
