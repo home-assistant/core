@@ -1,9 +1,10 @@
 """The tests for the MQTT client."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import socket
 import ssl
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -296,10 +297,13 @@ async def test_subscribe_mqtt_config_entry_disabled(
     mqtt_mock.connected = True
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.NOT_LOADED
 
     await hass.config_entries.async_set_disabled_by(
         mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
@@ -1279,7 +1283,7 @@ async def test_handle_message_callback(
         callbacks.append(args)
 
     msg = ReceiveMessage(
-        "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
+        "some-topic", b"test-payload", 1, False, "some-topic", time.monotonic()
     )
     mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "some-topic", _callback)

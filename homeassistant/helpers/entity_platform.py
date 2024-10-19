@@ -111,7 +111,11 @@ class EntityPlatformModule(Protocol):
 
 
 class EntityPlatform:
-    """Manage the entities for a single platform."""
+    """Manage the entities for a single platform.
+
+    An example of an entity platform is 'hue.light', which is managed by
+    the entity component 'light'.
+    """
 
     def __init__(
         self,

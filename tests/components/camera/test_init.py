@@ -4,7 +4,7 @@ from collections.abc import Generator
 from http import HTTPStatus
 import io
 from types import ModuleType
-from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
+from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 
@@ -226,7 +226,24 @@ async def test_get_image_fails(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_snapshot_service(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("filename_template", "expected_filename"),
+    [
+        ("/test/snapshot.jpg", "/test/snapshot.jpg"),
+        (
+            "/test/snapshot_{{ entity_id }}.jpg",
+            "/test/snapshot_<entity camera.demo_camera=streaming>.jpg",
+        ),
+        ("/test/snapshot_{{ entity_id.name }}.jpg", "/test/snapshot_Demo camera.jpg"),
+        (
+            "/test/snapshot_{{ entity_id.entity_id }}.jpg",
+            "/test/snapshot_camera.demo_camera.jpg",
+        ),
+    ],
+)
+async def test_snapshot_service(
+    hass: HomeAssistant, filename_template: str, expected_filename: str
+) -> None:
     """Test snapshot service."""
     mopen = mock_open()
 
@@ -242,10 +259,12 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
             camera.SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                camera.ATTR_FILENAME: filename_template,
             },
             blocking=True,
         )
+
+        mopen.assert_called_once_with(expected_filename, "wb")
 
         mock_write = mopen().write
 
@@ -263,7 +282,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.camera.os.makedirs",
         ),
-        pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"),
+        pytest.raises(
+            HomeAssistantError,
+            match="Cannot write `/test/snapshot.jpg`, no access to path",
+        ),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -274,6 +296,28 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_snapshot_service_os_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test snapshot service with os error."""
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("homeassistant.components.camera.os.makedirs", side_effect=OSError),
+    ):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+    assert "Can't write image to file:" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -557,7 +601,24 @@ async def test_record_service_invalid_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
-async def test_record_service(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("filename_template", "expected_filename"),
+    [
+        ("/test/recording.mpg", "/test/recording.mpg"),
+        (
+            "/test/recording_{{ entity_id }}.mpg",
+            "/test/recording_<entity camera.demo_camera=streaming>.mpg",
+        ),
+        ("/test/recording_{{ entity_id.name }}.mpg", "/test/recording_Demo camera.mpg"),
+        (
+            "/test/recording_{{ entity_id.entity_id }}.mpg",
+            "/test/recording_camera.demo_camera.mpg",
+        ),
+    ],
+)
+async def test_record_service(
+    hass: HomeAssistant, filename_template: str, expected_filename: str
+) -> None:
     """Test record service."""
     with (
         patch(
@@ -573,12 +634,17 @@ async def test_record_service(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             camera.DOMAIN,
             camera.SERVICE_RECORD,
-            {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"},
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: filename_template,
+            },
             blocking=True,
         )
         # So long as we call stream.record, the rest should be covered
         # by those tests.
-        assert mock_record.called
+        mock_record.assert_called_once_with(
+            ANY, expected_filename, duration=30, lookback=0
+        )
 
 
 @pytest.mark.usefixtures("mock_camera")

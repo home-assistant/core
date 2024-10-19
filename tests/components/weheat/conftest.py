@@ -115,6 +115,9 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.power_output = 66
     mock_heat_pump_instance.dhw_top_temperature = 77
     mock_heat_pump_instance.dhw_bottom_temperature = 88
+    mock_heat_pump_instance.thermostat_water_setpoint = 35
+    mock_heat_pump_instance.thermostat_room_temperature = 19
+    mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
     mock_heat_pump_instance.energy_total = 12345

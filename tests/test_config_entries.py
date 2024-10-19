@@ -5122,6 +5122,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "expected_data",
         "expected_options",
         "calls_entry_load_unload",
+        "raises",
     ),
     [
         (
@@ -5136,6 +5137,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data2"},
             {"vendor": "options2"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5149,6 +5151,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5163,6 +5166,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data2"},
             {"vendor": "options2"},
             (2, 1),
+            None,
         ),
         (
             {
@@ -5177,6 +5181,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (1, 0),
+            None,
         ),
         (
             {},
@@ -5185,6 +5190,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"vendor": "data"},
             {"vendor": "options"},
             (2, 1),
+            None,
         ),
         (
             {"data": {"buyer": "me"}, "options": {}},
@@ -5193,6 +5199,31 @@ def test_raise_trying_to_add_same_config_entry_twice(
             {"buyer": "me"},
             {},
             (2, 1),
+            None,
+        ),
+        (
+            {"data_updates": {"buyer": "me"}},
+            "Test",
+            "1234",
+            {"vendor": "data", "buyer": "me"},
+            {"vendor": "options"},
+            (2, 1),
+            None,
+        ),
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "options": {"vendor": "options2"},
+                "data_updates": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            {"vendor": "options"},
+            (1, 0),
+            ValueError,
         ),
     ],
     ids=[
@@ -5202,6 +5233,8 @@ def test_raise_trying_to_add_same_config_entry_twice(
         "unchanged_entry_no_reload",
         "no_kwargs",
         "replace_data",
+        "update_data",
+        "update_and_data_raises",
     ],
 )
 @pytest.mark.parametrize(
@@ -5221,6 +5254,7 @@ async def test_update_entry_and_reload(
     expected_options: dict[str, Any],
     kwargs: dict[str, Any],
     calls_entry_load_unload: tuple[int, int],
+    raises: type[Exception] | None,
 ) -> None:
     """Test updating an entry and reloading."""
     entry = MockConfigEntry(
@@ -5255,11 +5289,15 @@ async def test_update_entry_and_reload(
             """Mock Reconfigure."""
             return self.async_update_reload_and_abort(entry, **kwargs)
 
+    err: Exception
     with mock_config_flow("comp", MockFlowHandler):
-        if source == config_entries.SOURCE_REAUTH:
-            result = await entry.start_reauth_flow(hass)
-        elif source == config_entries.SOURCE_RECONFIGURE:
-            result = await entry.start_reconfigure_flow(hass)
+        try:
+            if source == config_entries.SOURCE_REAUTH:
+                result = await entry.start_reauth_flow(hass)
+            elif source == config_entries.SOURCE_RECONFIGURE:
+                result = await entry.start_reconfigure_flow(hass)
+        except Exception as ex:  # noqa: BLE001
+            err = ex
 
     await hass.async_block_till_done()
 
@@ -5268,8 +5306,11 @@ async def test_update_entry_and_reload(
     assert entry.data == expected_data
     assert entry.options == expected_options
     assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == reason
+    if raises:
+        assert isinstance(err, raises)
+    else:
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == reason
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
@@ -6896,3 +6937,72 @@ async def test_async_update_entry_unique_id_collision(
         "Unique id of config entry 'Mock Title' from integration test changed to "
         "'very unique' which is already in use"
     ) in caplog.text
+
+
+async def test_context_no_leak(hass: HomeAssistant) -> None:
+    """Test ensure that config entry context does not leak.
+
+    Unlikely to happen in real world, but occurs often in tests.
+    """
+
+    connected_future = asyncio.Future()
+    bg_tasks = []
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+
+        async def _async_set_runtime_data():
+            # Show that config_entries.current_entry is preserved for child tasks
+            await connected_future
+            entry.runtime_data = config_entries.current_entry.get()
+
+        bg_tasks.append(hass.loop.create_task(_async_set_runtime_data()))
+
+        return True
+
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock unload entry."""
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry1 = MockConfigEntry(domain="comp")
+    entry1.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry1.entry_id)
+    assert entry1.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is None
+
+    # Load an existing config entry
+    entry2 = MockConfigEntry(domain="comp")
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    assert entry2.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is None
+
+    # Add a new config entry (eg. from config flow)
+    entry3 = MockConfigEntry(domain="comp")
+    await hass.config_entries.async_add(entry3)
+    assert entry3.state is config_entries.ConfigEntryState.LOADED
+    assert config_entries.current_entry.get() is None
+
+    for entry in (entry1, entry2, entry3):
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert not hasattr(entry, "runtime_data")
+    assert config_entries.current_entry.get() is None
+
+    connected_future.set_result(None)
+    await asyncio.gather(*bg_tasks)
+
+    for entry in (entry1, entry2, entry3):
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert entry.runtime_data is entry
+    assert config_entries.current_entry.get() is None
