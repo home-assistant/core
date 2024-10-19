@@ -38,6 +38,7 @@ class TwitchUpdate:
     subscription_gifted: bool | None
     follows: bool
     following_since: datetime | None
+    viewers: int | None
 
 
 class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
@@ -112,5 +113,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 sub.is_gift if sub else None,
                 follows is not None and follows.total > 0,
                 follows.data[0].followed_at if follows and follows.total else None,
+                stream.viewer_count if stream else None,
             )
         return data
