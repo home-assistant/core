@@ -15,13 +15,7 @@
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Slaapkamer",
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 92,
         "setpoint": 13.0,
@@ -122,13 +116,7 @@
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Kinderkamer",
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 79,
         "setpoint": 13.0,
@@ -188,13 +176,7 @@
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Logeerkamer",
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 80,
         "setpoint": 13.0,
@@ -221,23 +203,14 @@
       },
       "dev_class": "gateway",
       "firmware": "3.2.8",
-      "gateway_modes": [
-        "away",
-        "full",
-        "vacation"
-      ],
+      "gateway_modes": ["away", "full", "vacation"],
       "hardware": "AME Smile 2.0 board",
       "location": "9e4433a9d69f40b3aefd15e74395eaec",
       "mac_address": "012345670001",
       "model": "Gateway",
       "model_id": "smile_open_therm",
       "name": "Adam",
-      "regulation_modes": [
-        "heating",
-        "off",
-        "bleeding_cold",
-        "bleeding_hot"
-      ],
+      "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
       "select_gateway_mode": "full",
       "select_regulation_mode": "heating",
       "sensors": {
@@ -321,13 +294,7 @@
       "model": "Jip",
       "model_id": "168-01",
       "name": "Woonkamer",
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 100,
         "humidity": 56.2,

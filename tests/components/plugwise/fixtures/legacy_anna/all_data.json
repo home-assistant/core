@@ -43,13 +43,7 @@
       "mode": "heat",
       "model": "ThermoTouch",
       "name": "Anna",
-      "preset_modes": [
-        "away",
-        "vacation",
-        "asleep",
-        "home",
-        "no_frost"
-      ],
+      "preset_modes": ["away", "vacation", "asleep", "home", "no_frost"],
       "sensors": {
         "illuminance": 151,
         "setpoint": 20.5,
