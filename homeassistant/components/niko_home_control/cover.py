@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COVER_CLOSE, COVER_OPEN, COVER_STOP, DOMAIN
@@ -53,12 +52,6 @@ class NikoHomeControlCover(CoverEntity):
         self._attr_unique_id = f"cover-{cover.action_id}"
         self._attr_name = cover.name
         self._moving = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cover.action_id)},
-            manufacturer=hub.manufacturer,
-            model=f"{hub.model}-cover",
-            name=cover.name,
-        )
 
     @property
     def id(self):

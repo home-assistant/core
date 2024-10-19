@@ -4,19 +4,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,18 +43,13 @@ class NikoHomeControlLight(LightEntity):
 
     def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
+        self._hub = hub
         self._light = light
         self._attr_name = light.name
         self._attr_is_on = light.is_on
         self._attr_unique_id = f"light-{light.action_id}"
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, light.action_id)},
-            manufacturer=hub.manufacturer,
-            model=f"{hub.model}-light",
-            name=light.name,
-        )
 
     @property
     def should_poll(self) -> bool:
@@ -99,13 +90,6 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_brightness = light.state * 2.55
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, light.action_id)},
-            manufacturer=hub.manufacturer,
-            model=f"{hub.model}-dimmable-light",
-            name=light.name,
-        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

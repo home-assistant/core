@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ipaddress
+
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -25,15 +26,15 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     name = data[CONF_NAME]
     host = data[CONF_HOST]
     port = data[CONF_PORT]
-    hub = Hub(hass, name, host, port)
+    hub = Hub(hass, name, host, port, None)
 
     try:
-      ipaddress.ip_address(host)
+        ipaddress.ip_address(host)
     except ValueError:
-      raise InvalidHost
+        raise InvalidHost
 
     if port < 0 or port > 65535:
-      raise InvalidPort
+        raise InvalidPort
 
     if not hub:
         raise CannotConnect
@@ -43,6 +44,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
@@ -59,8 +61,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["host"] = "invalid_host"
             except InvalidPort:
                 errors["port"] = "invalid_port"
-            except Exception:
-                errors["base"] = "unexpected_exception"
 
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(

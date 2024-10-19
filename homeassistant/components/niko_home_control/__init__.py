@@ -7,15 +7,18 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .hub import Hub
 
-PLATFORMS: list[str] = ["light", "cover"]
+PLATFORMS: list[str] = ["light", "cover", "fan"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set Niko Home Control from a config entry."""
-    hub = Hub(hass, entry.data["name"], entry.data["host"], entry.data["port"])
+    hub = Hub(
+        hass, entry.data["name"], entry.data["host"], entry.data["port"], entry.entry_id
+    )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     hub.start_events()
     return True
 
