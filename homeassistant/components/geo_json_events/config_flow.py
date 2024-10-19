@@ -19,13 +19,21 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import DEFAULT_RADIUS_IN_M, DOMAIN
+from .const import (
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_RADIUS_IN_M,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=True, icon="")
+        ),
+        vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=60)
         ),
     }
 )
@@ -55,6 +63,7 @@ class GeoJsonEventsFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         url: str = user_input[CONF_URL]
+        interval: float = user_input[CONF_UPDATE_INTERVAL]
         location: dict[str, Any] = user_input[CONF_LOCATION]
         latitude: float = location[CONF_LATITUDE]
         longitude: float = location[CONF_LONGITUDE]
@@ -69,6 +78,7 @@ class GeoJsonEventsFlowHandler(ConfigFlow, domain=DOMAIN):
             title=f"{url} ({latitude}, {longitude})",
             data={
                 CONF_URL: url,
+                CONF_UPDATE_INTERVAL: interval,
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: DistanceConverter.convert(

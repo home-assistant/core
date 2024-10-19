@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from aio_geojson_generic_client import GenericFeedManager
@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    DEFAULT_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL,
     DOMAIN,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
@@ -38,6 +38,7 @@ class GeoJsonFeedEntityManager:
         self._hass: HomeAssistant = hass
         self.entry_id: str = config_entry.entry_id
         websession = aiohttp_client.async_get_clientsession(hass)
+        self.config_entry = config_entry
         self._feed_manager: GenericFeedManager = GenericFeedManager(
             websession,
             self._generate_entity,
@@ -65,7 +66,9 @@ class GeoJsonFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, DEFAULT_UPDATE_INTERVAL
+            self._hass,
+            update,
+            timedelta(seconds=self.config_entry.data[CONF_UPDATE_INTERVAL]),
         )
 
         _LOGGER.debug("Feed entity manager initialized")
