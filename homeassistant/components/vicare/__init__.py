@@ -24,6 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_HEATING_TYPE,
     DEFAULT_CACHE_DURATION,
     DEVICE_LIST,
     DOMAIN,
@@ -113,6 +114,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
+            )
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                data={
+                    **entry.data,
+                },
+                options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
+            )
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+    return True
 
 
 async def async_migrate_devices_and_entities(
