@@ -961,7 +961,7 @@ homematicip==1.1.2
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.7.3
+huawei-lte-api==1.9.3
 
 # homeassistant.components.huum
 huum==0.7.10
