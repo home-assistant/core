@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 import logging
 
 from spotifyaio import (
+    ItemType,
     PlaybackState,
     Playlist,
     SpotifyClient,
     SpotifyConnectionError,
-    UserProfile, ItemType,
+    UserProfile,
 )
 from spotifyaio.models import AudioFeatures
 
@@ -68,7 +69,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         current = await self.client.get_playback()
         if not current:
             return SpotifyCoordinatorData(
-                current_playback=None, position_updated_at=None, playlist=None, audio_features=None
+                current_playback=None,
+                position_updated_at=None,
+                playlist=None,
+                audio_features=None,
             )
         # Record the last updated time, because Spotify's timestamp property is unreliable
         # and doesn't actually return the fetch time as is mentioned in the API description
