@@ -26,7 +26,7 @@ async def test_lawn_mower_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower state."""
     await setup_integration(hass, mock_config_entry)
@@ -44,9 +44,9 @@ async def test_lawn_mower_states(
             LawnMowerActivity.RETURNING,
         ),
     ):
-        mower_values[TEST_MOWER_ID].mower.activity = activity
-        mower_values[TEST_MOWER_ID].mower.state = state
-        mock_automower_client.get_status.return_value = mower_values
+        values[TEST_MOWER_ID].mower.activity = activity
+        values[TEST_MOWER_ID].mower.state = state
+        mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -251,12 +251,12 @@ async def test_lawn_mower_wrong_service_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    mower_values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

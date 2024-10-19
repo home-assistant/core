@@ -42,8 +42,8 @@ def mock_scope() -> str:
     return "iam:read amc:api"
 
 
-@pytest.fixture(name="mower_values")
-def mock_mower_values() -> dict[str, MowerAttributes]:
+@pytest.fixture(name="values")
+def mock_values() -> dict[str, MowerAttributes]:
     """Fixture to set correct scope for the token."""
     return mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),
@@ -92,13 +92,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client(mower_values) -> Generator[AsyncMock]:
+def mock_automower_client(values) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
     mock.commands = AsyncMock(spec_set=_MowerCommands)
-    mock.get_status.return_value = mower_values
+    mock.get_status.return_value = values
 
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",

@@ -47,10 +47,9 @@ async def test_switch_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch state."""
-    values = mower_values
     await setup_integration(hass, mock_config_entry)
 
     for mode, expected_state in (
@@ -223,7 +222,7 @@ async def test_zones_deleted(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test if stay-out-zone is deleted after removed."""
     await setup_integration(hass, mock_config_entry)
@@ -231,8 +230,8 @@ async def test_zones_deleted(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    del mower_values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID]
-    mock_automower_client.get_status.return_value = mower_values
+    del values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID]
+    mock_automower_client.get_status.return_value = values
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(

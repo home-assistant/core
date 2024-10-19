@@ -60,13 +60,13 @@ async def test_number_workarea_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test number commands."""
     entity_id = "number.test_mower_1_front_lawn_cutting_height"
     await setup_integration(hass, mock_config_entry)
-    mower_values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
+    mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
     await hass.services.async_call(

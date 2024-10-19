@@ -10,6 +10,7 @@ from aioautomower.exceptions import (
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
+from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -167,11 +168,10 @@ async def test_workarea_deleted(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mower_values,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test if work area is deleted after removed."""
 
-    values = mower_values
     await setup_integration(hass, mock_config_entry)
     current_entries = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -192,7 +192,7 @@ async def test_coordinator_automatic_registry_cleanup(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mower_values,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test automatic registry cleanup."""
     await setup_integration(hass, mock_config_entry)
@@ -206,7 +206,6 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
 
-    values = mower_values
     values.pop(TEST_MOWER_ID)
     mock_automower_client.get_status.return_value = values
     await hass.config_entries.async_reload(mock_config_entry.entry_id)

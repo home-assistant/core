@@ -25,7 +25,7 @@ async def test_sensor_unknown_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test a sensor which returns unknown."""
     await setup_integration(hass, mock_config_entry)
@@ -33,8 +33,8 @@ async def test_sensor_unknown_states(
     assert state is not None
     assert state.state == "main_area"
 
-    mower_values[TEST_MOWER_ID].mower.mode = MowerModes.UNKNOWN
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].mower.mode = MowerModes.UNKNOWN
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -64,7 +64,7 @@ async def test_next_start_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test if this sensor is only added, if data is available."""
     await setup_integration(hass, mock_config_entry)
@@ -72,8 +72,8 @@ async def test_next_start_sensor(
     assert state is not None
     assert state.state == "2023-06-05T17:00:00+00:00"
 
-    mower_values[TEST_MOWER_ID].planner.next_start_datetime = None
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].planner.next_start_datetime = None
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_work_area_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test the work area sensor."""
     await setup_integration(hass, mock_config_entry)
@@ -94,16 +94,16 @@ async def test_work_area_sensor(
     assert state is not None
     assert state.state == "Front lawn"
 
-    mower_values[TEST_MOWER_ID].mower.work_area_id = None
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].mower.work_area_id = None
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_work_area")
     assert state.state == "no_work_area_active"
 
-    mower_values[TEST_MOWER_ID].mower.work_area_id = 0
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].mower.work_area_id = 0
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -129,12 +129,12 @@ async def test_statistics_not_available(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sensor_to_test: str,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test if this sensor is only added, if data is available."""
 
-    delattr(mower_values[TEST_MOWER_ID].statistics, sensor_to_test)
-    mock_automower_client.get_status.return_value = mower_values
+    delattr(values[TEST_MOWER_ID].statistics, sensor_to_test)
+    mock_automower_client.get_status.return_value = values
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(f"sensor.test_mower_1_{sensor_to_test}")
     assert state is None
@@ -145,7 +145,7 @@ async def test_error_sensor(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test error sensor."""
     await setup_integration(hass, mock_config_entry)
@@ -157,9 +157,9 @@ async def test_error_sensor(
         (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
         (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
     ):
-        mower_values[TEST_MOWER_ID].mower.state = state
-        mower_values[TEST_MOWER_ID].mower.error_key = error_key
-        mock_automower_client.get_status.return_value = mower_values
+        values[TEST_MOWER_ID].mower.state = state
+        values[TEST_MOWER_ID].mower.error_key = error_key
+        mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

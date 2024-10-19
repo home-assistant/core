@@ -33,7 +33,7 @@ async def test_button_states_and_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test error confirm button command."""
     entity_id = "button.test_mower_1_confirm_error"
@@ -42,16 +42,16 @@ async def test_button_states_and_commands(
     assert state.name == "Test Mower 1 Confirm error"
     assert state.state == STATE_UNAVAILABLE
 
-    mower_values[TEST_MOWER_ID].mower.is_error_confirmable = None
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].mower.is_error_confirmable = None
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
 
-    mower_values[TEST_MOWER_ID].mower.is_error_confirmable = True
-    mock_automower_client.get_status.return_value = mower_values
+    values[TEST_MOWER_ID].mower.is_error_confirmable = True
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -90,7 +90,7 @@ async def test_sync_clock(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mower_values: dict[str, MowerAttributes],
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test sync clock button command."""
     entity_id = "button.test_mower_1_sync_clock"
@@ -98,7 +98,7 @@ async def test_sync_clock(
     state = hass.states.get(entity_id)
     assert state.name == "Test Mower 1 Sync clock"
 
-    mock_automower_client.get_status.return_value = mower_values
+    mock_automower_client.get_status.return_value = values
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
