@@ -24,7 +24,6 @@ from .api import (
     InvalidCredential,
     OAuthError,
     async_create_device_flow,
-    get_feature_access,
 )
 from .const import (
     CONF_CALENDAR_ACCESS,
@@ -117,7 +116,7 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
-            calendar_access = get_feature_access(self.hass)
+            calendar_access = DEFAULT_FEATURE_ACCESS
             if self._reauth_config_entry and self._reauth_config_entry.options:
                 calendar_access = FeatureAccess[
                     self._reauth_config_entry.options[CONF_CALENDAR_ACCESS]
@@ -214,7 +213,7 @@ class OAuth2FlowHandler(
             title=primary_calendar.id,
             data=data,
             options={
-                CONF_CALENDAR_ACCESS: get_feature_access(self.hass).name,
+                CONF_CALENDAR_ACCESS: DEFAULT_FEATURE_ACCESS.name,
             },
         )
 
