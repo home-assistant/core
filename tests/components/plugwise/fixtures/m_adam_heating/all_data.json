@@ -75,7 +75,13 @@
       "model": "ThermoTouch",
       "model_id": "143.1",
       "name": "Anna",
-      "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+      "preset_modes": [
+        "no_frost",
+        "asleep",
+        "vacation",
+        "home",
+        "away"
+      ],
       "select_schedule": "off",
       "sensors": {
         "setpoint": 20.0,
@@ -95,14 +101,23 @@
       },
       "dev_class": "gateway",
       "firmware": "3.7.8",
-      "gateway_modes": ["away", "full", "vacation"],
+      "gateway_modes": [
+        "away",
+        "full",
+        "vacation"
+      ],
       "hardware": "AME Smile 2.0 board",
       "location": "bc93488efab249e5bc54fd7e175a6f91",
       "mac_address": "012345679891",
       "model": "Gateway",
       "model_id": "smile_open_therm",
       "name": "Adam",
-      "regulation_modes": ["bleeding_hot", "bleeding_cold", "off", "heating"],
+      "regulation_modes": [
+        "bleeding_hot",
+        "bleeding_cold",
+        "off",
+        "heating"
+      ],
       "select_gateway_mode": "full",
       "select_regulation_mode": "heating",
       "sensors": {
@@ -133,7 +148,13 @@
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Lisa Badkamer",
-      "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+      "preset_modes": [
+        "no_frost",
+        "asleep",
+        "vacation",
+        "home",
+        "away"
+      ],
       "select_schedule": "Badkamer",
       "sensors": {
         "battery": 14,
