@@ -9,7 +9,6 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, SpotifyConfigEntry
@@ -20,7 +19,7 @@ from .coordinator import SpotifyCoordinator
 class SpotifyAudioFeaturesSensorEntityDescription(SensorEntityDescription):
     """Describes Spotify sensor entity."""
 
-    value_fn: Callable[[AudioFeatures], StateType]
+    value_fn: Callable[[AudioFeatures], float]
 
 
 AUDIO_FEATURE_SENSORS: tuple[SpotifyAudioFeaturesSensorEntityDescription, ...] = (
@@ -79,7 +78,7 @@ class SpotifyAudioFeatureSensor(CoordinatorEntity[SpotifyCoordinator], SensorEnt
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if (audio_features := self.coordinator.data.audio_features) is None:
             return None
