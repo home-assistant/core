@@ -19,6 +19,7 @@ from roborock.web_api import RoborockApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -44,7 +45,6 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
     VERSION = 1
-    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -116,15 +116,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.reauth_entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        self.reauth_entry,
-                        data={
-                            **self.reauth_entry.data,
-                            CONF_USER_DATA: login_data.as_dict(),
-                        },
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_USER_DATA: login_data.as_dict()},
                     )
-                    return self.async_abort(reason="reauth_successful")
                 return self._create_entry(self._client, self._username, login_data)
 
         return self.async_show_form(
@@ -140,9 +136,6 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         assert self._username
         self._client = RoborockApiClient(self._username)
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
