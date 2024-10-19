@@ -49,6 +49,8 @@ async def test_async_register_webrtc_provider(
     await hass.async_block_till_done()
 
     assert camera.frontend_stream_type is StreamType.WEB_RTC
+    answer = await camera.async_handle_web_rtc_offer("offer")
+    assert answer == "answer"
 
     # Mark stream as unsupported
     stream_supported = False
