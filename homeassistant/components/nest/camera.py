@@ -24,7 +24,9 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
     StreamType,
+    WebRTCAnswer,
     WebRTCClientConfiguration,
+    WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
@@ -205,16 +207,21 @@ class NestCamera(Camera):
         """Return placeholder image to use when no stream is available."""
         return PLACEHOLDER.read_bytes()
 
-    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
+    async def async_handle_async_webrtc_offer(
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
         """Return the source of the stream."""
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC not in trait.supported_protocols:
-            return await super().async_handle_web_rtc_offer(offer_sdp)
+            await super().async_handle_async_webrtc_offer(
+                offer_sdp, session_id, send_message
+            )
+            return
         try:
             stream = await trait.generate_web_rtc_stream(offer_sdp)
         except ApiException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
-        return stream.answer_sdp
+        send_message(WebRTCAnswer(stream.answer_sdp))
 
     @callback
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
