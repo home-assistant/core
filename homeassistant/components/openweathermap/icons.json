@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_minutely_forecasts": {
+      "service": "mdi:weather-snowy-rainy"
+    }
+  }
+}
