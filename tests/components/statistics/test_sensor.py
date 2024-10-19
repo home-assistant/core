@@ -26,7 +26,6 @@ from homeassistant.components.statistics.sensor import (
     CONF_SAMPLES_MAX_BUFFER_SIZE,
     CONF_STATE_CHARACTERISTIC,
     STAT_MEAN,
-    StatisticsSensor,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -558,7 +557,7 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Buffer is empty
 
-        current_time += timedelta(minutes=1)
+        current_time += timedelta(minutes=1, seconds=1)
         freezer.move_to(current_time)
         async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
@@ -1562,18 +1561,12 @@ async def test_initialize_from_database_with_maxage(
     """Test initializing the statistics from the database."""
     current_time = dt_util.utcnow()
 
-    # Testing correct retrieval from recorder, thus we do not
-    # want purging to occur within the class itself.
-    def mock_purge(self, *args):
-        return
-
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     with (
         freeze_time(current_time) as freezer,
-        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
     ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(
@@ -1713,18 +1706,12 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    # Testing correct retrieval from recorder, thus we do not
-    # want purging to occur within the class itself.
-    def mock_purge(self, *args):
-        return
-
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     with (
         freeze_time(current_time) as freezer,
-        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
     ):
         for value in VALUES_NUMERIC_LINEAR:
             hass.states.async_set(
