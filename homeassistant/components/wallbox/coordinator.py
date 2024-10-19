@@ -19,18 +19,29 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CHARGER_ATTRIBUTES_KEY,
+    CHARGER_CHARGER_KEY,
+    CHARGER_CHARGER_NAME_KEY,
+    CHARGER_COST_KEY,
     CHARGER_CURRENCY_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
     CHARGER_LAST_EVENT,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
+    CHARGER_MID_ENERGY_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SESSION_DATA_KEY,
+    CHARGER_START_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
+    CHARGER_TIME_KEY,
+    CHARGER_TYPE_KEY,
+    CHARGER_USERNAME_KEY,
     CODE_KEY,
     DOMAIN,
     UPDATE_INTERVAL,
@@ -216,26 +227,28 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         tzone = dt_util.get_default_time_zone()
         events: list[WallboxEvent] = [
             WallboxEvent(
-                charger_name=event["attributes"]["charger_name"],
-                username=event["attributes"]["user_name"],
+                charger_name=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
+                username=event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY],
                 session_id=event["id"],
-                currency=event["attributes"]["currency"]["code"],
-                serial_number=event["attributes"]["charger"],
-                time=event["attributes"]["time"],
-                energy=event["attributes"]["mid_energy"]
-                if event["attributes"]["mid_energy"] > 0
-                else event["attributes"]["energy"],
-                session_cost=event["attributes"]["cost"],
+                currency=event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"],
+                serial_number=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY],
+                time=event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY],
+                energy=event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY]
+                if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0
+                else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY],
+                session_cost=event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY],
                 start=datetime.datetime.fromtimestamp(
-                    event["attributes"]["start"], tzone
+                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_START_KEY], tzone
                 ),
-                end=datetime.datetime.fromtimestamp(event["attributes"]["end"], tzone),
-                summary=f"Charging session {event["id"]}: {event["attributes"]["energy"]}KWh",
-                location=event["attributes"]["charger_name"],
-                description=f"Session ID: {event["id"]}\nSerial number: {event["attributes"]["charger"]}\nUsername: {event["attributes"]["user_name"]}\nTime: {datetime.datetime.fromtimestamp(event["attributes"]["time"]) - datetime.datetime.fromtimestamp(0)}\nEnergy: {event["attributes"]["mid_energy"] if event["attributes"]["mid_energy"] > 0 else event["attributes"]["energy"]}KWh\nSession cost: {event["attributes"]["cost"]}{event["attributes"]["currency"]["code"]}\n",
+                end=datetime.datetime.fromtimestamp(
+                    event[CHARGER_ATTRIBUTES_KEY]["end"], tzone
+                ),
+                summary=f"Charging session {event["id"]}: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh",
+                location=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
+                description=f"Session ID: {event["id"]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"]}\n",
             )
-            for event in data["data"]
-            if event["type"] == "charger_log_session"
+            for event in data[CHARGER_SESSION_DATA_KEY]
+            if event[CHARGER_TYPE_KEY] == "charger_log_session"
         ]
 
         return events

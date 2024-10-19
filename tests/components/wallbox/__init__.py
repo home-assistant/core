@@ -7,24 +7,45 @@ import requests_mock
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
+    CHARGER_ATTRIBUTES_KEY,
+    CHARGER_CHARGER_KEY,
+    CHARGER_CHARGER_NAME_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_COST_KEY,
     CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_DISCHARGED_ENERGY_KEY,
+    CHARGER_DISCHARGING_TIME_KEY,
+    CHARGER_END_KEY,
+    CHARGER_ENERGY_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_GREEN_ENERGY_KEY,
+    CHARGER_GROUP_KEY,
+    CHARGER_ID_KEY,
+    CHARGER_LINKS_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
+    CHARGER_META_KEY,
+    CHARGER_MID_ENERGY_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
+    CHARGER_SESSION_DATA_KEY,
     CHARGER_SOFTWARE_KEY,
+    CHARGER_START_KEY,
     CHARGER_STATUS_ID_KEY,
+    CHARGER_TIME_KEY,
+    CHARGER_TYPE_KEY,
+    CHARGER_USER_EMAIL_KEY,
+    CHARGER_USER_KEY,
+    CHARGER_USERNAME_KEY,
 )
 from homeassistant.core import HomeAssistant
 
@@ -75,30 +96,30 @@ test_response_bidir = {
 }
 
 test_response_sessions = {
-    "meta": {"count": 2},
-    "links": {
+    CHARGER_META_KEY: {"count": 2},
+    CHARGER_LINKS_KEY: {
         "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
     },
-    "data": [
+    CHARGER_SESSION_DATA_KEY: [
         {
-            "type": "charger_log_session",
-            "id": "123456789",
-            "attributes": {
-                "group": 12345,
-                "charger": 12345,
-                "user": 12345,
-                "start": 1728417604,
-                "end": 1728539458,
-                "energy": 15.06,
-                "discharged_energy": 0,
-                "mid_energy": 0,
-                "green_energy": 0,
-                "time": 13577,
-                "discharging_time": 0,
-                "cost": 6.024,
+            CHARGER_TYPE_KEY: "charger_log_session",
+            CHARGER_ID_KEY: "123456789",
+            CHARGER_ATTRIBUTES_KEY: {
+                CHARGER_GROUP_KEY: 12345,
+                CHARGER_CHARGER_KEY: 12345,
+                CHARGER_USER_KEY: 12345,
+                CHARGER_START_KEY: 1728417604,
+                CHARGER_END_KEY: 1728539458,
+                CHARGER_ENERGY_KEY: 15.06,
+                CHARGER_DISCHARGED_ENERGY_KEY: 0,
+                CHARGER_MID_ENERGY_KEY: 0,
+                CHARGER_GREEN_ENERGY_KEY: 0,
+                CHARGER_TIME_KEY: 13577,
+                CHARGER_DISCHARGING_TIME_KEY: 0,
+                CHARGER_COST_KEY: 6.024,
                 "cost_savings": 0,
                 "cost_unit": "€",
-                "currency": {
+                CHARGER_CURRENCY_KEY: {
                     "id": 1,
                     "name": "Euro Member Countries",
                     "symbol": "€",
@@ -107,10 +128,10 @@ test_response_sessions = {
                 "range": 125,
                 "group_name": "Family",
                 "base_group_name": "Family",
-                "charger_name": "Commander 2 SN 12345",
+                CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
                 "user_subgroup": "Family",
-                "user_name": "user",
-                "user_email": "test.test@test.com",
+                CHARGER_USERNAME_KEY: "user",
+                CHARGER_USER_EMAIL_KEY: "test.test@test.com",
                 "user_rfid": None,
                 "user_is_rfid": 0,
                 "user_plate": None,
@@ -124,21 +145,21 @@ test_response_sessions = {
             },
         },
         {
-            "type": "charger_log_session",
-            "id": "987654321",
-            "attributes": {
-                "group": 12345,
-                "charger": 12345,
-                "user": 12345,
-                "start": 1728331202,
-                "end": 1728366534,
-                "energy": 16.139,
-                "discharged_energy": 0,
-                "mid_energy": 0,
-                "green_energy": 0,
-                "time": 14480,
-                "discharging_time": 0,
-                "cost": 6.4556,
+            CHARGER_TYPE_KEY: "charger_log_session",
+            CHARGER_ID_KEY: "987654321",
+            CHARGER_ATTRIBUTES_KEY: {
+                CHARGER_GROUP_KEY: 12345,
+                CHARGER_CHARGER_KEY: 12345,
+                CHARGER_USER_KEY: 12345,
+                CHARGER_START_KEY: 1728331202,
+                CHARGER_END_KEY: 1728366534,
+                CHARGER_ENERGY_KEY: 16.139,
+                CHARGER_DISCHARGED_ENERGY_KEY: 0,
+                CHARGER_MID_ENERGY_KEY: 0,
+                CHARGER_GREEN_ENERGY_KEY: 0,
+                CHARGER_TIME_KEY: 14480,
+                CHARGER_DISCHARGING_TIME_KEY: 0,
+                CHARGER_COST_KEY: 6.4556,
                 "cost_savings": 0,
                 "cost_unit": "€",
                 "currency": {
@@ -150,10 +171,10 @@ test_response_sessions = {
                 "range": 134,
                 "group_name": "Family",
                 "base_group_name": "Family",
-                "charger_name": "Commander 2 SN 12345",
+                CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
                 "user_subgroup": "Family",
-                "user_name": "test",
-                "user_email": "test.test@test.com",
+                CHARGER_USERNAME_KEY: "test",
+                CHARGER_USER_EMAIL_KEY: "test.test@test.com",
                 "user_rfid": None,
                 "user_is_rfid": 0,
                 "user_plate": None,
@@ -170,11 +191,11 @@ test_response_sessions = {
 }
 
 test_response_sessions_empty = {
-    "meta": {"count": 0},
-    "links": {
+    CHARGER_META_KEY: {"count": 0},
+    CHARGER_LINKS_KEY: {
         "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
     },
-    "data": [],
+    CHARGER_SESSION_DATA_KEY: [],
 }
 
 authorisation_response = {
