@@ -83,7 +83,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=VICARE_NAME,
                     data=user_input,
-                    options={CONF_HEATING_TYPE: HeatingType.auto},
+                    options={CONF_HEATING_TYPE: DEFAULT_HEATING_TYPE.value},
                 )
 
         return self.async_show_form(
