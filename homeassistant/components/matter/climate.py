@@ -409,7 +409,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
-        if feature_map & ThermostatFeature.kHeating:
+        if feature_map & (
+            ThermostatFeature.kHeating |
+            TemperatureControlFeature.kTemperatureLevel |
+            TemperatureControlFeature.kTemperatureNumber | 
+            TemperatureControlFeature.kTemperatureStep
+        ):
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
@@ -427,16 +432,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 )
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
-
-        # TemperatureLevel feature
-        if feature_map & TemperatureControlFeature.kTemperatureNumber:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
-        # TemperatureLevel feature
-        if feature_map & TemperatureControlFeature.kTemperatureLevel:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
-        # TemperatureStep feature
-        if feature_map & TemperatureControlFeature.kTemperatureStep:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
 
     @callback
     def _get_temperature_in_degrees(
