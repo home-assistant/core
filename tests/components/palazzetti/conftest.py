@@ -36,19 +36,19 @@ def mock_palazzetti():
     ):
         client.connect = AsyncMock(return_value=True)
         client.update_state = AsyncMock(return_value=True)
-        client.mac = AsyncMock(return_value="11:22:33:44:55:66")
-        client.name = AsyncMock(return_value="Stove")
-        client.sw_version = AsyncMock(return_value="0.0.0")
-        client.hw_version = AsyncMock(return_value="1.1.1")
-        client.fan_speed_min = AsyncMock(return_value=1)
-        client.fan_speed_max = AsyncMock(return_value=5)
-        client.has_fan_silent = AsyncMock(return_value=False)
-        client.has_fan_high = AsyncMock(return_value=True)
-        client.has_fan_auto = AsyncMock(return_value=True)
-        client.has_on_off_switch = AsyncMock(return_value=True)
-        client.connected = AsyncMock(return_value=True)
-        client.is_heating = AsyncMock(return_value=True)
-        client.room_temperature = AsyncMock(18)
-        client.target_temperature = AsyncMock(21)
-        client.fan_speed = AsyncMock(3)
+        client.mac = "11:22:33:44:55:66"
+        client.name = "Stove"
+        client.sw_version = "0.0.0"
+        client.hw_version = "1.1.1"
+        client.fan_speed_min = 1
+        client.fan_speed_max = 5
+        client.has_fan_silent = False
+        client.has_fan_high = True
+        client.has_fan_auto = True
+        client.has_on_off_switch = True
+        client.connected = True
+        client.is_heating = True
+        client.room_temperature = 18
+        client.target_temperature = 21
+        client.fan_speed = 3
         yield client

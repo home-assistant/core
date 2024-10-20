@@ -17,8 +17,14 @@
     }
   },
   "exceptions": {
-    "action_not_available": {
-      "message": "This action is currently not available. Try again later."
+    "on_off_not_available": {
+      "message": "The appliance cannot be turned on or off atthe moment. Try again later."
+    },
+    "fan_speed_out_of_bounds": {
+      "message": "This fan mode ({value}) is not supported."
+    },
+    "target_temperature_out_of_bounds": {
+      "message": "This target temperature ({value}) is not supported."
     }
   }
 }
