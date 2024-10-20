@@ -40,7 +40,7 @@ TCTL_SYSTEM_MODE_MAP = {
 
 SystemModeEnum = clusters.TemperatureControl.Enums.SystemModeEnum
 ControlSequenceEnum = clusters.TemperatureControl.Enums.ControlSequenceOfOperationEnum
-ThermostatFeature = clusters.TemperatureControl.Bitmaps.Feature
+TemperatureControlFeature = clusters.TemperatureControl.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -276,13 +276,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
-        if feature_map & ThermostatFeature.kHeating:
+        if feature_map & TemperatureControlFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & ThermostatFeature.kCooling:
+        if feature_map & TemperatureControlFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
-        if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
-            self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
-        if feature_map & ThermostatFeature.kAutoMode:
+        if feature_map & TemperatureControlFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
             # only enable temperature_range feature if the device actually supports that
 
