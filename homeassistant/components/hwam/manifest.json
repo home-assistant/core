@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/hwam",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["pystove==0.2a1"],
+  "requirements": ["pystove==0.3a1"],
   "ssdp": []
 }

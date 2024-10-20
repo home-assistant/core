@@ -1825,7 +1825,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.9.3
 
 # homeassistant.components.hwam
-pystove==0.2a1
+pystove==0.3a1
 
 # homeassistant.components.suez_water
 pysuez==0.2.0
