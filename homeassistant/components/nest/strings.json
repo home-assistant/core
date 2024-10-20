@@ -26,10 +26,24 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "pubsub": {
-        "title": "Configure Google Cloud",
-        "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
+        "title": "Configure Google Cloud Pub/Sub",
+        "description": "Home Assistant uses Cloud Pub/Sub to efficiently receive updates from Nest devices. Nest servers publish updates to a Pub/Sub Topic and Home Assistat receives the updates through a Pub/Sub Subscription.\n\nYou will need to ensure a Pub/Sub topic is configured in the [Device Access Console]({device_access_console_url}), then the next step will attempt to audo-discover Pub/Sub topics and subscriptions. See the integration documentation for [more info]({more_info_url}).\n\nVisit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
           "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
+        }
+      },
+      "pubsub_topic": {
+        "title": "Configure Cloud Pub/Sub Topic",
+        "description": "Select the Pub/Sub topic to use. It needs to match the topic in the [Device Access Console]({device_access_console_url}). See the integration documentation for [more info]({more_info_url}).",
+        "data": {
+          "topic_name": "Pub/Sub Topic Name"
+        }
+      },
+      "pubsub_subscription": {
+        "title": "Configure Cloud Pub/Sub Subscription",
+        "description": "Select the Pub/Sub subscription to use for topic {topic}. See the integration documentation for [more info]({more_info_url}).",
+        "data": {
+          "topic_name": "Pub/Sub Topic Name"
         }
       },
       "reauth_confirm": {
@@ -40,7 +54,9 @@
     "error": {
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
       "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
-      "subscriber_error": "Unknown subscriber error, see logs"
+      "subscriber_error": "Unknown subscriber error, see logs",
+      "no_pubsub_topics": "No eligible Pub/Sub topics found, please ensure Device Access Console has a Pub/Sub topic.",
+      "pubsub_api_error": "Unknown error talking to Cloud Pub/Sub, see logs"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
