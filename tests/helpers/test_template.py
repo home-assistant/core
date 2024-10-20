@@ -6564,3 +6564,21 @@ def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
     template.Template("blah", hass)
     assert message not in caplog.text
     caplog.clear()
+
+
+async def test_merge_response_not_mutate_original_object(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test the merge_response does not mutate original service response value."""
+
+    value = '{"calendar.family": {"events": [{"summary": "An event"}]}'
+    _template = (
+        "{% set calendar_response = " + value + "} %}"
+        "{{ merge_response(calendar_response) }}"
+        # We should be able to merge the same response again
+        # as the merge is working on a copy of the original object (response)
+        "{{ merge_response(calendar_response) }}"
+    )
+
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render()

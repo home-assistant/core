@@ -204,6 +204,12 @@
           "zone_generator_problem": "Zone generator problem"
         }
       },
+      "my_lawn_last_time_completed": {
+        "name": "My lawn last time completed"
+      },
+      "my_lawn_progress": {
+        "name": "My lawn progress"
+      },
       "number_of_charging_cycles": {
         "name": "Number of charging cycles"
       },
@@ -266,6 +272,12 @@
             "name": "Work area ID assignment"
           }
         }
+      },
+      "work_area_last_time_completed": {
+        "name": "{work_area} last time completed"
+      },
+      "work_area_progress": {
+        "name": "{work_area} progress"
       }
     },
     "switch": {

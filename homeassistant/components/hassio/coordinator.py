@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import StoreInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -332,12 +333,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass) or {}
+        store_data = get_store(self.hass)
 
-        repositories = {
-            repo[ATTR_SLUG]: repo[ATTR_NAME]
-            for repo in store_data.get("repositories", [])
-        }
+        if store_data:
+            repositories = {
+                repo.slug: repo.name
+                for repo in StoreInfo.from_dict(store_data).repositories
+            }
+        else:
+            repositories = {}
 
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
