@@ -30,17 +30,14 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
-from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
+from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
 from .coordinator import SpotifyCoordinator
+from .entity import SpotifyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,10 +96,9 @@ def ensure_item[_R](
     return wrapper
 
 
-class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntity):
+class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    _attr_has_entity_name = True
     _attr_media_image_remotely_accessible = False
     _attr_name = None
     _attr_translation_key = "spotify"
@@ -117,17 +113,7 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         """Initialize."""
         super().__init__(coordinator)
         self.devices = device_coordinator
-
         self._attr_unique_id = user_id
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, user_id)},
-            manufacturer="Spotify AB",
-            model=f"Spotify {coordinator.current_user.product}",
-            name=f"Spotify {name}",
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://open.spotify.com",
-        )
 
     @property
     def currently_playing(self) -> PlaybackState | None:
