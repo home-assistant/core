@@ -73,6 +73,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="ViCare",
         entry_id="1234",
+        version=1,
+        minor_version=2,
         data=ENTRY_CONFIG,
         options=ENTRY_OPTIONS,
     )
@@ -85,6 +87,8 @@ def mock_config_entry_1_1() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="ViCare",
         entry_id="1234",
+        version=1,
+        minor_version=1,
         data=ENTRY_CONFIG_1_1,
     )
 
