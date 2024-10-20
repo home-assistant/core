@@ -34,48 +34,19 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "leaving_dock": {
-        "name": "Leaving dock"
-      },
-      "returning_to_dock": {
-        "name": "Returning to dock"
-      }
-    },
-    "button": {
-      "confirm_error": {
-        "name": "Confirm error"
-      }
-    },
-    "number": {
-      "cutting_height": {
-        "name": "Cutting height"
-      },
-      "my_lawn_cutting_height": {
-        "name": "My lawn cutting height "
-      },
-      "work_area_cutting_height": {
-        "name": "{work_area} cutting height"
-      }
-    },
-    "select": {
-      "headlight_mode": {
-        "name": "Headlight mode",
-        "state": {
-          "always_on": "Always on",
-          "always_off": "Always off",
-          "evening_only": "Evening only",
-          "evening_and_night": "Evening and night"
-        }
-      }
-    },
     "sensor": {
-      "state": {
+      "container_state": {
         "name": "{container}",
         "state": {
           "running": "Running",
           "exited": "Exited"
         }
+      },
+      "total_cpu": {
+        "name": "Total CPU"
+      },
+      "total_memory": {
+        "name": "Total memory"
       }
     }
   },
@@ -88,44 +59,6 @@
     },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
-    }
-  },
-  "selector": {
-    "override_modes": {
-      "options": {
-        "mow": "Mow",
-        "park": "Park"
-      }
-    }
-  },
-  "services": {
-    "override_schedule": {
-      "name": "Override schedule",
-      "description": "Override the schedule to either mow or park for a duration of time.",
-      "fields": {
-        "duration": {
-          "name": "Duration",
-          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored."
-        },
-        "override_mode": {
-          "name": "Override mode",
-          "description": "With which action the schedule should be overridden."
-        }
-      }
-    },
-    "override_schedule_work_area": {
-      "name": "Override schedule work area",
-      "description": "Override the schedule of the node for a duration of time in the selected work area.",
-      "fields": {
-        "duration": {
-          "name": "[%key:component::husqvarna_Portainer::services::override_schedule::fields::duration::name%]",
-          "description": "[%key:component::husqvarna_Portainer::services::override_schedule::fields::duration::description%]"
-        },
-        "work_area_id": {
-          "name": "Work area ID",
-          "description": "In which work area the node should mow."
-        }
-      }
     }
   }
 }

@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from aiotainer.model import Container, NodeData, Snapshot
+from aiotainer.model import Container, NodeData, Snapshot, State
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -65,9 +65,10 @@ class ContainerSensorEntityDescription(SensorEntityDescription):
 
 CONTAINER_SENSOR_TYPES: tuple[ContainerSensorEntityDescription, ...] = (
     ContainerSensorEntityDescription(
-        key="state",
-        translation_key="state",
+        key="container_state",
+        translation_key="container_state",
         device_class=SensorDeviceClass.ENUM,
+        options=list(State),
         value_fn=lambda data: data.state.name.lower(),
     ),
 )
@@ -144,17 +145,16 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         """Set up PortainerSensors."""
         super().__init__(coordinator, node_id, snapshot, container)
         self.entity_description = description
-        self._attr_unique_id = f"{node_id}-{container}-{description.key}"
-        _LOGGER.debug("self.node_attributes %s", self.node_attributes)
+        _LOGGER.debug("container.names %s %s", container.names, container.id)
+        self._attr_unique_id = f"{node_id}-{container.id}-{description.key}"
+        # _LOGGER.debug("self.node_attributes %s", self.node_attributes)
         self.container = container
-        self._attr_translation_placeholders = {
-            "container": container.names[0].strip("/").capitalize()
-        }
+        self._attr_translation_placeholders = {"container": container.names}
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        _LOGGER.debug("self.node_attributes %s", self.node_attributes)
+        # _LOGGER.debug("self.container_attributes %s", self.container_attributes)
         return self.entity_description.value_fn(self.container_attributes)
 
     @property

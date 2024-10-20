@@ -67,7 +67,6 @@ class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
     ) -> None:
         """Initialize PortainerEntity."""
         super().__init__(coordinator)
-        _LOGGER.debug("node_id %s", node_id)
         self.node_id = node_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, node_id)},
