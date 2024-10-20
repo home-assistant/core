@@ -161,7 +161,7 @@ async def setup_evohome(
 
 
 def get_dhw_entity(hass: HomeAssistant) -> EvoDHW:
-    """Return the DHW entity of the evohome system."""
+    """Return the WaterHeater entity of the evohome integration."""
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
@@ -183,7 +183,7 @@ async def dhw(
     config: dict[str, str],
     install: str,
 ) -> AsyncGenerator[EvoDHW]:
-    """Return the first heating zone (Climate entity) of the evohome system."""
+    """Return the WaterHeater entity of the evohome integration."""
 
     async for _ in setup_evohome(hass, config, install=install):
         yield get_dhw_entity(hass)
