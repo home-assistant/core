@@ -103,7 +103,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 30
         ),
         class_needed=MAGE,
-        entity_picture=f"{ASSETS_URL}shop_mpheal.png",
+        entity_picture="shop_mpheal.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.EARTH,
@@ -114,7 +114,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 35
         ),
         class_needed=MAGE,
-        entity_picture=f"{ASSETS_URL}shop_earth.png",
+        entity_picture="shop_earth.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
@@ -129,7 +129,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 40
         ),
         class_needed=MAGE,
-        entity_picture=f"{ASSETS_URL}shop_frost.png",
+        entity_picture="shop_frost.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.DEFENSIVE_STANCE,
@@ -144,7 +144,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=WARRIOR,
-        entity_picture=f"{ASSETS_URL}shop_defensiveStance.png",
+        entity_picture="shop_defensiveStance.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.VALOROUS_PRESENCE,
@@ -159,7 +159,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 20
         ),
         class_needed=WARRIOR,
-        entity_picture=f"{ASSETS_URL}shop_valorousPresence.png",
+        entity_picture="shop_valorousPresence.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.INTIMIDATE,
@@ -174,7 +174,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 15
         ),
         class_needed=WARRIOR,
-        entity_picture=f"{ASSETS_URL}shop_intimidate.png",
+        entity_picture="shop_intimidate.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.TOOLS_OF_TRADE,
@@ -187,7 +187,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=ROGUE,
-        entity_picture=f"{ASSETS_URL}shop_toolsOfTrade.png",
+        entity_picture="shop_toolsOfTrade.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.STEALTH,
@@ -202,7 +202,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 45
         ),
         class_needed=ROGUE,
-        entity_picture=f"{ASSETS_URL}shop_stealth.png",
+        entity_picture="shop_stealth.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
@@ -231,7 +231,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 15
         ),
         class_needed=HEALER,
-        entity_picture=f"{ASSETS_URL}shop_brightness.png",
+        entity_picture="shop_brightness.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.PROTECT_AURA,
@@ -244,7 +244,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 30
         ),
         class_needed=HEALER,
-        entity_picture=f"{ASSETS_URL}shop_protectAura.png",
+        entity_picture="shop_protectAura.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL_ALL,
@@ -255,7 +255,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=HEALER,
-        entity_picture=f"{ASSETS_URL}shop_healAll.png",
+        entity_picture="shop_healAll.png",
     ),
 )
 
@@ -347,4 +347,6 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        return self.entity_description.entity_picture
+        if entity_picture := self.entity_description.entity_picture:
+            return f"{ASSETS_URL}{entity_picture}"
+        return None
