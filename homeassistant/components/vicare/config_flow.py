@@ -96,7 +96,6 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with ViCare."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -104,11 +103,11 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm re-authentication with ViCare."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
 
+        reauth_entry = self._get_reauth_entry()
         if user_input:
             data = {
-                **self.entry.data,
+                **reauth_entry.data,
                 **user_input,
             }
 
@@ -117,17 +116,12 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data=data,
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                REAUTH_SCHEMA, self.entry.data
+                REAUTH_SCHEMA, reauth_entry.data
             ),
             errors=errors,
         )

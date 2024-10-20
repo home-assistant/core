@@ -42,7 +42,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    _config_entry: ConfigEntry
     _max_entries: int | None = None
 
     @staticmethod
@@ -124,18 +123,12 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._config_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
+        reconfigure_entry = self._get_reconfigure_entry()
         if not user_input:
             return self.show_user_form(
-                user_input={**self._config_entry.data},
-                description_placeholders={"name": self._config_entry.title},
-                step_id="reconfigure_confirm",
+                user_input={**reconfigure_entry.data},
+                description_placeholders={"name": reconfigure_entry.title},
+                step_id="reconfigure",
             )
 
         feed = await async_fetch_feed(self.hass, user_input[CONF_URL])
@@ -145,12 +138,12 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             if isinstance(feed.bozo_exception, urllib.error.URLError):
                 return self.show_user_form(
                     user_input=user_input,
-                    description_placeholders={"name": self._config_entry.title},
-                    step_id="reconfigure_confirm",
+                    description_placeholders={"name": reconfigure_entry.title},
+                    step_id="reconfigure",
                     errors={"base": "url_error"},
                 )
 
-        self.hass.config_entries.async_update_entry(self._config_entry, data=user_input)
+        self.hass.config_entries.async_update_entry(reconfigure_entry, data=user_input)
         return self.async_abort(reason="reconfigure_successful")
 
 
