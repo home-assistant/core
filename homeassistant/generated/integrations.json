@@ -3740,6 +3740,12 @@
         }
       }
     },
+    "microsoft_speech": {
+      "name": "Microsoft Speech",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",

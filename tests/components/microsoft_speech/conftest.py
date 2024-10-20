@@ -1,4 +1,4 @@
-"""Common fixtures for the NEW_NAME tests."""
+"""Common fixtures for the Microsoft Speech tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
