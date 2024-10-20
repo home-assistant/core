@@ -1,4 +1,5 @@
 """Test the Victron Bluetooth Low Energy config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -23,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Mock bluetooth for all tests in this module."""
 
 
