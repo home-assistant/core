@@ -7,7 +7,7 @@ from pypalazzetti.exceptions import CommunicationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
@@ -23,14 +23,14 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            palazzetti = PalazzettiClient(hostname=host)
+            client = PalazzettiClient(hostname=host)
             try:
-                await palazzetti.connect()
+                await client.connect()
             except CommunicationError:
                 LOGGER.exception("Communication error")
                 errors["base"] = "invalid_host"
             else:
-                formatted_mac = dr.format_mac(palazzetti.mac)
+                formatted_mac = dr.format_mac(client.mac)
 
                 # Assign a unique ID to the flow
                 await self.async_set_unique_id(formatted_mac)
@@ -38,10 +38,9 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Abort the flow if a config entry with the same unique ID exists
                 self._abort_if_unique_id_configured()
 
-                name = palazzetti.name
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_NAME: name, CONF_HOST: host, CONF_MAC: formatted_mac},
+                    title=client.name,
+                    data={CONF_HOST: host, CONF_MAC: formatted_mac},
                 )
 
         return self.async_show_form(

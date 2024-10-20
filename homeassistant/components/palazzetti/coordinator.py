@@ -33,16 +33,16 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = PalazzettiClient(self.config_entry.data[CONF_HOST])
 
-    async def _async_update_data(self) -> None:
-        """Fetch data from Palazzetti."""
-        try:
-            await self.client.update_state()
-        except (CommunicationError, ValidationError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
     async def _async_setup(self) -> None:
         try:
             await self.client.connect()
             await self.client.update_state()
         except (CommunicationError, ValidationError) as err:
             raise ConfigEntryNotReady from err
+
+    async def _async_update_data(self) -> None:
+        """Fetch data from Palazzetti."""
+        try:
+            await self.client.update_state()
+        except (CommunicationError, ValidationError) as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err

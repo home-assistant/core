@@ -8,7 +8,9 @@ DOMAIN: Final = "palazzetti"
 PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
-ACTION_NOT_UNAVAILABLE = "action_not_available"
+ON_OFF_NOT_AVAILABLE = "on_off_not_available"
+FAN_MODE_OUT_OF_BOUNDS = "fan_speed_out_of_bounds"
+TEMPERATURE_OUT_OF_BOUNDS = "temperature_out_of_bounds"
 
 FAN_SILENT: Final = "SILENT"
 FAN_HIGH: Final = "HIGH"

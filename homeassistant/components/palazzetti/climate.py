@@ -1,6 +1,6 @@
 """Support for Palazzetti climates."""
 
-from typing import Any, cast
+from typing import Any
 
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 
@@ -9,22 +9,24 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, CONF_NAME, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PalazzettiConfigEntry
 from .const import (
-    ACTION_NOT_UNAVAILABLE,
     DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
+    FAN_MODE_OUT_OF_BOUNDS,
     FAN_MODES,
     FAN_SILENT,
+    ON_OFF_NOT_AVAILABLE,
     PALAZZETTI,
+    TEMPERATURE_OUT_OF_BOUNDS,
 )
 from .coordinator import PalazzettiDataUpdateCoordinator
 
@@ -35,13 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Palazzetti climates based on a config entry."""
-    async_add_entities(
-        [
-            PalazzettiClimateEntity(
-                coordinator=entry.runtime_data,
-            )
-        ]
-    )
+    async_add_entities([PalazzettiClimateEntity(coordinator=entry.runtime_data)])
 
 
 class PalazzettiClimateEntity(
@@ -50,25 +46,26 @@ class PalazzettiClimateEntity(
     """Defines a Palazzetti climate."""
 
     _attr_has_entity_name = True
-    _attr_hvac_modes = []  # The available modes will be set when we know the current state
-    _attr_fan_modes = FAN_MODES
+    _attr_name = None
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
-    def __init__(self, *, coordinator: PalazzettiDataUpdateCoordinator) -> None:
+    def __init__(self, *kargs, **kwargs) -> None:
         """Initialize Palazzetti climate."""
-        super().__init__(coordinator=coordinator)
-        client = coordinator.client
-        self._attr_unique_id = f"{coordinator.config_entry.data[CONF_MAC]}-climate"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.data[CONF_MAC])},
-            name=coordinator.config_entry.data[CONF_NAME],
+        super().__init__(*kargs, **kwargs)
+        client = self.coordinator.client
+        mac = self.coordinator.config_entry.data[CONF_MAC]
+        self._attr_unique_id = mac
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, mac)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            name=client.name,
             manufacturer=PALAZZETTI,
             sw_version=client.sw_version,
             hw_version=client.hw_version,
         )
-        self._attr_name = coordinator.config_entry.data[CONF_NAME]
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._attr_fan_modes = list(
             map(str, range(client.fan_speed_min, client.fan_speed_max + 1))
         )
@@ -82,28 +79,17 @@ class PalazzettiClimateEntity(
     @property
     def available(self) -> bool:
         """Is the entity available."""
-        return self.coordinator.client.connected
+        return super().available and self.coordinator.client.connected
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Supported features."""
-        features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
-        if self.coordinator.client.has_on_off_switch:
-            features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        return features
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """List the hvac modes.
-
-        The on/off switch becomes unavaiables at times, during ignition and shut off cycles.
-        An API call to turn on/off during that time will not raise an error but it will fail.
-        """
-        if self.coordinator.client.has_on_off_switch:
-            return [HVACMode.OFF, HVACMode.HEAT]
-        return [self.hvac_mode]
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -115,27 +101,38 @@ class PalazzettiClimateEntity(
         """Set new target hvac mode."""
         try:
             await self.coordinator.client.set_on(hvac_mode != HVACMode.OFF)
-        except (CommunicationError, ValidationError) as err:
+        except CommunicationError as err:
+            raise HomeAssistantError from err
+        except ValidationError as err:
             raise ServiceValidationError(
-                err, translation_domain=DOMAIN, translation_key=ACTION_NOT_UNAVAILABLE
+                translation_domain=DOMAIN, translation_key=ON_OFF_NOT_AVAILABLE
             ) from err
 
     @property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
-        api_state = self.coordinator.client.room_temperature
-        return api_state if isinstance(api_state, float) else None
+        return self.coordinator.client.room_temperature
 
     @property
     def target_temperature(self) -> int | None:
         """Return the temperature."""
-        api_state = self.coordinator.client.target_temperature
-        return api_state if isinstance(api_state, int) else None
+        return self.coordinator.client.target_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
-        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
-        await self.coordinator.client.set_target_temperature(int(temperature))
+        temperature = int(kwargs[ATTR_TEMPERATURE])
+        try:
+            await self.coordinator.client.set_target_temperature(temperature)
+        except CommunicationError as err:
+            raise HomeAssistantError from err
+        except ValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=TEMPERATURE_OUT_OF_BOUNDS,
+                translation_placeholders={
+                    "value": f"{temperature}",
+                },
+            ) from err
 
     @property
     def fan_mode(self) -> str | None:
@@ -155,5 +152,13 @@ class PalazzettiClimateEntity(
                 await self.coordinator.client.set_fan_auto()
             else:
                 await self.coordinator.client.set_fan_speed(FAN_MODES.index(fan_mode))
-        except (CommunicationError, ValidationError) as err:
+        except CommunicationError as err:
             raise HomeAssistantError from err
+        except ValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=FAN_MODE_OUT_OF_BOUNDS,
+                translation_placeholders={
+                    "value": fan_mode,
+                },
+            ) from err
