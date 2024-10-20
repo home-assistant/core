@@ -46,15 +46,18 @@ class StoveDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     @property
     def device_id(self) -> str:
         """The stoves unique device ID."""
-        return self.stove.stove_ip
+        if self.stove.stove_mdns is None:
+            # fallback as not every FW provides this info
+            return self.stove.stove_ip
+        return self.stove.stove_mdns
 
     def device_info(self):
         """Generate common device info for entities."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.device_id)},
             name=self.stove.name,
-            manufacturer="DanSkan",
-            model="Orbit",
+            manufacturer="HWAM",
+            model=self.stove.series,
             model_id=self.stove.series,
             sw_version=self.data[DATA_FIRMWARE_VERSION],
         )
