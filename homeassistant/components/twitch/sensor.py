@@ -24,6 +24,7 @@ ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
+ATTR_VIEWERS = "viewers"
 ATTR_STARTED_AT = "started_at"
 
 STATE_OFFLINE = "offline"
@@ -82,6 +83,7 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
             ATTR_GAME: channel.game,
             ATTR_TITLE: channel.title,
             ATTR_STARTED_AT: channel.started_at,
+            ATTR_VIEWERS: channel.viewers,
         }
         resp[ATTR_SUBSCRIPTION] = False
         if channel.subscribed is not None:
