@@ -311,6 +311,12 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
         optional_attributes=(
         ),
-        device_type=(device_types.DishWasher, device_types.LaundryWasher, device_types.LaundryDryer),
+        device_type=(
+            device_types.CookSurface,
+            device_types.Dishwasher,
+            device_types.HeatingCoolingUnit,
+            device_types.LaundryDryer,
+            device_types.LaundryWasher,
+        ),
     ),
 ]
