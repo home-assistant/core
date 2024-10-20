@@ -35,14 +35,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Palazzetti climates based on a config entry."""
-    coordinator: PalazzettiDataUpdateCoordinator = entry.runtime_data
-    entities: list[PalazzettiClimateEntity] = []
-    entities.append(
-        PalazzettiClimateEntity(
-            coordinator=coordinator,
-        )
+    async_add_entities(
+        [
+            PalazzettiClimateEntity(
+                coordinator=entry.runtime_data,
+            )
+        ]
     )
-    async_add_entities(entities)
 
 
 class PalazzettiClimateEntity(
@@ -61,7 +60,7 @@ class PalazzettiClimateEntity(
         """Initialize Palazzetti climate."""
         super().__init__(coordinator=coordinator)
         client = coordinator.client
-        self._attr_unique_id = coordinator.config_entry.data[CONF_MAC]
+        self._attr_unique_id = f"{coordinator.config_entry.data[CONF_MAC]}-climate"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.data[CONF_MAC])},
             name=coordinator.config_entry.data[CONF_NAME],
