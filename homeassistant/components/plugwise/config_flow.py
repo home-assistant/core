@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
     DEFAULT_USERNAME,
     DOMAIN,
     FLOW_SMILE,
@@ -38,8 +40,10 @@ from .const import (
     SMILE,
     STRETCH,
     STRETCH_USERNAME,
+    VERSION,
     ZEROCONF_MAP,
 )
+from .util import get_timeout_for_version
 
 
 def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
@@ -70,8 +74,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
         host=data[CONF_HOST],
         password=data[CONF_PASSWORD],
         port=data[CONF_PORT],
+        timeout=data[CONF_TIMEOUT],
         username=data[CONF_USERNAME],
-        timeout=30,
         websession=websession,
     )
     await api.connect()
@@ -82,9 +86,11 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Plugwise Smile."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     discovery_info: ZeroconfServiceInfo | None = None
     product: str = "Unknown Smile"
+    _timeout: int = DEFAULT_TIMEOUT
     _username: str = DEFAULT_USERNAME
 
     async def async_step_zeroconf(
@@ -93,17 +99,22 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         _properties = discovery_info.properties
-
+        _version = _properties.get(VERSION, "n/a")
+        self._timeout = get_timeout_for_version(_version)
         unique_id = discovery_info.hostname.split(".")[0].split("-")[0]
+        if DEFAULT_USERNAME not in unique_id:
+            self._username = STRETCH_USERNAME
+
         if config_entry := await self.async_set_unique_id(unique_id):
             try:
                 await validate_input(
                     self.hass,
                     {
                         CONF_HOST: discovery_info.host,
-                        CONF_PORT: discovery_info.port,
-                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
                         CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+                        CONF_PORT: discovery_info.port,
+                        CONF_TIMEOUT: self._timeout,
+                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
                     },
                 )
             except Exception:  # noqa: BLE001
@@ -116,8 +127,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-        if DEFAULT_USERNAME not in unique_id:
-            self._username = STRETCH_USERNAME
         self.product = _product = _properties.get("product", "Unknown Smile")
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
@@ -167,6 +176,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = self.discovery_info.port
                 user_input[CONF_USERNAME] = self._username
 
+            # Ensure a timeout-value is available, required for validation
+            user_input[CONF_TIMEOUT] = self._timeout
             try:
                 api = await validate_input(self.hass, user_input)
             except ConnectionFailedError:

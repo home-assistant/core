@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
+from .util import get_timeout_for_version
 
 type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
@@ -21,7 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
-    migrate_sensor_entities(hass, coordinator)
+    await async_migrate_sensor_entities(hass, coordinator)
+    await async_migrate_plugwise_entry(hass, coordinator, entry)
 
     entry.runtime_data = coordinator
 
@@ -46,7 +48,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-@callback
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
@@ -73,7 +74,7 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     return None
 
 
-def migrate_sensor_entities(
+async def async_migrate_sensor_entities(
     hass: HomeAssistant,
     coordinator: PlugwiseDataUpdateCoordinator,
 ) -> None:
@@ -98,3 +99,25 @@ def migrate_sensor_entities(
                 new_unique_id,
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
+async def async_migrate_plugwise_entry(
+    hass: HomeAssistant,
+    coordinator: PlugwiseDataUpdateCoordinator,
+    entry: ConfigEntry,
+) -> bool:
+    """Migrate to new config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        new_data = {**entry.data}
+        new_data[CONF_TIMEOUT] = get_timeout_for_version(coordinator.api.smile_version)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, minor_version=2, version=1
+        )
+        LOGGER.debug(
+            "Migration to version %s.%s successful",
+            entry.version,
+            entry.minor_version,
+        )
+        return True
+
+    return False

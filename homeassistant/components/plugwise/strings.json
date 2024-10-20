@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the Smile",
-        "description": "Please enter",
+        "title": "Set up Plugwise Adam/Smile/Stretch",
+        "description": "Enter your Plugwise device: (setup can take up to 90s)",
         "data": {
           "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
