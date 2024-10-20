@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -18,7 +17,6 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -228,7 +226,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
     ) -> None:
         """Calculate features for HA TemperatureControl platform from Matter FeatureMap."""
         feature_map = int(
-            self.get_matter_attribute_value(clusters.TemperatureControl.Attributes.FeatureMap)
+            self.get_matter_attribute_value(
+                clusters.TemperatureControl.Attributes.FeatureMap
+            )
         )
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
@@ -276,8 +276,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
-        optional_attributes=(
-        ),
+        optional_attributes=(),
         device_type=(
             device_types.CookSurface,
             device_types.Dishwasher,
