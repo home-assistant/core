@@ -43,18 +43,6 @@ ControlSequenceEnum = clusters.TemperatureControl.Enums.ControlSequenceOfOperati
 TemperatureControlFeature = clusters.TemperatureControl.Bitmaps.Feature
 
 
-class ThermostatRunningState(IntEnum):
-    """Thermostat Running State, Matter spec Thermostat 7.33."""
-
-    Heat = 1  # 1 << 0 = 1
-    Cool = 2  # 1 << 1 = 2
-    Fan = 4  # 1 << 2 = 4
-    HeatStage2 = 8  # 1 << 3 = 8
-    CoolStage2 = 16  # 1 << 4 = 16
-    FanStage2 = 32  # 1 << 5 = 32
-    FanStage3 = 64  # 1 << 6 = 64
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -188,28 +176,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # running state is an optional attribute
             # which we map to hvac_action if it exists (its value is not None)
             self._attr_hvac_action = None
-            if running_state_value := self.get_matter_attribute_value(
-                clusters.TemperatureControl.Attributes.ThermostatRunningState
-            ):
-                match running_state_value:
-                    case (
-                        ThermostatRunningState.Heat
-                        | ThermostatRunningState.HeatStage2
-                    ):
-                        self._attr_hvac_action = HVACAction.HEATING
-                    case (
-                        ThermostatRunningState.Cool
-                        | ThermostatRunningState.CoolStage2
-                    ):
-                        self._attr_hvac_action = HVACAction.COOLING
-                    case (
-                        ThermostatRunningState.Fan
-                        | ThermostatRunningState.FanStage2
-                        | ThermostatRunningState.FanStage3
-                    ):
-                        self._attr_hvac_action = HVACAction.FAN
-                    case _:
-                        self._attr_hvac_action = HVACAction.OFF
 
         # update target temperature high/low
         supports_range = (
@@ -260,7 +226,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _calculate_features(
         self,
     ) -> None:
-        """Calculate features for HA Thermostat platform from Matter FeatureMap."""
+        """Calculate features for HA TemperatureControl platform from Matter FeatureMap."""
         feature_map = int(
             self.get_matter_attribute_value(clusters.TemperatureControl.Attributes.FeatureMap)
         )
@@ -305,7 +271,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
-            key="MatterThermostat",
+            key="MatterTemperatureControl",
             translation_key="thermostat",
         ),
         entity_class=MatterClimate,
