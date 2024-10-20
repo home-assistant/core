@@ -13,6 +13,7 @@ from plugwise.exceptions import (
     UnsupportedDeviceError,
 )
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -27,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from syrupy import SnapshotAssertion
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -234,9 +234,8 @@ async def test_migrate_unique_id_relay(
 
 
 async def test_entry_migration(
-    hass: HomeAssistant,
-    mock_smile_anna_2: MagicMock,
-    snapshot: SnapshotAssertion) -> None:
+    hass: HomeAssistant, mock_smile_anna_2: MagicMock, snapshot: SnapshotAssertion
+) -> None:
     """Test config entry version 1 -> 2 migration."""
     entry = MockConfigEntry(
         title="My Plugwise",
