@@ -86,10 +86,8 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_PASSWORD: password,
-                    },
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: password},
                 )
 
         return self.async_show_form(
