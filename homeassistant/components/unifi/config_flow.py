@@ -119,8 +119,10 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
             else:
                 if (
                     self.source == SOURCE_REAUTH
-                    and ((reauth_unique_id := self._get_reauth_entry().unique_id)
-                    is not None)
+                    and (
+                        (reauth_unique_id := self._get_reauth_entry().unique_id)
+                        is not None
+                    )
                     and reauth_unique_id in self.sites
                 ):
                     return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
