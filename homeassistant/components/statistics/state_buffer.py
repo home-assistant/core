@@ -116,10 +116,16 @@ class StateBuffer:
                 is_valid = buffered_state.is_valid
         return StateData(timestamps, values, update_time, is_valid)
 
-    def next_expiry_timestamp(self) -> datetime | None:
+    def next_expiry_timestamp(self, update_time: datetime) -> datetime | None:
         """Get the timestamp of the next item that will expire."""
         result: datetime | None = None
         with self._lock:
-            if len(self._buffer) > 1:
-                result = self._buffer[1].changed_at
+            if (len(self._buffer) > 0) and self._age_limit:
+                if self._buffer[0].changed_at + self._age_limit == update_time:
+                    # this is an edge case where there is no expired value in the list
+                    # this means the first value is exactly at the beginning of the interval
+                    result = self._buffer[0].changed_at
+                elif len(self._buffer) > 1:
+                    # the first value is already expired, so the next to expire is the second one
+                    result = self._buffer[1].changed_at
         return result

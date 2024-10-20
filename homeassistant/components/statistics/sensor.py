@@ -564,7 +564,9 @@ class StatisticsSensor(SensorEntity):
         result: datetime | None = None
 
         if self._samples_max_age:
-            next_expiry = self._state_buffer.next_expiry_timestamp()
+            next_expiry = self._state_buffer.next_expiry_timestamp(
+                state_data.update_time
+            )
             if next_expiry:
                 next_expiry = next_expiry + self._samples_max_age
         if self._refresh_interval:
