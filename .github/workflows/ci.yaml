@@ -945,6 +945,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
+            --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1067,6 +1068,7 @@ jobs:
             -qq \
             --timeout=20 \
             --numprocesses 1 \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
@@ -1193,6 +1195,7 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses 1 \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
@@ -1339,6 +1342,7 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses auto \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
