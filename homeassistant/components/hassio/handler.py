@@ -63,17 +63,6 @@ def api_data[**_P](
     return _wrapper
 
 
-@api_data
-async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on store info.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/store/addons/{slug}"
-    return await hassio.send_command(command, method="get")
-
-
 @bind_hass
 async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
@@ -82,18 +71,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     """
     hassio: HassIO = hass.data[DOMAIN]
     return await hassio.update_diagnostics(diagnostics)
-
-
-@bind_hass
-@api_data
-async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Install add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/install"
-    return await hassio.send_command(command, timeout=None)
 
 
 @bind_hass
@@ -373,14 +350,6 @@ class HassIO:
         return self.send_command(
             f"/addons/{addon}/changelog", method="get", return_text=True
         )
-
-    @api_data
-    def get_store(self) -> Coroutine:
-        """Return data from the store.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/store", method="get")
 
     @api_data
     def get_ingress_panels(self) -> Coroutine:

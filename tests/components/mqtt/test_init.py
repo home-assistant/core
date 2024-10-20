@@ -230,7 +230,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     )
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value(
-            '{"some_var": null }', default=100
+            '{"some_var": null }', default="100"
         )
     assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
@@ -835,7 +835,7 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     msg.payload = b"Payload"
     msg.qos = 2
     msg.retain = True
-    msg.timestamp = time.monotonic()
+    msg.timestamp = time.monotonic()  # type:ignore[assignment]
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -1489,7 +1489,7 @@ async def test_debug_info_non_mqtt(
     """Test we get empty debug_info for a device with non MQTT entities."""
     await mqtt_mock_entry()
     domain = "sensor"
-    setup_test_component_platform(hass, domain, mock_sensor_entities)
+    setup_test_component_platform(hass, domain, mock_sensor_entities.values())
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

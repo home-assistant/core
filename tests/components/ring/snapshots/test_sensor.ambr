@@ -341,39 +341,6 @@
     'state': '11',
   })
 # ---
-# name: test_states[sensor.front_door_wi_fi_signal_category-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.front_door_wi_fi_signal_category',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wi-Fi signal category',
-    'platform': 'ring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_signal_category',
-    'unique_id': '987654-wifi_signal_category',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_states[sensor.front_door_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

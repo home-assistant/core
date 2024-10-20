@@ -16,8 +16,9 @@ from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
+from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID, DOMAIN
 from .handler import HassIO, HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,23 @@ def async_setup_discovery_view(hass: HomeAssistant, hassio: HassIO) -> None:
         EVENT_HOMEASSISTANT_START, _async_discovery_start_handler
     )
 
+    async def _handle_config_entry_removed(
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for disc_key in entry.discovery_keys[DOMAIN]:
+            if disc_key.version != 1 or not isinstance(key := disc_key.key, str):
+                continue
+            uuid = key
+            _LOGGER.debug("Rediscover addon %s", uuid)
+            await hassio_discovery.async_rediscover(uuid)
+
+    async_dispatcher_connect(
+        hass,
+        config_entries.signal_discovered_config_entry_removed(DOMAIN),
+        _handle_config_entry_removed,
+    )
+
 
 class HassIODiscovery(HomeAssistantView):
     """Hass.io view to handle base part."""
@@ -90,6 +108,15 @@ class HassIODiscovery(HomeAssistantView):
         await self.async_process_del(data)
         return web.Response()
 
+    async def async_rediscover(self, uuid: str) -> None:
+        """Rediscover add-on when config entry is removed."""
+        try:
+            data = await self.hassio.get_discovery_message(uuid)
+        except HassioAPIError as err:
+            _LOGGER.debug("Can't read discovery data: %s", err)
+        else:
+            await self.async_process_new(data)
+
     async def async_process_new(self, data: dict[str, Any]) -> None:
         """Process add discovery entry."""
         service: str = data[ATTR_SERVICE]
@@ -113,6 +140,11 @@ class HassIODiscovery(HomeAssistantView):
             context={"source": config_entries.SOURCE_HASSIO},
             data=HassioServiceInfo(
                 config=config_data, name=addon_info.name, slug=slug, uuid=uuid
+            ),
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain=DOMAIN,
+                key=data[ATTR_UUID],
+                version=1,
             ),
         )
 
