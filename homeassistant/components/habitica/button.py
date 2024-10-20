@@ -21,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HabiticaConfigEntry
-from .const import DOMAIN, HEALER, MAGE, ROGUE, WARRIOR
+from .const import ASSETS_URL, DOMAIN, HEALER, MAGE, ROGUE, WARRIOR
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 
@@ -33,6 +33,7 @@ class HabiticaButtonEntityDescription(ButtonEntityDescription):
     press_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
     available_fn: Callable[[HabiticaData], bool] | None = None
     class_needed: str | None = None
+    entity_picture: str | None = None
 
 
 class HabitipyButtonEntity(StrEnum):
@@ -102,6 +103,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 30
         ),
         class_needed=MAGE,
+        entity_picture=f"{ASSETS_URL}shop_mpheal.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.EARTH,
@@ -112,6 +114,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 35
         ),
         class_needed=MAGE,
+        entity_picture=f"{ASSETS_URL}shop_earth.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
@@ -126,6 +129,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 40
         ),
         class_needed=MAGE,
+        entity_picture=f"{ASSETS_URL}shop_frost.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.DEFENSIVE_STANCE,
@@ -140,6 +144,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=WARRIOR,
+        entity_picture=f"{ASSETS_URL}shop_defensiveStance.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.VALOROUS_PRESENCE,
@@ -154,6 +159,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 20
         ),
         class_needed=WARRIOR,
+        entity_picture=f"{ASSETS_URL}shop_valorousPresence.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.INTIMIDATE,
@@ -168,6 +174,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 15
         ),
         class_needed=WARRIOR,
+        entity_picture=f"{ASSETS_URL}shop_intimidate.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.TOOLS_OF_TRADE,
@@ -180,6 +187,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=ROGUE,
+        entity_picture=f"{ASSETS_URL}shop_toolsOfTrade.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.STEALTH,
@@ -194,6 +202,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 45
         ),
         class_needed=ROGUE,
+        entity_picture=f"{ASSETS_URL}shop_stealth.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
@@ -222,6 +231,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 15
         ),
         class_needed=HEALER,
+        entity_picture=f"{ASSETS_URL}shop_brightness.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.PROTECT_AURA,
@@ -234,6 +244,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 30
         ),
         class_needed=HEALER,
+        entity_picture=f"{ASSETS_URL}shop_protectAura.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL_ALL,
@@ -244,6 +255,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
         ),
         class_needed=HEALER,
+        entity_picture=f"{ASSETS_URL}shop_healAll.png",
     ),
 )
 
@@ -331,3 +343,8 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         if self.entity_description.available_fn:
             return self.entity_description.available_fn(self.coordinator.data)
         return True
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        return self.entity_description.entity_picture
