@@ -15,8 +15,18 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.mark.parametrize(
+    "username",
+    [
+        "test-username",
+        "TEST-USERNAME",
+    ],
+)
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_pyschlage_auth: Mock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_pyschlage_auth: Mock,
+    username: str,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -28,7 +38,7 @@ async def test_form(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "username": "test-username",
+            "username": username,
             "password": "test-password",
         },
     )
