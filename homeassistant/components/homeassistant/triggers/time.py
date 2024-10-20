@@ -64,7 +64,8 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
     _TIME_TRIGGER_ENTITY_WITH_OFFSET,
     valid_at_template,
     msg=(
-        "Expected HH:MM, HH:MM:SS, Entity ID with domain 'input_datetime' or 'sensor', or Limited Template"
+        "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
+        "'sensor', a combination of a timestamp sensor entity and an offset, or Limited Template"
     ),
 )
 
@@ -223,7 +224,8 @@ async def async_attach_trigger(
                 at_time = _TIME_AT_SCHEMA(render)
             except vol.Invalid as exc:
                 raise HomeAssistantError(
-                    "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                    f"Limited Template for 'at' rendered a unexpected value '{render}', expected HH:MM, "
+                    f"HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
                 ) from exc
 
         if isinstance(at_time, str):
