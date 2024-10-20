@@ -31,95 +31,16 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 TEMPERATURE_SCALING_FACTOR = 100
-HVAC_SYSTEM_MODE_MAP = {
-    HVACMode.OFF: 0,
-    HVACMode.HEAT_COOL: 1,
-    HVACMode.COOL: 3,
-    HVACMode.HEAT: 4,
-    HVACMode.DRY: 8,
-    HVACMode.FAN_ONLY: 7,
+TCTL_SYSTEM_MODE_MAP = {
+    HVACMode.TN: 0,
+    HVACMode.TL: 1,
+    HVACMode.STEP: 2,
 }
 
 
-SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
-    # The Matter spec is missing a feature flag if the device supports a dry mode.
-    # In the list below specify tuples of (vendorid, productid) of devices that
-    # support dry mode.
-    (0x0001, 0x0108),
-    (0x0001, 0x010A),
-    (0x1209, 0x8000),
-    (0x1209, 0x8001),
-    (0x1209, 0x8002),
-    (0x1209, 0x8003),
-    (0x1209, 0x8004),
-    (0x1209, 0x8005),
-    (0x1209, 0x8006),
-    (0x1209, 0x8007),
-    (0x1209, 0x8008),
-    (0x1209, 0x8009),
-    (0x1209, 0x800A),
-    (0x1209, 0x800B),
-    (0x1209, 0x800C),
-    (0x1209, 0x800D),
-    (0x1209, 0x800E),
-    (0x1209, 0x8010),
-    (0x1209, 0x8011),
-    (0x1209, 0x8012),
-    (0x1209, 0x8013),
-    (0x1209, 0x8014),
-    (0x1209, 0x8020),
-    (0x1209, 0x8021),
-    (0x1209, 0x8022),
-    (0x1209, 0x8023),
-    (0x1209, 0x8024),
-    (0x1209, 0x8025),
-    (0x1209, 0x8026),
-    (0x1209, 0x8027),
-    (0x1209, 0x8028),
-    (0x1209, 0x8029),
-}
-
-SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
-    # The Matter spec is missing a feature flag if the device supports a fan-only mode.
-    # In the list below specify tuples of (vendorid, productid) of devices that
-    # support fan-only mode.
-    (0x0001, 0x0108),
-    (0x0001, 0x010A),
-    (0x1209, 0x8000),
-    (0x1209, 0x8001),
-    (0x1209, 0x8002),
-    (0x1209, 0x8003),
-    (0x1209, 0x8004),
-    (0x1209, 0x8005),
-    (0x1209, 0x8006),
-    (0x1209, 0x8007),
-    (0x1209, 0x8008),
-    (0x1209, 0x8009),
-    (0x1209, 0x800A),
-    (0x1209, 0x800B),
-    (0x1209, 0x800C),
-    (0x1209, 0x800D),
-    (0x1209, 0x800E),
-    (0x1209, 0x8010),
-    (0x1209, 0x8011),
-    (0x1209, 0x8012),
-    (0x1209, 0x8013),
-    (0x1209, 0x8014),
-    (0x1209, 0x8020),
-    (0x1209, 0x8021),
-    (0x1209, 0x8022),
-    (0x1209, 0x8023),
-    (0x1209, 0x8024),
-    (0x1209, 0x8025),
-    (0x1209, 0x8026),
-    (0x1209, 0x8027),
-    (0x1209, 0x8028),
-    (0x1209, 0x8029),
-}
-
-SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
-ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
-ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
+SystemModeEnum = clusters.TemperatureControl.Enums.SystemModeEnum
+ControlSequenceEnum = clusters.TemperatureControl.Enums.ControlSequenceOfOperationEnum
+ThermostatFeature = clusters.TemperatureControl.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -168,11 +89,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if self.target_temperature != target_temperature:
                 if current_mode == HVACMode.COOL:
                     matter_attribute = (
-                        clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                        clusters.TemperatureControl.Attributes.OccupiedCoolingSetpoint
                     )
                 else:
                     matter_attribute = (
-                        clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                        clusters.TemperatureControl.Attributes.OccupiedHeatingSetpoint
                     )
                 await self.matter_client.write_attribute(
                     node_id=self._endpoint.node.node_id,
@@ -191,7 +112,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     node_id=self._endpoint.node.node_id,
                     attribute_path=create_attribute_path_from_attribute(
                         self._endpoint.endpoint_id,
-                        clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+                        clusters.TemperatureControl.Attributes.OccupiedHeatingSetpoint,
                     ),
                     value=int(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                 )
@@ -203,7 +124,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     node_id=self._endpoint.node.node_id,
                     attribute_path=create_attribute_path_from_attribute(
                         self._endpoint.endpoint_id,
-                        clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
+                        clusters.TemperatureControl.Attributes.OccupiedCoolingSetpoint,
                     ),
                     value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                 )
@@ -212,9 +133,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Set new target hvac mode."""
         system_mode_path = create_attribute_path_from_attribute(
             endpoint_id=self._endpoint.endpoint_id,
-            attribute=clusters.Thermostat.Attributes.SystemMode,
+            attribute=clusters.TemperatureControl.Attributes.SystemMode,
         )
-        system_mode_value = HVAC_SYSTEM_MODE_MAP.get(hvac_mode)
+        system_mode_value = TCTL_SYSTEM_MODE_MAP.get(hvac_mode)
         if system_mode_value is None:
             raise ValueError(f"Unsupported hvac mode {hvac_mode} in Matter")
         await self.matter_client.write_attribute(
@@ -233,7 +154,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Update from device."""
         self._calculate_features()
         self._attr_current_temperature = self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.LocalTemperature
+            clusters.TemperatureControl.Attributes.LocalTemperature
         )
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
@@ -244,7 +165,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # update hvac_mode from SystemMode
             system_mode_value = int(
                 self.get_matter_attribute_value(
-                    clusters.Thermostat.Attributes.SystemMode
+                    clusters.TemperatureControl.Attributes.SystemMode
                 )
             )
             match system_mode_value:
@@ -268,7 +189,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # which we map to hvac_action if it exists (its value is not None)
             self._attr_hvac_action = None
             if running_state_value := self.get_matter_attribute_value(
-                clusters.Thermostat.Attributes.ThermostatRunningState
+                clusters.TemperatureControl.Attributes.ThermostatRunningState
             ):
                 match running_state_value:
                     case (
@@ -298,10 +219,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                clusters.TemperatureControl.Attributes.OccupiedCoolingSetpoint
             )
             self._attr_target_temperature_low = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                clusters.TemperatureControl.Attributes.OccupiedHeatingSetpoint
             )
         else:
             self._attr_target_temperature_high = None
@@ -309,27 +230,27 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # update target_temperature
             if self._attr_hvac_mode == HVACMode.COOL:
                 self._attr_target_temperature = self._get_temperature_in_degrees(
-                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                    clusters.TemperatureControl.Attributes.OccupiedCoolingSetpoint
                 )
             else:
                 self._attr_target_temperature = self._get_temperature_in_degrees(
-                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                    clusters.TemperatureControl.Attributes.OccupiedHeatingSetpoint
                 )
 
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
-            attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
+            attribute = clusters.TemperatureControl.Attributes.AbsMinCoolSetpointLimit
         else:
-            attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
+            attribute = clusters.TemperatureControl.Attributes.AbsMinHeatSetpointLimit
         if (value := self._get_temperature_in_degrees(attribute)) is not None:
             self._attr_min_temp = value
         else:
             self._attr_min_temp = DEFAULT_MIN_TEMP
         # update max_temp
         if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
-            attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+            attribute = clusters.TemperatureControl.Attributes.AbsMaxCoolSetpointLimit
         else:
-            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
+            attribute = clusters.TemperatureControl.Attributes.AbsMaxHeatSetpointLimit
         if (value := self._get_temperature_in_degrees(attribute)) is not None:
             self._attr_max_temp = value
         else:
@@ -341,7 +262,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     ) -> None:
         """Calculate features for HA Thermostat platform from Matter FeatureMap."""
         feature_map = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
+            self.get_matter_attribute_value(clusters.TemperatureControl.Attributes.FeatureMap)
         )
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
@@ -359,8 +280,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
-        if (vendor_id, product_id) in SUPPORT_DRY_MODE_DEVICES:
-            self._attr_hvac_modes.append(HVACMode.DRY)
         if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
         if feature_map & ThermostatFeature.kAutoMode:
@@ -389,21 +308,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="thermostat",
         ),
         entity_class=MatterClimate,
-        required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
+        required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
         optional_attributes=(
-            clusters.Thermostat.Attributes.FeatureMap,
-            clusters.Thermostat.Attributes.ControlSequenceOfOperation,
-            clusters.Thermostat.Attributes.Occupancy,
-            clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
-            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
-            clusters.Thermostat.Attributes.SystemMode,
-            clusters.Thermostat.Attributes.ThermostatRunningMode,
-            clusters.Thermostat.Attributes.ThermostatRunningState,
-            clusters.Thermostat.Attributes.TemperatureSetpointHold,
-            clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
-            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
-            clusters.OnOff.Attributes.OnOff,
         ),
-        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        device_type=(device_types.LaundryWasher, device_types.LaundryDryer),
     ),
 ]
