@@ -57,7 +57,13 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.TODO]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CALENDAR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TODO,
+]
 
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(

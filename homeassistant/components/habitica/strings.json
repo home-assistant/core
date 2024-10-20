@@ -48,6 +48,23 @@
         "name": "Revive from death"
       }
     },
+    "calendar": {
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies",
+        "state_attributes": {
+          "yesterdaily": {
+            "name": "Yester-Daily",
+            "state": {
+              "true": "[%key:common::state::yes%]",
+              "false": "[%key:common::state::no%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
