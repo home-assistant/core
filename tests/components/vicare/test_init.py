@@ -120,7 +120,7 @@ async def test_config_entry_migration_1_1_to_1_2(
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", []),
     ):
-        setup_integration(hass, mock_config_entry_1_1)
+        await setup_integration(hass, mock_config_entry_1_1)
 
     assert mock_config_entry_1_1.minor_version == 2
     assert mock_config_entry_1_1.options.get(CONF_HEATING_TYPE)
