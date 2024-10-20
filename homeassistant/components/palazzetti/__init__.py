@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from pypalazzetti.exceptions import CommunicationError, ValidationError
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 
@@ -18,11 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PalazzettiConfigEntry) -
     """Set up Palazzetti from a config entry."""
 
     coordinator = PalazzettiDataUpdateCoordinator(hass)
-    try:
-        await coordinator.client.connect()
-        await coordinator.client.update_state()
-    except (CommunicationError, ValidationError) as err:
-        raise ConfigEntryNotReady from err
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, CONF_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,15 +37,12 @@ async def async_setup_entry(
     """Set up Palazzetti climates based on a config entry."""
     coordinator: PalazzettiDataUpdateCoordinator = entry.runtime_data
     entities: list[PalazzettiClimateEntity] = []
-    if coordinator.client.connected:
-        entities.append(
-            PalazzettiClimateEntity(
-                coordinator=coordinator,
-            )
+    entities.append(
+        PalazzettiClimateEntity(
+            coordinator=coordinator,
         )
-        async_add_entities(entities)
-    else:
-        raise ConfigEntryNotReady
+    )
+    async_add_entities(entities)
 
 
 class PalazzettiClimateEntity(
@@ -74,7 +71,7 @@ class PalazzettiClimateEntity(
         )
         self._attr_name = coordinator.config_entry.data[CONF_NAME]
         self._attr_fan_modes = list(
-            str(range(client.fan_speed_min, client.fan_speed_max + 1))
+            map(str, range(client.fan_speed_min, client.fan_speed_max + 1))
         )
         if self.coordinator.client.has_fan_silent:
             self._attr_fan_modes.insert(0, FAN_SILENT)
@@ -100,7 +97,11 @@ class PalazzettiClimateEntity(
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
-        """List the hvac modes."""
+        """List the hvac modes.
+
+        The on/off switch becomes unavaiables at times, during ignition and shut off cycles.
+        An API call to turn on/off during that time will not raise an error but it will fail.
+        """
         if self.coordinator.client.has_on_off_switch:
             return [HVACMode.OFF, HVACMode.HEAT]
         return [self.hvac_mode]
@@ -145,11 +146,15 @@ class PalazzettiClimateEntity(
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        if fan_mode == FAN_SILENT:
-            await self.coordinator.client.set_fan_silent()
-        elif fan_mode == FAN_HIGH:
-            await self.coordinator.client.set_fan_high()
-        elif fan_mode == FAN_AUTO:
-            await self.coordinator.client.set_fan_auto()
-        else:
-            await self.coordinator.client.set_fan_speed(FAN_MODES.index(fan_mode))
+
+        try:
+            if fan_mode == FAN_SILENT:
+                await self.coordinator.client.set_fan_silent()
+            elif fan_mode == FAN_HIGH:
+                await self.coordinator.client.set_fan_high()
+            elif fan_mode == FAN_AUTO:
+                await self.coordinator.client.set_fan_auto()
+            else:
+                await self.coordinator.client.set_fan_speed(FAN_MODES.index(fan_mode))
+        except (CommunicationError, ValidationError) as err:
+            raise HomeAssistantError from err

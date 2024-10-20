@@ -26,11 +26,12 @@ def mock_palazzetti():
     """Return a mocked PalazzettiClient."""
     with (
         patch(
-            "homeassistant.components.palazzetti.coordinator.PalazzettiClient"
-        ) as palazzetti_mock,
+            "homeassistant.components.palazzetti.coordinator.PalazzettiClient",
+            AsyncMock,
+        ) as client,
     ):
-        client = palazzetti_mock.return_value
         client.connect = AsyncMock(return_value=True)
         client.update_state = AsyncMock(return_value=True)
+        client.mac = AsyncMock(return_value="11:22:33:44:55:66")
         client.name = AsyncMock(return_value="Stove")
         yield client
