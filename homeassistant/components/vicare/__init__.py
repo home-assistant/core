@@ -127,7 +127,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry,
                 minor_version=2,
                 data={
-                    **entry.data,
+                    CONF_CLIENT_ID: entry.data.get(CONF_CLIENT_ID),
+                    CONF_USERNAME: entry.data.get(CONF_USERNAME),
+                    CONF_PASSWORD: entry.data.get(CONF_PASSWORD),
                 },
                 options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
             )
