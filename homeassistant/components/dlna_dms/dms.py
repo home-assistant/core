@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
+    CONF_RETRY,
     CONF_SOURCE_ID,
     DLNA_BROWSE_FILTER,
     DLNA_PATH_FILTER,
@@ -132,8 +133,24 @@ def catch_request_errors[_DlnaDmsDeviceMethod: DmsDeviceSource, _R](
     @functools.wraps(func)
     async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _R:
         """Catch UpnpError errors and check availability before and after request."""
+        if not self.available and self._retry:
+            # Try once to connect.
+            LOGGER.debug(
+                "Device at: %s is not available, attempting reconnection", self.location
+            )
+            try:
+                await self.device_connect()
+            except UpnpError as err:
+                LOGGER.debug(
+                    "Couldn't connect immediately, during attempted reconnect: %r", err
+                )
+                raise DeviceConnectionError("DMS could not be reconnected") from err
         if not self.available:
-            LOGGER.warning("Device disappeared when trying to call %s", func.__name__)
+            LOGGER.warning(
+                "Device at: %s disappeared when trying to call %s",
+                self.location,
+                func.__name__,
+            )
             raise DeviceConnectionError("DMS is not connected")
 
         try:
@@ -285,6 +302,11 @@ class DmsDeviceSource:
 
     # Device connection/disconnection
 
+    @property
+    def _retry(self) -> bool | False:
+        """Return a boolean for retrying during browsing or playing media."""
+        return self.config_entry.options.get(CONF_RETRY) or False
+        
     async def device_connect(self) -> None:
         """Connect to the device now that it's available."""
         LOGGER.debug("Connecting to device at %s", self.location)
