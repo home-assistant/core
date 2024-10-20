@@ -13,7 +13,7 @@ from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import ENTRY_CONFIG, MODULE, setup_integration
+from . import ENTRY_CONFIG, ENTRY_CONFIG_1_1, ENTRY_OPTIONS, MODULE, setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -74,6 +74,18 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="ViCare",
         entry_id="1234",
         data=ENTRY_CONFIG,
+        options=ENTRY_OPTIONS,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_1_1() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        entry_id="1234",
+        data=ENTRY_CONFIG_1_1,
     )
 
 

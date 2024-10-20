@@ -12,10 +12,18 @@ from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.vicare"
 
+ENTRY_CONFIG_1_1: Final[dict[str, str]] = {
+    CONF_USERNAME: "foo@bar.com",
+    CONF_PASSWORD: "1234",
+    CONF_CLIENT_ID: "5678",
+    CONF_HEATING_TYPE: "auto",
+}
 ENTRY_CONFIG: Final[dict[str, str]] = {
     CONF_USERNAME: "foo@bar.com",
     CONF_PASSWORD: "1234",
     CONF_CLIENT_ID: "5678",
+}
+ENTRY_OPTIONS = {
     CONF_HEATING_TYPE: "auto",
 }
 

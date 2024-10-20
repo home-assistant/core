@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MODULE
+from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
@@ -105,3 +105,23 @@ async def test_device_and_entity_migration(
         == "gateway1_deviceId1-heating-0"
     )
     assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway2-0"
+
+
+# Entry migration test can be removed in 2025.5.0
+async def test_config_entry_migration_1_1_to_1_2(
+    hass: HomeAssistant,
+    mock_config_entry_1_1: MockConfigEntry,
+) -> None:
+    """Test config entry is migrated correctly."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+    ]
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", []),
+    ):
+        setup_integration(hass, mock_config_entry_1_1)
+
+    assert mock_config_entry_1_1.minor_version == 2
+    assert mock_config_entry_1_1.options.get(CONF_HEATING_TYPE)
+    assert not mock_config_entry_1_1.data.get(CONF_HEATING_TYPE)
