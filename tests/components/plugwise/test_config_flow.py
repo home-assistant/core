@@ -47,7 +47,7 @@ TEST_DISCOVERY = ZeroconfServiceInfo(
     port=DEFAULT_PORT,
     properties={
         "product": "smile",
-        "version": "1.2.3",
+        "version": "4.1.2",
         "hostname": f"{TEST_HOSTNAME}.local.",
     },
     type="mock_type",
@@ -61,7 +61,7 @@ TEST_DISCOVERY2 = ZeroconfServiceInfo(
     port=DEFAULT_PORT,
     properties={
         "product": "stretch",
-        "version": "4.1.2",
+        "version": "1.2.3",
         "hostname": f"{TEST_HOSTNAME2}.local.",
     },
     type="mock_type",
