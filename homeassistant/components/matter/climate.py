@@ -39,11 +39,7 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.DRY: 8,
     HVACMode.FAN_ONLY: 7,
 }
-TCTL_SYSTEM_MODE_MAP = {
-    TCTLMode.TN: 0,
-    TCTLMode.TL: 1,
-    TCTLMode.STEP: 2,
-}
+
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     # Some devices only have a single setpoint while the matter spec
@@ -193,6 +189,12 @@ class TCTLMode(StrEnum):
     TN = "TemperatureNumber"
     TL = "TemperatureLevel"
     STEP = "TemperatureStep"
+
+TCTL_SYSTEM_MODE_MAP = {
+    TCTLMode.TN: 0,
+    TCTLMode.TL: 1,
+    TCTLMode.STEP: 2,
+}
 
 
 class MatterClimate(MatterEntity, ClimateEntity):
