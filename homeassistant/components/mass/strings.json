@@ -24,6 +24,12 @@
         "description": "Do you want to add the Music Assistant Server `{url}` to Home Assistant?",
         "title": "Discovered Music Assistant Server",
         "data": {}
+      },
+      "reconfigure": {
+        "description": "Update your Music Assistant Server URL",
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
       }
     },
     "error": {
@@ -34,7 +40,8 @@
     "abort": {
       "already_in_progress": "Configuration flow is already in progress",
       "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "Failed to connect",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "selector": {
