@@ -24,18 +24,9 @@ from .const import DOMAIN, URL_PAIRING_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
-        vol.Required(CONF_MAC): str,
-    }
-)
+async def validate_input(hass: HomeAssistant, address: str) -> None:
+    """Validate that we can connect."""
 
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-
-    address = data[CONF_MAC]
     ble_device = async_ble_device_from_address(hass, address.upper(), connectable=True)
 
     if ble_device is None:
@@ -77,49 +68,6 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
-    async def async_step_user(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle manually setting up a light."""
-
-        errors: dict[str, str] = {}
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                description_placeholders={"url_pairing_mode": URL_PAIRING_MODE},
-                errors=errors,
-            )
-
-        try:
-            unique_id = dr.format_mac(user_input[CONF_MAC])
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
-            await validate_input(self.hass, user_input)
-
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except ScannerNotAvailable:
-            errors["base"] = "no_scanners"
-        except NotFound:
-            errors["base"] = "not_found"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=user_input[CONF_NAME], data={})
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            description_placeholders={"url_pairing_mode": URL_PAIRING_MODE},
-            errors=errors,
-        )
-
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -148,17 +96,13 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self._discovery_info is not None
         errors: dict[str, str] = {}
-        if user_input is not None:
-            user_input = {
-                CONF_NAME: self._discovery_info.name,
-                CONF_MAC: self._discovery_info.address,
-            }
 
+        if user_input is not None:
             try:
-                unique_id = dr.format_mac(user_input[CONF_MAC])
+                unique_id = dr.format_mac(self._discovery_info.address)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                await validate_input(self.hass, user_input)
+                await validate_input(self.hass, unique_id)
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -172,14 +116,15 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=user_input[CONF_NAME], data={})
+                return self.async_create_entry(title=self._discovery_info.name, data={})
 
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema({}),
             errors=errors,
             description_placeholders={
-                "name": self._discovery_info.name,
+                CONF_NAME: self._discovery_info.name,
+                CONF_MAC: self._discovery_info.address,
                 "url_pairing_mode": URL_PAIRING_MODE,
             },
         )
