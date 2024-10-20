@@ -146,7 +146,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     port: int = DEFAULT_HTTP_PORT
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
-    entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -356,7 +355,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -364,8 +362,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        host = self.entry.data[CONF_HOST]
-        port = get_http_port(self.entry.data)
+        reauth_entry = self._get_reauth_entry()
+        host = reauth_entry.data[CONF_HOST]
+        port = get_http_port(reauth_entry.data)
 
         if user_input is not None:
             try:
@@ -373,7 +372,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            if get_device_entry_gen(self.entry) != 1:
+            if get_device_entry_gen(reauth_entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, port, info, user_input)
@@ -381,10 +380,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(
-                self.entry, data={**self.entry.data, **user_input}
+                reauth_entry, data_updates=user_input
             )
 
-        if get_device_entry_gen(self.entry) in BLOCK_GENERATIONS:
+        if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -402,17 +401,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.entry = self._get_reconfigure_entry()
-        self.host = self.entry.data[CONF_HOST]
-        self.port = self.entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        self.host = reconfigure_entry.data[CONF_HOST]
+        self.port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -424,23 +416,23 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except CustomPortNotSupported:
                 errors["base"] = "custom_port_not_supported"
             else:
-                if info[CONF_MAC] != self.entry.unique_id:
-                    return self.async_abort(reason="another_device")
+                await self.async_set_unique_id(info[CONF_MAC])
+                self._abort_if_unique_id_mismatch(reason="another_device")
 
-                data = {**self.entry.data, CONF_HOST: host, CONF_PORT: port}
-                self.hass.config_entries.async_update_entry(self.entry, data=data)
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: host, CONF_PORT: port},
+                )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
                     vol.Required(CONF_PORT, default=self.port): vol.Coerce(int),
                 }
             ),
-            description_placeholders={"device_name": self.entry.title},
+            description_placeholders={"device_name": reconfigure_entry.title},
             errors=errors,
         )
 

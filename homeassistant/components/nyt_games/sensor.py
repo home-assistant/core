@@ -161,10 +161,11 @@ async def async_setup_entry(
             NYTGamesSpellingBeeSensor(coordinator, description)
             for description in SPELLING_BEE_SENSORS
         )
-    entities.extend(
-        NYTGamesConnectionsSensor(coordinator, description)
-        for description in CONNECTIONS_SENSORS
-    )
+    if coordinator.data.connections is not None:
+        entities.extend(
+            NYTGamesConnectionsSensor(coordinator, description)
+            for description in CONNECTIONS_SENSORS
+        )
 
     async_add_entities(entities)
 
@@ -236,4 +237,5 @@ class NYTGamesConnectionsSensor(ConnectionsEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | date:
         """Return the state of the sensor."""
+        assert self.coordinator.data.connections is not None
         return self.entity_description.value_fn(self.coordinator.data.connections)

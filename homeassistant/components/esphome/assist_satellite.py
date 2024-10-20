@@ -247,14 +247,14 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
+            # Block until config is retrieved.
+            # If the device supports announcements, it will return a config.
+            _LOGGER.debug("Waiting for satellite configuration")
+            await self._update_satellite_config()
+
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
             self._update_tts_format()
-
-        # Fetch latest config in the background
-        self.config_entry.async_create_background_task(
-            self.hass, self._update_satellite_config(), "esphome_voice_assistant_config"
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""

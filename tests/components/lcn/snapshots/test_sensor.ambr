@@ -113,7 +113,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Sensor_Setpoint1',
     'platform': 'lcn',
@@ -121,14 +121,15 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'lcn/config_entry_pchk.json-m000007-r1varsetpoint',
-    'unit_of_measurement': '°C',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_setup_lcn_sensor[sensor.sensor_setpoint1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Sensor_Setpoint1',
-      'unit_of_measurement': '°C',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sensor_setpoint1',
@@ -160,7 +161,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Sensor_Var1',
     'platform': 'lcn',
@@ -168,14 +169,15 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'lcn/config_entry_pchk.json-m000007-var1',
-    'unit_of_measurement': '°C',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_setup_lcn_sensor[sensor.sensor_var1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Sensor_Var1',
-      'unit_of_measurement': '°C',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sensor_var1',

@@ -2,64 +2,14 @@
 
 from __future__ import annotations
 
-from functools import partial
-from typing import Any
-
-from homeassistant.components.notify import (
-    ATTR_TARGET,
-    BaseNotificationService,
-    NotifyEntity,
-    migrate_notify_issue,
-)
+from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import Ecobee, EcobeeData
+from . import EcobeeData
 from .const import DOMAIN
 from .entity import EcobeeBaseEntity
-
-
-def get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> EcobeeNotificationService | None:
-    """Get the Ecobee notification service."""
-    if discovery_info is None:
-        return None
-
-    data: EcobeeData = hass.data[DOMAIN]
-    return EcobeeNotificationService(data.ecobee)
-
-
-class EcobeeNotificationService(BaseNotificationService):
-    """Implement the notification service for the Ecobee thermostat."""
-
-    def __init__(self, ecobee: Ecobee) -> None:
-        """Initialize the service."""
-        self.ecobee = ecobee
-
-    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message and raise issue."""
-        migrate_notify_issue(
-            self.hass, DOMAIN, "Ecobee", "2024.11.0", service_name=self._service_name
-        )
-        await self.hass.async_add_executor_job(
-            partial(self.send_message, message, **kwargs)
-        )
-
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message."""
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
-            raise ValueError("Missing required argument: target")
-
-        for target in targets:
-            thermostat_index = int(target)
-            self.ecobee.send_message(thermostat_index, message)
 
 
 async def async_setup_entry(

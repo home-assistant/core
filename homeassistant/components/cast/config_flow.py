@@ -47,18 +47,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_config()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         await self.async_set_unique_id(DOMAIN)
 
         return await self.async_step_confirm()

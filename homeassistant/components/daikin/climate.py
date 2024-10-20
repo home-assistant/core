@@ -159,6 +159,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 
         if values:
             await self.device.set(values)
+            await self.coordinator.async_refresh()
 
     @property
     def unique_id(self) -> str:
@@ -261,6 +262,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             await self.device.set_advanced_mode(
                 HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
             )
+        await self.coordinator.async_refresh()
 
     @property
     def preset_modes(self) -> list[str]:
@@ -275,9 +277,11 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn device on."""
         await self.device.set({})
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.device.set(
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
+        await self.coordinator.async_refresh()

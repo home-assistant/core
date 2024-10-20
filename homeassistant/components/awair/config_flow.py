@@ -209,10 +209,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             _, error = await self._check_cloud_connection(access_token)
 
             if error is None:
-                entry = await self.async_set_unique_id(self.unique_id)
-                assert entry
-                self.hass.config_entries.async_update_entry(entry, data=user_input)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
 
             if error != "invalid_access_token":
                 return self.async_abort(reason=error)

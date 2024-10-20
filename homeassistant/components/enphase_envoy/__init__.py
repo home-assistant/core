@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import httpx
 from pyenphase import Envoy
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, PLATFORMS
+from .const import (
+    DOMAIN,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
+    PLATFORMS,
+)
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
@@ -18,7 +25,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
-    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
+    options = entry.options
+    envoy = (
+        Envoy(
+            host,
+            httpx.AsyncClient(
+                verify=False, limits=httpx.Limits(max_keepalive_connections=0)
+            ),
+        )
+        if options.get(
+            OPTION_DISABLE_KEEP_ALIVE, OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE
+        )
+        else Envoy(host, get_async_client(hass, verify_ssl=False))
+    )
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
     await coordinator.async_config_entry_first_refresh()
@@ -40,7 +59,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Reload entry when it is updated.
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 import copy
 import json
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
@@ -504,7 +505,7 @@ async def test_entity_device_info_update(
     """Test device registry update."""
     await mqtt_mock_entry()
 
-    config = {
+    config: dict[str, Any] = {
         "topic": "test-topic",
         "device": {
             "identifiers": ["helloworld"],

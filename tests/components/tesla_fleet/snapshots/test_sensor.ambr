@@ -364,6 +364,89 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.energy_site_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'island_status_unknown',
+        'on_grid',
+        'off_grid',
+        'off_grid_unintentional',
+        'off_grid_intentional',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Grid Status',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Grid Status',
+      'options': list([
+        'island_status_unknown',
+        'on_grid',
+        'off_grid',
+        'off_grid_unintentional',
+        'off_grid_intentional',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_status-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Grid Status',
+      'options': list([
+        'island_status_unknown',
+        'on_grid',
+        'off_grid',
+        'off_grid_unintentional',
+        'off_grid_intentional',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

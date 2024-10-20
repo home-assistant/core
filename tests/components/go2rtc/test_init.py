@@ -17,7 +17,7 @@ from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -184,13 +184,13 @@ async def _test_setup(
 async def test_setup_go_binary(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_server: Mock,
+    mock_server: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the go2rtc config entry with binary."""
 
     def after_setup() -> None:
-        mock_server.assert_called_once_with("/usr/bin/go2rtc")
+        mock_server.assert_called_once_with(hass, "/usr/bin/go2rtc")
         mock_server.return_value.start.assert_called_once()
 
     await _test_setup(hass, mock_client, mock_config_entry, after_setup)
@@ -208,7 +208,7 @@ async def test_setup_go(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
-        data={CONF_HOST: "http://localhost:1984/"},
+        data={CONF_URL: "http://localhost:1984/"},
     )
 
     def after_setup() -> None:

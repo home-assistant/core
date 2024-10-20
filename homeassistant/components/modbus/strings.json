@@ -97,10 +97,6 @@
     "no_entities": {
       "title": "Modbus {sub_1} contain no entities, entry not loaded.",
       "description": "Please add at least one entity to Modbus {sub_1} in your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "deprecated_restart": {
-      "title": "modbus.restart is being removed",
-      "description": "Please use reload yaml via the developer tools in the UI instead of via the `modbus.restart` action."
     }
   }
 }

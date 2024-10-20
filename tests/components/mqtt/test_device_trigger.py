@@ -45,7 +45,7 @@ async def test_get_triggers(
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    expected_triggers = [
+    expected_triggers: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -165,7 +165,7 @@ async def test_discover_bad_triggers(
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    expected_triggers = [
+    expected_triggers: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -226,7 +226,7 @@ async def test_update_remove_triggers(
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry.name == "milk"
-    expected_triggers1 = [
+    expected_triggers1: list[dict[str, Any]] = [
         {
             "platform": "device",
             "domain": DOMAIN,
@@ -1263,7 +1263,7 @@ async def test_entity_device_info_update(
     """Test device registry update."""
     await mqtt_mock_entry()
 
-    config = {
+    config: dict[str, Any] = {
         "automation_type": "trigger",
         "topic": "test-topic",
         "type": "foo",

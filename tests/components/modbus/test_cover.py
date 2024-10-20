@@ -3,7 +3,7 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
@@ -23,10 +23,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, State
@@ -99,23 +95,23 @@ async def test_config_cover(hass: HomeAssistant, mock_modbus) -> None:
     [
         (
             [0x00],
-            STATE_CLOSED,
+            CoverState.CLOSED,
         ),
         (
             [0x80],
-            STATE_CLOSED,
+            CoverState.CLOSED,
         ),
         (
             [0xFE],
-            STATE_CLOSED,
+            CoverState.CLOSED,
         ),
         (
             [0xFF],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
         (
             [0x01],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
     ],
 )
@@ -143,23 +139,23 @@ async def test_coil_cover(hass: HomeAssistant, expected, mock_do_cycle) -> None:
     [
         (
             [0x00],
-            STATE_CLOSED,
+            CoverState.CLOSED,
         ),
         (
             [0x80],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
         (
             [0xFE],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
         (
             [0xFF],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
         (
             [0x01],
-            STATE_OPEN,
+            CoverState.OPEN,
         ),
     ],
 )
@@ -187,21 +183,21 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_CLOSED
+    assert hass.states.get(ENTITY_ID).state == CoverState.CLOSED
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_OPEN
+    assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(
     "mock_test_state",
     [
-        (State(ENTITY_ID, STATE_CLOSED),),
-        (State(ENTITY_ID, STATE_CLOSING),),
-        (State(ENTITY_ID, STATE_OPENING),),
-        (State(ENTITY_ID, STATE_OPEN),),
+        (State(ENTITY_ID, CoverState.CLOSED),),
+        (State(ENTITY_ID, CoverState.CLOSING),),
+        (State(ENTITY_ID, CoverState.OPENING),),
+        (State(ENTITY_ID, CoverState.OPEN),),
     ],
     indirect=True,
 )
@@ -262,13 +258,13 @@ async def test_service_cover_move(hass: HomeAssistant, mock_modbus_ha) -> None:
     await hass.services.async_call(
         "cover", "open_cover", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_OPEN
+    assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_CLOSED
+    assert hass.states.get(ENTITY_ID).state == CoverState.CLOSED
 
     await mock_modbus_ha.reset()
     mock_modbus_ha.read_holding_registers.side_effect = ModbusException("fail write_")

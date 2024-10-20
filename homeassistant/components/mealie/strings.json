@@ -17,7 +17,7 @@
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Please reconfigure with Mealie.",
         "data": {
           "host": "[%key:common::config_flow::data::url%]",

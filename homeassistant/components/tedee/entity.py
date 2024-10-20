@@ -32,6 +32,7 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
             name=lock.lock_name,
             manufacturer="Tedee",
             model=lock.lock_type,
+            model_id=lock.lock_type,
             via_device=(DOMAIN, coordinator.bridge.serial),
         )
 

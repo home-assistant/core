@@ -164,7 +164,7 @@ async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     # init user flow
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # success
     with patch(
@@ -196,7 +196,7 @@ async def test_reconfigure_errors(
     # init user flow
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # raise URLError
     feedparser.side_effect = urllib.error.URLError("Test")
@@ -208,7 +208,7 @@ async def test_reconfigure_errors(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "url_error"}
 
     # success

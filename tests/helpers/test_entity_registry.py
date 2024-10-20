@@ -653,36 +653,36 @@ async def test_deleted_entity_removing_config_entry_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we update config entry id in registry on deleted entity."""
-    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config1 = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config2 = MockConfigEntry(domain="light", entry_id="mock-id-2")
 
-    entry = entity_registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=mock_config
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config1
     )
-    assert entry.config_entry_id == "mock-id-1"
-    entity_registry.async_remove(entry.entity_id)
+    assert entry1.config_entry_id == "mock-id-1"
+    entry2 = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=mock_config2
+    )
+    assert entry2.config_entry_id == "mock-id-2"
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
 
     assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 1
-    assert (
-        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
-        == "mock-id-1"
-    )
-    assert (
-        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
-        is None
-    )
+    assert len(entity_registry.deleted_entities) == 2
+    deleted_entry1 = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entry1.config_entry_id == "mock-id-1"
+    assert deleted_entry1.orphaned_timestamp is None
+    deleted_entry2 = entity_registry.deleted_entities[("light", "hue", "1234")]
+    assert deleted_entry2.config_entry_id == "mock-id-2"
+    assert deleted_entry2.orphaned_timestamp is None
 
     entity_registry.async_clear_config_entry("mock-id-1")
     assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 1
-    assert (
-        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
-        is None
-    )
-    assert (
-        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
-        is not None
-    )
+    assert len(entity_registry.deleted_entities) == 2
+    deleted_entry1 = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entry1.config_entry_id is None
+    assert deleted_entry1.orphaned_timestamp is not None
+    assert entity_registry.deleted_entities[("light", "hue", "1234")] == deleted_entry2
 
 
 async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
@@ -840,6 +840,123 @@ async def test_migration_1_7(hass: HomeAssistant, hass_storage: dict[str, Any]) 
     entry = registry.async_get_or_create("cover", "super_platform", "very_unique")
     assert entry.device_class == "class_by_user"
     assert entry.original_device_class == "class_by_integration"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_11(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.11.
+
+    This is the first version which has deleted entities, make sure deleted entities
+    are updated.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 11,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "config_entry_id": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "12345",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "original_device_class": "best_class",
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "very_unique",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                }
+            ],
+            "deleted_entities": [
+                {
+                    "config_entry_id": None,
+                    "entity_id": "test.deleted_entity",
+                    "id": "23456",
+                    "orphaned_timestamp": None,
+                    "platform": "super_duper_platform",
+                    "unique_id": "very_very_unique",
+                }
+            ],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+
+    assert entry.device_class is None
+    assert entry.original_device_class == "best_class"
+
+    # Check migrated data
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": ANY,
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "original_device_class": "best_class",
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "very_unique",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                }
+            ],
+            "deleted_entities": [
+                {
+                    "config_entry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "entity_id": "test.deleted_entity",
+                    "id": "23456",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "orphaned_timestamp": None,
+                    "platform": "super_duper_platform",
+                    "unique_id": "very_very_unique",
+                }
+            ],
+        },
+    }
 
 
 async def test_update_entity_unique_id(entity_registry: er.EntityRegistry) -> None:
@@ -1030,14 +1147,17 @@ async def test_disabled_by(entity_registry: er.EntityRegistry) -> None:
         "light", "hue", "5678", disabled_by=er.RegistryEntryDisabler.HASS
     )
     assert entry.disabled_by is er.RegistryEntryDisabler.HASS
+    assert entry.disabled is True
 
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", disabled_by=er.RegistryEntryDisabler.INTEGRATION
     )
     assert entry.disabled_by is er.RegistryEntryDisabler.HASS
+    assert entry.disabled is True
 
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry2.disabled_by is None
+    assert entry2.disabled is False
 
 
 async def test_disabled_by_config_entry_pref(
@@ -1062,6 +1182,25 @@ async def test_disabled_by_config_entry_pref(
         disabled_by=er.RegistryEntryDisabler.USER,
     )
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
+
+
+async def test_hidden_by(entity_registry: er.EntityRegistry) -> None:
+    """Test that we can hide an entry when we create it."""
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", hidden_by=er.RegistryEntryHider.USER
+    )
+    assert entry.hidden_by is er.RegistryEntryHider.USER
+    assert entry.hidden is True
+
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", disabled_by=er.RegistryEntryHider.INTEGRATION
+    )
+    assert entry.hidden_by is er.RegistryEntryHider.USER
+    assert entry.hidden is True
+
+    entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
+    assert entry2.hidden_by is None
+    assert entry2.hidden is False
 
 
 async def test_restore_states(

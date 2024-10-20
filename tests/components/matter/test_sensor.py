@@ -17,8 +17,6 @@ from .common import (
 )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.usefixtures("matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
@@ -29,8 +27,6 @@ async def test_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["flow_sensor"])
 async def test_sensor_null_value(
     hass: HomeAssistant,
@@ -50,8 +46,6 @@ async def test_sensor_null_value(
     assert state.state == "unknown"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,
@@ -71,8 +65,6 @@ async def test_flow_sensor(
     assert state.state == "2.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["humidity_sensor"])
 async def test_humidity_sensor(
     hass: HomeAssistant,
@@ -92,8 +84,6 @@ async def test_humidity_sensor(
     assert state.state == "40.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["light_sensor"])
 async def test_light_sensor(
     hass: HomeAssistant,
@@ -113,8 +103,6 @@ async def test_light_sensor(
     assert state.state == "2.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["temperature_sensor"])
 async def test_temperature_sensor(
     hass: HomeAssistant,
@@ -134,8 +122,6 @@ async def test_temperature_sensor(
     assert state.state == "25.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_contact_sensor"])
 async def test_battery_sensor(
     hass: HomeAssistant,
@@ -162,8 +148,6 @@ async def test_battery_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_contact_sensor"])
 async def test_battery_sensor_voltage(
     hass: HomeAssistant,
@@ -190,8 +174,6 @@ async def test_battery_sensor_voltage(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_eve_thermo_sensor(
     hass: HomeAssistant,
@@ -212,8 +194,6 @@ async def test_eve_thermo_sensor(
     assert state.state == "0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
 async def test_pressure_sensor(
     hass: HomeAssistant,
@@ -252,8 +232,6 @@ async def test_eve_weather_sensor_custom_cluster(
     assert state.state == "800.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
 async def test_air_quality_sensor(
     hass: HomeAssistant,

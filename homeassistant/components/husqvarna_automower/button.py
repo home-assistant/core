@@ -46,7 +46,7 @@ class AutomowerButtonEntityDescription(ButtonEntityDescription):
     press_fn: Callable[[AutomowerSession, str], Awaitable[Any]]
 
 
-BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
+MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
     AutomowerButtonEntityDescription(
         key="confirm_error",
         translation_key="confirm_error",
@@ -73,7 +73,7 @@ async def async_setup_entry(
     async_add_entities(
         AutomowerButtonEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
-        for description in BUTTON_TYPES
+        for description in MOWER_BUTTON_TYPES
         if description.exists_fn(coordinator.data[mower_id])
     )
 

@@ -72,7 +72,10 @@ DISCOVERY_COUNT = len(MQTT)
 
 type _MqttMessageType = list[tuple[str, str]]
 type _AttributesType = list[tuple[str, Any]]
-type _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
+type _StateDataType = (
+    list[tuple[_MqttMessageType, str, _AttributesType | None]]
+    | list[tuple[_MqttMessageType, str, None]]
+)
 
 
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
@@ -106,7 +109,7 @@ def help_custom_config(
         )
         base.update(instance)
         entity_instances.append(base)
-    config[mqtt.DOMAIN][mqtt_entity_domain]: list[ConfigType] = entity_instances
+    config[mqtt.DOMAIN][mqtt_entity_domain] = entity_instances
     return config
 
 
@@ -1360,11 +1363,11 @@ async def help_test_entity_debug_info_message(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    service: str,
+    service: str | None,
     command_topic: str | None = None,
     command_payload: str | None = None,
     state_topic: str | object | None = _SENTINEL,
-    state_payload: str | None = None,
+    state_payload: bytes | str | None = None,
     service_parameters: dict[str, Any] | None = None,
 ) -> None:
     """Test debug_info.

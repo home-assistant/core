@@ -119,7 +119,6 @@ async def test_binary_sensors(
     with patch("homeassistant.components.axis.PLATFORMS", [Platform.BINARY_SENSOR]):
         config_entry = await config_entry_factory()
     mock_rtsp_event(**event)
-    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 

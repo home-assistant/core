@@ -8,7 +8,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "protocol": "Protocol"
         },
         "data_description": {
           "host": "The hostname or IP address of the Axis device.",
@@ -25,7 +26,10 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "link_local_address": "Link local addresses are not supported",
-      "not_axis_device": "Discovered device not an Axis device"
+      "not_axis_device": "Discovered device not an Axis device",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
     }
   },
   "options": {

@@ -267,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -693,11 +698,6 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
-        },
-    ],
-    "_powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [

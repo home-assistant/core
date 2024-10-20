@@ -3,8 +3,9 @@
 from collections.abc import Generator
 import os
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohasupervisor.models import AddonState
 from aiohttp.test_utils import TestClient
 import pytest
 
@@ -129,7 +130,10 @@ def hassio_handler(
 
 @pytest.fixture
 def all_setup_requests(
-    aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest
+    aioclient_mock: AiohttpClientMocker,
+    request: pytest.FixtureRequest,
+    addon_installed: AsyncMock,
+    store_info,
 ) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
@@ -148,13 +152,6 @@ def all_setup_requests(
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -227,44 +224,33 @@ def all_setup_requests(
     )
     aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
+    addon_installed.return_value.update_available = False
+    addon_installed.return_value.version = "1.0.0"
+    addon_installed.return_value.version_latest = "1.0.0"
+    addon_installed.return_value.repository = "core"
+    addon_installed.return_value.state = AddonState.STARTED
+    addon_installed.return_value.icon = False
+
+    def mock_addon_info(slug: str):
+        if slug == "test":
+            addon_installed.return_value.name = "test"
+            addon_installed.return_value.slug = "test"
+            addon_installed.return_value.url = (
+                "https://github.com/home-assistant/addons/test"
+            )
+            addon_installed.return_value.auto_update = True
+        else:
+            addon_installed.return_value.name = "test2"
+            addon_installed.return_value.slug = "test2"
+            addon_installed.return_value.url = "https://github.com"
+            addon_installed.return_value.auto_update = False
+
+        return addon_installed.return_value
+
+    addon_installed.side_effect = mock_addon_info
+
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={
-            "result": "ok",
-            "data": {
-                "name": "test",
-                "slug": "test",
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "core",
-                "state": "started",
-                "icon": False,
-                "url": "https://github.com/home-assistant/addons/test",
-                "auto_update": True,
-            },
-        },
-    )
     aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={
-            "result": "ok",
-            "data": {
-                "name": "test2",
-                "slug": "test2",
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "core",
-                "state": "started",
-                "icon": False,
-                "url": "https://github.com",
-                "auto_update": False,
-            },
-        },
-    )
     aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={

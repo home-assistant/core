@@ -56,6 +56,10 @@
     "entity_state_class_measurement_no_last_reset": {
       "title": "Last reset missing",
       "description": "The following entities have state class 'measurement' but 'last_reset' is missing:"
+    },
+    "statistics_not_defined": {
+      "title": "Statistics not defined",
+      "description": "Some entities currently have no statistics metadata. If these are newly created, it may take up to 5 minutes for this to be generated for the following entities:"
     }
   }
 }

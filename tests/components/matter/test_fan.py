@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -17,14 +18,32 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     FanEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_fans(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test fans."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.FAN)
+
+
 @pytest.mark.parametrize("node_fixture", ["air_purifier"])
 async def test_fan_base(
     hass: HomeAssistant,

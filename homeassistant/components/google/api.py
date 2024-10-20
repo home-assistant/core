@@ -26,13 +26,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_CALENDAR_ACCESS,
-    DATA_CONFIG,
-    DEFAULT_FEATURE_ACCESS,
-    DOMAIN,
-    FeatureAccess,
-)
+from .const import CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS, FeatureAccess
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,27 +155,11 @@ class DeviceFlow:
             self._listener()
 
 
-def get_feature_access(
-    hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> FeatureAccess:
+def get_feature_access(config_entry: ConfigEntry) -> FeatureAccess:
     """Return the desired calendar feature access."""
-    if (
-        config_entry
-        and config_entry.options
-        and CONF_CALENDAR_ACCESS in config_entry.options
-    ):
+    if config_entry.options and CONF_CALENDAR_ACCESS in config_entry.options:
         return FeatureAccess[config_entry.options[CONF_CALENDAR_ACCESS]]
-
-    # This may be called during config entry setup without integration setup running when there
-    # is no google entry in configuration.yaml
-    return cast(
-        FeatureAccess,
-        (
-            hass.data.get(DOMAIN, {})
-            .get(DATA_CONFIG, {})
-            .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
-        ),
-    )
+    return DEFAULT_FEATURE_ACCESS
 
 
 async def async_create_device_flow(

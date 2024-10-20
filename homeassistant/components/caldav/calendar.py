@@ -15,7 +15,6 @@ from homeassistant.components.calendar import (
     CalendarEvent,
     is_offset_reached,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -30,8 +29,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import CalDavConfigEntry
 from .api import async_get_calendars
-from .const import DOMAIN
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,12 +140,11 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CalDavConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
-    client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
+    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavCalendarEntity(

@@ -43,6 +43,7 @@ class LaMarzoccoBaseEntity(
             name=device.name,
             manufacturer="La Marzocco",
             model=device.full_model_name,
+            model_id=device.model,
             serial_number=device.serial_number,
             sw_version=device.firmware[FirmwareType.MACHINE].current_version,
         )

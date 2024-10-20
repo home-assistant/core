@@ -235,6 +235,10 @@ async def test_user_flow_cannot_connect(
     assert result["step_id"] == "user"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.homeworks.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
 ) -> None:
@@ -243,7 +247,7 @@ async def test_reconfigure_flow(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -308,7 +312,7 @@ async def test_reconfigure_flow_flow_duplicate(
 
     result = await entry1.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -318,10 +322,14 @@ async def test_reconfigure_flow_flow_duplicate(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.homeworks.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure_flow_flow_no_change(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
 ) -> None:
@@ -330,7 +338,7 @@ async def test_reconfigure_flow_flow_no_change(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -375,7 +383,7 @@ async def test_reconfigure_flow_credentials_password_only(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -386,7 +394,7 @@ async def test_reconfigure_flow_credentials_password_only(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "need_username_with_password"}
 
 

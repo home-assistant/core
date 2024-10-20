@@ -1,26 +1,29 @@
 """Provides a sensor for Home Connect."""
 
-from dataclasses import dataclass, field
+import contextlib
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import cast
+
+from homeconnect.api import HomeConnectError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITIES
+from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .api import ConfigEntryAuth, HomeConnectDevice
+from .api import ConfigEntryAuth
 from .const import (
-    ATTR_DEVICE,
     ATTR_VALUE,
-    BSH_EVENT_PRESENT_STATE_OFF,
     BSH_OPERATION_STATE,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
@@ -38,53 +41,182 @@ from .entity import HomeConnectEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+EVENT_OPTIONS = ["confirmed", "off", "present"]
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSensorEntityDescription(SensorEntityDescription):
     """Entity Description class for sensors."""
 
-    device_class: SensorDeviceClass | None = SensorDeviceClass.ENUM
-    options: list[str] | None = field(
-        default_factory=lambda: ["confirmed", "off", "present"]
-    )
-    state_key: str
-    appliance_types: tuple[str, ...]
+    default_value: str | None = None
+    appliance_types: tuple[str, ...] | None = None
+    sign: int = 1
 
 
-SENSORS: tuple[HomeConnectSensorEntityDescription, ...] = (
+BSH_PROGRAM_SENSORS = (
     HomeConnectSensorEntityDescription(
-        key="Door Alarm Freezer",
-        translation_key="alarm_sensor_freezer",
-        state_key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+        key="BSH.Common.Option.RemainingProgramTime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        sign=1,
+        translation_key="program_finish_time",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="BSH.Common.Option.Duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        sign=1,
+    ),
+    HomeConnectSensorEntityDescription(
+        key="BSH.Common.Option.ProgramProgress",
+        native_unit_of_measurement=PERCENTAGE,
+        sign=1,
+        translation_key="program_progress",
+    ),
+)
+
+SENSORS = (
+    HomeConnectSensorEntityDescription(
+        key=BSH_OPERATION_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "inactive",
+            "ready",
+            "delayedstart",
+            "run",
+            "pause",
+            "actionrequired",
+            "finished",
+            "error",
+            "aborting",
+        ],
+        translation_key="operation_state",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="coffee_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterPowderCoffee",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="powder_coffee_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWater",
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="hot_water_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWaterCups",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="hot_water_cups_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotMilk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="hot_milk_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterFrothyMilk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="frothy_milk_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterMilk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="milk_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffeeAndMilk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="coffee_and_milk_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterRistrettoEspresso",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="ristretto_espresso_counter",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="BSH.Common.Status.BatteryLevel",
+        device_class=SensorDeviceClass.BATTERY,
+        translation_key="battery_level",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="BSH.Common.Status.Video.CameraState",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "disabled",
+            "sleeping",
+            "ready",
+            "streaminglocal",
+            "streamingcloud",
+            "streaminglocalancloud",
+            "error",
+        ],
+        translation_key="camera_state",
+    ),
+    HomeConnectSensorEntityDescription(
+        key="ConsumerProducts.CleaningRobot.Status.LastSelectedMap",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "tempmap",
+            "map1",
+            "map2",
+            "map3",
+        ],
+        translation_key="last_selected_map",
+    ),
+)
+
+EVENT_SENSORS = (
+    HomeConnectSensorEntityDescription(
+        key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="freezer_door_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
-        key="Door Alarm Refrigerator",
-        translation_key="alarm_sensor_fridge",
-        state_key=REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
+        key=REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="refrigerator_door_alarm",
         appliance_types=("FridgeFreezer", "Refrigerator"),
     ),
     HomeConnectSensorEntityDescription(
-        key="Temperature Alarm Freezer",
-        translation_key="alarm_sensor_temp",
-        state_key=REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
+        key=REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="freezer_temperature_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
-        key="Bean Container Empty",
-        translation_key="alarm_sensor_coffee_bean_container",
-        state_key=COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+        key=COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="bean_container_empty",
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key="Water Tank Empty",
-        translation_key="alarm_sensor_coffee_water_tank",
-        state_key=COFFEE_EVENT_WATER_TANK_EMPTY,
+        key=COFFEE_EVENT_WATER_TANK_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="water_tank_empty",
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key="Drip Tray Full",
-        translation_key="alarm_sensor_coffee_drip_tray",
-        state_key=COFFEE_EVENT_DRIP_TRAY_FULL,
+        key=COFFEE_EVENT_DRIP_TRAY_FULL,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
     ),
 )
@@ -101,18 +233,25 @@ async def async_setup_entry(
         """Get a list of entities."""
         entities: list[SensorEntity] = []
         hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("sensor", [])
-            entities += [HomeConnectSensor(**d) for d in entity_dicts]
-            device: HomeConnectDevice = device_dict[ATTR_DEVICE]
-            # Auto-discover entities
+        for device in hc_api.devices:
             entities.extend(
-                HomeConnectAlarmSensor(
+                HomeConnectSensor(
                     device,
-                    entity_description=description,
+                    description,
                 )
+                for description in EVENT_SENSORS
+                if description.appliance_types
+                and device.appliance.type in description.appliance_types
+            )
+            with contextlib.suppress(HomeConnectError):
+                if device.appliance.get_programs_available():
+                    entities.extend(
+                        HomeConnectSensor(device, desc) for desc in BSH_PROGRAM_SENSORS
+                    )
+            entities.extend(
+                HomeConnectSensor(device, description)
                 for description in SENSORS
-                if device.appliance.type in description.appliance_types
+                if description.key in device.appliance.status
             )
         return entities
 
@@ -122,26 +261,7 @@ async def async_setup_entry(
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     """Sensor class for Home Connect."""
 
-    _key: str
-    _sign: int
-
-    def __init__(
-        self,
-        device: HomeConnectDevice,
-        desc: str,
-        key: str,
-        unit: str,
-        icon: str,
-        device_class: SensorDeviceClass,
-        sign: int = 1,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(device, desc)
-        self._key = key
-        self._sign = sign
-        self._attr_native_unit_of_measurement = unit
-        self._attr_icon = icon
-        self._attr_device_class = device_class
+    entity_description: HomeConnectSensorEntityDescription
 
     @property
     def available(self) -> bool:
@@ -150,76 +270,52 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Update the sensor's status."""
-        status = self.device.appliance.status
-        if self._key not in status:
-            self._attr_native_value = None
-        elif self.device_class == SensorDeviceClass.TIMESTAMP:
-            if ATTR_VALUE not in status[self._key]:
-                self._attr_native_value = None
-            elif (
-                self._attr_native_value is not None
-                and self._sign == 1
-                and isinstance(self._attr_native_value, datetime)
-                and self._attr_native_value < dt_util.utcnow()
-            ):
-                # if the date is supposed to be in the future but we're
-                # already past it, set state to None.
-                self._attr_native_value = None
-            elif (
-                BSH_OPERATION_STATE in status
-                and ATTR_VALUE in status[BSH_OPERATION_STATE]
-                and status[BSH_OPERATION_STATE][ATTR_VALUE]
-                in [
-                    BSH_OPERATION_STATE_RUN,
-                    BSH_OPERATION_STATE_PAUSE,
-                    BSH_OPERATION_STATE_FINISHED,
-                ]
-            ):
-                seconds = self._sign * float(status[self._key][ATTR_VALUE])
-                self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
-            else:
-                self._attr_native_value = None
-        else:
-            self._attr_native_value = status[self._key].get(ATTR_VALUE)
-            if self._key == BSH_OPERATION_STATE:
+        appliance_status = self.device.appliance.status
+        if (
+            self.bsh_key not in appliance_status
+            or ATTR_VALUE not in appliance_status[self.bsh_key]
+        ):
+            self._attr_native_value = self.entity_description.default_value
+            _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
+            return
+        status = appliance_status[self.bsh_key]
+        match self.device_class:
+            case SensorDeviceClass.TIMESTAMP:
+                if ATTR_VALUE not in status:
+                    self._attr_native_value = None
+                elif (
+                    self._attr_native_value is not None
+                    and self.entity_description.sign == 1
+                    and isinstance(self._attr_native_value, datetime)
+                    and self._attr_native_value < dt_util.utcnow()
+                ):
+                    # if the date is supposed to be in the future but we're
+                    # already past it, set state to None.
+                    self._attr_native_value = None
+                elif (
+                    BSH_OPERATION_STATE
+                    in (appliance_status := self.device.appliance.status)
+                    and ATTR_VALUE in appliance_status[BSH_OPERATION_STATE]
+                    and appliance_status[BSH_OPERATION_STATE][ATTR_VALUE]
+                    in [
+                        BSH_OPERATION_STATE_RUN,
+                        BSH_OPERATION_STATE_PAUSE,
+                        BSH_OPERATION_STATE_FINISHED,
+                    ]
+                ):
+                    seconds = self.entity_description.sign * float(status[ATTR_VALUE])
+                    self._attr_native_value = dt_util.utcnow() + timedelta(
+                        seconds=seconds
+                    )
+                else:
+                    self._attr_native_value = None
+            case SensorDeviceClass.ENUM:
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off
                 # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = cast(str, self._attr_native_value).split(".")[
-                    -1
-                ]
+                self._attr_native_value = slugify(
+                    cast(str, status.get(ATTR_VALUE)).split(".")[-1]
+                )
+            case _:
+                self._attr_native_value = status.get(ATTR_VALUE)
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
-
-
-class HomeConnectAlarmSensor(HomeConnectEntity, SensorEntity):
-    """Sensor entity setup using SensorEntityDescription."""
-
-    entity_description: HomeConnectSensorEntityDescription
-
-    def __init__(
-        self,
-        device: HomeConnectDevice,
-        entity_description: HomeConnectSensorEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(device, self.entity_description.key)
-
-    @property
-    def available(self) -> bool:
-        """Return true if the sensor is available."""
-        return self._attr_native_value is not None
-
-    async def async_update(self) -> None:
-        """Update the sensor's status."""
-        self._attr_native_value = (
-            self.device.appliance.status.get(self.entity_description.state_key, {})
-            .get(ATTR_VALUE, BSH_EVENT_PRESENT_STATE_OFF)
-            .rsplit(".", maxsplit=1)[-1]
-            .lower()
-        )
-        _LOGGER.debug(
-            "Updated: %s, new state: %s",
-            self._attr_unique_id,
-            self._attr_native_value,
-        )

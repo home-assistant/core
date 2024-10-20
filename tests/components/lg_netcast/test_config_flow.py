@@ -3,9 +3,11 @@
 from datetime import timedelta
 from unittest.mock import DEFAULT, patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.lg_netcast.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -23,8 +25,6 @@ from . import (
     UNIQUE_ID,
     _patch_lg_netcast,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -114,6 +114,10 @@ async def test_manual_host_unsuccessful_details_response(hass: HomeAssistant) ->
         assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.lg_netcast.config.abort.invalid_host"],
+)
 async def test_manual_host_no_unique_id_response(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(no_unique_id=True):
@@ -144,77 +148,6 @@ async def test_invalid_session_id(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "authorize"
         assert result2["errors"] is not None
         assert result2["errors"]["base"] == "cannot_connect"
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test that the import works."""
-    with _patch_lg_netcast():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: IP_ADDRESS,
-                CONF_ACCESS_TOKEN: FAKE_PIN,
-                CONF_NAME: MODEL_NAME,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == UNIQUE_ID
-        assert result["data"] == {
-            CONF_HOST: IP_ADDRESS,
-            CONF_ACCESS_TOKEN: FAKE_PIN,
-            CONF_NAME: MODEL_NAME,
-            CONF_MODEL: MODEL_NAME,
-            CONF_ID: UNIQUE_ID,
-        }
-
-
-async def test_import_not_online(hass: HomeAssistant) -> None:
-    """Test that the import works."""
-    with _patch_lg_netcast(fail_connection=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: IP_ADDRESS,
-                CONF_ACCESS_TOKEN: FAKE_PIN,
-                CONF_NAME: MODEL_NAME,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
-
-
-async def test_import_duplicate_error(hass: HomeAssistant) -> None:
-    """Test that errors are shown when duplicates are added during import."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=UNIQUE_ID,
-        data={
-            CONF_HOST: IP_ADDRESS,
-            CONF_ACCESS_TOKEN: FAKE_PIN,
-            CONF_NAME: MODEL_NAME,
-            CONF_ID: UNIQUE_ID,
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    with _patch_lg_netcast():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: IP_ADDRESS,
-                CONF_ACCESS_TOKEN: FAKE_PIN,
-                CONF_NAME: MODEL_NAME,
-                CONF_ID: UNIQUE_ID,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_display_access_token_aborted(hass: HomeAssistant) -> None:

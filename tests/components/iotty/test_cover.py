@@ -18,10 +18,7 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import UPDATE_INTERVAL
@@ -55,7 +52,7 @@ async def test_open_ok(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     mock_get_status_filled_stationary_0.return_value = {
         RESULT: {STATUS: STATUS_OPENING, OPEN_PERCENTAGE: 10}
@@ -72,7 +69,7 @@ async def test_open_ok(
     mock_command_fn.assert_called_once()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
 async def test_close_ok(
@@ -96,7 +93,7 @@ async def test_close_ok(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     mock_get_status_filled_stationary_100.return_value = {
         RESULT: {STATUS: STATUS_CLOSING, OPEN_PERCENTAGE: 90}
@@ -113,7 +110,7 @@ async def test_close_ok(
     mock_command_fn.assert_called_once()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
 
 async def test_stop_ok(
@@ -137,7 +134,7 @@ async def test_stop_ok(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     mock_get_status_filled_opening_50.return_value = {
         RESULT: {STATUS: STATUS_STATIONATRY, OPEN_PERCENTAGE: 60}
@@ -154,7 +151,7 @@ async def test_stop_ok(
     mock_command_fn.assert_called_once()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 async def test_set_position_ok(
@@ -178,7 +175,7 @@ async def test_set_position_ok(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     mock_get_status_filled_stationary_0.return_value = {
         RESULT: {STATUS: STATUS_OPENING, OPEN_PERCENTAGE: 50}
@@ -195,7 +192,7 @@ async def test_set_position_ok(
     mock_command_fn.assert_called_once()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
 async def test_devices_insertion_ok(

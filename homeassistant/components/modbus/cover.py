@@ -5,17 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.const import (
-    CONF_COVERS,
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
+from homeassistant.const import CONF_COVERS, CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -105,10 +96,10 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
             convert = {
-                STATE_CLOSED: self._state_closed,
-                STATE_CLOSING: self._state_closing,
-                STATE_OPENING: self._state_opening,
-                STATE_OPEN: self._state_open,
+                CoverState.CLOSED: self._state_closed,
+                CoverState.CLOSING: self._state_closing,
+                CoverState.OPENING: self._state_opening,
+                CoverState.OPEN: self._state_open,
                 STATE_UNAVAILABLE: None,
                 STATE_UNKNOWN: None,
             }

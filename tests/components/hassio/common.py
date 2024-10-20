@@ -9,13 +9,53 @@ from types import MethodType
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
-from aiohasupervisor.models import InstalledAddonComplete
+from aiohasupervisor.models import (
+    AddonStage,
+    InstalledAddonComplete,
+    Repository,
+    StoreAddon,
+    StoreAddonComplete,
+)
 
 from homeassistant.components.hassio.addon_manager import AddonManager
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
 INSTALLED_ADDON_FIELDS = [field.name for field in fields(InstalledAddonComplete)]
+STORE_ADDON_FIELDS = [field.name for field in fields(StoreAddonComplete)]
+
+MOCK_STORE_ADDONS = [
+    StoreAddon(
+        name="test",
+        arch=[],
+        documentation=False,
+        advanced=False,
+        available=True,
+        build=False,
+        description="Test add-on service",
+        homeassistant=None,
+        icon=False,
+        logo=False,
+        repository="core",
+        slug="core_test",
+        stage=AddonStage.EXPERIMENTAL,
+        update_available=False,
+        url="https://example.com/addons/tree/master/test",
+        version_latest="1.0.0",
+        version="1.0.0",
+        installed=True,
+    )
+]
+
+MOCK_REPOSITORIES = [
+    Repository(
+        slug="core",
+        name="Official add-ons",
+        source="core",
+        url="https://home-assistant.io/addons",
+        maintainer="Home Assistant",
+    )
+]
 
 
 def mock_to_dict(obj: Mock, fields: list[str]) -> dict[str, Any]:
@@ -50,25 +90,34 @@ def mock_get_addon_discovery_info(
 
 
 def mock_addon_store_info(
+    supervisor_client: AsyncMock,
     addon_store_info_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock Supervisor add-on store info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info",
-        side_effect=addon_store_info_side_effect,
-    ) as addon_store_info:
-        addon_store_info.return_value = {
-            "available": True,
-            "installed": None,
-            "state": None,
-            "version": "1.0.0",
-        }
-        yield addon_store_info
+    supervisor_client.store.addon_info.side_effect = addon_store_info_side_effect
+
+    supervisor_client.store.addon_info.return_value = addon_info = Mock(
+        spec=StoreAddonComplete,
+        slug="test",
+        repository="core",
+        available=True,
+        installed=False,
+        update_available=False,
+        version="1.0.0",
+        supervisor_api=False,
+        supervisor_role="default",
+    )
+    addon_info.name = "test"
+    addon_info.to_dict = MethodType(
+        lambda self: mock_to_dict(self, STORE_ADDON_FIELDS),
+        addon_info,
+    )
+    return supervisor_client.store.addon_info
 
 
 def mock_addon_info(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock Supervisor add-on info."""
     supervisor_client.addons.addon_info.side_effect = addon_info_side_effect
 
@@ -90,14 +139,14 @@ def mock_addon_info(
         lambda self: mock_to_dict(self, INSTALLED_ADDON_FIELDS),
         addon_info,
     )
-    yield supervisor_client.addons.addon_info
+    return supervisor_client.addons.addon_info
 
 
 def mock_addon_not_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
-    addon_store_info.return_value["available"] = True
+    addon_store_info.return_value.available = True
     return addon_info
 
 
@@ -105,12 +154,8 @@ def mock_addon_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "stopped",
-        "version": "1.0.0",
-    }
+    addon_store_info.return_value.available = True
+    addon_store_info.return_value.installed = True
     addon_info.return_value.available = True
     addon_info.return_value.hostname = "core-test-addon"
     addon_info.return_value.state = "stopped"
@@ -120,12 +165,8 @@ def mock_addon_installed(
 
 def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
     """Mock add-on already running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "started",
-        "version": "1.0.0",
-    }
+    addon_store_info.return_value.available = True
+    addon_store_info.return_value.installed = True
     addon_info.return_value.state = "started"
     return addon_info
 
@@ -135,30 +176,15 @@ def mock_install_addon_side_effect(
 ) -> Any | None:
     """Return the install add-on side effect."""
 
-    async def install_addon(hass: HomeAssistant, slug):
+    async def install_addon(addon: str):
         """Mock install add-on."""
-        addon_store_info.return_value = {
-            "available": True,
-            "installed": "1.0.0",
-            "state": "stopped",
-            "version": "1.0.0",
-        }
-
+        addon_store_info.return_value.available = True
+        addon_store_info.return_value.installed = True
         addon_info.return_value.available = True
         addon_info.return_value.state = "stopped"
         addon_info.return_value.version = "1.0.0"
 
     return install_addon
-
-
-def mock_install_addon(install_addon_side_effect: Any | None) -> Generator[AsyncMock]:
-    """Mock install add-on."""
-
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon",
-        side_effect=install_addon_side_effect,
-    ) as install_addon:
-        yield install_addon
 
 
 def mock_start_addon_side_effect(
@@ -168,12 +194,8 @@ def mock_start_addon_side_effect(
 
     async def start_addon(addon: str) -> None:
         """Mock start add-on."""
-        addon_store_info.return_value = {
-            "available": True,
-            "installed": "1.0.0",
-            "state": "started",
-            "version": "1.0.0",
-        }
+        addon_store_info.return_value.available = True
+        addon_store_info.return_value.installed = True
         addon_info.return_value.available = True
         addon_info.return_value.state = "started"
 

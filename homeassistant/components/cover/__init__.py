@@ -13,7 +13,7 @@ from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -52,6 +52,24 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
+
+
+class CoverState(StrEnum):
+    """State of Cover entities."""
+
+    CLOSED = "closed"
+    CLOSING = "closing"
+    OPEN = "open"
+    OPENING = "opening"
+
+
+# STATE_* below are deprecated as of 2024.11
+# when imported from homeassistant.components.cover
+# use the CoverState enum instead.
+_DEPRECATED_STATE_CLOSED = DeprecatedConstantEnum(CoverState.CLOSED, "2025.11")
+_DEPRECATED_STATE_CLOSING = DeprecatedConstantEnum(CoverState.CLOSING, "2025.11")
+_DEPRECATED_STATE_OPEN = DeprecatedConstantEnum(CoverState.OPEN, "2025.11")
+_DEPRECATED_STATE_OPENING = DeprecatedConstantEnum(CoverState.OPENING, "2025.11")
 
 
 class CoverDeviceClass(StrEnum):
@@ -148,7 +166,7 @@ ATTR_TILT_POSITION = "tilt_position"
 @bind_hass
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_CLOSED)
+    return hass.states.is_state(entity_id, CoverState.CLOSED)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -303,15 +321,15 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state of the cover."""
         if self.is_opening:
             self._cover_is_last_toggle_direction_open = True
-            return STATE_OPENING
+            return CoverState.OPENING
         if self.is_closing:
             self._cover_is_last_toggle_direction_open = False
-            return STATE_CLOSING
+            return CoverState.CLOSING
 
         if (closed := self.is_closed) is None:
             return None
 
-        return STATE_CLOSED if closed else STATE_OPEN
+        return CoverState.CLOSED if closed else CoverState.OPEN
 
     @final
     @property

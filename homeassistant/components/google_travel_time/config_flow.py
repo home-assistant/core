@@ -207,8 +207,6 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _context_entry: ConfigEntry
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -240,27 +238,18 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        self._context_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._context_entry,
-                    data=user_input,
-                    reason="reconfigure_successful",
+                    self._get_reconfigure_entry(), data=user_input
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, self._context_entry.data.copy()
+                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

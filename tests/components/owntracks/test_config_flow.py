@@ -94,13 +94,14 @@ async def test_import_setup(hass: HomeAssistant) -> None:
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test that we can't add more than one instance."""
-    flow = await init_config_flow(hass)
-
     MockConfigEntry(domain=DOMAIN, data={}).add_to_hass(hass)
     assert hass.config_entries.async_entries(DOMAIN)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     # Should fail, already setup (flow)
-    result = await flow.async_step_user({})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 

@@ -493,6 +493,8 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         position = self._status.seconds
+        if position is None:
+            return None
 
         if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()

@@ -105,9 +105,7 @@
             "workAreaId": 654321,
             "name": "Back lawn",
             "cuttingHeight": 25,
-            "enabled": true,
-            "progress": 30,
-            "lastTimeCompleted": 1722449269
+            "enabled": true
           },
           {
             "workAreaId": 0,

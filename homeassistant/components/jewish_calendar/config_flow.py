@@ -87,7 +87,6 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
     VERSION = 1
-    _config_entry: ConfigEntry
 
     @staticmethod
     @callback
@@ -133,25 +132,17 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._config_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
+        reconfigure_entry = self._get_reconfigure_entry()
         if not user_input:
             return self.async_show_form(
                 data_schema=self.add_suggested_values_to_schema(
                     _get_data_schema(self.hass),
-                    {**self._config_entry.data},
+                    reconfigure_entry.data,
                 ),
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
             )
 
-        return self.async_update_reload_and_abort(
-            self._config_entry, data=user_input, reason="reconfigure_successful"
-        )
+        return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
 
 
 class JewishCalendarOptionsFlowHandler(OptionsFlowWithConfigEntry):

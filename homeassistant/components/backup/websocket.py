@@ -18,6 +18,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
         websocket_api.async_register_command(hass, handle_backup_start)
         return
 
+    websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
     websocket_api.async_register_command(hass, handle_remove)
@@ -33,12 +34,35 @@ async def handle_info(
 ) -> None:
     """List all stored backups."""
     manager = hass.data[DATA_MANAGER]
-    backups = await manager.get_backups()
+    backups = await manager.async_get_backups()
     connection.send_result(
         msg["id"],
         {
             "backups": list(backups.values()),
             "backing_up": manager.backing_up,
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/details",
+        vol.Required("slug"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_details(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get backup details for a specific slug."""
+    backup = await hass.data[DATA_MANAGER].async_get_backup(slug=msg["slug"])
+    connection.send_result(
+        msg["id"],
+        {
+            "backup": backup,
         },
     )
 
@@ -57,7 +81,7 @@ async def handle_remove(
     msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
-    await hass.data[DATA_MANAGER].remove_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].async_remove_backup(slug=msg["slug"])
     connection.send_result(msg["id"])
 
 
@@ -70,7 +94,7 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_MANAGER].generate_backup()
+    backup = await hass.data[DATA_MANAGER].async_create_backup()
     connection.send_result(msg["id"], backup)
 
 
@@ -88,7 +112,7 @@ async def handle_backup_start(
     LOGGER.debug("Backup start notification")
 
     try:
-        await manager.pre_backup_actions()
+        await manager.async_pre_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "pre_backup_actions_failed", str(err))
         return
@@ -110,7 +134,7 @@ async def handle_backup_end(
     LOGGER.debug("Backup end notification")
 
     try:
-        await manager.post_backup_actions()
+        await manager.async_post_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
         return

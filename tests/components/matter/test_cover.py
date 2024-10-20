@@ -6,21 +6,30 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.cover import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntityFeature, CoverState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_covers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test covers."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.COVER)
+
+
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -91,8 +100,6 @@ async def test_cover(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -131,18 +138,16 @@ async def test_cover_lift(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     set_node_attribute(matter_node, 1, 258, 10, 0b000101)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -180,8 +185,6 @@ async def test_cover_lift_only(
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION != 0
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -214,7 +217,7 @@ async def test_cover_position_aware_lift(
         state = hass.states.get(entity_id)
         assert state
         assert state.attributes["current_position"] == 100 - floor(position / 100)
-        assert state.state == STATE_OPEN
+        assert state.state == CoverState.OPEN
 
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
@@ -223,11 +226,9 @@ async def test_cover_position_aware_lift(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["current_position"] == 0
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -268,18 +269,16 @@ async def test_cover_tilt(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     set_node_attribute(matter_node, 1, 258, 10, 0b010001)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -315,8 +314,6 @@ async def test_cover_tilt_only(
     )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -380,7 +377,7 @@ async def test_cover_full_features(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, 10000)
@@ -389,7 +386,7 @@ async def test_cover_full_features(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     set_node_attribute(matter_node, 1, 258, 14, 10000)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
@@ -398,7 +395,7 @@ async def test_cover_full_features(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
@@ -407,7 +404,7 @@ async def test_cover_full_features(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     set_node_attribute(matter_node, 1, 258, 14, 5000)
     set_node_attribute(matter_node, 1, 258, 15, None)
@@ -415,7 +412,7 @@ async def test_cover_full_features(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 15, 5000)
@@ -431,7 +428,7 @@ async def test_cover_full_features(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 15, 10000)

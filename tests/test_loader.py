@@ -583,6 +583,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.dependencies == ["test-dep"]
     assert integration.requirements == ["test-req==1.0.0"]
     assert integration.is_built_in is True
+    assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
 
     integration = loader.Integration(
@@ -597,6 +598,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
         },
     )
     assert integration.is_built_in is False
+    assert integration.overwrites_built_in is True
     assert integration.homekit is None
     assert integration.zeroconf is None
     assert integration.dhcp is None
@@ -619,6 +621,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
         },
     )
     assert integration.is_built_in is False
+    assert integration.overwrites_built_in is True
     assert integration.homekit is None
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
     assert integration.dhcp is None
@@ -826,6 +829,29 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         integrations = await loader.async_get_custom_components(hass)
         assert integrations == mock_get.return_value
         mock_get.assert_called_once_with(hass)
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
+    """Test loading a custom component that overwrites a core component."""
+    # First load the core 'light' component
+    core_light = await loader.async_get_integration(hass, "light")
+    assert core_light.is_built_in is True
+
+    # create a mock custom 'light' component
+    mock_integration(
+        hass,
+        MockModule("light", partial_manifest={"version": "1.0.0"}),
+        built_in=False,
+    )
+
+    # Try to load the 'light' component again
+    custom_light = await loader.async_get_integration(hass, "light")
+
+    # Assert that we got the custom component instead of the core one
+    assert custom_light.is_built_in is False
+    assert custom_light.overwrites_built_in is True
+    assert custom_light.version == "1.0.0"
 
 
 async def test_get_config_flows(hass: HomeAssistant) -> None:

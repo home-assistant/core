@@ -124,12 +124,6 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
         if conf_result is not None:
             return conf_result
 
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if entry is not None:
-            data: Mapping[str, Any] = self.data
-            self.hass.config_entries.async_update_entry(entry, data=data)
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data=self.data
+        )

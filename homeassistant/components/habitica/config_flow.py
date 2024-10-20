@@ -18,9 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -178,21 +176,3 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import habitica config from configuration.yaml."""
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            breaks_in_ha_version="2024.11.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Habitica",
-            },
-        )
-        return await self.async_step_advanced(import_data)

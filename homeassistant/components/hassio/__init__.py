@@ -38,6 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -92,7 +93,6 @@ from .coordinator import (
     get_info,  # noqa: F401
     get_issues_info,  # noqa: F401
     get_os_info,
-    get_store,  # noqa: F401
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
@@ -102,10 +102,8 @@ from .handler import (  # noqa: F401
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_store_info,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_install_addon,
     async_reboot_host,
     async_set_addon_options,
     async_set_green_settings,
@@ -395,6 +393,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        if service.service == SERVICE_ADDON_UPDATE:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "update_service_deprecated",
+                breaks_in_ha_version="2025.5",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="update_service_deprecated",
+            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()
@@ -429,7 +437,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             (
                 hass.data[DATA_INFO],
                 hass.data[DATA_HOST_INFO],
-                hass.data[DATA_STORE],
+                store_info,
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
@@ -437,7 +445,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
-                create_eager_task(hassio.get_store()),
+                create_eager_task(hassio.client.store.info()),
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
@@ -446,6 +454,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
+        else:
+            hass.data[DATA_STORE] = store_info.to_dict()
 
         async_call_later(
             hass,

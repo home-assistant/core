@@ -86,6 +86,10 @@ async def test_user_connection_timeout(
     assert result["errors"] == {"base": "timeout"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.tradfri.config.error.invalid_security_code"],
+)
 async def test_user_connection_bad_key(
     hass: HomeAssistant, mock_auth, mock_entry_setup
 ) -> None:

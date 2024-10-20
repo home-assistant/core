@@ -66,6 +66,13 @@ RPC_VIRTUAL_SWITCH = RpcSwitchDescription(
     sub_key="value",
 )
 
+RPC_SCRIPT_SWITCH = RpcSwitchDescription(
+    key="script",
+    sub_key="running",
+    entity_registry_enabled_default=False,
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -176,6 +183,14 @@ def async_setup_rpc_entry(
         RpcVirtualSwitch,
     )
 
+    async_setup_rpc_attribute_entities(
+        hass,
+        config_entry,
+        async_add_entities,
+        {"script": RPC_SCRIPT_SWITCH},
+        RpcScriptSwitch,
+    )
+
     # the user can remove virtual components from the device configuration, so we need
     # to remove orphaned entities
     virtual_switch_ids = get_virtual_component_ids(
@@ -188,6 +203,17 @@ def async_setup_rpc_entry(
         SWITCH_PLATFORM,
         virtual_switch_ids,
         "boolean",
+    )
+
+    # if the script is removed, from the device configuration, we need
+    # to remove orphaned entities
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        SWITCH_PLATFORM,
+        coordinator.device.status,
+        "script",
     )
 
     if not switch_ids:
@@ -317,3 +343,23 @@ class RpcVirtualSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
         await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
+
+
+class RpcScriptSwitch(ShellyRpcAttributeEntity, SwitchEntity):
+    """Entity that controls a script component on RPC based Shelly devices."""
+
+    entity_description: RpcSwitchDescription
+    _attr_has_entity_name = True
+
+    @property
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return bool(self.status["running"])
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        await self.call_rpc("Script.Start", {"id": self._id})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        await self.call_rpc("Script.Stop", {"id": self._id})

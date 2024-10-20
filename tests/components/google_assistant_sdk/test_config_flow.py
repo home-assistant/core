@@ -157,6 +157,10 @@ async def test_reauth(
     assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.google_assistant_sdk.config.abort.single_instance_allowed"],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_single_instance_allowed(
     hass: HomeAssistant,

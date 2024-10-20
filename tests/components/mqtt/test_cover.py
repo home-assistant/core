@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverState,
 )
 from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
 from homeassistant.components.mqtt.cover import (
@@ -39,9 +40,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
-    STATE_CLOSING,
     STATE_OPEN,
-    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -116,12 +115,12 @@ async def test_state_via_state_topic(
     async_fire_mqtt_message(hass, "state-topic", STATE_CLOSED)
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "state-topic", STATE_OPEN)
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "None")
 
@@ -162,17 +161,17 @@ async def test_opening_and_closing_state_via_custom_state_payload(
     async_fire_mqtt_message(hass, "state-topic", "34")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     async_fire_mqtt_message(hass, "state-topic", "--43")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     async_fire_mqtt_message(hass, "state-topic", STATE_CLOSED)
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -197,11 +196,11 @@ async def test_opening_and_closing_state_via_custom_state_payload(
 @pytest.mark.parametrize(
     ("position", "assert_state"),
     [
-        (0, STATE_CLOSED),
-        (1, STATE_OPEN),
-        (30, STATE_OPEN),
-        (99, STATE_OPEN),
-        (100, STATE_OPEN),
+        (0, CoverState.CLOSED),
+        (1, CoverState.OPEN),
+        (30, CoverState.OPEN),
+        (99, CoverState.OPEN),
+        (100, CoverState.OPEN),
     ],
 )
 async def test_open_closed_state_from_position_optimistic(
@@ -253,13 +252,13 @@ async def test_open_closed_state_from_position_optimistic(
 @pytest.mark.parametrize(
     ("position", "assert_state"),
     [
-        (0, STATE_CLOSED),
-        (1, STATE_CLOSED),
-        (10, STATE_CLOSED),
-        (11, STATE_OPEN),
-        (30, STATE_OPEN),
-        (99, STATE_OPEN),
-        (100, STATE_OPEN),
+        (0, CoverState.CLOSED),
+        (1, CoverState.CLOSED),
+        (10, CoverState.CLOSED),
+        (11, CoverState.OPEN),
+        (30, CoverState.OPEN),
+        (99, CoverState.OPEN),
+        (100, CoverState.OPEN),
     ],
 )
 async def test_open_closed_state_from_position_optimistic_alt_positions(
@@ -449,12 +448,12 @@ async def test_position_via_position_topic(
     async_fire_mqtt_message(hass, "get-position-topic", "0")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(
@@ -490,12 +489,12 @@ async def test_state_via_template(
     async_fire_mqtt_message(hass, "state-topic", "10000")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "99")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -532,13 +531,13 @@ async def test_state_via_template_and_entity_id(
     async_fire_mqtt_message(hass, "state-topic", "invalid")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "closed")
     async_fire_mqtt_message(hass, "state-topic", "invalid")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -571,14 +570,14 @@ async def test_state_via_template_with_json_value(
     async_fire_mqtt_message(hass, "state-topic", '{ "Var1": "open", "Var2": "other" }')
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(
         hass, "state-topic", '{ "Var1": "closed", "Var2": "other" }'
     )
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "state-topic", '{ "Var2": "other" }')
     assert (
@@ -741,7 +740,7 @@ async def test_optimistic_state_change(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -750,7 +749,7 @@ async def test_optimistic_state_change(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -759,7 +758,7 @@ async def test_optimistic_state_change(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -767,7 +766,7 @@ async def test_optimistic_state_change(
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -804,7 +803,7 @@ async def test_optimistic_state_change_with_position(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
 
     await hass.services.async_call(
@@ -814,7 +813,7 @@ async def test_optimistic_state_change_with_position(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
     await hass.services.async_call(
@@ -824,7 +823,7 @@ async def test_optimistic_state_change_with_position(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
 
     await hass.services.async_call(
@@ -833,7 +832,7 @@ async def test_optimistic_state_change_with_position(
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
 
@@ -1026,35 +1025,35 @@ async def test_current_cover_position_inverted(
         ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 0
-    assert hass.states.get("cover.test").state == STATE_CLOSED
+    assert hass.states.get("cover.test").state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 100
-    assert hass.states.get("cover.test").state == STATE_OPEN
+    assert hass.states.get("cover.test").state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "50")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 50
-    assert hass.states.get("cover.test").state == STATE_OPEN
+    assert hass.states.get("cover.test").state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "non-numeric")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 50
-    assert hass.states.get("cover.test").state == STATE_OPEN
+    assert hass.states.get("cover.test").state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "101")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
     assert current_percentage_cover_position == 0
-    assert hass.states.get("cover.test").state == STATE_CLOSED
+    assert hass.states.get("cover.test").state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -2738,32 +2737,32 @@ async def test_state_and_position_topics_state_not_set_via_position_topic(
     async_fire_mqtt_message(hass, "state-topic", "OPEN")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "CLOSE")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -2800,27 +2799,27 @@ async def test_set_state_via_position_using_stopped_state(
     async_fire_mqtt_message(hass, "state-topic", "OPEN")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "STOPPED")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "state-topic", "STOPPED")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(
@@ -3136,32 +3135,32 @@ async def test_set_state_via_stopped_state_no_position_topic(
     async_fire_mqtt_message(hass, "state-topic", "OPEN")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "OPENING")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     async_fire_mqtt_message(hass, "state-topic", "STOPPED")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     async_fire_mqtt_message(hass, "state-topic", "CLOSING")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     async_fire_mqtt_message(hass, "state-topic", "STOPPED")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     async_fire_mqtt_message(hass, "state-topic", "STOPPED")
 
     state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(

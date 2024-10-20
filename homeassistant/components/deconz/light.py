@@ -39,7 +39,22 @@ from .hub import DeconzHub
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
     EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
-    "None": LightEffect.NONE,
+    "none": LightEffect.NONE,
+    # Specific to Philips Hue
+    "candle": LightEffect.CANDLE,
+    "cosmos": LightEffect.COSMOS,
+    "enchant": LightEffect.ENCHANT,
+    "fire": LightEffect.FIRE,
+    "fireplace": LightEffect.FIREPLACE,
+    "glisten": LightEffect.GLISTEN,
+    "loop": LightEffect.LOOP,
+    "opal": LightEffect.OPAL,
+    "prism": LightEffect.PRISM,
+    "sparkle": LightEffect.SPARKLE,
+    "sunbeam": LightEffect.SUNBEAM,
+    "sunrise": LightEffect.SUNRISE,
+    "sunset": LightEffect.SUNSET,
+    "underwater": LightEffect.UNDERWATER,
     # Specific to Lidl christmas light
     "carnival": LightEffect.CARNIVAL,
     "collide": LightEffect.COLLIDE,
@@ -208,8 +223,17 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
-            if device.model_id in ("HG06467", "TS0601"):
-                self._attr_effect_list = XMAS_LIGHT_EFFECTS
+
+            # For lights that report supported effects.
+            if isinstance(device, Light):
+                if device.supported_effects is not None:
+                    self._attr_effect_list = [
+                        EFFECT_TO_DECONZ[el]
+                        for el in device.supported_effects
+                        if el in EFFECT_TO_DECONZ
+                    ]
+                if device.model_id in ("HG06467", "TS0601"):
+                    self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:

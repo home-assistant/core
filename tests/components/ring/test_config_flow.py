@@ -1,6 +1,6 @@
 """Test the Ring config flow."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import ring_doorbell
@@ -8,10 +8,12 @@ import ring_doorbell
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.ring import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+
+from .conftest import MOCK_HARDWARE_ID
 
 from tests.common import MockConfigEntry
 
@@ -29,17 +31,19 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"username": "hello@home-assistant.io", "password": "test-password"},
-    )
-    await hass.async_block_till_done()
+    with patch("uuid.uuid4", return_value=MOCK_HARDWARE_ID):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "hello@home-assistant.io", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "hello@home-assistant.io"
     assert result2["data"] == {
-        "username": "hello@home-assistant.io",
-        "token": {"access_token": "mock-token"},
+        CONF_DEVICE_ID: MOCK_HARDWARE_ID,
+        CONF_USERNAME: "hello@home-assistant.io",
+        CONF_TOKEN: {"access_token": "mock-token"},
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -82,13 +86,14 @@ async def test_form_2fa(
     assert result["errors"] == {}
 
     mock_ring_auth.async_fetch_token.side_effect = ring_doorbell.Requires2FAError
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "foo@bar.com",
-            CONF_PASSWORD: "fake-password",
-        },
-    )
+    with patch("uuid.uuid4", return_value=MOCK_HARDWARE_ID):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "foo@bar.com",
+                CONF_PASSWORD: "fake-password",
+            },
+        )
     await hass.async_block_till_done()
     mock_ring_auth.async_fetch_token.assert_called_once_with(
         "foo@bar.com", "fake-password", None
@@ -109,8 +114,9 @@ async def test_form_2fa(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "foo@bar.com"
     assert result3["data"] == {
-        "username": "foo@bar.com",
-        "token": "new-foobar",
+        CONF_DEVICE_ID: MOCK_HARDWARE_ID,
+        CONF_USERNAME: "foo@bar.com",
+        CONF_TOKEN: "new-foobar",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -156,8 +162,9 @@ async def test_reauth(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
-        "username": "foo@bar.com",
-        "token": "new-foobar",
+        CONF_DEVICE_ID: MOCK_HARDWARE_ID,
+        CONF_USERNAME: "foo@bar.com",
+        CONF_TOKEN: "new-foobar",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -218,8 +225,9 @@ async def test_reauth_error(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
-        "username": "foo@bar.com",
-        "token": "new-foobar",
+        CONF_DEVICE_ID: MOCK_HARDWARE_ID,
+        CONF_USERNAME: "foo@bar.com",
+        CONF_TOKEN: "new-foobar",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -268,15 +276,17 @@ async def test_dhcp_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"username": username, "password": "test-password"},
-    )
+    with patch("uuid.uuid4", return_value=MOCK_HARDWARE_ID):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": username, "password": "test-password"},
+        )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "hello@home-assistant.io"
     assert result["data"] == {
-        "username": username,
-        "token": {"access_token": "mock-token"},
+        CONF_DEVICE_ID: MOCK_HARDWARE_ID,
+        CONF_USERNAME: username,
+        CONF_TOKEN: {"access_token": "mock-token"},
     }
 
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(

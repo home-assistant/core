@@ -5,13 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from aioshelly.ble import async_start_scanner, create_scanner
-from aioshelly.ble.const import (
-    BLE_SCAN_RESULT_EVENT,
-    BLE_SCAN_RESULT_VERSION,
-    DEFAULT_DURATION_MS,
-    DEFAULT_INTERVAL_MS,
-    DEFAULT_WINDOW_MS,
-)
+from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -43,9 +37,6 @@ async def async_connect_scanner(
         active=scanner_mode == BLEScannerMode.ACTIVE,
         event_type=BLE_SCAN_RESULT_EVENT,
         data_version=BLE_SCAN_RESULT_VERSION,
-        interval_ms=DEFAULT_INTERVAL_MS,
-        window_ms=DEFAULT_WINDOW_MS,
-        duration_ms=DEFAULT_DURATION_MS,
     )
 
     @hass_callback

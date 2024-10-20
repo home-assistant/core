@@ -6,6 +6,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -426,3 +427,19 @@ async def test_rediscovery(
     assert state
     assert state.state == "Beep Beep"
     assert "Platform zwave_js does not generate unique IDs" not in caplog.text
+
+
+async def test_aeotec_smart_switch_7(
+    hass: HomeAssistant,
+    aeotec_smart_switch_7: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that Smart Switch 7 has a light and a switch entity."""
+    state = hass.states.get("light.smart_switch_7")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.HS,
+    ]
+
+    state = hass.states.get("switch.smart_switch_7")
+    assert state

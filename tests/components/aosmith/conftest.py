@@ -10,7 +10,6 @@ from py_aosmith.models import (
     DeviceType,
     EnergyUseData,
     EnergyUseHistoryEntry,
-    HotWaterStatus,
     OperationMode,
     SupportedOperationModeInfo,
 )
@@ -93,7 +92,7 @@ def build_device_fixture(
             temperature_setpoint_pending=setpoint_pending,
             temperature_setpoint_previous=130,
             temperature_setpoint_maximum=130,
-            hot_water_status=HotWaterStatus.LOW,
+            hot_water_status=90,
         ),
     )
 

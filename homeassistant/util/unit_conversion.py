@@ -178,9 +178,9 @@ class ConductivityConverter(BaseUnitConverter):
 
     UNIT_CLASS = "conductivity"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfConductivity.MICROSIEMENS: 1,
-        UnitOfConductivity.MILLISIEMENS: 1e-3,
-        UnitOfConductivity.SIEMENS: 1e-6,
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
     }
     VALID_UNITS = set(UnitOfConductivity)
 

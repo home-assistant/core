@@ -68,7 +68,8 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
 
     with patch(
         "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",

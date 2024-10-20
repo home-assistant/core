@@ -1090,8 +1090,6 @@ build.json @home-assistant/supervisor
 /tests/components/p1_monitor/ @klaasnicolaas
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
-/homeassistant/components/panel_iframe/ @home-assistant/frontend
-/tests/components/panel_iframe/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185

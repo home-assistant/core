@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, MANUFACTURER
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.SCENE]
 
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 

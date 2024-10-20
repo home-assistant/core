@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 
 from pynina import ApiError
+import pytest
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -89,7 +90,9 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
-        assert result["type"] is FlowResultType.ABORT
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -276,6 +279,10 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.nina.options.error.unknown"],
+)
 async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
     """Test config flow options but with an unexpected exception."""
     config_entry = MockConfigEntry(
@@ -300,7 +307,9 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.ABORT
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        hass.config_entries.options.async_abort(result["flow_id"])
 
 
 async def test_options_flow_entity_removal(

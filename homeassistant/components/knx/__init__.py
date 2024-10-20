@@ -29,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
@@ -192,14 +191,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
         },
     )
-
-    # set up notify service for backwards compatibility - remove 2024.11
-    if NotifySchema.PLATFORM in config:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
-            )
-        )
 
     await register_panel(hass)
 

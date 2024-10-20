@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -162,7 +161,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state: float | int | Decimal = 0
+        self._attr_native_value = round(Decimal(0), round_digits)
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -190,7 +189,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 restored_data.native_unit_of_measurement
             )
             try:
-                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
+                self._attr_native_value = round(
+                    Decimal(restored_data.native_value),  # type: ignore[arg-type]
+                    self._round_digits,
+                )
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
@@ -270,12 +272,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = Decimal(0)
+                derivative = Decimal(0.00)
                 for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
-
-            self._state = derivative
+            self._attr_native_value = round(derivative, self._round_digits)
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -283,11 +284,3 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 self.hass, self._sensor_source_id, calc_derivative
             )
         )
-
-    @property
-    def native_value(self) -> float | int | Decimal:
-        """Return the state of the sensor."""
-        value = round(self._state, self._round_digits)
-        if TYPE_CHECKING:
-            assert isinstance(value, (float, int, Decimal))
-        return value

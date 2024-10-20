@@ -594,7 +594,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, siren.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry, siren.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
@@ -974,7 +974,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain][siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
 
     await help_test_publishing_with_custom_encoding(

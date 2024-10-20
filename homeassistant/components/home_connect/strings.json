@@ -135,42 +135,219 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "local_control": {
+        "name": "Local control"
+      },
+      "battery_charging_state": {
+        "name": "Battery charging state"
+      },
+      "charging_connection": {
+        "name": "Charging connection"
+      },
+      "dust_box_inserted": {
+        "name": "Dust box",
+        "state": {
+          "on": "Inserted",
+          "off": "Not inserted"
+        }
+      },
+      "lifted": {
+        "name": "Lifted"
+      },
+      "lost": {
+        "name": "Lost"
+      },
+      "chiller_door": {
+        "name": "Chiller door"
+      },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "refrigerator_door": {
+        "name": "Refrigerator door"
+      }
+    },
+    "light": {
+      "cooking_lighting": {
+        "name": "Functional light"
+      },
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "external_light": {
+        "name": "External light"
+      },
+      "internal_light": {
+        "name": "Internal light"
+      }
+    },
     "sensor": {
-      "alarm_sensor_fridge": {
+      "program_progress": {
+        "name": "Program progress"
+      },
+      "program_finish_time": {
+        "name": "Program finish time"
+      },
+      "operation_state": {
+        "name": "Operation state",
+        "state": {
+          "inactive": "Inactive",
+          "ready": "Ready",
+          "delayedstart": "Delayed start",
+          "run": "Run",
+          "pause": "[%key:common::state::paused%]",
+          "actionrequired": "Action required",
+          "finished": "Finished",
+          "error": "Error",
+          "aborting": "Aborting"
+        }
+      },
+      "coffee_counter": {
+        "name": "Coffees"
+      },
+      "powder_coffee_counter": {
+        "name": "Powder coffees"
+      },
+      "hot_water_counter": {
+        "name": "Hot water"
+      },
+      "hot_water_cups_counter": {
+        "name": "Hot water cups"
+      },
+      "hot_milk_counter": {
+        "name": "Hot milk cups"
+      },
+      "frothy_milk_counter": {
+        "name": "Frothy milk cups"
+      },
+      "milk_counter": {
+        "name": "Milk cups"
+      },
+      "coffee_and_milk_counter": {
+        "name": "Coffee and milk cups"
+      },
+      "ristretto_espresso_counter": {
+        "name": "Ristretto espresso cups"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "camera_state": {
+        "name": "Camera state",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "sleeping": "Sleeping",
+          "ready": "Ready",
+          "streaminglocal": "Streaming local",
+          "streamingcloud": "Streaming cloud",
+          "streaminglocal_and_cloud": "Streaming local and cloud",
+          "error": "Error"
+        }
+      },
+      "last_selected_map": {
+        "name": "Last selected map",
+        "state": {
+          "tempmap": "Temporary map",
+          "map1": "Map 1",
+          "map2": "Map 2",
+          "map3": "Map 3"
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
         "state": {
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "alarm_sensor_freezer": {
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
         "state": {
+          "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "alarm_sensor_temp": {
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
         "state": {
+          "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "alarm_sensor_coffee_bean_container": {
+      "bean_container_empty": {
+        "name": "Bean container empty",
         "state": {
+          "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "alarm_sensor_coffee_water_tank": {
+      "water_tank_empty": {
+        "name": "Water tank empty",
         "state": {
+          "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "alarm_sensor_coffee_drip_tray": {
+      "drip_tray_full": {
+        "name": "Drip tray full",
         "state": {
+          "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "cup_warmer": {
+        "name": "Cup warmer"
+      },
+      "refrigerator_super_mode": {
+        "name": "Refrigerator super mode"
+      },
+      "freezer_super_mode": {
+        "name": "Freezer super mode"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
+      },
+      "vacation_mode": {
+        "name": "Vacation mode"
+      },
+      "fresh_mode": {
+        "name": "Fresh mode"
+      },
+      "dispenser_enabled": {
+        "name": "Dispenser",
+        "state": {
+          "off": "[%key:common::state::disabled%]",
+          "on": "[%key:common::state::enabled%]"
+        }
+      },
+      "door_assistant_fridge": {
+        "name": "Fridge door assistant"
+      },
+      "door_assistant_freezer": {
+        "name": "Freezer door assistant"
       }
     }
   }

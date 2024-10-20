@@ -56,7 +56,7 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidToken:
                 errors[CONF_TOKEN] = "invalid_token"
             except TRIGGERcmdConnectionError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

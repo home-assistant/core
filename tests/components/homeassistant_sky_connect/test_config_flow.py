@@ -159,6 +159,7 @@ async def test_options_flow(
     }
 
 
+@pytest.mark.usefixtures("supervisor_client")
 @pytest.mark.parametrize(
     ("usb_data", "model"),
     [

@@ -1,0 +1,245 @@
+# serializer version: 1
+# name: test_covers[window_covering_full][cover.mock_full_window_covering_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_full_window_covering_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 143>,
+    'translation_key': 'cover',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareLiftAndTilt-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[window_covering_full][cover.mock_full_window_covering_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'current_tilt_position': 100,
+      'device_class': 'awning',
+      'friendly_name': 'Mock Full Window Covering Cover',
+      'supported_features': <CoverEntityFeature: 143>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_full_window_covering_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[window_covering_lift][cover.mock_lift_window_covering_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_lift_window_covering_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'cover',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[window_covering_lift][cover.mock_lift_window_covering_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'awning',
+      'friendly_name': 'Mock Lift Window Covering Cover',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_lift_window_covering_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.longan_link_wncv_da01_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'cover',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 51,
+      'device_class': 'awning',
+      'friendly_name': 'Longan link WNCV DA01 Cover',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.longan_link_wncv_da01_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_pa_tilt_window_covering_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 139>,
+    'translation_key': 'cover',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_tilt_position': 100,
+      'device_class': 'awning',
+      'friendly_name': 'Mock PA Tilt Window Covering Cover',
+      'supported_features': <CoverEntityFeature: 139>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_pa_tilt_window_covering_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_tilt_window_covering_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 139>,
+    'translation_key': 'cover',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'awning',
+      'friendly_name': 'Mock Tilt Window Covering Cover',
+      'supported_features': <CoverEntityFeature: 139>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_tilt_window_covering_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

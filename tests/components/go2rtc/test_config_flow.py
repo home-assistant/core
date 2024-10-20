@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -53,7 +53,7 @@ async def test_docker_with_binary(
         assert result["title"] == "go2rtc"
         assert result["data"] == {
             CONF_BINARY: binary,
-            CONF_HOST: "http://localhost:1984/",
+            CONF_URL: "http://localhost:1984/",
         }
 
 
@@ -66,12 +66,12 @@ async def test_docker_with_binary(
         (False, "/usr/bin/go2rtc"),
     ],
 )
-async def test_config_flow_host(
+async def test_config_flow_url(
     hass: HomeAssistant,
     is_docker_env: bool,
     shutil_which: str | None,
 ) -> None:
-    """Test config flow with host input."""
+    """Test config flow with url input."""
     with (
         patch(
             "homeassistant.components.go2rtc.config_flow.is_docker_env",
@@ -87,18 +87,18 @@ async def test_config_flow_host(
             context={"source": SOURCE_USER},
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "host"
-        host = "http://go2rtc.local:1984/"
+        assert result["step_id"] == "url"
+        url = "http://go2rtc.local:1984/"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: host},
+            {CONF_URL: url},
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "go2rtc"
         assert result["data"] == {
-            CONF_HOST: host,
+            CONF_URL: url,
         }
 
 
@@ -119,38 +119,38 @@ async def test_flow_errors(
             context={"source": SOURCE_USER},
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "host"
+        assert result["step_id"] == "url"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "go2rtc.local:1984/"},
+            {CONF_URL: "go2rtc.local:1984/"},
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"host": "invalid_url_schema"}
+        assert result["errors"] == {"url": "invalid_url_schema"}
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "http://"},
+            {CONF_URL: "http://"},
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"host": "invalid_url"}
+        assert result["errors"] == {"url": "invalid_url"}
 
-        host = "http://go2rtc.local:1984/"
+        url = "http://go2rtc.local:1984/"
         mock_client.streams.list.side_effect = Exception
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: host},
+            {CONF_URL: url},
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"host": "cannot_connect"}
+        assert result["errors"] == {"url": "cannot_connect"}
 
         mock_client.streams.list.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: host},
+            {CONF_URL: url},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "go2rtc"
         assert result["data"] == {
-            CONF_HOST: host,
+            CONF_URL: url,
         }

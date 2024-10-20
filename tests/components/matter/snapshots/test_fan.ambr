@@ -1,0 +1,263 @@
+# serializer version: 1
+# name: test_fans[air_purifier][fan.air_purifier_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'natural_wind',
+        'sleep_wind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.air_purifier_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 63>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[air_purifier][fan.air_purifier_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'direction': 'forward',
+      'friendly_name': 'Air Purifier Fan',
+      'oscillating': False,
+      'percentage': None,
+      'percentage_step': 10.0,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'natural_wind',
+        'sleep_wind',
+      ]),
+      'supported_features': <FanEntityFeature: 63>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.air_purifier_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_fans[fan][fan.mocked_fan_switch_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'natural_wind',
+        'sleep_wind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.mocked_fan_switch_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[fan][fan.mocked_fan_switch_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mocked Fan Switch Fan',
+      'percentage': 0,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': None,
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'natural_wind',
+        'sleep_wind',
+      ]),
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.mocked_fan_switch_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_fans[room_airconditioner][fan.room_airconditioner_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.room_airconditioner_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[room_airconditioner][fan.room_airconditioner_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Room AirConditioner Fan',
+      'percentage': 0,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': None,
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.room_airconditioner_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_fans[thermostat][fan.longan_link_hvac_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.longan_link_hvac_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 56>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[thermostat][fan.longan_link_hvac_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link HVAC Fan',
+      'preset_mode': None,
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+      ]),
+      'supported_features': <FanEntityFeature: 56>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.longan_link_hvac_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

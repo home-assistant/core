@@ -23,7 +23,7 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.structure import Structure
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import get_random_string
 
@@ -96,21 +96,6 @@ class NestFlowHandler(
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
 
-    def _async_reauth_entry(self) -> ConfigEntry | None:
-        """Return existing entry for reauth."""
-        if self.source != SOURCE_REAUTH or not (
-            entry_id := self.context.get("entry_id")
-        ):
-            return None
-        return next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if entry.entry_id == entry_id
-            ),
-            None,
-        )
-
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -140,7 +125,7 @@ class NestFlowHandler(
         self._data.update(data)
         if self.source == SOURCE_REAUTH:
             _LOGGER.debug("Skipping Pub/Sub configuration")
-            return await self.async_step_finish()
+            return await self._async_finish()
         return await self.async_step_pubsub()
 
     async def async_step_reauth(
@@ -303,7 +288,7 @@ class NestFlowHandler(
                         CONF_CLOUD_PROJECT_ID: cloud_project_id,
                     }
                 )
-                return await self.async_step_finish()
+                return await self._async_finish()
 
         return self.async_show_form(
             step_id="pubsub",
@@ -316,19 +301,15 @@ class NestFlowHandler(
             errors=errors,
         )
 
-    async def async_step_finish(
-        self, data: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def _async_finish(self) -> ConfigFlowResult:
         """Create an entry for the SDM flow."""
         _LOGGER.debug("Creating/updating configuration entry")
         # Update existing config entry when in the reauth flow.
-        if entry := self._async_reauth_entry():
-            self.hass.config_entries.async_update_entry(
-                entry,
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
                 data=self._data,
             )
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
         title = self.flow_impl.name
         if self._structure_config_title:
             title = self._structure_config_title

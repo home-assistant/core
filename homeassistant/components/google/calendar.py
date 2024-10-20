@@ -132,7 +132,7 @@ def _get_entity_descriptions(
             )
         read_only = not (
             calendar_item.access_role.is_writer
-            and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            and get_feature_access(config_entry) is FeatureAccess.read_write
         )
         # Prefer calendar sync down of resources when possible. However,
         # sync does not work for search. Also free-busy calendars denormalize
@@ -304,7 +304,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     if (
         any(calendar_item.access_role.is_writer for calendar_item in result.items)
-        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+        and get_feature_access(config_entry) is FeatureAccess.read_write
     ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
